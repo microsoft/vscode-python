@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import { MockOutputChannel } from './mocks';
-import { initialize } from './../initialize';
+import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 import { JupyterClientAdapter } from '../../client/jupyter/jupyter_client/main';
 import { KernelShutdownError } from '../../client/jupyter/common/errors';
 import { createDeferred } from '../../client/common/helpers';
@@ -8,18 +8,25 @@ import { JupyterClientKernel } from '../../client/jupyter/jupyter_client-Kernel'
 import { KernelspecMetadata } from '../../client/jupyter/contracts';
 
 suite('Jupyter Kernel', () => {
-    suiteSetup(() => initialize());
+    suiteSetup(async function () {
+        if (IS_MULTI_ROOT_TEST) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
+        await initialize();
+    });
     setup(() => {
-        process.env['PYTHON_DONJAYAMANNE_TEST'] = '0';
+        process.env['VSC_PYTHON_CI_TEST'] = '0';
         process.env['DEBUG_DJAYAMANNE_IPYTHON'] = '1';
         disposables = [];
         output = new MockOutputChannel('Jupyter');
         disposables.push(output);
         jupyter = new JupyterClientAdapter(output, __dirname);
         disposables.push(jupyter);
+        return initializeTest();
     });
     teardown(() => {
-        process.env['PYTHON_DONJAYAMANNE_TEST'] = '1';
+        process.env['VSC_PYTHON_CI_TEST'] = '1';
         process.env['DEBUG_DJAYAMANNE_IPYTHON'] = '0';
         output.dispose();
         jupyter.dispose();

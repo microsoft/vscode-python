@@ -1,23 +1,22 @@
-import { QuickPickItem, window } from 'vscode';
-import * as vscode from 'vscode';
-import { Tests, TestFile, TestFunction, FlattenedTestFunction, TestStatus } from '../common/contracts';
-import { getDiscoveredTests } from '../common/testUtils';
-import * as constants from '../../common/constants';
 import * as path from 'path';
+import { QuickPickItem, Uri, window } from 'vscode';
+import * as vscode from 'vscode';
+import * as constants from '../../common/constants';
+import { FlattenedTestFunction, ITestCollectionStorageService, TestFile, TestFunction, Tests, TestStatus, TestsToRun } from '../common/types';
 
 export class TestDisplay {
-    constructor() {
-    }
-    public displayStopTestUI(message: string) {
+    constructor(private testCollectionStorage: ITestCollectionStorageService) { }
+    public displayStopTestUI(workspace: Uri, message: string) {
         window.showQuickPick([message]).then(item => {
             if (item === message) {
-                vscode.commands.executeCommand(constants.Commands.Tests_Stop);
+                vscode.commands.executeCommand(constants.Commands.Tests_Stop, workspace);
             }
         });
     }
-    public displayTestUI(rootDirectory: string) {
-        const tests = getDiscoveredTests();
-        window.showQuickPick(buildItems(rootDirectory, tests), { matchOnDescription: true, matchOnDetail: true }).then(onItemSelected);
+    public displayTestUI(wkspace: Uri) {
+        const tests = this.testCollectionStorage.getTests(wkspace);
+        window.showQuickPick(buildItems(tests), { matchOnDescription: true, matchOnDetail: true })
+            .then(item => onItemSelected(wkspace, item, false));
     }
     public selectTestFunction(rootDirectory: string, tests: Tests): Promise<FlattenedTestFunction> {
         return new Promise<FlattenedTestFunction>((resolve, reject) => {
@@ -41,12 +40,13 @@ export class TestDisplay {
                 }, reject);
         });
     }
-    public displayFunctionTestPickerUI(rootDirectory: string, fileName: string, testFunctions: TestFunction[], debug?: boolean) {
-        const tests = getDiscoveredTests();
+    public displayFunctionTestPickerUI(wkspace: Uri, rootDirectory: string, file: Uri, testFunctions: TestFunction[], debug?: boolean) {
+        const tests = this.testCollectionStorage.getTests(wkspace);
         if (!tests) {
             return;
         }
-        const testFile = tests.testFiles.find(file => file.name === fileName || file.fullPath === fileName);
+        const fileName = file.fsPath;
+        const testFile = tests.testFiles.find(item => item.name === fileName || item.fullPath === fileName);
         if (!testFile) {
             return;
         }
@@ -55,9 +55,9 @@ export class TestDisplay {
                 testFunctions.some(testFunc => testFunc.nameToRun === fn.testFunction.nameToRun);
         });
 
-        window.showQuickPick(buildItemsForFunctions(rootDirectory, flattenedFunctions),
+        window.showQuickPick(buildItemsForFunctions(rootDirectory, flattenedFunctions, undefined, undefined, debug),
             { matchOnDescription: true, matchOnDetail: true }).then(testItem => {
-                return onItemSelected(testItem, debug);
+                return onItemSelected(wkspace, testItem, debug);
             });
     }
 }
@@ -72,7 +72,8 @@ enum Type {
     RunMethod = 6,
     ViewTestOutput = 7,
     Null = 8,
-    SelectAndRunMethod = 9
+    SelectAndRunMethod = 9,
+    DebugMethod = 10
 }
 const statusIconMapping = new Map<TestStatus, string>();
 statusIconMapping.set(TestStatus.Pass, constants.Octicons.Test_Pass);
@@ -80,14 +81,16 @@ statusIconMapping.set(TestStatus.Fail, constants.Octicons.Test_Fail);
 statusIconMapping.set(TestStatus.Error, constants.Octicons.Test_Error);
 statusIconMapping.set(TestStatus.Skipped, constants.Octicons.Test_Skip);
 
-interface TestItem extends QuickPickItem {
+type TestItem = QuickPickItem & {
     type: Type;
     fn?: FlattenedTestFunction;
-}
-interface TestFileItem extends QuickPickItem {
+};
+
+type TestFileItem = QuickPickItem & {
     type: Type;
     testFile?: TestFile;
-}
+};
+
 function getSummary(tests?: Tests) {
     if (!tests || !tests.summary) {
         return '';
@@ -101,20 +104,20 @@ function getSummary(tests?: Tests) {
     }
     if (tests.summary.errors > 0) {
         const plural = tests.summary.errors === 1 ? '' : 's';
-        statusText.push(`${constants.Octicons.Test_Error} ${tests.summary.errors} Error` + plural);
+        statusText.push(`${constants.Octicons.Test_Error} ${tests.summary.errors} Error${plural}`);
     }
     if (tests.summary.skipped > 0) {
         statusText.push(`${constants.Octicons.Test_Skip} ${tests.summary.skipped} Skipped`);
     }
     return statusText.join(', ').trim();
 }
-function buildItems(rootDirectory: string, tests?: Tests): TestItem[] {
+function buildItems(tests?: Tests): TestItem[] {
     const items: TestItem[] = [];
     items.push({ description: '', label: 'Run All Unit Tests', type: Type.RunAll });
     items.push({ description: '', label: 'Discover Unit Tests', type: Type.ReDiscover });
     items.push({ description: '', label: 'Run Unit Test Method ...', type: Type.SelectAndRunMethod });
 
-    let summary = getSummary(tests);
+    const summary = getSummary(tests);
     items.push({ description: '', label: 'View Unit Test Output', type: Type.ViewTestOutput, detail: summary });
 
     if (tests && tests.summary.failures > 0) {
@@ -130,8 +133,8 @@ statusSortPrefix[TestStatus.Fail] = '2';
 statusSortPrefix[TestStatus.Skipped] = '3';
 statusSortPrefix[TestStatus.Pass] = '4';
 
-function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunction[], sortBasedOnResults: boolean = false, displayStatusIcons: boolean = false): TestItem[] {
-    let functionItems: TestItem[] = [];
+function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunction[], sortBasedOnResults: boolean = false, displayStatusIcons: boolean = false, debug: boolean = false): TestItem[] {
+    const functionItems: TestItem[] = [];
     tests.forEach(fn => {
         let icon = '';
         if (displayStatusIcons && statusIconMapping.has(fn.testFunction.status)) {
@@ -142,7 +145,7 @@ function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunct
             description: '',
             detail: path.relative(rootDirectory, fn.parentTestFile.fullPath),
             label: icon + fn.testFunction.name,
-            type: Type.RunMethod,
+            type: debug === true ? Type.DebugMethod : Type.RunMethod,
             fn: fn
         });
     });
@@ -164,15 +167,15 @@ function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunct
     return functionItems;
 }
 function buildItemsForTestFiles(rootDirectory: string, testFiles: TestFile[]): TestFileItem[] {
-    let fileItems: TestFileItem[] = testFiles.map(testFile => {
+    const fileItems: TestFileItem[] = testFiles.map(testFile => {
         return {
             description: '',
             detail: path.relative(rootDirectory, testFile.fullPath),
             type: Type.RunFile,
             label: path.basename(testFile.fullPath),
             testFile: testFile
-        }
-    })
+        };
+    });
     fileItems.sort((a, b) => {
         if (a.detail < b.detail) {
             return -1;
@@ -181,15 +184,16 @@ function buildItemsForTestFiles(rootDirectory: string, testFiles: TestFile[]): T
             return 1;
         }
         return 0;
-    })
+    });
     return fileItems;
 }
-function onItemSelected(selection: TestItem, debug?: boolean) {
+function onItemSelected(wkspace: Uri, selection: TestItem, debug?: boolean) {
     if (!selection || typeof selection.type !== 'number') {
         return;
     }
     let cmd = '';
-    let args = [];
+    // tslint:disable-next-line:no-any
+    const args: any[] = [wkspace];
     switch (selection.type) {
         case Type.Null: {
             return;
@@ -216,8 +220,19 @@ function onItemSelected(selection: TestItem, debug?: boolean) {
         }
         case Type.RunMethod: {
             cmd = constants.Commands.Tests_Run;
-            args.push(selection.fn);
+            // tslint:disable-next-line:prefer-type-cast
+            args.push({ testFunction: [selection.fn.testFunction] } as TestsToRun);
             break;
+        }
+        case Type.DebugMethod: {
+            cmd = constants.Commands.Tests_Debug;
+            // tslint:disable-next-line:prefer-type-cast
+            args.push({ testFunction: [selection.fn.testFunction] } as TestsToRun);
+            args.push(true);
+            break;
+        }
+        default: {
+            return;
         }
     }
 

@@ -1,36 +1,43 @@
 import * as vscode from 'vscode';
+import * as _ from 'lodash';
 import { Generator } from './generator';
-import { PythonSettings } from '../common/configSettings';
 import { parseTags } from './parser';
 import { fsExistsAsync } from '../common/utils';
-import { createDeferred } from '../common/helpers';
 import { Commands } from '../common/constants';
-const pythonSettings = PythonSettings.getInstance();
 
 export class WorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvider {
-    public constructor(private tagGenerator: Generator, private outputChannel: vscode.OutputChannel) {
+    public constructor(private tagGenerators: Generator[], private outputChannel: vscode.OutputChannel) {
     }
 
     async provideWorkspaceSymbols(query: string, token: vscode.CancellationToken): Promise<vscode.SymbolInformation[]> {
-        if (!pythonSettings.workspaceSymbols.enabled) {
+        if (this.tagGenerators.length === 0) {
             return [];
         }
-        if (!vscode.workspace || typeof vscode.workspace.rootPath !== 'string' || vscode.workspace.rootPath.length === 0) {
-            return Promise.resolve([]);
-        }
-        // check whether tag file needs to be built
-        const tagFileExists = await fsExistsAsync(pythonSettings.workspaceSymbols.tagFilePath);
-        if (!tagFileExists) {
+        const generatorsWithTagFiles = await Promise.all(this.tagGenerators.map(generator => fsExistsAsync(generator.tagFilePath)));
+        if (generatorsWithTagFiles.filter(exists => exists).length !== this.tagGenerators.length) {
             await vscode.commands.executeCommand(Commands.Build_Workspace_Symbols, true, token);
         }
-        // load tags
-        const items = await parseTags(query, token);
-        if (!Array.isArray(items)) {
-            return [];
-        }
-        return items.map(item => new vscode.SymbolInformation(
-            item.symbolName, item.symbolKind, '',
-            new vscode.Location(vscode.Uri.file(item.fileName), item.position)
-        ));
+
+        const generators = await Promise.all(this.tagGenerators.map(async generator => {
+            const tagFileExists = await fsExistsAsync(generator.tagFilePath);
+            return tagFileExists ? generator : undefined;
+        }));
+
+        const promises = generators
+            .filter(generator => generator !== undefined && generator.enabled)
+            .map(async generator => {
+                // load tags
+                const items = await parseTags(generator.workspaceFolder.fsPath, generator.tagFilePath, query, token);
+                if (!Array.isArray(items)) {
+                    return [];
+                }
+                return items.map(item => new vscode.SymbolInformation(
+                    item.symbolName, item.symbolKind, '',
+                    new vscode.Location(vscode.Uri.file(item.fileName), item.position)
+                ));
+            });
+
+        const symbols = await Promise.all(promises);
+        return _.flatten(symbols);
     }
 }

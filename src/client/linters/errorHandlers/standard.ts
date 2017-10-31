@@ -1,18 +1,17 @@
 'use strict';
-import { OutputChannel } from 'vscode';
-import { Installer, Product, disableLinter } from '../../common/installer';
-import * as vscode from 'vscode';
+import { OutputChannel, Uri, window } from 'vscode';
+import { Installer, Product } from '../../common/installer';
 
 export class StandardErrorHandler {
     constructor(protected id: string, protected product: Product, protected installer: Installer, protected outputChannel: OutputChannel) {
 
     }
-    private displayLinterError() {
+    private displayLinterError(resource: Uri) {
         const message = `There was an error in running the linter '${this.id}'`;
-        vscode.window.showErrorMessage(message, 'Disable linter', 'View Errors').then(item => {
+        window.showErrorMessage(message, 'Disable linter', 'View Errors').then(item => {
             switch (item) {
                 case 'Disable linter': {
-                    disableLinter(this.product);
+                    this.installer.disableLinter(this.product, resource);
                     break;
                 }
                 case 'View Errors': {
@@ -23,7 +22,7 @@ export class StandardErrorHandler {
         });
     }
 
-    public handleError(expectedFileName: string, fileName: string, error: Error): boolean {
+    public handleError(expectedFileName: string, fileName: string, error: Error, resource: Uri): boolean {
         if (typeof error === 'string' && (error as string).indexOf("OSError: [Errno 2] No such file or directory: '/") > 0) {
             return false;
         }
@@ -31,7 +30,7 @@ export class StandardErrorHandler {
         console.error(error);
 
         this.outputChannel.appendLine(`Linting with ${this.id} failed.\n${error + ''}`);
-        this.displayLinterError();
+        this.displayLinterError(resource);
         return true;
     }
 }

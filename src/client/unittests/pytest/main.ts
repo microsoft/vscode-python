@@ -1,26 +1,26 @@
 'use strict';
-import { PythonSettings } from '../../common/configSettings';
-import { TestsToRun, Tests } from '../common/contracts';
-import { runTest } from './runner';
 import * as vscode from 'vscode';
-import { discoverTests } from './collector';
-import { BaseTestManager } from '../common/baseTestManager';
 import { Product } from '../../common/installer';
+import { BaseTestManager } from '../common/baseTestManager';
+import { ITestCollectionStorageService, ITestDebugLauncher, ITestResultsService, ITestsHelper, Tests, TestsToRun } from '../common/types';
+import { discoverTests } from './collector';
+import { runTest } from './runner';
 
-const settings = PythonSettings.getInstance();
 export class TestManager extends BaseTestManager {
-    constructor(rootDirectory: string, outputChannel: vscode.OutputChannel) {
-        super('pytest', Product.pytest, rootDirectory, outputChannel);
+    constructor(rootDirectory: string, outputChannel: vscode.OutputChannel,
+        testCollectionStorage: ITestCollectionStorageService,
+        testResultsService: ITestResultsService, testsHelper: ITestsHelper, private debugLauncher: ITestDebugLauncher) {
+        super('pytest', Product.pytest, rootDirectory, outputChannel, testCollectionStorage, testResultsService, testsHelper);
     }
-    discoverTestsImpl(ignoreCache: boolean): Promise<Tests> {
-        let args = settings.unitTest.pyTestArgs.slice(0);
-        return discoverTests(this.rootDirectory, args, this.cancellationToken, ignoreCache, this.outputChannel);
+    public discoverTestsImpl(ignoreCache: boolean): Promise<Tests> {
+        const args = this.settings.unitTest.pyTestArgs.slice(0);
+        return discoverTests(this.rootDirectory, args, this.testDiscoveryCancellationToken, ignoreCache, this.outputChannel, this.testsHelper);
     }
-    runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<any> {
-        let args = settings.unitTest.pyTestArgs.slice(0);
+    public runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<{}> {
+        const args = this.settings.unitTest.pyTestArgs.slice(0);
         if (runFailedTests === true && args.indexOf('--lf') === -1 && args.indexOf('--last-failed') === -1) {
             args.push('--last-failed');
         }
-        return runTest(this.rootDirectory, tests, args, testsToRun, this.cancellationToken, this.outputChannel, debug);
+        return runTest(this.testResultsService, this.debugLauncher, this.rootDirectory, tests, args, testsToRun, this.testRunnerCancellationToken, this.outputChannel, debug);
     }
 }

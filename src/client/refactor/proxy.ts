@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as child_process from 'child_process';
 import { IPythonSettings } from '../common/configSettings';
 import { REFACTOR } from '../common/telemetryContracts';
-import { IS_WINDOWS, getCustomEnvVars, getWindowsLineEndingCount } from '../common/utils';
+import { getCustomEnvVars, getCustomEnvVarsSync, getWindowsLineEndingCount, IS_WINDOWS } from '../common/utils';
 import { mergeEnvVariables } from '../common/envFileParser';
 
 export class RefactorProxy extends vscode.Disposable {
@@ -17,7 +17,7 @@ export class RefactorProxy extends vscode.Disposable {
     private _commandResolve: (value?: any | PromiseLike<any>) => void;
     private _commandReject: (reason?: any) => void;
     private _initializeReject: (reason?: any) => void;
-    constructor(extensionDir: string, private pythonSettings: IPythonSettings, private workspaceRoot: string = vscode.workspace.rootPath) {
+    constructor(extensionDir: string, private pythonSettings: IPythonSettings, private workspaceRoot: string) {
         super(() => { });
         this._extensionDir = extensionDir;
     }
@@ -106,7 +106,7 @@ export class RefactorProxy extends vscode.Disposable {
         return new Promise<any>((resolve, reject) => {
             this._initializeReject = reject;
             let environmentVariables = { 'PYTHONUNBUFFERED': '1' };
-            let customEnvironmentVars = getCustomEnvVars();
+            let customEnvironmentVars = getCustomEnvVarsSync(vscode.Uri.file(this.workspaceRoot));
             if (customEnvironmentVars) {
                 environmentVariables = mergeEnvVariables(environmentVariables, customEnvironmentVars);
             }

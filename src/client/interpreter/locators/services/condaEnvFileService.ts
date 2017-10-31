@@ -1,24 +1,26 @@
-"use strict";
+'use strict';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { IS_WINDOWS } from '../../../common/configSettings';
-import { IInterpreterVersionService } from '../../interpreterVersion';
 import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
-import { AnacondaDisplayName, AnacondaCompanyName, AnacondaCompanyNames, CONDA_RELATIVE_PY_PATH } from './conda';
+import { IInterpreterVersionService } from '../../interpreterVersion';
+import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName, CONDA_RELATIVE_PY_PATH } from './conda';
 
 export class CondaEnvFileService implements IInterpreterLocatorService {
     constructor(private condaEnvironmentFile: string,
         private versionService: IInterpreterVersionService) {
     }
-    public getInterpreters() {
+    public async getInterpreters(_?: Uri) {
         return this.getSuggestionsFromConda();
     }
-
-    private getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
+    // tslint:disable-next-line:no-empty
+    public dispose() { }
+    private async getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
         return fs.pathExists(this.condaEnvironmentFile)
             .then(exists => exists ? this.getEnvironmentsFromFile(this.condaEnvironmentFile) : Promise.resolve([]));
     }
-    private getEnvironmentsFromFile(envFile: string) {
+    private async getEnvironmentsFromFile(envFile: string) {
         return fs.readFile(envFile)
             .then(buffer => buffer.toString().split(/\r?\n/g))
             .then(lines => lines.map(line => line.trim()))
@@ -29,11 +31,12 @@ export class CondaEnvFileService implements IInterpreterLocatorService {
             .then(interpreterPaths => interpreterPaths.map(item => this.getInterpreterDetails(item)))
             .then(promises => Promise.all(promises));
     }
-    private getInterpreterDetails(interpreter: string) {
+    private async getInterpreterDetails(interpreter: string) {
         return this.versionService.getVersion(interpreter, path.basename(interpreter))
             .then(version => {
                 version = this.stripCompanyName(version);
                 const envName = this.getEnvironmentRootDirectory(interpreter);
+                // tslint:disable-next-line:no-unnecessary-local-variable
                 const info: PythonInterpreter = {
                     displayName: `${AnacondaDisplayName} ${version} (${envName})`,
                     path: interpreter,

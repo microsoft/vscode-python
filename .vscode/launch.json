@@ -1,25 +1,7 @@
 // A launch configuration that compiles the extension and then opens it inside a new window
 {
 	"version": "0.1.0",
-	"configurations": [{
-			"name": "CompletionServer.ppy",
-			"type": "python",
-			"request": "launch",
-			"stopOnEntry": true,
-			"pythonPath": "python",
-			"program": "${workspaceRoot}/pythonFiles/completionServer.py",
-			"cwd": "${workspaceRoot}",
-			"env": {},
-			"args": [
-				"123"
-			],
-			"envFile": "${workspaceRoot}/.env",
-			"debugOptions": [
-				"WaitOnAbnormalExit",
-				"WaitOnNormalExit",
-				"RedirectOutput"
-			]
-		},
+	"configurations": [
 		{
 			"name": "Launch Extension",
 			"type": "extensionHost",
@@ -33,7 +15,7 @@
 			"outFiles": [
 				"${workspaceRoot}/out/**/*.js"
 			],
-			"preLaunchTask": "npm"
+			"preLaunchTask": "compile"
 		},
 		{
 			"name": "Launch Extension as debugServer", // https://code.visualstudio.com/docs/extensions/example-debuggers
@@ -65,29 +47,33 @@
 			"outFiles": [
 				"${workspaceRoot}/out/**/*.js"
 			],
-			"preLaunchTask": "npm"
+			"preLaunchTask": "compile"
 		},
 		{
-			"name": "Python",
-			"type": "python",
+			"name": "Launch Multiroot Tests",
+			"type": "extensionHost",
 			"request": "launch",
-			"stopOnEntry": true,
-			"pythonPath": "python",
-			"program": "${file}",
-			"console": "integratedTerminal",
-			"args": [],
-			"debugOptions": [
-				"WaitOnAbnormalExit",
-				"WaitOnNormalExit",
-				"RedirectOutput"
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceRoot}/src/testMultiRootWkspc/multi.code-workspace",
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--extensionTestsPath=${workspaceRoot}/out/test"
 			],
-			"cwd": "${workspaceRoot}"
+			"stopOnEntry": false,
+			"sourceMaps": true,
+			"outFiles": [
+				"${workspaceRoot}/out/**/*.js"
+			],
+			"preLaunchTask": "compile"
 		}
 	],
-	"compounds": [{
-		"name": "Extension + Debugger",
-		"configurations": [
-			"Launch Extension", "Launch Extension as debugServer"
-		]
-	}]
+	"compounds": [
+		{
+			"name": "Extension + Debugger",
+			"configurations": [
+				"Launch Extension",
+				"Launch Extension as debugServer"
+			]
+		}
+	]
 }

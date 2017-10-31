@@ -1,8 +1,10 @@
 import * as assert from 'assert';
-import { closeActiveWindows, IS_TRAVIS } from './../initialize';
-import { MockOutputChannel } from './../mockClasses';
-import { Installer, Product } from '../../client/common/installer';
+import * as path from 'path';
+import { Uri } from 'vscode';
 import { EnumEx } from '../../client/common/enumUtils';
+import { Installer, Product } from '../../client/common/installer';
+import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST, IS_TRAVIS } from './../initialize';
+import { MockOutputChannel } from './../mockClasses';
 
 // TODO: Need to mock the command runner, to check what commands are being sent.
 // Instead of altering the environment.
@@ -10,22 +12,25 @@ import { EnumEx } from '../../client/common/enumUtils';
 suite('Installer', () => {
     let outputChannel: MockOutputChannel;
     let installer: Installer;
-
-    suiteSetup(() => {
+    const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
+    const resource = IS_MULTI_ROOT_TEST ? workspaceUri : undefined;
+    suiteSetup(async () => {
         outputChannel = new MockOutputChannel('Installer');
         installer = new Installer(outputChannel);
+        await initializeTest();
     });
-    suiteTeardown(() => closeActiveWindows());
-    teardown(() => closeActiveWindows());
+    setup(initializeTest);
+    suiteTeardown(closeActiveWindows);
+    teardown(closeActiveWindows);
 
     async function testUninstallingProduct(product: Product) {
-        const isInstalled = await installer.isInstalled(product);
+        let isInstalled = await installer.isInstalled(product, resource);
         if (isInstalled) {
-            await installer.uninstall(product);
-            const isInstalled = await installer.isInstalled(product);
+            await installer.uninstall(product, resource);
+            isInstalled = await installer.isInstalled(product, resource);
             // Someimtes installation doesn't work on Travis
             if (!IS_TRAVIS) {
-                assert.equal(isInstalled, false, `Product uninstall failed`);
+                assert.equal(isInstalled, false, 'Product uninstall failed');
             }
         }
     }
@@ -40,14 +45,14 @@ suite('Installer', () => {
     });
 
     async function testInstallingProduct(product: Product) {
-        const isInstalled = await installer.isInstalled(product);
+        const isInstalled = await installer.isInstalled(product, resource);
         if (!isInstalled) {
-            await installer.install(product);
+            await installer.install(product, resource);
         }
-        const checkIsInstalledAgain = await installer.isInstalled(product);
+        const checkIsInstalledAgain = await installer.isInstalled(product, resource);
         // Someimtes installation doesn't work on Travis
         if (!IS_TRAVIS) {
-            assert.notEqual(checkIsInstalledAgain, false, `Product installation failed`);
+            assert.notEqual(checkIsInstalledAgain, false, 'Product installation failed');
         }
     }
     EnumEx.getNamesAndValues<Product>(Product).forEach(prod => {

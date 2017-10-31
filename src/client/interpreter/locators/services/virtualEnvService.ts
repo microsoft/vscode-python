@@ -1,32 +1,36 @@
-"use strict";
+'use strict';
 import * as _ from 'lodash';
 import * as path from 'path';
-import * as settings from './../../../common/configSettings';
-import { VirtualEnvironmentManager } from '../../virtualEnvs';
+import { Uri, workspace } from 'vscode';
+import { fsReaddirAsync, IS_WINDOWS } from '../../../common/utils';
 import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
 import { IInterpreterVersionService } from '../../interpreterVersion';
-import { IS_WINDOWS, fsReaddirAsync } from "../../../common/utils";
+import { VirtualEnvironmentManager } from '../../virtualEnvs';
 import { lookForInterpretersInDirectory } from '../helpers';
-import { workspace } from 'vscode';
+import * as settings from './../../../common/configSettings';
+// tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');
 
 export class VirtualEnvService implements IInterpreterLocatorService {
     public constructor(private knownSearchPaths: string[],
         private virtualEnvMgr: VirtualEnvironmentManager,
         private versionProvider: IInterpreterVersionService) { }
-    public getInterpreters() {
+    public async getInterpreters(resource?: Uri) {
         return this.suggestionsFromKnownVenvs();
     }
-
-    private suggestionsFromKnownVenvs() {
+    // tslint:disable-next-line:no-empty
+    public dispose() { }
+    private async suggestionsFromKnownVenvs() {
         return Promise.all(this.knownSearchPaths.map(dir => this.lookForInterpretersInVenvs(dir)))
+            // tslint:disable-next-line:underscore-consistent-invocation
             .then(listOfInterpreters => _.flatten(listOfInterpreters));
     }
-    private lookForInterpretersInVenvs(pathToCheck: string) {
+    private async lookForInterpretersInVenvs(pathToCheck: string) {
         return fsReaddirAsync(pathToCheck)
             .then(subDirs => Promise.all(this.getProspectiveDirectoriesForLookup(subDirs)))
             .then(dirs => dirs.filter(dir => dir.length > 0))
-            .then(dirs => Promise.all(dirs.map(dir => lookForInterpretersInDirectory(dir))))
+            .then(dirs => Promise.all(dirs.map(lookForInterpretersInDirectory)))
+            // tslint:disable-next-line:underscore-consistent-invocation
             .then(pathsWithInterpreters => _.flatten(pathsWithInterpreters))
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getVirtualEnvDetails(interpreter))));
     }
@@ -41,9 +45,10 @@ export class VirtualEnvService implements IInterpreterLocatorService {
         }));
     }
     private async getVirtualEnvDetails(interpreter: string): Promise<PythonInterpreter> {
-        const displayName = this.versionProvider.getVersion(interpreter, path.basename(interpreter));
-        const virtualEnv = this.virtualEnvMgr.detect(interpreter);
-        return Promise.all([displayName, virtualEnv])
+        return Promise.all([
+            this.versionProvider.getVersion(interpreter, path.basename(interpreter)),
+            this.virtualEnvMgr.detect(interpreter)
+        ])
             .then(([displayName, virtualEnv]) => {
                 const virtualEnvSuffix = virtualEnv ? virtualEnv.name : this.getVirtualEnvironmentRootDirectory(interpreter);
                 return {
@@ -57,20 +62,20 @@ export class VirtualEnvService implements IInterpreterLocatorService {
     }
 }
 
-export function getKnownSearchPathsForVirtualEnvs(): string[] {
+export function getKnownSearchPathsForVirtualEnvs(resource?: Uri): string[] {
     const paths: string[] = [];
     if (!IS_WINDOWS) {
         const defaultPaths = ['/Envs', '/.virtualenvs', '/.pyenv', '/.pyenv/versions'];
         defaultPaths.forEach(p => {
-            paths.push(untildify('~' + p));
+            paths.push(untildify(`~${p}`));
         });
     }
-    const venvPath = settings.PythonSettings.getInstance().venvPath;
+    const venvPath = settings.PythonSettings.getInstance(resource).venvPath;
     if (venvPath) {
         paths.push(untildify(venvPath));
     }
-    if (workspace.rootPath) {
-        paths.push(workspace.rootPath);
+    if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length === 0) {
+        paths.push(workspace.workspaceFolders[0].uri.fsPath);
     }
     return paths;
 }

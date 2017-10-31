@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import { RefactorProxy } from '../refactor/proxy';
 import { getTextEditsFromPatch } from '../common/editor';
-import { PythonSettings, IPythonSettings } from '../common/configSettings';
+import { PythonSettings } from '../common/configSettings';
 import { Installer, Product } from '../common/installer';
 
 interface RenameResponse {
@@ -34,8 +34,14 @@ export function activateSimplePythonRefactorProvider(context: vscode.ExtensionCo
 
 // Exported for unit testing
 export function extractVariable(extensionDir: string, textEditor: vscode.TextEditor, range: vscode.Range,
-    outputChannel: vscode.OutputChannel, workspaceRoot: string = vscode.workspace.rootPath,
-    pythonSettings: IPythonSettings = PythonSettings.getInstance()): Promise<any> {
+    outputChannel: vscode.OutputChannel): Promise<any> {
+
+    let workspaceFolder = vscode.workspace.getWorkspaceFolder(textEditor.document.uri);
+    if (!workspaceFolder && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
+        workspaceFolder = vscode.workspace.workspaceFolders[0];
+    }
+    const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
+    const pythonSettings = PythonSettings.getInstance(workspaceFolder ? workspaceFolder.uri : undefined);
 
     return validateDocumentForRefactor(textEditor).then(() => {
         let newName = 'newvariable' + new Date().getMilliseconds().toString();
@@ -50,8 +56,14 @@ export function extractVariable(extensionDir: string, textEditor: vscode.TextEdi
 
 // Exported for unit testing
 export function extractMethod(extensionDir: string, textEditor: vscode.TextEditor, range: vscode.Range,
-    outputChannel: vscode.OutputChannel, workspaceRoot: string = vscode.workspace.rootPath,
-    pythonSettings: IPythonSettings = PythonSettings.getInstance()): Promise<any> {
+    outputChannel: vscode.OutputChannel): Promise<any> {
+
+    let workspaceFolder = vscode.workspace.getWorkspaceFolder(textEditor.document.uri);
+    if (!workspaceFolder && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
+        workspaceFolder = vscode.workspace.workspaceFolders[0];
+    }
+    const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
+    const pythonSettings = PythonSettings.getInstance(workspaceFolder ? workspaceFolder.uri : undefined);
 
     return validateDocumentForRefactor(textEditor).then(() => {
         let newName = 'newmethod' + new Date().getMilliseconds().toString();
@@ -127,7 +139,7 @@ function extractName(extensionDir: string, textEditor: vscode.TextEditor, range:
         }
     }).catch(error => {
         if (error === 'Not installed') {
-            installer.promptToInstall(Product.rope);
+            installer.promptToInstall(Product.rope, textEditor.document.uri);
             return Promise.reject('');
         }
         let errorMessage = error + '';

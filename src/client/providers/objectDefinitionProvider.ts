@@ -2,16 +2,18 @@
 
 import * as vscode from 'vscode';
 import * as defProvider from './definitionProvider';
+import { JediFactory } from '../languageServices/jediProxyFactory';
 
-export function activateGoToObjectDefinitionProvider(context: vscode.ExtensionContext): vscode.Disposable {
-    let def = new PythonObjectDefinitionProvider(context);
-    return vscode.commands.registerCommand("python.goToPythonObject", () => def.goToObjectDefinition());
+export function activateGoToObjectDefinitionProvider(jediFactory: JediFactory): vscode.Disposable[] {
+    const def = new PythonObjectDefinitionProvider(jediFactory);
+    const commandRegistration = vscode.commands.registerCommand("python.goToPythonObject", () => def.goToObjectDefinition());
+    return [def, commandRegistration] as vscode.Disposable[];
 }
 
 export class PythonObjectDefinitionProvider {
     private readonly _defProvider: defProvider.PythonDefinitionProvider;
-    public constructor(context: vscode.ExtensionContext) {
-        this._defProvider = new defProvider.PythonDefinitionProvider(context);
+    public constructor(jediFactory: JediFactory) {
+        this._defProvider = new defProvider.PythonDefinitionProvider(jediFactory);
     }
 
     public async goToObjectDefinition() {

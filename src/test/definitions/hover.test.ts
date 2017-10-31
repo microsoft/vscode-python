@@ -9,7 +9,7 @@ import { EOL } from 'os';
 // as well as import your extension to test it
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { initialize, closeActiveWindows } from '../initialize';
+import { initialize, closeActiveWindows, initializeTest } from '../initialize';
 import { normalizeMarkedString } from '../textUtils';
 
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
@@ -23,6 +23,7 @@ const fileStringFormat = path.join(hoverPath, 'stringFormat.py');
 
 suite('Hover Definition', () => {
     suiteSetup(() => initialize());
+    setup(() => initializeTest());
     suiteTeardown(() => closeActiveWindows());
     teardown(() => closeActiveWindows());
 

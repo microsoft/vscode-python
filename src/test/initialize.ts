@@ -1,34 +1,58 @@
-//
-// Note: This example test is leveraging the Mocha test framework.
-// Please refer to their documentation on https://mochajs.org/ for help.
-//
-
-//First thing to be executed
-process.env['PYTHON_DONJAYAMANNE_TEST'] = "1";
-
-// The module 'assert' provides assertion methods from node
-import * as assert from "assert";
+import * as assert from 'assert';
 import * as fs from 'fs';
+import * as path from 'path';
+import * as vscode from 'vscode';
+import { PythonSettings } from '../client/common/configSettings';
+import { activated } from '../client/extension';
+import { clearPythonPathInWorkspaceFolder, resetGlobalPythonPathSetting, setPythonPathInWorkspaceRoot } from './common';
 
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
-import * as vscode from "vscode";
-import * as path from "path";
-let dummyPythonFile = path.join(__dirname, "..", "..", "src", "test", "pythonFiles", "dummy.py");
+const dummyPythonFile = path.join(__dirname, '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
+const multirootPath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc');
+const workspace3Uri = vscode.Uri.file(path.join(multirootPath, 'workspace3'));
 
-export function initialize(): Promise<any> {
-    // Opening a python file activates the extension
-    return new Promise<any>((resolve, reject) => {
-        vscode.workspace.openTextDocument(dummyPythonFile).then(() => resolve(), reject);
-    });
+//First thing to be executed.
+// tslint:disable-next-line:no-string-literal
+process.env['VSC_PYTHON_CI_TEST'] = '1';
+
+const PYTHON_PATH = getPythonPath();
+// tslint:disable-next-line:no-string-literal prefer-template
+export const IS_TRAVIS = (process.env['TRAVIS'] + '') === 'true';
+export const TEST_TIMEOUT = 25000;
+export const IS_MULTI_ROOT_TEST = isMultitrootTest();
+
+// Ability to use custom python environments for testing
+export async function initializePython() {
+    await resetGlobalPythonPathSetting();
+    await clearPythonPathInWorkspaceFolder(dummyPythonFile);
+    await clearPythonPathInWorkspaceFolder(workspace3Uri);
+    await setPythonPathInWorkspaceRoot(PYTHON_PATH);
+}
+
+// tslint:disable-next-line:no-any
+export async function initialize(): Promise<any> {
+    await initializePython();
+    // Opening a python file activates the extension.
+    await vscode.workspace.openTextDocument(dummyPythonFile);
+    await activated;
+    // Dispose any cached python settings (used only in test env).
+    PythonSettings.dispose();
+}
+// tslint:disable-next-line:no-any
+export async function initializeTest(): Promise<any> {
+    await initializePython();
+    await closeActiveWindows();
+    // Dispose any cached python settings (used only in test env).
+    PythonSettings.dispose();
 }
 
 export async function wait(timeoutMilliseconds: number) {
     return new Promise(resolve => {
+        // tslint:disable-next-line:no-string-based-set-timeout
         setTimeout(resolve, timeoutMilliseconds);
     });
 }
 
+// tslint:disable-next-line:no-any
 export async function closeActiveWindows(): Promise<any> {
     // https://github.com/Microsoft/vscode/blob/master/extensions/vscode-api-tests/src/utils.ts
     return new Promise(resolve => {
@@ -53,6 +77,7 @@ export async function closeActiveWindows(): Promise<any> {
                 return resolve();
             }
             vscode.commands.executeCommand('workbench.action.closeAllEditors')
+                // tslint:disable-next-line:no-any
                 .then(() => null, (err: any) => {
                     clearInterval(interval);
                     resolve();
@@ -64,28 +89,15 @@ export async function closeActiveWindows(): Promise<any> {
     });
 }
 
-export const IS_TRAVIS = (process.env['TRAVIS'] + '') === 'true';
-export const TEST_TIMEOUT = 25000;
-
 function getPythonPath(): string {
-    const pythonPaths = ['/home/travis/virtualenv/python3.5.2/bin/python',
-        '/xUsers/travis/.pyenv/versions/3.5.1/envs/MYVERSION/bin/python',
-        '/xUsers/donjayamanne/Projects/PythonEnvs/p361/bin/python',
-        'cC:/Users/dojayama/nine/python.exe',
-        'C:/Development/PythonEnvs/p27/scripts/python.exe',
-        '/Users/donjayamanne/Projects/PythonEnvs/p27/bin/python'];
-    for (let counter = 0; counter < pythonPaths.length; counter++) {
-        if (fs.existsSync(pythonPaths[counter])) {
-            return pythonPaths[counter];
-        }
+    // tslint:disable-next-line:no-unsafe-any
+    if (process.env.TRAVIS_PYTHON_PATH && fs.existsSync(process.env.TRAVIS_PYTHON_PATH)) {
+        // tslint:disable-next-line:no-unsafe-any
+        return process.env.TRAVIS_PYTHON_PATH;
     }
     return 'python';
 }
 
-const PYTHON_PATH = getPythonPath();
-
-// Ability to use custom python environments for testing
-export function initializePython() {
-    const pythonConfig = vscode.workspace.getConfiguration('python');
-    pythonConfig.update('pythonPath', PYTHON_PATH);
+function isMultitrootTest() {
+    return Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 1;
 }

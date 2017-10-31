@@ -1,36 +1,39 @@
-"use strict";
+'use strict';
+import * as child_process from 'child_process';
 import * as _ from 'lodash';
 import * as path from 'path';
-import * as child_process from 'child_process';
-import { IInterpreterLocatorService } from '../../contracts';
-import { IInterpreterVersionService } from '../../interpreterVersion';
-import { getFirstNonEmptyLineFromMultilineString } from '../../helpers';
-import { VirtualEnvironmentManager } from '../../virtualEnvs';
+import { Uri } from 'vscode';
 import { PythonSettings } from '../../../common/configSettings';
-
-const settings = PythonSettings.getInstance();
+import { IInterpreterLocatorService } from '../../contracts';
+import { getFirstNonEmptyLineFromMultilineString } from '../../helpers';
+import { IInterpreterVersionService } from '../../interpreterVersion';
+import { VirtualEnvironmentManager } from '../../virtualEnvs';
 
 export class CurrentPathService implements IInterpreterLocatorService {
     public constructor(private virtualEnvMgr: VirtualEnvironmentManager,
         private versionProvider: IInterpreterVersionService) { }
-    public getInterpreters() {
+    public async getInterpreters(resource?: Uri) {
         return this.suggestionsFromKnownPaths();
     }
-
-    private suggestionsFromKnownPaths() {
-        const currentPythonInterpreter = this.getInterpreter(settings.pythonPath, '').then(interpreter => [interpreter]);
+    // tslint:disable-next-line:no-empty
+    public dispose() { }
+    private async suggestionsFromKnownPaths(resource?: Uri) {
+        const currentPythonInterpreter = this.getInterpreter(PythonSettings.getInstance(resource).pythonPath, '').then(interpreter => [interpreter]);
         const python = this.getInterpreter('python', '').then(interpreter => [interpreter]);
         const python2 = this.getInterpreter('python2', '').then(interpreter => [interpreter]);
         const python3 = this.getInterpreter('python3', '').then(interpreter => [interpreter]);
         return Promise.all<string[]>([currentPythonInterpreter, python, python2, python3])
+            // tslint:disable-next-line:underscore-consistent-invocation
             .then(listOfInterpreters => _.flatten(listOfInterpreters))
             .then(interpreters => interpreters.filter(item => item.length > 0))
+            // tslint:disable-next-line:promise-function-async
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))));
     }
-    private getInterpreterDetails(interpreter: string) {
-        const virtualEnv = this.virtualEnvMgr.detect(interpreter);
-        const displayName = this.versionProvider.getVersion(interpreter, path.basename(interpreter));
-        return Promise.all([displayName, virtualEnv])
+    private async getInterpreterDetails(interpreter: string) {
+        return Promise.all([
+            this.versionProvider.getVersion(interpreter, path.basename(interpreter)),
+            this.virtualEnvMgr.detect(interpreter)
+        ])
             .then(([displayName, virtualEnv]) => {
                 displayName += virtualEnv ? ` (${virtualEnv.name})` : '';
                 return {
@@ -39,9 +42,10 @@ export class CurrentPathService implements IInterpreterLocatorService {
                 };
             });
     }
-    private getInterpreter(pythonPath: string, defaultValue: string) {
+    private async getInterpreter(pythonPath: string, defaultValue: string) {
         return new Promise<string>(resolve => {
-            child_process.execFile(pythonPath, ["-c", "import sys;print(sys.executable)"], (_, stdout) => {
+            // tslint:disable-next-line:variable-name
+            child_process.execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_err, stdout) => {
                 resolve(getFirstNonEmptyLineFromMultilineString(stdout));
             });
         })

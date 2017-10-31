@@ -1,32 +1,39 @@
 import * as assert from 'assert';
 import * as child_process from 'child_process';
-import * as settings from '../../client/common/configSettings';
+import { EOL } from 'os';
 import * as path from 'path';
-import * as utils from '../../client/common/utils';
-import { initialize } from '../initialize';
+import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
+import { PythonSettings } from '../../client/common/configSettings';
+import { InterpreterDisplay } from '../../client/interpreter/display';
+import { getFirstNonEmptyLineFromMultilineString } from '../../client/interpreter/helpers';
+import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
+import { clearPythonPathInWorkspaceFolder, rootWorkspaceUri, updateSetting } from '../common';
+import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { MockStatusBarItem } from '../mockClasses';
 import { MockInterpreterVersionProvider } from './mocks';
-import { InterpreterDisplay } from '../../client/interpreter/display';
 import { MockProvider, MockVirtualEnv } from './mocks';
-import { EOL } from 'os';
-import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
-import { getFirstNonEmptyLineFromMultilineString } from '../../client/interpreter/helpers';
 
-let pythonSettings = settings.PythonSettings.getInstance();
-let originalPythonPath;
+const fileInNonRootWorkspace = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
 
+// tslint:disable-next-line:max-func-body-length
 suite('Interpreters Display', () => {
-    suiteSetup(() => {
-        originalPythonPath = pythonSettings.pythonPath;
-        return initialize();
+    const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
+    suiteSetup(initialize);
+    setup(async () => {
+        await initializeTest();
+        if (IS_MULTI_ROOT_TEST) {
+            await initializeMultiRoot();
+        }
     });
-    teardown(() => {
-        pythonSettings.pythonPath = originalPythonPath;
+    teardown(async () => {
+        await clearPythonPathInWorkspaceFolder(fileInNonRootWorkspace);
+        await initialize();
+        await closeActiveWindows();
     });
-
     test('Must have command name', () => {
         const statusBar = new MockStatusBarItem();
         const displayNameProvider = new MockInterpreterVersionProvider('');
+        // tslint:disable-next-line:no-unused-expression
         new InterpreterDisplay(statusBar, new MockProvider([]), new VirtualEnvironmentManager([]), displayNameProvider);
         assert.equal(statusBar.command, 'python.setInterpreter', 'Incorrect command name');
     });
@@ -52,14 +59,15 @@ suite('Interpreters Display', () => {
         await display.refresh();
         assert.equal(statusBar.text, `${displayName} (${env2.name})`, 'Incorrect display name');
     });
-    test(`Must display default 'Display name' for unknown interpreter`, async () => {
+    test('Must display default \'Display name\' for unknown interpreter', async () => {
         const statusBar = new MockStatusBarItem();
         const provider = new MockProvider([]);
         const displayName = 'Mock Display Name';
         const displayNameProvider = new MockInterpreterVersionProvider(displayName, true);
         const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider);
         // Change interpreter to an invalid value
-        const pythonPath = pythonSettings.pythonPath = 'c:/some/unknonw/Python Interpreter.exe';
+        const pythonPath = 'UnknownInterpreter';
+        await updateSetting('pythonPath', pythonPath, rootWorkspaceUri, configTarget);
         await display.refresh();
 
         const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
@@ -67,15 +75,15 @@ suite('Interpreters Display', () => {
     });
     test('Must get display name from a list of interpreters', async () => {
         const pythonPath = await new Promise<string>(resolve => {
-            child_process.execFile(pythonSettings.pythonPath, ["-c", "import sys;print(sys.executable)"], (_, stdout) => {
+            child_process.execFile(PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath, ['-c', 'import sys;print(sys.executable)'], (_, stdout) => {
                 resolve(getFirstNonEmptyLineFromMultilineString(stdout));
             });
-        }).then(value => value.length === 0 ? pythonSettings.pythonPath : value);
+        }).then(value => value.length === 0 ? PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath : value);
         const statusBar = new MockStatusBarItem();
         const interpreters = [
             { displayName: 'One', path: 'c:/path1/one.exe', type: 'One 1' },
             { displayName: 'Two', path: pythonPath, type: 'Two 2' },
-            { displayName: 'Three', path: 'c:/path3/three.exe', type: 'Three 3' },
+            { displayName: 'Three', path: 'c:/path3/three.exe', type: 'Three 3' }
         ];
         const provider = new MockProvider(interpreters);
         const displayName = 'Mock Display Name';
@@ -87,16 +95,16 @@ suite('Interpreters Display', () => {
     });
     test('Must suffix tooltip with the companyDisplayName of interpreter', async () => {
         const pythonPath = await new Promise<string>(resolve => {
-            child_process.execFile(pythonSettings.pythonPath, ["-c", "import sys;print(sys.executable)"], (_, stdout) => {
+            child_process.execFile(PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath, ['-c', 'import sys;print(sys.executable)'], (_, stdout) => {
                 resolve(getFirstNonEmptyLineFromMultilineString(stdout));
             });
-        }).then(value => value.length === 0 ? pythonSettings.pythonPath : value);
+        }).then(value => value.length === 0 ? PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath : value);
 
         const statusBar = new MockStatusBarItem();
         const interpreters = [
             { displayName: 'One', path: 'c:/path1/one.exe', companyDisplayName: 'One 1' },
             { displayName: 'Two', path: pythonPath, companyDisplayName: 'Two 2' },
-            { displayName: 'Three', path: 'c:/path3/three.exe', companyDisplayName: 'Three 3' },
+            { displayName: 'Three', path: 'c:/path3/three.exe', companyDisplayName: 'Three 3' }
         ];
         const provider = new MockProvider(interpreters);
         const displayNameProvider = new MockInterpreterVersionProvider('');
@@ -111,25 +119,24 @@ suite('Interpreters Display', () => {
         const interpreters = [
             { displayName: 'One', path: 'c:/path1/one.exe', companyDisplayName: 'One 1' },
             { displayName: 'Two', path: 'c:/asdf', companyDisplayName: 'Two 2' },
-            { displayName: 'Three', path: 'c:/path3/three.exe', companyDisplayName: 'Three 3' },
+            { displayName: 'Three', path: 'c:/path3/three.exe', companyDisplayName: 'Three 3' }
         ];
         const provider = new MockProvider(interpreters);
         const displayNameProvider = new MockInterpreterVersionProvider('', true);
         const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider);
         // Change interpreter to an invalid value
-        pythonSettings.pythonPath = 'c:/some/unknonw/Python Interpreter.exe';
+        const pythonPath = 'UnknownInterpreter';
+        await updateSetting('pythonPath', pythonPath, rootWorkspaceUri, configTarget);
         await display.refresh();
 
         assert.equal(statusBar.text, '$(alert) Select Python Environment', 'Incorrect display name');
     });
+    async function initializeMultiRoot() {
+        // For multiroot environments, we need a file open to determine the best interpreter that needs to be displayed
+        await openDummyFile();
+    }
+    async function openDummyFile() {
+        const document = await workspace.openTextDocument(fileInNonRootWorkspace);
+        await window.showTextDocument(document);
+    }
 });
-
-async function getInterpreterDisplayName(pythonPath: string, defaultValue: string) {
-    return utils.execPythonFile(pythonPath, ['--version'], __dirname, true)
-        .then(version => {
-            version = version.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0).join('');
-            return version.length > 0 ? version : defaultValue;
-        })
-        .catch(() => defaultValue);
-}
-

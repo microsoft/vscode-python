@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { EOL } from 'os';
-import { initialize } from '../initialize';
+import { initialize, initializeTest } from '../initialize';
 import { IS_WINDOWS } from '../../client/common/utils';
 import { MockInterpreterVersionProvider } from './mocks';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
@@ -18,6 +18,7 @@ const environmentsFilePath = path.join(environmentsPath, 'environments.txt');
 
 suite('Interpreters from Conda Environments Text File', () => {
     suiteSetup(() => initialize());
+    setup(() => initializeTest());
     suiteTeardown(async () => {
         // Clear the file so we don't get unwanted changes prompting for a checkin of this file
         await updateEnvWithInterpreters([]);

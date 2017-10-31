@@ -1,17 +1,16 @@
-/// <reference path="../../../node_modules/@types/node/index.d.ts" />
-/// <reference path="../../../node_modules/vscode/vscode.d.ts" />
-
 'use strict';
 // TODO: Cleanup this place
 // Add options for execPythonFile
-import * as path from 'path';
-import * as fs from 'fs';
-import * as os from 'os';
 import * as child_process from 'child_process';
+import * as fs from 'fs';
+import * as fsExtra from 'fs-extra';
+import * as os from 'os';
+import * as path from 'path';
+import { CancellationToken, Range, TextDocument, Uri } from 'vscode';
 import * as settings from './configSettings';
-import { CancellationToken, TextDocument, Range } from 'vscode';
-import { isNotInstalledError } from './helpers';
 import { mergeEnvVariables, parseEnvFile } from './envFileParser';
+import { isNotInstalledError } from './helpers';
+import { InterpreterInfoCache } from './interpreterInfoCache';
 
 export const IS_WINDOWS = /^win/.test(process.platform);
 export const Is_64Bit = os.arch() === 'x64';
@@ -52,32 +51,29 @@ export function fsReaddirAsync(root: string): Promise<string[]> {
     });
 }
 
-let pythonInterpretterDirectory: string = null;
-let previouslyIdentifiedPythonPath: string = null;
-let customEnvVariables: any = null;
+async function getPythonInterpreterDirectory(resource?: Uri): Promise<string> {
+    const cache = InterpreterInfoCache.get(resource);
+    const pythonFileName = settings.PythonSettings.getInstance(resource).pythonPath;
 
-// If config settings change then clear env variables that we have cached
-// Remember, the path to the python interpreter can change, hence we need to re-set the paths
-settings.PythonSettings.getInstance().on('change', function () {
-    pythonInterpretterDirectory = null;
-    previouslyIdentifiedPythonPath = null;
-    customEnvVariables = null;
-});
-
-export function getPythonInterpreterDirectory(): Promise<string> {
     // If we already have it and the python path hasn't changed, yay
-    if (pythonInterpretterDirectory && previouslyIdentifiedPythonPath === settings.PythonSettings.getInstance().pythonPath) {
-        return Promise.resolve(pythonInterpretterDirectory);
+    if (cache.pythonInterpreterDirectory && cache.pythonInterpreterDirectory.length > 0
+        && cache.pythonSettingsPath === pythonFileName) {
+        return cache.pythonInterpreterDirectory;
     }
 
-    let pythonFileName = settings.PythonSettings.getInstance().pythonPath;
 
     // Check if we have the path
     if (path.basename(pythonFileName) === pythonFileName) {
-        // No path provided, however we can get it by using sys.executableFile
-        return getPathFromPythonCommand(["-c", "import sys;print(sys.executable)"])
-            .then(pythonExecutablePath => pythonInterpretterDirectory = path.dirname(pythonExecutablePath))
-            .catch(() => pythonInterpretterDirectory = '');
+        try {
+            const pythonInterpreterPath = await getPathFromPythonCommand(pythonFileName);
+            const pythonInterpreterDirectory = path.dirname(pythonInterpreterPath);
+            InterpreterInfoCache.setPaths(resource, pythonFileName, pythonInterpreterPath, pythonInterpreterDirectory);
+            return pythonInterpreterDirectory;
+            // tslint:disable-next-line:variable-name
+        } catch (_ex) {
+            InterpreterInfoCache.setPaths(resource, pythonFileName, pythonFileName, '');
+            return '';
+        }
     }
 
     return new Promise<string>(resolve => {
@@ -85,88 +81,78 @@ export function getPythonInterpreterDirectory(): Promise<string> {
         child_process.execFile(pythonFileName, ['-c', 'print(1234)'], (error, stdout, stderr) => {
             // Yes this is a valid python path
             if (stdout.startsWith('1234')) {
-                previouslyIdentifiedPythonPath = path.dirname(pythonFileName);
+                const pythonInterpreterDirectory = path.dirname(pythonFileName);
+                InterpreterInfoCache.setPaths(resource, pythonFileName, pythonFileName, pythonInterpreterDirectory);
+                resolve(pythonInterpreterDirectory);
+            } else {
+                // No idea, didn't work, hence don't reject, but return empty path
+                InterpreterInfoCache.setPaths(resource, pythonFileName, pythonFileName, '');
+                resolve('');
             }
-            else {
-                previouslyIdentifiedPythonPath = '';
-            }
-            // No idea, didn't work, hence don't reject, but return empty path
-            resolve(previouslyIdentifiedPythonPath);
         });
     });
 }
-export function getFullyQualifiedPythonInterpreterPath(): Promise<string> {
-    return getPythonInterpreterDirectory()
-        .then(pyPath => path.join(pyPath, path.basename(settings.PythonSettings.getInstance().pythonPath)));
+export async function getFullyQualifiedPythonInterpreterPath(resource?: Uri): Promise<string> {
+    const pyDir = await getPythonInterpreterDirectory(resource);
+    const cache = InterpreterInfoCache.get(resource);
+    return cache.pythonInterpreterPath;
 }
-export function getPathFromPythonCommand(args: string[]): Promise<string> {
-    return execPythonFile(settings.PythonSettings.getInstance().pythonPath, args, __dirname).then(stdout => {
-        if (stdout.length === 0) {
-            return "";
-        }
-        let lines = stdout.split(/\r?\n/g).filter(line => line.length > 0);
-        return validatePath(lines[0]);
-    }).catch(() => {
-        return "";
+export async function getPathFromPythonCommand(pythonPath: string): Promise<string> {
+    return await new Promise<string>((resolve, reject) => {
+        child_process.execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_, stdout) => {
+            if (stdout) {
+                const lines = stdout.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
+                resolve(lines.length > 0 ? lines[0] : '');
+            } else {
+                reject();
+            }
+        });
     });
 }
-export function execPythonFile(file: string, args: string[], cwd: string, includeErrorAsResponse: boolean = false, stdOut: (line: string) => void = null, token?: CancellationToken): Promise<string> {
-    const execAsModule = file.toUpperCase() === 'PYTHON' && args.length > 0 && args[0] === '-m';
-
-    // If running the python file, then always revert to execFileInternal
-    // Cuz python interpreter is always a file and we can and will always run it using child_process.execFile()
-    if (file === settings.PythonSettings.getInstance().pythonPath) {
-        if (stdOut) {
-            return spawnFileInternal(file, args, { cwd }, includeErrorAsResponse, stdOut, token);
-        }
-        if (execAsModule) {
-            return getFullyQualifiedPythonInterpreterPath()
-                .then(p => execPythonModule(p, args, { cwd: cwd }, includeErrorAsResponse, token));
-        }
-        return execFileInternal(file, args, { cwd: cwd }, includeErrorAsResponse, token);
+async function getEnvVariables(resource?: Uri): Promise<{}> {
+    const cache = InterpreterInfoCache.get(resource);
+    if (cache.customEnvVariables) {
+        return cache.customEnvVariables;
     }
 
-    return getPythonInterpreterDirectory().then(pyPath => {
-        // We don't have a path
-        if (pyPath.length === 0) {
-            let options: child_process.ExecFileOptions = { cwd };
-            const envVars = customEnvVariables || getCustomEnvVars();
-            if (envVars) {
-                options.env = envVars;
-            }
-            if (stdOut) {
-                return spawnFileInternal(file, args, options, includeErrorAsResponse, stdOut, token);
-            }
-            return execFileInternal(file, args, options, includeErrorAsResponse, token);
-        }
+    const pyPath = await getPythonInterpreterDirectory(resource);
+    let customEnvVariables = await getCustomEnvVars(resource) || {};
 
-        if (customEnvVariables === null) {
-            customEnvVariables = getCustomEnvVars();
-            customEnvVariables = customEnvVariables ? customEnvVariables : {};
-            // Ensure to include the path of the current python 
-            let newPath = '';
-            let currentPath = typeof customEnvVariables[PATH_VARIABLE_NAME] === 'string' ? customEnvVariables[PATH_VARIABLE_NAME] : process.env[PATH_VARIABLE_NAME];
-            if (IS_WINDOWS) {
-                newPath = pyPath + '\\' + path.delimiter + path.join(pyPath, 'Scripts\\') + path.delimiter + currentPath;
-                // This needs to be done for windows
-                process.env[PATH_VARIABLE_NAME] = newPath;
-            }
-            else {
-                newPath = pyPath + path.delimiter + currentPath;
-            }
-            customEnvVariables = mergeEnvVariables(customEnvVariables, process.env);
-            customEnvVariables[PATH_VARIABLE_NAME] = newPath;
+    if (pyPath.length > 0) {
+        // Ensure to include the path of the current python.
+        let newPath = '';
+        const currentPath = typeof customEnvVariables[PATH_VARIABLE_NAME] === 'string' ? customEnvVariables[PATH_VARIABLE_NAME] : process.env[PATH_VARIABLE_NAME];
+        if (IS_WINDOWS) {
+            newPath = `${pyPath}\\${path.delimiter}${path.join(pyPath, 'Scripts\\')}${path.delimiter}${currentPath}`;
+            // This needs to be done for windows.
+            process.env[PATH_VARIABLE_NAME] = newPath;
+        } else {
+            newPath = `${pyPath}${path.delimiter}${currentPath}`;
         }
+        customEnvVariables = mergeEnvVariables(customEnvVariables, process.env);
+        customEnvVariables[PATH_VARIABLE_NAME] = newPath;
+    }
 
-        if (stdOut) {
-            return spawnFileInternal(file, args, { cwd, env: customEnvVariables }, includeErrorAsResponse, stdOut, token);
-        }
-        if (execAsModule) {
-            return getFullyQualifiedPythonInterpreterPath()
-                .then(p => execPythonModule(p, args, { cwd: cwd, env: customEnvVariables }, includeErrorAsResponse, token));
-        }
-        return execFileInternal(file, args, { cwd, env: customEnvVariables }, includeErrorAsResponse, token);
-    });
+    InterpreterInfoCache.setCustomEnvVariables(resource, customEnvVariables);
+    return customEnvVariables;
+}
+export async function execPythonFile(resource: string | Uri | undefined, file: string, args: string[], cwd: string, includeErrorAsResponse: boolean = false, stdOut: (line: string) => void = null, token?: CancellationToken): Promise<string> {
+    const resourceUri = typeof resource === 'string' ? Uri.file(resource) : resource;
+    const env = await getEnvVariables(resourceUri);
+    const options = { cwd, env };
+
+    if (stdOut) {
+        return spawnFileInternal(file, args, options, includeErrorAsResponse, stdOut, token);
+    }
+
+    const fileIsPythonInterpreter = (file.toUpperCase() === 'PYTHON' || file === settings.PythonSettings.getInstance(resourceUri).pythonPath);
+    const execAsModule = fileIsPythonInterpreter && args.length > 0 && args[0] === '-m';
+
+    if (execAsModule) {
+        return getFullyQualifiedPythonInterpreterPath(resourceUri)
+            .then(p => execPythonModule(p, args, options, includeErrorAsResponse, token));
+    }
+    return execFileInternal(file, args, options, includeErrorAsResponse, token);
 }
 
 function handleResponse(file: string, includeErrorAsResponse: boolean, error: Error, stdout: string, stderr: string, token?: CancellationToken): Promise<string> {
@@ -179,7 +165,7 @@ function handleResponse(file: string, includeErrorAsResponse: boolean, error: Er
 
     // pylint:
     //      In the case of pylint we have some messages (such as config file not found and using default etc...) being returned in stderr
-    //      These error messages are useless when using pylint   
+    //      These error messages are useless when using pylint
     if (includeErrorAsResponse && (stdout.length > 0 || stderr.length > 0)) {
         return Promise.resolve(stdout + '\n' + stderr);
     }
@@ -203,7 +189,7 @@ function handlePythonModuleResponse(includeErrorAsResponse: boolean, error: Erro
 
     // pylint:
     //      In the case of pylint we have some messages (such as config file not found and using default etc...) being returned in stderr
-    //      These error messages are useless when using pylint   
+    //      These error messages are useless when using pylint
     if (includeErrorAsResponse && (stdout.length > 0 || stderr.length > 0)) {
         return Promise.resolve(stdout + '\n' + stderr);
     }
@@ -252,6 +238,8 @@ function execFileInternal(file: string, args: string[], options: child_process.E
 }
 function spawnFileInternal(file: string, args: string[], options: child_process.ExecFileOptions, includeErrorAsResponse: boolean, stdOut: (line: string) => void, token?: CancellationToken): Promise<string> {
     return new Promise<string>((resolve, reject) => {
+        options.env = options.env || {};
+        options.env['PYTHONIOENCODING'] = 'UTF-8';
         let proc = child_process.spawn(file, args, options);
         let error = '';
         let exited = false;
@@ -359,21 +347,41 @@ export function getSubDirectories(rootDir: string): Promise<string[]> {
     });
 }
 
-export function getCustomEnvVars(): any {
-    const envFile = settings.PythonSettings.getInstance().envFile;
-    if (typeof envFile === 'string' &&
-        envFile.length > 0 &&
-        fs.existsSync(envFile)) {
-
-        try {
-            let vars = parseEnvFile(envFile);
-            if (vars && typeof vars === 'object' && Object.keys(vars).length > 0) {
-                return vars;
-            }
+export async function getCustomEnvVars(resource?: Uri): Promise<{} | undefined | null> {
+    const envFile = settings.PythonSettings.getInstance(resource).envFile;
+    if (typeof envFile !== 'string' || envFile.length === 0) {
+        return null;
+    }
+    const exists = await fsExtra.pathExists(envFile);
+    if (!exists) {
+        return null;
+    }
+    try {
+        const vars = parseEnvFile(envFile);
+        if (vars && typeof vars === 'object' && Object.keys(vars).length > 0) {
+            return vars;
         }
-        catch (ex) {
-            console.error('Failed to load env file', ex);
+    } catch (ex) {
+        console.error('Failed to parse env file', ex);
+    }
+    return null;
+}
+export function getCustomEnvVarsSync(resource?: Uri): {} | undefined | null {
+    const envFile = settings.PythonSettings.getInstance(resource).envFile;
+    if (typeof envFile !== 'string' || envFile.length === 0) {
+        return null;
+    }
+    const exists = fsExtra.pathExistsSync(envFile);
+    if (!exists) {
+        return null;
+    }
+    try {
+        const vars = parseEnvFile(envFile);
+        if (vars && typeof vars === 'object' && Object.keys(vars).length > 0) {
+            return vars;
         }
+    } catch (ex) {
+        console.error('Failed to parse env file', ex);
     }
     return null;
 }
@@ -415,10 +423,12 @@ export function areBasePathsSame(path1: string, path2: string) {
     path2 = IS_WINDOWS ? path2.replace(/\//g, "\\") : path2;
     return path.dirname(path1).toUpperCase() === path.dirname(path2).toUpperCase();
 }
-export function getInterpreterDisplayName(pythonPath: string) {
-    return execPythonFile(pythonPath, ['--version'], __dirname, true)
-        .then(version => {
-            version = version.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0).join('');
-            return version;
+export async function getInterpreterDisplayName(pythonPath: string) {
+    return await new Promise<string>((resolve, reject) => {
+        child_process.execFile(pythonPath, ['--version'], (error, stdout, stdErr) => {
+            const out = (typeof stdErr === 'string' ? stdErr : '') + os.EOL + (typeof stdout === 'string' ? stdout : '');
+            const lines = out.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
+            resolve(lines.length > 0 ? lines[0] : '');
         });
+    });
 }

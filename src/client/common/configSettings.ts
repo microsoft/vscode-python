@@ -1,11 +1,14 @@
 'use strict';
 
-import * as vscode from 'vscode';
-import * as path from 'path';
 import * as child_process from 'child_process';
-import { Uri } from 'vscode';
-import { SystemVariables } from './systemVariables';
 import { EventEmitter } from 'events';
+import * as path from 'path';
+import * as vscode from 'vscode';
+import { Uri } from 'vscode';
+import { InterpreterInfoCache } from './interpreterInfoCache';
+import { SystemVariables } from './systemVariables';
+
+// tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');
 
 export const IS_WINDOWS = /^win/.test(process.platform);
@@ -56,6 +59,7 @@ export interface IPep8CategorySeverity {
     W: vscode.DiagnosticSeverity;
     E: vscode.DiagnosticSeverity;
 }
+// tslint:disable-next-line:interface-name
 export interface Flake8CategorySeverity {
     F: vscode.DiagnosticSeverity;
     E: vscode.DiagnosticSeverity;
@@ -125,18 +129,39 @@ export interface ITerminalSettings {
     executeInFileDir: boolean;
     launchArgs: string[];
 }
+// tslint:disable-next-line:interface-name
 export interface JupyterSettings {
     appendResults: boolean;
     defaultKernel: string;
     startupCode: string[];
 }
 
-const IS_TEST_EXECUTION = process.env['PYTHON_DONJAYAMANNE_TEST'] === '1';
+// tslint:disable-next-line:no-string-literal
+const IS_TEST_EXECUTION = process.env['VSC_PYTHON_CI_TEST'] === '1';
 
+// tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
-    private workspaceRoot?: vscode.Uri;
+
+    public jediPath: string;
+    public envFile: string;
+    public disablePromptForFeatures: string[];
+    public venvPath: string;
+    public devOptions: string[];
+    public linting: ILintingSettings;
+    public formatting: IFormattingSettings;
+    public autoComplete: IAutoCompeteSettings;
+    public unitTest: IUnitTestSettings;
+    public terminal: ITerminalSettings;
+    public jupyter: JupyterSettings;
+    public sortImports: ISortImportSettings;
+    public workspaceSymbols: IWorkspaceSymbolSettings;
+
+    private workspaceRoot: vscode.Uri;
     private disposables: vscode.Disposable[] = [];
+    // tslint:disable-next-line:variable-name
+    private _pythonPath: string;
+
     constructor(workspaceFolder?: Uri) {
         super();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : vscode.Uri.file(__dirname);
@@ -146,9 +171,10 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
 
         this.initializeSettings();
     }
+    // tslint:disable-next-line:function-name
     public static getInstance(resource?: Uri): PythonSettings {
         const workspaceFolder = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
-        let workspaceFolderUri: Uri = workspaceFolder ? workspaceFolder.uri : undefined;
+        let workspaceFolderUri: Uri | undefined = workspaceFolder ? workspaceFolder.uri : undefined;
         if (!workspaceFolderUri && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
             workspaceFolderUri = vscode.workspace.workspaceFolders[0].uri;
         }
@@ -157,44 +183,69 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             const settings = new PythonSettings(workspaceFolderUri);
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
         }
-        return PythonSettings.pythonSettings.get(workspaceFolderKey);
+        // tslint:disable-next-line:no-non-null-assertion
+        return PythonSettings.pythonSettings.get(workspaceFolderKey)!;
     }
+    // tslint:disable-next-line:function-name
+    public static dispose() {
+        if (!IS_TEST_EXECUTION) {
+            throw new Error('Dispose can only be called from unit tests');
+        }
+        // tslint:disable-next-line:no-void-expression
+        PythonSettings.pythonSettings.forEach(item => item.dispose());
+        PythonSettings.pythonSettings.clear();
+    }
+    public dispose() {
+        // tslint:disable-next-line:no-unsafe-any
+        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables = [];
+        InterpreterInfoCache.clear();
+    }
+
+    // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     private initializeSettings() {
-        const systemVariables: SystemVariables = new SystemVariables();
-        const workspaceRoot = (IS_TEST_EXECUTION || !this.workspaceRoot) ? __dirname : this.workspaceRoot.fsPath;
+        InterpreterInfoCache.clear();
+        const workspaceRoot = this.workspaceRoot.fsPath;
+        const systemVariables: SystemVariables = new SystemVariables(this.workspaceRoot ? this.workspaceRoot.fsPath : undefined);
         const pythonSettings = vscode.workspace.getConfiguration('python', this.workspaceRoot);
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
-        this.pythonPath = getAbsolutePath(this.pythonPath, IS_TEST_EXECUTION ? __dirname : workspaceRoot);
+        this.pythonPath = getAbsolutePath(this.pythonPath, workspaceRoot);
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
         if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
-            this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), IS_TEST_EXECUTION ? __dirname : workspaceRoot);
-        }
-        else {
+            this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), workspaceRoot);
+        } else {
             this.jediPath = '';
         }
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.envFile = systemVariables.resolveAny(pythonSettings.get<string>('envFile'))!;
+        // tslint:disable-next-line:no-any
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion no-any
         this.devOptions = systemVariables.resolveAny(pythonSettings.get<any[]>('devOptions'))!;
         this.devOptions = Array.isArray(this.devOptions) ? this.devOptions : [];
-        let lintingSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('linting'))!;
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        const lintingSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('linting'))!;
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.disablePromptForFeatures = pythonSettings.get<string[]>('disablePromptForFeatures')!;
         this.disablePromptForFeatures = Array.isArray(this.disablePromptForFeatures) ? this.disablePromptForFeatures : [];
         if (this.linting) {
             Object.assign<ILintingSettings, ILintingSettings>(this.linting, lintingSettings);
-        }
-        else {
+        } else {
             this.linting = lintingSettings;
         }
-        let sortImportSettings = systemVariables.resolveAny(pythonSettings.get<ISortImportSettings>('sortImports'))!;
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        const sortImportSettings = systemVariables.resolveAny(pythonSettings.get<ISortImportSettings>('sortImports'))!;
         if (this.sortImports) {
             Object.assign<ISortImportSettings, ISortImportSettings>(this.sortImports, sortImportSettings);
-        }
-        else {
+        } else {
             this.sortImports = sortImportSettings;
         }
-        // Support for travis
+        // Support for travis.
         this.sortImports = this.sortImports ? this.sortImports : { path: '', args: [] };
-        // Support for travis
+        // Support for travis.
         this.linting = this.linting ? this.linting : {
             enabled: false,
             enabledWithoutWorkspace: false,
@@ -236,14 +287,14 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.linting.pydocstylePath = getAbsolutePath(systemVariables.resolveAny(this.linting.pydocstylePath), workspaceRoot);
         this.linting.mypyPath = getAbsolutePath(systemVariables.resolveAny(this.linting.mypyPath), workspaceRoot);
 
-        let formattingSettings = systemVariables.resolveAny(pythonSettings.get<IFormattingSettings>('formatting'))!;
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        const formattingSettings = systemVariables.resolveAny(pythonSettings.get<IFormattingSettings>('formatting'))!;
         if (this.formatting) {
             Object.assign<IFormattingSettings, IFormattingSettings>(this.formatting, formattingSettings);
-        }
-        else {
+        } else {
             this.formatting = formattingSettings;
         }
-        // Support for travis
+        // Support for travis.
         this.formatting = this.formatting ? this.formatting : {
             autopep8Args: [], autopep8Path: 'autopep8',
             outputWindow: 'python',
@@ -254,45 +305,46 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.formatting.autopep8Path = getAbsolutePath(systemVariables.resolveAny(this.formatting.autopep8Path), workspaceRoot);
         this.formatting.yapfPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.yapfPath), workspaceRoot);
 
-        let autoCompleteSettings = systemVariables.resolveAny(pythonSettings.get<IAutoCompeteSettings>('autoComplete'))!;
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        const autoCompleteSettings = systemVariables.resolveAny(pythonSettings.get<IAutoCompeteSettings>('autoComplete'))!;
         if (this.autoComplete) {
             Object.assign<IAutoCompeteSettings, IAutoCompeteSettings>(this.autoComplete, autoCompleteSettings);
-        }
-        else {
+        } else {
             this.autoComplete = autoCompleteSettings;
         }
-        // Support for travis
+        // Support for travis.
         this.autoComplete = this.autoComplete ? this.autoComplete : {
             extraPaths: [],
             addBrackets: false,
             preloadModules: []
         };
 
-        let workspaceSymbolsSettings = systemVariables.resolveAny(pythonSettings.get<IWorkspaceSymbolSettings>('workspaceSymbols'))!;
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        const workspaceSymbolsSettings = systemVariables.resolveAny(pythonSettings.get<IWorkspaceSymbolSettings>('workspaceSymbols'))!;
         if (this.workspaceSymbols) {
             Object.assign<IWorkspaceSymbolSettings, IWorkspaceSymbolSettings>(this.workspaceSymbols, workspaceSymbolsSettings);
-        }
-        else {
+        } else {
             this.workspaceSymbols = workspaceSymbolsSettings;
         }
-        // Support for travis
+        // Support for travis.
         this.workspaceSymbols = this.workspaceSymbols ? this.workspaceSymbols : {
             ctagsPath: 'ctags',
             enabled: true,
             exclusionPatterns: [],
             rebuildOnFileSave: true,
             rebuildOnStart: true,
-            tagFilePath: path.join(workspaceRoot, "tags")
+            tagFilePath: path.join(workspaceRoot, 'tags')
         };
         this.workspaceSymbols.tagFilePath = getAbsolutePath(systemVariables.resolveAny(this.workspaceSymbols.tagFilePath), workspaceRoot);
 
-        let unitTestSettings = systemVariables.resolveAny(pythonSettings.get<IUnitTestSettings>('unitTest'))!;
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        const unitTestSettings = systemVariables.resolveAny(pythonSettings.get<IUnitTestSettings>('unitTest'))!;
         if (this.unitTest) {
             Object.assign<IUnitTestSettings, IUnitTestSettings>(this.unitTest, unitTestSettings);
-        }
-        else {
+        } else {
             this.unitTest = unitTestSettings;
             if (IS_TEST_EXECUTION && !this.unitTest) {
+                // tslint:disable-next-line:prefer-type-cast
                 this.unitTest = {
                     nosetestArgs: [], pyTestArgs: [], unittestArgs: [],
                     promptToConfigure: true, debugPort: 3000,
@@ -302,7 +354,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             }
         }
 
-        // Support for travis
+        // Support for travis.
         this.unitTest = this.unitTest ? this.unitTest : {
             promptToConfigure: true,
             debugPort: 3000,
@@ -317,18 +369,19 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             this.unitTest.cwd = getAbsolutePath(systemVariables.resolveAny(this.unitTest.cwd), workspaceRoot);
         }
 
-        // Resolve any variables found in the test arguments
+        // Resolve any variables found in the test arguments.
         this.unitTest.nosetestArgs = this.unitTest.nosetestArgs.map(arg => systemVariables.resolveAny(arg));
         this.unitTest.pyTestArgs = this.unitTest.pyTestArgs.map(arg => systemVariables.resolveAny(arg));
         this.unitTest.unittestArgs = this.unitTest.unittestArgs.map(arg => systemVariables.resolveAny(arg));
 
-        let terminalSettings = systemVariables.resolveAny(pythonSettings.get<ITerminalSettings>('terminal'))!;
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        const terminalSettings = systemVariables.resolveAny(pythonSettings.get<ITerminalSettings>('terminal'))!;
         if (this.terminal) {
             Object.assign<ITerminalSettings, ITerminalSettings>(this.terminal, terminalSettings);
-        }
-        else {
+        } else {
             this.terminal = terminalSettings;
             if (IS_TEST_EXECUTION && !this.terminal) {
+                // tslint:disable-next-line:prefer-type-cast
                 this.terminal = {} as ITerminalSettings;
             }
         }
@@ -338,16 +391,18 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             launchArgs: []
         };
 
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.jupyter = pythonSettings.get<JupyterSettings>('jupyter')!;
-        // Support for travis
+        // Support for travis.
         this.jupyter = this.jupyter ? this.jupyter : {
             appendResults: true, defaultKernel: '', startupCode: []
         };
 
-        this.emit('change');
+        // If workspace config changes, then we could have a cascading effect of on change events.
+        // Let's defer the change notification.
+        setTimeout(() => this.emit('change'), 1);
     }
 
-    private _pythonPath: string;
     public get pythonPath(): string {
         return this._pythonPath;
     }
@@ -355,32 +410,19 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         if (this._pythonPath === value) {
             return;
         }
-        // Add support for specifying just the directory where the python executable will be located
-        // E.g. virtual directory name
+        // Add support for specifying just the directory where the python executable will be located.
+        // E.g. virtual directory name.
         try {
             this._pythonPath = getPythonExecutable(value);
-        }
-        catch (ex) {
+        } catch (ex) {
             this._pythonPath = value;
         }
     }
-    public jediPath: string;
-    public envFile: string;
-    public disablePromptForFeatures: string[];
-    public venvPath: string;
-    public devOptions: string[];
-    public linting: ILintingSettings;
-    public formatting: IFormattingSettings;
-    public autoComplete: IAutoCompeteSettings;
-    public unitTest: IUnitTestSettings;
-    public terminal: ITerminalSettings;
-    public jupyter: JupyterSettings;
-    public sortImports: ISortImportSettings;
-    public workspaceSymbols: IWorkspaceSymbolSettings;
 }
 
 function getAbsolutePath(pathToCheck: string, rootDir: string): string {
-    pathToCheck = untildify(pathToCheck);
+    // tslint:disable-next-line:prefer-type-cast no-unsafe-any
+    pathToCheck = untildify(pathToCheck) as string;
     if (IS_TEST_EXECUTION && !pathToCheck) { return rootDir; }
     if (pathToCheck.indexOf(path.sep) === -1) {
         return pathToCheck;
@@ -389,9 +431,10 @@ function getAbsolutePath(pathToCheck: string, rootDir: string): string {
 }
 
 function getPythonExecutable(pythonPath: string): string {
-    pythonPath = untildify(pythonPath);
+    // tslint:disable-next-line:prefer-type-cast no-unsafe-any
+    pythonPath = untildify(pythonPath) as string;
 
-    // If only 'python'
+    // If only 'python'.
     if (pythonPath === 'python' ||
         pythonPath.indexOf(path.sep) === -1 ||
         path.basename(pythonPath) === path.dirname(pythonPath)) {
@@ -401,21 +444,21 @@ function getPythonExecutable(pythonPath: string): string {
     if (isValidPythonPath(pythonPath)) {
         return pythonPath;
     }
-    // Keep python right on top, for backwards compatibility
+    // Keep python right on top, for backwards compatibility.
+    // tslint:disable-next-line:variable-name
     const KnownPythonExecutables = ['python', 'python4', 'python3.6', 'python3.5', 'python3', 'python2.7', 'python2'];
 
     for (let executableName of KnownPythonExecutables) {
-        // Suffix with 'python' for linux and 'osx', and 'python.exe' for 'windows'
+        // Suffix with 'python' for linux and 'osx', and 'python.exe' for 'windows'.
         if (IS_WINDOWS) {
-            executableName = executableName + '.exe';
+            executableName = `${executableName}.exe`;
             if (isValidPythonPath(path.join(pythonPath, executableName))) {
                 return path.join(pythonPath, executableName);
             }
             if (isValidPythonPath(path.join(pythonPath, 'scripts', executableName))) {
                 return path.join(pythonPath, 'scripts', executableName);
             }
-        }
-        else {
+        } else {
             if (isValidPythonPath(path.join(pythonPath, executableName))) {
                 return path.join(pythonPath, executableName);
             }
@@ -430,10 +473,9 @@ function getPythonExecutable(pythonPath: string): string {
 
 function isValidPythonPath(pythonPath: string): boolean {
     try {
-        let output = child_process.execFileSync(pythonPath, ['-c', 'print(1234)'], { encoding: 'utf8' });
+        const output = child_process.execFileSync(pythonPath, ['-c', 'print(1234)'], { encoding: 'utf8' });
         return output.startsWith('1234');
-    }
-    catch (ex) {
+    } catch (ex) {
         return false;
     }
 }

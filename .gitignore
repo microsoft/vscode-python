@@ -2,9 +2,10 @@
 out
 node_modules
 *.pyc
-.vscode/.ropeproject/**
-src/test/.vscode/**
+**/.vscode/.ropeproject/**
 **/testFiles/**/.cache/**
 *.noseids
 .vscode-test
 __pycache__
+npm-debug.log
+**/.mypy_cache/**

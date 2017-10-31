@@ -1,7 +1,7 @@
 'use strict';
 import { IPythonSettings, PythonSettings } from '../common/configSettings';
 import { execPythonFile } from './../common/utils';
-import { OutputChannel } from 'vscode';
+import { OutputChannel, Uri } from 'vscode';
 import { Installer, Product } from '../common/installer';
 import * as vscode from 'vscode';
 import { ErrorHandler } from './errorHandlers/main';
@@ -131,7 +131,7 @@ export abstract class BaseLinter {
         this.outputChannel.append(data);
     }
     protected run(command: string, args: string[], document: vscode.TextDocument, cwd: string, cancellation: vscode.CancellationToken, regEx: string = REGEX): Promise<ILintMessage[]> {
-        return execPythonFile(command, args, cwd, true, null, cancellation).then(data => {
+        return execPythonFile(document.uri, command, args, cwd, true, null, cancellation).then(data => {
             if (!data) {
                 data = '';
             }
@@ -139,12 +139,12 @@ export abstract class BaseLinter {
             let outputLines = data.split(/\r?\n/g);
             return this.parseLines(outputLines, regEx);
         }).catch(error => {
-            this.handleError(this.Id, command, error);
+            this.handleError(this.Id, command, error, document.uri);
             return [];
         });
     }
 
-    protected handleError(expectedFileName: string, fileName: string, error: Error) {
-        this._errorHandler.handleError(expectedFileName, fileName, error);
+    protected handleError(expectedFileName: string, fileName: string, error: Error, resource: Uri) {
+        this._errorHandler.handleError(expectedFileName, fileName, error, resource);
     }
 }

@@ -2,13 +2,10 @@
 
 import * as vscode from 'vscode';
 import * as proxy from './jediProxy';
+import { JediFactory } from '../languageServices/jediProxyFactory';
 
 export class PythonSymbolProvider implements vscode.DocumentSymbolProvider {
-    private jediProxyHandler: proxy.JediProxyHandler<proxy.ISymbolResult>;
-
-    public constructor(context: vscode.ExtensionContext, jediProxy: proxy.JediProxy = null) {
-        this.jediProxyHandler = new proxy.JediProxyHandler(context, jediProxy);
-    }
+    public constructor(private jediFactory: JediFactory) { }
     private static parseData(document: vscode.TextDocument, data: proxy.ISymbolResult): vscode.SymbolInformation[] {
         if (data) {
             let symbols = data.definitions.filter(sym => sym.fileName === document.fileName);
@@ -38,7 +35,7 @@ export class PythonSymbolProvider implements vscode.DocumentSymbolProvider {
             cmd.source = document.getText();
         }
 
-        return this.jediProxyHandler.sendCommand(cmd, token).then(data => {
+        return this.jediFactory.getJediProxyHandler<proxy.ISymbolResult>(document.uri).sendCommand(cmd, token).then(data => {
             return PythonSymbolProvider.parseData(document, data);
         });
     }
@@ -56,7 +53,7 @@ export class PythonSymbolProvider implements vscode.DocumentSymbolProvider {
             cmd.source = document.getText();
         }
 
-        return this.jediProxyHandler.sendCommandNonCancellableCommand(cmd, token).then(data => {
+        return this.jediFactory.getJediProxyHandler<proxy.ISymbolResult>(document.uri).sendCommandNonCancellableCommand(cmd, token).then(data => {
             return PythonSymbolProvider.parseData(document, data);
         });
     }

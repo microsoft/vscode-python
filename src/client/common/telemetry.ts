@@ -1,4 +1,4 @@
-import { extensions } from "vscode";
+import { extensions, workspace } from "vscode";
 import TelemetryReporter from "vscode-extension-telemetry";
 
 // Borrowed from omnisharpServer.ts (omnisharp-vscode)
@@ -55,7 +55,7 @@ const extension = extensions.getExtension(extensionId);
 const extensionVersion = extension.packageJSON.version;
 const aiKey = "fce7a3d5-4665-4404-b786-31a6306749a6";
 let reporter: TelemetryReporter;
-
+let telemetryEnabled: boolean | undefined = undefined;
 /**
  * Sends a telemetry event
  * @param {string} eventName The event name
@@ -67,6 +67,12 @@ export function sendTelemetryEvent(eventName: string, properties?: {
 }, measures?: {
     [key: string]: number;
 }) {
+    if (telemetryEnabled === undefined) {
+        telemetryEnabled = workspace.getConfiguration('telemetry').get('enableTelemetry', true);
+    }
+    if (!telemetryEnabled) {
+        return;
+    }
     reporter = reporter ? reporter : new TelemetryReporter(extensionId, extensionVersion, aiKey);
     reporter.sendTelemetryEvent.apply(reporter, arguments);
 }

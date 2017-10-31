@@ -1,14 +1,12 @@
 import * as vscode from 'vscode';
 import { Tag } from './contracts';
 import * as path from 'path';
-import { PythonSettings } from '../common/configSettings';
 import { fsExistsAsync } from '../common/utils';
 
 const LineByLineReader = require("line-by-line");
 const NamedRegexp = require('named-js-regexp');
 const fuzzy = require('fuzzy');
 
-const pythonSettings = PythonSettings.getInstance();
 const IsFileRegEx = /\tkind:file\tline:\d+$/g;
 const LINE_REGEX = '(?<name>\\w+)\\t(?<file>.*)\\t\\/\\^(?<code>.*)\\$\\/;"\\tkind:(?<type>\\w+)\\tline:(?<line>\\d+)$';
 
@@ -102,15 +100,14 @@ Object.keys(newValuesAndKeys).forEach(key => {
     CTagKinMapping.set(key, newValuesAndKeys[key]);
 });
 
-export function parseTags(query: string, token: vscode.CancellationToken, maxItems: number = 200): Promise<Tag[]> {
-    const file = pythonSettings.workspaceSymbols.tagFilePath;
-    return fsExistsAsync(file).then(exists => {
+export function parseTags(workspaceFolder: string, tagFile: string, query: string, token: vscode.CancellationToken, maxItems: number = 200): Promise<Tag[]> {
+    return fsExistsAsync(tagFile).then(exists => {
         if (!exists) {
             return null;
         }
 
         return new Promise<Tag[]>((resolve, reject) => {
-            let lr = new LineByLineReader(file);
+            let lr = new LineByLineReader(tagFile);
             let lineNumber = 0;
             let tags: Tag[] = [];
 
@@ -124,7 +121,7 @@ export function parseTags(query: string, token: vscode.CancellationToken, maxIte
                     lr.close();
                     return;
                 }
-                const tag = parseTagsLine(line, query);
+                const tag = parseTagsLine(workspaceFolder, line, query);
                 if (tag) {
                     tags.push(tag);
                 }
@@ -139,7 +136,7 @@ export function parseTags(query: string, token: vscode.CancellationToken, maxIte
         });
     });
 }
-function parseTagsLine(line: string, searchPattern: string): Tag {
+function parseTagsLine(workspaceFolder: string, line: string, searchPattern: string): Tag {
     if (IsFileRegEx.test(line)) {
         return;
     }
@@ -152,7 +149,7 @@ function parseTagsLine(line: string, searchPattern: string): Tag {
     }
     let file = match.file;
     if (!path.isAbsolute(file)) {
-        file = path.resolve(vscode.workspace.rootPath, '.vscode', file);
+        file = path.resolve(workspaceFolder, '.vscode', file);
     }
 
     const symbolKind = CTagKinMapping.has(match.type) ? CTagKinMapping.get(match.type) : vscode.SymbolKind.Null;

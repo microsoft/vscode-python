@@ -7,7 +7,6 @@ import * as path from 'path';
 import { PythonSettings } from '../common/configSettings';
 import { Installer, Product } from '../common/installer';
 
-const pythonSettings = PythonSettings.getInstance();
 const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
 interface RenameResponse {
     results: [{ diff: string }];
@@ -41,14 +40,20 @@ export class PythonRenameProvider implements vscode.RenameProvider {
             return;
         }
 
-        let proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, vscode.workspace.rootPath);
+        let workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+        if (!workspaceFolder && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
+            workspaceFolder = vscode.workspace.workspaceFolders[0];
+        }
+        const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
+        const pythonSettings = PythonSettings.getInstance(workspaceFolder ? workspaceFolder.uri : undefined);
+
+        let proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, workspaceRoot);
         return proxy.rename<RenameResponse>(document, newName, document.uri.fsPath, range).then(response => {
-            //return response.results[0].diff;
-            const workspaceEdit = getWorkspaceEditsFromPatch(response.results.map(fileChanges => fileChanges.diff));
-            return workspaceEdit;
+            const fileDiffs = response.results.map(fileChanges => fileChanges.diff);
+            return getWorkspaceEditsFromPatch(fileDiffs, workspaceRoot);
         }).catch(reason => {
             if (reason === 'Not installed') {
-                this.installer.promptToInstall(Product.rope);
+                this.installer.promptToInstall(Product.rope, document.uri);
                 return Promise.reject('');
             }
             else {

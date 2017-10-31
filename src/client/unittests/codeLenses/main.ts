@@ -1,16 +1,17 @@
 import * as vscode from 'vscode';
 import * as constants from '../../common/constants';
-
-import { TestFileCodeLensProvider } from './testFiles';
 import { PythonSymbolProvider } from '../../providers/symbolProvider';
+import { ITestCollectionStorageService } from '../common/types';
+import { TestFileCodeLensProvider } from './testFiles';
 
-export function activateCodeLenses(onDidChange: vscode.EventEmitter<void>, symboldProvider: PythonSymbolProvider): vscode.Disposable {
+export function activateCodeLenses(onDidChange: vscode.EventEmitter<void>,
+    symboldProvider: PythonSymbolProvider, testCollectionStorage: ITestCollectionStorageService): vscode.Disposable {
+
     const disposables: vscode.Disposable[] = [];
-    disposables.push(vscode.languages.registerCodeLensProvider(constants.PythonLanguage, new TestFileCodeLensProvider(onDidChange, symboldProvider)));
+    const codeLensProvider = new TestFileCodeLensProvider(onDidChange, symboldProvider, testCollectionStorage);
+    disposables.push(vscode.languages.registerCodeLensProvider(constants.PythonLanguage, codeLensProvider));
 
     return {
-        dispose: function () {
-            disposables.forEach(d => d.dispose());
-        }
+        dispose: () => { disposables.forEach(d => d.dispose()); }
     };
 }

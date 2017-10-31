@@ -1,14 +1,26 @@
-import * as vscode from 'vscode';
-import { createDeferred } from '../../common/helpers';
-import { getSubDirectories } from '../../common/utils';
 import * as path from 'path';
+import * as vscode from 'vscode';
+import { Uri } from 'vscode';
+import { createDeferred } from '../../common/helpers';
+import { Installer } from '../../common/installer';
+import { getSubDirectories } from '../../common/utils';
+import { ITestConfigSettingsService, UnitTestProduct } from './types';
 
 export abstract class TestConfigurationManager {
-    public abstract enable(): Thenable<any>;
-    public abstract disable(): Thenable<any>;
-    constructor(protected readonly outputChannel: vscode.OutputChannel) { }
-    public abstract configure(rootDir: string): Promise<any>;
-
+    constructor(protected workspace: Uri,
+        protected product: UnitTestProduct,
+        protected readonly outputChannel: vscode.OutputChannel,
+        protected installer: Installer,
+        protected testConfigSettingsService: ITestConfigSettingsService) { }
+    // tslint:disable-next-line:no-any
+    public abstract configure(wkspace: Uri): Promise<any>;
+    public async enable() {
+        return this.testConfigSettingsService.enable(this.workspace, this.product);
+    }
+    // tslint:disable-next-line:no-any
+    public async disable() {
+        return this.testConfigSettingsService.enable(this.workspace, this.product);
+    }
     protected selectTestDir(rootDir: string, subDirs: string[], customOptions: vscode.QuickPickItem[] = []): Promise<string> {
         const options = {
             matchOnDescription: true,
@@ -22,7 +34,7 @@ export abstract class TestConfigurationManager {
             }
             return <vscode.QuickPickItem>{
                 label: dirName,
-                description: '',
+                description: ''
             };
         }).filter(item => item !== null);
 
@@ -46,12 +58,12 @@ export abstract class TestConfigurationManager {
             matchOnDetail: true,
             placeHolder: 'Select the pattern to identify test files'
         };
-        let items: vscode.QuickPickItem[] = [
-            { label: '*test.py', description: `Python Files ending with 'test'` },
-            { label: '*_test.py', description: `Python Files ending with '_test'` },
-            { label: 'test*.py', description: `Python Files begining with 'test'` },
-            { label: 'test_*.py', description: `Python Files begining with 'test_'` },
-            { label: '*test*.py', description: `Python Files containing the word 'test'` }
+        const items: vscode.QuickPickItem[] = [
+            { label: '*test.py', description: 'Python Files ending with \'test\'' },
+            { label: '*_test.py', description: 'Python Files ending with \'_test\'' },
+            { label: 'test*.py', description: 'Python Files begining with \'test\'' },
+            { label: 'test_*.py', description: 'Python Files begining with \'test_\'' },
+            { label: '*test*.py', description: 'Python Files containing the word \'test\'' }
         ];
 
         const def = createDeferred<string>();
@@ -65,16 +77,16 @@ export abstract class TestConfigurationManager {
 
         return def.promise;
     }
-    protected getTestDirs(rootDir): Promise<string[]> {
+    protected getTestDirs(rootDir: string): Promise<string[]> {
         return getSubDirectories(rootDir).then(subDirs => {
             subDirs.sort();
 
-            // Find out if there are any dirs with the name test and place them on the top
-            let possibleTestDirs = subDirs.filter(dir => dir.match(/test/i));
-            let nonTestDirs = subDirs.filter(dir => possibleTestDirs.indexOf(dir) === -1);
+            // Find out if there are any dirs with the name test and place them on the top.
+            const possibleTestDirs = subDirs.filter(dir => dir.match(/test/i));
+            const nonTestDirs = subDirs.filter(dir => possibleTestDirs.indexOf(dir) === -1);
             possibleTestDirs.push(...nonTestDirs);
 
-            // The test dirs are now on top
+            // The test dirs are now on top.
             return possibleTestDirs;
         });
     }

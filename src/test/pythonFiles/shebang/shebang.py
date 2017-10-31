@@ -1,3 +1,3 @@
-#!/usr/bin/test
+#!python
 
 print("dummy")

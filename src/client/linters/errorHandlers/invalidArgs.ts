@@ -1,6 +1,6 @@
 'use strict';
 import { isNotInstalledError } from '../../common/helpers';
-import * as vscode from 'vscode';
+import { Uri, window } from 'vscode';
 import { StandardErrorHandler } from './standard';
 
 export class InvalidArgumentsErrorHandler extends StandardErrorHandler {
@@ -13,14 +13,14 @@ export class InvalidArgumentsErrorHandler extends StandardErrorHandler {
 
     private displayInvalidArgsError() {
         // Ok if we have a space after the file name, this means we have some arguments defined and this isn't supported
-        vscode.window.showErrorMessage(`Unsupported configuration for '${this.id}'`, 'View Errors').then(item => {
+        window.showErrorMessage(`Unsupported configuration for '${this.id}'`, 'View Errors').then(item => {
             if (item === 'View Errors') {
                 this.outputChannel.show();
             }
         });
     }
 
-    public handleError(expectedFileName: string, fileName: string, error: Error): boolean {
+    public handleError(expectedFileName: string, fileName: string, error: Error, resource?: Uri): boolean {
         if (!isNotInstalledError(error)) {
             return false;
         }

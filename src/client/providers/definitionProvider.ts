@@ -2,17 +2,11 @@
 
 import * as vscode from 'vscode';
 import * as proxy from './jediProxy';
-import * as telemetryContracts from "../common/telemetryContracts";
+import * as telemetryContracts from '../common/telemetryContracts';
+import { JediFactory } from '../languageServices/jediProxyFactory';
 
 export class PythonDefinitionProvider implements vscode.DefinitionProvider {
-    private jediProxyHandler: proxy.JediProxyHandler<proxy.IDefinitionResult>;
-    public get JediProxy(): proxy.JediProxy {
-        return this.jediProxyHandler.JediProxy;
-    }
-
-    public constructor(context: vscode.ExtensionContext) {
-        this.jediProxyHandler = new proxy.JediProxyHandler(context);
-    }
+    public constructor(private jediFactory: JediFactory) { }
     private static parseData(data: proxy.IDefinitionResult, possibleWord: string): vscode.Definition {
         if (data && Array.isArray(data.definitions) && data.definitions.length > 0) {
             const definitions = data.definitions.filter(d => d.text === possibleWord);
@@ -46,7 +40,7 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
             cmd.source = document.getText();
         }
         let possibleWord = document.getText(range);
-        return this.jediProxyHandler.sendCommand(cmd, token).then(data => {
+        return this.jediFactory.getJediProxyHandler<proxy.IDefinitionResult>(document.uri).sendCommand(cmd, token).then(data => {
             return PythonDefinitionProvider.parseData(data, possibleWord);
         });
     }

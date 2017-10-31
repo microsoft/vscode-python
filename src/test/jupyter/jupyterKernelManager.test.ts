@@ -1,14 +1,20 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { MockOutputChannel } from './mocks';
-import { initialize } from './../initialize';
+import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 import { JupyterClientAdapter } from '../../client/jupyter/jupyter_client/main';
 import { KernelManagerImpl } from '../../client/jupyter/kernel-manager';
 
 suite('Kernel Manager', () => {
-    suiteSetup(() => initialize());
+    suiteSetup(async function () {
+        if (IS_MULTI_ROOT_TEST) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
+        await initialize();
+    });
     setup(() => {
-        process.env['PYTHON_DONJAYAMANNE_TEST'] = '0';
+        process.env['VSC_PYTHON_CI_TEST'] = '0';
         process.env['DEBUG_DJAYAMANNE_IPYTHON'] = '1';
         disposables = [];
         output = new MockOutputChannel('Jupyter');
@@ -17,9 +23,10 @@ suite('Kernel Manager', () => {
         disposables.push(jupyter);
         // Hack hack hack hack hack :)
         cmds.registerCommand = function () { };
+        return initializeTest();
     });
     teardown(() => {
-        process.env['PYTHON_DONJAYAMANNE_TEST'] = '1';
+        process.env['VSC_PYTHON_CI_TEST'] = '1';
         process.env['DEBUG_DJAYAMANNE_IPYTHON'] = '0';
         output.dispose();
         jupyter.dispose();
@@ -39,7 +46,7 @@ suite('Kernel Manager', () => {
     const oldRegisterCommand = vscode.commands.registerCommand;
 
     test('GetAllKernelSpecsFor python', done => {
-        process.env['PYTHON_DONJAYAMANNE_TEST'] = '0';
+        process.env['VSC_PYTHON_CI_TEST'] = '0';
         const mgr = new KernelManagerImpl(output, jupyter);
         disposables.push(mgr);
         mgr.getAllKernelSpecsFor('python').then(specMetadata => {

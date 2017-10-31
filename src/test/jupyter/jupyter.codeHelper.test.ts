@@ -1,16 +1,21 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { initialize, closeActiveWindows } from './../initialize';
+import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 import { CodeHelper } from '../../client/jupyter/common/codeHelper';
 import { JupyterCodeLensProvider } from '../../client/jupyter/editorIntegration/codeLensProvider';
 
 const FILE_WITH_CELLS = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'jupyter', 'cells.py');
 
 suite('Jupyter Code Helper', () => {
-    suiteSetup(() => initialize());
-
-    setup(() => closeActiveWindows());
+    suiteSetup(async function () {
+        if (IS_MULTI_ROOT_TEST) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
+        await initialize();
+    });
+    setup(() => initializeTest());
     teardown(() => closeActiveWindows());
     const codeLensProvider = new JupyterCodeLensProvider();
     const codeHelper = new CodeHelper(codeLensProvider);

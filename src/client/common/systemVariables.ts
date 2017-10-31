@@ -133,11 +133,10 @@ export abstract class AbstractSystemVariables implements ISystemVariables {
 export class SystemVariables extends AbstractSystemVariables {
     private _workspaceRoot: string;
     private _workspaceRootFolderName: string;
-    private _execPath: string;
 
-    constructor() {
+    constructor(workspaceRoot?: string) {
         super();
-        this._workspaceRoot = typeof vscode.workspace.rootPath === 'string' ? vscode.workspace.rootPath : __dirname;
+        this._workspaceRoot = typeof workspaceRoot === 'string' ? workspaceRoot : __dirname;
         this._workspaceRootFolderName = Path.basename(this._workspaceRoot);
         Object.keys(process.env).forEach(key => {
             this[`env:${key}`] = this[`env.${key}`] = process.env[key];

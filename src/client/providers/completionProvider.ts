@@ -7,17 +7,13 @@ import * as telemetryContracts from '../common/telemetryContracts';
 import { extractSignatureAndDocumentation } from './jediHelpers';
 import { EOL } from 'os';
 import { PythonSettings } from '../common/configSettings';
-import { SnippetString } from 'vscode';
-
-const pythonSettings = PythonSettings.getInstance();
+import { SnippetString, Uri } from 'vscode';
+import { JediFactory } from '../languageServices/jediProxyFactory';
 
 export class PythonCompletionItemProvider implements vscode.CompletionItemProvider {
-    private jediProxyHandler: proxy.JediProxyHandler<proxy.ICompletionResult>;
 
-    public constructor(context: vscode.ExtensionContext, jediProxy: proxy.JediProxy = null) {
-        this.jediProxyHandler = new proxy.JediProxyHandler(context, jediProxy);
-    }
-    private static parseData(data: proxy.ICompletionResult): vscode.CompletionItem[] {
+    public constructor(private jediFactory: JediFactory) { }
+    private static parseData(data: proxy.ICompletionResult, resource: Uri): vscode.CompletionItem[] {
         if (data && data.items.length > 0) {
             return data.items.map(item => {
                 const sigAndDocs = extractSignatureAndDocumentation(item);
@@ -25,7 +21,7 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
                 completionItem.kind = item.type;
                 completionItem.documentation = sigAndDocs[1].length === 0 ? item.description : sigAndDocs[1];
                 completionItem.detail = sigAndDocs[0].split(/\r?\n/).join('');
-                if (pythonSettings.autoComplete.addBrackets === true &&
+                if (PythonSettings.getInstance(resource).autoComplete.addBrackets === true &&
                     (item.kind === vscode.SymbolKind.Function || item.kind === vscode.SymbolKind.Method)) {
                     completionItem.insertText = new SnippetString(item.text).appendText("(").appendTabstop().appendText(")");
                 }
@@ -67,10 +63,10 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
         };
 
         const timer = new telemetryHelper.Delays();
-        return this.jediProxyHandler.sendCommand(cmd, token).then(data => {
+        return this.jediFactory.getJediProxyHandler<proxy.ICompletionResult>(document.uri).sendCommand(cmd, token).then(data => {
             timer.stop();
             telemetryHelper.sendTelemetryEvent(telemetryContracts.IDE.Completion, {}, timer.toMeasures());
-            const completions = PythonCompletionItemProvider.parseData(data);
+            const completions = PythonCompletionItemProvider.parseData(data, document.uri);
             return completions;
         });
     }

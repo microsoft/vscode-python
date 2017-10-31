@@ -1,25 +1,16 @@
 import * as assert from 'assert';
 import * as path from 'path';
-import * as settings from '../../client/common/configSettings';
-import { initialize } from '../initialize';
+import { initialize, initializeTest } from '../initialize';
 import { IS_WINDOWS } from '../../client/debugger/Common/Utils';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
 import { MockRegistry } from './mocks';
 import { Architecture, Hive } from '../../client/common/registry';
 
-const pythonSettings = settings.PythonSettings.getInstance();
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
-let originalPythonPath;
 
 suite('Interpreters from Windows Registry', () => {
-    suiteSetup(() => {
-        originalPythonPath = pythonSettings.pythonPath;
-        return initialize();
-    });
-    teardown(() => {
-        pythonSettings.pythonPath = originalPythonPath;
-    });
-
+    suiteSetup(() => initialize());
+    setup(() => initializeTest());
     if (IS_WINDOWS) {
         test('Must return an empty list (x86)', async () => {
             const registry = new MockRegistry([], []);

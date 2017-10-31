@@ -55,7 +55,7 @@ except ImportError:
     from queue import Empty, Queue  # Python 3
 
 DEBUG = os.environ.get('DEBUG_DJAYAMANNE_IPYTHON', '0') == '1'
-TEST = os.environ.get('PYTHON_DONJAYAMANNE_TEST', '0') == '1'
+TEST = os.environ.get('VSC_PYTHON_CI_TEST', '0') == '1'
 
 # The great "support IPython 2, 3, 4" strat begins
 if not TEST:

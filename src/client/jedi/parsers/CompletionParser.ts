@@ -1,12 +1,10 @@
-import { CompletionItem, SymbolKind, SnippetString } from 'vscode';
 import * as proxy from '../../providers/jediProxy';
 import { extractSignatureAndDocumentation } from '../../providers/jediHelpers';
 import { PythonSettings } from '../../common/configSettings';
-
-const pythonSettings = PythonSettings.getInstance();
+import { CompletionItem, SymbolKind, SnippetString, Uri } from 'vscode';
 
 export class CompletionParser {
-    public static parse(data: proxy.ICompletionResult): CompletionItem[] {
+    public static parse(data: proxy.ICompletionResult, resource: Uri): CompletionItem[] {
         if (!data || data.items.length === 0) {
             return [];
         }
@@ -16,7 +14,7 @@ export class CompletionParser {
             completionItem.kind = item.type;
             completionItem.documentation = sigAndDocs[1].length === 0 ? item.description : sigAndDocs[1];
             completionItem.detail = sigAndDocs[0].split(/\r?\n/).join('');
-            if (pythonSettings.autoComplete.addBrackets === true &&
+            if (PythonSettings.getInstance(resource).autoComplete.addBrackets === true &&
                 (item.kind === SymbolKind.Function || item.kind === SymbolKind.Method)) {
                 completionItem.insertText = new SnippetString(item.text).appendText("(").appendTabstop().appendText(")");
             }

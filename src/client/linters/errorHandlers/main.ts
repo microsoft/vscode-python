@@ -1,11 +1,12 @@
 'use strict';
-import { OutputChannel } from 'vscode';
+import { OutputChannel, Uri } from 'vscode';
 import { Installer, Product } from '../../common/installer';
 import { InvalidArgumentsErrorHandler } from './invalidArgs';
-import { StandardErrorHandler } from './standard';
 import { NotInstalledErrorHandler } from './notInstalled';
+import { StandardErrorHandler } from './standard';
 
 export class ErrorHandler {
+    // tslint:disable-next-line:variable-name
     private _errorHandlers: StandardErrorHandler[] = [];
     constructor(protected id: string, protected product: Product, protected installer: Installer, protected outputChannel: OutputChannel) {
         this._errorHandlers = [
@@ -15,7 +16,7 @@ export class ErrorHandler {
         ];
     }
 
-    public handleError(expectedFileName: string, fileName: string, error: Error) {
-        this._errorHandlers.some(handler => handler.handleError(expectedFileName, fileName, error));
+    public handleError(expectedFileName: string, fileName: string, error: Error, resource: Uri) {
+        this._errorHandlers.some(handler => handler.handleError(expectedFileName, fileName, error, resource));
     }
 }

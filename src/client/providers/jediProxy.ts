@@ -5,15 +5,14 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as settings from './../common/configSettings';
 import * as logger from './../common/logger';
-import * as telemetryHelper from "../common/telemetry";
-import { execPythonFile, validatePath } from "../common/utils";
+import * as telemetryHelper from '../common/telemetry';
+import { execPythonFile, getCustomEnvVarsSync, validatePath } from '../common/utils';
 import { createDeferred, Deferred } from '../common/helpers';
 import { getCustomEnvVars } from '../common/utils';
 import { mergeEnvVariables } from '../common/envFileParser';
+import { IPythonSettings, PythonSettings } from '../common/configSettings';
 
 const IS_WINDOWS = /^win/.test(process.platform);
-var proc: child_process.ChildProcess;
-var pythonSettings = settings.PythonSettings.getInstance();
 
 const pythonVSCodeTypeMappings = new Map<string, vscode.CompletionItemKind>();
 pythonVSCodeTypeMappings.set('none', vscode.CompletionItemKind.Value);
@@ -122,202 +121,250 @@ commandNames.set(CommandType.Hover, "tooltip");
 commandNames.set(CommandType.Usages, "usages");
 commandNames.set(CommandType.Symbols, "names");
 
-export class JediProxy extends vscode.Disposable {
-    public constructor(context: vscode.ExtensionContext) {
-        super(killProcess);
+export class JediProxy implements vscode.Disposable {
+    private proc: child_process.ChildProcess;
+    private pythonSettings: PythonSettings;
 
-        context.subscriptions.push(this);
-        initialize(context.asAbsolutePath("."));
+    public constructor(private extensionRootDir: string, private workspacePath: string) {
+        this.pythonSettings = PythonSettings.getInstance(vscode.Uri.file(workspacePath));
+        this.lastKnownPythonInterpreter = this.pythonSettings.pythonPath
+        this.pythonSettings.on('change', this.onPythonSettingsChanged.bind(this));
+        vscode.workspace.onDidChangeConfiguration(this.onConfigChanged.bind(this));
+        this.onConfigChanged();
+        this.initialize(extensionRootDir);
     }
-
+    public dispose() {
+        this.killProcess();
+    }
     private cmdId: number = 0;
 
     public getNextCommandId(): number {
         return this.cmdId++;
     }
-    public sendCommand<T extends ICommandResult>(cmd: ICommand<T>): Promise<T> {
-        return sendCommand(cmd);
+
+    // keep track of the directory so we can re-spawn the process
+    private pythonProcessCWD = "";
+    private initialize(dir: string) {
+        this.pythonProcessCWD = dir;
+        this.spawnProcess(path.join(dir, "pythonFiles"));
     }
-}
 
-// keep track of the directory so we can re-spawn the process
-let pythonProcessCWD = "";
-function initialize(dir: string) {
-    pythonProcessCWD = dir;
-    spawnProcess(path.join(dir, "pythonFiles"));
-}
-
-// Check if settings changes
-let lastKnownPythonInterpreter = pythonSettings.pythonPath;
-pythonSettings.on('change', onPythonSettingsChanged);
-
-function onPythonSettingsChanged() {
-    if (lastKnownPythonInterpreter === pythonSettings.pythonPath) {
-        return;
-    }
-    killProcess();
-    clearPendingRequests();
-    initialize(pythonProcessCWD);
-}
-
-function clearPendingRequests() {
-    commandQueue = [];
-    commands.forEach(item => {
-        item.deferred.resolve();
-    });
-    commands.clear();
-}
-var previousData = "";
-var commands = new Map<number, IExecutionCommand<ICommandResult>>();
-var commandQueue: number[] = [];
-
-function killProcess() {
-    try {
-        if (proc) {
-            proc.kill();
-        }
-    }
-    catch (ex) { }
-    proc = null;
-}
-
-function handleError(source: string, errorMessage: string) {
-    logger.error(source + ' jediProxy', `Error (${source}) ${errorMessage}`);
-}
-
-let spawnRetryAttempts = 0;
-function spawnProcess(dir: string) {
-    try {
-        let environmentVariables = { 'PYTHONUNBUFFERED': '1' };
-        let customEnvironmentVars = getCustomEnvVars();
-        if (customEnvironmentVars) {
-            environmentVariables = mergeEnvVariables(environmentVariables, customEnvironmentVars);
-        }
-        environmentVariables = mergeEnvVariables(environmentVariables);
-
-        logger.log('child_process.spawn in jediProxy', 'Value of pythonSettings.pythonPath is :' + pythonSettings.pythonPath);
-        const args = ["completion.py"];
-        if (typeof pythonSettings.jediPath !== 'string' || pythonSettings.jediPath.length === 0) {
-            if (Array.isArray(pythonSettings.devOptions) &&
-                pythonSettings.devOptions.some(item => item.toUpperCase().trim() === 'USERELEASEAUTOCOMP')) {
-                // Use standard version of jedi library
-                args.push('std');
-            }
-            else {
-                // Use preview version of jedi library
-                args.push('preview');
-            }
-        }
-        else {
-            args.push('custom');
-            args.push(pythonSettings.jediPath);
-        }
-        if (Array.isArray(pythonSettings.autoComplete.preloadModules) &&
-            pythonSettings.autoComplete.preloadModules.length > 0) {
-            var modules = pythonSettings.autoComplete.preloadModules.filter(m => m.trim().length > 0).join(',');
-            args.push(modules);
-        }
-        proc = child_process.spawn(pythonSettings.pythonPath, args, {
-            cwd: dir,
-            env: environmentVariables
-        });
-    }
-    catch (ex) {
-        return handleError("spawnProcess", ex.message);
-    }
-    proc.stderr.setEncoding('utf8');
-    proc.stderr.on("data", (data: string) => {
-        handleError("stderr", data);
-    });
-    proc.on("end", (end) => {
-        logger.error('spawnProcess.end', "End - " + end);
-    });
-    proc.on("error", error => {
-        handleError("error", error + '');
-        spawnRetryAttempts++;
-        if (spawnRetryAttempts < 10 && error && error.message &&
-            error.message.indexOf('This socket has been ended by the other party') >= 0) {
-            spawnProcess(dir);
-        }
-    });
-    proc.stdout.setEncoding('utf8');
-    proc.stdout.on("data", (data: string) => {
-        //Possible there was an exception in parsing the data returned
-        //So append the data then parse it
-        var dataStr = previousData = previousData + data + "";
-        var responses: any[];
-        try {
-            responses = dataStr.split(/\r?\n/g).filter(line => line.length > 0).map(resp => JSON.parse(resp));
-            previousData = "";
-        }
-        catch (ex) {
-            // Possible we've only received part of the data, hence don't clear previousData
-            // Don't log errors when we haven't received the entire response
-            if (ex.message.indexOf('Unexpected end of input') === -1 &&
-                ex.message.indexOf('Unexpected end of JSON input') === -1 &&
-                ex.message.indexOf('Unexpected token') === -1) {
-                handleError("stdout", ex.message);
-            }
+    // Check if settings changes
+    private lastKnownPythonInterpreter: string;
+    private onPythonSettingsChanged() {
+        if (this.lastKnownPythonInterpreter === this.pythonSettings.pythonPath) {
             return;
         }
+        this.killProcess();
+        this.clearPendingRequests();
+        this.initialize(this.pythonProcessCWD);
+    }
 
-        responses.forEach((response) => {
-            // What's this, can't remember,
-            // Great example of poorly written code (this whole file is a mess)
-            // I think this needs to be removed, because this is misspelt, it is argments, 'U' is missing
-            // And that case is handled further down
-            // case CommandType.Arguments: {
-            // Rewrite this mess to use stratergy..
-            if (response["argments"]) {
-                var index = commandQueue.indexOf(cmd.id);
-                commandQueue.splice(index, 1);
+    private clearPendingRequests() {
+        this.commandQueue = [];
+        this.commands.forEach(item => {
+            item.deferred.resolve();
+        });
+        this.commands.clear();
+    }
+    private previousData = "";
+    private commands = new Map<number, IExecutionCommand<ICommandResult>>();
+    private commandQueue: number[] = [];
+
+    private killProcess() {
+        try {
+            if (this.proc) {
+                this.proc.kill();
+            }
+        }
+        catch (ex) { }
+        this.proc = null;
+    }
+
+    private handleError(source: string, errorMessage: string) {
+        logger.error(source + ' jediProxy', `Error (${source}) ${errorMessage}`);
+    }
+
+    private spawnRetryAttempts = 0;
+    private spawnProcess(dir: string) {
+        try {
+            let environmentVariables = { 'PYTHONUNBUFFERED': '1' };
+            let customEnvironmentVars = getCustomEnvVarsSync(vscode.Uri.file(dir));
+            if (customEnvironmentVars) {
+                environmentVariables = mergeEnvVariables(environmentVariables, customEnvironmentVars);
+            }
+            environmentVariables = mergeEnvVariables(environmentVariables);
+
+            logger.log('child_process.spawn in jediProxy', 'Value of pythonSettings.pythonPath is :' + this.pythonSettings.pythonPath);
+            const args = ["completion.py"];
+            if (typeof this.pythonSettings.jediPath !== 'string' || this.pythonSettings.jediPath.length === 0) {
+                if (Array.isArray(this.pythonSettings.devOptions) &&
+                    this.pythonSettings.devOptions.some(item => item.toUpperCase().trim() === 'USERELEASEAUTOCOMP')) {
+                    // Use standard version of jedi library
+                    args.push('std');
+                }
+                else {
+                    // Use preview version of jedi library
+                    args.push('preview');
+                }
+            }
+            else {
+                args.push('custom');
+                args.push(this.pythonSettings.jediPath);
+            }
+            if (Array.isArray(this.pythonSettings.autoComplete.preloadModules) &&
+                this.pythonSettings.autoComplete.preloadModules.length > 0) {
+                var modules = this.pythonSettings.autoComplete.preloadModules.filter(m => m.trim().length > 0).join(',');
+                args.push(modules);
+            }
+            this.proc = child_process.spawn(this.pythonSettings.pythonPath, args, {
+                cwd: dir,
+                env: environmentVariables
+            });
+        }
+        catch (ex) {
+            return this.handleError("spawnProcess", ex.message);
+        }
+        this.proc.stderr.setEncoding('utf8');
+        this.proc.stderr.on("data", (data: string) => {
+            this.handleError("stderr", data);
+        });
+        this.proc.on("end", (end) => {
+            logger.error('spawnProcess.end', "End - " + end);
+        });
+        this.proc.on("error", error => {
+            this.handleError("error", error + '');
+            this.spawnRetryAttempts++;
+            if (this.spawnRetryAttempts < 10 && error && error.message &&
+                error.message.indexOf('This socket has been ended by the other party') >= 0) {
+                this.spawnProcess(dir);
+            }
+        });
+        this.proc.stdout.setEncoding('utf8');
+        this.proc.stdout.on("data", (data: string) => {
+            //Possible there was an exception in parsing the data returned
+            //So append the data then parse it
+            var dataStr = this.previousData = this.previousData + data + "";
+            var responses: any[];
+            try {
+                responses = dataStr.split(/\r?\n/g).filter(line => line.length > 0).map(resp => JSON.parse(resp));
+                this.previousData = "";
+            }
+            catch (ex) {
+                // Possible we've only received part of the data, hence don't clear previousData
+                // Don't log errors when we haven't received the entire response
+                if (ex.message.indexOf('Unexpected end of input') === -1 &&
+                    ex.message.indexOf('Unexpected end of JSON input') === -1 &&
+                    ex.message.indexOf('Unexpected token') === -1) {
+                    this.handleError("stdout", ex.message);
+                }
                 return;
             }
-            var responseId = <number>response["id"];
 
-            var cmd = <IExecutionCommand<ICommandResult>>commands.get(responseId);
-            if (typeof cmd === "object" && cmd !== null) {
-                commands.delete(responseId);
-                var index = commandQueue.indexOf(cmd.id);
-                commandQueue.splice(index, 1);
-
-                if (cmd.delays && typeof cmd.telemetryEvent === 'string') {
-                    // cmd.delays.stop();
-                    // telemetryHelper.sendTelemetryEvent(cmd.telemetryEvent, null, cmd.delays.toMeasures());
-                }
-
-                // Check if this command has expired
-                if (cmd.token.isCancellationRequested) {
-                    cmd.deferred.resolve();
+            responses.forEach((response) => {
+                // What's this, can't remember,
+                // Great example of poorly written code (this whole file is a mess)
+                // I think this needs to be removed, because this is misspelt, it is argments, 'U' is missing
+                // And that case is handled further down
+                // case CommandType.Arguments: {
+                // Rewrite this mess to use stratergy..
+                if (response["argments"]) {
+                    var index = this.commandQueue.indexOf(cmd.id);
+                    this.commandQueue.splice(index, 1);
                     return;
                 }
+                var responseId = <number>response["id"];
 
-                switch (cmd.command) {
-                    case CommandType.Completions: {
-                        let results = <IAutoCompleteItem[]>response['results'];
-                        results = Array.isArray(results) ? results : [];
-                        results.forEach(item => {
-                            const originalType = <string><any>item.type;
-                            item.type = getMappedVSCodeType(originalType);
-                            item.kind = getMappedVSCodeSymbol(originalType);
-                            item.rawType = getMappedVSCodeType(originalType);
-                        });
+                var cmd = <IExecutionCommand<ICommandResult>>this.commands.get(responseId);
+                if (typeof cmd === "object" && cmd !== null) {
+                    this.commands.delete(responseId);
+                    var index = this.commandQueue.indexOf(cmd.id);
+                    this.commandQueue.splice(index, 1);
 
-                        let completionResult: ICompletionResult = {
-                            items: results,
-                            requestId: cmd.id
-                        };
-                        cmd.deferred.resolve(completionResult);
-                        break;
+                    if (cmd.delays && typeof cmd.telemetryEvent === 'string') {
+                        // cmd.delays.stop();
+                        // telemetryHelper.sendTelemetryEvent(cmd.telemetryEvent, null, cmd.delays.toMeasures());
                     }
-                    case CommandType.Definitions: {
-                        let defs = <any[]>response['results'];
-                        let defResult: IDefinitionResult = {
-                            requestId: cmd.id,
-                            definitions: []
-                        };
-                        if (defs.length > 0) {
-                            defResult.definitions = defs.map(def => {
+
+                    // Check if this command has expired
+                    if (cmd.token.isCancellationRequested) {
+                        cmd.deferred.resolve();
+                        return;
+                    }
+
+                    switch (cmd.command) {
+                        case CommandType.Completions: {
+                            let results = <IAutoCompleteItem[]>response['results'];
+                            results = Array.isArray(results) ? results : [];
+                            results.forEach(item => {
+                                const originalType = <string><any>item.type;
+                                item.type = getMappedVSCodeType(originalType);
+                                item.kind = getMappedVSCodeSymbol(originalType);
+                                item.rawType = getMappedVSCodeType(originalType);
+                            });
+
+                            let completionResult: ICompletionResult = {
+                                items: results,
+                                requestId: cmd.id
+                            };
+                            cmd.deferred.resolve(completionResult);
+                            break;
+                        }
+                        case CommandType.Definitions: {
+                            let defs = <any[]>response['results'];
+                            let defResult: IDefinitionResult = {
+                                requestId: cmd.id,
+                                definitions: []
+                            };
+                            if (defs.length > 0) {
+                                defResult.definitions = defs.map(def => {
+                                    const originalType = def.type as string;
+                                    return {
+                                        fileName: def.fileName,
+                                        text: def.text,
+                                        rawType: originalType,
+                                        type: getMappedVSCodeType(originalType),
+                                        kind: getMappedVSCodeSymbol(originalType),
+                                        container: def.container,
+                                        range: {
+                                            startLine: def.range.start_line,
+                                            startColumn: def.range.start_column,
+                                            endLine: def.range.end_line,
+                                            endColumn: def.range.end_column
+                                        }
+                                    };
+                                });
+                            }
+
+                            cmd.deferred.resolve(defResult);
+                            break;
+                        }
+                        case CommandType.Hover: {
+                            let defs = <any[]>response['results'];
+                            var defResult: IHoverResult = {
+                                requestId: cmd.id,
+                                items: defs.map(def => {
+                                    return {
+                                        kind: getMappedVSCodeSymbol(def.type),
+                                        description: def.description,
+                                        signature: def.signature,
+                                        docstring: def.docstring,
+                                        text: def.text
+                                    };
+                                })
+                            };
+
+                            cmd.deferred.resolve(defResult);
+                            break;
+                        }
+                        case CommandType.Symbols: {
+                            let defs = <any[]>response['results'];
+                            defs = Array.isArray(defs) ? defs : [];
+                            var defResults: ISymbolResult = {
+                                requestId: cmd.id,
+                                definitions: []
+                            };
+                            defResults.definitions = defs.map<IDefinition>(def => {
                                 const originalType = def.type as string;
                                 return {
                                     fileName: def.fileName,
@@ -334,250 +381,201 @@ function spawnProcess(dir: string) {
                                     }
                                 };
                             });
+
+                            cmd.deferred.resolve(defResults);
+                            break;
                         }
-
-                        cmd.deferred.resolve(defResult);
-                        break;
-                    }
-                    case CommandType.Hover: {
-                        let defs = <any[]>response['results'];
-                        var defResult: IHoverResult = {
-                            requestId: cmd.id,
-                            items: defs.map(def => {
-                                return {
-                                    kind: getMappedVSCodeSymbol(def.type),
-                                    description: def.description,
-                                    signature: def.signature,
-                                    docstring: def.docstring,
-                                    text: def.text
-                                };
-                            })
-                        };
-
-                        cmd.deferred.resolve(defResult);
-                        break;
-                    }
-                    case CommandType.Symbols: {
-                        let defs = <any[]>response['results'];
-                        defs = Array.isArray(defs) ? defs : [];
-                        var defResults: ISymbolResult = {
-                            requestId: cmd.id,
-                            definitions: []
-                        };
-                        defResults.definitions = defs.map<IDefinition>(def => {
-                            const originalType = def.type as string;
-                            return {
-                                fileName: def.fileName,
-                                text: def.text,
-                                rawType: originalType,
-                                type: getMappedVSCodeType(originalType),
-                                kind: getMappedVSCodeSymbol(originalType),
-                                container: def.container,
-                                range: {
-                                    startLine: def.range.start_line,
-                                    startColumn: def.range.start_column,
-                                    endLine: def.range.end_line,
-                                    endColumn: def.range.end_column
+                        case CommandType.Usages: {
+                            let defs = <any[]>response['results'];
+                            defs = Array.isArray(defs) ? defs : [];
+                            var refResult: IReferenceResult = {
+                                requestId: cmd.id,
+                                references: defs.map(item => {
+                                    return {
+                                        columnIndex: item.column,
+                                        fileName: item.fileName,
+                                        lineIndex: item.line - 1,
+                                        moduleName: item.moduleName,
+                                        name: item.name
+                                    };
                                 }
+                                )
                             };
-                        });
 
-                        cmd.deferred.resolve(defResults);
-                        break;
-                    }
-                    case CommandType.Usages: {
-                        let defs = <any[]>response['results'];
-                        defs = Array.isArray(defs) ? defs : [];
-                        var refResult: IReferenceResult = {
-                            requestId: cmd.id,
-                            references: defs.map(item => {
-                                return {
-                                    columnIndex: item.column,
-                                    fileName: item.fileName,
-                                    lineIndex: item.line - 1,
-                                    moduleName: item.moduleName,
-                                    name: item.name
-                                };
-                            }
-                            )
-                        };
-
-                        cmd.deferred.resolve(refResult);
-                        break;
-                    }
-                    case CommandType.Arguments: {
-                        let defs = <any[]>response["results"];
-                        cmd.deferred.resolve(<IArgumentsResult>{
-                            requestId: cmd.id,
-                            definitions: defs
-                        });
-                        break;
+                            cmd.deferred.resolve(refResult);
+                            break;
+                        }
+                        case CommandType.Arguments: {
+                            let defs = <any[]>response["results"];
+                            cmd.deferred.resolve(<IArgumentsResult>{
+                                requestId: cmd.id,
+                                definitions: defs
+                            });
+                            break;
+                        }
                     }
                 }
-            }
 
-            //Ok, check if too many pending requets
-            if (commandQueue.length > 10) {
-                var items = commandQueue.splice(0, commandQueue.length - 10);
-                items.forEach(id => {
-                    if (commands.has(id)) {
-                        const cmd = commands.get(id);
-                        try {
-                            cmd.deferred.resolve(null);
+                //Ok, check if too many pending requets
+                if (this.commandQueue.length > 10) {
+                    var items = this.commandQueue.splice(0, this.commandQueue.length - 10);
+                    items.forEach(id => {
+                        if (this.commands.has(id)) {
+                            const cmd = this.commands.get(id);
+                            try {
+                                cmd.deferred.resolve(null);
+                            }
+                            catch (ex) {
+                            }
+                            this.commands.delete(id);
                         }
-                        catch (ex) {
-                        }
-                        commands.delete(id);
-                    }
-                });
-            }
+                    });
+                }
+            });
         });
-    });
-}
-
-function sendCommand<T extends ICommandResult>(cmd: ICommand<T>): Promise<T> {
-    if (!proc) {
-        return Promise.reject(new Error("Python proc not initialized"));
     }
-    var executionCmd = <IExecutionCommand<T>>cmd;
-    var payload = createPayload(executionCmd);
-    executionCmd.deferred = createDeferred<T>();
-    // if (typeof executionCmd.telemetryEvent === 'string') {
-    //     executionCmd.delays = new telemetryHelper.Delays();
-    // }
-    try {
-        proc.stdin.write(JSON.stringify(payload) + "\n");
-        commands.set(executionCmd.id, executionCmd);
-        commandQueue.push(executionCmd.id);
-    }
-    catch (ex) {
-        console.error(ex);
-        //If 'This socket is closed.' that means process didn't start at all (at least not properly)
-        if (ex.message === "This socket is closed.") {
 
-            killProcess();
+    public sendCommand<T extends ICommandResult>(cmd: ICommand<T>): Promise<T> {
+        if (!this.proc) {
+            return Promise.reject(new Error("Python proc not initialized"));
         }
-        else {
-            handleError("sendCommand", ex.message);
+        var executionCmd = <IExecutionCommand<T>>cmd;
+        var payload = this.createPayload(executionCmd);
+        executionCmd.deferred = createDeferred<T>();
+        // if (typeof executionCmd.telemetryEvent === 'string') {
+        //     executionCmd.delays = new telemetryHelper.Delays();
+        // }
+        try {
+            this.proc.stdin.write(JSON.stringify(payload) + "\n");
+            this.commands.set(executionCmd.id, executionCmd);
+            this.commandQueue.push(executionCmd.id);
         }
-        return Promise.reject(ex);
-    }
-    return executionCmd.deferred.promise;
-}
+        catch (ex) {
+            console.error(ex);
+            //If 'This socket is closed.' that means process didn't start at all (at least not properly)
+            if (ex.message === "This socket is closed.") {
 
-function createPayload<T extends ICommandResult>(cmd: IExecutionCommand<T>): any {
-    var payload = {
-        id: cmd.id,
-        prefix: "",
-        lookup: commandNames.get(cmd.command),
-        path: cmd.fileName,
-        source: cmd.source,
-        line: cmd.lineIndex,
-        column: cmd.columnIndex,
-        config: getConfig()
-    };
-
-    if (cmd.command === CommandType.Symbols) {
-        delete payload.column;
-        delete payload.line;
+                this.killProcess();
+            }
+            else {
+                this.handleError("sendCommand", ex.message);
+            }
+            return Promise.reject(ex);
+        }
+        return executionCmd.deferred.promise;
     }
 
-    return payload;
-}
+    private createPayload<T extends ICommandResult>(cmd: IExecutionCommand<T>): any {
+        var payload = {
+            id: cmd.id,
+            prefix: "",
+            lookup: commandNames.get(cmd.command),
+            path: cmd.fileName,
+            source: cmd.source,
+            line: cmd.lineIndex,
+            column: cmd.columnIndex,
+            config: this.getConfig()
+        };
 
-let lastKnownPythonPath: string = null;
-let additionalAutoCopletePaths: string[] = [];
-function getPathFromPythonCommand(args: string[]): Promise<string> {
-    return execPythonFile(pythonSettings.pythonPath, args, vscode.workspace.rootPath).then(stdout => {
-        if (stdout.length === 0) {
+        if (cmd.command === CommandType.Symbols) {
+            delete payload.column;
+            delete payload.line;
+        }
+
+        return payload;
+    }
+
+    private lastKnownPythonPath: string = null;
+    private additionalAutoCopletePaths: string[] = [];
+    private getPathFromPythonCommand(args: string[]): Promise<string> {
+        return execPythonFile(this.workspacePath, this.pythonSettings.pythonPath, args, this.workspacePath).then(stdout => {
+            if (stdout.length === 0) {
+                return "";
+            }
+            let lines = stdout.split(/\r?\n/g).filter(line => line.length > 0);
+            return validatePath(lines[0]);
+        }).catch(() => {
             return "";
+        });
+    }
+    private onConfigChanged() {
+        // We're only interested in changes to the python path
+        if (this.lastKnownPythonPath === this.pythonSettings.pythonPath) {
+            return;
         }
-        let lines = stdout.split(/\r?\n/g).filter(line => line.length > 0);
-        return validatePath(lines[0]);
-    }).catch(() => {
-        return "";
-    });
+
+        this.lastKnownPythonPath = this.pythonSettings.pythonPath;
+        let filePaths = [
+            // Sysprefix
+            this.getPathFromPythonCommand(["-c", "import sys;print(sys.prefix)"]),
+            // exeucutable path
+            this.getPathFromPythonCommand(["-c", "import sys;print(sys.executable)"]),
+            // Python specific site packages
+            this.getPathFromPythonCommand(["-c", "from distutils.sysconfig import get_python_lib; print(get_python_lib())"]),
+            // Python global site packages, as a fallback in case user hasn't installed them in custom environment
+            this.getPathFromPythonCommand(["-m", "site", "--user-site"]),
+        ];
+
+        let PYTHONPATH: string = process.env['PYTHONPATH'];
+        if (typeof PYTHONPATH !== 'string') {
+            PYTHONPATH = '';
+        }
+        let customEnvironmentVars = getCustomEnvVarsSync(vscode.Uri.file(this.pythonProcessCWD));
+        if (customEnvironmentVars && customEnvironmentVars['PYTHONPATH']) {
+            let PYTHONPATHFromEnvFile = customEnvironmentVars['PYTHONPATH'] as string;
+            if (!path.isAbsolute(PYTHONPATHFromEnvFile) && this.workspacePath === 'string') {
+                PYTHONPATHFromEnvFile = path.resolve(this.workspacePath, PYTHONPATHFromEnvFile);
+            }
+            PYTHONPATH += (PYTHONPATH.length > 0 ? + path.delimiter : '') + PYTHONPATHFromEnvFile;
+        }
+        if (typeof PYTHONPATH === 'string' && PYTHONPATH.length > 0) {
+            filePaths.push(Promise.resolve(PYTHONPATH.trim()));
+        }
+        Promise.all<string>(filePaths).then(paths => {
+            // Last item return a path, we need only the folder
+            if (paths[1].length > 0) {
+                paths[1] = path.dirname(paths[1]);
+            }
+
+            // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages)
+            // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
+            if (IS_WINDOWS && paths[2].length > 0) {
+                paths.splice(3, 0, path.join(paths[2], ".."));
+            }
+            this.additionalAutoCopletePaths = paths.filter(p => p.length > 0);
+        });
+    }
+
+    private getConfig() {
+        // Add support for paths relative to workspace
+        let extraPaths = this.pythonSettings.autoComplete.extraPaths.map(extraPath => {
+            if (path.isAbsolute(extraPath)) {
+                return extraPath;
+            }
+            if (typeof this.workspacePath !== 'string') {
+                return '';
+            }
+            return path.join(this.workspacePath, extraPath);
+        });
+
+        // Always add workspace path into extra paths
+        if (typeof this.workspacePath === 'string') {
+            extraPaths.unshift(this.workspacePath);
+        }
+
+        let distinctExtraPaths = extraPaths.concat(this.additionalAutoCopletePaths)
+            .filter(value => value.length > 0)
+            .filter((value, index, self) => self.indexOf(value) === index);
+
+        return {
+            extraPaths: distinctExtraPaths,
+            useSnippets: false,
+            caseInsensitiveCompletion: true,
+            showDescriptions: true,
+            fuzzyMatcher: true
+        };
+    }
 }
-vscode.workspace.onDidChangeConfiguration(onConfigChanged);
-onConfigChanged();
-function onConfigChanged() {
-    // We're only interested in changes to the python path
-    if (lastKnownPythonPath === pythonSettings.pythonPath) {
-        return;
-    }
-
-    lastKnownPythonPath = pythonSettings.pythonPath;
-    let filePaths = [
-        // Sysprefix
-        getPathFromPythonCommand(["-c", "import sys;print(sys.prefix)"]),
-        // exeucutable path
-        getPathFromPythonCommand(["-c", "import sys;print(sys.executable)"]),
-        // Python specific site packages
-        getPathFromPythonCommand(["-c", "from distutils.sysconfig import get_python_lib; print(get_python_lib())"]),
-        // Python global site packages, as a fallback in case user hasn't installed them in custom environment
-        getPathFromPythonCommand(["-m", "site", "--user-site"]),
-    ];
-
-    let PYTHONPATH: string = process.env['PYTHONPATH'];
-    if (typeof PYTHONPATH !== 'string') {
-        PYTHONPATH = '';
-    }
-    let customEnvironmentVars = getCustomEnvVars();
-    if (customEnvironmentVars && customEnvironmentVars['PYTHONPATH']) {
-        let PYTHONPATHFromEnvFile = customEnvironmentVars['PYTHONPATH'] as string;
-        if (!path.isAbsolute(PYTHONPATHFromEnvFile) && typeof vscode.workspace.rootPath === 'string') {
-            PYTHONPATHFromEnvFile = path.resolve(vscode.workspace.rootPath, PYTHONPATHFromEnvFile);
-        }
-        PYTHONPATH += (PYTHONPATH.length > 0 ? + path.delimiter : '') + PYTHONPATHFromEnvFile;
-    }
-    if (typeof PYTHONPATH === 'string' && PYTHONPATH.length > 0) {
-        filePaths.push(Promise.resolve(PYTHONPATH.trim()));
-    }
-    Promise.all<string>(filePaths).then(paths => {
-        // Last item return a path, we need only the folder
-        if (paths[1].length > 0) {
-            paths[1] = path.dirname(paths[1]);
-        }
-
-        // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages)
-        // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
-        if (IS_WINDOWS && paths[2].length > 0) {
-            paths.splice(3, 0, path.join(paths[2], ".."));
-        }
-        additionalAutoCopletePaths = paths.filter(p => p.length > 0);
-    });
-}
-
-function getConfig() {
-    // Add support for paths relative to workspace
-    let extraPaths = pythonSettings.autoComplete.extraPaths.map(extraPath => {
-        if (path.isAbsolute(extraPath)) {
-            return extraPath;
-        }
-        if (typeof vscode.workspace.rootPath !== 'string') {
-            return '';
-        }
-        return path.join(vscode.workspace.rootPath, extraPath);
-    });
-
-    // Always add workspace path into extra paths
-    if (typeof vscode.workspace.rootPath === 'string') {
-        extraPaths.unshift(vscode.workspace.rootPath);
-    }
-
-    let distinctExtraPaths = extraPaths.concat(additionalAutoCopletePaths)
-        .filter(value => value.length > 0)
-        .filter((value, index, self) => self.indexOf(value) === index);
-
-    return {
-        extraPaths: distinctExtraPaths,
-        useSnippets: false,
-        caseInsensitiveCompletion: true,
-        showDescriptions: true,
-        fuzzyMatcher: true
-    };
-}
-
 export interface ICommand<T extends ICommandResult> {
     telemetryEvent?: string;
     command: CommandType;
@@ -675,31 +673,31 @@ export interface IHoverItem {
     signature: string;
 }
 
-export class JediProxyHandler<R extends ICommandResult> {
-    private jediProxy: JediProxy;
-    private cancellationTokenSource: vscode.CancellationTokenSource;
+export class JediProxyHandler<R extends ICommandResult> implements vscode.Disposable {
+    private commandCancellationTokenSources: Map<CommandType, vscode.CancellationTokenSource>;
 
     public get JediProxy(): JediProxy {
         return this.jediProxy;
     }
 
-    public constructor(context: vscode.ExtensionContext, jediProxy: JediProxy = null) {
-        this.jediProxy = jediProxy ? jediProxy : new JediProxy(context);
+    public constructor(private jediProxy: JediProxy = null) {
+        this.commandCancellationTokenSources = new Map<CommandType, vscode.CancellationTokenSource>();
     }
-
+    public dispose() {
+        this.jediProxy.dispose();
+    }
     public sendCommand(cmd: ICommand<R>, token?: vscode.CancellationToken): Promise<R> {
         var executionCmd = <IExecutionCommand<R>>cmd;
         executionCmd.id = executionCmd.id || this.jediProxy.getNextCommandId();
 
-        if (this.cancellationTokenSource) {
-            try {
-                this.cancellationTokenSource.cancel();
-            }
-            catch (ex) { }
+        if (this.commandCancellationTokenSources.has(cmd.command)) {
+            const cancellation = this.commandCancellationTokenSources.get(cmd.command);
+            cancellation.cancel();
         }
 
-        this.cancellationTokenSource = new vscode.CancellationTokenSource();
-        executionCmd.token = this.cancellationTokenSource.token;
+        const cancellation = new vscode.CancellationTokenSource();
+        this.commandCancellationTokenSources.set(cmd.command, cancellation);
+        executionCmd.token = cancellation.token;
 
         return this.jediProxy.sendCommand<R>(executionCmd)
             .catch(reason => {

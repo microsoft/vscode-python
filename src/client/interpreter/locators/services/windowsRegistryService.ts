@@ -1,13 +1,18 @@
-import * as path from 'path';
-import * as _ from 'lodash';
 import * as fs from 'fs-extra';
+import * as _ from 'lodash';
+import * as path from 'path';
+import { Uri } from 'vscode';
 import { Architecture, Hive, IRegistry } from '../../../common/registry';
 import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
 
+// tslint:disable-next-line:variable-name
 const DefaultPythonExecutable = 'python.exe';
+// tslint:disable-next-line:variable-name
 const CompaniesToIgnore = ['PYLAUNCHER'];
-const PythonCoreCompanyDisplayName = "Python Software Foundation";
-const PythonCoreComany = "PYTHONCORE";
+// tslint:disable-next-line:variable-name
+const PythonCoreCompanyDisplayName = 'Python Software Foundation';
+// tslint:disable-next-line:variable-name
+const PythonCoreComany = 'PYTHONCORE';
 
 type CompanyInterpreter = {
     companyKey: string,
@@ -19,9 +24,12 @@ export class WindowsRegistryService implements IInterpreterLocatorService {
     constructor(private registry: IRegistry, private is64Bit: boolean) {
 
     }
-    public getInterpreters() {
+    // tslint:disable-next-line:variable-name
+    public getInterpreters(_resource?: Uri) {
         return this.getInterpretersFromRegistry();
     }
+    // tslint:disable-next-line:no-empty
+    public dispose() { }
     private async getInterpretersFromRegistry() {
         // https://github.com/python/peps/blob/master/pep-0514.txt#L357
         const hkcuArch = this.is64Bit ? undefined : Architecture.x86;
@@ -35,14 +43,17 @@ export class WindowsRegistryService implements IInterpreterLocatorService {
         }
 
         const companies = await Promise.all<CompanyInterpreter[]>(promises);
+        // tslint:disable-next-line:underscore-consistent-invocation
         const companyInterpreters = await Promise.all(_.flatten(companies)
             .filter(item => item !== undefined && item !== null)
             .map(company => {
                 return this.getInterpretersForCompany(company.companyKey, company.hive, company.arch);
             }));
 
+        // tslint:disable-next-line:underscore-consistent-invocation
         return _.flatten(companyInterpreters)
             .filter(item => item !== undefined && item !== null)
+            // tslint:disable-next-line:no-non-null-assertion
             .map(item => item!)
             .reduce<PythonInterpreter[]>((prev, current) => {
                 if (prev.findIndex(item => item.path.toUpperCase() === current.path.toUpperCase()) === -1) {
@@ -52,7 +63,7 @@ export class WindowsRegistryService implements IInterpreterLocatorService {
             }, []);
     }
     private async getCompanies(hive: Hive, arch?: Architecture): Promise<CompanyInterpreter[]> {
-        return this.registry.getKeys(`\\Software\\Python`, hive, arch)
+        return this.registry.getKeys('\\Software\\Python', hive, arch)
             .then(companyKeys => companyKeys
                 .filter(companyKey => CompaniesToIgnore.indexOf(path.basename(companyKey).toUpperCase()) === -1)
                 .map(companyKey => {
@@ -84,12 +95,14 @@ export class WindowsRegistryService implements IInterpreterLocatorService {
                 return Promise.all([
                     Promise.resolve(installPath),
                     this.registry.getValue(key, hive, arch, 'ExecutablePath'),
-                    this.getInterpreterDisplayName(tagKey, companyKey, hive, arch)!,
-                    this.registry.getValue(tagKey, hive, arch, 'Version')!,
-                    this.getCompanyDisplayName(companyKey, hive, arch)!
+                    // tslint:disable-next-line:no-non-null-assertion
+                    this.getInterpreterDisplayName(tagKey, companyKey, hive, arch),
+                    this.registry.getValue(tagKey, hive, arch, 'Version'),
+                    this.getCompanyDisplayName(companyKey, hive, arch)
                 ])
-                    .then(([installPath, executablePath, displayName, version, companyDisplayName]) => {
-                        return { installPath, executablePath, displayName, version, companyDisplayName } as InterpreterInformation;
+                    .then(([installedPath, executablePath, displayName, version, companyDisplayName]) => {
+                        // tslint:disable-next-line:prefer-type-cast
+                        return { installPath: installedPath, executablePath, displayName, version, companyDisplayName } as InterpreterInformation;
                     });
             })
             .then((interpreterInfo?: InterpreterInformation) => {
@@ -100,6 +113,7 @@ export class WindowsRegistryService implements IInterpreterLocatorService {
                 const executablePath = interpreterInfo.executablePath && interpreterInfo.executablePath.length > 0 ? interpreterInfo.executablePath : path.join(interpreterInfo.installPath, DefaultPythonExecutable);
                 const displayName = interpreterInfo.displayName;
                 const version = interpreterInfo.version ? path.basename(interpreterInfo.version) : path.basename(tagKey);
+                // tslint:disable-next-line:prefer-type-cast
                 return {
                     architecture: arch,
                     displayName,

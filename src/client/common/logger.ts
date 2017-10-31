@@ -22,7 +22,9 @@ class Logger {
         Logger.writeLine(category, message);
     }
     static writeLine(category: string = "log", line: any) {
-        console[category](line);
+        if (process.env['VSC_PYTHON_CI_TEST'] !== '1') {
+            console[category](line);
+        }
         if (outChannel) {
             outChannel.appendLine(line);
         }

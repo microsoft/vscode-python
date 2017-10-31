@@ -48,6 +48,7 @@ before_install: |
     pyenv install $PYTHON
     pyenv global $PYTHON
   fi
+  export TRAVIS_PYTHON_PATH=`which python`
 install:
   - pip install --upgrade -r requirements.txt
   - npm install

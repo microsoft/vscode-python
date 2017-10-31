@@ -11,7 +11,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { initialize, closeActiveWindows } from '../initialize';
+import { initialize, closeActiveWindows, initializeTest } from '../initialize';
 import { BlockFormatProviders } from '../../client/typeFormatters/blockFormatProvider';
 
 const srcPythoFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'typeFormatFiles');
@@ -676,6 +676,7 @@ suite('Else blocks with indentation of Tab', () => {
             fs.copySync(path.join(srcPythoFilesPath, file), targetFile);
         });
     });
+    setup(() => initializeTest());
     suiteTeardown(() => closeActiveWindows());
     teardown(() => closeActiveWindows());
 

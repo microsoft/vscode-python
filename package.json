@@ -23,7 +23,7 @@
     "theme": "dark"
   },
   "engines": {
-    "vscode": "^1.15.0"
+    "vscode": "^1.17.0"
   },
   "recommendations": [
     "donjayamanne.jupyter"
@@ -33,7 +33,8 @@
     "jupyter",
     "django",
     "debugger",
-    "unittest"
+    "unittest",
+    "multi-root ready"
   ],
   "categories": [
     "Languages",
@@ -44,8 +45,8 @@
     "Other"
   ],
   "activationEvents": [
+    "onDebug",
     "onLanguage:python",
-    "onCommand:python.python-debug.startSession",
     "onCommand:python.execInTerminal",
     "onCommand:python.sortImports",
     "onCommand:python.runtests",
@@ -278,7 +279,6 @@
         "languages": [
           "python"
         ],
-        "startSessionCommand": "python.python-debug.startSession",
         "enableBreakpointsFor": {
           "languageIds": [
             "python",
@@ -1594,7 +1594,10 @@
     "vscode:prepublish": "tsc -p ./ && webpack",
     "compile": "webpack && tsc -watch -p ./",
     "postinstall": "node ./node_modules/vscode/bin/install",
-    "test": "node ./node_modules/vscode/bin/test"
+    "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
+    "precommit": "node gulpfile.js",
+    "lint-staged": "node gulpfile.js",
+    "lint": "tslint src/**/*.ts -t verbose"
   },
   "dependencies": {
     "anser": "^1.1.0",
@@ -1624,13 +1627,15 @@
     "vscode-languageserver": "^3.1.0",
     "winreg": "^1.2.4",
     "xml2js": "^0.4.17",
-    "vscode": "^1.0.3"
+    "vscode": "^1.1.5"
   },
   "devDependencies": {
+    "@types/chai": "^4.0.4",
+    "@types/chai-as-promised": "^7.1.0",
     "@types/fs-extra": "^4.0.2",
     "@types/jquery": "^1.10.31",
     "@types/lodash": "^4.14.74",
-    "@types/mocha": "^2.2.32",
+    "@types/mocha": "^2.2.43",
     "@types/node": "^6.0.40",
     "@types/rx": "^2.5.33",
     "@types/semver": "^5.4.0",
@@ -1639,16 +1644,28 @@
     "@types/socket.io-client": "^1.4.27",
     "@types/uuid": "^3.3.27",
     "@types/winreg": "^1.2.30",
+    "@types/xml2js": "^0.4.0",
     "babel-core": "^6.14.0",
     "babel-loader": "^6.2.5",
     "babel-preset-es2015": "^6.14.0",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "event-stream": "^3.3.4",
+    "gulp": "^3.9.1",
+    "gulp-filter": "^5.0.1",
+    "gulp-typescript": "^3.2.2",
+    "husky": "^0.14.3",
     "ignore-loader": "^0.1.1",
-    "mocha": "^3.2.0",
+    "mocha": "^2.3.3",
+    "relative": "^3.0.2",
     "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
     "sinon": "^2.3.6",
-    "ts-loader": "^0.8.2",
-    "tslint": "^3.15.1",
-    "typescript": "^2.3.2",
+    "ts-loader": "^2.3.4",
+    "tslint": "^5.7.0",
+    "tslint-eslint-rules": "^4.1.1",
+    "tslint-microsoft-contrib": "^5.0.1",
+    "typescript": "^2.5.2",
+    "typescript-formatter": "^6.0.0",
     "webpack": "^1.13.2"
   }
 }

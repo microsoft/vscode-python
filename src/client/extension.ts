@@ -1,53 +1,53 @@
 'use strict';
 
+import * as fs from 'fs';
+import * as os from 'os';
+import { workspace } from 'vscode';
 import * as vscode from 'vscode';
-import { PythonCompletionItemProvider } from './providers/completionProvider';
-import { PythonHoverProvider } from './providers/hoverProvider';
-import { PythonDefinitionProvider } from './providers/definitionProvider';
-import { PythonReferenceProvider } from './providers/referenceProvider';
-import { PythonRenameProvider } from './providers/renameProvider';
-import { PythonFormattingEditProvider } from './providers/formatProvider';
-import { ShebangCodeLensProvider } from './providers/shebangCodeLensProvider'
-import * as sortImports from './sortImports';
-import { LintProvider } from './providers/lintProvider';
-import { PythonSymbolProvider } from './providers/symbolProvider';
-import { PythonSignatureProvider } from './providers/signatureProvider';
 import * as settings from './common/configSettings';
+import { Commands } from './common/constants';
+import { createDeferred } from './common/helpers';
 import * as telemetryHelper from './common/telemetry';
 import * as telemetryContracts from './common/telemetryContracts';
-import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
-import { SetInterpreterProvider } from './providers/setInterpreterProvider';
-import { activateExecInTerminalProvider } from './providers/execInTerminalProvider';
-import { Commands } from './common/constants';
-import * as tests from './unittests/main';
-import * as jup from './jupyter/main';
+import { SimpleConfigurationProvider } from './debugger';
 import { HelpProvider } from './helpProvider';
-import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
-import { activateFormatOnSaveProvider } from './providers/formatOnSaveProvider';
-import { WorkspaceSymbols } from './workspaceSymbols/main';
-import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
-import * as os from 'os';
-import * as fs from 'fs';
-import { activateSingleFileDebug } from './singleFileDebug';
-import { getPathFromPythonCommand } from './common/utils';
-import { JupyterProvider } from './jupyter/provider';
-import { activateGoToObjectDefinitionProvider } from './providers/objectDefinitionProvider';
 import { InterpreterManager } from './interpreter';
+import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
+import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
+import * as jup from './jupyter/main';
+import { JupyterProvider } from './jupyter/provider';
+import { JediFactory } from './languageServices/jediProxyFactory';
+import { PythonCompletionItemProvider } from './providers/completionProvider';
+import { PythonDefinitionProvider } from './providers/definitionProvider';
+import { activateExecInTerminalProvider } from './providers/execInTerminalProvider';
+import { activateFormatOnSaveProvider } from './providers/formatOnSaveProvider';
+import { PythonFormattingEditProvider } from './providers/formatProvider';
+import { PythonHoverProvider } from './providers/hoverProvider';
+import { LintProvider } from './providers/lintProvider';
+import { activateGoToObjectDefinitionProvider } from './providers/objectDefinitionProvider';
+import { PythonReferenceProvider } from './providers/referenceProvider';
+import { PythonRenameProvider } from './providers/renameProvider';
+import { ReplProvider } from './providers/replProvider';
+import { PythonSignatureProvider } from './providers/signatureProvider';
+import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
+import { PythonSymbolProvider } from './providers/symbolProvider';
+import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
+import * as sortImports from './sortImports';
+import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
+import * as tests from './unittests/main';
+import { WorkspaceSymbols } from './workspaceSymbols/main';
 
 const PYTHON: vscode.DocumentFilter = { language: 'python' };
 let unitTestOutChannel: vscode.OutputChannel;
 let formatOutChannel: vscode.OutputChannel;
 let lintingOutChannel: vscode.OutputChannel;
 let jupMain: jup.Jupyter;
+const activationDeferred = createDeferred<void>();
+export const activated = activationDeferred.promise;
+// tslint:disable-next-line:max-func-body-length
 export async function activate(context: vscode.ExtensionContext) {
     const pythonSettings = settings.PythonSettings.getInstance();
-    const pythonExt = new PythonExt();
-    context.subscriptions.push(pythonExt);
-    // telemetryHelper.sendTelemetryEvent(telemetryContracts.EVENT_LOAD, {
-    //     CodeComplete_Has_ExtraPaths: pythonSettings.autoComplete.extraPaths.length > 0 ? 'true' : 'false',
-    //     Format_Has_Custom_Python_Path: pythonSettings.pythonPath.length !== 'python'.length ? 'true' : 'false',
-    //     Has_PySpark_Path: hasPySparkInCompletionPath ? 'true' : 'false'
-    // });
+    sendStartupTelemetry();
     lintingOutChannel = vscode.window.createOutputChannel(pythonSettings.linting.outputWindow);
     formatOutChannel = lintingOutChannel;
     if (pythonSettings.linting.outputWindow !== pythonSettings.formatting.outputWindow) {
@@ -62,23 +62,17 @@ export async function activate(context: vscode.ExtensionContext) {
     sortImports.activate(context, formatOutChannel);
     const interpreterManager = new InterpreterManager();
     await interpreterManager.autoSetInterpreter();
+    await interpreterManager.refresh();
     context.subscriptions.push(interpreterManager);
     context.subscriptions.push(new SetInterpreterProvider(interpreterManager));
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, formatOutChannel);
     context.subscriptions.push(activateFormatOnSaveProvider(PYTHON, formatOutChannel));
-    context.subscriptions.push(activateGoToObjectDefinitionProvider(context));
+    const jediFactory = new JediFactory(context.asAbsolutePath('.'));
+    context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
-    context.subscriptions.push(vscode.commands.registerCommand(Commands.Start_REPL, () => {
-        getPathFromPythonCommand(["-c", "import sys;print(sys.executable)"]).catch(() => {
-            return pythonSettings.pythonPath;
-        }).then(pythonExecutablePath => {
-            let term = vscode.window.createTerminal('Python', pythonExecutablePath);
-            term.show();
-            context.subscriptions.push(term);
-        });
-    }));
+    context.subscriptions.push(new ReplProvider());
 
     // Enable indentAction
     vscode.languages.setLanguageConfiguration(PYTHON.language, {
@@ -90,28 +84,28 @@ export async function activate(context: vscode.ExtensionContext) {
             {
                 beforeText: /^ *#.*$/,
                 afterText: /.+$/,
-                action: { indentAction: vscode.IndentAction.None, appendText: '# ' },
+                action: { indentAction: vscode.IndentAction.None, appendText: '# ' }
             },
             {
                 beforeText: /^\s+(continue|break|return)\b.*$/,
-                action: { indentAction: vscode.IndentAction.Outdent },
+                action: { indentAction: vscode.IndentAction.Outdent }
             }
         ]
     });
 
+    context.subscriptions.push(jediFactory);
     context.subscriptions.push(vscode.languages.registerRenameProvider(PYTHON, new PythonRenameProvider(formatOutChannel)));
-    const definitionProvider = new PythonDefinitionProvider(context);
-    const jediProx = definitionProvider.JediProxy;
+    const definitionProvider = new PythonDefinitionProvider(jediFactory);
     context.subscriptions.push(vscode.languages.registerDefinitionProvider(PYTHON, definitionProvider));
-    context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(context, jediProx)));
-    context.subscriptions.push(vscode.languages.registerReferenceProvider(PYTHON, new PythonReferenceProvider(context, jediProx)));
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(PYTHON, new PythonCompletionItemProvider(context, jediProx), '.'));
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, new ShebangCodeLensProvider()))
+    context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
+    context.subscriptions.push(vscode.languages.registerReferenceProvider(PYTHON, new PythonReferenceProvider(jediFactory)));
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(PYTHON, new PythonCompletionItemProvider(jediFactory), '.'));
+    context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, new ShebangCodeLensProvider()));
 
-    const symbolProvider = new PythonSymbolProvider(context, jediProx);
+    const symbolProvider = new PythonSymbolProvider(jediFactory);
     context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider(PYTHON, symbolProvider));
     if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
-        context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(PYTHON, new PythonSignatureProvider(context, jediProx), '(', ','));
+        context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(PYTHON, new PythonSignatureProvider(jediFactory), '(', ','));
     }
     if (pythonSettings.formatting.provider !== 'none') {
         const formatProvider = new PythonFormattingEditProvider(context, formatOutChannel);
@@ -120,7 +114,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
-    let linterProvider = new LintProvider(context, lintingOutChannel, (a, b) => Promise.resolve(false));
+    const linterProvider = new LintProvider(context, lintingOutChannel, (a, b) => Promise.resolve(false));
     context.subscriptions.push();
     if (jupyterExtInstalled) {
         if (jupyterExtInstalled.isActive) {
@@ -132,8 +126,7 @@ export async function activate(context: vscode.ExtensionContext) {
             jupyterExtInstalled.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
             linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
         });
-    }
-    else {
+    } else {
         jupMain = new jup.Jupyter(lintingOutChannel);
         const documentHasJupyterCodeCells = jupMain.hasCodeCells.bind(jupMain);
         jupMain.activate();
@@ -152,42 +145,10 @@ export async function activate(context: vscode.ExtensionContext) {
     const hepProvider = new HelpProvider();
     context.subscriptions.push(hepProvider);
 
-    context.subscriptions.push(activateSingleFileDebug());
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
+    activationDeferred.resolve();
 }
 
-class PythonExt implements vscode.Disposable {
-
-    private isDjangoProject: ContextKey;
-
-    constructor() {
-        this.isDjangoProject = new ContextKey('python.isDjangoProject');
-        this.ensureState();
-    }
-    public dispose() {
-        this.isDjangoProject = null;
-    }
-    private ensureState(): void {
-        // context: python.isDjangoProject
-        if (typeof vscode.workspace.rootPath === 'string') {
-            this.isDjangoProject.set(fs.existsSync(vscode.workspace.rootPath.concat("/manage.py")));
-        }
-        else {
-            this.isDjangoProject.set(false);
-        }
-    }
+function sendStartupTelemetry() {
+    telemetryHelper.sendTelemetryEvent(telemetryContracts.EVENT_LOAD);
 }
-
-class ContextKey {
-    private lastValue: boolean;
-
-    constructor(private name: string) {
-    }
-
-    public set(value: boolean): void {
-        if (this.lastValue === value) {
-            return;
-        }
-        this.lastValue = value;
-        vscode.commands.executeCommand('setContext', this.name, this.lastValue);
-    }
-} 

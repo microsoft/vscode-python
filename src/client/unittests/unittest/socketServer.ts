@@ -1,16 +1,19 @@
 'use strict';
-import * as net from 'net';
-import * as fs from 'fs';
-import * as os from 'os';
-import { Disposable } from 'vscode'
-import { createDeferred, Deferred } from '../../common/helpers';
 import { EventEmitter } from 'events';
+import * as fs from 'fs';
+import * as net from 'net';
+import * as os from 'os';
+import { Disposable } from 'vscode';
+import { createDeferred, Deferred } from '../../common/helpers';
 
+// tslint:disable-next-line:variable-name
 const MaxConnections = 100;
 
 function getIPType() {
     const networkInterfaces = os.networkInterfaces();
+    // tslint:disable-next-line:variable-name
     let IPType = '';
+    // tslint:disable-next-line:prefer-type-cast no-any
     if (networkInterfaces && Array.isArray(networkInterfaces) && (networkInterfaces as any).length > 0) {
         // getting the family of first network interface available
         IPType = networkInterfaces[Object.keys(networkInterfaces)[0]][0].family;
@@ -41,7 +44,7 @@ export class Server extends EventEmitter implements Disposable {
         }
     }
     public start(): Promise<number> {
-        this.startedDef = createDeferred<number>()
+        this.startedDef = createDeferred<number>();
         fs.unlink(this.path, () => {
             this.server = net.createServer(this.connectionListener.bind(this));
             this.server.maxConnections = MaxConnections;
@@ -72,16 +75,17 @@ export class Server extends EventEmitter implements Disposable {
             this.emit('error', err);
         });
         socket.on('data', (data) => {
-            let sock = socket;
+            const sock = socket;
             // Assume we have just one client socket connection
             let dataStr = this.ipcBuffer += data;
 
+            // tslint:disable-next-line:no-constant-condition
             while (true) {
                 const startIndex = dataStr.indexOf('{');
                 if (startIndex === -1) {
                     return;
                 }
-                const lengthOfMessage = parseInt(dataStr.slice(dataStr.indexOf(':') + 1, dataStr.indexOf('{')).trim());
+                const lengthOfMessage = parseInt(dataStr.slice(dataStr.indexOf(':') + 1, dataStr.indexOf('{')).trim(), 10);
                 if (dataStr.length < startIndex + lengthOfMessage) {
                     return;
                 }
@@ -97,13 +101,16 @@ export class Server extends EventEmitter implements Disposable {
         this.emit('log', message, ...data);
     }
     private onCloseSocket() {
-        for (let i = 0, count = this.sockets.length; i < count; i++) {
-            let socket = this.sockets[i];
+        // tslint:disable-next-line:one-variable-per-declaration
+        for (let i = 0, count = this.sockets.length; i < count; i += 1) {
+            const socket = this.sockets[i];
             let destroyedSocketId = false;
             if (socket && socket.readable) {
                 continue;
             }
+            // tslint:disable-next-line:no-any prefer-type-cast
             if ((socket as any).id) {
+                // tslint:disable-next-line:no-any prefer-type-cast
                 destroyedSocketId = (socket as any).id;
             }
             this.log('socket disconnected', destroyedSocketId.toString());

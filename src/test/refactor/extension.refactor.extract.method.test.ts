@@ -4,9 +4,9 @@ import * as assert from 'assert';
 // as well as import your extension to test it
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as settings from '../../client/common/configSettings';
 import * as fs from 'fs-extra';
-import { initialize, closeActiveWindows, IS_TRAVIS, wait } from './../initialize';
+import { PythonSettings } from '../../client/common/configSettings';
+import { initialize, closeActiveWindows, IS_TRAVIS, wait, initializeTest } from './../initialize';
 import { Position } from 'vscode';
 import { extractMethod } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
@@ -14,7 +14,6 @@ import { getTextEditsFromPatch } from '../../client/common/editor';
 import { MockOutputChannel } from './../mockClasses';
 
 const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
-const pythonSettings = settings.PythonSettings.getInstance();
 const refactorSourceFile = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'refactoring', 'standAlone', 'refactor.py');
 const refactorTargetFile = path.join(__dirname, '..', '..', '..', 'out', 'test', 'pythonFiles', 'refactoring', 'standAlone', 'refactor.py');
 
@@ -41,7 +40,7 @@ suite('Method Extraction', () => {
             fs.unlinkSync(refactorTargetFile);
         }
         fs.copySync(refactorSourceFile, refactorTargetFile, { overwrite: true });
-        await closeActiveWindows();
+        await initializeTest();
         (<any>vscode).commands.executeCommand = (cmd) => Promise.resolve();
     });
     teardown(() => {
@@ -49,7 +48,8 @@ suite('Method Extraction', () => {
         return closeActiveWindows();
     });
 
-    function testingMethodExtraction(shouldError: boolean, pythonSettings: settings.IPythonSettings, startPos: Position, endPos: Position) {
+    function testingMethodExtraction(shouldError: boolean, startPos: Position, endPos: Position) {
+        const pythonSettings = PythonSettings.getInstance(vscode.Uri.file(refactorTargetFile));
         let rangeOfTextToExtract = new vscode.Range(startPos, endPos);
         let proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile));
         let expectedTextEdits: vscode.TextEdit[];
@@ -61,7 +61,7 @@ suite('Method Extraction', () => {
                 mockTextDoc = textDocument;
                 expectedTextEdits = getTextEditsFromPatch(textDocument.getText(), DIFF);
                 resolve();
-            }, error => reject(error))
+            }, error => reject(error));
         })
             .then(() => proxy.extractMethod<RenameResponse>(mockTextDoc, 'myNewMethod', refactorTargetFile, rangeOfTextToExtract, options))
             .then(response => {
@@ -93,16 +93,16 @@ suite('Method Extraction', () => {
     test('Extract Method', done => {
         let startPos = new vscode.Position(239, 0);
         let endPos = new vscode.Position(241, 35);
-        testingMethodExtraction(false, pythonSettings, startPos, endPos).then(() => done(), done);
+        testingMethodExtraction(false, startPos, endPos).then(() => done(), done);
     });
 
     test('Extract Method will fail if complete statements are not selected', done => {
         let startPos = new vscode.Position(239, 30);
         let endPos = new vscode.Position(241, 35);
-        testingMethodExtraction(true, pythonSettings, startPos, endPos).then(() => done(), done);
+        testingMethodExtraction(true, startPos, endPos).then(() => done(), done);
     });
 
-    function testingMethodExtractionEndToEnd(shouldError: boolean, pythonSettings: settings.IPythonSettings, startPos: Position, endPos: Position) {
+    function testingMethodExtractionEndToEnd(shouldError: boolean, startPos: Position, endPos: Position) {
         let ch = new MockOutputChannel('Python');
         let textDocument: vscode.TextDocument;
         let textEditor: vscode.TextEditor;
@@ -119,7 +119,7 @@ suite('Method Extraction', () => {
             textEditor = editor;
             return;
         }).then(() => {
-            return extractMethod(EXTENSION_DIR, textEditor, rangeOfTextToExtract, ch, path.dirname(refactorTargetFile), pythonSettings).then(() => {
+            return extractMethod(EXTENSION_DIR, textEditor, rangeOfTextToExtract, ch).then(() => {
                 if (shouldError) {
                     ignoreErrorHandling = true;
                     assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
@@ -161,13 +161,13 @@ suite('Method Extraction', () => {
         test('Extract Method (end to end)', done => {
             let startPos = new vscode.Position(239, 0);
             let endPos = new vscode.Position(241, 35);
-            testingMethodExtractionEndToEnd(false, pythonSettings, startPos, endPos).then(() => done(), done);
+            testingMethodExtractionEndToEnd(false, startPos, endPos).then(() => done(), done);
         });
     }
 
     test('Extract Method will fail if complete statements are not selected', done => {
         let startPos = new vscode.Position(239, 30);
         let endPos = new vscode.Position(241, 35);
-        testingMethodExtractionEndToEnd(true, pythonSettings, startPos, endPos).then(() => done(), done);
+        testingMethodExtractionEndToEnd(true, startPos, endPos).then(() => done(), done);
     });
 });

@@ -1,14 +1,12 @@
 'use strict';
-import { execPythonFile } from './../../common/utils';
-import { TestFile, TestSuite, TestFunction, Tests } from '../common/contracts';
 import * as os from 'os';
-import { extractBetweenDelimiters, flattenTestFiles, convertFileToPackage } from '../common/testUtils';
-import * as vscode from 'vscode';
 import * as path from 'path';
-import { PythonSettings } from '../../common/configSettings';
+import * as vscode from 'vscode';
 import { OutputChannel } from 'vscode';
-
-const pythonSettings = PythonSettings.getInstance();
+import { PythonSettings } from '../../common/configSettings';
+import { convertFileToPackage, extractBetweenDelimiters } from '../common/testUtils';
+import { ITestsHelper, TestFile, TestFunction, Tests, TestSuite } from '../common/types';
+import { execPythonFile } from './../../common/utils';
 
 const argsToExcludeForDiscovery = ['-x', '--exitfirst',
     '--fixtures-per-test', '--pdb', '--runxfail',
@@ -18,10 +16,10 @@ const argsToExcludeForDiscovery = ['-x', '--exitfirst',
     '--disable-pytest-warnings', '-l', '--showlocals'];
 const settingsInArgsToExcludeForDiscovery = [];
 
-export function discoverTests(rootDirectory: string, args: string[], token: vscode.CancellationToken, ignoreCache: boolean, outChannel: OutputChannel): Promise<Tests> {
+export function discoverTests(rootDirectory: string, args: string[], token: vscode.CancellationToken, ignoreCache: boolean, outChannel: OutputChannel, testsHelper: ITestsHelper): Promise<Tests> {
     let logOutputLines: string[] = [''];
-    let testFiles: TestFile[] = [];
-    let parentNodes: { indent: number, item: TestFile | TestSuite }[] = [];
+    const testFiles: TestFile[] = [];
+    const parentNodes: { indent: number, item: TestFile | TestSuite }[] = [];
     const errorLine = /==*( *)ERRORS( *)=*/;
     const errorFileLine = /__*( *)ERROR collecting (.*)/;
     const lastLineWithErrors = /==*.*/;
@@ -85,14 +83,14 @@ export function discoverTests(rootDirectory: string, args: string[], token: vsco
         });
     }
 
-    return execPythonFile(pythonSettings.unitTest.pyTestPath, args.concat(['--collect-only']), rootDirectory, false, null, token)
+    return execPythonFile(rootDirectory, PythonSettings.getInstance(vscode.Uri.file(rootDirectory)).unitTest.pyTestPath, args.concat(['--collect-only']), rootDirectory, false, null, token)
         .then(data => {
             outChannel.appendLine(data);
             processOutput(data);
             if (token && token.isCancellationRequested) {
                 return Promise.reject<Tests>('cancelled');
             }
-            return flattenTestFiles(testFiles);
+            return testsHelper.flattenTestFiles(testFiles);
         });
 }
 
@@ -106,7 +104,7 @@ function parsePyTestModuleCollectionError(rootDirectory: string, lines: string[]
         return;
     }
 
-    let errorFileLine = lines[0];
+    const errorFileLine = lines[0];
     let fileName = errorFileLine.substring(errorFileLine.indexOf('ERROR collecting') + 'ERROR collecting'.length).trim();
     fileName = fileName.substr(0, fileName.lastIndexOf(' '));
 
@@ -146,22 +144,23 @@ function parsePyTestModuleCollectionResult(rootDirectory: string, lines: string[
 
         if (trimmedLine.startsWith('<Class \'') || trimmedLine.startsWith('<UnitTestCase \'')) {
             const isUnitTest = trimmedLine.startsWith('<UnitTestCase \'');
-            const rawName = parentNode.item.nameToRun + `::${name}`;
-            const xmlName = parentNode.item.xmlName + `.${name}`;
+            const rawName = `${parentNode.item.nameToRun}::${name}`;
+            const xmlName = `${parentNode.item.xmlName}.${name}`;
             const testSuite: TestSuite = { name: name, nameToRun: rawName, functions: [], suites: [], isUnitTest: isUnitTest, isInstance: false, xmlName: xmlName, time: 0 };
             parentNode.item.suites.push(testSuite);
             parentNodes.push({ indent: indent, item: testSuite });
             return;
         }
         if (trimmedLine.startsWith('<Instance \'')) {
-            let suite = (parentNode.item as TestSuite);
+            // tslint:disable-next-line:prefer-type-cast
+            const suite = (parentNode.item as TestSuite);
             // suite.rawName = suite.rawName + '::()';
             // suite.xmlName = suite.xmlName + '.()';
             suite.isInstance = true;
             return;
         }
         if (trimmedLine.startsWith('<TestCaseFunction \'') || trimmedLine.startsWith('<Function \'')) {
-            const rawName = parentNode.item.nameToRun + '::' + name;
+            const rawName = `${parentNode.item.nameToRun}::${name}`;
             const fn: TestFunction = { name: name, nameToRun: rawName, time: 0 };
             parentNode.item.functions.push(fn);
             return;
@@ -171,7 +170,7 @@ function parsePyTestModuleCollectionResult(rootDirectory: string, lines: string[
 
 function findParentOfCurrentItem(indentOfCurrentItem: number, parentNodes: { indent: number, item: TestFile | TestSuite }[]): { indent: number, item: TestFile | TestSuite } {
     while (parentNodes.length > 0) {
-        let parentNode = parentNodes[parentNodes.length - 1];
+        const parentNode = parentNodes[parentNodes.length - 1];
         if (parentNode.indent < indentOfCurrentItem) {
             return parentNode;
         }

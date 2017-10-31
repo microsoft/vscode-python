@@ -50,7 +50,7 @@ export abstract class BaseFormatter {
             if (token && token.isCancellationRequested) {
                 return [filePath, ''];
             }
-            return Promise.all<string>([Promise.resolve(filePath), execPythonFile(command, args.concat([filePath]), cwd)]);
+            return Promise.all<string>([Promise.resolve(filePath), execPythonFile(document.uri, command, args.concat([filePath]), cwd)]);
         }).then(data => {
             // Delete the temporary file created
             if (tmpFileCreated) {
@@ -61,14 +61,14 @@ export abstract class BaseFormatter {
             }
             return getTextEditsFromPatch(document.getText(), data[1]);
         }).catch(error => {
-            this.handleError(this.Id, command, error);
+            this.handleError(this.Id, command, error, document.uri);
             return [];
         });
         vscode.window.setStatusBarMessage(`Formatting with ${this.Id}`, promise);
         return promise;
     }
 
-    protected handleError(expectedFileName: string, fileName: string, error: Error) {
+    protected handleError(expectedFileName: string, fileName: string, error: Error, resource?: Uri) {
         let customError = `Formatting with ${this.Id} failed.`;
 
         if (isNotInstalledError(error)) {
@@ -84,7 +84,7 @@ export abstract class BaseFormatter {
             }
             else {
                 customError += `\nYou could either install the '${this.Id}' formatter, turn it off or use another formatter.`;
-                this.installer.promptToInstall(this.product);
+                this.installer.promptToInstall(this.product, resource);
             }
         }
 

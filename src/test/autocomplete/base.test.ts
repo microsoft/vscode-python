@@ -10,10 +10,11 @@ import { EOL } from 'os';
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as settings from '../../client/common/configSettings';
-import { initialize, closeActiveWindows } from '../initialize';
+import { initialize, closeActiveWindows, initializeTest } from '../initialize';
 import { execPythonFile } from '../../client/common/utils';
+import { PythonSettings } from '../../client/common/configSettings';
+import { rootWorkspaceUri } from '../common';
 
-const pythonSettings = settings.PythonSettings.getInstance();
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
 const fileOne = path.join(autoCompPath, 'one.py');
 const fileImport = path.join(autoCompPath, 'imp.py');
@@ -27,10 +28,10 @@ suite('Autocomplete', () => {
     let isPython3: Promise<boolean>;
     suiteSetup(async () => {
         await initialize();
-        let version = await execPythonFile(pythonSettings.pythonPath, ['--version'], __dirname, true);
+        const version = await execPythonFile(rootWorkspaceUri, PythonSettings.getInstance(rootWorkspaceUri).pythonPath, ['--version'], __dirname, true);
         isPython3 = Promise.resolve(version.indexOf('3.') >= 0);
     });
-
+    setup(() => initializeTest());
     suiteTeardown(() => closeActiveWindows());
     teardown(() => closeActiveWindows());
 
@@ -114,7 +115,7 @@ suite('Autocomplete', () => {
         const position = new vscode.Position(10, 9);
         const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
         assert.notEqual(list.items.filter(item => item.label === 'sleep').length, 0, 'sleep not found');
-        assert.notEqual(list.items.filter(item => item.documentation.startsWith("Delay execution for a given number of seconds.  The argument may be")).length, 0, 'Documentation incorrect');
+        assert.notEqual(list.items.filter(item => item.documentation.toString().startsWith("Delay execution for a given number of seconds.  The argument may be")).length, 0, 'Documentation incorrect');
     });
 
     test('For custom class', done => {

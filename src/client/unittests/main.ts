@@ -1,67 +1,79 @@
 'use strict';
+import { Uri, window, workspace } from 'vscode';
 import * as vscode from 'vscode';
+import { IUnitTestSettings, PythonSettings } from '../common/configSettings';
+import * as constants from '../common/constants';
+import { PythonSymbolProvider } from '../providers/symbolProvider';
+import { activateCodeLenses } from './codeLenses/main';
+import { BaseTestManager } from './common/baseTestManager';
+import { CANCELLATION_REASON } from './common/constants';
+import { DebugLauncher } from './common/debugLauncher';
+import { TestCollectionStorageService } from './common/storageService';
+import { TestManagerServiceFactory } from './common/testManagerServiceFactory';
+import { TestResultsService } from './common/testResultsService';
+import { selectTestWorkspace, TestsHelper } from './common/testUtils';
+import { FlattenedTestFunction, ITestCollectionStorageService, IWorkspaceTestManagerService, TestFile, TestFunction, TestStatus, TestsToRun } from './common/types';
+import { WorkspaceTestManagerService } from './common/workspaceTestManagerService';
+import { displayTestFrameworkError } from './configuration';
+import { TestResultDisplay } from './display/main';
+import { TestDisplay } from './display/picker';
 import * as nosetests from './nosetest/main';
 import * as pytest from './pytest/main';
 import * as unittest from './unittest/main';
-import * as constants from '../common/constants';
-import {
-    CANCELLATION_REASON,
-    FlattenedTestFunction,
-    TestFile,
-    TestFunction,
-    TestStatus,
-    TestsToRun,
-} from './common/contracts';
-import { resolveValueAsTestToRun, getDiscoveredTests } from './common/testUtils';
-import { BaseTestManager } from './common/baseTestManager';
-import { PythonSettings } from '../common/configSettings';
-import { TestResultDisplay } from './display/main';
-import { TestDisplay } from './display/picker';
-import { activateCodeLenses } from './codeLenses/main';
-import { displayTestFrameworkError } from './configuration';
-import { PythonSymbolProvider } from '../providers/symbolProvider';
 
-const settings = PythonSettings.getInstance();
-let testManager: BaseTestManager | undefined | null;
-let pyTestManager: pytest.TestManager | undefined | null;
-let unittestManager: unittest.TestManager | undefined | null;
-let nosetestManager: nosetests.TestManager | undefined | null;
+let workspaceTestManagerService: IWorkspaceTestManagerService;
 let testResultDisplay: TestResultDisplay;
 let testDisplay: TestDisplay;
 let outChannel: vscode.OutputChannel;
-let onDidChange: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+const onDidChange: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+let testCollectionStorage: ITestCollectionStorageService;
 
 export function activate(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel, symboldProvider: PythonSymbolProvider) {
     context.subscriptions.push({ dispose: dispose });
     outChannel = outputChannel;
-    let disposables = registerCommands();
+    const disposables = registerCommands();
     context.subscriptions.push(...disposables);
 
-    if (settings.unitTest.nosetestsEnabled || settings.unitTest.pyTestEnabled || settings.unitTest.unittestEnabled) {
-        // Ignore the exceptions returned
-        // This function is invoked via a command which will be invoked else where in the extension
-        discoverTests(true).catch(() => {
-            // Ignore the errors
-        });
-    }
+    testCollectionStorage = new TestCollectionStorageService();
+    const testResultsService = new TestResultsService();
+    const testsHelper = new TestsHelper();
+    const debugLauncher = new DebugLauncher();
+    const testManagerServiceFactory = new TestManagerServiceFactory(outChannel, testCollectionStorage, testResultsService, testsHelper, debugLauncher);
+    workspaceTestManagerService = new WorkspaceTestManagerService(outChannel, testManagerServiceFactory);
 
-    settings.addListener('change', onConfigChanged);
-    context.subscriptions.push(activateCodeLenses(onDidChange, symboldProvider));
+    context.subscriptions.push(autoResetTests());
+    context.subscriptions.push(activateCodeLenses(onDidChange, symboldProvider, testCollectionStorage));
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(onDocumentSaved));
+
+    autoDiscoverTests();
 }
 
-function getTestWorkingDirectory() {
-    return settings.unitTest.cwd && settings.unitTest.cwd.length > 0 ? settings.unitTest.cwd : vscode.workspace.rootPath!;
+async function getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<BaseTestManager | undefined | void> {
+    let wkspace: Uri | undefined;
+    if (resource) {
+        const wkspaceFolder = workspace.getWorkspaceFolder(resource);
+        wkspace = wkspaceFolder ? wkspaceFolder.uri : undefined;
+    } else {
+        wkspace = await selectTestWorkspace();
+    }
+    if (!wkspace) {
+        return;
+    }
+    const testManager = workspaceTestManagerService.getTestManager(wkspace);
+    if (testManager) {
+        return testManager;
+    }
+    if (displayTestNotConfiguredMessage) {
+        await displayTestFrameworkError(wkspace, outChannel);
+    }
 }
-
 let timeoutId: number;
 async function onDocumentSaved(doc: vscode.TextDocument): Promise<void> {
-    let testManager = getTestRunner();
+    const testManager = await getTestManager(false, doc.uri);
     if (!testManager) {
         return;
     }
-
-    let tests = await testManager.discoverTests(false, true);
+    const tests = await testManager.discoverTests(false, true);
     if (!tests || !Array.isArray(tests.testFiles) || tests.testFiles.length === 0) {
         return;
     }
@@ -72,123 +84,158 @@ async function onDocumentSaved(doc: vscode.TextDocument): Promise<void> {
     if (timeoutId) {
         clearTimeout(timeoutId);
     }
-    timeoutId = setTimeout(() => { discoverTests(true); }, 1000);
+    timeoutId = setTimeout(() => discoverTests(doc.uri, true), 1000);
 }
 
 function dispose() {
-    if (pyTestManager) {
-        pyTestManager.dispose();
-    }
-    if (nosetestManager) {
-        nosetestManager.dispose();
-    }
-    if (unittestManager) {
-        unittestManager.dispose();
-    }
+    workspaceTestManagerService.dispose();
+    testCollectionStorage.dispose();
 }
 function registerCommands(): vscode.Disposable[] {
     const disposables = [];
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Discover, () => {
-        // Ignore the exceptions returned
-        // This command will be invoked else where in the extension
-        discoverTests(true).catch(() => { return null; });
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Discover, (resource?: Uri) => {
+        // Ignore the exceptions returned.
+        // This command will be invoked else where in the extension.
+        // tslint:disable-next-line:no-empty
+        discoverTests(resource, true, true).catch(() => { });
     }));
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Run_Failed, () => runTestsImpl(true)));
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Run, (testId) => runTestsImpl(testId)));
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Debug, (testId) => runTestsImpl(testId, true)));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Run_Failed, (resource: Uri) => runTestsImpl(resource, undefined, true)));
+    // tslint:disable-next-line:no-unnecessary-callback-wrapper
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Run, (file: Uri, testToRun?: TestsToRun) => runTestsImpl(file, testToRun)));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Debug, (file: Uri, testToRun: TestsToRun) => runTestsImpl(file, testToRun, false, true)));
+    // tslint:disable-next-line:no-unnecessary-callback-wrapper
     disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_View_UI, () => displayUI()));
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Picker_UI, (file, testFunctions) => displayPickerUI(file, testFunctions)));
+    // tslint:disable-next-line:no-unnecessary-callback-wrapper
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Picker_UI, (file: Uri, testFunctions: TestFunction[]) => displayPickerUI(file, testFunctions)));
     disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Picker_UI_Debug, (file, testFunctions) => displayPickerUI(file, testFunctions, true)));
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Stop, () => stopTests()));
+    // tslint:disable-next-line:no-unnecessary-callback-wrapper
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Stop, (resource: Uri) => stopTests(resource)));
     disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_ViewOutput, () => outChannel.show()));
     disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Ask_To_Stop_Discovery, () => displayStopUI('Stop discovering tests')));
     disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Ask_To_Stop_Test, () => displayStopUI('Stop running tests')));
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Select_And_Run_Method, () => selectAndRunTestMethod()));
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Select_And_Debug_Method, () => selectAndRunTestMethod(true)));
+    // tslint:disable-next-line:no-unnecessary-callback-wrapper
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Select_And_Run_Method, (resource: Uri) => selectAndRunTestMethod(resource)));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Select_And_Debug_Method, (resource: Uri) => selectAndRunTestMethod(resource, true)));
+    // tslint:disable-next-line:no-unnecessary-callback-wrapper
     disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Select_And_Run_File, () => selectAndRunTestFile()));
+    // tslint:disable-next-line:no-unnecessary-callback-wrapper
     disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Run_Current_File, () => runCurrentTestFile()));
 
     return disposables;
 }
 
-function displayUI() {
-    let testManager = getTestRunner();
+async function displayUI() {
+    const testManager = await getTestManager(true);
     if (!testManager) {
-        return displayTestFrameworkError(outChannel);
-    }
-
-    testDisplay = testDisplay ? testDisplay : new TestDisplay();
-    testDisplay.displayTestUI(getTestWorkingDirectory());
-}
-function displayPickerUI(file: string, testFunctions: TestFunction[], debug?: boolean) {
-    let testManager = getTestRunner();
-    if (!testManager) {
-        return displayTestFrameworkError(outChannel);
-    }
-
-    testDisplay = testDisplay ? testDisplay : new TestDisplay();
-    testDisplay.displayFunctionTestPickerUI(getTestWorkingDirectory(), file, testFunctions, debug);
-}
-function selectAndRunTestMethod(debug?: boolean) {
-    let testManager = getTestRunner();
-    if (!testManager) {
-        return displayTestFrameworkError(outChannel);
-    }
-    testManager.discoverTests(true, true).then(() => {
-        const tests = getDiscoveredTests();
-        testDisplay = testDisplay ? testDisplay : new TestDisplay();
-        testDisplay.selectTestFunction(getTestWorkingDirectory(), tests).then(testFn => {
-            runTestsImpl(testFn, debug);
-        }).catch(() => { });
-    });
-}
-function selectAndRunTestFile() {
-    let testManager = getTestRunner();
-    if (!testManager) {
-        return displayTestFrameworkError(outChannel);
-    }
-    testManager.discoverTests(true, true).then(() => {
-        const tests = getDiscoveredTests();
-        testDisplay = testDisplay ? testDisplay : new TestDisplay();
-        testDisplay.selectTestFile(getTestWorkingDirectory(), tests).then(testFile => {
-            runTestsImpl({ testFile: [testFile] });
-        }).catch(() => { });
-    });
-}
-function runCurrentTestFile() {
-    if (!vscode.window.activeTextEditor) {
         return;
     }
-    const currentFilePath = vscode.window.activeTextEditor.document.fileName;
-    let testManager = getTestRunner();
+
+    testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
+    testDisplay.displayTestUI(testManager.workspace);
+}
+async function displayPickerUI(file: Uri, testFunctions: TestFunction[], debug?: boolean) {
+    const testManager = await getTestManager(true, file);
     if (!testManager) {
-        return displayTestFrameworkError(outChannel);
+        return;
     }
-    testManager.discoverTests(true, true).then(() => {
-        const tests = getDiscoveredTests();
-        const testFiles = tests.testFiles.filter(testFile => {
-            return testFile.fullPath === currentFilePath;
-        });
-        if (testFiles.length < 1) {
-            return;
-        }
-        runTestsImpl({ testFile: [testFiles[0]] });
+
+    testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
+    testDisplay.displayFunctionTestPickerUI(testManager.workspace, testManager.workingDirectory, file, testFunctions, debug);
+}
+async function selectAndRunTestMethod(resource: Uri, debug?: boolean) {
+    const testManager = await getTestManager(true, resource);
+    if (!testManager) {
+        return;
+    }
+    try {
+        await testManager.discoverTests(true, true, true);
+    } catch (ex) {
+        return;
+    }
+
+    const tests = testCollectionStorage.getTests(testManager.workspace);
+    testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
+    const selectedTestFn = await testDisplay.selectTestFunction(testManager.workspace.fsPath, tests);
+    if (!selectedTestFn) {
+        return;
+    }
+    // tslint:disable-next-line:prefer-type-cast
+    await runTestsImpl(testManager.workspace, { testFunction: [selectedTestFn.testFunction] } as TestsToRun, debug);
+}
+async function selectAndRunTestFile() {
+    const testManager = await getTestManager(true);
+    if (!testManager) {
+        return;
+    }
+    try {
+        await testManager.discoverTests(true, true, true);
+    } catch (ex) {
+        return;
+    }
+
+    const tests = testCollectionStorage.getTests(testManager.workspace);
+    testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
+    const selectedFile = await testDisplay.selectTestFile(testManager.workspace.fsPath, tests);
+    if (!selectedFile) {
+        return;
+    }
+    // tslint:disable-next-line:prefer-type-cast
+    await runTestsImpl(testManager.workspace, { testFile: [selectedFile] } as TestsToRun);
+}
+async function runCurrentTestFile() {
+    if (!window.activeTextEditor) {
+        return;
+    }
+    const testManager = await getTestManager(true, window.activeTextEditor.document.uri);
+    if (!testManager) {
+        return;
+    }
+    try {
+        await testManager.discoverTests(true, true, true);
+    } catch (ex) {
+        return;
+    }
+    const tests = testCollectionStorage.getTests(testManager.workspace);
+    const testFiles = tests.testFiles.filter(testFile => {
+        return testFile.fullPath === window.activeTextEditor.document.uri.fsPath;
     });
+    if (testFiles.length < 1) {
+        return;
+    }
+    // tslint:disable-next-line:prefer-type-cast
+    await runTestsImpl(testManager.workspace, { testFile: [testFiles[0]] } as TestsToRun);
 }
-function displayStopUI(message: string) {
-    let testManager = getTestRunner();
+async function displayStopUI(message: string) {
+    const testManager = await getTestManager(true);
     if (!testManager) {
-        return displayTestFrameworkError(outChannel);
+        return;
     }
 
-    testDisplay = testDisplay ? testDisplay : new TestDisplay();
-    testDisplay.displayStopTestUI(message);
+    testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
+    testDisplay.displayStopTestUI(testManager.workspace, message);
 }
-let uniTestSettingsString = JSON.stringify(settings.unitTest);
 
+let uniTestSettingsString: string;
+function autoResetTests() {
+    if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length > 1) {
+        // tslint:disable-next-line:no-empty
+        return { dispose: () => { } };
+    }
+
+    const settings = PythonSettings.getInstance();
+    uniTestSettingsString = JSON.stringify(settings.unitTest);
+    return workspace.onDidChangeConfiguration(() => setTimeout(onConfigChanged, 1000));
+}
 function onConfigChanged() {
-    // Possible that a test framework has been enabled or some settings have changed
-    // Meaning we need to re-load the discovered tests (as something could have changed)
+    // If there's one workspace, then stop the tests and restart,
+    // else let the user do this manually.
+    if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length > 1) {
+        return;
+    }
+    const settings = PythonSettings.getInstance();
+
+    // Possible that a test framework has been enabled or some settings have changed.
+    // Meaning we need to re-load the discovered tests (as something could have changed).
     const newSettings = JSON.stringify(settings.unitTest);
     if (uniTestSettingsString === newSettings) {
         return;
@@ -199,70 +246,47 @@ function onConfigChanged() {
         if (testResultDisplay) {
             testResultDisplay.enabled = false;
         }
-
-        if (testManager) {
-            testManager.stop();
-            testManager = null;
-        }
-        if (pyTestManager) {
-            pyTestManager.dispose();
-            pyTestManager = null;
-        }
-        if (nosetestManager) {
-            nosetestManager.dispose();
-            nosetestManager = null;
-        }
-        if (unittestManager) {
-            unittestManager.dispose();
-            unittestManager = null;
-        }
+        workspaceTestManagerService.dispose();
         return;
     }
-
     if (testResultDisplay) {
         testResultDisplay.enabled = true;
     }
-
-    // No need to display errors
-    if (settings.unitTest.nosetestsEnabled || settings.unitTest.pyTestEnabled || settings.unitTest.unittestEnabled) {
-        discoverTests(true);
-    }
+    autoDiscoverTests();
 }
-function getTestRunner() {
-    const rootDirectory = getTestWorkingDirectory();
-    if (settings.unitTest.nosetestsEnabled) {
-        return nosetestManager = nosetestManager ? nosetestManager : new nosetests.TestManager(rootDirectory, outChannel);
+function autoDiscoverTests() {
+    if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length > 1) {
+        return;
     }
-    else if (settings.unitTest.pyTestEnabled) {
-        return pyTestManager = pyTestManager ? pyTestManager : new pytest.TestManager(rootDirectory, outChannel);
+    const settings = PythonSettings.getInstance();
+    if (!settings.unitTest.nosetestsEnabled && !settings.unitTest.pyTestEnabled && !settings.unitTest.unittestEnabled) {
+        return;
     }
-    else if (settings.unitTest.unittestEnabled) {
-        return unittestManager = unittestManager ? unittestManager : new unittest.TestManager(rootDirectory, outChannel);
-    }
-    return null;
-}
 
-function stopTests() {
-    let testManager = getTestRunner();
+    // No need to display errors.
+    // tslint:disable-next-line:no-empty
+    discoverTests(workspace.workspaceFolders[0].uri, true).catch(() => { });
+}
+async function stopTests(resource: Uri) {
+    const testManager = await getTestManager(true, resource);
     if (testManager) {
         testManager.stop();
     }
 }
-function discoverTests(ignoreCache?: boolean) {
-    let testManager = getTestRunner();
+async function discoverTests(resource?: Uri, ignoreCache?: boolean, userInitiated?: boolean) {
+    const testManager = await getTestManager(true, resource);
     if (!testManager) {
-        displayTestFrameworkError(outChannel);
-        return Promise.resolve(null);
+        return;
     }
 
     if (testManager && (testManager.status !== TestStatus.Discovering && testManager.status !== TestStatus.Running)) {
         testResultDisplay = testResultDisplay ? testResultDisplay : new TestResultDisplay(outChannel, onDidChange);
-        return testResultDisplay.DisplayDiscoverStatus(testManager.discoverTests(ignoreCache));
-    }
-    else {
-        return Promise.resolve(null);
+        const discoveryPromise = testManager.discoverTests(ignoreCache, false, userInitiated);
+        testResultDisplay.displayDiscoverStatus(discoveryPromise);
+        await discoveryPromise;
     }
 }
+// tslint:disable-next-line:no-any
 function isTestsToRun(arg: any): arg is TestsToRun {
     if (arg && arg.testFunction && Array.isArray(arg.testFunction)) {
         return true;
@@ -275,46 +299,21 @@ function isTestsToRun(arg: any): arg is TestsToRun {
     }
     return false;
 }
-function isUri(arg: any): arg is vscode.Uri {
-    return arg && arg.fsPath && typeof arg.fsPath === 'string';
-}
-function isFlattenedTestFunction(arg: any): arg is FlattenedTestFunction {
-    return arg && arg.testFunction && typeof arg.xmlClassName === 'string' &&
-        arg.parentTestFile && typeof arg.testFunction.name === 'string';
-}
-function identifyTestType(rootDirectory: string, arg?: vscode.Uri | TestsToRun | boolean | FlattenedTestFunction): TestsToRun | boolean | null | undefined {
-    if (typeof arg === 'boolean') {
-        return arg === true;
-    }
-    if (isTestsToRun(arg)) {
-        return arg;
-    }
-    if (isFlattenedTestFunction(arg)) {
-        return <TestsToRun>{ testFunction: [arg.testFunction] };
-    }
-    if (isUri(arg)) {
-        return resolveValueAsTestToRun(arg.fsPath, rootDirectory);
-    }
-    return null;
-}
-function runTestsImpl(arg?: vscode.Uri | TestsToRun | boolean | FlattenedTestFunction, debug: boolean = false) {
-    let testManager = getTestRunner();
+async function runTestsImpl(resource?: Uri, testsToRun?: TestsToRun, runFailedTests?: boolean, debug: boolean = false) {
+    const testManager = await getTestManager(true, resource);
     if (!testManager) {
-        return displayTestFrameworkError(outChannel);
+        return;
     }
-
-    // lastRanTests = testsToRun;
-    const runInfo = identifyTestType(getTestWorkingDirectory(), arg);
 
     testResultDisplay = testResultDisplay ? testResultDisplay : new TestResultDisplay(outChannel, onDidChange);
+    const promise = testManager.runTest(testsToRun, runFailedTests, debug)
+        .catch(reason => {
+            if (reason !== CANCELLATION_REASON) {
+                outChannel.appendLine(`Error: ${reason}`);
+            }
+            return Promise.reject(reason);
+        });
 
-    const ret = typeof runInfo === 'boolean' ? testManager.runTest(runInfo, debug) : testManager.runTest(runInfo as TestsToRun, debug);
-    let runPromise = ret.catch(reason => {
-        if (reason !== CANCELLATION_REASON) {
-            outChannel.appendLine('Error: ' + reason);
-        }
-        return Promise.reject(reason);
-    });
-
-    testResultDisplay.DisplayProgressStatus(runPromise, debug);
+    testResultDisplay.displayProgressStatus(promise, debug);
+    await promise;
 }

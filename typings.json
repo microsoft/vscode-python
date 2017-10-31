@@ -1,6 +1,0 @@
-{
-  "globalDependencies": {
-    "fs-extra": "registry:dt/fs-extra#0.0.0+20160319124112",
-    "xml2js": "registry:dt/xml2js#0.0.0+20160317120654"
-  }
-}

@@ -1,10 +1,10 @@
 "use strict";
 
-import { SocketClient } from './socketClient';
-import { SocketServer } from '../common/comms/socketServer';
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { SocketClient } from './socketClient';
+import { SocketServer } from '../common/comms/socketServer';
 import { createDeferred, Deferred } from '../common/helpers';
 import { PythonSettings } from '../common/configSettings';
 import { EventEmitter } from 'events';
@@ -80,7 +80,8 @@ export class ClientAdapter extends EventEmitter {
         this.startSocketServer().then(port => {
             const def = createDeferred<any>();
             const options = { env: newEnv, cwd: this.rootDir };
-            this.process = child_process.spawn(PythonSettings.getInstance().pythonPath, [pyFile, port.toString()], options);
+            const rootDirUri = this.rootDir ? vscode.Uri.file(this.rootDir) : undefined;
+            this.process = child_process.spawn(PythonSettings.getInstance(rootDirUri).pythonPath, [pyFile, port.toString()], options);
             this.process.stdout.setEncoding('utf8');
             this.process.stderr.setEncoding('utf8');
 

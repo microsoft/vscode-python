@@ -75,7 +75,7 @@ export function getTextEditsFromPatch(before: string, patch: string): TextEdit[]
 
     return textEdits;
 }
-export function getWorkspaceEditsFromPatch(filePatches: string[]): WorkspaceEdit {
+export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?:string): WorkspaceEdit {
     const workspaceEdit = new WorkspaceEdit();
     filePatches.forEach(patch => {
         const indexOfAtAt = patch.indexOf('@@');
@@ -101,7 +101,7 @@ export function getWorkspaceEditsFromPatch(filePatches: string[]): WorkspaceEdit
         }
 
         let fileName = fileNameLines[0].substring(fileNameLines[0].indexOf(' a') + 3).trim();
-        fileName = path.isAbsolute(fileName) ? fileName : path.resolve(vscode.workspace.rootPath, fileName);
+        fileName = workspaceRoot && !path.isAbsolute(fileName) ? path.resolve(workspaceRoot, fileName) : fileName;
         if (!fs.existsSync(fileName)) {
             return;
         }

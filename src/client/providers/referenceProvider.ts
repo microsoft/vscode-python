@@ -2,14 +2,11 @@
 
 import * as vscode from 'vscode';
 import * as proxy from './jediProxy';
+import { JediFactory } from '../languageServices/jediProxyFactory';
 
 
 export class PythonReferenceProvider implements vscode.ReferenceProvider {
-    private jediProxyHandler: proxy.JediProxyHandler<proxy.IReferenceResult>;
-
-    public constructor(context: vscode.ExtensionContext, jediProxy: proxy.JediProxy = null) {
-        this.jediProxyHandler = new proxy.JediProxyHandler(context, jediProxy);
-    }
+    public constructor(private jediFactory: JediFactory) { }
     private static parseData(data: proxy.IReferenceResult): vscode.Location[] {
         if (data && data.references.length > 0) {
             var references = data.references.filter(ref => {
@@ -52,7 +49,7 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
             cmd.source = document.getText();
         }
 
-        return this.jediProxyHandler.sendCommand(cmd, token).then(data => {
+        return this.jediFactory.getJediProxyHandler<proxy.IReferenceResult>(document.uri).sendCommand(cmd, token).then(data => {
             return PythonReferenceProvider.parseData(data);
         });
     }

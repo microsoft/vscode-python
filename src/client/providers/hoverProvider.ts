@@ -4,13 +4,10 @@ import * as vscode from 'vscode';
 import * as proxy from './jediProxy';
 import { highlightCode } from './jediHelpers';
 import { EOL } from 'os';
+import { JediFactory } from '../languageServices/jediProxyFactory';
 
 export class PythonHoverProvider implements vscode.HoverProvider {
-    private jediProxyHandler: proxy.JediProxyHandler<proxy.IHoverResult>;
-
-    public constructor(context: vscode.ExtensionContext, jediProxy: proxy.JediProxy = null) {
-        this.jediProxyHandler = new proxy.JediProxyHandler(context, jediProxy);
-    }
+    public constructor(private jediFactory: JediFactory) { }
     private static parseData(data: proxy.IHoverResult, currentWord: string): vscode.Hover {
         let results = [];
         let capturedInfo: string[] = [];
@@ -96,7 +93,7 @@ export class PythonHoverProvider implements vscode.HoverProvider {
             cmd.source = document.getText();
         }
 
-        const data = await this.jediProxyHandler.sendCommand(cmd, token);
+        const data = await this.jediFactory.getJediProxyHandler<proxy.IHoverResult>(document.uri).sendCommand(cmd, token);
         if (!data || !data.items.length) {
             return;
         }

@@ -1,22 +1,17 @@
 'use strict';
-import { createTemporaryFile } from '../../common/helpers';
-import { OutputChannel, CancellationToken } from 'vscode';
-import { TestsToRun, Tests } from '../common/contracts';
-import { updateResults } from '../common/testUtils';
-import { updateResultsFromXmlLogFile, PassCalculationFormulae } from '../common/xUnitParser';
-import { run } from '../common/runner';
-import { PythonSettings } from '../../common/configSettings';
-import * as vscode from 'vscode';
-import { execPythonFile } from './../../common/utils';
-import { createDeferred } from './../../common/helpers';
-import * as os from 'os';
 import * as path from 'path';
+import { CancellationToken, OutputChannel, Uri } from 'vscode';
+import { PythonSettings } from '../../common/configSettings';
+import { createTemporaryFile } from '../../common/helpers';
+import { run } from '../common/runner';
+import { ITestDebugLauncher, ITestResultsService, Tests, TestsToRun } from '../common/types';
+import { PassCalculationFormulae, updateResultsFromXmlLogFile } from '../common/xUnitParser';
 
-const pythonSettings = PythonSettings.getInstance();
 const WITH_XUNIT = '--with-xunit';
 const XUNIT_FILE = '--xunit-file';
 
-export function runTest(rootDirectory: string, tests: Tests, args: string[], testsToRun?: TestsToRun, token?: CancellationToken, outChannel?: OutputChannel, debug?: boolean): Promise<any> {
+// tslint:disable-next-line:no-any
+export function runTest(testResultsService: ITestResultsService, debugLauncher: ITestDebugLauncher, rootDirectory: string, tests: Tests, args: string[], testsToRun?: TestsToRun, token?: CancellationToken, outChannel?: OutputChannel, debug?: boolean): Promise<any> {
     let testPaths = [];
     if (testsToRun && testsToRun.testFolder) {
         testPaths = testPaths.concat(testsToRun.testFolder.map(f => f.nameToRun));
@@ -32,6 +27,7 @@ export function runTest(rootDirectory: string, tests: Tests, args: string[], tes
     }
 
     let xmlLogFile = '';
+    // tslint:disable-next-line:no-empty
     let xmlLogFileCleanup: Function = () => { };
 
     // Check if '--with-xunit' is in args list
@@ -41,7 +37,7 @@ export function runTest(rootDirectory: string, tests: Tests, args: string[], tes
     }
 
     // Check if '--xunit-file' exists, if not generate random xml file
-    let indexOfXUnitFile = noseTestArgs.findIndex(value => value.indexOf(XUNIT_FILE) === 0);
+    const indexOfXUnitFile = noseTestArgs.findIndex(value => value.indexOf(XUNIT_FILE) === 0);
     let promiseToGetXmlLogFile: Promise<string>;
     if (indexOfXUnitFile === -1) {
         promiseToGetXmlLogFile = createTemporaryFile('.xml').then(xmlLogResult => {
@@ -51,12 +47,10 @@ export function runTest(rootDirectory: string, tests: Tests, args: string[], tes
             noseTestArgs.push(`${XUNIT_FILE}=${xmlLogFile}`);
             return xmlLogResult.filePath;
         });
-    }
-    else {
+    } else {
         if (noseTestArgs[indexOfXUnitFile].indexOf('=') === -1) {
             xmlLogFile = noseTestArgs[indexOfXUnitFile + 1];
-        }
-        else {
+        } else {
             xmlLogFile = noseTestArgs[indexOfXUnitFile].substring(noseTestArgs[indexOfXUnitFile].indexOf('=') + 1).trim();
         }
 
@@ -64,65 +58,19 @@ export function runTest(rootDirectory: string, tests: Tests, args: string[], tes
     }
 
     return promiseToGetXmlLogFile.then(() => {
+        const pythonSettings = PythonSettings.getInstance(Uri.file(rootDirectory));
         if (debug === true) {
-            const def = createDeferred<any>();
-            const launchDef = createDeferred<any>();
             const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');
-
-            // start the debug adapter only once we have started the debug process
-            // pytestlauncherargs
             const nosetestlauncherargs = [rootDirectory, 'my_secret', pythonSettings.unitTest.debugPort.toString(), 'nose'];
-            let outputChannelShown = false;
-            execPythonFile(pythonSettings.pythonPath, [testLauncherFile].concat(nosetestlauncherargs).concat(noseTestArgs.concat(testPaths)), rootDirectory, true, (data: string) => {
-                if (data.startsWith('READY' + os.EOL)) {
-                    // debug socket server has started
-                    launchDef.resolve();
-                    data = data.substring(('READY' + os.EOL).length);
-                }
-
-                if (!outputChannelShown) {
-                    outputChannelShown = true;
-                    outChannel.show();
-                }
-                outChannel.append(data);
-            }, token).catch(reason => {
-                if (!def.rejected && !def.resolved) {
-                    def.reject(reason);
-                }
-            }).then(() => {
-                if (!def.rejected && !def.resolved) {
-                    def.resolve();
-                }
-            }).catch(reason => {
-                if (!def.rejected && !def.resolved) {
-                    def.reject(reason);
-                }
-            });
-
-            launchDef.promise.then(() => {
-                return vscode.commands.executeCommand('vscode.startDebug', {
-                    "name": "Debug Unit Test",
-                    "type": "python",
-                    "request": "attach",
-                    "localRoot": rootDirectory,
-                    "remoteRoot": rootDirectory,
-                    "port": pythonSettings.unitTest.debugPort,
-                    "secret": "my_secret",
-                    "host": "localhost"
-                });
-            }).catch(reason => {
-                if (!def.rejected && !def.resolved) {
-                    def.reject(reason);
-                }
-            });
-
-            return def.promise;
-        }
-        else {
-            return run(pythonSettings.unitTest.nosetestPath, noseTestArgs.concat(testPaths), rootDirectory, token, outChannel);
+            const debuggerArgs = [testLauncherFile].concat(nosetestlauncherargs).concat(noseTestArgs.concat(testPaths));
+            // tslint:disable-next-line:prefer-type-cast no-any
+            return debugLauncher.launchDebugger(rootDirectory, debuggerArgs, token, outChannel) as Promise<any>;
+        } else {
+            // tslint:disable-next-line:prefer-type-cast no-any
+            return run(pythonSettings.unitTest.nosetestPath, noseTestArgs.concat(testPaths), rootDirectory, token, outChannel) as Promise<any>;
         }
     }).then(() => {
-        return updateResultsFromLogFiles(tests, xmlLogFile);
+        return updateResultsFromLogFiles(tests, xmlLogFile, testResultsService);
     }).then(result => {
         xmlLogFileCleanup();
         return result;
@@ -132,9 +80,10 @@ export function runTest(rootDirectory: string, tests: Tests, args: string[], tes
     });
 }
 
-export function updateResultsFromLogFiles(tests: Tests, outputXmlFile: string): Promise<any> {
+// tslint:disable-next-line:no-any
+export function updateResultsFromLogFiles(tests: Tests, outputXmlFile: string, testResultsService: ITestResultsService): Promise<any> {
     return updateResultsFromXmlLogFile(tests, outputXmlFile, PassCalculationFormulae.nosetests).then(() => {
-        updateResults(tests);
+        testResultsService.updateResults(tests);
         return tests;
     });
 }

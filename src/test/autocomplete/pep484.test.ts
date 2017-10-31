@@ -11,9 +11,10 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as settings from '../../client/common/configSettings';
 import { execPythonFile } from '../../client/common/utils';
-import { initialize, closeActiveWindows } from '../initialize';
+import { initialize, closeActiveWindows, initializeTest } from '../initialize';
+import { PythonSettings } from '../../client/common/configSettings';
+import { rootWorkspaceUri } from '../common';
 
-const pythonSettings = settings.PythonSettings.getInstance();
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
 const filePep484 = path.join(autoCompPath, 'pep484.py');
 
@@ -21,9 +22,10 @@ suite('Autocomplete PEP 484', () => {
     let isPython3: Promise<boolean>;
     suiteSetup(async () => {
         await initialize();
-        const version = await execPythonFile(pythonSettings.pythonPath, ['--version'], __dirname, true);
+        const version = await execPythonFile(rootWorkspaceUri, PythonSettings.getInstance(rootWorkspaceUri).pythonPath, ['--version'], __dirname, true);
         isPython3 = Promise.resolve(version.indexOf('3.') >= 0);
     });
+    setup(() => initializeTest());
     suiteTeardown(() => closeActiveWindows());
     teardown(() => closeActiveWindows());
 

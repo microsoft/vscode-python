@@ -1,12 +1,12 @@
 import * as fs from 'fs';
 import * as xml2js from 'xml2js';
-import { Tests, TestStatus } from './contracts';
+import { Tests, TestStatus } from './types';
 
 export enum PassCalculationFormulae {
     pytest,
     nosetests
 }
-interface TestSuiteResult {
+type TestSuiteResult = {
     $: {
         errors: string;
         failures: string;
@@ -17,8 +17,8 @@ interface TestSuiteResult {
         time: string;
     };
     testcase: TestCaseResult[];
-}
-interface TestCaseResult {
+};
+type TestCaseResult = {
     $: {
         classname: string;
         file: string;
@@ -38,30 +38,32 @@ interface TestCaseResult {
         _: string;
         $: { message: string, type: string }
     }[];
-}
+};
 
+// tslint:disable-next-line:no-any
 function getSafeInt(value: string, defaultValue: any = 0): number {
-    const num = parseInt(value);
+    const num = parseInt(value, 10);
     if (isNaN(num)) { return defaultValue; }
     return num;
 }
-export function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, passCalculationFormulae: PassCalculationFormulae): Promise<any> {
+export function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, passCalculationFormulae: PassCalculationFormulae): Promise<{}> {
+    // tslint:disable-next-line:no-any
     return new Promise<any>((resolve, reject) => {
         fs.readFile(outputXmlFile, 'utf8', (err, data) => {
             if (err) {
                 return reject(err);
             }
 
-            xml2js.parseString(data, (err, result) => {
-                if (err) {
-                    return reject(err);
+            xml2js.parseString(data, (error, parserResult) => {
+                if (error) {
+                    return reject(error);
                 }
 
-                let testSuiteResult: TestSuiteResult = result.testsuite;
+                const testSuiteResult: TestSuiteResult = parserResult.testsuite;
                 tests.summary.errors = getSafeInt(testSuiteResult.$.errors);
                 tests.summary.failures = getSafeInt(testSuiteResult.$.failures);
                 tests.summary.skipped = getSafeInt(testSuiteResult.$.skips ? testSuiteResult.$.skips : testSuiteResult.$.skip);
-                let testCount = getSafeInt(testSuiteResult.$.tests);
+                const testCount = getSafeInt(testSuiteResult.$.tests);
 
                 switch (passCalculationFormulae) {
                     case PassCalculationFormulae.pytest: {
@@ -73,7 +75,7 @@ export function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string,
                         break;
                     }
                     default: {
-                        throw new Error("Unknown Test Pass Calculation");
+                        throw new Error('Unknown Test Pass Calculation');
                     }
                 }
 
@@ -83,7 +85,7 @@ export function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string,
 
                 testSuiteResult.testcase.forEach((testcase: TestCaseResult) => {
                     const xmlClassName = testcase.$.classname.replace(/\(\)/g, '').replace(/\.\./g, '.').replace(/\.\./g, '.').replace(/\.+$/, '');
-                    let result = tests.testFunctions.find(fn => fn.xmlClassName === xmlClassName && fn.testFunction.name === testcase.$.name);
+                    const result = tests.testFunctions.find(fn => fn.xmlClassName === xmlClassName && fn.testFunction.name === testcase.$.name);
                     if (!result) {
                         // Possible we're dealing with nosetests, where the file name isn't returned to us
                         // When dealing with nose tests
@@ -94,7 +96,7 @@ export function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string,
                         //     fn.parentTestSuite && fn.parentTestSuite.name === testcase.$.classname);
 
                         // Look for failed file test
-                        let fileTest = testcase.$.file && tests.testFiles.find(file => file.nameToRun === testcase.$.file);
+                        const fileTest = testcase.$.file && tests.testFiles.find(file => file.nameToRun === testcase.$.file);
                         if (fileTest && testcase.error) {
                             fileTest.status = TestStatus.Error;
                             fileTest.passed = false;
@@ -108,7 +110,6 @@ export function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string,
                     result.testFunction.time = parseFloat(testcase.$.time);
                     result.testFunction.passed = true;
                     result.testFunction.status = TestStatus.Pass;
-
 
                     if (testcase.failure) {
                         result.testFunction.status = TestStatus.Fail;

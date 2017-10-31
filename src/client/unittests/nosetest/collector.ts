@@ -1,14 +1,13 @@
 'use strict';
-import * as path from 'path';
-import { execPythonFile } from './../../common/utils';
-import { TestFile, TestSuite, TestFunction, Tests } from '../common/contracts';
 import * as os from 'os';
-import { extractBetweenDelimiters, convertFileToPackage, flattenTestFiles } from '../common/testUtils';
+import * as path from 'path';
 import { CancellationToken } from 'vscode';
+import { OutputChannel, Uri } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
-import { OutputChannel } from 'vscode';
+import { convertFileToPackage, extractBetweenDelimiters } from '../common/testUtils';
+import { ITestsHelper, TestFile, TestFunction, Tests, TestSuite } from '../common/types';
+import { execPythonFile } from './../../common/utils';
 
-const pythonSettings = PythonSettings.getInstance();
 const NOSE_WANT_FILE_PREFIX = 'nose.selector: DEBUG: wantFile ';
 const NOSE_WANT_FILE_SUFFIX = '.py? True';
 const NOSE_WANT_FILE_SUFFIX_WITHOUT_EXT = '? True';
@@ -21,7 +20,7 @@ const argsToExcludeForDiscovery = ['-v', '--verbose',
     '--failed', '--process-restartworker', '--with-xunit'];
 const settingsInArgsToExcludeForDiscovery = ['--verbosity'];
 
-export function discoverTests(rootDirectory: string, args: string[], token: CancellationToken, ignoreCache: boolean, outChannel: OutputChannel): Promise<Tests> {
+export function discoverTests(rootDirectory: string, args: string[], token: CancellationToken, ignoreCache: boolean, outChannel: OutputChannel, testsHelper: ITestsHelper): Promise<Tests> {
     let logOutputLines: string[] = [''];
     let testFiles: TestFile[] = [];
 
@@ -45,8 +44,7 @@ export function discoverTests(rootDirectory: string, args: string[], token: Canc
         //  and starts with nose.selector: DEBUG: want
         if (logOutputLines[lastLineIndex].endsWith('? True')) {
             logOutputLines.push('');
-        }
-        else {
+        } else {
             // We don't need this line
             logOutputLines[lastLineIndex] = '';
         }
@@ -78,14 +76,14 @@ export function discoverTests(rootDirectory: string, args: string[], token: Canc
         });
     }
 
-    return execPythonFile(pythonSettings.unitTest.nosetestPath, args.concat(['--collect-only', '-vvv']), rootDirectory, true)
+    return execPythonFile(rootDirectory, PythonSettings.getInstance(Uri.file(rootDirectory)).unitTest.nosetestPath, args.concat(['--collect-only', '-vvv']), rootDirectory, true)
         .then(data => {
             outChannel.appendLine(data);
             processOutput(data);
 
             // Exclude tests that don't have any functions or test suites
             testFiles = testFiles.filter(testFile => testFile.suites.length > 0 || testFile.functions.length > 0);
-            return flattenTestFiles(testFiles);
+            return testsHelper.flattenTestFiles(testFiles);
         });
 }
 
@@ -116,10 +114,10 @@ function parseNoseTestModuleCollectionResult(rootDirectory: string, lines: strin
         }
 
         if (line.startsWith('nose.selector: DEBUG: wantClass <class \'')) {
-            let name = extractBetweenDelimiters(line, 'nose.selector: DEBUG: wantClass <class \'', '\'>? True');
+            const name = extractBetweenDelimiters(line, 'nose.selector: DEBUG: wantClass <class \'', '\'>? True');
             const clsName = path.extname(name).substring(1);
             const testSuite: TestSuite = {
-                name: clsName, nameToRun: fileName + `:${clsName}`,
+                name: clsName, nameToRun: `${fileName}:${clsName}`,
                 functions: [], suites: [], xmlName: name, time: 0, isUnitTest: false,
                 isInstance: false, functionsFailed: 0, functionsPassed: 0
             };
@@ -127,7 +125,7 @@ function parseNoseTestModuleCollectionResult(rootDirectory: string, lines: strin
             return;
         }
         if (line.startsWith('nose.selector: DEBUG: wantClass ')) {
-            let name = extractBetweenDelimiters(line, 'nose.selector: DEBUG: wantClass ', '? True');
+            const name = extractBetweenDelimiters(line, 'nose.selector: DEBUG: wantClass ', '? True');
             const testSuite: TestSuite = {
                 name: path.extname(name).substring(1), nameToRun: `${fileName}:.${name}`,
                 functions: [], suites: [], xmlName: name, time: 0, isUnitTest: false,
@@ -145,6 +143,7 @@ function parseNoseTestModuleCollectionResult(rootDirectory: string, lines: strin
                 time: 0, functionsFailed: 0, functionsPassed: 0
             };
 
+            // tslint:disable-next-line:no-non-null-assertion
             const cls = testFile.suites.find(suite => suite.name === clsName)!;
             cls.functions.push(fn);
             return;

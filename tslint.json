@@ -1,13 +1,46 @@
 {
+    "extends": [
+        "tslint-eslint-rules",
+        "tslint-microsoft-contrib"
+    ],
     "rules": {
         "no-unused-expression": true,
-        "no-unreachable": true,
         "no-duplicate-variable": true,
-        "no-duplicate-key": true,
         "no-unused-variable": true,
         "curly": true,
         "class-name": true,
-        "semicolon": true,
-        "triple-equals": true
+        "semicolon": [
+            true
+        ],
+        "triple-equals": true,
+        "no-relative-imports": false,
+        "max-line-length": false,
+        "typedef": false,
+        "no-string-throw": true,
+        "missing-jsdoc": false,
+        "one-line": [
+            true,
+            "check-catch",
+            "check-finally",
+            "check-else"
+        ],
+        "no-parameter-properties": false,
+        "no-reserved-keywords": false,
+        "newline-before-return": false,
+        "export-name": false,
+        "align": false,
+        "linebreak-style": false,
+        "strict-boolean-expressions": [
+            true,
+            "allow-null-union",
+            "allow-undefined-union",
+            "allow-string",
+            "allow-number"
+        ],
+        "await-promise": [
+            true,
+            "Thenable"
+        ],
+        "completed-docs": false
     }
 }

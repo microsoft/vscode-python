@@ -1,54 +1,44 @@
-import * as vscode from 'vscode';
-import { TestConfigurationManager } from '../common/testConfigurationManager';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as vscode from 'vscode';
+import { Uri } from 'vscode';
 import { Installer, Product } from '../../common/installer';
+import { TestConfigurationManager } from '../common/testConfigurationManager';
+import { ITestConfigSettingsService } from '../common/types';
 
 export class ConfigurationManager extends TestConfigurationManager {
-    public enable(): Thenable<any> {
-        const pythonConfig = vscode.workspace.getConfiguration('python');
-        return pythonConfig.update('unitTest.nosetestsEnabled', true);
+    constructor(workspace: Uri, outputChannel: vscode.OutputChannel,
+        installer: Installer, testConfigSettingsService: ITestConfigSettingsService) {
+        super(workspace, Product.nosetest, outputChannel, installer, testConfigSettingsService);
     }
-    public disable(): Thenable<any> {
-        const pythonConfig = vscode.workspace.getConfiguration('python');
-        return pythonConfig.update('unitTest.nosetestsEnabled', false);
-    }
-
-    private static configFilesExist(rootDir: string): Promise<string[]> {
+    private static async configFilesExist(rootDir: string): Promise<string[]> {
         const promises = ['.noserc', 'nose.cfg'].map(cfg => {
             return new Promise<string>(resolve => {
                 fs.exists(path.join(rootDir, cfg), exists => { resolve(exists ? cfg : ''); });
             });
         });
-        return Promise.all(promises).then(values => {
-            return values.filter(exists => exists.length > 0);
-        });
+        const values = await Promise.all(promises);
+        return values.filter(exists => exists.length > 0);
     }
-    public configure(rootDir: string): Promise<any> {
+    // tslint:disable-next-line:no-any
+    public async configure(wkspace: Uri): Promise<any> {
         const args: string[] = [];
         const configFileOptionLabel = 'Use existing config file';
-        let installer = new Installer(this.outputChannel);
-        return ConfigurationManager.configFilesExist(rootDir).then(configFiles => {
-            if (configFiles.length > 0) {
-                return Promise.resolve();
-            }
+        const configFiles = await ConfigurationManager.configFilesExist(wkspace.fsPath);
+        // If a config file exits, there's nothing to be configured.
+        if (configFiles.length > 0) {
+            return;
+        }
 
-            return this.getTestDirs(rootDir).then(subDirs => {
-                return this.selectTestDir(rootDir, subDirs);
-            }).then(testDir => {
-                if (typeof testDir === 'string' && testDir !== configFileOptionLabel) {
-                    args.push(testDir);
-                }
-            });
-        }).then(() => {
-            return installer.isInstalled(Product.nosetest);
-        }).then(installed => {
-            if (!installed) {
-                return installer.install(Product.nosetest);
-            }
-        }).then(() => {
-            const pythonConfig = vscode.workspace.getConfiguration('python');
-            return pythonConfig.update('unitTest.nosetestArgs', args);
-        });
+        const subDirs = await this.getTestDirs(wkspace.fsPath);
+        const testDir = await this.selectTestDir(wkspace.fsPath, subDirs);
+        if (typeof testDir === 'string' && testDir !== configFileOptionLabel) {
+            args.push(testDir);
+        }
+        const installed = await this.installer.isInstalled(Product.nosetest);
+        if (!installed) {
+            await this.installer.install(Product.nosetest);
+        }
+        await this.testConfigSettingsService.updateTestArgs(wkspace.fsPath, Product.nosetest, args);
     }
 }

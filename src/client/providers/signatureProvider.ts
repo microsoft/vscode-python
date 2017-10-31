@@ -1,8 +1,9 @@
 "use strict";
 
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
+import * as proxy from './jediProxy';
 import { TextDocument, Position, CancellationToken, SignatureHelp } from "vscode";
-import * as proxy from "./jediProxy";
+import { JediFactory } from '../languageServices/jediProxyFactory';
 
 const DOCSTRING_PARAM_PATTERNS = [
     "\\s*:type\\s*PARAMNAME:\\s*([^\\n, ]+)", // Sphinx
@@ -43,11 +44,7 @@ function extractParamDocString(paramName: string, docString: string): string {
     return paramDocString.trim();
 }
 export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
-    private jediProxyHandler: proxy.JediProxyHandler<proxy.IArgumentsResult>;
-
-    public constructor(context: vscode.ExtensionContext, jediProxy: proxy.JediProxy = null) {
-        this.jediProxyHandler = new proxy.JediProxyHandler(context, jediProxy);
-    }
+    public constructor(private jediFactory: JediFactory) { }
     private static parseData(data: proxy.IArgumentsResult): vscode.SignatureHelp {
         if (data && Array.isArray(data.definitions) && data.definitions.length > 0) {
             let signature = new SignatureHelp();
@@ -86,7 +83,7 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
             lineIndex: position.line,
             source: document.getText()
         };
-        return this.jediProxyHandler.sendCommand(cmd, token).then(data => {
+        return this.jediFactory.getJediProxyHandler<proxy.IArgumentsResult>(document.uri).sendCommand(cmd, token).then(data => {
             return PythonSignatureProvider.parseData(data);
         });
     }

@@ -8,7 +8,7 @@
         ],
         "sourceMap": true,
         "rootDir": "src"
-        // TODO: better code
+        // TODO: enable to ensure all code complies with strict coding standards
         // , "strict": true
     },
     "exclude": [

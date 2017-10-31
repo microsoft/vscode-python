@@ -4,9 +4,9 @@ import * as assert from 'assert';
 // as well as import your extension to test it
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as settings from '../../client/common/configSettings';
 import * as fs from 'fs-extra';
-import { initialize, closeActiveWindows, IS_TRAVIS, wait } from './../initialize';
+import { PythonSettings } from '../../client/common/configSettings';
+import { closeActiveWindows, initialize, initializeTest, IS_TRAVIS, wait } from './../initialize';
 import { Position } from 'vscode';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
@@ -14,7 +14,6 @@ import { getTextEditsFromPatch } from '../../client/common/editor';
 import { MockOutputChannel } from './../mockClasses';
 
 const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
-const pythonSettings = settings.PythonSettings.getInstance();
 const refactorSourceFile = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'refactoring', 'standAlone', 'refactor.py');
 const refactorTargetFile = path.join(__dirname, '..', '..', '..', 'out', 'test', 'pythonFiles', 'refactoring', 'standAlone', 'refactor.py');
 
@@ -26,9 +25,9 @@ suite('Variable Extraction', () => {
     // Hack hac hack
     const oldExecuteCommand = vscode.commands.executeCommand;
     const options: vscode.TextEditorOptions = { cursorStyle: vscode.TextEditorCursorStyle.Line, insertSpaces: true, lineNumbers: vscode.TextEditorLineNumbersStyle.Off, tabSize: 4 };
-    suiteSetup(done => {
+    suiteSetup(async () => {
         fs.copySync(refactorSourceFile, refactorTargetFile, { overwrite: true });
-        initialize().then(() => done(), () => done());
+        await initialize();
     });
     suiteTeardown(() => {
         vscode.commands.executeCommand = oldExecuteCommand;
@@ -40,7 +39,7 @@ suite('Variable Extraction', () => {
             fs.unlinkSync(refactorTargetFile);
         }
         fs.copySync(refactorSourceFile, refactorTargetFile, { overwrite: true });
-        await closeActiveWindows();
+        await initializeTest();
         (<any>vscode).commands.executeCommand = (cmd) => Promise.resolve();
     });
     teardown(() => {
@@ -48,7 +47,8 @@ suite('Variable Extraction', () => {
         return closeActiveWindows();
     });
 
-    function testingVariableExtraction(shouldError: boolean, pythonSettings: settings.IPythonSettings, startPos: Position, endPos: Position) {
+    function testingVariableExtraction(shouldError: boolean, startPos: Position, endPos: Position) {
+        const pythonSettings = PythonSettings.getInstance(vscode.Uri.file(refactorTargetFile));
         let rangeOfTextToExtract = new vscode.Range(startPos, endPos);
         let proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile));
         let expectedTextEdits: vscode.TextEdit[];
@@ -92,16 +92,16 @@ suite('Variable Extraction', () => {
     test('Extract Variable', done => {
         let startPos = new vscode.Position(234, 29);
         let endPos = new vscode.Position(234, 38);
-        testingVariableExtraction(false, pythonSettings, startPos, endPos).then(() => done(), done);
+        testingVariableExtraction(false, startPos, endPos).then(() => done(), done);
     });
 
     test('Extract Variable fails if whole string not selected', done => {
         let startPos = new vscode.Position(234, 20);
         let endPos = new vscode.Position(234, 38);
-        testingVariableExtraction(true, pythonSettings, startPos, endPos).then(() => done(), done);
+        testingVariableExtraction(true, startPos, endPos).then(() => done(), done);
     });
 
-    function testingVariableExtractionEndToEnd(shouldError: boolean, pythonSettings: settings.IPythonSettings, startPos: Position, endPos: Position) {
+    function testingVariableExtractionEndToEnd(shouldError: boolean, startPos: Position, endPos: Position) {
         let ch = new MockOutputChannel('Python');
         let textDocument: vscode.TextDocument;
         let textEditor: vscode.TextEditor;
@@ -117,7 +117,7 @@ suite('Variable Extraction', () => {
             textEditor = editor;
             return;
         }).then(() => {
-            return extractVariable(EXTENSION_DIR, textEditor, rangeOfTextToExtract, ch, path.dirname(refactorTargetFile), pythonSettings).then(() => {
+            return extractVariable(EXTENSION_DIR, textEditor, rangeOfTextToExtract, ch).then(() => {
                 if (shouldError) {
                     ignoreErrorHandling = true;
                     assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
@@ -160,13 +160,13 @@ suite('Variable Extraction', () => {
         test('Extract Variable (end to end)', done => {
             let startPos = new vscode.Position(234, 29);
             let endPos = new vscode.Position(234, 38);
-            testingVariableExtractionEndToEnd(false, pythonSettings, startPos, endPos).then(() => done(), done);
+            testingVariableExtractionEndToEnd(false, startPos, endPos).then(() => done(), done);
         });
     }
 
     test('Extract Variable fails if whole string not selected (end to end)', done => {
         let startPos = new vscode.Position(234, 20);
         let endPos = new vscode.Position(234, 38);
-        testingVariableExtractionEndToEnd(true, pythonSettings, startPos, endPos).then(() => done(), done);
+        testingVariableExtractionEndToEnd(true, startPos, endPos).then(() => done(), done);
     });
 });

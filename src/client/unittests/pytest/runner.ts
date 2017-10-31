@@ -1,22 +1,13 @@
-/// <reference path="../../../../typings/globals/xml2js/index.d.ts" />
-
 'use strict';
-import { createTemporaryFile } from '../../common/helpers';
-import { TestsToRun, Tests } from '../common/contracts';
-import { updateResults } from '../common/testUtils';
-import { CancellationToken, OutputChannel } from 'vscode';
-import { updateResultsFromXmlLogFile, PassCalculationFormulae } from '../common/xUnitParser';
-import { run } from '../common/runner';
-import { PythonSettings } from '../../common/configSettings';
-import * as vscode from 'vscode';
-import { execPythonFile } from './../../common/utils';
-import { createDeferred } from './../../common/helpers';
-import * as os from 'os';
 import * as path from 'path';
+import { CancellationToken, OutputChannel, Uri } from 'vscode';
+import { PythonSettings } from '../../common/configSettings';
+import { createTemporaryFile } from '../../common/helpers';
+import { run } from '../common/runner';
+import { ITestDebugLauncher, ITestResultsService, Tests, TestsToRun } from '../common/types';
+import { PassCalculationFormulae, updateResultsFromXmlLogFile } from '../common/xUnitParser';
 
-const pythonSettings = PythonSettings.getInstance();
-
-export function runTest(rootDirectory: string, tests: Tests, args: string[], testsToRun?: TestsToRun, token?: CancellationToken, outChannel?: OutputChannel, debug?: boolean): Promise<Tests> {
+export function runTest(testResultsService: ITestResultsService, debugLauncher: ITestDebugLauncher, rootDirectory: string, tests: Tests, args: string[], testsToRun?: TestsToRun, token?: CancellationToken, outChannel?: OutputChannel, debug?: boolean): Promise<Tests> {
     let testPaths = [];
     if (testsToRun && testsToRun.testFolder) {
         testPaths = testPaths.concat(testsToRun.testFolder.map(f => f.nameToRun));
@@ -42,65 +33,19 @@ export function runTest(rootDirectory: string, tests: Tests, args: string[], tes
             args = args.filter(arg => arg.trim().startsWith('-'));
         }
         const testArgs = testPaths.concat(args, [`--junitxml=${xmlLogFile}`]);
+        const pythonSettings = PythonSettings.getInstance(Uri.file(rootDirectory));
         if (debug) {
-            const def = createDeferred<any>();
-            const launchDef = createDeferred<any>();
             const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');
-
-            // start the debug adapter only once we have started the debug process
-            // pytestlauncherargs
             const pytestlauncherargs = [rootDirectory, 'my_secret', pythonSettings.unitTest.debugPort.toString(), 'pytest'];
-            let outputChannelShown = false;
-            execPythonFile(pythonSettings.pythonPath, [testLauncherFile].concat(pytestlauncherargs).concat(testArgs), rootDirectory, true, (data: string) => {
-                if (data.startsWith('READY' + os.EOL)) {
-                    // debug socket server has started
-                    launchDef.resolve();
-                    data = data.substring(('READY' + os.EOL).length);
-                }
-
-                if (!outputChannelShown) {
-                    outputChannelShown = true;
-                    outChannel.show();
-                }
-                outChannel.append(data);
-            }, token).catch(reason => {
-                if (!def.rejected && !def.resolved) {
-                    def.reject(reason);
-                }
-            }).then(() => {
-                if (!def.rejected && !def.resolved) {
-                    def.resolve();
-                }
-            }).catch(reason => {
-                if (!def.rejected && !def.resolved) {
-                    def.reject(reason);
-                }
-            });
-
-            launchDef.promise.then(() => {
-                return vscode.commands.executeCommand('vscode.startDebug', {
-                    "name": "Debug Unit Test",
-                    "type": "python",
-                    "request": "attach",
-                    "localRoot": rootDirectory,
-                    "remoteRoot": rootDirectory,
-                    "port": pythonSettings.unitTest.debugPort,
-                    "secret": "my_secret",
-                    "host": "localhost"
-                });
-            }).catch(reason => {
-                if (!def.rejected && !def.resolved) {
-                    def.reject(reason);
-                }
-            });
-
-            return def.promise;
-        }
-        else {
-            return run(pythonSettings.unitTest.pyTestPath, testArgs, rootDirectory, token, outChannel);
+            const debuggerArgs = [testLauncherFile].concat(pytestlauncherargs).concat(testArgs);
+            // tslint:disable-next-line:prefer-type-cast no-any
+            return debugLauncher.launchDebugger(rootDirectory, debuggerArgs, token, outChannel) as Promise<any>;
+        } else {
+            // tslint:disable-next-line:prefer-type-cast no-any
+            return run(pythonSettings.unitTest.pyTestPath, testArgs, rootDirectory, token, outChannel) as Promise<any>;
         }
     }).then(() => {
-        return updateResultsFromLogFiles(tests, xmlLogFile);
+        return updateResultsFromLogFiles(tests, xmlLogFile, testResultsService);
     }).then(result => {
         xmlLogFileCleanup();
         return result;
@@ -110,9 +55,9 @@ export function runTest(rootDirectory: string, tests: Tests, args: string[], tes
     });
 }
 
-export function updateResultsFromLogFiles(tests: Tests, outputXmlFile: string): Promise<Tests> {
+export function updateResultsFromLogFiles(tests: Tests, outputXmlFile: string, testResultsService: ITestResultsService): Promise<Tests> {
     return updateResultsFromXmlLogFile(tests, outputXmlFile, PassCalculationFormulae.pytest).then(() => {
-        updateResults(tests);
+        testResultsService.updateResults(tests);
         return tests;
     });
 }

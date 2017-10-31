@@ -1,27 +1,29 @@
-import * as vscode from 'vscode';
-import * as settings from './configSettings';
 import * as os from 'os';
+import * as vscode from 'vscode';
+import { commands, ConfigurationTarget, Disposable, OutputChannel, Terminal, Uri, window, workspace } from 'vscode';
+import * as settings from './configSettings';
 import { isNotInstalledError } from './helpers';
+import { error } from './logger';
 import { execPythonFile, getFullyQualifiedPythonInterpreterPath } from './utils';
-import { Documentation } from './constants';
 
 export enum Product {
-    pytest,
-    nosetest,
-    pylint,
-    flake8,
-    pep8,
-    pylama,
-    prospector,
-    pydocstyle,
-    yapf,
-    autopep8,
-    mypy,
-    unittest,
-    ctags,
-    rope
+    pytest = 1,
+    nosetest = 2,
+    pylint = 3,
+    flake8 = 4,
+    pep8 = 5,
+    pylama = 6,
+    prospector = 7,
+    pydocstyle = 8,
+    yapf = 9,
+    autopep8 = 10,
+    mypy = 11,
+    unittest = 12,
+    ctags = 13,
+    rope = 14
 }
 
+// tslint:disable-next-line:variable-name
 const ProductInstallScripts = new Map<Product, string[]>();
 ProductInstallScripts.set(Product.autopep8, ['-m', 'pip', 'install', 'autopep8']);
 ProductInstallScripts.set(Product.flake8, ['-m', 'pip', 'install', 'flake8']);
@@ -36,6 +38,7 @@ ProductInstallScripts.set(Product.pytest, ['-m', 'pip', 'install', '-U', 'pytest
 ProductInstallScripts.set(Product.yapf, ['-m', 'pip', 'install', 'yapf']);
 ProductInstallScripts.set(Product.rope, ['-m', 'pip', 'install', 'rope']);
 
+// tslint:disable-next-line:variable-name
 const ProductUninstallScripts = new Map<Product, string[]>();
 ProductUninstallScripts.set(Product.autopep8, ['-m', 'pip', 'uninstall', 'autopep8', '--yes']);
 ProductUninstallScripts.set(Product.flake8, ['-m', 'pip', 'uninstall', 'flake8', '--yes']);
@@ -50,6 +53,7 @@ ProductUninstallScripts.set(Product.pytest, ['-m', 'pip', 'uninstall', 'pytest',
 ProductUninstallScripts.set(Product.yapf, ['-m', 'pip', 'uninstall', 'yapf', '--yes']);
 ProductUninstallScripts.set(Product.rope, ['-m', 'pip', 'uninstall', 'rope', '--yes']);
 
+// tslint:disable-next-line:variable-name
 export const ProductExecutableAndArgs = new Map<Product, { executable: string, args: string[] }>();
 ProductExecutableAndArgs.set(Product.mypy, { executable: 'python', args: ['-m', 'mypy'] });
 ProductExecutableAndArgs.set(Product.nosetest, { executable: 'python', args: ['-m', 'nose'] });
@@ -76,6 +80,7 @@ switch (os.platform()) {
     }
 }
 
+// tslint:disable-next-line:variable-name
 export const Linters: Product[] = [
     Product.flake8,
     Product.pep8,
@@ -86,6 +91,7 @@ export const Linters: Product[] = [
     Product.pydocstyle
 ];
 
+// tslint:disable-next-line:variable-name
 const ProductNames = new Map<Product, string>();
 ProductNames.set(Product.autopep8, 'autopep8');
 ProductNames.set(Product.flake8, 'flake8');
@@ -100,6 +106,7 @@ ProductNames.set(Product.pytest, 'py.test');
 ProductNames.set(Product.yapf, 'yapf');
 ProductNames.set(Product.rope, 'rope');
 
+// tslint:disable-next-line:variable-name
 export const SettingToDisableProduct = new Map<Product, string>();
 SettingToDisableProduct.set(Product.flake8, 'linting.flake8Enabled');
 SettingToDisableProduct.set(Product.mypy, 'linting.mypyEnabled');
@@ -111,6 +118,10 @@ SettingToDisableProduct.set(Product.pydocstyle, 'linting.pydocstyleEnabled');
 SettingToDisableProduct.set(Product.pylint, 'linting.pylintEnabled');
 SettingToDisableProduct.set(Product.pytest, 'unitTest.pyTestEnabled');
 
+// tslint:disable-next-line:variable-name
+const ProductInstallationPrompt = new Map<Product, string>();
+ProductInstallationPrompt.set(Product.ctags, 'Install CTags to enable Python workspace symbols');
+
 enum ProductType {
     Linter,
     Formatter,
@@ -119,6 +130,7 @@ enum ProductType {
     WorkspaceSymbols
 }
 
+// tslint:disable-next-line:variable-name
 const ProductTypeNames = new Map<ProductType, string>();
 ProductTypeNames.set(ProductType.Formatter, 'Formatter');
 ProductTypeNames.set(ProductType.Linter, 'Linter');
@@ -126,6 +138,7 @@ ProductTypeNames.set(ProductType.RefactoringLibrary, 'Refactoring library');
 ProductTypeNames.set(ProductType.TestFramework, 'Test Framework');
 ProductTypeNames.set(ProductType.WorkspaceSymbols, 'Workspace Symbols');
 
+// tslint:disable-next-line:variable-name
 const ProductTypes = new Map<Product, ProductType>();
 ProductTypes.set(Product.flake8, ProductType.Linter);
 ProductTypes.set(Product.mypy, ProductType.Linter);
@@ -142,6 +155,11 @@ ProductTypes.set(Product.autopep8, ProductType.Formatter);
 ProductTypes.set(Product.yapf, ProductType.Formatter);
 ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
 
+export enum InstallerResponse {
+    Installed,
+    Disabled,
+    Ignore
+}
 export class Installer implements vscode.Disposable {
     private static terminal: vscode.Terminal | undefined | null;
     private disposables: vscode.Disposable[] = [];
@@ -155,30 +173,37 @@ export class Installer implements vscode.Disposable {
     public dispose() {
         this.disposables.forEach(d => d.dispose());
     }
-    public shouldDisplayPrompt(product: Product) {
+    private shouldDisplayPrompt(product: Product) {
+        // tslint:disable-next-line:no-non-null-assertion
         const productName = ProductNames.get(product)!;
-        return settings.PythonSettings.getInstance().disablePromptForFeatures.indexOf(productName) === -1;
+        const pythonConfig = workspace.getConfiguration('python');
+        // tslint:disable-next-line:prefer-type-cast
+        const disablePromptForFeatures = pythonConfig.get('disablePromptForFeatures', [] as string[]);
+        return disablePromptForFeatures.indexOf(productName) === -1;
     }
 
-    async promptToInstall(product: Product) {
+    // tslint:disable-next-line:member-ordering
+    public async promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse> {
+        // tslint:disable-next-line:no-non-null-assertion
         const productType = ProductTypes.get(product)!;
-        const productTypeName = ProductTypeNames.get(productType);
+        // tslint:disable-next-line:no-non-null-assertion
+        const productTypeName = ProductTypeNames.get(productType)!;
+        // tslint:disable-next-line:no-non-null-assertion
         const productName = ProductNames.get(product)!;
 
         if (!this.shouldDisplayPrompt(product)) {
             const message = `${productTypeName} '${productName}' not installed.`;
             if (this.outputChannel) {
                 this.outputChannel.appendLine(message);
-            }
-            else {
+            } else {
                 console.warn(message);
             }
-            return;
+            return InstallerResponse.Ignore;
         }
 
-        const installOption = 'Install ' + productName;
-        const disableOption = 'Disable ' + productTypeName;
-        const dontShowAgain = `Don't show this prompt again`;
+        const installOption = ProductInstallationPrompt.has(product) ? ProductInstallationPrompt.get(product) : `Install ${productName}`;
+        const disableOption = `Disable ${productTypeName}`;
+        const dontShowAgain = 'Don\'t show this prompt again';
         const alternateFormatter = product === Product.autopep8 ? 'yapf' : 'autopep8';
         const useOtherFormatter = `Use '${alternateFormatter}' formatter`;
         const options = [];
@@ -189,122 +214,165 @@ export class Installer implements vscode.Disposable {
         if (SettingToDisableProduct.has(product)) {
             options.push(...[disableOption, dontShowAgain]);
         }
-        return vscode.window.showErrorMessage(`${productTypeName} ${productName} is not installed`, ...options).then(item => {
-            switch (item) {
-                case installOption: {
-                    return this.install(product);
-                }
-                case disableOption: {
-                    if (Linters.indexOf(product) >= 0) {
-                        return disableLinter(product);
-                    }
-                    else {
-                        const pythonConfig = vscode.workspace.getConfiguration('python');
-                        const settingToDisable = SettingToDisableProduct.get(product)!;
-                        return pythonConfig.update(settingToDisable, false);
-                    }
-                }
-                case useOtherFormatter: {
-                    const pythonConfig = vscode.workspace.getConfiguration('python');
-                    return pythonConfig.update('formatting.provider', alternateFormatter);
-                }
-                case dontShowAgain: {
-                    const pythonConfig = vscode.workspace.getConfiguration('python');
-                    const features = pythonConfig.get('disablePromptForFeatures', [] as string[]);
-                    features.push(productName);
-                    return pythonConfig.update('disablePromptForFeatures', features, true);
-                }
-                case 'Help': {
-                    return Promise.resolve();
+        const item = await window.showErrorMessage(`${productTypeName} ${productName} is not installed`, ...options);
+        switch (item) {
+            case installOption: {
+                return this.install(product, resource);
+            }
+            case disableOption: {
+                if (Linters.indexOf(product) >= 0) {
+                    return this.disableLinter(product, resource).then(() => InstallerResponse.Disabled);
+                } else {
+                    // tslint:disable-next-line:no-non-null-assertion
+                    const settingToDisable = SettingToDisableProduct.get(product)!;
+                    return this.updateSetting(settingToDisable, false, resource).then(() => InstallerResponse.Disabled);
                 }
             }
-        });
+            case useOtherFormatter: {
+                return this.updateSetting('formatting.provider', alternateFormatter, resource)
+                    .then(() => InstallerResponse.Installed);
+            }
+            case dontShowAgain: {
+                const pythonConfig = workspace.getConfiguration('python');
+                // tslint:disable-next-line:prefer-type-cast
+                const features = pythonConfig.get('disablePromptForFeatures', [] as string[]);
+                features.push(productName);
+                return pythonConfig.update('disablePromptForFeatures', features, true).then(() => InstallerResponse.Ignore);
+            }
+            default: {
+                throw new Error('Invalid selection');
+            }
+        }
     }
-
-    install(product: Product): Promise<any> {
+    // tslint:disable-next-line:member-ordering
+    public async install(product: Product, resource?: Uri): Promise<InstallerResponse> {
         if (!this.outputChannel && !Installer.terminal) {
-            Installer.terminal = vscode.window.createTerminal('Python Installer');
+            Installer.terminal = window.createTerminal('Python Installer');
         }
 
-        if (product === Product.ctags && os.platform() === 'win32') {
-            vscode.commands.executeCommand('python.displayHelp', Documentation.Workspace.InstallOnWindows);
-            return Promise.resolve();
+        if (product === Product.ctags && settings.IS_WINDOWS) {
+            if (this.outputChannel) {
+                this.outputChannel.appendLine('Install Universal Ctags Win32 to enable support for Workspace Symbols');
+                this.outputChannel.appendLine('Download the CTags binary from the Universal CTags site.');
+                this.outputChannel.appendLine('Option 1: Extract ctags.exe from the downloaded zip to any folder within your PATH so that Visual Studio Code can run it.');
+                this.outputChannel.appendLine('Option 2: Extract to any folder and add the path to this folder to the command setting.');
+                this.outputChannel.appendLine('Option 3: Extract to any folder and define that path in the python.workspaceSymbols.ctagsPath setting of your user settings file (settings.json).');
+                this.outputChannel.show();
+            } else {
+                window.showInformationMessage('Install Universal Ctags and set it in your path or define the path in your python.workspaceSymbols.ctagsPath settings');
+            }
+            return InstallerResponse.Ignore;
         }
 
+        // tslint:disable-next-line:no-non-null-assertion
         let installArgs = ProductInstallScripts.get(product)!;
-        let pipIndex = installArgs.indexOf('pip');
+        const pipIndex = installArgs.indexOf('pip');
         if (pipIndex > 0) {
             installArgs = installArgs.slice();
-            let proxy = vscode.workspace.getConfiguration('http').get('proxy', '');
+            const proxy = vscode.workspace.getConfiguration('http').get('proxy', '');
             if (proxy.length > 0) {
                 installArgs.splice(2, 0, proxy);
                 installArgs.splice(2, 0, '--proxy');
             }
         }
+        // tslint:disable-next-line:no-any
+        let installationPromise: Promise<any>;
         if (this.outputChannel && installArgs[0] === '-m') {
             // Errors are just displayed to the user
             this.outputChannel.show();
-            return execPythonFile(settings.PythonSettings.getInstance().pythonPath, installArgs, vscode.workspace.rootPath!, true, (data) => {
-                this.outputChannel!.append(data);
-            });
-        }
-        else {
+            installationPromise = execPythonFile(resource, settings.PythonSettings.getInstance(resource).pythonPath,
+                // tslint:disable-next-line:no-non-null-assertion
+                installArgs, getCwdForInstallScript(resource), true, (data) => { this.outputChannel!.append(data); });
+        } else {
             // When using terminal get the fully qualitified path
             // Cuz people may launch vs code from terminal when they have activated the appropriate virtual env
             // Problem is terminal doesn't use the currently activated virtual env
             // Must have something to do with the process being launched in the terminal
-            return getFullyQualifiedPythonInterpreterPath()
+            installationPromise = getFullyQualifiedPythonInterpreterPath(resource)
                 .then(pythonPath => {
                     let installScript = installArgs.join(' ');
 
                     if (installArgs[0] === '-m') {
                         if (pythonPath.indexOf(' ') >= 0) {
                             installScript = `"${pythonPath}" ${installScript}`;
-                        }
-                        else {
+                        } else {
                             installScript = `${pythonPath} ${installScript}`;
                         }
                     }
+                    // tslint:disable-next-line:no-non-null-assertion
                     Installer.terminal!.sendText(installScript);
+                    // tslint:disable-next-line:no-non-null-assertion
                     Installer.terminal!.show(false);
                 });
         }
+
+        return installationPromise
+            .then(() => this.isInstalled(product))
+            .then(isInstalled => isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore);
     }
 
-    isInstalled(product: Product): Promise<boolean | undefined> {
-        return isProductInstalled(product);
+    // tslint:disable-next-line:member-ordering
+    public isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined> {
+        return isProductInstalled(product, resource);
     }
 
-    uninstall(product: Product): Promise<any> {
-        return uninstallproduct(product);
+    // tslint:disable-next-line:member-ordering no-any
+    public uninstall(product: Product, resource?: Uri): Promise<any> {
+        return uninstallproduct(product, resource);
+    }
+    // tslint:disable-next-line:member-ordering
+    public disableLinter(product: Product, resource: Uri) {
+        if (resource && !workspace.getWorkspaceFolder(resource)) {
+            // tslint:disable-next-line:no-non-null-assertion
+            const settingToDisable = SettingToDisableProduct.get(product)!;
+            const pythonConfig = workspace.getConfiguration('python', resource);
+            return pythonConfig.update(settingToDisable, false, ConfigurationTarget.Workspace);
+        } else {
+            const pythonConfig = workspace.getConfiguration('python');
+            return pythonConfig.update('linting.enabledWithoutWorkspace', false, true);
+        }
+    }
+    // tslint:disable-next-line:no-any
+    private updateSetting(setting: string, value: any, resource?: Uri) {
+        if (resource && !workspace.getWorkspaceFolder(resource)) {
+            const pythonConfig = workspace.getConfiguration('python', resource);
+            return pythonConfig.update(setting, value, ConfigurationTarget.Workspace);
+        } else {
+            const pythonConfig = workspace.getConfiguration('python');
+            return pythonConfig.update(setting, value, true);
+        }
     }
 }
 
-export function disableLinter(product: Product, global?: boolean) {
-    const pythonConfig = vscode.workspace.getConfiguration('python');
-    const settingToDisable = SettingToDisableProduct.get(product)!;
-    if (vscode.workspace.rootPath) {
-        return pythonConfig.update(settingToDisable, false, global);
+function getCwdForInstallScript(resource?: Uri) {
+    const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
+    if (workspaceFolder) {
+        return workspaceFolder.uri.fsPath;
     }
-    else {
-        return pythonConfig.update('linting.enabledWithoutWorkspace', false, true);
+    if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
+        return workspace.workspaceFolders[0].uri.fsPath;
     }
+    return __dirname;
 }
 
-async function isProductInstalled(product: Product): Promise<boolean | undefined> {
+async function isProductInstalled(product: Product, resource?: Uri): Promise<boolean | undefined> {
     if (!ProductExecutableAndArgs.has(product)) {
         return;
     }
+    // tslint:disable-next-line:no-non-null-assertion
     const prodExec = ProductExecutableAndArgs.get(product)!;
-    return execPythonFile(prodExec.executable, prodExec.args.concat(['--version']), vscode.workspace.rootPath!, false)
-        .then(() => {
-            return true;
-        }).catch(reason => {
-            return !isNotInstalledError(reason);
-        });
+    const cwd = getCwdForInstallScript(resource);
+    return execPythonFile(resource, prodExec.executable, prodExec.args.concat(['--version']), cwd, false)
+        .then(() => true)
+        .catch(reason => !isNotInstalledError(reason));
 }
 
-function uninstallproduct(product: Product): Promise<any> {
+// tslint:disable-next-line:no-any
+function uninstallproduct(product: Product, resource?: Uri): Promise<any> {
+    if (!ProductUninstallScripts.has(product)) {
+        return Promise.resolve();
+    }
+    // tslint:disable-next-line:no-non-null-assertion
     const uninstallArgs = ProductUninstallScripts.get(product)!;
-    return execPythonFile('python', uninstallArgs, vscode.workspace.rootPath!, false);
+    return execPythonFile(resource, 'python', uninstallArgs, getCwdForInstallScript(resource), false);
 }
