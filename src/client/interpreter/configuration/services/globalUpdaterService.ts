@@ -1,4 +1,4 @@
-import { ConfigurationTarget, Uri, workspace } from 'vscode';
+import { Uri, workspace } from 'vscode';
 import { InterpreterManager } from '../..';
 import { WorkspacePythonPath } from '../../contracts';
 import { IPythonPathUpdaterService } from '../types';

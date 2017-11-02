@@ -34,6 +34,7 @@ import * as sortImports from './sortImports';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import * as tests from './unittests/main';
 import { WorkspaceSymbols } from './workspaceSymbols/main';
+import { InterpreterVersionService } from './interpreter/interpreterVersion';
 
 const PYTHON: vscode.DocumentFilter = { language: 'python' };
 let unitTestOutChannel: vscode.OutputChannel;
@@ -66,7 +67,8 @@ export async function activate(context: vscode.ExtensionContext) {
     await interpreterManager.autoSetInterpreter();
     await interpreterManager.refresh();
     context.subscriptions.push(interpreterManager);
-    context.subscriptions.push(new SetInterpreterProvider(interpreterManager));
+    const interpreterVersionService = new InterpreterVersionService();
+    context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService));
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, formatOutChannel);

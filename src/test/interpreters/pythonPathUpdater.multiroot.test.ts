@@ -57,7 +57,7 @@ suite('Multiroot Python Path Settings Updater', () => {
         const workspaceUri = workspace3Uri;
         const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory());
         const pythonPath = `xWorkspacePythonPathFromUpdater${new Date().getMilliseconds()}`;
-        await updaterService.updatePythonPath(pythonPath, ConfigurationTarget.WorkspaceFolder, workspace.getWorkspaceFolder(workspaceUri).uri);
+        await updaterService.updatePythonPath(pythonPath, ConfigurationTarget.WorkspaceFolder, 'ui', workspace.getWorkspaceFolder(workspaceUri).uri);
         const folderValue = workspace.getConfiguration('python', workspace3Uri).inspect('pythonPath').workspaceFolderValue;
         assert.equal(folderValue, pythonPath, 'Workspace Python Path not updated');
     });

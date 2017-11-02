@@ -5,6 +5,7 @@ import { InterpreterManager } from '../';
 import * as settings from '../../common/configSettings';
 import { PythonInterpreter, WorkspacePythonPath } from '../contracts';
 import { ShebangCodeLensProvider } from '../display/shebangCodeLensProvider';
+import { IInterpreterVersionService } from '../interpreterVersion';
 import { PythonPathUpdaterService } from './pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './pythonPathUpdaterServiceFactory';
 import { IPythonPathUpdaterServiceFactory } from './types';
@@ -17,10 +18,10 @@ interface PythonPathQuickPickItem extends QuickPickItem {
 export class SetInterpreterProvider implements Disposable {
     private disposables: Disposable[] = [];
     private pythonPathUpdaterService: PythonPathUpdaterService;
-    constructor(private interpreterManager: InterpreterManager) {
+    constructor(private interpreterManager: InterpreterManager, interpreterVersionService: IInterpreterVersionService) {
         this.disposables.push(commands.registerCommand('python.setInterpreter', this.setInterpreter.bind(this)));
         this.disposables.push(commands.registerCommand('python.setShebangInterpreter', this.setShebangInterpreter.bind(this)));
-        this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory());
+        this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), interpreterVersionService);
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
@@ -85,7 +86,7 @@ export class SetInterpreterProvider implements Disposable {
 
         const selection = await window.showQuickPick(suggestions, quickPickOptions);
         if (selection !== undefined) {
-            await this.pythonPathUpdaterService.updatePythonPath(selection.path, configTarget, wkspace);
+            await this.pythonPathUpdaterService.updatePythonPath(selection.path, configTarget, 'ui', wkspace);
         }
     }
 
@@ -100,15 +101,15 @@ export class SetInterpreterProvider implements Disposable {
         const isWorkspaceChange = Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length === 1;
 
         if (isGlobalChange) {
-            await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Global);
+            await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Global, 'shebang');
             return;
         }
 
         if (isWorkspaceChange || !workspaceFolder) {
-            await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Workspace, workspace.workspaceFolders[0].uri);
+            await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Workspace, 'shebang', workspace.workspaceFolders[0].uri);
             return;
         }
 
-        await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.WorkspaceFolder, workspaceFolder.uri);
+        await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.WorkspaceFolder, 'shebang', workspaceFolder.uri);
     }
 }

@@ -1,5 +1,4 @@
 import { Uri } from 'vscode';
-import { InterpreterManager } from '../index';
 import { GlobalPythonPathUpdaterService } from './services/globalUpdaterService';
 import { WorkspaceFolderPythonPathUpdaterService } from './services/workspaceFolderUpdaterService';
 import { WorkspacePythonPathUpdaterService } from './services/workspaceUpdaterService';

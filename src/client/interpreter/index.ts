@@ -58,7 +58,7 @@ export class InterpreterManager implements Disposable {
         const pythonPath = interpretersInWorkspace[0].path;
         const relativePath = path.dirname(pythonPath).substring(activeWorkspace.folderUri.fsPath.length);
         if (relativePath.split(path.sep).filter(l => l.length > 0).length === 2) {
-            await this.pythonPathUpdaterService.updatePythonPath(pythonPath, activeWorkspace.configTarget, activeWorkspace.folderUri);
+            await this.pythonPathUpdaterService.updatePythonPath(pythonPath, activeWorkspace.configTarget, 'load', activeWorkspace.folderUri);
         }
     }
     public dispose(): void {

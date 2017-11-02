@@ -2,7 +2,6 @@ import * as assert from 'assert';
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ConfigurationTarget } from 'vscode';
 import { IS_WINDOWS, PythonSettings } from '../../client/common/configSettings';
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { getFirstNonEmptyLineFromMultilineString } from '../../client/interpreter/helpers';

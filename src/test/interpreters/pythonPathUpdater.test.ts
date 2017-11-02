@@ -74,7 +74,7 @@ suite('Python Path Settings Updater', () => {
         const workspaceUri = Uri.file(workspaceRoot);
         const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory());
         const pythonPath = `xWorkspacePythonPathFromUpdater${new Date().getMilliseconds()}`;
-        await updaterService.updatePythonPath(pythonPath, ConfigurationTarget.Workspace, workspace.getWorkspaceFolder(workspaceUri).uri);
+        await updaterService.updatePythonPath(pythonPath, ConfigurationTarget.Workspace, 'ui', workspace.getWorkspaceFolder(workspaceUri).uri);
         const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath').workspaceValue;
         assert.equal(workspaceValue, pythonPath, 'Workspace Python Path not updated');
     });

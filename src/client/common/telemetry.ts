@@ -18,6 +18,7 @@ export const REFACTOR_RENAME = 'REFACTOR_RENAME';
 export const REFACTOR_EXTRACT_VAR = 'REFACTOR_EXTRACT_VAR';
 export const REFACTOR_EXTRACT_FUNCTION = 'REFACTOR_EXTRACT_FUNCTION';
 export const REPL = 'REPL';
+export const PYTHON_INTERPRETER = 'PYTHON_INTERPRETER';
 
 type EditorLoadTelemetry = {
     condaVersion: string;
@@ -33,7 +34,13 @@ type LintingTelemetry = {
     trigger: 'save' | 'auto';
     executableSpecified: boolean;
 };
-type Terlemetries = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry;
+type PythonInterpreterTelemetry = {
+    trigger: 'ui' | 'shebang' | 'load';
+    failed: boolean;
+    version: string;
+    pipVersion: string;
+};
+type Terlemetries = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry;
 export class StopWatch {
     private started: number = Date.now();
     private stopped?: number;
