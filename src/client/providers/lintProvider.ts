@@ -1,19 +1,22 @@
 'use strict';
+import { sendTelemetryEvent, sendTelemetryWhenDone, StopWatch, LINTING } from '../common/telemetry';
 
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as linter from '../linters/baseLinter';
-import * as prospector from './../linters/prospector';
-import * as pylint from './../linters/pylint';
-import * as pep8 from './../linters/pep8Linter';
-import * as pylama from './../linters/pylama';
-import * as flake8 from './../linters/flake8';
-import * as pydocstyle from './../linters/pydocstyle';
-import * as mypy from './../linters/mypy';
-import { PythonSettings } from '../common/configSettings';
 import * as fs from 'fs';
+import * as path from 'path';
+import * as vscode from 'vscode';
+import { PythonSettings } from '../common/configSettings';
 import { LinterErrors } from '../common/constants';
-const Minimatch = require("minimatch").Minimatch;
+import * as linter from '../linters/baseLinter';
+import * as flake8 from './../linters/flake8';
+import * as mypy from './../linters/mypy';
+import * as pep8 from './../linters/pep8Linter';
+import * as prospector from './../linters/prospector';
+import * as pydocstyle from './../linters/pydocstyle';
+import * as pylama from './../linters/pylama';
+import * as pylint from './../linters/pylint';
+import { BaseLinter } from '../linters/baseLinter';
+// tslint:disable-next-line:no-require-imports no-var-requires
+const Minimatch = require('minimatch').Minimatch;
 
 const uriSchemesToIgnore = ['git', 'showModifications'];
 const lintSeverityToVSSeverity = new Map<linter.LintMessageSeverity, vscode.DiagnosticSeverity>();
@@ -23,20 +26,22 @@ lintSeverityToVSSeverity.set(linter.LintMessageSeverity.Information, vscode.Diag
 lintSeverityToVSSeverity.set(linter.LintMessageSeverity.Warning, vscode.DiagnosticSeverity.Warning);
 
 function createDiagnostics(message: linter.ILintMessage, document: vscode.TextDocument): vscode.Diagnostic {
-    let position = new vscode.Position(message.line - 1, message.column);
-    let range = new vscode.Range(position, position);
+    const position = new vscode.Position(message.line - 1, message.column);
+    const range = new vscode.Range(position, position);
 
-    let severity = lintSeverityToVSSeverity.get(message.severity);
-    let diagnostic = new vscode.Diagnostic(range, message.code + ':' + message.message, severity);
+    const severity = lintSeverityToVSSeverity.get(message.severity);
+    const diagnostic = new vscode.Diagnostic(range, `${message.code}:${message.message}`, severity);
     diagnostic.code = message.code;
     diagnostic.source = message.provider;
     return diagnostic;
 }
 
+// tslint:disable-next-line:interface-name
 interface DocumentHasJupyterCodeCells {
+    // tslint:disable-next-line:callable-types
     (doc: vscode.TextDocument, token: vscode.CancellationToken): Promise<Boolean>;
 }
-export class LintProvider extends vscode.Disposable {
+export class LintProvider implements vscode.Disposable {
     private diagnosticCollection: vscode.DiagnosticCollection;
     private linters: linter.BaseLinter[] = [];
     private pendingLintings = new Map<string, vscode.CancellationTokenSource>();
@@ -45,13 +50,12 @@ export class LintProvider extends vscode.Disposable {
     private disposables: vscode.Disposable[];
     public constructor(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel,
         public documentHasJupyterCodeCells: DocumentHasJupyterCodeCells) {
-        super(() => { });
         this.outputChannel = outputChannel;
         this.context = context;
         this.disposables = [];
         this.initialize();
     }
-    dispose() {
+    public dispose() {
         this.disposables.forEach(d => d.dispose());
     }
     private isDocumentOpen(uri: vscode.Uri): boolean {
@@ -74,7 +78,7 @@ export class LintProvider extends vscode.Disposable {
             if (e.languageId !== 'python' || !settings.linting.enabled || !settings.linting.lintOnSave) {
                 return;
             }
-            this.lintDocument(e, 100);
+            this.lintDocument(e, 100, 'save');
         });
         this.context.subscriptions.push(disposable);
 
@@ -90,7 +94,7 @@ export class LintProvider extends vscode.Disposable {
             if (!e.uri.path || (path.basename(e.uri.path) === e.uri.path && !fs.existsSync(e.uri.path))) {
                 return;
             }
-            this.lintDocument(e, 100);
+            this.lintDocument(e, 100, 'auto');
         }, this.context.subscriptions);
 
         disposable = vscode.workspace.onDidCloseTextDocument(textDocument => {
@@ -106,8 +110,9 @@ export class LintProvider extends vscode.Disposable {
         this.context.subscriptions.push(disposable);
     }
 
+    // tslint:disable-next-line:member-ordering
     private lastTimeout: number;
-    private lintDocument(document: vscode.TextDocument, delay: number): void {
+    private lintDocument(document: vscode.TextDocument, delay: number, trigger: 'auto' | 'save'): void {
         // Since this is a hack, lets wait for 2 seconds before linting
         // Give user to continue typing before we waste CPU time
         if (this.lastTimeout) {
@@ -116,11 +121,10 @@ export class LintProvider extends vscode.Disposable {
         }
 
         this.lastTimeout = setTimeout(() => {
-            this.onLintDocument(document);
+            this.onLintDocument(document, trigger);
         }, delay);
     }
-
-    private onLintDocument(document: vscode.TextDocument): void {
+    private onLintDocument(document: vscode.TextDocument, trigger: 'auto' | 'save'): void {
         // Check if we need to lint this document
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
         const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
@@ -138,7 +142,7 @@ export class LintProvider extends vscode.Disposable {
             this.pendingLintings.delete(document.uri.fsPath);
         }
 
-        let cancelToken = new vscode.CancellationTokenSource();
+        const cancelToken = new vscode.CancellationTokenSource();
         cancelToken.token.onCancellationRequested(() => {
             if (this.pendingLintings.has(document.uri.fsPath)) {
                 this.pendingLintings.delete(document.uri.fsPath);
@@ -147,15 +151,22 @@ export class LintProvider extends vscode.Disposable {
 
         this.pendingLintings.set(document.uri.fsPath, cancelToken);
         this.outputChannel.clear();
-        let promises: Promise<linter.ILintMessage[]>[] = this.linters.map(linter => {
-            if (typeof workspaceRootPath !== 'string' && !settings.linting.enabledWithoutWorkspace) {
-                return Promise.resolve([]);
-            }
-            return linter.lint(document, cancelToken.token);
-        });
+        const promises: Promise<linter.ILintMessage[]>[] = this.linters
+            .filter(item => item.isEnabled(document.uri))
+            .map(item => {
+                if (typeof workspaceRootPath !== 'string' && !settings.linting.enabledWithoutWorkspace) {
+                    return Promise.resolve([]);
+                }
+                const stopWatch = new StopWatch();
+                const promise = item.lint(document, cancelToken.token);
+                const hasCustomArgs = item.linterArgs(document.uri).length > 0;
+                const executableSpecified = item.isLinterExecutableSpecified(document.uri);
+                sendTelemetryWhenDone(LINTING, promise, stopWatch, { tool: item.Id, hasCustomArgs, trigger, executableSpecified });
+                return promise;
+            });
         this.documentHasJupyterCodeCells(document, cancelToken.token).then(hasJupyterCodeCells => {
-            // linters will resolve asynchronously - keep a track of all 
-            // diagnostics reported as them come in
+            // linters will resolve asynchronously - keep a track of all
+            // diagnostics reported as them come in.
             let diagnostics: vscode.Diagnostic[] = [];
 
             promises.forEach(p => {

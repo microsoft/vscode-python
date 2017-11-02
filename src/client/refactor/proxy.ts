@@ -4,7 +4,6 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as child_process from 'child_process';
 import { IPythonSettings } from '../common/configSettings';
-import { REFACTOR } from '../common/telemetryContracts';
 import { getCustomEnvVars, getCustomEnvVarsSync, getWindowsLineEndingCount, IS_WINDOWS } from '../common/utils';
 import { mergeEnvVariables } from '../common/envFileParser';
 
@@ -57,7 +56,7 @@ export class RefactorProxy extends vscode.Disposable {
             "indent_size": options.tabSize
         };
 
-        return this.sendCommand<T>(JSON.stringify(command), REFACTOR.Rename);
+        return this.sendCommand<T>(JSON.stringify(command));
     }
     extractVariable<T>(document: vscode.TextDocument, name: string, filePath: string, range: vscode.Range, options?: vscode.TextEditorOptions): Promise<T> {
         if (!options) {
@@ -72,7 +71,7 @@ export class RefactorProxy extends vscode.Disposable {
             "name": name,
             "indent_size": options.tabSize
         };
-        return this.sendCommand<T>(JSON.stringify(command), REFACTOR.ExtractVariable);
+        return this.sendCommand<T>(JSON.stringify(command));
     }
     extractMethod<T>(document: vscode.TextDocument, name: string, filePath: string, range: vscode.Range, options?: vscode.TextEditorOptions): Promise<T> {
         if (!options) {
@@ -91,9 +90,9 @@ export class RefactorProxy extends vscode.Disposable {
             "name": name,
             "indent_size": options.tabSize
         };
-        return this.sendCommand<T>(JSON.stringify(command), REFACTOR.ExtractMethod);
+        return this.sendCommand<T>(JSON.stringify(command));
     }
-    private sendCommand<T>(command: string, telemetryEvent: string): Promise<T> {
+    private sendCommand<T>(command: string, telemetryEvent?: string): Promise<T> {
         return this.initialize(this.pythonSettings.pythonPath).then(() => {
             return new Promise<T>((resolve, reject) => {
                 this._commandResolve = resolve;

@@ -1,14 +1,15 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import * as proxy from './jediProxy';
+import { captureTelemetry, SYMBOL } from '../common/telemetry';
 import { JediFactory } from '../languageServices/jediProxyFactory';
+import * as proxy from './jediProxy';
 
 export class PythonSymbolProvider implements vscode.DocumentSymbolProvider {
     public constructor(private jediFactory: JediFactory) { }
     private static parseData(document: vscode.TextDocument, data: proxy.ISymbolResult): vscode.SymbolInformation[] {
         if (data) {
-            let symbols = data.definitions.filter(sym => sym.fileName === document.fileName);
+            const symbols = data.definitions.filter(sym => sym.fileName === document.fileName);
             return symbols.map(sym => {
                 const symbol = sym.kind;
                 const range = new vscode.Range(
@@ -21,10 +22,11 @@ export class PythonSymbolProvider implements vscode.DocumentSymbolProvider {
         }
         return [];
     }
+    @captureTelemetry(SYMBOL)
     public provideDocumentSymbols(document: vscode.TextDocument, token: vscode.CancellationToken): Thenable<vscode.SymbolInformation[]> {
-        var filename = document.fileName;
+        const filename = document.fileName;
 
-        var cmd: proxy.ICommand<proxy.ISymbolResult> = {
+        const cmd: proxy.ICommand<proxy.ISymbolResult> = {
             command: proxy.CommandType.Symbols,
             fileName: filename,
             columnIndex: 0,
@@ -40,9 +42,9 @@ export class PythonSymbolProvider implements vscode.DocumentSymbolProvider {
         });
     }
     public provideDocumentSymbolsForInternalUse(document: vscode.TextDocument, token: vscode.CancellationToken): Thenable<vscode.SymbolInformation[]> {
-        var filename = document.fileName;
+        const filename = document.fileName;
 
-        var cmd: proxy.ICommand<proxy.ISymbolResult> = {
+        const cmd: proxy.ICommand<proxy.ISymbolResult> = {
             command: proxy.CommandType.Symbols,
             fileName: filename,
             columnIndex: 0,

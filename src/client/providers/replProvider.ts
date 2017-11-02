@@ -1,6 +1,7 @@
 import { commands, Disposable, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { Commands } from '../common/constants';
+import { captureTelemetry, REPL } from '../common/telemetry';
 import { getPathFromPythonCommand } from '../common/utils';
 
 export class ReplProvider implements Disposable {
@@ -15,6 +16,7 @@ export class ReplProvider implements Disposable {
         const disposable = commands.registerCommand(Commands.Start_REPL, this.commandHandler, this);
         this.disposables.push(disposable);
     }
+    @captureTelemetry(REPL)
     private async commandHandler() {
         const pythonPath = await this.getPythonPath();
         if (!pythonPath) {

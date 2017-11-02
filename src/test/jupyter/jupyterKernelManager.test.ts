@@ -5,7 +5,7 @@ import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize'
 import { JupyterClientAdapter } from '../../client/jupyter/jupyter_client/main';
 import { KernelManagerImpl } from '../../client/jupyter/kernel-manager';
 
-suite('Kernel Manager', () => {
+suite('Jupyter Kernel Manager', () => {
     suiteSetup(async function () {
         if (IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this

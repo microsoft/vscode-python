@@ -1,14 +1,13 @@
 'use strict';
 
-import * as vscode from 'vscode';
-import * as proxy from './jediProxy';
-import * as telemetryHelper from '../common/telemetry';
-import * as telemetryContracts from '../common/telemetryContracts';
-import { extractSignatureAndDocumentation } from './jediHelpers';
 import { EOL } from 'os';
+import * as vscode from 'vscode';
+import { ProviderResult, SnippetString, Uri } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { SnippetString, Uri } from 'vscode';
+import { captureTelemetry, COMPLETION } from '../common/telemetry';
 import { JediFactory } from '../languageServices/jediProxyFactory';
+import { extractSignatureAndDocumentation } from './jediHelpers';
+import * as proxy from './jediProxy';
 
 export class PythonCompletionItemProvider implements vscode.CompletionItemProvider {
 
@@ -17,13 +16,13 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
         if (data && data.items.length > 0) {
             return data.items.map(item => {
                 const sigAndDocs = extractSignatureAndDocumentation(item);
-                let completionItem = new vscode.CompletionItem(item.text);
+                const completionItem = new vscode.CompletionItem(item.text);
                 completionItem.kind = item.type;
                 completionItem.documentation = sigAndDocs[1].length === 0 ? item.description : sigAndDocs[1];
                 completionItem.detail = sigAndDocs[0].split(/\r?\n/).join('');
                 if (PythonSettings.getInstance(resource).autoComplete.addBrackets === true &&
                     (item.kind === vscode.SymbolKind.Function || item.kind === vscode.SymbolKind.Method)) {
-                    completionItem.insertText = new SnippetString(item.text).appendText("(").appendTabstop().appendText(")");
+                    completionItem.insertText = new SnippetString(item.text).appendText('(').appendTabstop().appendText(')');
                 }
 
                 // ensure the built in memebers are at the bottom
@@ -33,7 +32,8 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
         }
         return [];
     }
-    public provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Thenable<vscode.CompletionItem[]> {
+    @captureTelemetry(COMPLETION)
+    public provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): ProviderResult<vscode.CompletionItem[]> {
         if (position.character <= 0) {
             return Promise.resolve([]);
         }
@@ -62,12 +62,8 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
             source: source
         };
 
-        const timer = new telemetryHelper.Delays();
         return this.jediFactory.getJediProxyHandler<proxy.ICompletionResult>(document.uri).sendCommand(cmd, token).then(data => {
-            timer.stop();
-            telemetryHelper.sendTelemetryEvent(telemetryContracts.IDE.Completion, {}, timer.toMeasures());
-            const completions = PythonCompletionItemProvider.parseData(data, document.uri);
-            return completions;
+            return PythonCompletionItemProvider.parseData(data, document.uri);
         });
     }
 }

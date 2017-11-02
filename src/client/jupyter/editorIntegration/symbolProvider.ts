@@ -1,6 +1,5 @@
 'use strict';
-import {DocumentSymbolProvider, TextDocument, CancellationToken, SymbolInformation, SymbolKind} from 'vscode';
-import * as telemetryContracts from '../../common/telemetryContracts';
+import {CancellationToken, DocumentSymbolProvider, SymbolInformation, SymbolKind, TextDocument} from 'vscode';
 import {CellHelper} from '../common/cellHelper';
 
 export class JupyterSymbolProvider implements DocumentSymbolProvider {

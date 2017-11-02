@@ -281,7 +281,7 @@ export class JediProxy implements vscode.Disposable {
                     var index = this.commandQueue.indexOf(cmd.id);
                     this.commandQueue.splice(index, 1);
 
-                    if (cmd.delays && typeof cmd.telemetryEvent === 'string') {
+                    if (cmd.delay && typeof cmd.telemetryEvent === 'string') {
                         // cmd.delays.stop();
                         // telemetryHelper.sendTelemetryEvent(cmd.telemetryEvent, null, cmd.delays.toMeasures());
                     }
@@ -589,7 +589,7 @@ interface IExecutionCommand<T extends ICommandResult> extends ICommand<T> {
     id?: number;
     deferred?: Deferred<T>;
     token: vscode.CancellationToken;
-    delays?: telemetryHelper.Delays;
+    delay?: number;
 }
 
 export interface ICommandError {

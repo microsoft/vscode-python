@@ -12,7 +12,6 @@ import { BaseDebugServer } from "./DebugServers/BaseDebugServer";
 import { DebugClient } from "./DebugClients/DebugClient";
 import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients/DebugFactory";
 import { LaunchRequestArguments, AttachRequestArguments, DebugOptions, TelemetryEvent, PythonEvaluationResultFlags } from "./Common/Contracts";
-import * as telemetryContracts from "../common/telemetryContracts";
 import { validatePath, getPythonExecutable } from './Common/Utils';
 import { isNotInstalledError } from '../common/helpers';
 
@@ -274,7 +273,7 @@ export class PythonDebugger extends DebugSession {
         this.sendEvent(new TerminatedEvent());
     }
     protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments) {
-        this.sendEvent(new TelemetryEvent(telemetryContracts.Debugger.Attach));
+        // this.sendEvent(new TelemetryEvent(telemetryContracts.Debugger.Attach));
         this.attachArgs = args;
         this.debugClient = CreateAttachDebugClient(args, this);
         this.entryResponse = response;

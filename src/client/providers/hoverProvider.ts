@@ -1,27 +1,28 @@
 'use strict';
 
-import * as vscode from 'vscode';
-import * as proxy from './jediProxy';
-import { highlightCode } from './jediHelpers';
 import { EOL } from 'os';
+import * as vscode from 'vscode';
+import { captureTelemetry, HOVER_DEFINITION } from '../common/telemetry';
 import { JediFactory } from '../languageServices/jediProxyFactory';
+import { highlightCode } from './jediHelpers';
+import * as proxy from './jediProxy';
 
 export class PythonHoverProvider implements vscode.HoverProvider {
     public constructor(private jediFactory: JediFactory) { }
     private static parseData(data: proxy.IHoverResult, currentWord: string): vscode.Hover {
-        let results = [];
-        let capturedInfo: string[] = [];
+        const results = [];
+        const capturedInfo: string[] = [];
         data.items.forEach(item => {
             let { signature } = item;
             switch (item.kind) {
                 case vscode.SymbolKind.Constructor:
                 case vscode.SymbolKind.Function:
                 case vscode.SymbolKind.Method: {
-                    signature = 'def ' + signature;
+                    signature = `def ${signature}`;
                     break;
                 }
                 case vscode.SymbolKind.Class: {
-                    signature = 'class ' + signature;
+                    signature = `class ${signature}`;
                     break;
                 }
                 default: {
@@ -30,10 +31,10 @@ export class PythonHoverProvider implements vscode.HoverProvider {
             }
             if (item.docstring) {
                 let lines = item.docstring.split(/\r?\n/);
-                // If the docstring starts with the signature, then remove those lines from the docstring
+                // If the docstring starts with the signature, then remove those lines from the docstring.
                 if (lines.length > 0 && item.signature.indexOf(lines[0]) === 0) {
                     lines.shift();
-                    let endIndex = lines.findIndex(line => item.signature.endsWith(line));
+                    const endIndex = lines.findIndex(line => item.signature.endsWith(line));
                     if (endIndex >= 0) {
                         lines = lines.filter((line, index) => index > endIndex);
                     }
@@ -41,36 +42,38 @@ export class PythonHoverProvider implements vscode.HoverProvider {
                 if (lines.length > 0 && item.signature.startsWith(currentWord) && lines[0].startsWith(currentWord) && lines[0].endsWith(')')) {
                     lines.shift();
                 }
-                let descriptionWithHighlightedCode = highlightCode(lines.join(EOL));
-                let hoverInfo = ['```python', signature, '```', descriptionWithHighlightedCode].join(EOL);
-                let key = signature + lines.join('');
-                // Sometimes we have duplicate documentation, one with a period at the end
-                if (capturedInfo.indexOf(key) >= 0 || capturedInfo.indexOf(key + '.') >= 0) {
+                const descriptionWithHighlightedCode = highlightCode(lines.join(EOL));
+                const hoverInfo = ['```python', signature, '```', descriptionWithHighlightedCode].join(EOL);
+                const key = signature + lines.join('');
+                // Sometimes we have duplicate documentation, one with a period at the end.
+                if (capturedInfo.indexOf(key) >= 0 || capturedInfo.indexOf(`${key}.`) >= 0) {
                     return;
                 }
                 capturedInfo.push(key);
-                capturedInfo.push(key + '.');
+                capturedInfo.push(`${key}.`);
                 results.push(hoverInfo);
                 return;
             }
             if (item.description) {
-                let descriptionWithHighlightedCode = highlightCode(item.description);
-                let hoverInfo = '```python' + EOL + signature + EOL + '```' + EOL + descriptionWithHighlightedCode;
-                let lines = item.description.split(EOL);
-                let key = signature + lines.join('');
-                // Sometimes we have duplicate documentation, one with a period at the end
-                if (capturedInfo.indexOf(key) >= 0 || capturedInfo.indexOf(key + '.') >= 0) {
+                const descriptionWithHighlightedCode = highlightCode(item.description);
+                // tslint:disable-next-line:prefer-template
+                const hoverInfo = '```python' + EOL + signature + EOL + '```' + EOL + descriptionWithHighlightedCode;
+                const lines = item.description.split(EOL);
+                const key = signature + lines.join('');
+                // Sometimes we have duplicate documentation, one with a period at the end.
+                if (capturedInfo.indexOf(key) >= 0 || capturedInfo.indexOf(`${key}.`) >= 0) {
                     return;
                 }
                 capturedInfo.push(key);
-                capturedInfo.push(key + '.');
+                capturedInfo.push(`${key}.`);
                 results.push(hoverInfo);
             }
         });
         return new vscode.Hover(results);
     }
+    @captureTelemetry(HOVER_DEFINITION)
     public async provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Hover> {
-        var filename = document.fileName;
+        const filename = document.fileName;
         if (document.lineAt(position.line).text.match(/^\s*\/\//)) {
             return null;
         }
@@ -78,12 +81,12 @@ export class PythonHoverProvider implements vscode.HoverProvider {
             return null;
         }
 
-        var range = document.getWordRangeAtPosition(position);
+        const range = document.getWordRangeAtPosition(position);
         if (!range || range.isEmpty) {
             return null;
         }
-        let word = document.getText(range);
-        var cmd: proxy.ICommand<proxy.IDefinitionResult> = {
+        const word = document.getText(range);
+        const cmd: proxy.ICommand<proxy.IDefinitionResult> = {
             command: proxy.CommandType.Hover,
             fileName: filename,
             columnIndex: range.end.character,

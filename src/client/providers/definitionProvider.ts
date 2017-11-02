@@ -1,9 +1,9 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import * as proxy from './jediProxy';
-import * as telemetryContracts from '../common/telemetryContracts';
+import { captureTelemetry, DEFINITION } from '../common/telemetry';
 import { JediFactory } from '../languageServices/jediProxyFactory';
+import * as proxy from './jediProxy';
 
 export class PythonDefinitionProvider implements vscode.DefinitionProvider {
     public constructor(private jediFactory: JediFactory) { }
@@ -19,8 +19,9 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
         }
         return null;
     }
+    @captureTelemetry(DEFINITION)
     public provideDefinition(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Thenable<vscode.Definition> {
-        var filename = document.fileName;
+        const filename = document.fileName;
         if (document.lineAt(position.line).text.match(/^\s*\/\//)) {
             return Promise.resolve(null);
         }
@@ -28,9 +29,9 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
             return Promise.resolve(null);
         }
 
-        var range = document.getWordRangeAtPosition(position);
-        var columnIndex = range.isEmpty ? position.character : range.end.character;
-        var cmd: proxy.ICommand<proxy.IDefinitionResult> = {
+        const range = document.getWordRangeAtPosition(position);
+        const columnIndex = range.isEmpty ? position.character : range.end.character;
+        const cmd: proxy.ICommand<proxy.IDefinitionResult> = {
             command: proxy.CommandType.Definitions,
             fileName: filename,
             columnIndex: columnIndex,
@@ -39,7 +40,7 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
         if (document.isDirty) {
             cmd.source = document.getText();
         }
-        let possibleWord = document.getText(range);
+        const possibleWord = document.getText(range);
         return this.jediFactory.getJediProxyHandler<proxy.IDefinitionResult>(document.uri).sendCommand(cmd, token).then(data => {
             return PythonDefinitionProvider.parseData(data, possibleWord);
         });

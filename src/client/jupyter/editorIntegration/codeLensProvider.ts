@@ -1,7 +1,6 @@
 'use strict';
 
-import {CodeLensProvider, TextDocument, CancellationToken, CodeLens, Command} from 'vscode';
-import * as telemetryContracts from '../../common/telemetryContracts';
+import {CancellationToken, CodeLens, CodeLensProvider, Command, TextDocument} from 'vscode';
 import {Commands} from '../../common/constants';
 import {CellHelper} from '../common/cellHelper';
 
