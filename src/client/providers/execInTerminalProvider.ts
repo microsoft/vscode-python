@@ -7,7 +7,8 @@ import { Disposable, workspace } from 'vscode';
 import * as settings from '../common/configSettings';
 import { Commands, PythonLanguage } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
-import { EXECUTION_CODE, EXECUTION_DJANGO, sendTelemetryEvent } from '../common/telemetry';
+import { sendTelemetryEvent } from '../common/telemetry';
+import { EXECUTION_CODE, EXECUTION_DJANGO } from '../common/telemetry/constants';
 import { IS_WINDOWS } from '../common/utils';
 
 let terminal: vscode.Terminal;

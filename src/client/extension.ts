@@ -1,12 +1,14 @@
 'use strict';
+import { EDITOR_LOAD } from './common/telemetry/constants';
 
 import * as os from 'os';
-import * as vscode from 'vscode';
 import { workspace } from 'vscode';
+import * as vscode from 'vscode';
 import * as settings from './common/configSettings';
 import { Commands } from './common/constants';
 import { createDeferred } from './common/helpers';
-import { EDITOR_LOAD, sendTelemetryEvent, StopWatch } from './common/telemetry';
+import { sendTelemetryEvent } from './common/telemetry';
+import { StopWatch } from './common/telemetry/stopWatch';
 import { SimpleConfigurationProvider } from './debugger';
 import { InterpreterManager } from './interpreter';
 import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
@@ -46,11 +48,8 @@ export const activated = activationDeferred.promise;
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: vscode.ExtensionContext) {
     const pythonSettings = settings.PythonSettings.getInstance();
-    const stopwatch = new StopWatch();
-    activated.then(() => {
-        // Do not wait for this to complete.
-        sendStartupTelemetry(stopwatch.elpsedTime);
-    });
+    sendStartupTelemetry(activated)
+
     lintingOutChannel = vscode.window.createOutputChannel(pythonSettings.linting.outputWindow);
     formatOutChannel = lintingOutChannel;
     if (pythonSettings.linting.outputWindow !== pythonSettings.formatting.outputWindow) {
@@ -150,11 +149,15 @@ export async function activate(context: vscode.ExtensionContext) {
     activationDeferred.resolve();
 }
 
-async function sendStartupTelemetry(duration: number) {
-    let condaVersion: string | undefined;
-    try {
-        condaVersion = await getCondaVersion();
-        // tslint:disable-next-line:no-empty
-    } catch { }
-    sendTelemetryEvent(EDITOR_LOAD, duration, { condaVersion });
+async function sendStartupTelemetry(activatedPromise: Promise<void>) {
+    const stopWatch = new StopWatch();
+    activatedPromise.then(async () => {
+        const duration = stopWatch.elpsedTime;
+        let condaVersion: string | undefined;
+        try {
+            condaVersion = await getCondaVersion();
+            // tslint:disable-next-line:no-empty
+        } catch { }
+        sendTelemetryEvent(EDITOR_LOAD, duration, { condaVersion });
+    });
 }

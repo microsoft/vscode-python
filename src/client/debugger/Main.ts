@@ -14,6 +14,8 @@ import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients
 import { LaunchRequestArguments, AttachRequestArguments, DebugOptions, TelemetryEvent, PythonEvaluationResultFlags } from "./Common/Contracts";
 import { validatePath, getPythonExecutable } from './Common/Utils';
 import { isNotInstalledError } from '../common/helpers';
+import { DEBUGGER } from '../../client/common/telemetry/constants';
+import { DebuggerTelemetry } from '../../client/common/telemetry/types';
 
 const CHILD_ENUMEARATION_TIMEOUT = 5000;
 
@@ -189,7 +191,7 @@ export class PythonDebugger extends DebugSession {
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
         // Some versions may still exist with incorrect launch.json values
         const setting = '${config.python.pythonPath}';
-        if (args.pythonPath === setting){
+        if (args.pythonPath === setting) {
             return this.sendErrorResponse(response, 2001, `Invalid launch.json (re-create it or replace 'config.python.pythonPath' with 'config:python.pythonPath')`);
         }
         // Add support for specifying just the directory where the python executable will be located
@@ -227,17 +229,18 @@ export class PythonDebugger extends DebugSession {
         if (args && typeof args.cwd === 'string' && args.cwd.length > 0 && args.cwd !== 'null') {
             programDirectory = args.cwd;
         }
-        if (programDirectory.length > 0 && fs.existsSync(path.join(programDirectory, 'pyenv.cfg'))){
-            this.sendEvent(new OutputEvent(`Warning 'pyenv.cfg' can interfere with the debugger. Please rename or delete this file (temporary solution)`));            
+        if (programDirectory.length > 0 && fs.existsSync(path.join(programDirectory, 'pyenv.cfg'))) {
+            this.sendEvent(new OutputEvent(`Warning 'pyenv.cfg' can interfere with the debugger. Please rename or delete this file (temporary solution)`));
         }
-        
-        // this.sendEvent(new TelemetryEvent(telemetryContracts.Debugger.Load, {
-        //     Debug_Console: args.console,
-        //     Debug_DebugOptions: args.debugOptions.join(","),
-        //     Debug_DJango: args.debugOptions.indexOf("DjangoDebugging") >= 0 ? "true" : "false",
-        //     Debug_PySpark: typeof args.pythonPath === 'string' && args.pythonPath.indexOf('spark-submit') > 0 ? 'true' : 'false',
-        //     Debug_HasEnvVaraibles: args.env && typeof args.env === "object" && Object.keys(args.env).length > 0 ? "true" : "false"
-        // }));
+
+        const telemetryProps: DebuggerTelemetry = {
+            trigger: 'launch',
+            console: args.console,
+            debugOptions: args.debugOptions.join(","),
+            pyspark: typeof args.pythonPath === 'string' && args.pythonPath.indexOf('spark-submit') > 0,
+            hasEnvVars: args.env && typeof args.env === "object" && Object.keys(args.env).length > 0
+        };
+        this.sendEvent(new TelemetryEvent(DEBUGGER, telemetryProps));
 
         this.launchArgs = args;
         this.debugClient = CreateLaunchDebugClient(args, this);
@@ -273,7 +276,8 @@ export class PythonDebugger extends DebugSession {
         this.sendEvent(new TerminatedEvent());
     }
     protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments) {
-        // this.sendEvent(new TelemetryEvent(telemetryContracts.Debugger.Attach));
+        this.sendEvent(new TelemetryEvent(DEBUGGER, { trigger: 'attach' }));
+
         this.attachArgs = args;
         this.debugClient = CreateAttachDebugClient(args, this);
         this.entryResponse = response;

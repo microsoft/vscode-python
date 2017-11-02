@@ -8,6 +8,7 @@ import { GlobalPythonPathUpdaterService } from '../../client/interpreter/configu
 import { WorkspaceFolderPythonPathUpdaterService } from '../../client/interpreter/configuration/services/workspaceFolderUpdaterService';
 import { WorkspacePythonPathUpdaterService } from '../../client/interpreter/configuration/services/workspaceUpdaterService';
 import { WorkspacePythonPath } from '../../client/interpreter/contracts';
+import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
 import { clearPythonPathInWorkspaceFolder } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 
@@ -55,7 +56,7 @@ suite('Multiroot Python Path Settings Updater', () => {
 
     test('Updating Workspace Python Path using the PythonPathUpdaterService should work', async () => {
         const workspaceUri = workspace3Uri;
-        const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory());
+        const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), new InterpreterVersionService());
         const pythonPath = `xWorkspacePythonPathFromUpdater${new Date().getMilliseconds()}`;
         await updaterService.updatePythonPath(pythonPath, ConfigurationTarget.WorkspaceFolder, 'ui', workspace.getWorkspaceFolder(workspaceUri).uri);
         const folderValue = workspace.getConfiguration('python', workspace3Uri).inspect('pythonPath').workspaceFolderValue;

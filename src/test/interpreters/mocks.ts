@@ -55,9 +55,13 @@ export class MockVirtualEnv implements IVirtualEnvironment {
 
 // tslint:disable-next-line:max-classes-per-file
 export class MockInterpreterVersionProvider implements IInterpreterVersionService {
-    constructor(private displayName: string, private useDefaultDisplayName: boolean = false) { }
+    constructor(private displayName: string, private useDefaultDisplayName: boolean = false,
+        private pipVersionPromise?: Promise<string>) { }
     public getVersion(pythonPath: string, defaultDisplayName: string): Promise<string> {
         return this.useDefaultDisplayName ? Promise.resolve(defaultDisplayName) : Promise.resolve(this.displayName);
+    }
+    public getPipVersion(pythonPath: string): Promise<string> {
+        return this.pipVersionPromise;
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }

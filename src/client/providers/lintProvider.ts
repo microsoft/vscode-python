@@ -1,11 +1,14 @@
 'use strict';
-import { sendTelemetryEvent, sendTelemetryWhenDone, StopWatch, LINTING } from '../common/telemetry';
 
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { LinterErrors } from '../common/constants';
+import { sendTelemetryEvent, sendTelemetryWhenDone } from '../common/telemetry';
+import { LINTING } from '../common/telemetry/constants';
+import { StopWatch } from '../common/telemetry/stopWatch';
+import { BaseLinter } from '../linters/baseLinter';
 import * as linter from '../linters/baseLinter';
 import * as flake8 from './../linters/flake8';
 import * as mypy from './../linters/mypy';
@@ -14,7 +17,6 @@ import * as prospector from './../linters/prospector';
 import * as pydocstyle from './../linters/pydocstyle';
 import * as pylama from './../linters/pylama';
 import * as pylint from './../linters/pylint';
-import { BaseLinter } from '../linters/baseLinter';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const Minimatch = require('minimatch').Minimatch;
 

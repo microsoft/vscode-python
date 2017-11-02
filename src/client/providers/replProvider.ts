@@ -1,7 +1,8 @@
 import { commands, Disposable, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { Commands } from '../common/constants';
-import { captureTelemetry, REPL } from '../common/telemetry';
+import { captureTelemetry } from '../common/telemetry';
+import { REPL } from '../common/telemetry/constants';
 import { getPathFromPythonCommand } from '../common/utils';
 
 export class ReplProvider implements Disposable {

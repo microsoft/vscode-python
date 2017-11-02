@@ -3,7 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IPythonSettings, PythonSettings } from '../common/configSettings';
-import { captureTelemetry, WORKSPACE_SYMBOLS_BUILD } from '../common/telemetry';
+import { captureTelemetry } from '../common/telemetry';
+import { WORKSPACE_SYMBOLS_BUILD } from '../common/telemetry/constants';
 
 export class Generator implements vscode.Disposable {
     private optionsFile: string;

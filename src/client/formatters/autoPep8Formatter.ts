@@ -3,7 +3,9 @@
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { Product } from '../common/installer';
-import { FORMAT, sendTelemetryWhenDone, StopWatch } from '../common/telemetry';
+import { sendTelemetryWhenDone } from '../common/telemetry';
+import { FORMAT } from '../common/telemetry/constants';
+import { StopWatch } from '../common/telemetry/stopWatch';
 import { BaseFormatter } from './baseFormatter';
 
 export class AutoPep8Formatter extends BaseFormatter {

@@ -2,7 +2,8 @@
 
 import * as vscode from 'vscode';
 import { CancellationToken, Position, SignatureHelp, TextDocument } from 'vscode';
-import { captureTelemetry, SIGNATURE } from '../common/telemetry';
+import { captureTelemetry } from '../common/telemetry';
+import { SIGNATURE } from '../common/telemetry/constants';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import * as proxy from './jediProxy';
 

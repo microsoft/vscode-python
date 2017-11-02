@@ -7,6 +7,7 @@ import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/config
 import { GlobalPythonPathUpdaterService } from '../../client/interpreter/configuration/services/globalUpdaterService';
 import { WorkspacePythonPathUpdaterService } from '../../client/interpreter/configuration/services/workspaceUpdaterService';
 import { WorkspacePythonPath } from '../../client/interpreter/contracts';
+import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
 import { clearPythonPathInWorkspaceFolder } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 
@@ -72,7 +73,7 @@ suite('Python Path Settings Updater', () => {
 
     test('Updating Workspace Python Path using the PythonPathUpdaterService should work', async () => {
         const workspaceUri = Uri.file(workspaceRoot);
-        const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory());
+        const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), new InterpreterVersionService());
         const pythonPath = `xWorkspacePythonPathFromUpdater${new Date().getMilliseconds()}`;
         await updaterService.updatePythonPath(pythonPath, ConfigurationTarget.Workspace, 'ui', workspace.getWorkspaceFolder(workspaceUri).uri);
         const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath').workspaceValue;

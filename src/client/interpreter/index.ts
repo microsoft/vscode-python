@@ -25,7 +25,8 @@ export class InterpreterManager implements Disposable {
         this.interpreterProvider = new PythonInterpreterLocatorService(virtualEnvMgr);
         const versionService = new InterpreterVersionService();
         this.display = new InterpreterDisplay(statusBar, this.interpreterProvider, virtualEnvMgr, versionService);
-        this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory());
+        const interpreterVersionService = new InterpreterVersionService();
+        this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), interpreterVersionService);
         PythonSettings.getInstance().addListener('change', () => this.onConfigChanged());
         this.disposables.push(window.onDidChangeActiveTextEditor(() => this.refresh()));
         this.disposables.push(statusBar);

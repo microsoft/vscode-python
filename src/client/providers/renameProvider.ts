@@ -5,7 +5,8 @@ import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
 import { Installer, Product } from '../common/installer';
-import { captureTelemetry, REFACTOR_RENAME } from '../common/telemetry';
+import { captureTelemetry } from '../common/telemetry';
+import { REFACTOR_RENAME } from '../common/telemetry/constants';
 import { RefactorProxy } from '../refactor/proxy';
 
 const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');

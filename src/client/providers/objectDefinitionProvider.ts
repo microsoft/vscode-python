@@ -1,7 +1,8 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { captureTelemetry, GO_TO_OBJECT_DEFINITION } from '../common/telemetry';
+import { captureTelemetry } from '../common/telemetry';
+import { GO_TO_OBJECT_DEFINITION } from '../common/telemetry/constants';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import * as defProvider from './definitionProvider';
 

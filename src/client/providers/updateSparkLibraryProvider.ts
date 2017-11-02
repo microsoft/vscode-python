@@ -2,7 +2,8 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Commands } from '../common/constants';
-import { sendTelemetryEvent, UPDATE_PYSPARK_LIBRARY } from '../common/telemetry';
+import { sendTelemetryEvent } from '../common/telemetry';
+import { UPDATE_PYSPARK_LIBRARY } from '../common/telemetry/constants';
 
 export function activateUpdateSparkLibraryProvider(): vscode.Disposable {
     return vscode.commands.registerCommand(Commands.Update_SparkLibrary, updateSparkLibrary);
