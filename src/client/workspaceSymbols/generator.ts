@@ -1,8 +1,9 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
 import * as child_process from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as vscode from 'vscode';
 import { IPythonSettings, PythonSettings } from '../common/configSettings';
+import { captureTelemetry, WORKSPACE_SYMBOLS_BUILD } from '../common/telemetry';
 
 export class Generator implements vscode.Disposable {
     private optionsFile: string;
@@ -20,7 +21,7 @@ export class Generator implements vscode.Disposable {
         this.pythonSettings = PythonSettings.getInstance(workspaceFolder);
     }
 
-    dispose() {
+    public dispose() {
         this.disposables.forEach(d => d.dispose());
     }
 
@@ -32,13 +33,13 @@ export class Generator implements vscode.Disposable {
         return [`--options=${optionsFile}`, '--languages=Python'].concat(excludes);
     }
 
-    async generateWorkspaceTags(): Promise<void> {
+    public async generateWorkspaceTags(): Promise<void> {
         if (!this.pythonSettings.workspaceSymbols.enabled) {
             return;
         }
         return await this.generateTags({ directory: this.workspaceFolder.fsPath });
     }
-
+    @captureTelemetry(WORKSPACE_SYMBOLS_BUILD)
     private generateTags(source: { directory?: string, file?: string }): Promise<void> {
         const tagFile = path.normalize(this.pythonSettings.workspaceSymbols.tagFilePath);
         const cmd = this.pythonSettings.workspaceSymbols.ctagsPath;
