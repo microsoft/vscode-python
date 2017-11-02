@@ -2,15 +2,16 @@
 
 import * as os from 'os';
 import * as vscode from 'vscode';
+import { workspace } from 'vscode';
 import * as settings from './common/configSettings';
 import { Commands } from './common/constants';
 import { createDeferred } from './common/helpers';
-import * as telemetryHelper from './common/telemetry';
-import * as telemetryContracts from './common/telemetryContracts';
+import { EDITOR_LOAD, sendTelemetryEvent, StopWatch } from './common/telemetry';
 import { SimpleConfigurationProvider } from './debugger';
 import { InterpreterManager } from './interpreter';
 import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
+import { getCondaVersion } from './interpreter/helpers';
 import * as jup from './jupyter/main';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
@@ -44,7 +45,11 @@ export const activated = activationDeferred.promise;
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: vscode.ExtensionContext) {
     const pythonSettings = settings.PythonSettings.getInstance();
-    sendStartupTelemetry();
+    const stopwatch = new StopWatch();
+    activated.then(() => {
+        // Do not wait for this to complete.
+        sendStartupTelemetry(stopwatch.elpsedTime);
+    });
     lintingOutChannel = vscode.window.createOutputChannel(pythonSettings.linting.outputWindow);
     formatOutChannel = lintingOutChannel;
     if (pythonSettings.linting.outputWindow !== pythonSettings.formatting.outputWindow) {
@@ -143,6 +148,11 @@ export async function activate(context: vscode.ExtensionContext) {
     activationDeferred.resolve();
 }
 
-function sendStartupTelemetry() {
-    telemetryHelper.sendTelemetryEvent(telemetryContracts.EVENT_LOAD);
+async function sendStartupTelemetry(duration: number) {
+    let condaVersion: string | undefined;
+    try {
+        condaVersion = await getCondaVersion();
+        // tslint:disable-next-line:no-empty
+    } catch { }
+    sendTelemetryEvent(EDITOR_LOAD, duration, { condaVersion });
 }
