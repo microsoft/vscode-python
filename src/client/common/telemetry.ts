@@ -21,6 +21,8 @@ export const REPL = 'REPL';
 export const PYTHON_INTERPRETER = 'PYTHON_INTERPRETER';
 export const WORKSPACE_SYMBOLS_BUILD = 'WORKSPACE_SYMBOLS_BUILD';
 export const WORKSPACE_SYMBOLS_GO_TO = 'WORKSPACE_SYMBOLS_GO_TO';
+export const EXECUTION_CODE = 'EXECUTION_CODE';
+export const EXECUTION_DJANGO = 'EXECUTION_DJANGO';
 
 type EditorLoadTelemetry = {
     condaVersion: string;
@@ -42,7 +44,10 @@ type PythonInterpreterTelemetry = {
     version: string;
     pipVersion: string;
 };
-type Terlemetries = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry;
+type CodeExecutionTelemetry = {
+    scope: 'file'|'selection';
+};
+type Terlemetries = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry | CodeExecutionTelemetry;
 export class StopWatch {
     private started: number = Date.now();
     private stopped?: number;
