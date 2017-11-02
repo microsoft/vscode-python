@@ -7,7 +7,8 @@
             "es6"
         ],
         "sourceMap": true,
-        "rootDir": "src"
+        "rootDir": "src",
+        "experimentalDecorators": true
         // TODO: enable to ensure all code complies with strict coding standards
         // , "strict": true
     },
