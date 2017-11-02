@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 export const COMPLETION = 'COMPLETION';
 export const DEFINITION = 'DEFINITION';
 export const HOVER_DEFINITION = 'HOVER_DEFINITION';
