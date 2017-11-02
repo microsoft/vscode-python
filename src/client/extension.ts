@@ -12,6 +12,7 @@ import { InterpreterManager } from './interpreter';
 import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
 import { getCondaVersion } from './interpreter/helpers';
+import { InterpreterVersionService } from './interpreter/interpreterVersion';
 import * as jup from './jupyter/main';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
@@ -34,7 +35,6 @@ import * as sortImports from './sortImports';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import * as tests from './unittests/main';
 import { WorkspaceSymbols } from './workspaceSymbols/main';
-import { InterpreterVersionService } from './interpreter/interpreterVersion';
 
 const PYTHON: vscode.DocumentFilter = { language: 'python' };
 let unitTestOutChannel: vscode.OutputChannel;
