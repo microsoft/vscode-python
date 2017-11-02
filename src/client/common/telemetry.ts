@@ -1,6 +1,6 @@
-import { extensions, workspace } from 'vscode';
-// tslint:disable-next-line:import-name
-import TelemetryReporter from 'vscode-extension-telemetry';
+import { extensions } from 'vscode';
+// tslint:disable-next-line:variable-name no-require-imports no-var-requires no-use-before-declare  no-unsafe-any
+const TelemetryReporter: typeof TelemetryReporterType = require('vscode-extension-telemetry');
 
 export const COMPLETION = 'COMPLETION';
 export const DEFINITION = 'DEFINITION';
@@ -19,7 +19,9 @@ export const REFACTOR_EXTRACT_VAR = 'REFACTOR_EXTRACT_VAR';
 export const REFACTOR_EXTRACT_FUNCTION = 'REFACTOR_EXTRACT_FUNCTION';
 export const REPL = 'REPL';
 
-type TelemetryProperties = { [key: string]: string; };
+type EditorLoadTelemetry = {
+    condaVersion: string;
+};
 type FormatTelemetry = {
     tool: 'autoppep8' | 'yapf';
     hasCustomArgs: boolean;
@@ -31,8 +33,7 @@ type LintingTelemetry = {
     trigger: 'save' | 'auto';
     executableSpecified: boolean;
 };
-let s: FormatTelemetry;
-s = { tool: 'yapf', hasCustomArgs: false, formatSelection: false };
+type Terlemetries = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry;
 export class StopWatch {
     private started: number = Date.now();
     private stopped?: number;
@@ -44,45 +45,52 @@ export class StopWatch {
     }
 }
 
-let telemetryReporter: TelemetryReporter;
+let telemetryReporter: TelemetryReporterType;
 function getTelemetryReporter() {
     if (telemetryReporter) {
         return telemetryReporter;
     }
     const extensionId = 'donjayamanne.python';
-    const extension = extensions.getExtension(extensionId);
+    // tslint:disable-next-line:no-non-null-assertion
+    const extension = extensions.getExtension(extensionId)!;
+    // tslint:disable-next-line:no-unsafe-any
     const extensionVersion = extension.packageJSON.version;
+    // tslint:disable-next-line:no-unsafe-any
     const aiKey = extension.packageJSON.contributes.debuggers[0].aiKey;
+    // tslint:disable-next-line:no-unsafe-any
     return telemetryReporter = new TelemetryReporter(extensionId, extensionVersion, aiKey);
 }
-export function sendTelemetryEvent(eventName: string, durationMs?: number, properties?: FormatTelemetry | LintingTelemetry) {
+export function sendTelemetryEvent(eventName: string, durationMs?: number, properties?: Terlemetries) {
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : undefined;
 
-    const customProperties = {};
+    // tslint:disable-next-line:no-any
+    const customProperties: { [key: string]: string } = {};
     if (properties) {
-        Object.getOwnPropertyNames(properties).forEach(prop => {
-            customProperties[prop] = typeof properties[prop] === 'string' ? properties[prop] : properties[prop].toString();
+        // tslint:disable-next-line:prefer-type-cast no-any
+        const data = properties as any;
+        Object.getOwnPropertyNames(data).forEach(prop => {
+            // tslint:disable-next-line:prefer-type-cast no-any  no-unsafe-any
+            (customProperties as any)[prop] = typeof data[prop] === 'string' ? data[prop] : data[prop].toString();
         });
     }
+    //
     reporter.sendTelemetryEvent(eventName, properties ? customProperties : undefined, measures);
 }
-
-// tslint:disable-next-line:no-any
-type Handler = (...args: any[]) => any;
 
 // tslint:disable-next-line:no-any function-name
 export function captureTelemetry(eventName: string) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<Handler>) {
+    return function (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
         descriptor.value = function (...args: any[]) {
             const stopWatch = new StopWatch();
-            // tslint:disable-next-line:no-invalid-this
+            // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
             const result = originalMethod.apply(this, args);
 
-            // If method being wrapped returns a promise then wait for it
+            // If method being wrapped returns a promise then wait for it.
+            // tslint:disable-next-line:no-unsafe-any
             if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
                 // tslint:disable-next-line:prefer-type-cast
                 (result as Promise<void>)
@@ -90,6 +98,7 @@ export function captureTelemetry(eventName: string) {
                         sendTelemetryEvent(eventName, stopWatch.elpsedTime);
                         return data;
                     })
+                    // tslint:disable-next-line:promise-function-async
                     .catch(ex => {
                         sendTelemetryEvent(eventName, stopWatch.elpsedTime);
                         return Promise.reject(ex);
@@ -107,19 +116,47 @@ export function captureTelemetry(eventName: string) {
 
 // tslint:disable-next-line:no-any function-name
 export function sendTelemetryWhenDone(eventName: string, promise: Promise<any> | Thenable<any>,
-    stopWatch?: StopWatch, properties?: FormatTelemetry | LintingTelemetry) {
-    stopWatch = stopWatch || new StopWatch();
+    stopWatch?: StopWatch, properties?: Terlemetries) {
+    stopWatch = stopWatch ? stopWatch : new StopWatch();
     if (typeof promise.then === 'function') {
         // tslint:disable-next-line:prefer-type-cast no-any
         (promise as Promise<any>)
             .then(data => {
-                sendTelemetryEvent(eventName, stopWatch.elpsedTime, properties);
+                // tslint:disable-next-line:no-non-null-assertion
+                sendTelemetryEvent(eventName, stopWatch!.elpsedTime, properties);
                 return data;
+                // tslint:disable-next-line:promise-function-async
             }, ex => {
-                sendTelemetryEvent(eventName, stopWatch.elpsedTime, properties);
+                // tslint:disable-next-line:no-non-null-assertion
+                sendTelemetryEvent(eventName, stopWatch!.elpsedTime, properties);
                 return Promise.reject(ex);
             });
     } else {
         throw new Error('Method is neither a Promise nor a Theneable');
     }
+}
+
+class TelemetryReporterType {
+    /**
+     * Constructs a new telemetry reporter
+     * @param {string} extensionId All events will be prefixed with this event name
+     * @param {string} extensionVersion Extension version to be reported with each event
+     * @param {string} key The application insights key
+     */
+    // tslint:disable-next-line:no-empty
+    constructor(extensionId: string, extensionVersion: string, key: string) { }
+
+    /**
+     * Sends a telemetry event
+     * @param {string} eventName The event name
+     * @param {object} properties An associative array of strings
+     * @param {object} measures An associative array of numbers
+     */
+    // tslint:disable-next-line:member-access
+    public sendTelemetryEvent(eventName: string, properties?: {
+        [key: string]: string;
+    }, measures?: {
+        [key: string]: number;
+        // tslint:disable-next-line:no-empty
+    }): void { }
 }
