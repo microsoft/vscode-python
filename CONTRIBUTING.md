@@ -38,5 +38,5 @@ Clone the repo into any directory and start debugging.
 From there use the "Launch Extension" launch option.
 
 ### Debugging the Python Extension Debugger
-The easiest way to debug the Python Debugger (in my opinion) is to clone this git repo directory into [your](https://code.visualstudio.com/docs/extensions/install-extension#_your-extensions-folder) extensions directory.
+The easiest way to debug the Python Debugger (in our opinion) is to clone this git repo directory into [your](https://code.visualstudio.com/docs/extensions/install-extension#_your-extensions-folder) extensions directory.
 From there use the ```Launch Extension as debugserver``` launch option.
