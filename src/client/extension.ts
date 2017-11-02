@@ -1,8 +1,6 @@
 'use strict';
 
-import * as fs from 'fs';
 import * as os from 'os';
-import { workspace } from 'vscode';
 import * as vscode from 'vscode';
 import * as settings from './common/configSettings';
 import { Commands } from './common/constants';
@@ -10,7 +8,6 @@ import { createDeferred } from './common/helpers';
 import * as telemetryHelper from './common/telemetry';
 import * as telemetryContracts from './common/telemetryContracts';
 import { SimpleConfigurationProvider } from './debugger';
-import { HelpProvider } from './helpProvider';
 import { InterpreterManager } from './interpreter';
 import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
@@ -141,9 +138,6 @@ export async function activate(context: vscode.ExtensionContext) {
     // In case we have CR LF
     const triggerCharacters: string[] = os.EOL.split('');
     triggerCharacters.shift();
-
-    const hepProvider = new HelpProvider();
-    context.subscriptions.push(hepProvider);
 
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
     activationDeferred.resolve();

@@ -80,20 +80,3 @@ export namespace LinterErrors {
         export const InvalidSyntax = 'E999';
     }
 }
-
-export namespace Documentation {
-    export const Home = '/docs/python-path/';
-    export namespace Jupyter {
-        export const GettingStarted = '/docs/jupyter_getting-started/';
-        export const Examples = '/docs/jupyter_examples/';
-        export const Setup = '/docs/jupyter_prerequisites/';
-        export const VersionIncompatiblity = '/docs/troubleshooting_jupyter/#Incompatible-dependencies';
-    }
-    export namespace Formatting {
-        export const FormatOnSave = '/docs/formatting/';
-    }
-    export namespace Workspace {
-        export const Home = '/docs/workspaceSymbols/';
-        export const InstallOnWindows = '/docs/workspaceSymbols/#Install-Windows';
-    }
-}

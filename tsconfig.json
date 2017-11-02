@@ -17,7 +17,6 @@
         "src/server/node_modules",
         "src/client/node_modules",
         "src/server/src/typings",
-        "src/client/src/typings",
-        "docs"
+        "src/client/src/typings"
     ]
 }
