@@ -4,7 +4,7 @@
 
 ## Prerequisites
 1. Node.js
-2. Python v2.6 or later (required only for testing the extension and running unit tests)
+2. Python 2.7 or later (required only for testing the extension and running unit tests)
 3. Windows, OS X or Linux
 
 ## Setup
@@ -25,18 +25,18 @@ To test the changes you launch a development version of VS Code on the workspace
 Use the "Launch Extension" launch option.
 
 ### Unit Tests
-Run the Unit Tests via the "Launch Test" launch option.   
+Run the Unit Tests via the "Launch Test" launch option.
 Currently unit tests only run on [Travis](https://travis-ci.org/DonJayamanne/pythonVSCode)
 
-_Requirements_   
-1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests   
-2. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally   
+_Requirements_
+1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
+2. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
 
 ## Debugging the extension
 ### Standard Debugging
 Clone the repo into any directory and start debugging.
-From there use the "Launch Extension" launch option.   
+From there use the "Launch Extension" launch option.
 
 ### Debugging the Python Extension Debugger
-The easiest way to debug the Python Debugger (in my opinion) is to clone this git repo directory into [your](https://code.visualstudio.com/docs/extensions/install-extension#_your-extensions-folder) extensions directory.   
+The easiest way to debug the Python Debugger (in our opinion) is to clone this git repo directory into [your](https://code.visualstudio.com/docs/extensions/install-extension#_your-extensions-folder) extensions directory.
 From there use the ```Launch Extension as debugserver``` launch option.

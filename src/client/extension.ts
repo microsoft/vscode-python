@@ -2,7 +2,6 @@
 import { EDITOR_LOAD } from './common/telemetry/constants';
 
 import * as os from 'os';
-import { workspace } from 'vscode';
 import * as vscode from 'vscode';
 import * as settings from './common/configSettings';
 import { Commands } from './common/constants';

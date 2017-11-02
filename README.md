@@ -1,7 +1,7 @@
 # Python
 
-An extension with rich support for the [Python language](https://www.python.org/) (_including Python 3.6_), with features including the following and more:   
-* Linting ([Prospector](https://pypi.io/project/prospector/), [Pylint](https://pypi.io/project/pylint/), [pycodestyle/pep257/pep8](https://pypi.io/project/pycodestyle/), [Flake8](https://pypi.io/project/flake8/), [pylama](https://github.com/klen/pylama), [pydocstyle](https://pypi.io/project/pydocstyle/), [mypy](http://mypy-lang.org/) with config files and plugins)  
+An extension with rich support for the [Python language](https://www.python.org/) (_including Python 3.6_), with features including the following and more:
+* Linting ([Prospector](https://pypi.io/project/prospector/), [Pylint](https://pypi.io/project/pylint/), [pycodestyle/pep257/pep8](https://pypi.io/project/pycodestyle/), [Flake8](https://pypi.io/project/flake8/), [pylama](https://github.com/klen/pylama), [pydocstyle](https://pypi.io/project/pydocstyle/), [mypy](http://mypy-lang.org/) with config files and plugins)
 * Intellisense (autocompletion with support for PEP-0484 and PEP 526)
 * Auto indenting
 * Code formatting ([autopep8](https://pypi.io/project/autopep8/), [yapf](https://pypi.io/project/yapf/), with config files)
@@ -18,14 +18,14 @@ An extension with rich support for the [Python language](https://www.python.org/
 * optionally install `ctags` for Workspace Symbols, from [here](http://ctags.sourceforge.net/), or using `brew install ctags` on OSX.
 * If Python is in the current path
   + You're ready to use it.
-* To select a different Python Interpreter/Version (or use Virtual Environment), use the command [```Select Workspace Interpreter```](https://github.com/DonJayamanne/pythonVSCode/wiki/Miscellaneous#select-an-interpreter)) 
+* To select a different Python Interpreter/Version (or use Virtual Environment), use the command [```Select Workspace Interpreter```](https://github.com/DonJayamanne/pythonVSCode/wiki/Miscellaneous#select-an-interpreter))
 
 ## [Documentation](https://github.com/DonJayamanne/pythonVSCode/wiki)
 For further information and details continue through to the [documentation](https://github.com/DonJayamanne/pythonVSCode/wiki).
 
 ## [Issues, Feature Requests and Contributions](https://github.com/DonJayamanne/pythonVSCode/issues)
 * Contributions are always welcome. Fork it, modify it and create a pull request.
-  + Details on contributing can be found [here](https://github.com/DonJayamanne/pythonVSCode/wiki/Contribution) 
+  + Details on contributing can be found [here](https://github.com/DonJayamanne/pythonVSCode/wiki/Contribution)
 * Any and all feedback is appreciated and welcome.
   + Please feel free to [add suggestions here](https://github.com/DonJayamanne/pythonVSCode/issues/183)
 
@@ -58,7 +58,7 @@ For further information and details continue through to the [documentation](http
   + Custom plugins such as pylint plugin for Django can be easily used by modifying the settings as follows:
 ```json
 "python.linting.pylintArgs": ["--load-plugins", "pylint_django"]
-``` 
+```
 * [Debugging](https://github.com/DonJayamanne/pythonVSCode/wiki/Debugging)
   + Watch window
   + Evaluate Expressions
@@ -101,23 +101,33 @@ For further information and details continue through to the [documentation](http
 ## [Change Log](https://github.com/DonJayamanne/pythonVSCode/blob/master/CHANGELOG.md)
 
 ### Version 0.7.0 (3 August 2017)
-* Displaying internal documntation [#1008](https://github.com/DonJayamanne/pythonVSCode/issues/1008), [#10860](https://github.com/DonJayamanne/pythonVSCode/issues/10860)  
-* Fixes to 'async with' snippet [#1108](https://github.com/DonJayamanne/pythonVSCode/pull/1108), [#996](https://github.com/DonJayamanne/pythonVSCode/issues/996)  
-* Add support for environment variable in unit tests [#1074](https://github.com/DonJayamanne/pythonVSCode/issues/1074)  
-* Fixes to unit test code lenses not being displayed [#1115](https://github.com/DonJayamanne/pythonVSCode/issues/1115)  
-* Fix to empty brackets being added [#1110](https://github.com/DonJayamanne/pythonVSCode/issues/1110), [#1031](https://github.com/DonJayamanne/pythonVSCode/issues/1031)    
-* Fix debugging of Django applications [#819](https://github.com/DonJayamanne/pythonVSCode/issues/819), [#999](https://github.com/DonJayamanne/pythonVSCode/issues/999)   
-* Update isort to the latest version [#1134](https://github.com/DonJayamanne/pythonVSCode/issues/1134), [#1135](https://github.com/DonJayamanne/pythonVSCode/pull/1135)  
-* Fix issue causing intellisense and similar functionality to stop working [#1072](https://github.com/DonJayamanne/pythonVSCode/issues/1072), [#1118](https://github.com/DonJayamanne/pythonVSCode/pull/1118), [#1089](https://github.com/DonJayamanne/pythonVSCode/issues/1089)  
-* Bunch of unit tests and code cleanup  
-* Resolve issue where navigation to decorated function goes to decorator [#742](https://github.com/DonJayamanne/pythonVSCode/issues/742)  
-* Go to symbol in workspace leads to nonexisting files [#816](https://github.com/DonJayamanne/pythonVSCode/issues/816), [#829](https://github.com/DonJayamanne/pythonVSCode/issues/829)    
+* Displaying internal documntation [#1008](https://github.com/DonJayamanne/pythonVSCode/issues/1008), [#10860](https://github.com/DonJayamanne/pythonVSCode/issues/10860)
+* Fixes to 'async with' snippet [#1108](https://github.com/DonJayamanne/pythonVSCode/pull/1108), [#996](https://github.com/DonJayamanne/pythonVSCode/issues/996)
+* Add support for environment variable in unit tests [#1074](https://github.com/DonJayamanne/pythonVSCode/issues/1074)
+* Fixes to unit test code lenses not being displayed [#1115](https://github.com/DonJayamanne/pythonVSCode/issues/1115)
+* Fix to empty brackets being added [#1110](https://github.com/DonJayamanne/pythonVSCode/issues/1110), [#1031](https://github.com/DonJayamanne/pythonVSCode/issues/1031)
+* Fix debugging of Django applications [#819](https://github.com/DonJayamanne/pythonVSCode/issues/819), [#999](https://github.com/DonJayamanne/pythonVSCode/issues/999)
+* Update isort to the latest version [#1134](https://github.com/DonJayamanne/pythonVSCode/issues/1134), [#1135](https://github.com/DonJayamanne/pythonVSCode/pull/1135)
+* Fix issue causing intellisense and similar functionality to stop working [#1072](https://github.com/DonJayamanne/pythonVSCode/issues/1072), [#1118](https://github.com/DonJayamanne/pythonVSCode/pull/1118), [#1089](https://github.com/DonJayamanne/pythonVSCode/issues/1089)
+* Bunch of unit tests and code cleanup
+* Resolve issue where navigation to decorated function goes to decorator [#742](https://github.com/DonJayamanne/pythonVSCode/issues/742)
+* Go to symbol in workspace leads to nonexisting files [#816](https://github.com/DonJayamanne/pythonVSCode/issues/816), [#829](https://github.com/DonJayamanne/pythonVSCode/issues/829)
 
 ## Source
 
-[GitHub](https://github.com/DonJayamanne/pythonVSCode)
+[GitHub](https://github.com/microsoft/vscode-python)
 
-                
+
 ## License
 
-[MIT](https://raw.githubusercontent.com/DonJayamanne/pythonVSCode/master/LICENSE)
+[MIT](https://raw.githubusercontent.com/microsoft/vscode-python/master/LICENSE)
+
+
+## Data/Telemetry
+The Microsoft Python Extension for Visual Studio Code collects usage
+data and sends it to Microsoft to help improve our products and
+services. Read our
+[privacy statement](https://privacy.microsoft.com/privacystatement) to
+learn more. This extension respects the `telemetry.enableTelemetry`
+setting which you can learn more about at
+https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting.
