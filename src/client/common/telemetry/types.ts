@@ -28,4 +28,16 @@ export type DebuggerTelemetry = {
     pyspark?: boolean;
     hasEnvVars?: boolean;
 };
-export type TelemetryProperties = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry | CodeExecutionTelemetry;
+export type TestRunTelemetry = {
+    tool: 'nosetest' | 'pytest' | 'unittest'
+    scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
+    debugging: boolean;
+    trigger: 'ui' | 'codelens' | 'commandpalette' | 'auto';
+    failed: boolean;
+};
+export type TestDiscoverytTelemetry = {
+    tool: 'nosetest' | 'pytest' | 'unittest'
+    trigger: 'ui' | 'commandpalette';
+    failed: boolean;
+};
+export type TelemetryProperties = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry | CodeExecutionTelemetry | TestRunTelemetry | TestDiscoverytTelemetry;

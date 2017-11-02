@@ -5,7 +5,7 @@ import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
 import { createDeferred } from '../../client/common/helpers';
 import { BaseTestManager } from '../../client/unittests/common/baseTestManager';
-import { CANCELLATION_REASON } from '../../client/unittests/common/constants';
+import { CANCELLATION_REASON, CommandSource } from '../../client/unittests/common/constants';
 import { TestCollectionStorageService } from '../../client/unittests/common/storageService';
 import { TestResultsService } from '../../client/unittests/common/testResultsService';
 import { TestsHelper } from '../../client/unittests/common/testUtils';
@@ -75,13 +75,13 @@ suite('Unit Tests Debugging', () => {
     }
 
     async function testStartingDebugger() {
-        const tests = await testManager.discoverTests(true, true);
+        const tests = await testManager.discoverTests(CommandSource.commandPalette, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
 
         const testFunction = [tests.testFunctions[0].testFunction];
-        testManager.runTest({ testFunction }, false, true);
+        testManager.runTest(CommandSource.commandPalette, { testFunction }, false, true);
         const launched = await mockDebugLauncher.launched;
         assert.isTrue(launched, 'Debugger not launched');
     }
@@ -108,17 +108,17 @@ suite('Unit Tests Debugging', () => {
     });
 
     async function testStoppingDebugger() {
-        const tests = await testManager.discoverTests(true, true);
+        const tests = await testManager.discoverTests(CommandSource.commandPalette, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
 
         const testFunction = [tests.testFunctions[0].testFunction];
-        const runningPromise = testManager.runTest({ testFunction }, false, true);
+        const runningPromise = testManager.runTest(CommandSource.commandPalette, { testFunction }, false, true);
         const launched = await mockDebugLauncher.launched;
         assert.isTrue(launched, 'Debugger not launched');
 
-        const discoveryPromise = testManager.discoverTests(true, true, true);
+        const discoveryPromise = testManager.discoverTests(CommandSource.commandPalette, true, true, true);
 
         expect(runningPromise).eventually.throws(CANCELLATION_REASON, 'Incorrect reason for ending the debugger');
     }
@@ -145,17 +145,17 @@ suite('Unit Tests Debugging', () => {
     });
 
     async function testDebuggerWhenRediscoveringTests() {
-        const tests = await testManager.discoverTests(true, true);
+        const tests = await testManager.discoverTests(CommandSource.commandPalette, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
 
         const testFunction = [tests.testFunctions[0].testFunction];
-        const runningPromise = testManager.runTest({ testFunction }, false, true);
+        const runningPromise = testManager.runTest(CommandSource.commandPalette, { testFunction }, false, true);
         const launched = await mockDebugLauncher.launched;
         assert.isTrue(launched, 'Debugger not launched');
 
-        const discoveryPromise = testManager.discoverTests(false, true);
+        const discoveryPromise = testManager.discoverTests(CommandSource.commandPalette, false, true);
         const deferred = createDeferred<string>();
 
         discoveryPromise

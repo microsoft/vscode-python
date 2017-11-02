@@ -3,10 +3,13 @@ import { Uri, window, workspace } from 'vscode';
 import * as vscode from 'vscode';
 import { IUnitTestSettings, PythonSettings } from '../common/configSettings';
 import * as constants from '../common/constants';
+import { UNITTEST_STOP, UNITTEST_VIEW_OUTPUT } from '../common/telemetry/constants';
+import { sendTelemetryEvent } from '../common/telemetry/index';
+import { TestRunTelemetry } from '../common/telemetry/types';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
 import { activateCodeLenses } from './codeLenses/main';
 import { BaseTestManager } from './common/baseTestManager';
-import { CANCELLATION_REASON } from './common/constants';
+import { CANCELLATION_REASON, CommandSource } from './common/constants';
 import { DebugLauncher } from './common/debugLauncher';
 import { TestCollectionStorageService } from './common/storageService';
 import { TestManagerServiceFactory } from './common/testManagerServiceFactory';
@@ -73,7 +76,7 @@ async function onDocumentSaved(doc: vscode.TextDocument): Promise<void> {
     if (!testManager) {
         return;
     }
-    const tests = await testManager.discoverTests(false, true);
+    const tests = await testManager.discoverTests(CommandSource.auto, false, true);
     if (!tests || !Array.isArray(tests.testFiles) || tests.testFiles.length === 0) {
         return;
     }
@@ -84,7 +87,7 @@ async function onDocumentSaved(doc: vscode.TextDocument): Promise<void> {
     if (timeoutId) {
         clearTimeout(timeoutId);
     }
-    timeoutId = setTimeout(() => discoverTests(doc.uri, true), 1000);
+    timeoutId = setTimeout(() => discoverTests(CommandSource.auto, doc.uri, true), 1000);
 }
 
 function dispose() {
@@ -93,62 +96,67 @@ function dispose() {
 }
 function registerCommands(): vscode.Disposable[] {
     const disposables = [];
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Discover, (resource?: Uri) => {
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Discover, (cmdSource: CommandSource = CommandSource.commandPalette, resource?: Uri) => {
         // Ignore the exceptions returned.
         // This command will be invoked else where in the extension.
         // tslint:disable-next-line:no-empty
-        discoverTests(resource, true, true).catch(() => { });
+        discoverTests(cmdSource, resource, true, true).catch(() => { });
     }));
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Run_Failed, (resource: Uri) => runTestsImpl(resource, undefined, true)));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Run_Failed, (cmdSource: CommandSource = CommandSource.commandPalette, resource: Uri) => runTestsImpl(cmdSource, resource, undefined, true)));
     // tslint:disable-next-line:no-unnecessary-callback-wrapper
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Run, (file: Uri, testToRun?: TestsToRun) => runTestsImpl(file, testToRun)));
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Debug, (file: Uri, testToRun: TestsToRun) => runTestsImpl(file, testToRun, false, true)));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Run, (cmdSource: CommandSource = CommandSource.commandPalette, file: Uri, testToRun?: TestsToRun) => runTestsImpl(cmdSource, file, testToRun)));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Debug, (cmdSource: CommandSource = CommandSource.commandPalette, file: Uri, testToRun: TestsToRun) => runTestsImpl(cmdSource, file, testToRun, false, true)));
     // tslint:disable-next-line:no-unnecessary-callback-wrapper
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_View_UI, () => displayUI()));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_View_UI, () => displayUI(CommandSource.commandPalette)));
     // tslint:disable-next-line:no-unnecessary-callback-wrapper
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Picker_UI, (file: Uri, testFunctions: TestFunction[]) => displayPickerUI(file, testFunctions)));
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Picker_UI_Debug, (file, testFunctions) => displayPickerUI(file, testFunctions, true)));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Picker_UI, (cmdSource: CommandSource = CommandSource.commandPalette, file: Uri, testFunctions: TestFunction[]) => displayPickerUI(cmdSource, file, testFunctions)));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Picker_UI_Debug, (cmdSource: CommandSource = CommandSource.commandPalette, file: Uri, testFunctions: TestFunction[]) => displayPickerUI(cmdSource, file, testFunctions, true)));
     // tslint:disable-next-line:no-unnecessary-callback-wrapper
     disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Stop, (resource: Uri) => stopTests(resource)));
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_ViewOutput, () => outChannel.show()));
+    // tslint:disable-next-line:no-unnecessary-callback-wrapper
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_ViewOutput, (cmdSource: CommandSource = CommandSource.commandPalette) => viewOutput(cmdSource)));
     disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Ask_To_Stop_Discovery, () => displayStopUI('Stop discovering tests')));
     disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Ask_To_Stop_Test, () => displayStopUI('Stop running tests')));
     // tslint:disable-next-line:no-unnecessary-callback-wrapper
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Select_And_Run_Method, (resource: Uri) => selectAndRunTestMethod(resource)));
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Select_And_Debug_Method, (resource: Uri) => selectAndRunTestMethod(resource, true)));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Select_And_Run_Method, (cmdSource: CommandSource = CommandSource.commandPalette, resource: Uri) => selectAndRunTestMethod(cmdSource, resource)));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Select_And_Debug_Method, (cmdSource: CommandSource = CommandSource.commandPalette, resource: Uri) => selectAndRunTestMethod(cmdSource, resource, true)));
     // tslint:disable-next-line:no-unnecessary-callback-wrapper
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Select_And_Run_File, () => selectAndRunTestFile()));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Select_And_Run_File, (cmdSource: CommandSource = CommandSource.commandPalette) => selectAndRunTestFile(cmdSource)));
     // tslint:disable-next-line:no-unnecessary-callback-wrapper
-    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Run_Current_File, () => runCurrentTestFile()));
+    disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Run_Current_File, (cmdSource: CommandSource = CommandSource.commandPalette) => runCurrentTestFile(cmdSource)));
 
     return disposables;
 }
 
-async function displayUI() {
+function viewOutput(cmdSource: CommandSource) {
+    sendTelemetryEvent(UNITTEST_VIEW_OUTPUT);
+    outChannel.show();
+}
+async function displayUI(cmdSource: CommandSource) {
     const testManager = await getTestManager(true);
     if (!testManager) {
         return;
     }
 
     testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
-    testDisplay.displayTestUI(testManager.workspace);
+    testDisplay.displayTestUI(cmdSource, testManager.workspace);
 }
-async function displayPickerUI(file: Uri, testFunctions: TestFunction[], debug?: boolean) {
+async function displayPickerUI(cmdSource: CommandSource, file: Uri, testFunctions: TestFunction[], debug?: boolean) {
     const testManager = await getTestManager(true, file);
     if (!testManager) {
         return;
     }
 
     testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
-    testDisplay.displayFunctionTestPickerUI(testManager.workspace, testManager.workingDirectory, file, testFunctions, debug);
+    testDisplay.displayFunctionTestPickerUI(cmdSource, testManager.workspace, testManager.workingDirectory, file, testFunctions, debug);
 }
-async function selectAndRunTestMethod(resource: Uri, debug?: boolean) {
+async function selectAndRunTestMethod(cmdSource: CommandSource, resource: Uri, debug?: boolean) {
     const testManager = await getTestManager(true, resource);
     if (!testManager) {
         return;
     }
     try {
-        await testManager.discoverTests(true, true, true);
+        await testManager.discoverTests(cmdSource, true, true, true);
     } catch (ex) {
         return;
     }
@@ -160,15 +168,15 @@ async function selectAndRunTestMethod(resource: Uri, debug?: boolean) {
         return;
     }
     // tslint:disable-next-line:prefer-type-cast
-    await runTestsImpl(testManager.workspace, { testFunction: [selectedTestFn.testFunction] } as TestsToRun, debug);
+    await runTestsImpl(cmdSource, testManager.workspace, { testFunction: [selectedTestFn.testFunction] } as TestsToRun, debug);
 }
-async function selectAndRunTestFile() {
+async function selectAndRunTestFile(cmdSource: CommandSource) {
     const testManager = await getTestManager(true);
     if (!testManager) {
         return;
     }
     try {
-        await testManager.discoverTests(true, true, true);
+        await testManager.discoverTests(cmdSource, true, true, true);
     } catch (ex) {
         return;
     }
@@ -180,9 +188,9 @@ async function selectAndRunTestFile() {
         return;
     }
     // tslint:disable-next-line:prefer-type-cast
-    await runTestsImpl(testManager.workspace, { testFile: [selectedFile] } as TestsToRun);
+    await runTestsImpl(cmdSource, testManager.workspace, { testFile: [selectedFile] } as TestsToRun);
 }
-async function runCurrentTestFile() {
+async function runCurrentTestFile(cmdSource: CommandSource) {
     if (!window.activeTextEditor) {
         return;
     }
@@ -191,7 +199,7 @@ async function runCurrentTestFile() {
         return;
     }
     try {
-        await testManager.discoverTests(true, true, true);
+        await testManager.discoverTests(cmdSource, true, true, true);
     } catch (ex) {
         return;
     }
@@ -203,7 +211,7 @@ async function runCurrentTestFile() {
         return;
     }
     // tslint:disable-next-line:prefer-type-cast
-    await runTestsImpl(testManager.workspace, { testFile: [testFiles[0]] } as TestsToRun);
+    await runTestsImpl(cmdSource, testManager.workspace, { testFile: [testFiles[0]] } as TestsToRun);
 }
 async function displayStopUI(message: string) {
     const testManager = await getTestManager(true);
@@ -265,15 +273,16 @@ function autoDiscoverTests() {
 
     // No need to display errors.
     // tslint:disable-next-line:no-empty
-    discoverTests(workspace.workspaceFolders[0].uri, true).catch(() => { });
+    discoverTests(CommandSource.auto, workspace.workspaceFolders[0].uri, true).catch(() => { });
 }
 async function stopTests(resource: Uri) {
+    sendTelemetryEvent(UNITTEST_STOP);
     const testManager = await getTestManager(true, resource);
     if (testManager) {
         testManager.stop();
     }
 }
-async function discoverTests(resource?: Uri, ignoreCache?: boolean, userInitiated?: boolean) {
+async function discoverTests(cmdSource: CommandSource, resource?: Uri, ignoreCache?: boolean, userInitiated?: boolean) {
     const testManager = await getTestManager(true, resource);
     if (!testManager) {
         return;
@@ -281,7 +290,7 @@ async function discoverTests(resource?: Uri, ignoreCache?: boolean, userInitiate
 
     if (testManager && (testManager.status !== TestStatus.Discovering && testManager.status !== TestStatus.Running)) {
         testResultDisplay = testResultDisplay ? testResultDisplay : new TestResultDisplay(outChannel, onDidChange);
-        const discoveryPromise = testManager.discoverTests(ignoreCache, false, userInitiated);
+        const discoveryPromise = testManager.discoverTests(cmdSource, ignoreCache, false, userInitiated);
         testResultDisplay.displayDiscoverStatus(discoveryPromise);
         await discoveryPromise;
     }
@@ -299,14 +308,14 @@ function isTestsToRun(arg: any): arg is TestsToRun {
     }
     return false;
 }
-async function runTestsImpl(resource?: Uri, testsToRun?: TestsToRun, runFailedTests?: boolean, debug: boolean = false) {
+async function runTestsImpl(cmdSource: CommandSource, resource?: Uri, testsToRun?: TestsToRun, runFailedTests?: boolean, debug: boolean = false) {
     const testManager = await getTestManager(true, resource);
     if (!testManager) {
         return;
     }
 
     testResultDisplay = testResultDisplay ? testResultDisplay : new TestResultDisplay(outChannel, onDidChange);
-    const promise = testManager.runTest(testsToRun, runFailedTests, debug)
+    const promise = testManager.runTest(cmdSource, testsToRun, runFailedTests, debug)
         .catch(reason => {
             if (reason !== CANCELLATION_REASON) {
                 outChannel.appendLine(`Error: ${reason}`);

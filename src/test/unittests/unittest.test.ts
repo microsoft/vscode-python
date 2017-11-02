@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
+import { CommandSource } from '../../client/unittests/common/constants';
 import { TestCollectionStorageService } from '../../client/unittests/common/storageService';
 import { TestResultsService } from '../../client/unittests/common/testResultsService';
 import { TestsHelper } from '../../client/unittests/common/testUtils';
@@ -68,7 +69,7 @@ suite('Unit Tests (unittest)', () => {
         resultsService = new TestResultsService();
         testsHelper = new TestsHelper();
         testManager = new unittest.TestManager(UNITTEST_SINGLE_TEST_FILE_PATH, outChannel, storageService, resultsService, testsHelper, new MockDebugLauncher());
-        const tests = await testManager.discoverTests(true, true);
+        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 3, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
@@ -78,7 +79,7 @@ suite('Unit Tests (unittest)', () => {
     test('Discover Tests', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         createTestManager();
-        const tests = await testManager.discoverTests(true, true);
+        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 9, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 3, 'Incorrect number of test suites');
@@ -89,7 +90,7 @@ suite('Unit Tests (unittest)', () => {
     test('Discover Tests (pattern = *_test_*.py)', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=*_test*.py'], rootWorkspaceUri, configTarget);
         createTestManager();
-        const tests = await testManager.discoverTests(true, true);
+        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
@@ -99,7 +100,7 @@ suite('Unit Tests (unittest)', () => {
     test('Run Tests', async () => {
         await updateSetting('unitTest.unittestArgs', ['-v', '-s', './tests', '-p', 'test_unittest*.py'], rootWorkspaceUri, configTarget);
         createTestManager();
-        const results = await testManager.runTest();
+        const results = await testManager.runTest(CommandSource.ui);
         assert.equal(results.summary.errors, 1, 'Errors');
         assert.equal(results.summary.failures, 4, 'Failures');
         assert.equal(results.summary.passed, 3, 'Passed');
@@ -109,13 +110,13 @@ suite('Unit Tests (unittest)', () => {
     test('Run Failed Tests', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
         createTestManager();
-        let results = await testManager.runTest();
+        let results = await testManager.runTest(CommandSource.ui);
         assert.equal(results.summary.errors, 1, 'Errors');
         assert.equal(results.summary.failures, 4, 'Failures');
         assert.equal(results.summary.passed, 3, 'Passed');
         assert.equal(results.summary.skipped, 1, 'skipped');
 
-        results = await testManager.runTest(undefined, true);
+        results = await testManager.runTest(CommandSource.ui, undefined, true);
         assert.equal(results.summary.errors, 1, 'Failed Errors');
         assert.equal(results.summary.failures, 4, 'Failed Failures');
         assert.equal(results.summary.passed, 0, 'Failed Passed');
@@ -125,12 +126,12 @@ suite('Unit Tests (unittest)', () => {
     test('Run Specific Test File', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
         createTestManager(unitTestSpecificTestFilesPath);
-        const tests = await testManager.discoverTests(true, true);
+        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
 
         // tslint:disable-next-line:no-non-null-assertion
         const testFileToTest = tests.testFiles.find(f => f.name === 'test_unittest_one.py')!;
         const testFile: TestsToRun = { testFile: [testFileToTest], testFolder: [], testFunction: [], testSuite: [] };
-        const results = await testManager.runTest(testFile);
+        const results = await testManager.runTest(CommandSource.ui, testFile);
 
         assert.equal(results.summary.errors, 0, 'Errors');
         assert.equal(results.summary.failures, 1, 'Failures');
@@ -141,12 +142,12 @@ suite('Unit Tests (unittest)', () => {
     test('Run Specific Test Suite', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
         createTestManager(unitTestSpecificTestFilesPath);
-        const tests = await testManager.discoverTests(true, true);
+        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
 
         // tslint:disable-next-line:no-non-null-assertion
         const testSuiteToTest = tests.testSuites.find(s => s.testSuite.name === 'Test_test_one_1')!.testSuite;
         const testSuite: TestsToRun = { testFile: [], testFolder: [], testFunction: [], testSuite: [testSuiteToTest] };
-        const results = await testManager.runTest(testSuite);
+        const results = await testManager.runTest(CommandSource.ui, testSuite);
 
         assert.equal(results.summary.errors, 0, 'Errors');
         assert.equal(results.summary.failures, 1, 'Failures');
@@ -157,9 +158,9 @@ suite('Unit Tests (unittest)', () => {
     test('Run Specific Test Function', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
         createTestManager();
-        const tests = await testManager.discoverTests(true, true);
+        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const testFn: TestsToRun = { testFile: [], testFolder: [], testFunction: [tests.testFunctions[0].testFunction], testSuite: [] };
-        const results = await testManager.runTest(testFn);
+        const results = await testManager.runTest(CommandSource.ui, testFn);
         assert.equal(results.summary.errors, 0, 'Errors');
         assert.equal(results.summary.failures, 1, 'Failures');
         assert.equal(results.summary.passed, 0, 'Passed');
@@ -170,7 +171,7 @@ suite('Unit Tests (unittest)', () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         createTestManager(unitTestTestFilesCwdPath);
 
-        const tests = await testManager.discoverTests(true, true);
+        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFolders.length, 1, 'Incorrect number of test folders');
         assert.equal(tests.testFunctions.length, 1, 'Incorrect number of test functions');

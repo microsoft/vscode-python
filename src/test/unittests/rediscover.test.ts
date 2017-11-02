@@ -3,7 +3,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ConfigurationTarget, Position, Range, Uri, window, workspace } from 'vscode';
 import { BaseTestManager } from '../../client/unittests/common/baseTestManager';
-import { CANCELLATION_REASON } from '../../client/unittests/common/constants';
+import { CANCELLATION_REASON, CommandSource } from '../../client/unittests/common/constants';
 import { TestCollectionStorageService } from '../../client/unittests/common/storageService';
 import { TestResultsService } from '../../client/unittests/common/testResultsService';
 import { TestsHelper } from '../../client/unittests/common/testUtils';
@@ -75,13 +75,13 @@ suite('Unit Tests Discovery', () => {
     }
 
     async function discoverUnitTests() {
-        let tests = await testManager.discoverTests(true, true);
+        let tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
         assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
         await deleteFile(path.join(path.dirname(testFile), `${path.basename(testFile, '.py')}.pyc`));
         await fs.copy(testFileWithMoreTests, testFile, { overwrite: true });
-        tests = await testManager.discoverTests(true, true);
+        tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFunctions.length, 4, 'Incorrect number of updated test functions');
     }
 

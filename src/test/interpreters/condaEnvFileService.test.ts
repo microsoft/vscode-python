@@ -1,24 +1,24 @@
 import * as assert from 'assert';
-import * as path from 'path';
 import * as fs from 'fs-extra';
 import { EOL } from 'os';
-import { initialize, initializeTest } from '../initialize';
+import * as path from 'path';
 import { IS_WINDOWS } from '../../client/common/utils';
-import { MockInterpreterVersionProvider } from './mocks';
-import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import {
     AnacondaCompanyName,
     AnacondaCompanyNames,
     AnacondaDisplayName,
-    CONDA_RELATIVE_PY_PATH,
+    CONDA_RELATIVE_PY_PATH
 } from '../../client/interpreter/locators/services/conda';
+import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
+import { initialize, initializeTest } from '../initialize';
+import { MockInterpreterVersionProvider } from './mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 const environmentsFilePath = path.join(environmentsPath, 'environments.txt');
 
 suite('Interpreters from Conda Environments Text File', () => {
-    suiteSetup(() => initialize());
-    setup(() => initializeTest());
+    suiteSetup(initialize);
+    setup(initializeTest);
     suiteTeardown(async () => {
         // Clear the file so we don't get unwanted changes prompting for a checkin of this file
         await updateEnvWithInterpreters([]);

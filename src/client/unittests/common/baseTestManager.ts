@@ -4,7 +4,10 @@ import { Uri, workspace } from 'vscode';
 import { IPythonSettings, PythonSettings } from '../../common/configSettings';
 import { isNotInstalledError } from '../../common/helpers';
 import { Installer, Product } from '../../common/installer';
-import { CANCELLATION_REASON } from './constants';
+import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../common/telemetry/constants';
+import { sendTelemetryEvent } from '../../common/telemetry/index';
+import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../common/telemetry/types';
+import { CANCELLATION_REASON, CommandSource } from './constants';
 import { displayTestErrorMessage } from './testUtils';
 import { ITestCollectionStorageService, ITestResultsService, ITestsHelper, Tests, TestStatus, TestsToRun } from './types';
 
@@ -12,7 +15,7 @@ enum CancellationTokenType {
     testDiscovery,
     testRunner
 }
-
+type TestProvider = 'nosetest' | 'pytest' | 'unittest';
 export abstract class BaseTestManager {
     public readonly workspace: Uri;
     protected readonly settings: IPythonSettings;
@@ -23,7 +26,7 @@ export abstract class BaseTestManager {
     private testRunnerCancellationTokenSource: vscode.CancellationTokenSource;
     private installer: Installer;
     private discoverTestsPromise: Promise<Tests>;
-    constructor(private testProvider: string, private product: Product, protected rootDirectory: string,
+    constructor(public readonly testProvider: TestProvider, private product: Product, protected rootDirectory: string,
         protected outputChannel: vscode.OutputChannel, private testCollectionStorage: ITestCollectionStorageService,
         protected testResultsService: ITestResultsService, protected testsHelper: ITestsHelper) {
         this._status = TestStatus.Unknown;
@@ -66,7 +69,7 @@ export abstract class BaseTestManager {
 
         this.testResultsService.resetResults(this.tests);
     }
-    public async discoverTests(ignoreCache: boolean = false, quietMode: boolean = false, userInitiated: boolean = false): Promise<Tests> {
+    public async discoverTests(cmdSource: CommandSource, ignoreCache: boolean = false, quietMode: boolean = false, userInitiated: boolean = false): Promise<Tests> {
         if (this.discoverTestsPromise) {
             return this.discoverTestsPromise;
         }
@@ -82,6 +85,12 @@ export abstract class BaseTestManager {
         if (userInitiated) {
             this.stop();
         }
+        const telementryProperties: TestDiscoverytTelemetry = {
+            tool: this.testProvider,
+            // tslint:disable-next-line:no-any prefer-type-cast
+            trigger: cmdSource as any,
+            failed: false
+        };
 
         this.createCancellationToken(CancellationTokenType.testDiscovery);
         return this.discoverTestsPromise = this.discoverTestsImpl(ignoreCache)
@@ -108,7 +117,7 @@ export abstract class BaseTestManager {
                 const wkspace = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(this.rootDirectory)).uri;
                 this.testCollectionStorage.storeTests(wkspace, tests);
                 this.disposeCancellationToken(CancellationTokenType.testDiscovery);
-
+                sendTelemetryEvent(UNITTEST_DISCOVER, undefined, telementryProperties);
                 return tests;
             }).catch(reason => {
                 if (isNotInstalledError(reason) && !quietMode) {
@@ -122,6 +131,8 @@ export abstract class BaseTestManager {
                     reason = CANCELLATION_REASON;
                     this._status = TestStatus.Idle;
                 } else {
+                    telementryProperties.failed = true;
+                    sendTelemetryEvent(UNITTEST_DISCOVER, undefined, telementryProperties);
                     this._status = TestStatus.Error;
                     this.outputChannel.appendLine('Test Disovery failed: ');
                     // tslint:disable-next-line:prefer-template
@@ -133,7 +144,7 @@ export abstract class BaseTestManager {
                 return Promise.reject(reason);
             });
     }
-    public runTest(testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<Tests> {
+    public runTest(cmdSource: CommandSource, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<Tests> {
         const moreInfo = {
             Test_Provider: this.testProvider,
             Run_Failed_Tests: 'false',
@@ -141,22 +152,33 @@ export abstract class BaseTestManager {
             Run_Specific_Class: 'false',
             Run_Specific_Function: 'false'
         };
-
+        const telementryProperties: TestRunTelemetry = {
+            tool: this.testProvider,
+            scope: 'file',
+            debugging: debug === true,
+            trigger: cmdSource,
+            failed: false
+        };
         if (runFailedTests === true) {
             // tslint:disable-next-line:prefer-template
             moreInfo.Run_Failed_Tests = runFailedTests + '';
+            telementryProperties.scope = 'failed';
         }
         if (testsToRun && typeof testsToRun === 'object') {
             if (Array.isArray(testsToRun.testFile) && testsToRun.testFile.length > 0) {
+                telementryProperties.scope = 'file';
                 moreInfo.Run_Specific_File = 'true';
             }
             if (Array.isArray(testsToRun.testSuite) && testsToRun.testSuite.length > 0) {
+                telementryProperties.scope = 'class';
                 moreInfo.Run_Specific_Class = 'true';
             }
             if (Array.isArray(testsToRun.testFunction) && testsToRun.testFunction.length > 0) {
+                telementryProperties.scope = 'function';
                 moreInfo.Run_Specific_Function = 'true';
             }
         }
+
         if (runFailedTests === false && testsToRun === null) {
             this.resetTestResults();
         }
@@ -167,7 +189,7 @@ export abstract class BaseTestManager {
         // If we do so, then we end up re-discovering the unit tests and clearing previously cached list of failed tests
         // Similarly, if running a specific test or test file, don't clear the cache (possible tests have some state information retained)
         const clearDiscoveredTestCache = runFailedTests || moreInfo.Run_Specific_File || moreInfo.Run_Specific_Class || moreInfo.Run_Specific_Function ? false : true;
-        return this.discoverTests(clearDiscoveredTestCache, true, true)
+        return this.discoverTests(cmdSource, clearDiscoveredTestCache, true, true)
             .catch(reason => {
                 if (this.testDiscoveryCancellationToken && this.testDiscoveryCancellationToken.isCancellationRequested) {
                     return Promise.reject<Tests>(reason);
@@ -184,6 +206,7 @@ export abstract class BaseTestManager {
             }).then(() => {
                 this._status = TestStatus.Idle;
                 this.disposeCancellationToken(CancellationTokenType.testRunner);
+                sendTelemetryEvent(UNITTEST_RUN, undefined, telementryProperties);
                 return this.tests;
             }).catch(reason => {
                 if (this.testRunnerCancellationToken && this.testRunnerCancellationToken.isCancellationRequested) {
@@ -191,6 +214,8 @@ export abstract class BaseTestManager {
                     this._status = TestStatus.Idle;
                 } else {
                     this._status = TestStatus.Error;
+                    telementryProperties.failed = true;
+                    sendTelemetryEvent(UNITTEST_RUN, undefined, telementryProperties);
                 }
                 this.disposeCancellationToken(CancellationTokenType.testRunner);
                 return Promise.reject<Tests>(reason);

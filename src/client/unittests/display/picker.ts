@@ -2,6 +2,7 @@ import * as path from 'path';
 import { QuickPickItem, Uri, window } from 'vscode';
 import * as vscode from 'vscode';
 import * as constants from '../../common/constants';
+import { CommandSource } from '../common/constants';
 import { FlattenedTestFunction, ITestCollectionStorageService, TestFile, TestFunction, Tests, TestStatus, TestsToRun } from '../common/types';
 
 export class TestDisplay {
@@ -13,10 +14,10 @@ export class TestDisplay {
             }
         });
     }
-    public displayTestUI(wkspace: Uri) {
+    public displayTestUI(cmdSource: CommandSource, wkspace: Uri) {
         const tests = this.testCollectionStorage.getTests(wkspace);
         window.showQuickPick(buildItems(tests), { matchOnDescription: true, matchOnDetail: true })
-            .then(item => onItemSelected(wkspace, item, false));
+            .then(item => onItemSelected(cmdSource, wkspace, item, false));
     }
     public selectTestFunction(rootDirectory: string, tests: Tests): Promise<FlattenedTestFunction> {
         return new Promise<FlattenedTestFunction>((resolve, reject) => {
@@ -40,7 +41,7 @@ export class TestDisplay {
                 }, reject);
         });
     }
-    public displayFunctionTestPickerUI(wkspace: Uri, rootDirectory: string, file: Uri, testFunctions: TestFunction[], debug?: boolean) {
+    public displayFunctionTestPickerUI(cmdSource: CommandSource, wkspace: Uri, rootDirectory: string, file: Uri, testFunctions: TestFunction[], debug?: boolean) {
         const tests = this.testCollectionStorage.getTests(wkspace);
         if (!tests) {
             return;
@@ -57,7 +58,7 @@ export class TestDisplay {
 
         window.showQuickPick(buildItemsForFunctions(rootDirectory, flattenedFunctions, undefined, undefined, debug),
             { matchOnDescription: true, matchOnDetail: true }).then(testItem => {
-                return onItemSelected(wkspace, testItem, debug);
+                return onItemSelected(cmdSource, wkspace, testItem, debug);
             });
     }
 }
@@ -187,13 +188,13 @@ function buildItemsForTestFiles(rootDirectory: string, testFiles: TestFile[]): T
     });
     return fileItems;
 }
-function onItemSelected(wkspace: Uri, selection: TestItem, debug?: boolean) {
+function onItemSelected(cmdSource: CommandSource, wkspace: Uri, selection: TestItem, debug?: boolean) {
     if (!selection || typeof selection.type !== 'number') {
         return;
     }
     let cmd = '';
     // tslint:disable-next-line:no-any
-    const args: any[] = [wkspace];
+    const args: any[] = [cmdSource, wkspace];
     switch (selection.type) {
         case Type.Null: {
             return;
