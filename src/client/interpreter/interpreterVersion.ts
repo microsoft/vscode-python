@@ -1,5 +1,3 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
 import * as child_process from 'child_process';
 import { getInterpreterVersion } from '../common/utils';
 
