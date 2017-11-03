@@ -1,13 +1,17 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { ConfigurationTarget, Position, Range, Uri, window, workspace } from 'vscode';
+import { ConfigurationTarget } from 'vscode';
 import { BaseTestManager } from '../../client/unittests/common/baseTestManager';
-import { CANCELLATION_REASON, CommandSource } from '../../client/unittests/common/constants';
+import { CommandSource } from '../../client/unittests/common/constants';
 import { TestCollectionStorageService } from '../../client/unittests/common/storageService';
 import { TestResultsService } from '../../client/unittests/common/testResultsService';
 import { TestsHelper } from '../../client/unittests/common/testUtils';
-import { ITestCollectionStorageService, ITestResultsService, ITestsHelper, TestsToRun } from '../../client/unittests/common/types';
+import { ITestCollectionStorageService, ITestResultsService, ITestsHelper } from '../../client/unittests/common/types';
 import { TestResultDisplay } from '../../client/unittests/display/main';
 import { TestManager as NosetestManager } from '../../client/unittests/nosetest/main';
 import { TestManager as PytestManager } from '../../client/unittests/pytest/main';
@@ -30,7 +34,7 @@ const defaultUnitTestArgs = [
 ];
 
 // tslint:disable-next-line:max-func-body-length
-suite('Unit Tests Discovery', () => {
+suite('Unit Tests re-discovery', () => {
     let testManager: BaseTestManager;
     let testResultDisplay: TestResultDisplay;
     let outChannel: MockOutputChannel;

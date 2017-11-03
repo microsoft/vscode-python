@@ -84,6 +84,7 @@ suite('Unit Tests Debugging', () => {
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
 
         const testFunction = [tests.testFunctions[0].testFunction];
+        // tslint:disable-next-line:no-floating-promises
         testManager.runTest(CommandSource.commandPalette, { testFunction }, false, true);
         const launched = await mockDebugLauncher.launched;
         assert.isTrue(launched, 'Debugger not launched');
@@ -121,9 +122,10 @@ suite('Unit Tests Debugging', () => {
         const launched = await mockDebugLauncher.launched;
         assert.isTrue(launched, 'Debugger not launched');
 
-        const discoveryPromise = testManager.discoverTests(CommandSource.commandPalette, true, true, true);
+        // tslint:disable-next-line:no-floating-promises
+        testManager.discoverTests(CommandSource.commandPalette, true, true, true);
 
-        expect(runningPromise).eventually.throws(CANCELLATION_REASON, 'Incorrect reason for ending the debugger');
+        await expect(runningPromise).to.be.rejectedWith(CANCELLATION_REASON, 'Incorrect reason for ending the debugger');
     }
 
     test('Debugger should stop when user invokes a test discovery (unittest)', async () => {
@@ -161,11 +163,15 @@ suite('Unit Tests Debugging', () => {
         const discoveryPromise = testManager.discoverTests(CommandSource.commandPalette, false, true);
         const deferred = createDeferred<string>();
 
+        // tslint:disable-next-line:no-floating-promises
         discoveryPromise
+            // tslint:disable-next-line:no-unsafe-any
             .then(() => deferred.resolve(''))
+            // tslint:disable-next-line:no-unsafe-any
             .catch(ex => deferred.reject(ex));
 
         // This promise should never resolve nor reject.
+        // tslint:disable-next-line:no-floating-promises
         runningPromise
             .then(() => 'Debugger stopped when it shouldn\'t have')
             .catch(() => 'Debugger crashed when it shouldn\'t have')

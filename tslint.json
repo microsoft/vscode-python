@@ -39,7 +39,8 @@
         ],
         "await-promise": [
             true,
-            "Thenable"
+            "Thenable",
+            "PromiseLike"
         ],
         "completed-docs": false
     }
