@@ -210,7 +210,7 @@ function execSelectionInDjangoShell() {
         terminal.sendText(unix_code);
     }
     terminal.show();
-    sendTelemetryEvent(EXECUTION_DJANGO, undefined, { scope: 'selection' });
+    sendTelemetryEvent(EXECUTION_DJANGO);
 }
 
 class DjangoContextInitializer implements vscode.Disposable {
