@@ -158,7 +158,7 @@ export abstract class BaseTestManager {
         };
         const telementryProperties: TestRunTelemetry = {
             tool: this.testProvider,
-            scope: 'file',
+            scope: 'all',
             debugging: debug === true,
             trigger: cmdSource,
             failed: false
