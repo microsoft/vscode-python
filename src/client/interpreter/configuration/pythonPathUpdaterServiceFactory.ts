@@ -1,7 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License.
- *--------------------------------------------------------------------------------------------*/
 import { Uri } from 'vscode';
 import { GlobalPythonPathUpdaterService } from './services/globalUpdaterService';
 import { WorkspaceFolderPythonPathUpdaterService } from './services/workspaceFolderUpdaterService';
