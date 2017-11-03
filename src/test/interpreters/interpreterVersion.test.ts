@@ -1,7 +1,5 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License.
- *--------------------------------------------------------------------------------------------*/
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { execPythonFile } from '../../client/common/utils';
@@ -28,16 +26,19 @@ suite('Interpreters display version', () => {
     });
     test('Must return the Pip Version', async () => {
         const output = await execPythonFile(undefined, 'python', ['-m', 'pip', '--version'], __dirname, true);
-        const versionInfo = getFirstNonEmptyLineFromMultilineString(output);
-
         // Take the second part, see below example.
         // pip 9.0.1 from /Users/donjayamanne/anaconda3/lib/python3.6/site-packages (python 3.6).
-        const parts = versionInfo.split(' ');
+        const re = new RegExp('\\d\\.\\d(\\.\\d)+', 'g');
+        const matches = re.exec(output);
+        assert.isNotNull(matches, 'No matches for version found');
+        // tslint:disable-next-line:no-non-null-assertion
+        assert.isAtLeast(matches!.length, 1, 'Version number not found');
 
         const pipVersionPromise = interpreterVersion.getPipVersion('python');
-        await expect(pipVersionPromise).to.eventually.equal(parts[1].trim());
+        // tslint:disable-next-line:no-non-null-assertion
+        await expect(pipVersionPromise).to.eventually.equal(matches![0].trim());
     });
-    test('Must throw an exceptionn when Pip version cannot be determine', async () => {
+    test('Must throw an exceptionn when pip version cannot be determine', async () => {
         const pipVersionPromise = interpreterVersion.getPipVersion('INVALID_INTERPRETER');
         await expect(pipVersionPromise).to.be.rejectedWith();
     });
