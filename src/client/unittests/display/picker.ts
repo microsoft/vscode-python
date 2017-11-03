@@ -1,7 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License.
- *--------------------------------------------------------------------------------------------*/
 import * as path from 'path';
 import { QuickPickItem, Uri, window } from 'vscode';
 import * as vscode from 'vscode';
