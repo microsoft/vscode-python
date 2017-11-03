@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 'use strict';
 
 import * as fs from 'fs';
@@ -5,10 +9,9 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { LinterErrors } from '../common/constants';
-import { sendTelemetryEvent, sendTelemetryWhenDone } from '../common/telemetry';
+import { sendTelemetryWhenDone } from '../common/telemetry';
 import { LINTING } from '../common/telemetry/constants';
 import { StopWatch } from '../common/telemetry/stopWatch';
-import { BaseLinter } from '../linters/baseLinter';
 import * as linter from '../linters/baseLinter';
 import * as flake8 from './../linters/flake8';
 import * as mypy from './../linters/mypy';

@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
@@ -5,7 +9,6 @@ import { window } from 'vscode';
 import * as constants from '../../common/constants';
 import { CommandSource } from './constants';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
-import { TestResultResetVisitor } from './testVisitors/resultResetVisitor';
 import { TestFile, TestFolder, Tests, TestsToRun } from './types';
 import { ITestsHelper } from './types';
 

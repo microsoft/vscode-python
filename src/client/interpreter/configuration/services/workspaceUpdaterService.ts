@@ -1,7 +1,9 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 import * as path from 'path';
-import { ConfigurationTarget, Uri, workspace } from 'vscode';
-import { InterpreterManager } from '../..';
-import { WorkspacePythonPath } from '../../contracts';
+import { Uri, workspace } from 'vscode';
 import { IPythonPathUpdaterService } from '../types';
 
 export class WorkspacePythonPathUpdaterService implements IPythonPathUpdaterService {

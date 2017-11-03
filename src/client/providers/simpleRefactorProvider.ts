@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 'use strict';
 
 import * as vscode from 'vscode';
@@ -5,9 +9,9 @@ import { PythonSettings } from '../common/configSettings';
 import { getTextEditsFromPatch } from '../common/editor';
 import { Installer, Product } from '../common/installer';
 import { sendTelemetryWhenDone } from '../common/telemetry';
-import { RefactorProxy } from '../refactor/proxy';
+import { REFACTOR_EXTRACT_FUNCTION, REFACTOR_EXTRACT_VAR } from '../common/telemetry/constants';
 import { StopWatch } from '../common/telemetry/stopWatch';
-import { REFACTOR_EXTRACT_VAR, REFACTOR_EXTRACT_FUNCTION } from '../common/telemetry/constants';
+import { RefactorProxy } from '../refactor/proxy';
 
 interface RenameResponse {
     results: [{ diff: string }];

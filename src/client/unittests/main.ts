@@ -1,11 +1,14 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 'use strict';
 import { Uri, window, workspace } from 'vscode';
 import * as vscode from 'vscode';
-import { IUnitTestSettings, PythonSettings } from '../common/configSettings';
+import { PythonSettings } from '../common/configSettings';
 import * as constants from '../common/constants';
 import { UNITTEST_STOP, UNITTEST_VIEW_OUTPUT } from '../common/telemetry/constants';
 import { sendTelemetryEvent } from '../common/telemetry/index';
-import { TestRunTelemetry } from '../common/telemetry/types';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
 import { activateCodeLenses } from './codeLenses/main';
 import { BaseTestManager } from './common/baseTestManager';
@@ -15,14 +18,11 @@ import { TestCollectionStorageService } from './common/storageService';
 import { TestManagerServiceFactory } from './common/testManagerServiceFactory';
 import { TestResultsService } from './common/testResultsService';
 import { selectTestWorkspace, TestsHelper } from './common/testUtils';
-import { FlattenedTestFunction, ITestCollectionStorageService, IWorkspaceTestManagerService, TestFile, TestFunction, TestStatus, TestsToRun } from './common/types';
+import { ITestCollectionStorageService, IWorkspaceTestManagerService, TestFile, TestFunction, TestStatus, TestsToRun } from './common/types';
 import { WorkspaceTestManagerService } from './common/workspaceTestManagerService';
 import { displayTestFrameworkError } from './configuration';
 import { TestResultDisplay } from './display/main';
 import { TestDisplay } from './display/picker';
-import * as nosetests from './nosetest/main';
-import * as pytest from './pytest/main';
-import * as unittest from './unittest/main';
 
 let workspaceTestManagerService: IWorkspaceTestManagerService;
 let testResultDisplay: TestResultDisplay;

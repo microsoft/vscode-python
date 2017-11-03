@@ -1,11 +1,13 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 'use strict';
 import * as path from 'path';
-import { ConfigurationTarget, Disposable, StatusBarAlignment, Uri, window, workspace } from 'vscode';
+import { Disposable, StatusBarAlignment, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { IS_WINDOWS } from '../common/utils';
 import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './configuration/pythonPathUpdaterServiceFactory';
-import { WorkspacePythonPath } from './contracts';
 import { InterpreterDisplay } from './display';
 import { getActiveWorkspaceUri } from './helpers';
 import { InterpreterVersionService } from './interpreterVersion';

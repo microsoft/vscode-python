@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 import { Architecture, Hive, IRegistry } from '../../client/common/registry';
 import { IInterpreterLocatorService, PythonInterpreter } from '../../client/interpreter/contracts';
 import { IInterpreterVersionService } from '../../client/interpreter/interpreterVersion';

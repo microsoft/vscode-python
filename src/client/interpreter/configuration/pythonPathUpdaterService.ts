@@ -1,11 +1,14 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 import * as path from 'path';
 import { ConfigurationTarget, Uri, window } from 'vscode';
 import { sendTelemetryEvent } from '../../common/telemetry';
 import { PYTHON_INTERPRETER } from '../../common/telemetry/constants';
 import { StopWatch } from '../../common/telemetry/stopWatch';
-import { WorkspacePythonPath } from '../contracts';
 import { IInterpreterVersionService } from '../interpreterVersion';
-import { IPythonPathUpdaterService, IPythonPathUpdaterServiceFactory } from './types';
+import { IPythonPathUpdaterServiceFactory } from './types';
 
 export class PythonPathUpdaterService {
     constructor(private pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory,

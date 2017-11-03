@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 'use strict';
 import * as path from 'path';
 import { commands, ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri, window, workspace } from 'vscode';
@@ -8,7 +12,6 @@ import { ShebangCodeLensProvider } from '../display/shebangCodeLensProvider';
 import { IInterpreterVersionService } from '../interpreterVersion';
 import { PythonPathUpdaterService } from './pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './pythonPathUpdaterServiceFactory';
-import { IPythonPathUpdaterServiceFactory } from './types';
 
 // tslint:disable-next-line:interface-name
 interface PythonPathQuickPickItem extends QuickPickItem {
