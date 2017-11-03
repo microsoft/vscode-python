@@ -155,7 +155,7 @@ export async function activate(context: vscode.ExtensionContext) {
 async function sendStartupTelemetry(activatedPromise: Promise<void>) {
     const stopWatch = new StopWatch();
     activatedPromise.then(async () => {
-        const duration = stopWatch.elpsedTime;
+        const duration = stopWatch.elapsedTime;
         let condaVersion: string | undefined;
         try {
             condaVersion = await getCondaVersion();

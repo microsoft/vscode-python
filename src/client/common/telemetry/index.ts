@@ -41,16 +41,16 @@ export function captureTelemetry(eventName: string) {
                 // tslint:disable-next-line:prefer-type-cast
                 (result as Promise<void>)
                     .then(data => {
-                        sendTelemetryEvent(eventName, stopWatch.elpsedTime);
+                        sendTelemetryEvent(eventName, stopWatch.elapsedTime);
                         return data;
                     })
                     // tslint:disable-next-line:promise-function-async
                     .catch(ex => {
-                        sendTelemetryEvent(eventName, stopWatch.elpsedTime);
+                        sendTelemetryEvent(eventName, stopWatch.elapsedTime);
                         return Promise.reject(ex);
                     });
             } else {
-                sendTelemetryEvent(eventName, stopWatch.elpsedTime);
+                sendTelemetryEvent(eventName, stopWatch.elapsedTime);
             }
 
             return result;
@@ -69,12 +69,12 @@ export function sendTelemetryWhenDone(eventName: string, promise: Promise<any> |
         (promise as Promise<any>)
             .then(data => {
                 // tslint:disable-next-line:no-non-null-assertion
-                sendTelemetryEvent(eventName, stopWatch!.elpsedTime, properties);
+                sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
                 return data;
                 // tslint:disable-next-line:promise-function-async
             }, ex => {
                 // tslint:disable-next-line:no-non-null-assertion
-                sendTelemetryEvent(eventName, stopWatch!.elpsedTime, properties);
+                sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
                 return Promise.reject(ex);
             });
     } else {
