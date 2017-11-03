@@ -62,7 +62,7 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
         createTestManagerDepedencies();
         const mockTestManager = new MockTestManagerWithRunningTests('unittest', Product.unittest, testFilesPath, outChannel, storageService, resultsService, testsHelper);
         const discoveryPromise = mockTestManager.discoverTests(CommandSource.auto);
-        mockTestManager.discoveryDeferred.resolve(undefined);
+        mockTestManager.discoveryDeferred.resolve(EmptyTests);
         // tslint:disable-next-line:no-floating-promises
         mockTestManager.runTest(CommandSource.ui);
 
