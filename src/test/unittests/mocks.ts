@@ -1,13 +1,17 @@
 import { CancellationToken, Disposable, OutputChannel } from 'vscode';
 import { createDeferred, Deferred } from '../../client/common/helpers';
-import { ITestDebugLauncher, Tests } from '../../client/unittests/common/types';
+import { Product } from '../../client/common/installer';
+import { BaseTestManager } from '../../client/unittests/common/baseTestManager';
+import { CANCELLATION_REASON } from '../../client/unittests/common/constants';
+import { ITestCollectionStorageService, ITestDebugLauncher, ITestResultsService, ITestsHelper, Tests, TestsToRun } from '../../client/unittests/common/types';
 
 export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     public get launched(): Promise<boolean> {
         return this._launched.promise;
     }
     public get debuggerPromise(): Deferred<Tests> {
-        return this._promise;
+        // tslint:disable-next-line:no-non-null-assertion
+        return this._promise!;
     }
     public get cancellationToken(): CancellationToken {
         return this._token;
@@ -36,5 +40,31 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     }
     public dispose() {
         this._promise = undefined;
+    }
+}
+
+export class MockTestManagerWithRunningTests extends BaseTestManager {
+    // tslint:disable-next-line:no-any
+    public readonly runnerDeferred = createDeferred<any>();
+    // tslint:disable-next-line:no-any
+    public readonly discoveryDeferred = createDeferred<Tests>();
+    constructor(testRunnerId: 'nosetest' | 'pytest' | 'unittest', product: Product, rootDirectory: string,
+        outputChannel: OutputChannel, storageService: ITestCollectionStorageService, resultsService: ITestResultsService, testsHelper: ITestsHelper) {
+        super('nosetest', product, rootDirectory, outputChannel, storageService, resultsService, testsHelper);
+    }
+    // tslint:disable-next-line:no-any
+    protected async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<any> {
+        // tslint:disable-next-line:no-non-null-assertion
+        this.testRunnerCancellationToken!.onCancellationRequested(() => {
+            this.runnerDeferred.reject(CANCELLATION_REASON);
+        });
+        return this.runnerDeferred.promise;
+    }
+    protected async discoverTestsImpl(ignoreCache: boolean, debug?: boolean): Promise<Tests> {
+        // tslint:disable-next-line:no-non-null-assertion
+        this.testDiscoveryCancellationToken!.onCancellationRequested(() => {
+            this.discoveryDeferred.reject(CANCELLATION_REASON);
+        });
+        return this.discoveryDeferred.promise;
     }
 }

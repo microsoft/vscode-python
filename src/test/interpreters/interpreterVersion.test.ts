@@ -2,11 +2,14 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { assert, expect } from 'chai';
+import { assert, expect, use } from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 import { execPythonFile } from '../../client/common/utils';
 import { getFirstNonEmptyLineFromMultilineString } from '../../client/interpreter/helpers';
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
 import { initialize, initializeTest } from '../initialize';
+
+use(chaiAsPromised);
 
 suite('Interpreters display version', () => {
     const interpreterVersion = new InterpreterVersionService();
@@ -32,15 +35,10 @@ suite('Interpreters display version', () => {
         const parts = versionInfo.split(' ');
 
         const pipVersionPromise = interpreterVersion.getPipVersion('python');
-        // If pip version cannot be identified exception must be thrown.
-        if (parts.length > 1) {
-            expect(pipVersionPromise).eventually.to.equal(parts[1].trim(), 'Pip version is not the same');
-        } else {
-            expect(pipVersionPromise).eventually.to.throw();
-        }
+        await expect(pipVersionPromise).to.eventually.equal(parts[1].trim());
     });
     test('Must throw an exceptionn when Pip version cannot be determine', async () => {
         const pipVersionPromise = interpreterVersion.getPipVersion('INVALID_INTERPRETER');
-        expect(pipVersionPromise).eventually.to.throw();
+        await expect(pipVersionPromise).to.be.rejectedWith();
     });
 });
