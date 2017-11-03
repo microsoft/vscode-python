@@ -1,7 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License.
- *--------------------------------------------------------------------------------------------*/
 import * as child_process from 'child_process';
 import { ConfigurationTarget, window, workspace } from 'vscode';
 import { RegistryImplementation } from '../common/registry';
