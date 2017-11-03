@@ -188,7 +188,9 @@ export abstract class BaseTestManager {
         }
 
         this._status = TestStatus.Running;
-        this.stop();
+        if (this.testRunnerCancellationTokenSource) {
+            this.testRunnerCancellationTokenSource.cancel();
+        }
         // If running failed tests, then don't clear the previously build UnitTests
         // If we do so, then we end up re-discovering the unit tests and clearing previously cached list of failed tests
         // Similarly, if running a specific test or test file, don't clear the cache (possible tests have some state information retained)
