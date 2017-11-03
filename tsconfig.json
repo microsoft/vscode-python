@@ -10,6 +10,8 @@
         "rootDir": "src",
         "experimentalDecorators": true
         // TODO: enable to ensure all code complies with strict coding standards
+        // , "noUnusedLocals": true
+        // , "noUnusedParameters": false
         // , "strict": true
     },
     "exclude": [
