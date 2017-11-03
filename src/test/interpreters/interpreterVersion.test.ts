@@ -24,7 +24,7 @@ suite('Interpreters display version', () => {
         const pyVersion = await interpreterVersion.getVersion('INVALID_INTERPRETER', 'DEFAULT_TEST_VALUE');
         assert.equal(pyVersion, 'DEFAULT_TEST_VALUE', 'Incorrect version');
     });
-    test('Must return the Pip Version', async () => {
+    test('Must return the pip Version', async () => {
         const output = await execPythonFile(undefined, 'python', ['-m', 'pip', '--version'], __dirname, true);
         // Take the second part, see below example.
         // pip 9.0.1 from /Users/donjayamanne/anaconda3/lib/python3.6/site-packages (python 3.6).
