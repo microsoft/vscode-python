@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
+import { commands } from 'vscode';
 import { StopWatch } from './stopWatch';
 import { getTelemetryReporter } from './telemetry';
 import { TelemetryProperties } from './types';
@@ -19,12 +22,12 @@ export function sendTelemetryEvent(eventName: string, durationMs?: number, prope
             (customProperties as any)[prop] = typeof data[prop] === 'string' ? data[prop] : data[prop].toString();
         });
     }
-    //
+    commands.executeCommand('python.updateFeedbackCounter', eventName);
     reporter.sendTelemetryEvent(eventName, properties ? customProperties : undefined, measures);
 }
 
 // tslint:disable-next-line:no-any function-name
-export function captureTelemetry(eventName: string) {
+export function captureTelemetry(eventName: string, properties?: TelemetryProperties) {
     // tslint:disable-next-line:no-function-expression no-any
     return function (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
@@ -40,16 +43,16 @@ export function captureTelemetry(eventName: string) {
                 // tslint:disable-next-line:prefer-type-cast
                 (result as Promise<void>)
                     .then(data => {
-                        sendTelemetryEvent(eventName, stopWatch.elapsedTime);
+                        sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
                         return data;
                     })
                     // tslint:disable-next-line:promise-function-async
                     .catch(ex => {
-                        sendTelemetryEvent(eventName, stopWatch.elapsedTime);
+                        sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
                         return Promise.reject(ex);
                     });
             } else {
-                sendTelemetryEvent(eventName, stopWatch.elapsedTime);
+                sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
             }
 
             return result;

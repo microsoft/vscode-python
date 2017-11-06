@@ -1,14 +1,12 @@
 'use strict';
-import { EDITOR_LOAD } from './common/telemetry/constants';
-
 import * as os from 'os';
 import * as vscode from 'vscode';
+import { BannerService } from './banner';
 import * as settings from './common/configSettings';
-import { Commands } from './common/constants';
 import { createDeferred } from './common/helpers';
-import { sendTelemetryEvent } from './common/telemetry';
-import { StopWatch } from './common/telemetry/stopWatch';
+import { PersistentStateFactory } from './common/persistentState';
 import { SimpleConfigurationProvider } from './debugger';
+import { FeedbackService } from './feedback';
 import { InterpreterManager } from './interpreter';
 import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
@@ -33,6 +31,9 @@ import { activateSimplePythonRefactorProvider } from './providers/simpleRefactor
 import { PythonSymbolProvider } from './providers/symbolProvider';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
 import * as sortImports from './sortImports';
+import { sendTelemetryEvent } from './telemetry';
+import { EDITOR_LOAD } from './telemetry/constants';
+import { StopWatch } from './telemetry/stopWatch';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import * as tests from './unittests/main';
 import { WorkspaceSymbols } from './workspaceSymbols/main';
@@ -47,6 +48,7 @@ export const activated = activationDeferred.promise;
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: vscode.ExtensionContext) {
     const pythonSettings = settings.PythonSettings.getInstance();
+    // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated);
 
     lintingOutChannel = vscode.window.createOutputChannel(pythonSettings.linting.outputWindow);
@@ -77,7 +79,8 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new ReplProvider());
 
     // Enable indentAction
-    vscode.languages.setLanguageConfiguration(PYTHON.language, {
+    // tslint:disable-next-line:no-non-null-assertion
+    vscode.languages.setLanguageConfiguration(PYTHON.language!, {
         onEnterRules: [
             {
                 beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async).*?:\s*$/,
@@ -116,16 +119,21 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
+    // tslint:disable-next-line:promise-function-async
     const linterProvider = new LintProvider(context, lintingOutChannel, (a, b) => Promise.resolve(false));
     context.subscriptions.push();
     if (jupyterExtInstalled) {
         if (jupyterExtInstalled.isActive) {
+            // tslint:disable-next-line:no-unsafe-any
             jupyterExtInstalled.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
+            // tslint:disable-next-line:no-unsafe-any
             linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
         }
 
         jupyterExtInstalled.activate().then(() => {
+            // tslint:disable-next-line:no-unsafe-any
             jupyterExtInstalled.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
+            // tslint:disable-next-line:no-unsafe-any
             linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
         });
     } else {
@@ -133,6 +141,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const documentHasJupyterCodeCells = jupMain.hasCodeCells.bind(jupMain);
         jupMain.activate();
         context.subscriptions.push(jupMain);
+        // tslint:disable-next-line:no-unsafe-any
         linterProvider.documentHasJupyterCodeCells = documentHasJupyterCodeCells;
     }
     tests.activate(context, unitTestOutChannel, symbolProvider);
@@ -146,10 +155,16 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
     activationDeferred.resolve();
+
+    const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
+    const feedbackService = new FeedbackService(persistentStateFactory);
+    context.subscriptions.push(feedbackService);
+    new BannerService(persistentStateFactory).showBanner();
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>) {
     const stopWatch = new StopWatch();
+    // tslint:disable-next-line:no-floating-promises
     activatedPromise.then(async () => {
         const duration = stopWatch.elapsedTime;
         let condaVersion: string | undefined;
@@ -157,6 +172,7 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>) {
             condaVersion = await getCondaVersion();
             // tslint:disable-next-line:no-empty
         } catch { }
-        sendTelemetryEvent(EDITOR_LOAD, duration, { condaVersion });
+        const props = condaVersion ? { condaVersion } : undefined;
+        sendTelemetryEvent(EDITOR_LOAD, duration, props);
     });
 }

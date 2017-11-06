@@ -1,5 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
+'use strict';
+
 export const COMPLETION = 'COMPLETION';
 export const DEFINITION = 'DEFINITION';
 export const HOVER_DEFINITION = 'HOVER_DEFINITION';
@@ -26,3 +29,4 @@ export const UNITTEST_STOP = 'UNITTEST.STOP';
 export const UNITTEST_RUN = 'UNITTEST.RUN';
 export const UNITTEST_DISCOVER = 'UNITTEST.DISCOVER';
 export const UNITTEST_VIEW_OUTPUT = 'UNITTEST.VIEW_OUTPUT';
+export const FEEDBACK = 'FEEDBACK';

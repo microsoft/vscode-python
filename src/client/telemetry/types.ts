@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 export type EditorLoadTelemetry = {
     condaVersion: string;
 };
@@ -42,4 +43,7 @@ export type TestDiscoverytTelemetry = {
     trigger: 'ui' | 'commandpalette';
     failed: boolean;
 };
-export type TelemetryProperties = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry | CodeExecutionTelemetry | TestRunTelemetry | TestDiscoverytTelemetry;
+export type FeedbackTelemetry = {
+    action: 'accepted' | 'dismissed' | 'doNotShowAgain';
+};
+export type TelemetryProperties = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry | CodeExecutionTelemetry | TestRunTelemetry | TestDiscoverytTelemetry | FeedbackTelemetry;
