@@ -13,7 +13,7 @@ const BANNER_URL = 'https://aka.ms/pvsc-at-msft';
 export class BannerService {
     private shouldShowBanner: PersistentState<boolean>;
     constructor(persistentStateFactory: IPersistentStateFactor) {
-        this.shouldShowBanner = persistentStateFactory.createGlobalPersistentState('SHOW_NEW_EXT_BANNER_Xxx', true);
+        this.shouldShowBanner = persistentStateFactory.createGlobalPersistentState('SHOW_NEW_PUBLISHER_BANNER', true);
         this.showBanner();
     }
     private showBanner() {
