@@ -5,6 +5,9 @@
 
 import { EventEmitter } from 'events';
 
+const THRESHOLD_FOR_FEATURE_USAGE = 1000;
+const THRESHOLD_FOR_TEXT_EDIT = 5000;
+
 const FEARTURES_USAGE_COUNTER = 'FEARTURES_USAGE';
 const TEXT_EDIT_COUNTER = 'TEXT_EDIT';
 type counters = 'FEARTURES_USAGE' | 'TEXT_EDIT';
@@ -22,8 +25,8 @@ export class FeedbackCounters extends EventEmitter {
         this.updateCounter(FEARTURES_USAGE_COUNTER);
     }
     private createCounters() {
-        this.counters.set(TEXT_EDIT_COUNTER, { counter: 0, threshold: 5000 });
-        this.counters.set(FEARTURES_USAGE_COUNTER, { counter: 0, threshold: 10000 });
+        this.counters.set(TEXT_EDIT_COUNTER, { counter: 0, threshold: THRESHOLD_FOR_TEXT_EDIT });
+        this.counters.set(FEARTURES_USAGE_COUNTER, { counter: 0, threshold: THRESHOLD_FOR_FEATURE_USAGE });
     }
     private updateCounter(counterName: counters): void {
         if (!this.counters.has(counterName)) {
