@@ -18,22 +18,14 @@ const FEEDBACK_URL = 'https://aka.ms/egv4z1';
 export class FeedbackService implements Disposable {
     private counters?: FeedbackCounters;
     private showFeedback: PersistentState<boolean>;
+    private userResponded: PersistentState<boolean>;
     private promptDisplayed: boolean;
     private disposables: Disposable[] = [];
     constructor(persistentStateFactory: IPersistentStateFactor) {
         this.showFeedback = persistentStateFactory.createGlobalPersistentState('SHOW_FEEDBACK', true);
-        // tslint:disable-next-line:no-void-expression
-        let commandDisable = commands.registerCommand('python.updateFeedbackCounter', (telemetryEventName: string) => this.updateFeedbackCounter(telemetryEventName));
-        this.disposables.push(commandDisable);
-        // tslint:disable-next-line:no-void-expression
-        commandDisable = workspace.onDidChangeTextDocument(changeEvent => this.handleChangesToTextDocument(changeEvent.document), this, this.disposables);
-        this.disposables.push(commandDisable);
-
+        this.userResponded = persistentStateFactory.createGlobalPersistentState('RESPONDED_TO_FEEDBACK', false);
         if (this.showFeedback.value) {
-            this.counters = new FeedbackCounters();
-            this.counters.on('thresholdReached', () => {
-                this.thresholdHandler();
-            });
+            this.initialize();
         }
     }
     public dispose() {
@@ -43,6 +35,19 @@ export class FeedbackService implements Disposable {
             disposable.dispose();
         });
         this.disposables = [];
+    }
+    private initialize() {
+        // tslint:disable-next-line:no-void-expression
+        let commandDisable = commands.registerCommand('python.updateFeedbackCounter', (telemetryEventName: string) => this.updateFeedbackCounter(telemetryEventName));
+        this.disposables.push(commandDisable);
+        // tslint:disable-next-line:no-void-expression
+        commandDisable = workspace.onDidChangeTextDocument(changeEvent => this.handleChangesToTextDocument(changeEvent.document), this, this.disposables);
+        this.disposables.push(commandDisable);
+
+        this.counters = new FeedbackCounters();
+        this.counters.on('thresholdReached', () => {
+            this.thresholdHandler();
+        });
     }
     private handleChangesToTextDocument(textDocument: TextDocument) {
         if (textDocument.languageId !== PythonLanguage.language) {
@@ -97,6 +102,7 @@ export class FeedbackService implements Disposable {
     @captureTelemetry(FEEDBACK, { action: 'accepted' })
     private displaySurvey() {
         this.showFeedback.value = false;
+        this.userResponded.value = true;
 
         let openCommand: string | undefined;
         if (os.platform() === 'win32') {
@@ -114,5 +120,6 @@ export class FeedbackService implements Disposable {
     @captureTelemetry(FEEDBACK, { action: 'doNotShowAgain' })
     private doNotShowFeedbackAgain() {
         this.showFeedback.value = false;
+        this.userResponded.value = false;
     }
 }
