@@ -722,7 +722,7 @@
             ]
           },
           {
-            "name": "PySpark",
+            "name": "Python: PySpark",
             "type": "python",
             "request": "launch",
             "stopOnEntry": true,
@@ -746,7 +746,7 @@
             ]
           },
           {
-            "name": "Python Module",
+            "name": "Python: Module",
             "type": "python",
             "request": "launch",
             "stopOnEntry": true,
@@ -762,7 +762,7 @@
             ]
           },
           {
-            "name": "Integrated Terminal/Console",
+            "name": "Python: Terminal (integrated)",
             "type": "python",
             "request": "launch",
             "stopOnEntry": true,
@@ -778,7 +778,7 @@
             ]
           },
           {
-            "name": "External Terminal/Console",
+            "name": "Python: Terminal (external)",
             "type": "python",
             "request": "launch",
             "stopOnEntry": true,
@@ -794,7 +794,7 @@
             ]
           },
           {
-            "name": "Django",
+            "name": "Python: Django",
             "type": "python",
             "request": "launch",
             "stopOnEntry": true,
@@ -816,7 +816,7 @@
             ]
           },
           {
-            "name": "Flask",
+            "name": "Python: Flask (0.11.x or later)",
             "type": "python",
             "request": "launch",
             "stopOnEntry": false,
@@ -839,7 +839,7 @@
             ]
           },
           {
-            "name": "Flask (old)",
+            "name": "Python: Flask (0.10.x or earlier)",
             "type": "python",
             "request": "launch",
             "stopOnEntry": false,
@@ -856,7 +856,7 @@
             ]
           },
           {
-            "name": "Pyramid",
+            "name": "Python: Pyramid",
             "type": "python",
             "request": "launch",
             "stopOnEntry": true,
@@ -875,7 +875,7 @@
             ]
           },
           {
-            "name": "Watson",
+            "name": "Python: Watson",
             "type": "python",
             "request": "launch",
             "stopOnEntry": true,
@@ -896,7 +896,7 @@
             ]
           },
           {
-            "name": "Attach (Remote Debug)",
+            "name": "Python: Attach",
             "type": "python",
             "request": "attach",
             "localRoot": "${workspaceRoot}",
