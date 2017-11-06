@@ -40,7 +40,7 @@ export class BannerService {
             openCommand = '/usr/bin/xdg-open';
         }
         if (!openCommand) {
-            console.error(`Unable to determine platform to capture user feedback in Python extension ${os.platform()}`);
+            console.error(`Unable open ${BANNER_URL} on platform '${os.platform()}'.`);
         }
         child_process.spawn(openCommand, [BANNER_URL]);
     }
