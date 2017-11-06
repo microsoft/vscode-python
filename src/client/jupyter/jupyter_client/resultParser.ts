@@ -12,7 +12,7 @@ export class MessageParser extends EventEmitter {
     private isDebugging: boolean;
     constructor(private outputChannel: OutputChannel) {
         super();
-        this.isDebugging = process.env['DEBUG_DJAYAMANNE_IPYTHON'] === '1';
+        this.isDebugging = process.env['DEBUG_EXTENSION_IPYTHON'] === '1';
     }
     private writeToDebugLog(message: string) {
         if (!this.isDebugging) {

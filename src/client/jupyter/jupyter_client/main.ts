@@ -57,7 +57,7 @@ export class JupyterClientAdapter extends EventEmitter implements IJupyterClient
         this.startDef = createDeferred<any>();
         const pyFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'ipythonServer.py');
         const newEnv = {};
-        // const newEnv = {'DEBUG_DJAYAMANNE_IPYTHON':'1'};
+        // const newEnv = {'DEBUG_EXTENSION_IPYTHON':'1'};
         Object.assign(newEnv, envVariables);
         Object.assign(newEnv, process.env);
 

@@ -3,19 +3,18 @@
   "displayName": "Python",
   "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, Data Science (with Jupyter), PySpark and more.",
   "version": "0.7.0",
-  "publisher": "donjayamanne",
+  "publisher": "ms-vscode",
   "author": {
-    "name": "Don Jayamanne",
-    "email": "don.jayamanne@yahoo.com"
+    "name": "Microsoft Corporation"
   },
   "license": "MIT",
-  "homepage": "http://donjayamanne.github.io/pythonVSCode/",
+  "homepage": "https://github.com/Microsoft/vscode-python",
   "repository": {
     "type": "git",
-    "url": "https://github.com/DonJayamanne/pythonVSCode"
+    "url": "https://github.com/Microsoft/vscode-python"
   },
   "bugs": {
-    "url": "https://github.com/DonJayamanne/pythonVSCode/issues"
+    "url": "https://github.com/Microsoft/vscode-python/issues"
   },
   "icon": "icon.png",
   "galleryBanner": {
@@ -279,7 +278,7 @@
             "html"
           ]
         },
-        "aiKey": "fce7a3d5-4665-4404-b786-31a6306749a6",
+        "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
         "program": "./out/client/debugger/Main.js",
         "runtime": "node",
         "configurationSnippets": [

@@ -16,14 +16,14 @@ suite('JupyterClient', () => {
     });
     setup(() => {
         process.env['VSC_PYTHON_CI_TEST'] = '0';
-        process.env['DEBUG_DJAYAMANNE_IPYTHON'] = '1';
+        process.env['DEBUG_EXTENSION_IPYTHON'] = '1';
         output = new MockOutputChannel('Jupyter');
         jupyter = new JupyterClientAdapter(output, __dirname);
         return initializeTest();
     });
     teardown(() => {
         process.env['VSC_PYTHON_CI_TEST'] = '1';
-        process.env['DEBUG_DJAYAMANNE_IPYTHON'] = '0';
+        process.env['DEBUG_EXTENSION_IPYTHON'] = '0';
         output.dispose();
         jupyter.dispose();
     });
@@ -32,7 +32,7 @@ suite('JupyterClient', () => {
     let jupyter: JupyterClientAdapter;
 
     test('Ping (Process and Socket)', done => {
-        jupyter.start({ 'VSC_PYTHON_CI_TEST': '1', 'DEBUG_DJAYAMANNE_IPYTHON': '1' }).then(() => {
+        jupyter.start({ 'VSC_PYTHON_CI_TEST': '1', 'DEBUG_EXTENSION_IPYTHON': '1' }).then(() => {
             done();
         }).catch(reason => {
             assert.fail(reason, undefined, 'Starting Jupyter failed', '');

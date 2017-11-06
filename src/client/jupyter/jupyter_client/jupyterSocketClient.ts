@@ -16,7 +16,7 @@ export class JupyterSocketClient extends SocketCallbackHandler {
     private isDebugging: boolean;
     constructor(socketServer: SocketServer, private outputChannel: OutputChannel) {
         super(socketServer);
-        this.isDebugging = process.env['DEBUG_DJAYAMANNE_IPYTHON'] === '1';
+        this.isDebugging = process.env['DEBUG_EXTENSION_IPYTHON'] === '1';
         this.registerCommandHandler(ResponseCommands.Pong, this.onPong.bind(this));
         this.registerCommandHandler(ResponseCommands.ListKernelsSpecs, this.onKernelsListed.bind(this));
         this.registerCommandHandler(ResponseCommands.Error, this.onError.bind(this));

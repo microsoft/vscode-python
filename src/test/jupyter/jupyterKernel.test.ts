@@ -17,7 +17,7 @@ suite('Jupyter Kernel', () => {
     });
     setup(() => {
         process.env['VSC_PYTHON_CI_TEST'] = '0';
-        process.env['DEBUG_DJAYAMANNE_IPYTHON'] = '1';
+        process.env['DEBUG_EXTENSION_IPYTHON'] = '1';
         disposables = [];
         output = new MockOutputChannel('Jupyter');
         disposables.push(output);
@@ -27,7 +27,7 @@ suite('Jupyter Kernel', () => {
     });
     teardown(() => {
         process.env['VSC_PYTHON_CI_TEST'] = '1';
-        process.env['DEBUG_DJAYAMANNE_IPYTHON'] = '0';
+        process.env['DEBUG_EXTENSION_IPYTHON'] = '0';
         output.dispose();
         jupyter.dispose();
         disposables.forEach(d => {

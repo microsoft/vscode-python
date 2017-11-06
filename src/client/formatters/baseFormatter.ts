@@ -1,14 +1,14 @@
 'use strict';
 
-import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as settings from './../common/configSettings';
+import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { execPythonFile } from './../common/utils';
-import { getTextEditsFromPatch, getTempFileWithDocumentContents } from './../common/editor';
 import { isNotInstalledError } from '../common/helpers';
 import { Installer, Product } from '../common/installer';
+import * as settings from './../common/configSettings';
+import { getTempFileWithDocumentContents, getTextEditsFromPatch } from './../common/editor';
+import { execPythonFile } from './../common/utils';
 
 
 export abstract class BaseFormatter {
@@ -79,10 +79,8 @@ export abstract class BaseFormatter {
             // Ok if we have a space after the file name, this means we have some arguments defined and this isn't supported
             if (stuffAfterFileName.trim().indexOf(' ') > 0) {
                 customError = `Formatting failed, custom arguments in the 'python.formatting.${this.Id}Path' is not supported.\n` +
-                    `Custom arguments to the formatter can be defined in 'python.formatter.${this.Id}Args' setting of settings.json.\n` +
-                    'For further details, please see https://github.com/DonJayamanne/pythonVSCode/wiki/Troubleshooting-Linting#2-linting-with-xxx-failed-';
-            }
-            else {
+                    `Custom arguments to the formatter can be defined in 'python.formatter.${this.Id}Args' setting of settings.json.`;
+            } else {
                 customError += `\nYou could either install the '${this.Id}' formatter, turn it off or use another formatter.`;
                 this.installer.promptToInstall(this.product, resource);
             }
