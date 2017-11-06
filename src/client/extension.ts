@@ -159,7 +159,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
     const feedbackService = new FeedbackService(persistentStateFactory);
     context.subscriptions.push(feedbackService);
-    new BannerService(persistentStateFactory).showBanner();
+    // tslint:disable-next-line:no-unused-expression
+    new BannerService(persistentStateFactory);
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>) {
