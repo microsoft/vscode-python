@@ -17,14 +17,14 @@ const FEEDBACK_URL = 'https://aka.ms/egv4z1';
 
 export class FeedbackService implements Disposable {
     private counters?: FeedbackCounters;
-    private showFeedback: PersistentState<boolean>;
+    private showFeedbackPrompt: PersistentState<boolean>;
     private userResponded: PersistentState<boolean>;
     private promptDisplayed: boolean;
     private disposables: Disposable[] = [];
     constructor(persistentStateFactory: IPersistentStateFactor) {
-        this.showFeedback = persistentStateFactory.createGlobalPersistentState('SHOW_FEEDBACK', true);
+        this.showFeedbackPrompt = persistentStateFactory.createGlobalPersistentState('SHOW_FEEDBACK_PROMPT', true);
         this.userResponded = persistentStateFactory.createGlobalPersistentState('RESPONDED_TO_FEEDBACK', false);
-        if (this.showFeedback.value) {
+        if (this.showFeedbackPrompt.value && !this.userResponded.value) {
             this.initialize();
         }
     }
@@ -53,23 +53,23 @@ export class FeedbackService implements Disposable {
         if (textDocument.languageId !== PythonLanguage.language) {
             return;
         }
-        if (!this.showFeedback.value || !this.counters) {
+        if (!this.showFeedbackPrompt.value || this.userResponded.value || !this.counters) {
             return;
         }
-        this.counters.updateTextEditCounter();
+        this.counters.updateEditCounter();
     }
     private updateFeedbackCounter(telemetryEventName: string): void {
         // Ignore feedback events.
         if (telemetryEventName === FEEDBACK) {
             return;
         }
-        if (!this.showFeedback.value || !this.counters) {
+        if (!this.showFeedbackPrompt.value || this.userResponded.value || !this.counters) {
             return;
         }
         this.counters.updateFeatureUsageCounter();
     }
     private thresholdHandler() {
-        if (!this.showFeedback.value || this.promptDisplayed) {
+        if (!this.showFeedbackPrompt.value || this.userResponded.value || this.promptDisplayed) {
             return;
         }
         this.showPrompt();
@@ -101,7 +101,6 @@ export class FeedbackService implements Disposable {
     }
     @captureTelemetry(FEEDBACK, { action: 'accepted' })
     private displaySurvey() {
-        this.showFeedback.value = false;
         this.userResponded.value = true;
 
         let openCommand: string | undefined;
@@ -119,7 +118,6 @@ export class FeedbackService implements Disposable {
     }
     @captureTelemetry(FEEDBACK, { action: 'doNotShowAgain' })
     private doNotShowFeedbackAgain() {
-        this.showFeedback.value = false;
-        this.userResponded.value = false;
+        this.showFeedbackPrompt.value = false;
     }
 }

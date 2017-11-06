@@ -18,7 +18,7 @@ export class FeedbackCounters extends EventEmitter {
         super();
         this.createCounters();
     }
-    public updateTextEditCounter(): void {
+    public updateEditCounter(): void {
         this.updateCounter(TEXT_EDIT_COUNTER);
     }
     public updateFeatureUsageCounter(): void {
