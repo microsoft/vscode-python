@@ -1,8 +1,8 @@
 import * as path from 'path';
 import { ConfigurationTarget, Uri, window } from 'vscode';
-import { sendTelemetryEvent } from '../../common/telemetry';
-import { PYTHON_INTERPRETER } from '../../common/telemetry/constants';
-import { StopWatch } from '../../common/telemetry/stopWatch';
+import { sendTelemetryEvent } from '../../telemetry';
+import { PYTHON_INTERPRETER } from '../../telemetry/constants';
+import { StopWatch } from '../../telemetry/stopWatch';
 import { IInterpreterVersionService } from '../interpreterVersion';
 import { IPythonPathUpdaterServiceFactory } from './types';
 

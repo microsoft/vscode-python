@@ -2,9 +2,9 @@
 
 import * as vscode from 'vscode';
 import { CancellationToken, Position, SignatureHelp, TextDocument } from 'vscode';
-import { captureTelemetry } from '../common/telemetry';
-import { SIGNATURE } from '../common/telemetry/constants';
 import { JediFactory } from '../languageServices/jediProxyFactory';
+import { captureTelemetry } from '../telemetry';
+import { SIGNATURE } from '../telemetry/constants';
 import * as proxy from './jediProxy';
 
 const DOCSTRING_PARAM_PATTERNS = [

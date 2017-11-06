@@ -2,9 +2,9 @@
 
 import { EOL } from 'os';
 import * as vscode from 'vscode';
-import { captureTelemetry } from '../common/telemetry';
-import { HOVER_DEFINITION } from '../common/telemetry/constants';
 import { JediFactory } from '../languageServices/jediProxyFactory';
+import { captureTelemetry } from '../telemetry';
+import { HOVER_DEFINITION } from '../telemetry/constants';
 import { highlightCode } from './jediHelpers';
 import * as proxy from './jediProxy';
 

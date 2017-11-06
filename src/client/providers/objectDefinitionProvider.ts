@@ -1,9 +1,9 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { captureTelemetry } from '../common/telemetry';
-import { GO_TO_OBJECT_DEFINITION } from '../common/telemetry/constants';
 import { JediFactory } from '../languageServices/jediProxyFactory';
+import { captureTelemetry } from '../telemetry';
+import { GO_TO_OBJECT_DEFINITION } from '../telemetry/constants';
 import * as defProvider from './definitionProvider';
 
 export function activateGoToObjectDefinitionProvider(jediFactory: JediFactory): vscode.Disposable[] {

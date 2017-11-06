@@ -14,8 +14,8 @@ import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients
 import { LaunchRequestArguments, AttachRequestArguments, DebugOptions, TelemetryEvent, PythonEvaluationResultFlags } from "./Common/Contracts";
 import { validatePath, getPythonExecutable } from './Common/Utils';
 import { isNotInstalledError } from '../common/helpers';
-import { DEBUGGER } from '../../client/common/telemetry/constants';
-import { DebuggerTelemetry } from '../../client/common/telemetry/types';
+import { DEBUGGER } from '../../client/telemetry/constants';
+import { DebuggerTelemetry } from '../../client/telemetry/types';
 
 const CHILD_ENUMEARATION_TIMEOUT = 5000;
 

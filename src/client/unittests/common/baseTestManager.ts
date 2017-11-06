@@ -4,9 +4,9 @@ import { Uri, workspace } from 'vscode';
 import { IPythonSettings, PythonSettings } from '../../common/configSettings';
 import { isNotInstalledError } from '../../common/helpers';
 import { Installer, Product } from '../../common/installer';
-import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../common/telemetry/constants';
-import { sendTelemetryEvent } from '../../common/telemetry/index';
-import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../common/telemetry/types';
+import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../telemetry/constants';
+import { sendTelemetryEvent } from '../../telemetry/index';
+import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../telemetry/types';
 import { CANCELLATION_REASON, CommandSource } from './constants';
 import { displayTestErrorMessage } from './testUtils';
 import { ITestCollectionStorageService, ITestResultsService, ITestsHelper, Tests, TestStatus, TestsToRun } from './types';
@@ -112,7 +112,7 @@ export abstract class BaseTestManager {
                     }
                 });
                 if (haveErrorsInDiscovering && !quietMode) {
-                    displayTestErrorMessage('There were some errors in disovering unit tests');
+                    displayTestErrorMessage('There were some errors in discovering unit tests');
                 }
                 const wkspace = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(this.rootDirectory)).uri;
                 this.testCollectionStorage.storeTests(wkspace, tests);

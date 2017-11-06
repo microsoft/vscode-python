@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as settings from './../common/configSettings';
 import * as logger from './../common/logger';
-import * as telemetryHelper from '../common/telemetry';
+import * as telemetryHelper from '../telemetry';
 import { execPythonFile, getCustomEnvVarsSync, validatePath } from '../common/utils';
 import { createDeferred, Deferred } from '../common/helpers';
 import { getCustomEnvVars } from '../common/utils';

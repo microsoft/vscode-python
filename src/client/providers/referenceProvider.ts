@@ -1,9 +1,9 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { captureTelemetry } from '../common/telemetry';
-import { REFERENCE } from '../common/telemetry/constants';
 import { JediFactory } from '../languageServices/jediProxyFactory';
+import { captureTelemetry } from '../telemetry';
+import { REFERENCE } from '../telemetry/constants';
 import * as proxy from './jediProxy';
 
 export class PythonReferenceProvider implements vscode.ReferenceProvider {

@@ -1,9 +1,9 @@
 import { commands, Disposable, window, workspace } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { Commands } from '../common/constants';
-import { captureTelemetry } from '../common/telemetry';
-import { REPL } from '../common/telemetry/constants';
 import { getPathFromPythonCommand } from '../common/utils';
+import { captureTelemetry } from '../telemetry';
+import { REPL } from '../telemetry/constants';
 
 export class ReplProvider implements Disposable {
     private readonly disposables: Disposable[] = [];

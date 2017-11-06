@@ -1,9 +1,9 @@
 import * as _ from 'lodash';
 import * as vscode from 'vscode';
 import { Commands } from '../common/constants';
-import { captureTelemetry } from '../common/telemetry';
-import { WORKSPACE_SYMBOLS_GO_TO } from '../common/telemetry/constants';
 import { fsExistsAsync } from '../common/utils';
+import { captureTelemetry } from '../telemetry';
+import { WORKSPACE_SYMBOLS_GO_TO } from '../telemetry/constants';
 import { Generator } from './generator';
 import { parseTags } from './parser';
 

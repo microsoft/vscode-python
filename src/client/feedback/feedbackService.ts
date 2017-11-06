@@ -25,6 +25,7 @@ export class FeedbackService implements Disposable {
         // tslint:disable-next-line:no-void-expression
         let commandDisable = commands.registerCommand('python.updateFeedbackCounter', (telemetryEventName: string) => this.updateFeedbackCounter(telemetryEventName));
         this.disposables.push(commandDisable);
+        // tslint:disable-next-line:no-void-expression
         commandDisable = workspace.onDidChangeTextDocument(changeEvent => this.handleChangesToTextDocument(changeEvent.document), this, this.disposables);
         this.disposables.push(commandDisable);
 

@@ -5,8 +5,8 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { getTempFileWithDocumentContents, getTextEditsFromPatch } from '../common/editor';
-import { captureTelemetry } from '../common/telemetry';
-import { FORMAT_SORT_IMPORTS } from '../common/telemetry/constants';
+import { captureTelemetry } from '../telemetry';
+import { FORMAT_SORT_IMPORTS } from '../telemetry/constants';
 
 // tslint:disable-next-line:completed-docs
 export class PythonImportSortProvider {

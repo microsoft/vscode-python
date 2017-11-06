@@ -1,11 +1,11 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { BaseFormatter } from './../formatters/baseFormatter';
-import { YapfFormatter } from './../formatters/yapfFormatter';
-import { AutoPep8Formatter } from './../formatters/autoPep8Formatter';
-import { DummyFormatter } from './../formatters/dummyFormatter';
 import { PythonSettings } from './../common/configSettings';
+import { AutoPep8Formatter } from './../formatters/autoPep8Formatter';
+import { BaseFormatter } from './../formatters/baseFormatter';
+import { DummyFormatter } from './../formatters/dummyFormatter';
+import { YapfFormatter } from './../formatters/yapfFormatter';
 
 export class PythonFormattingEditProvider implements vscode.DocumentFormattingEditProvider, vscode.DocumentRangeFormattingEditProvider {
     private formatters = new Map<string, BaseFormatter>();

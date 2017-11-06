@@ -3,9 +3,9 @@
 import * as vscode from 'vscode';
 import { ProviderResult, SnippetString, Uri } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { captureTelemetry } from '../common/telemetry';
-import { COMPLETION } from '../common/telemetry/constants';
 import { JediFactory } from '../languageServices/jediProxyFactory';
+import { captureTelemetry } from '../telemetry';
+import { COMPLETION } from '../telemetry/constants';
 import { extractSignatureAndDocumentation } from './jediHelpers';
 import * as proxy from './jediProxy';
 

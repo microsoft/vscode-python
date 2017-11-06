@@ -4,10 +4,10 @@ import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { getTextEditsFromPatch } from '../common/editor';
 import { Installer, Product } from '../common/installer';
-import { sendTelemetryWhenDone } from '../common/telemetry';
-import { REFACTOR_EXTRACT_FUNCTION, REFACTOR_EXTRACT_VAR } from '../common/telemetry/constants';
-import { StopWatch } from '../common/telemetry/stopWatch';
 import { RefactorProxy } from '../refactor/proxy';
+import { sendTelemetryWhenDone } from '../telemetry';
+import { REFACTOR_EXTRACT_FUNCTION, REFACTOR_EXTRACT_VAR } from '../telemetry/constants';
+import { StopWatch } from '../telemetry/stopWatch';
 
 interface RenameResponse {
     results: [{ diff: string }];

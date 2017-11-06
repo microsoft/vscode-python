@@ -1,9 +1,9 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { captureTelemetry } from '../common/telemetry';
-import { DEFINITION } from '../common/telemetry/constants';
 import { JediFactory } from '../languageServices/jediProxyFactory';
+import { captureTelemetry } from '../telemetry';
+import { DEFINITION } from '../telemetry/constants';
 import * as proxy from './jediProxy';
 
 export class PythonDefinitionProvider implements vscode.DefinitionProvider {
