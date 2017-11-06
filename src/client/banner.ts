@@ -6,13 +6,13 @@
 import * as child_process from 'child_process';
 import * as os from 'os';
 import { window } from 'vscode';
-import { IPersistentStateFactor, PersistentState } from './common/persistentState';
+import { IPersistentStateFactory, PersistentState } from './common/persistentState';
 
 const BANNER_URL = 'https://aka.ms/pvsc-at-msft';
 
 export class BannerService {
     private shouldShowBanner: PersistentState<boolean>;
-    constructor(persistentStateFactory: IPersistentStateFactor) {
+    constructor(persistentStateFactory: IPersistentStateFactory) {
         this.shouldShowBanner = persistentStateFactory.createGlobalPersistentState('SHOW_NEW_PUBLISHER_BANNER', true);
         this.showBanner();
     }
@@ -40,7 +40,7 @@ export class BannerService {
             openCommand = '/usr/bin/xdg-open';
         }
         if (!openCommand) {
-            console.error(`Unable to determine platform to capture user feedback in Python extension ${os.platform()}`);
+            console.error(`Unable open ${BANNER_URL} on platform '${os.platform()}'.`);
         }
         child_process.spawn(openCommand, [BANNER_URL]);
     }

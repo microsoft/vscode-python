@@ -18,17 +18,17 @@ export class FeedbackCounters extends EventEmitter {
         super();
         this.createCounters();
     }
-    public updateEditCounter(): void {
-        this.updateCounter(TEXT_EDIT_COUNTER);
+    public incrementEditCounter(): void {
+        this.incrementCounter(TEXT_EDIT_COUNTER);
     }
-    public updateFeatureUsageCounter(): void {
-        this.updateCounter(FEARTURES_USAGE_COUNTER);
+    public incrementFeatureUsageCounter(): void {
+        this.incrementCounter(FEARTURES_USAGE_COUNTER);
     }
     private createCounters() {
         this.counters.set(TEXT_EDIT_COUNTER, { counter: 0, threshold: THRESHOLD_FOR_TEXT_EDIT });
         this.counters.set(FEARTURES_USAGE_COUNTER, { counter: 0, threshold: THRESHOLD_FOR_FEATURE_USAGE });
     }
-    private updateCounter(counterName: counters): void {
+    private incrementCounter(counterName: counters): void {
         if (!this.counters.has(counterName)) {
             console.error(`Counter ${counterName} not supported in the feedback module of the Python Extension`);
             return;
@@ -38,19 +38,15 @@ export class FeedbackCounters extends EventEmitter {
         const value = this.counters.get(counterName)!;
         value.counter += 1;
 
-        this.checkThreshold();
+        this.checkThreshold(counterName);
     }
-    private checkThreshold() {
-        let thresholdReached = false;
-        this.counters.forEach((value, key) => {
-            if (value.counter < value.threshold) {
-                return;
-            }
-            thresholdReached = true;
-        });
-
-        if (thresholdReached) {
-            this.emit('thresholdReached');
+    private checkThreshold(counterName: string) {
+        // tslint:disable-next-line:no-non-null-assertion
+        const value = this.counters.get(counterName)!;
+        if (value.counter < value.threshold) {
+            return;
         }
+
+        this.emit('thresholdReached');
     }
 }
