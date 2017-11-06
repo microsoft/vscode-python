@@ -8,7 +8,7 @@ import * as os from 'os';
 import { window } from 'vscode';
 import { commands, Disposable, TextDocument, workspace } from 'vscode';
 import { PythonLanguage } from '../common/constants';
-import { IPersistentStateFactor, PersistentState } from '../common/persistentState';
+import { IPersistentStateFactory, PersistentState } from '../common/persistentState';
 import { FEEDBACK } from '../telemetry/constants';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
 import { FeedbackCounters } from './counters';
@@ -21,7 +21,11 @@ export class FeedbackService implements Disposable {
     private userResponded: PersistentState<boolean>;
     private promptDisplayed: boolean;
     private disposables: Disposable[] = [];
-    constructor(persistentStateFactory: IPersistentStateFactor) {
+    private get canShowPrompt(): boolean {
+        return this.showFeedbackPrompt.value && !this.userResponded.value &&
+            !this.promptDisplayed && this.counters !== undefined;
+    }
+    constructor(persistentStateFactory: IPersistentStateFactory) {
         this.showFeedbackPrompt = persistentStateFactory.createGlobalPersistentState('SHOW_FEEDBACK_PROMPT', true);
         this.userResponded = persistentStateFactory.createGlobalPersistentState('RESPONDED_TO_FEEDBACK', false);
         if (this.showFeedbackPrompt.value && !this.userResponded.value) {
@@ -53,23 +57,23 @@ export class FeedbackService implements Disposable {
         if (textDocument.languageId !== PythonLanguage.language) {
             return;
         }
-        if (!this.showFeedbackPrompt.value || this.userResponded.value || !this.counters) {
+        if (!this.canShowPrompt) {
             return;
         }
-        this.counters.updateEditCounter();
+        this.counters.incrementEditCounter();
     }
     private updateFeedbackCounter(telemetryEventName: string): void {
         // Ignore feedback events.
         if (telemetryEventName === FEEDBACK) {
             return;
         }
-        if (!this.showFeedbackPrompt.value || this.userResponded.value || !this.counters) {
+        if (!this.canShowPrompt) {
             return;
         }
-        this.counters.updateFeatureUsageCounter();
+        this.counters.incrementFeatureUsageCounter();
     }
     private thresholdHandler() {
-        if (!this.showFeedbackPrompt.value || this.userResponded.value || this.promptDisplayed) {
+        if (!this.canShowPrompt) {
             return;
         }
         this.showPrompt();
@@ -113,6 +117,7 @@ export class FeedbackService implements Disposable {
         }
         if (!openCommand) {
             console.error(`Unable to determine platform to capture user feedback in Python extension ${os.platform()}`);
+            console.error(`Survey link is: ${FEEDBACK_URL}`);
         }
         child_process.spawn(openCommand, [FEEDBACK_URL]);
     }

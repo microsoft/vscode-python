@@ -17,12 +17,12 @@ export class PersistentState<T> {
     }
 }
 
-export interface IPersistentStateFactor {
+export interface IPersistentStateFactory {
     createGlobalPersistentState<T>(key: string, defaultValue: T): PersistentState<T>;
     createWorkspacePersistentState<T>(key: string, defaultValue: T): PersistentState<T>;
 }
 
-export class PersistentStateFactory implements IPersistentStateFactor {
+export class PersistentStateFactory implements IPersistentStateFactory {
     constructor(private globalState: Memento, private workspaceState: Memento) { }
     public createGlobalPersistentState<T>(key: string, defaultValue: T): PersistentState<T> {
         return new PersistentState<T>(this.globalState, key, defaultValue);

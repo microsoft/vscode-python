@@ -7,8 +7,6 @@ import { Commands, PythonLanguage } from '../common/constants';
 import { JupyterCodeLensProvider } from './editorIntegration/codeLensProvider';
 import { JupyterSymbolProvider } from './editorIntegration/symbolProvider';
 import { formatErrorForLogging } from '../common/utils';
-// import * as telemetryHelper from '../telemetry';
-// import * as telemetryContracts from '../common/telemetryContracts';
 import * as main from './jupyter_client/main';
 import { KernelRestartedError, KernelShutdownError } from './common/errors';
 import { PythonSettings } from '../common/configSettings';

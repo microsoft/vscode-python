@@ -6,13 +6,13 @@
 import * as child_process from 'child_process';
 import * as os from 'os';
 import { window } from 'vscode';
-import { IPersistentStateFactor, PersistentState } from './common/persistentState';
+import { IPersistentStateFactory, PersistentState } from './common/persistentState';
 
 const BANNER_URL = 'https://aka.ms/egv4z1';
 
 export class BannerService {
     private shouldShowBanner: PersistentState<boolean>;
-    constructor(persistentStateFactory: IPersistentStateFactor) {
+    constructor(persistentStateFactory: IPersistentStateFactory) {
         this.shouldShowBanner = persistentStateFactory.createGlobalPersistentState('SHOW_NEW_EXT_BANNER', true);
     }
     public showBanner() {
