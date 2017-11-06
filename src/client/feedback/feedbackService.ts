@@ -23,7 +23,7 @@ export class FeedbackService implements Disposable {
     private disposables: Disposable[] = [];
     constructor(persistentStateFactory: IPersistentStateFactor) {
         this.showFeedbackPrompt = persistentStateFactory.createGlobalPersistentState('SHOW_FEEDBACK_PROMPT', true);
-        this.userResponded = persistentStateFactory.createGlobalPersistentState('RESPONDED_TO_FEEDBACK', false);
+        this.userResponded = persistentStateFactory.createGlobalPersistentState('RESPONDED_TO_FEEDBACKX', false);
         if (this.showFeedbackPrompt.value && !this.userResponded.value) {
             this.initialize();
         }
@@ -77,7 +77,7 @@ export class FeedbackService implements Disposable {
     private showPrompt() {
         this.promptDisplayed = true;
 
-        const message = 'Would you tell us how likely you are to recommend the Python extension for VS Code to a friend or colleague?';
+        const message = 'Would you tell us how likely you are to recommend the Microsoft Python extension for VS Code to a friend or colleague?';
         const yesButton = 'Yes';
         const dontShowAgainButton = 'Don\'t Show Again';
         window.showInformationMessage(message, yesButton, dontShowAgainButton).then((value) => {
@@ -112,7 +112,7 @@ export class FeedbackService implements Disposable {
             openCommand = '/usr/bin/xdg-open';
         }
         if (!openCommand) {
-            console.error(`Unable to determine platform to capture user feedback in Python extension ${os.platform()}`);
+            console.error(`Unable to determine platform to capture user feedback in Microsoft Python extension ${os.platform()}`);
         }
         child_process.spawn(openCommand, [FEEDBACK_URL]);
     }

@@ -8,12 +8,12 @@ import * as os from 'os';
 import { window } from 'vscode';
 import { IPersistentStateFactor, PersistentState } from './common/persistentState';
 
-const BANNER_URL = 'https://aka.ms/egv4z1';
+const BANNER_URL = 'https://aka.ms/pvsc-at-msft';
 
 export class BannerService {
     private shouldShowBanner: PersistentState<boolean>;
     constructor(persistentStateFactory: IPersistentStateFactor) {
-        this.shouldShowBanner = persistentStateFactory.createGlobalPersistentState('SHOW_NEW_EXT_BANNER', true);
+        this.shouldShowBanner = persistentStateFactory.createGlobalPersistentState('SHOW_NEW_EXT_BANNER_Xxx', true);
         this.showBanner();
     }
     private showBanner() {
@@ -22,8 +22,8 @@ export class BannerService {
         }
         this.shouldShowBanner.value = false;
 
-        const message = 'Would you like to know what is new?';
-        const yesButton = 'Yes';
+        const message = 'The Python extension is now published by Microsoft!';
+        const yesButton = 'Read more';
         window.showInformationMessage(message, yesButton).then((value) => {
             if (value === yesButton) {
                 this.displayBanner();
