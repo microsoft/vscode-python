@@ -13,7 +13,7 @@ import { FEEDBACK } from '../telemetry/constants';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
 import { FeedbackCounters } from './counters';
 
-const FEEDBACK_URL = 'https://aka.ms/egv4z1';
+const FEEDBACK_URL = 'https://www.surveymonkey.com/r/293C9HY';
 
 export class FeedbackService implements Disposable {
     private counters?: FeedbackCounters;
