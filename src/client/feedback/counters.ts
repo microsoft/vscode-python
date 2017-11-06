@@ -13,7 +13,7 @@ const TEXT_EDIT_COUNTER = 'TEXT_EDIT';
 type counters = 'FEARTURES_USAGE' | 'TEXT_EDIT';
 
 export class FeedbackCounters extends EventEmitter {
-    private counters = new Map<string, { counter: number; threshold: number; }>();
+    private counters = new Map<string, { counter: number, threshold: number }>();
     constructor() {
         super();
         this.createCounters();
