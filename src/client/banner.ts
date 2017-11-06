@@ -14,8 +14,12 @@ export class BannerService {
     private shouldShowBanner: PersistentState<boolean>;
     constructor(persistentStateFactory: IPersistentStateFactory) {
         this.shouldShowBanner = persistentStateFactory.createGlobalPersistentState('SHOW_NEW_EXT_BANNER', true);
+        this.showBanner();
     }
-    public showBanner() {
+    private showBanner() {
+        if (!this.shouldShowBanner.value) {
+            return;
+        }
         this.shouldShowBanner.value = false;
 
         const message = 'Would you like to know what is new?';
