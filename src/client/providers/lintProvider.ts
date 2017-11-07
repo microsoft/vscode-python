@@ -3,8 +3,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { ConfigurationTarget, Uri, workspace } from 'vscode';
+import { ConfigSettingMonitor } from '../common/configSettingMonitor';
 import { PythonSettings } from '../common/configSettings';
 import { LinterErrors } from '../common/constants';
+import { PythonLanguage } from '../jupyter/common/constants';
 import * as linter from '../linters/baseLinter';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { LINTING } from '../telemetry/constants';
@@ -49,18 +52,22 @@ export class LintProvider implements vscode.Disposable {
     private outputChannel: vscode.OutputChannel;
     private context: vscode.ExtensionContext;
     private disposables: vscode.Disposable[];
+    private configMonitor: ConfigSettingMonitor;
     public constructor(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel,
         public documentHasJupyterCodeCells: DocumentHasJupyterCodeCells) {
         this.outputChannel = outputChannel;
         this.context = context;
         this.disposables = [];
         this.initialize();
+        this.configMonitor = new ConfigSettingMonitor('linting');
+        this.configMonitor.on('change', this.lintSettingsChangedHandler.bind(this));
     }
     public dispose() {
         this.disposables.forEach(d => d.dispose());
+        this.configMonitor.dispose();
     }
     private isDocumentOpen(uri: vscode.Uri): boolean {
-        return vscode.window.visibleTextEditors.some(editor => editor.document && editor.document.uri.fsPath === uri.fsPath);
+        return vscode.workspace.textDocuments.some(document => document.uri.fsPath === uri.fsPath);
     }
 
     private initialize() {
@@ -109,6 +116,28 @@ export class LintProvider implements vscode.Disposable {
             }
         });
         this.context.subscriptions.push(disposable);
+        this.lintOpenPythonFiles();
+    }
+
+    private lintOpenPythonFiles() {
+        workspace.textDocuments.forEach(document => {
+            if (document.languageId === PythonLanguage.language) {
+                this.onLintDocument(document, 'auto');
+            }
+        });
+    }
+    private lintSettingsChangedHandler(configTarget: ConfigurationTarget, wkspaceOrFolder: Uri) {
+        if (configTarget === ConfigurationTarget.Workspace) {
+            this.lintOpenPythonFiles();
+            return;
+        }
+        // Look for python files that belong to the specified workspace folder.
+        workspace.textDocuments.forEach(document => {
+            const wkspaceFolder = workspace.getWorkspaceFolder(document.uri);
+            if (wkspaceFolder && wkspaceFolder.uri.fsPath === wkspaceOrFolder.fsPath) {
+                this.onLintDocument(document, 'auto');
+            }
+        });
     }
 
     // tslint:disable-next-line:member-ordering
