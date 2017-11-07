@@ -1,8 +1,8 @@
 {
   "name": "python",
   "displayName": "Python",
-  "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, Data Science (with Jupyter), PySpark and more.",
-  "version": "0.7.0",
+  "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
+  "version": "0.8.0",
   "publisher": "ms-python",
   "author": {
     "name": "Microsoft Corporation"
@@ -22,16 +22,14 @@
     "theme": "dark"
   },
   "engines": {
-    "vscode": "^1.17.0"
+    "vscode": "^1.18.0"
   },
   "recommendations": [
     "donjayamanne.jupyter"
   ],
   "keywords": [
     "python",
-    "jupyter",
     "django",
-    "debugger",
     "unittest",
     "multi-root ready"
   ],
