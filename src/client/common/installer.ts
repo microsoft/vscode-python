@@ -4,7 +4,7 @@ import { commands, ConfigurationTarget, Disposable, OutputChannel, Terminal, Uri
 import * as settings from './configSettings';
 import { isNotInstalledError } from './helpers';
 import { error } from './logger';
-import { execPythonFile, getFullyQualifiedPythonInterpreterPath } from './utils';
+import { execPythonFile, getFullyQualifiedPythonInterpreterPath, IS_WINDOWS } from './utils';
 
 export enum Product {
     pytest = 1,
@@ -155,6 +155,8 @@ ProductTypes.set(Product.autopep8, ProductType.Formatter);
 ProductTypes.set(Product.yapf, ProductType.Formatter);
 ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
 
+const IS_POWERSHELL = /powershell.exe$/i;
+
 export enum InstallerResponse {
     Installed,
     Disabled,
@@ -299,6 +301,10 @@ export class Installer implements vscode.Disposable {
                             installScript = `${pythonPath} ${installScript}`;
                         }
                     }
+                    if (this.terminalIsPowershell(resource)) {
+                        installScript = `& ${installScript}`;
+                    }
+
                     // tslint:disable-next-line:no-non-null-assertion
                     Installer.terminal!.sendText(installScript);
                     // tslint:disable-next-line:no-non-null-assertion
@@ -331,6 +337,14 @@ export class Installer implements vscode.Disposable {
             const pythonConfig = workspace.getConfiguration('python');
             return pythonConfig.update('linting.enabledWithoutWorkspace', false, true);
         }
+    }
+    private terminalIsPowershell(resource?: Uri) {
+        if (!IS_WINDOWS) {
+            return false;
+        }
+        // tslint:disable-next-line:no-backbone-get-set-outside-model
+        const terminal = workspace.getConfiguration('terminal.integrated.shell', resource).get<string>('windows');
+        return typeof terminal === 'string' && IS_POWERSHELL.test(terminal);
     }
     // tslint:disable-next-line:no-any
     private updateSetting(setting: string, value: any, resource?: Uri) {
