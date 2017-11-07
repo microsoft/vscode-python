@@ -2,7 +2,7 @@
 * Add support for multi-root workspaces [#1228](https://github.com/DonJayamanne/pythonVSCode/issues/1228), [#1302](https://github.com/DonJayamanne/pythonVSCode/pull/1302), [#1328](https://github.com/DonJayamanne/pythonVSCode/issues/1328), [#1357](https://github.com/DonJayamanne/pythonVSCode/pull/1357)  
 * Add code snippet for ```ipdb``` [#1141](https://github.com/DonJayamanne/pythonVSCode/pull/1141)  
 * Add ability to resolving environment variables in path to ```mypy``` [#1195](https://github.com/DonJayamanne/pythonVSCode/issues/1195)   
-* Add ability to disable a linter globally and disable prompts to install linters [#1207]
+* Add ability to disable a linter globally and disable prompts to install linters [#1207](https://github.com/DonJayamanne/pythonVSCode/issues/1207)
 * Auto-selecting a interpreter in a virtual directory if only one is found in the root directory of the project [#1216](https://github.com/DonJayamanne/pythonVSCode/issues/1216)  
 * Add support for specifying the working directory for unit tests [#1155](https://github.com/DonJayamanne/pythonVSCode/issues/1155), [#1185](https://github.com/DonJayamanne/pythonVSCode/issues/1185)  
 * Add syntax highlighting of pip requirements files [#1247](https://github.com/DonJayamanne/pythonVSCode/pull/1247)  
