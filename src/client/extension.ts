@@ -65,11 +65,12 @@ export async function activate(context: vscode.ExtensionContext) {
     sortImports.activate(context, formatOutChannel);
     const interpreterManager = new InterpreterManager();
     await interpreterManager.autoSetInterpreter();
-    await interpreterManager.refresh();
+    interpreterManager.refresh();
     context.subscriptions.push(interpreterManager);
     const interpreterVersionService = new InterpreterVersionService();
     context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService));
     context.subscriptions.push(...activateExecInTerminalProvider());
+    // tslint:disable-next-line:no-floating-promises
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, formatOutChannel);
     context.subscriptions.push(activateFormatOnSaveProvider(PYTHON, formatOutChannel));
