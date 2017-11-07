@@ -3,7 +3,7 @@
   "displayName": "Python",
   "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, Data Science (with Jupyter), PySpark and more.",
   "version": "0.7.0",
-  "publisher": "ms-vscode",
+  "publisher": "ms-python",
   "author": {
     "name": "Microsoft Corporation"
   },

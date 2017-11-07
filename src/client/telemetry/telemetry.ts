@@ -15,7 +15,7 @@ export function getTelemetryReporter() {
     if (telemetryReporter) {
         return telemetryReporter;
     }
-    const extensionId = 'ms-vscode.python';
+    const extensionId = 'ms-python.python';
     // tslint:disable-next-line:no-non-null-assertion
     const extension = extensions.getExtension(extensionId)!;
     // tslint:disable-next-line:no-unsafe-any
