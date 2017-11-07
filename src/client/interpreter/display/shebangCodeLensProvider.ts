@@ -7,7 +7,8 @@ import { IS_WINDOWS } from '../../common/utils';
 import { getFirstNonEmptyLineFromMultilineString } from '../../interpreter/helpers';
 
 export class ShebangCodeLensProvider implements vscode.CodeLensProvider {
-    public onDidChangeCodeLenses: vscode.Event<void> = vscode.workspace.onDidChangeConfiguration;
+    // tslint:disable-next-line:prefer-type-cast no-any
+    public onDidChangeCodeLenses: vscode.Event<void> = vscode.workspace.onDidChangeConfiguration as any as vscode.Event<void>;
     // tslint:disable-next-line:function-name
     public static async detectShebang(document: TextDocument): Promise<string | undefined> {
         const firstLine = document.lineAt(0);
