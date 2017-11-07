@@ -134,7 +134,7 @@ export abstract class BaseTestManager {
                     telementryProperties.failed = true;
                     sendTelemetryEvent(UNITTEST_DISCOVER, undefined, telementryProperties);
                     this._status = TestStatus.Error;
-                    this.outputChannel.appendLine('Test Disovery failed: ');
+                    this.outputChannel.appendLine('Test Discovery failed: ');
                     // tslint:disable-next-line:prefer-template
                     this.outputChannel.appendLine('' + reason);
                 }
