@@ -11,15 +11,18 @@ export class ConfigSettingMonitor extends EventEmitter implements Disposable {
     constructor(private settingToMonitor: settingsToMonitor) {
         super();
         this.initializeSettings();
+        // tslint:disable-next-line:no-void-expression
         PythonSettings.getInstance().on('change', () => this.onConfigChange());
     }
     public dispose() {
         if (this.timeout) {
+            // tslint:disable-next-line:no-unsafe-any
             clearTimeout(this.timeout);
         }
     }
     private onConfigChange() {
         if (this.timeout) {
+            // tslint:disable-next-line:no-unsafe-any
             clearTimeout(this.timeout);
         }
         this.timeout = setTimeout(() => {
@@ -55,7 +58,8 @@ export class ConfigSettingMonitor extends EventEmitter implements Disposable {
         if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length <= 1) {
             return;
         }
-        workspace.workspaceFolders.forEach(this.checkChangesToSettingsInWorkspaceFolder);
+        // tslint:disable-next-line:no-void-expression
+        workspace.workspaceFolders.forEach(folder => this.checkChangesToSettingsInWorkspaceFolder(folder));
     }
     private checkChangesToSettingsInWorkspaceFolder(workspaceFolder: WorkspaceFolder) {
         const newValue = JSON.stringify(PythonSettings.getInstance(workspaceFolder.uri)[this.settingToMonitor]);
@@ -74,7 +78,8 @@ export class ConfigSettingMonitor extends EventEmitter implements Disposable {
         }
     }
     private getWorkspaceKey() {
-        return workspace.workspaceFolders[0].uri.fsPath;
+        // tslint:disable-next-line:no-non-null-assertion
+        return workspace.workspaceFolders[0]!.uri.fsPath;
     }
     private getWorkspaceFolderKey(wkspaceFolder: Uri) {
         return `${ConfigurationTarget.WorkspaceFolder}:${wkspaceFolder.fsPath}`;
