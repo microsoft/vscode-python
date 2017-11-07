@@ -22,7 +22,7 @@
     "theme": "dark"
   },
   "engines": {
-    "vscode": "^1.18.0"
+    "vscode": "^1.17.0"
   },
   "recommendations": [
     "donjayamanne.jupyter"
