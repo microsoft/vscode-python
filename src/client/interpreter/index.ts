@@ -73,10 +73,10 @@ export class InterpreterManager implements Disposable {
         }
         const pythonConfig = workspace.getConfiguration('python', activeWorkspace.folderUri);
         const pythonPathInConfig = pythonConfig.inspect<string>('pythonPath');
-        if (activeWorkspace.configTarget === ConfigurationTarget.Workspace){
+        if (activeWorkspace.configTarget === ConfigurationTarget.Workspace) {
             return pythonPathInConfig.workspaceValue === undefined || pythonPathInConfig.workspaceValue === 'python';
         }
-        if (activeWorkspace.configTarget === ConfigurationTarget.WorkspaceFolder){
+        if (activeWorkspace.configTarget === ConfigurationTarget.WorkspaceFolder) {
             return pythonPathInConfig.workspaceFolderValue === undefined || pythonPathInConfig.workspaceFolderValue === 'python';
         }
         return false;
