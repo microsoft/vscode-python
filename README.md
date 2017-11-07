@@ -17,8 +17,8 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 * Install the extension
 * optionally install `ctags` for Workspace Symbols, from [here](http://ctags.sourceforge.net/), or using `brew install ctags` on macOS
 * Select your Python interpreter
-  + If it's already in your Python then you're ready to use it
-  + Otherwise, to select a different Python Interpreter/Version (or use a virtual environment), use the command [`Select Workspace Interpreter`](https://github.com/DonJayamanne/pythonVSCode/wiki/Miscellaneous#select-an-interpreter))
+  + If it's already in your path then you're set
+  + Otherwise, to select a different Python Interpreter/Version (or use a virtual environment), use the command `Select Workspace Interpreter`)
 
 ## [Documentation](https://github.com/DonJayamanne/pythonVSCode/wiki)
 For further information and details continue through to the [documentation](https://github.com/DonJayamanne/pythonVSCode/wiki).
@@ -71,15 +71,11 @@ For further information and details continue through to the [documentation](http
   + Extract Method Refactorings
   + Sort Imports
 
-![Generate Features](https://raw.githubusercontent.com/DonJayamanne/pythonVSCodeDocs/master/images/general.gif)
+![General Features](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/general.gif)
 
-![Debugging](https://raw.githubusercontent.com/DonJayamanne/pythonVSCodeDocs/master/images/debugDemo.gif)
+![Debugging](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/debugDemo.gif)
 
-![Unit Tests](https://raw.githubusercontent.com/DonJayamanne/pythonVSCodeDocs/master/images/unittest.gif)
-
-![Scientific Tools](https://raw.githubusercontent.com/DonJayamanne/pythonVSCodeDocs/master/images/jupyter/examples.gif)
-
-![Local Help](https://raw.githubusercontent.com/DonJayamanne/pythonVSCodeDocs/master/images/help.gif)
+![Unit Tests](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/unittest.gif)
 
 
 ## Data/Telemetry
