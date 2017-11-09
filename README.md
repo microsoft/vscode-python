@@ -20,8 +20,8 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
   + If it's already in your path then you're set
   + Otherwise, to select a different Python Interpreter/Version (or use a virtual environment), use the command `Select Workspace Interpreter`)
 
-## [Documentation](https://aka.ms/pvsc-docs)
-For further information and details continue through to the [documentation](https://aka.ms/pvsc-docs).
+## [Documentation](https://code.visualstudio.com/docs/languages/python)
+For further information and details continue through to the [documentation](https://code.visualstudio.com/docs/languages/python).
 
 ## Issues, Feature Requests, and Contributions
 * If you come across a problem with the extension please [file an issue](https://github.com/microsoft/vscode-python)
