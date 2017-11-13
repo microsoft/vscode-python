@@ -87,7 +87,7 @@ export class LintProvider implements vscode.Disposable {
                 return;
             }
 
-            if (!settings.linting.enabledWithoutWorkspace) {
+            if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length <= 1 && !settings.linting.enabledWithoutWorkspace) {
                 return;
             }
 
@@ -101,7 +101,7 @@ export class LintProvider implements vscode.Disposable {
                 return;
             }
 
-            if (!settings.linting.enabledWithoutWorkspace) {
+            if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length <= 1 && !settings.linting.enabledWithoutWorkspace) {
                 return;
             }
 
