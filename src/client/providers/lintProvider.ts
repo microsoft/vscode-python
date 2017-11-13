@@ -86,6 +86,11 @@ export class LintProvider implements vscode.Disposable {
             if (e.languageId !== 'python' || !settings.linting.enabled || !settings.linting.lintOnSave) {
                 return;
             }
+
+            if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length <= 1 && !settings.linting.enabledWithoutWorkspace) {
+                return;
+            }
+
             this.lintDocument(e, 100, 'save');
         });
         this.context.subscriptions.push(disposable);
@@ -95,6 +100,11 @@ export class LintProvider implements vscode.Disposable {
             if (e.languageId !== 'python' || !settings.linting.enabled) {
                 return;
             }
+
+            if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length <= 1 && !settings.linting.enabledWithoutWorkspace) {
+                return;
+            }
+
             // Exclude files opened by vscode when showing a diff view
             if (uriSchemesToIgnore.indexOf(e.uri.scheme) >= 0) {
                 return;
