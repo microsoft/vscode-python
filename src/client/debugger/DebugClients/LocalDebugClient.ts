@@ -154,6 +154,7 @@ export class LocalDebugClient extends DebugClient {
             }
         });
     }
+    // tslint:disable-next-line:member-ordering
     protected handleProcessOutput(failedToLaunch: (error: Error | string | Buffer) => void) {
         this.pyProc.on('error', error => {
             // TODO: This condition makes no sense (refactor)
@@ -183,6 +184,7 @@ export class LocalDebugClient extends DebugClient {
             let x = 0;
         });
     }
+    // tslint:disable-next-line:member-ordering
     protected buildLauncherArguments(): string[] {
         let vsDebugOptions = 'WaitOnAbnormalExit,WaitOnNormalExit,RedirectOutput';
         if (Array.isArray(this.args.debugOptions)) {

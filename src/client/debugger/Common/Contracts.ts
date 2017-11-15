@@ -103,7 +103,7 @@ export enum PythonEvaluationResultFlags {
 }
 
 export interface IPythonProcess extends NodeJS.EventEmitter {
-    Connect(buffer: Buffer, socket: net.Socket, isRemoteProcess: boolean);
+    Connect(buffer: Buffer, socket: net.Socket, isRemoteProcess: boolean): boolean;
     HandleIncomingData(buffer: Buffer);
     Detach();
     Kill();

@@ -29,7 +29,7 @@ def launch():
     # Arguments are:
     # 1. Working directory.
     # 2. VS debugger port to connect to.
-    # 3. GUID for the debug session (not used)
+    # 3. GUID for the debug session
     # 4. Debug options (as integer - see enum PythonDebugOptions).
     # 5. '-m' or '-c' to override the default run-as mode. [optional]
     # 6. Startup script name.
@@ -39,6 +39,7 @@ def launch():
     os.chdir(sys.argv[1])
 
     port_num = int(sys.argv[2])
+    debug_id = sys.argv[3]
     debug_options = parse_debug_options(sys.argv[4])
     wait_on_normal_exit = 'WaitOnNormalExit' in debug_options
 
@@ -64,10 +65,10 @@ def launch():
     # remove all state we imported.
     del sys, os
 
-    run(filename, port_num, wait_on_normal_exit, currentPid, run_as)
+    run(filename, port_num, debug_id, wait_on_normal_exit, currentPid, run_as)
 
-def run(file, port_num, wait_on_normal_exit, currentPid, run_as = 'script'):
-    attach_process(port_num, currentPid)
+def run(file, port_num, debug_id, wait_on_normal_exit, currentPid, run_as = 'script'):
+    attach_process(port_num, currentPid, debug_id)
 
     # now execute main file
     globals_obj = {'__name__': '__main__'}
@@ -82,13 +83,12 @@ def run(file, port_num, wait_on_normal_exit, currentPid, run_as = 'script'):
     if wait_on_normal_exit:
         do_wait()
 
-    LAST = _vspu.to_bytes('LAST')
-    _vspu.write_bytes(conn, LAST)
+    _vspu.write_bytes(conn, _vspu.to_bytes('LAST'))
     # wait for message to be received by debugger.
     import time
     time.sleep(0.5)
 
-def attach_process(port_num, currentPid):
+def attach_process(port_num, currentPid, debug_id):
     import socket
     try:
         xrange
@@ -100,7 +100,14 @@ def attach_process(port_num, currentPid):
         try:
             conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             conn.connect(('127.0.0.1', port_num))
+            # initial handshake.
+            _vspu.write_string(conn, debug_id)
+            _vspu.write_int(conn, 0)
             _vspu.write_int(conn, currentPid)
+
+            # notify debugger that process has launched.
+            _vspu.write_bytes(conn, _vspu.to_bytes('LOAD'))
+            _vspu.write_int(conn, 0)
             break
         except:
             import time

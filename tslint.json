@@ -46,6 +46,7 @@
         "no-unsafe-any": false,
         "prefer-type-cast": false,
         "function-name": false,
-        "variable-name": false
+        "variable-name": false,
+        "no-void-expression": false
     }
 }

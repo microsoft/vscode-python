@@ -37,7 +37,6 @@ export class PythonDebugger extends DebugSession {
     private configurationDonePromiseResolve: () => void;
     private lastException: IPythonException;
     private _supportsRunInTerminalRequest: boolean;
-    private terminatedEventSent: boolean;
     public constructor(debuggerLinesStartAt1: boolean, isServer: boolean) {
         super(debuggerLinesStartAt1, isServer === true);
         this._variableHandles = new Handles<IDebugVariable>();
@@ -98,10 +97,7 @@ export class PythonDebugger extends DebugSession {
             this.pythonProcess.Kill();
             this.pythonProcess = null;
         }
-        if (this.terminatedEventSent) {
-            this.terminatedEventSent = true;
-            this.sendEvent(new TerminatedEvent());
-        }
+        this.sendEvent(new TerminatedEvent());
     }
     private InitializeEventHandlers() {
         this.pythonProcess.on("last", arg => this.onLastCommand());
@@ -118,6 +114,7 @@ export class PythonDebugger extends DebugSession {
         this.pythonProcess.on("asyncBreakCompleted", arg => this.onPythonProcessPaused(arg));
 
         this.debugServer.on("detach", () => this.onDetachDebugger());
+        this.debugServer.on("attached", () => this.onDetachDebugger());
     }
     private onLastCommand() {
         // If we're running in terminal (integrated or external)
@@ -127,8 +124,7 @@ export class PythonDebugger extends DebugSession {
             return;
         }
 
-        // Else default behaviour as previous, which was to perform the same as onDetachDebugger
-        this.onDetachDebugger();
+        this.sendEvent(new TerminatedEvent());
     }
     private onDetachDebugger() {
         this.stopDebugServer();
@@ -153,7 +149,7 @@ export class PythonDebugger extends DebugSession {
     private onPythonModuleLoaded(module: IPythonModule) {
     }
     private debuggerHasLoaded: boolean;
-    private onPythonProcessLoaded(pyThread: IPythonThread) {
+    private onPythonProcessLoaded(pyThread?: IPythonThread) {
         this.debuggerHasLoaded = true;
         this.sendResponse(this.entryResponse);
         this.debuggerLoadedPromiseResolve();
@@ -165,16 +161,18 @@ export class PythonDebugger extends DebugSession {
         if (!this._supportsRunInTerminalRequest && this.launchArgs && this.launchArgs.console === 'integratedTerminal') {
             this.launchArgs.console = 'externalTerminal';
         }
-        if (this.launchArgs && this.launchArgs.stopOnEntry === true) {
-            this.sendEvent(new StoppedEvent("entry", pyThread.Id));
-        }
-        else if (this.launchArgs && this.launchArgs.stopOnEntry === false) {
-            this.configurationDone.then(() => {
-                this.pythonProcess.SendResumeThread(pyThread.Id);
-            });
-        }
-        else {
-            this.pythonProcess.SendResumeThread(pyThread.Id);
+        if (this.launchArgs.noDebug !== true) {
+            // tslint:disable-next-line:no-non-null-assertion
+            const thread = pyThread!;
+            if (this.launchArgs && this.launchArgs.stopOnEntry === true) {
+                this.sendEvent(new StoppedEvent("entry", thread.Id));
+            } else if (this.launchArgs && this.launchArgs.stopOnEntry === false) {
+                this.configurationDone.then(() => {
+                    this.pythonProcess.SendResumeThread(thread.Id);
+                });
+            } else {
+                this.pythonProcess.SendResumeThread(thread.Id);
+            }
         }
     }
 
