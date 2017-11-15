@@ -1,14 +1,14 @@
-import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
-import { LocalDebugServer } from '../DebugServers/LocalDebugServer';
-import { IPythonProcess, IDebugServer } from '../Common/Contracts';
+import * as child_process from 'child_process';
+import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import * as path from 'path';
-import * as child_process from 'child_process';
-import { LaunchRequestArguments } from '../Common/Contracts';
-import { DebugClient, DebugType } from './DebugClient';
 import { open } from '../../common/open';
+import { IDebugServer, IPythonProcess } from '../Common/Contracts';
+import { LaunchRequestArguments } from '../Common/Contracts';
 import { getCustomEnvVars } from '../Common/Utils';
+import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
+import { LocalDebugServer } from '../DebugServers/LocalDebugServer';
+import { DebugClient, DebugType } from './DebugClient';
 
 const VALID_DEBUG_OPTIONS = ['WaitOnAbnormalExit',
     'WaitOnNormalExit',
@@ -24,9 +24,9 @@ export class LocalDebugClient extends DebugClient {
         this.args = args;
     }
 
-    private pyProc: child_process.ChildProcess;
+    protected pyProc: child_process.ChildProcess;
     private pythonProcess: IPythonProcess;
-    private debugServer: BaseDebugServer;
+    protected debugServer: BaseDebugServer;
     public CreateDebugServer(pythonProcess: IPythonProcess): BaseDebugServer {
         this.pythonProcess = pythonProcess;
         this.debugServer = new LocalDebugServer(this.debugSession, this.pythonProcess);
@@ -53,7 +53,7 @@ export class LocalDebugClient extends DebugClient {
             this.pyProc = null;
         }
     }
-    private getPTVSToolsFilePath(): string {
+    protected getLauncherFilePath(): string {
         let currentFileName = module.filename;
         let ptVSToolsPath = path.join(path.dirname(currentFileName), '..', '..', '..', '..', 'pythonFiles', 'PythonTools');
         return path.join(ptVSToolsPath, 'visualstudio_py_launcher.py');
@@ -64,7 +64,9 @@ export class LocalDebugClient extends DebugClient {
             this.debugSession.sendEvent(new OutputEvent(errorMsg, 'stderr'));
         }
     }
+    // tslint:disable-next-line:max-func-body-length member-ordering
     public LaunchApplicationToDebug(dbgServer: IDebugServer, processErrored: (error: any) => void): Promise<any> {
+        // tslint:disable-next-line:max-func-body-length cyclomatic-complexity
         return new Promise<any>((resolve, reject) => {
             let fileDir = this.args && this.args.program ? path.dirname(this.args.program) : '';
             let processCwd = fileDir;
@@ -101,7 +103,7 @@ export class LocalDebugClient extends DebugClient {
                 newEnvVars['PYTHONUNBUFFERED'] = '1';
                 process.env['PYTHONUNBUFFERED'] = '1';
             }
-            let ptVSToolsFilePath = this.getPTVSToolsFilePath();
+            let ptVSToolsFilePath = this.getLauncherFilePath();
             let launcherArgs = this.buildLauncherArguments();
 
             let args = [ptVSToolsFilePath, processCwd, dbgServer.port.toString(), '34806ad9-833a-4524-8cd6-18ca4aa74f14'].concat(launcherArgs);
@@ -142,33 +144,7 @@ export class LocalDebugClient extends DebugClient {
                 }
                 default: {
                     this.pyProc = child_process.spawn(pythonPath, args, { cwd: processCwd, env: environmentVariables });
-                    this.pyProc.on('error', error => {
-                        // TODO: This condition makes no sense (refactor)
-                        if (!this.debugServer && this.debugServer.IsRunning) {
-                            return;
-                        }
-                        if (!this.debugServer.IsRunning && typeof (error) === 'object' && error !== null) {
-                            // return processErrored(error);
-                            return reject(error);
-                        }
-                        this.displayError(error);
-                    });
-                    this.pyProc.stderr.setEncoding('utf8');
-                    this.pyProc.stderr.on('data', error => {
-                        // We generally don't need to display the errors as stderr output is being captured by debugger
-                        // and it gets sent out to the debug client
-
-                        // Either way, we need some code in here so we read the stdout of the python process
-                        // Else it just keep building up (related to issue #203 and #52)
-                        if (this.debugServer && !this.debugServer.IsRunning) {
-                            return reject(error);
-                        }
-                    });
-                    this.pyProc.stdout.on('data', d => {
-                        // This is necessary so we read the stdout of the python process
-                        // Else it just keep building up (related to issue #203 and #52)
-                        let x = 0;
-                    });
+                    this.handleProcessOutput(reject);
 
                     // Here we wait for the application to connect to the socket server
                     // Only once connected do we know that the application has successfully launched
@@ -176,6 +152,35 @@ export class LocalDebugClient extends DebugClient {
                     this.debugServer.DebugClientConnected.then(resolve);
                 }
             }
+        });
+    }
+    protected handleProcessOutput(failedToLaunch: (error: Error | string | Buffer) => void) {
+        this.pyProc.on('error', error => {
+            // TODO: This condition makes no sense (refactor)
+            if (!this.debugServer && this.debugServer.IsRunning) {
+                return;
+            }
+            if (!this.debugServer.IsRunning && typeof (error) === 'object' && error !== null) {
+                // return processErrored(error);
+                return failedToLaunch(error);
+            }
+            this.displayError(error);
+        });
+        this.pyProc.stderr.setEncoding('utf8');
+        this.pyProc.stderr.on('data', error => {
+            // We generally don't need to display the errors as stderr output is being captured by debugger
+            // and it gets sent out to the debug client
+
+            // Either way, we need some code in here so we read the stdout of the python process
+            // Else it just keep building up (related to issue #203 and #52)
+            if (this.debugServer && !this.debugServer.IsRunning) {
+                return failedToLaunch(error);
+            }
+        });
+        this.pyProc.stdout.on('data', d => {
+            // This is necessary so we read the stdout of the python process
+            // Else it just keep building up (related to issue #203 and #52)
+            let x = 0;
         });
     }
     protected buildLauncherArguments(): string[] {
@@ -186,6 +191,10 @@ export class LocalDebugClient extends DebugClient {
         // If internal or external console, then don't re-direct the output
         if (this.args.externalConsole === true || this.args.console === 'integratedTerminal' || this.args.console === 'externalTerminal') {
             vsDebugOptions = vsDebugOptions.split(',').filter(opt => opt !== 'RedirectOutput').join(',');
+        }
+        // If using debug console (no terminals), then don't promp
+        if (this.args.externalConsole !== true && this.args.console === 'none') {
+            vsDebugOptions = vsDebugOptions.split(',').filter(opt => opt !== 'WaitOnNormalExit').join(',');
         }
 
         let programArgs = Array.isArray(this.args.args) && this.args.args.length > 0 ? this.args.args : [];

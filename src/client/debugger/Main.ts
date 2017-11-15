@@ -37,6 +37,7 @@ export class PythonDebugger extends DebugSession {
     private configurationDonePromiseResolve: () => void;
     private lastException: IPythonException;
     private _supportsRunInTerminalRequest: boolean;
+    private terminatedEventSent: boolean;
     public constructor(debuggerLinesStartAt1: boolean, isServer: boolean) {
         super(debuggerLinesStartAt1, isServer === true);
         this._variableHandles = new Handles<IDebugVariable>();
@@ -97,6 +98,10 @@ export class PythonDebugger extends DebugSession {
             this.pythonProcess.Kill();
             this.pythonProcess = null;
         }
+        if (this.terminatedEventSent) {
+            this.terminatedEventSent = true;
+            this.sendEvent(new TerminatedEvent());
+        }
     }
     private InitializeEventHandlers() {
         this.pythonProcess.on("last", arg => this.onLastCommand());
@@ -127,8 +132,6 @@ export class PythonDebugger extends DebugSession {
     }
     private onDetachDebugger() {
         this.stopDebugServer();
-        this.sendEvent(new TerminatedEvent());
-        this.shutdown();
     }
     private onPythonThreadCreated(pyThread: IPythonThread) {
         this.sendEvent(new ThreadEvent("started", pyThread.Id));
@@ -157,7 +160,7 @@ export class PythonDebugger extends DebugSession {
         if (this.launchArgs && !this.launchArgs.console) {
             this.launchArgs.console = this.launchArgs.externalConsole === true ? 'externalTerminal' : 'none';
         }
-        // If launching the integrated terminal is not supported, then defer to external terminal 
+        // If launching the integrated terminal is not supported, then defer to external terminal
         // that will be displayed by our own code
         if (!this._supportsRunInTerminalRequest && this.launchArgs && this.launchArgs.console === 'integratedTerminal') {
             this.launchArgs.console = 'externalTerminal';
@@ -352,7 +355,7 @@ export class PythonDebugger extends DebugSession {
             // Always add new breakpoints, don't re-enable previous breakpoints
             // Cuz sometimes some breakpoints get added too early (e.g. in django) and don't get registeredBks
             // and the response comes back indicating it wasn't set properly
-            // However, at a later point in time, the program breaks at that point!!!            
+            // However, at a later point in time, the program breaks at that point!!!
             let linesToAddPromises = args.breakpoints.map(bk => {
                 return new Promise(resolve => {
                     let breakpoint: IPythonBreakpoint;
@@ -411,9 +414,11 @@ export class PythonDebugger extends DebugSession {
 
     protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
         let threads = [];
-        this.pythonProcess.Threads.forEach(t => {
-            threads.push(new Thread(t.Id, t.Name));
-        });
+        if (this.pythonProcess) {
+            this.pythonProcess.Threads.forEach(t => {
+                threads.push(new Thread(t.Id, t.Name));
+            });
+        }
 
         response.body = {
             threads: threads
@@ -452,7 +457,7 @@ export class PythonDebugger extends DebugSession {
     }
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
         this.debuggerLoaded.then(() => {
-            if (!this.pythonProcess.Threads.has(args.threadId)) {
+            if (!this.pythonProcess || !this.pythonProcess.Threads.has(args.threadId)) {
                 response.body = {
                     stackFrames: []
                 };
@@ -506,7 +511,7 @@ export class PythonDebugger extends DebugSession {
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
         this.debuggerLoaded.then(() => {
             let frame = this._pythonStackFrames.get(args.frameId);
-            if (!frame) {
+            if (!frame || !this.pythonProcess) {
                 response.body = {
                     result: null,
                     variablesReference: 0
@@ -536,7 +541,7 @@ export class PythonDebugger extends DebugSession {
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
         this.debuggerLoaded.then(() => {
             let frame = this._pythonStackFrames.get(args.frameId);
-            if (!frame) {
+            if (!frame || !this.pythonProcess) {
                 response.body = {
                     scopes: []
                 };

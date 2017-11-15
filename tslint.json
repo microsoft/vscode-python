@@ -43,6 +43,9 @@
             "PromiseLike"
         ],
         "completed-docs": false,
-        "no-unsafe-any": false
+        "no-unsafe-any": false,
+        "prefer-type-cast": false,
+        "function-name": false,
+        "variable-name": false
     }
 }
