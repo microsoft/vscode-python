@@ -162,7 +162,7 @@ export class PythonDebugger extends DebugSession {
         if (!this._supportsRunInTerminalRequest && this.launchArgs && this.launchArgs.console === 'integratedTerminal') {
             this.launchArgs.console = 'externalTerminal';
         }
-        if (this.launchArgs.noDebug !== true) {
+        if (!this.launchArgs || this.launchArgs.noDebug !== true) {
             // tslint:disable-next-line:no-non-null-assertion
             const thread = pyThread!;
             if (this.launchArgs && this.launchArgs.stopOnEntry === true) {
