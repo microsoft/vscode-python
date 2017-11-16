@@ -47,6 +47,7 @@
         "prefer-type-cast": false,
         "function-name": false,
         "variable-name": false,
-        "no-void-expression": false
+        "no-void-expression": false,
+        "no-backbone-get-set-outside-model": false
     }
 }
