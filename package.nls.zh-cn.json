@@ -1,6 +1,6 @@
 {
     "python.command.python.sortImports.title": "排序引入的模块",
-    "python.command.python.startREPL.title": "启动REPL",
+    "python.command.python.startREPL.title": "启动 REPL",
     "python.command.python.buildWorkspaceSymbols.title": "构建工作区符号",
     "python.command.python.runtests.title": "运行全部单元测试",
     "python.command.python.debugtests.title": "调试全部单元测试",
