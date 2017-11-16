@@ -1,5 +1,5 @@
-import * as path from 'path';
 import { ChildProcess } from 'child_process';
+import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { IPythonProcess } from '../Common/Contracts';
 import { LaunchRequestArguments } from '../Common/Contracts';

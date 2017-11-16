@@ -57,8 +57,6 @@ export class SimpleConfigurationProvider implements DebugConfigurationProvider {
             envFile,
             env: {},
             debugOptions: [
-                'WaitOnAbnormalExit',
-                'WaitOnNormalExit',
                 'RedirectOutput'
             ]
         };

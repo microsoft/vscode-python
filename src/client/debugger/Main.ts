@@ -1,21 +1,21 @@
 "use strict";
 
-import { DebugSession, InitializedEvent, TerminatedEvent, StoppedEvent, OutputEvent, Thread, StackFrame, Scope, Source, Handles } from "vscode-debugadapter";
+import * as fs from "fs";
+import * as path from "path";
+import { DebugSession, Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread } from "vscode-debugadapter";
 import { ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import * as path from "path";
-import * as fs from "fs";
-import { PythonProcess } from "./PythonProcess";
-import { IPythonThread, IPythonModule, IPythonEvaluationResult, IPythonStackFrame, IDebugServer } from "./Common/Contracts";
-import { IPythonBreakpoint, PythonBreakpointConditionKind, PythonBreakpointPassCountKind, IPythonException, PythonEvaluationResultReprKind, enum_EXCEPTION_STATE } from "./Common/Contracts";
-import { BaseDebugServer } from "./DebugServers/BaseDebugServer";
-import { DebugClient } from "./DebugClients/DebugClient";
-import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients/DebugFactory";
-import { LaunchRequestArguments, AttachRequestArguments, DebugOptions, TelemetryEvent, PythonEvaluationResultFlags } from "./Common/Contracts";
-import { validatePath, getPythonExecutable } from './Common/Utils';
-import { isNotInstalledError } from '../common/helpers';
 import { DEBUGGER } from '../../client/telemetry/constants';
 import { DebuggerTelemetry } from '../../client/telemetry/types';
+import { isNotInstalledError } from '../common/helpers';
+import { enum_EXCEPTION_STATE, IPythonBreakpoint, IPythonException, PythonBreakpointConditionKind, PythonBreakpointPassCountKind, PythonEvaluationResultReprKind } from "./Common/Contracts";
+import { IDebugServer, IPythonEvaluationResult, IPythonModule, IPythonStackFrame, IPythonThread } from "./Common/Contracts";
+import { AttachRequestArguments, DebugOptions, LaunchRequestArguments, PythonEvaluationResultFlags, TelemetryEvent } from "./Common/Contracts";
+import { getPythonExecutable, validatePath } from './Common/Utils';
+import { DebugClient } from "./DebugClients/DebugClient";
+import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients/DebugFactory";
+import { BaseDebugServer } from "./DebugServers/BaseDebugServer";
+import { PythonProcess } from "./PythonProcess";
 
 const CHILD_ENUMEARATION_TIMEOUT = 5000;
 
@@ -116,25 +116,14 @@ export class PythonDebugger extends DebugSession {
         this.pythonProcess.on("asyncBreakCompleted", arg => this.onPythonProcessPaused(arg));
 
         this.debugServer.on("detach", () => this.onDetachDebugger());
-        this.debugServer.on("attached", () => this.onDetachDebugger());
     }
     private onLastCommand() {
-        // If we're running in terminal (integrated or external)
-        // Then don't stop the debug server
-        if (this.launchArgs && (this.launchArgs.console === "externalTerminal" ||
-            this.launchArgs.console === "integratedTerminal")) {
-            return;
-        }
         this.terminateEventSent = true;
-        if (this.launchArgs && this.launchArgs.noDebug !== true && this.launchArgs.console === 'none') {
-            // When running in terminals, and if there are any errors, the PTVSD library
-            // first sends the LAST command (meaning everything has ended) and then sends the stderr and stdout messages.
-            // I.e. to us, it looks as though everything is done and completed, when it isn't.
-            // A simple solution is to tell vscode that it has ended 500ms later (giving us time to receive any messages from stderr/stdout from ptvsd).
-            setTimeout(() => this.sendEvent(new TerminatedEvent()), 500);
-        } else {
-            this.sendEvent(new TerminatedEvent());
-        }
+        // When running in terminals, and if there are any errors, the PTVSD library
+        // first sends the LAST command (meaning everything has ended) and then sends the stderr and stdout messages.
+        // I.e. to us, it looks as though everything is done and completed, when it isn't.
+        // A simple solution is to tell vscode that it has ended 500ms later (giving us time to receive any messages from stderr/stdout from ptvsd).
+        setTimeout(() => this.sendEvent(new TerminatedEvent()), 500);
     }
     private onDetachDebugger() {
         this.stopDebugServer();
@@ -166,7 +155,7 @@ export class PythonDebugger extends DebugSession {
         }
         this.debuggerLoadedPromiseResolve();
         if (this.launchArgs && !this.launchArgs.console) {
-            this.launchArgs.console = this.launchArgs.externalConsole === true ? 'externalTerminal' : 'none';
+            this.launchArgs.console = 'none';
         }
         // If launching the integrated terminal is not supported, then defer to external terminal
         // that will be displayed by our own code

@@ -50,7 +50,6 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
     stopOnEntry?: boolean;
     args: string[];
     applicationType?: string;
-    externalConsole?: boolean;
     cwd?: string;
     debugOptions?: string[];
     env?: Object;

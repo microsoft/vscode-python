@@ -11,8 +11,7 @@ import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { LocalDebugServer } from '../DebugServers/LocalDebugServer';
 import { DebugClient, DebugType } from './DebugClient';
 
-const VALID_DEBUG_OPTIONS = ['WaitOnAbnormalExit',
-    'WaitOnNormalExit',
+const VALID_DEBUG_OPTIONS = [
     'RedirectOutput',
     'DebugStdLib',
     'BreakOnSystemExitZero',
@@ -20,14 +19,15 @@ const VALID_DEBUG_OPTIONS = ['WaitOnAbnormalExit',
 
 export class LocalDebugClient extends DebugClient {
     protected args: LaunchRequestArguments;
+    protected pyProc: child_process.ChildProcess;
+    protected pythonProcess: IPythonProcess;
+    protected debugServer: BaseDebugServer;
+    // tslint:disable-next-line:no-any
     constructor(args: any, debugSession: DebugSession) {
         super(args, debugSession);
         this.args = args;
     }
 
-    protected pyProc: child_process.ChildProcess;
-    protected pythonProcess: IPythonProcess;
-    protected debugServer: BaseDebugServer;
     public CreateDebugServer(pythonProcess: IPythonProcess): BaseDebugServer {
         this.pythonProcess = pythonProcess;
         this.debugServer = new LocalDebugServer(this.debugSession, this.pythonProcess);
@@ -45,31 +45,38 @@ export class LocalDebugClient extends DebugClient {
         }
 
         if (this.pyProc) {
-            try { this.pyProc.send('EXIT'); }
-            catch (ex) { }
-            try { this.pyProc.stdin.write('EXIT'); }
-            catch (ex) { }
-            try { this.pyProc.disconnect(); }
-            catch (ex) { }
+            try {
+                this.pyProc.send('EXIT');
+                // tslint:disable-next-line:no-empty
+            } catch { }
+            try {
+                this.pyProc.stdin.write('EXIT');
+                // tslint:disable-next-line:no-empty
+            } catch { }
+            try {
+                this.pyProc.disconnect();
+                // tslint:disable-next-line:no-empty
+            } catch { }
             this.pyProc = null;
         }
     }
     protected getLauncherFilePath(): string {
-        let currentFileName = module.filename;
-        let ptVSToolsPath = path.join(path.dirname(currentFileName), '..', '..', '..', '..', 'pythonFiles', 'PythonTools');
+        const currentFileName = module.filename;
+        const ptVSToolsPath = path.join(path.dirname(currentFileName), '..', '..', '..', '..', 'pythonFiles', 'PythonTools');
         return path.join(ptVSToolsPath, 'visualstudio_py_launcher.py');
     }
+    // tslint:disable-next-line:no-any
     private displayError(error: any) {
-        let errorMsg = typeof error === 'string' ? error : ((error.message && error.message.length > 0) ? error.message : '');
+        const errorMsg = typeof error === 'string' ? error : ((error.message && error.message.length > 0) ? error.message : '');
         if (errorMsg.length > 0) {
             this.debugSession.sendEvent(new OutputEvent(errorMsg, 'stderr'));
         }
     }
-    // tslint:disable-next-line:max-func-body-length member-ordering
+    // tslint:disable-next-line:max-func-body-length member-ordering no-any
     public LaunchApplicationToDebug(dbgServer: IDebugServer, processErrored: (error: any) => void): Promise<any> {
-        // tslint:disable-next-line:max-func-body-length cyclomatic-complexity
+        // tslint:disable-next-line:max-func-body-length cyclomatic-complexity no-any
         return new Promise<any>((resolve, reject) => {
-            let fileDir = this.args && this.args.program ? path.dirname(this.args.program) : '';
+            const fileDir = this.args && this.args.program ? path.dirname(this.args.program) : '';
             let processCwd = fileDir;
             if (typeof this.args.cwd === 'string' && this.args.cwd.length > 0 && this.args.cwd !== 'null') {
                 processCwd = this.args.cwd;
@@ -80,7 +87,7 @@ export class LocalDebugClient extends DebugClient {
             }
             let environmentVariables = getCustomEnvVars(this.args.env, this.args.envFile);
             environmentVariables = environmentVariables ? environmentVariables : {};
-            let newEnvVars = {};
+            const newEnvVars = {};
             if (environmentVariables) {
                 for (let setting in environmentVariables) {
                     if (!newEnvVars[setting]) {
@@ -104,35 +111,23 @@ export class LocalDebugClient extends DebugClient {
                 newEnvVars['PYTHONUNBUFFERED'] = '1';
                 process.env['PYTHONUNBUFFERED'] = '1';
             }
-            let ptVSToolsFilePath = this.getLauncherFilePath();
-            let launcherArgs = this.buildLauncherArguments();
+            const ptVSToolsFilePath = this.getLauncherFilePath();
+            const launcherArgs = this.buildLauncherArguments();
 
-            let args = [ptVSToolsFilePath, processCwd, dbgServer.port.toString(), '34806ad9-833a-4524-8cd6-18ca4aa74f14'].concat(launcherArgs);
+            const args = [ptVSToolsFilePath, processCwd, dbgServer.port.toString(), '34806ad9-833a-4524-8cd6-18ca4aa74f14'].concat(launcherArgs);
             switch (this.args.console) {
-                case 'externalTerminal': {
-                    const isSudo = Array.isArray(this.args.debugOptions) && this.args.debugOptions.some(opt => opt === 'Sudo');
-                    open({ wait: false, app: [pythonPath].concat(args), cwd: processCwd, env: environmentVariables, sudo: isSudo }).then(proc => {
-                        this.pyProc = proc;
-                        resolve();
-                    }, error => {
-                        // TODO: This condition makes no sense (refactor)
-                        if (!this.debugServer && this.debugServer.IsRunning) {
-                            return;
-                        }
-                        reject(error);
-                    });
-                    break;
-                }
+                case 'externalTerminal':
                 case 'integratedTerminal': {
                     const isSudo = Array.isArray(this.args.debugOptions) && this.args.debugOptions.some(opt => opt === 'Sudo');
                     const command = isSudo ? 'sudo' : pythonPath;
                     const commandArgs = isSudo ? [pythonPath].concat(args) : args;
+                    const consoleKind = this.args.console === 'externalTerminal' ? 'external' : 'integrated';
                     const termArgs: DebugProtocol.RunInTerminalRequestArguments = {
-                        kind: 'integrated',
+                        kind: consoleKind,
                         title: 'Python Debug Console',
                         cwd: processCwd,
                         args: [command].concat(commandArgs),
-                        env: newEnvVars as { [key: string]: string }
+                        env: environmentVariables
                     };
                     this.debugSession.runInTerminalRequest(termArgs, 5000, (response) => {
                         if (response.success) {
@@ -147,9 +142,8 @@ export class LocalDebugClient extends DebugClient {
                     this.pyProc = child_process.spawn(pythonPath, args, { cwd: processCwd, env: environmentVariables });
                     this.handleProcessOutput(this.pyProc, reject);
 
-                    // Here we wait for the application to connect to the socket server
-                    // Only once connected do we know that the application has successfully launched
-                    // resolve();
+                    // Here we wait for the application to connect to the socket server.
+                    // Only once connected do we know that the application has successfully launched.
                     this.debugServer.DebugClientConnected.then(resolve);
                 }
             }
@@ -163,7 +157,6 @@ export class LocalDebugClient extends DebugClient {
                 return;
             }
             if (!this.debugServer.IsRunning && typeof (error) === 'object' && error !== null) {
-                // return processErrored(error);
                 return failedToLaunch(error);
             }
             this.displayError(error);
@@ -171,45 +164,39 @@ export class LocalDebugClient extends DebugClient {
         proc.stderr.setEncoding('utf8');
         proc.stderr.on('data', error => {
             // We generally don't need to display the errors as stderr output is being captured by debugger
-            // and it gets sent out to the debug client
+            // and it gets sent out to the debug client.
 
-            // Either way, we need some code in here so we read the stdout of the python process
-            // Else it just keep building up (related to issue #203 and #52)
+            // Either way, we need some code in here so we read the stdout of the python process,
+            // Else it just keep building up (related to issue #203 and #52).
             if (this.debugServer && !this.debugServer.IsRunning) {
                 return failedToLaunch(error);
             }
         });
         proc.stdout.on('data', d => {
-            // This is necessary so we read the stdout of the python process
-            // Else it just keep building up (related to issue #203 and #52)
+            // This is necessary so we read the stdout of the python process,
+            // Else it just keep building up (related to issue #203 and #52).
             let x = 0;
         });
     }
     // tslint:disable-next-line:member-ordering
     protected buildLauncherArguments(): string[] {
-        let vsDebugOptions = 'WaitOnAbnormalExit,WaitOnNormalExit,RedirectOutput';
+        let vsDebugOptions = ['RedirectOutput'];
         if (Array.isArray(this.args.debugOptions)) {
-            vsDebugOptions = this.args.debugOptions.filter(opt => VALID_DEBUG_OPTIONS.indexOf(opt) >= 0).join(',');
+            vsDebugOptions = this.args.debugOptions.filter(opt => VALID_DEBUG_OPTIONS.indexOf(opt) >= 0);
         }
-        // If internal or external console, then don't re-direct the output
-        if (this.args.externalConsole === true || this.args.console === 'integratedTerminal' || this.args.console === 'externalTerminal') {
-            vsDebugOptions = vsDebugOptions.split(',').filter(opt => opt !== 'RedirectOutput').join(',');
-        }
-        // If using the vscode debug console (i.e. no terminals), then don't display prompt at the end of code execution.
-        // The prompt is 'Press Enter to continue . . . ' (simple readline, causing the terminal to wait for user to end the program).
-        if (this.args.noDebug === true && this.args.externalConsole !== true && this.args.console === 'none') {
-            vsDebugOptions = vsDebugOptions.split(',')
-                .filter(opt => opt !== 'WaitOnNormalExit' && opt !== 'WaitOnAbnormalExit')
-                .join(',');
+        // If internal or external console, then don't re-direct the output.
+        if (this.args.console === 'integratedTerminal' || this.args.console === 'externalTerminal') {
+            vsDebugOptions = vsDebugOptions.filter(opt => opt !== 'RedirectOutput');
         }
 
-        let programArgs = Array.isArray(this.args.args) && this.args.args.length > 0 ? this.args.args : [];
+        // Include a dummy value, to ensure something gets sent.
+        // Else, argument positions get messed up due to an empty string.
+        vsDebugOptions = vsDebugOptions.length === 0 ? ['DUMMYVALUE'] : vsDebugOptions;
+
+        const programArgs = Array.isArray(this.args.args) && this.args.args.length > 0 ? this.args.args : [];
         if (typeof this.args.module === 'string' && this.args.module.length > 0) {
-            return [vsDebugOptions, '-m', this.args.module].concat(programArgs);
+            return [vsDebugOptions.join(','), '-m', this.args.module].concat(programArgs);
         }
-        return [vsDebugOptions, this.args.program].concat(programArgs);
-        // Use this ability to debug unit tests or modules
-        // Adding breakpoints programatically to the first executable line of the test program
-        // return [vsDebugOptions, '-c', "import pytest;pytest.main(['/Users/donjayamanne/Desktop/Development/Python/Temp/MyEnvs/tests/test_another.py::Test_CheckMyApp::test_complex_check'])"].concat(programArgs);
+        return [vsDebugOptions.join(','), this.args.program].concat(programArgs);
     }
 }

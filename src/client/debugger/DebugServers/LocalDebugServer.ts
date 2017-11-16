@@ -26,6 +26,7 @@ export class LocalDebugServer extends BaseDebugServer {
         return new Promise<IDebugServer>((resolve, reject) => {
             let connectedResolve = this.debugClientConnected.resolve.bind(this.debugClientConnected);
             let connected = false;
+            let disconnected = false;
             this.debugSocketServer = net.createServer(c => {
                 // "connection" listener
                 c.on('data', (buffer: Buffer) => {
@@ -42,11 +43,22 @@ export class LocalDebugServer extends BaseDebugServer {
                     }
                 });
                 c.on('close', d => {
+                    disconnected = true;
                     this.emit('detach', d);
                 });
                 c.on('timeout', d => {
                     const msg = `Debugger client timedout, ${d}`;
                     this.debugSession.sendEvent(new OutputEvent(`${msg}${EOL}`, 'stderr'));
+                });
+                c.on('error', ex => {
+                    // Errors can be raised, when program has termined, but the adapter has
+                    // sent an acknowledgement of the last message (LAST), however the socket client has ended.
+                    if (connected || disconnected) {
+                        return;
+                    }
+                    const msg = `There was an error in starting the debug server. Error = ${JSON.stringify(ex)}`;
+                    this.debugSession.sendEvent(new OutputEvent(`${msg}${EOL}`, 'stderr'));
+                    reject(msg);
                 });
             });
             this.debugSocketServer.on('error', ex => {
