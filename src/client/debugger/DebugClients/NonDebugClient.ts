@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { ChildProcess } from 'child_process';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { IPythonProcess } from '../Common/Contracts';
 import { LaunchRequestArguments } from '../Common/Contracts';
@@ -15,10 +16,6 @@ export class NonDebugClient extends LocalDebugClient {
         this.args = args;
     }
 
-    public CreateDebugServer(pythonProcess: IPythonProcess): BaseDebugServer {
-        return this.debugServer = new LocalDebugServer(this.debugSession, pythonProcess);
-    }
-
     public get DebugType(): DebugType {
         return DebugType.RunLocal;
     }
@@ -33,22 +30,8 @@ export class NonDebugClient extends LocalDebugClient {
             this.pyProc = null;
         }
     }
-    protected handleProcessOutput(_failedToLaunch: (error: Error | string | Buffer) => void) {
-        this.pyProc.on('error', error => {
-            this.debugSession.sendEvent(new OutputEvent(error.toString(), 'stderr'));
-        });
-        this.pyProc.stderr.setEncoding('utf8');
-        this.pyProc.stdout.setEncoding('utf8');
-        this.pyProc.stderr.on('data', (error: string) => {
-            this.debugSession.sendEvent(new OutputEvent(error, 'stderr'));
-        });
-        this.pyProc.stdout.on('data', (d: string) => {
-            this.debugSession.sendEvent(new OutputEvent(d, 'stdout'));
-        });
-        this.pyProc.on('exit', () => {
-            this.pyProc = null;
-            this.emit('detach');
-        });
+    protected handleProcessOutput(proc: ChildProcess, _failedToLaunch: (error: Error | string | Buffer) => void) {
+        this.pythonProcess.attach(proc);
     }
     protected getLauncherFilePath(): string {
         const currentFileName = module.filename;

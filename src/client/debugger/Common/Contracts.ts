@@ -1,5 +1,6 @@
 "use strict";
 import * as net from "net";
+import { ChildProcess } from 'child_process';
 import { DebugProtocol } from "vscode-debugprotocol";
 import { OutputEvent } from "vscode-debugadapter";
 
@@ -105,6 +106,7 @@ export enum PythonEvaluationResultFlags {
 export interface IPythonProcess extends NodeJS.EventEmitter {
     Connect(buffer: Buffer, socket: net.Socket, isRemoteProcess: boolean): boolean;
     HandleIncomingData(buffer: Buffer);
+    attach(proc: ChildProcess): void;
     Detach();
     Kill();
     SendStepInto(threadId: number);

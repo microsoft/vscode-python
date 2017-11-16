@@ -37,6 +37,7 @@ export class PythonDebugger extends DebugSession {
     private configurationDonePromiseResolve: () => void;
     private lastException: IPythonException;
     private _supportsRunInTerminalRequest: boolean;
+    private terminateEventSent: boolean;
     public constructor(debuggerLinesStartAt1: boolean, isServer: boolean) {
         super(debuggerLinesStartAt1, isServer === true);
         this._variableHandles = new Handles<IDebugVariable>();
@@ -97,6 +98,7 @@ export class PythonDebugger extends DebugSession {
             this.pythonProcess.Kill();
             this.pythonProcess = null;
         }
+        this.terminateEventSent = true;
         this.sendEvent(new TerminatedEvent());
     }
     private InitializeEventHandlers() {
@@ -105,12 +107,12 @@ export class PythonDebugger extends DebugSession {
         this.pythonProcess.on("moduleLoaded", arg => this.onPythonModuleLoaded(arg));
         this.pythonProcess.on("threadCreated", arg => this.onPythonThreadCreated(arg));
         this.pythonProcess.on("processLoaded", arg => this.onPythonProcessLoaded(arg));
-        this.pythonProcess.on("output", (pyThread, output) => this.onDebuggerOutput(pyThread, output));
+        this.pythonProcess.on("output", (pyThread, output) => this.onDebuggerOutput(pyThread, output, 'stdout'));
         this.pythonProcess.on("exceptionRaised", (pyThread, ex) => this.onPythonException(pyThread, ex));
         this.pythonProcess.on("breakpointHit", (pyThread, breakpointId) => this.onBreakpointHit(pyThread, breakpointId));
         this.pythonProcess.on("stepCompleted", (pyThread) => this.onStepCompleted(pyThread));
         this.pythonProcess.on("detach", () => this.onDetachDebugger());
-        this.pythonProcess.on("error", ex => this.sendEvent(new OutputEvent(ex, "stderr")));
+        this.pythonProcess.on("error", ex => this.onDebuggerOutput(undefined, ex, 'stderr'));
         this.pythonProcess.on("asyncBreakCompleted", arg => this.onPythonProcessPaused(arg));
 
         this.debugServer.on("detach", () => this.onDetachDebugger());
@@ -123,8 +125,16 @@ export class PythonDebugger extends DebugSession {
             this.launchArgs.console === "integratedTerminal")) {
             return;
         }
-
-        this.sendEvent(new TerminatedEvent());
+        this.terminateEventSent = true;
+        if (this.launchArgs && this.launchArgs.noDebug !== true && this.launchArgs.console === 'none') {
+            // When running in terminals, and if there are any errors, the PTVSD library
+            // first sends the LAST command (meaning everything has ended) and then sends the stderr and stdout messages.
+            // I.e. to us, it looks as though everything is done and completed, when it isn't.
+            // A simple solution is to tell vscode that it has ended 500ms later (giving us time to receive any messages from stderr/stdout from ptvsd).
+            setTimeout(() => this.sendEvent(new TerminatedEvent()), 500);
+        } else {
+            this.sendEvent(new TerminatedEvent());
+        }
     }
     private onDetachDebugger() {
         this.stopDebugServer();
@@ -151,7 +161,9 @@ export class PythonDebugger extends DebugSession {
     private debuggerHasLoaded: boolean;
     private onPythonProcessLoaded(pyThread?: IPythonThread) {
         this.debuggerHasLoaded = true;
-        this.sendResponse(this.entryResponse);
+        if (this.entryResponse) {
+            this.sendResponse(this.entryResponse);
+        }
         this.debuggerLoadedPromiseResolve();
         if (this.launchArgs && !this.launchArgs.console) {
             this.launchArgs.console = this.launchArgs.externalConsole === true ? 'externalTerminal' : 'none';
@@ -176,14 +188,18 @@ export class PythonDebugger extends DebugSession {
         }
     }
 
-    private onDebuggerOutput(pyThread: IPythonThread, output: string) {
-        if (!this.debuggerHasLoaded) {
+    private onDebuggerOutput(pyThread: IPythonThread | undefined, output: string, outputChannel: 'stdout' | 'stderr') {
+        if (this.entryResponse) {
+            // Sometimes we can get output from PTVSD even before things load.
+            // E.g. if the program didn't even run (e.g. simple one liner with invalid syntax).
+            // But we need to tell vscode that the debugging has started, so we can send error messages.
             this.sendResponse(this.entryResponse);
             this.debuggerLoadedPromiseResolve();
+            this.entryResponse = undefined;
         }
-        this.sendEvent(new OutputEvent(output, "stdout"));
+        this.sendEvent(new OutputEvent(output, outputChannel));
     }
-    private entryResponse: DebugProtocol.LaunchResponse;
+    private entryResponse?: DebugProtocol.LaunchResponse;
     private launchArgs: LaunchRequestArguments;
     private attachArgs: AttachRequestArguments;
     private canStartDebugger(): Promise<boolean> {
@@ -274,6 +290,7 @@ export class PythonDebugger extends DebugSession {
         if (errorMsg.length > 0) {
             this.sendEvent(new OutputEvent(errorMsg + "\n", "stderr"));
         }
+        this.terminateEventSent = true;
         this.sendEvent(new TerminatedEvent());
     }
     protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments) {
@@ -340,6 +357,12 @@ export class PythonDebugger extends DebugSession {
     }
     protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
         this.debuggerLoaded.then(() => {
+            if (this.terminateEventSent) {
+                response.body = {
+                    breakpoints: []
+                };
+                return this.sendResponse(response);
+            }
             if (!this.registeredBreakpointsByFileName.has(args.source.path)) {
                 this.registeredBreakpointsByFileName.set(args.source.path, []);
             }
@@ -455,11 +478,11 @@ export class PythonDebugger extends DebugSession {
     }
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
         this.debuggerLoaded.then(() => {
-            if (!this.pythonProcess || !this.pythonProcess.Threads.has(args.threadId)) {
+            if (this.terminateEventSent || !this.pythonProcess || !this.pythonProcess.Threads.has(args.threadId)) {
                 response.body = {
                     stackFrames: []
                 };
-                this.sendResponse(response);
+                return this.sendResponse(response);
             }
 
             let pyThread = this.pythonProcess.Threads.get(args.threadId);
@@ -509,7 +532,7 @@ export class PythonDebugger extends DebugSession {
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
         this.debuggerLoaded.then(() => {
             let frame = this._pythonStackFrames.get(args.frameId);
-            if (!frame || !this.pythonProcess) {
+            if (this.terminateEventSent || !frame || !this.pythonProcess) {
                 response.body = {
                     result: null,
                     variablesReference: 0
@@ -539,7 +562,7 @@ export class PythonDebugger extends DebugSession {
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
         this.debuggerLoaded.then(() => {
             let frame = this._pythonStackFrames.get(args.frameId);
-            if (!frame || !this.pythonProcess) {
+            if (this.terminateEventSent || !frame || !this.pythonProcess) {
                 response.body = {
                     scopes: []
                 };
@@ -648,6 +671,9 @@ export class PythonDebugger extends DebugSession {
     }
     protected setExceptionBreakPointsRequest(response: DebugProtocol.SetExceptionBreakpointsResponse, args: DebugProtocol.SetExceptionBreakpointsArguments): void {
         this.debuggerLoaded.then(() => {
+            if (this.terminateEventSent) {
+                return this.sendResponse(response);
+            }
             let mode = enum_EXCEPTION_STATE.BREAK_MODE_NEVER;
             if (args.filters.indexOf("uncaught") >= 0) {
                 mode = enum_EXCEPTION_STATE.BREAK_MODE_UNHANDLED;
@@ -686,7 +712,9 @@ export class PythonDebugger extends DebugSession {
             if (!exToIgnore.has('GeneratorExit')) {
                 exToIgnore.set('GeneratorExit', enum_EXCEPTION_STATE.BREAK_MODE_NEVER);
             }
-            this.pythonProcess.SendExceptionInfo(mode, exToIgnore);
+            if (this.pythonProcess) {
+                this.pythonProcess.SendExceptionInfo(mode, exToIgnore);
+            }
             this.sendResponse(response);
         });
     }

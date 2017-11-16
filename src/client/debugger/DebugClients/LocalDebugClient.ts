@@ -1,4 +1,5 @@
 import * as child_process from 'child_process';
+import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -25,7 +26,7 @@ export class LocalDebugClient extends DebugClient {
     }
 
     protected pyProc: child_process.ChildProcess;
-    private pythonProcess: IPythonProcess;
+    protected pythonProcess: IPythonProcess;
     protected debugServer: BaseDebugServer;
     public CreateDebugServer(pythonProcess: IPythonProcess): BaseDebugServer {
         this.pythonProcess = pythonProcess;
@@ -144,7 +145,7 @@ export class LocalDebugClient extends DebugClient {
                 }
                 default: {
                     this.pyProc = child_process.spawn(pythonPath, args, { cwd: processCwd, env: environmentVariables });
-                    this.handleProcessOutput(reject);
+                    this.handleProcessOutput(this.pyProc, reject);
 
                     // Here we wait for the application to connect to the socket server
                     // Only once connected do we know that the application has successfully launched
@@ -155,8 +156,8 @@ export class LocalDebugClient extends DebugClient {
         });
     }
     // tslint:disable-next-line:member-ordering
-    protected handleProcessOutput(failedToLaunch: (error: Error | string | Buffer) => void) {
-        this.pyProc.on('error', error => {
+    protected handleProcessOutput(proc: ChildProcess, failedToLaunch: (error: Error | string | Buffer) => void) {
+        proc.on('error', error => {
             // TODO: This condition makes no sense (refactor)
             if (!this.debugServer && this.debugServer.IsRunning) {
                 return;
@@ -167,8 +168,8 @@ export class LocalDebugClient extends DebugClient {
             }
             this.displayError(error);
         });
-        this.pyProc.stderr.setEncoding('utf8');
-        this.pyProc.stderr.on('data', error => {
+        proc.stderr.setEncoding('utf8');
+        proc.stderr.on('data', error => {
             // We generally don't need to display the errors as stderr output is being captured by debugger
             // and it gets sent out to the debug client
 
@@ -178,7 +179,7 @@ export class LocalDebugClient extends DebugClient {
                 return failedToLaunch(error);
             }
         });
-        this.pyProc.stdout.on('data', d => {
+        proc.stdout.on('data', d => {
             // This is necessary so we read the stdout of the python process
             // Else it just keep building up (related to issue #203 and #52)
             let x = 0;
@@ -194,9 +195,12 @@ export class LocalDebugClient extends DebugClient {
         if (this.args.externalConsole === true || this.args.console === 'integratedTerminal' || this.args.console === 'externalTerminal') {
             vsDebugOptions = vsDebugOptions.split(',').filter(opt => opt !== 'RedirectOutput').join(',');
         }
-        // If using debug console (no terminals), then don't promp
-        if (this.args.externalConsole !== true && this.args.console === 'none') {
-            vsDebugOptions = vsDebugOptions.split(',').filter(opt => opt !== 'WaitOnNormalExit').join(',');
+        // If using the vscode debug console (i.e. no terminals), then don't display prompt at the end of code execution.
+        // The prompt is 'Press Enter to continue . . . ' (simple readline, causing the terminal to wait for user to end the program).
+        if (this.args.noDebug === true && this.args.externalConsole !== true && this.args.console === 'none') {
+            vsDebugOptions = vsDebugOptions.split(',')
+                .filter(opt => opt !== 'WaitOnNormalExit' && opt !== 'WaitOnAbnormalExit')
+                .join(',');
         }
 
         let programArgs = Array.isArray(this.args.args) && this.args.args.length > 0 ? this.args.args : [];
