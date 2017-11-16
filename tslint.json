@@ -43,6 +43,7 @@
             "PromiseLike"
         ],
         "completed-docs": false,
+        "no-backbone-get-set-outside-model": false,
         "no-unsafe-any": false
     }
 }

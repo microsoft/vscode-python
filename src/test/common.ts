@@ -14,9 +14,10 @@ export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'linting.prospectorEnabled' | 'linting.pydocstyleEnabled' | 'linting.mypyEnabled' |
     'unitTest.nosetestArgs' | 'unitTest.pyTestArgs' | 'unitTest.unittestArgs' |
     'formatting.formatOnSave' | 'formatting.provider' | 'sortImports.args' |
-    'unitTest.nosetestsEnabled' | 'unitTest.pyTestEnabled' | 'unitTest.unittestEnabled';
+    'unitTest.nosetestsEnabled' | 'unitTest.pyTestEnabled' | 'unitTest.unittestEnabled' |
+    'linting.enabledWithoutWorkspace';
 
-export async function updateSetting(setting: PythonSettingKeys, value: {}, resource: Uri, configTarget: ConfigurationTarget) {
+export async function updateSetting(setting: PythonSettingKeys, value: {}, resource: Uri | undefined, configTarget: ConfigurationTarget) {
     const settings = workspace.getConfiguration('python', resource);
     const currentValue = settings.inspect(setting);
     if (currentValue !== undefined && ((configTarget === ConfigurationTarget.Global && currentValue.globalValue === value) ||
@@ -50,8 +51,7 @@ export function retryAsync(wrapped: Function, retryCount: number = 2) {
             const reasons: any[] = [];
 
             const makeCall = () => {
-                // tslint:disable-next-line:no-unsafe-any no-any
-                // tslint:disable-next-line:no-invalid-this
+                // tslint:disable-next-line:no-unsafe-any no-any no-invalid-this
                 wrapped.call(this, ...args)
                     // tslint:disable-next-line:no-unsafe-any no-any
                     .then(resolve, (reason: any) => {
@@ -86,7 +86,9 @@ async function setPythonPathInWorkspace(resource: string | Uri | undefined, conf
 }
 async function restoreGlobalPythonPathSetting(): Promise<void> {
     const pythonConfig = workspace.getConfiguration('python');
-    const currentGlobalPythonPathSetting = pythonConfig.inspect('pythonPath').globalValue;
+    // tslint:disable-next-line:no-non-null-assertion
+    const currentGlobalPythonPathSetting = pythonConfig.inspect('pythonPath')!.globalValue;
+    // tslint:disable-next-line:no-use-before-declare
     if (globalPythonPathSetting !== currentGlobalPythonPathSetting) {
         await pythonConfig.update('pythonPath', undefined, true);
     }
@@ -106,7 +108,8 @@ export async function deleteFile(file: string) {
     }
 }
 
-const globalPythonPathSetting = workspace.getConfiguration('python').inspect('pythonPath').globalValue;
+// tslint:disable-next-line:no-non-null-assertion
+const globalPythonPathSetting = workspace.getConfiguration('python').inspect('pythonPath')!.globalValue;
 export const clearPythonPathInWorkspaceFolder = async (resource: string | Uri) => retryAsync(setPythonPathInWorkspace)(resource, ConfigurationTarget.WorkspaceFolder);
 export const setPythonPathInWorkspaceRoot = async (pythonPath: string) => retryAsync(setPythonPathInWorkspace)(undefined, ConfigurationTarget.Workspace, pythonPath);
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
