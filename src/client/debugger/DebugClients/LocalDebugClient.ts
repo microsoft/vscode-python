@@ -23,7 +23,7 @@ export class LocalDebugClient extends DebugClient {
     protected pythonProcess: IPythonProcess;
     protected debugServer: BaseDebugServer;
     // tslint:disable-next-line:no-any
-    constructor(args: any, debugSession: DebugSession) {
+    constructor(args: any, debugSession: DebugSession, private canLaunchTerminal: boolean) {
         super(args, debugSession);
         this.args = args;
     }
@@ -85,31 +85,13 @@ export class LocalDebugClient extends DebugClient {
             if (typeof this.args.pythonPath === 'string' && this.args.pythonPath.trim().length > 0) {
                 pythonPath = this.args.pythonPath;
             }
-            let environmentVariables = getCustomEnvVars(this.args.env, this.args.envFile);
+            let environmentVariables = getCustomEnvVars(this.args.env, this.args.envFile, false);
             environmentVariables = environmentVariables ? environmentVariables : {};
-            const newEnvVars = {};
-            if (environmentVariables) {
-                for (let setting in environmentVariables) {
-                    if (!newEnvVars[setting]) {
-                        newEnvVars[setting] = environmentVariables[setting];
-                        process.env[setting] = environmentVariables[setting];
-                    }
-                }
-                for (let setting in process.env) {
-                    if (!environmentVariables[setting]) {
-                        environmentVariables[setting] = process.env[setting];
-                    }
-                }
-            }
             if (!environmentVariables.hasOwnProperty('PYTHONIOENCODING')) {
-                environmentVariables['PYTHONIOENCODING'] = 'UTF-8';
-                newEnvVars['PYTHONIOENCODING'] = 'UTF-8';
-                process.env['PYTHONIOENCODING'] = 'UTF-8';
+                environmentVariables.PYTHONIOENCODING = 'UTF-8';
             }
             if (!environmentVariables.hasOwnProperty('PYTHONUNBUFFERED')) {
-                environmentVariables['PYTHONUNBUFFERED'] = '1';
-                newEnvVars['PYTHONUNBUFFERED'] = '1';
-                process.env['PYTHONUNBUFFERED'] = '1';
+                environmentVariables.PYTHONUNBUFFERED = '1';
             }
             const ptVSToolsFilePath = this.getLauncherFilePath();
             const launcherArgs = this.buildLauncherArguments();
@@ -119,23 +101,7 @@ export class LocalDebugClient extends DebugClient {
                 case 'externalTerminal':
                 case 'integratedTerminal': {
                     const isSudo = Array.isArray(this.args.debugOptions) && this.args.debugOptions.some(opt => opt === 'Sudo');
-                    const command = isSudo ? 'sudo' : pythonPath;
-                    const commandArgs = isSudo ? [pythonPath].concat(args) : args;
-                    const consoleKind = this.args.console === 'externalTerminal' ? 'external' : 'integrated';
-                    const termArgs: DebugProtocol.RunInTerminalRequestArguments = {
-                        kind: consoleKind,
-                        title: 'Python Debug Console',
-                        cwd: processCwd,
-                        args: [command].concat(commandArgs),
-                        env: environmentVariables
-                    };
-                    this.debugSession.runInTerminalRequest(termArgs, 5000, (response) => {
-                        if (response.success) {
-                            resolve();
-                        } else {
-                            reject(response);
-                        }
-                    });
+                    this.launchExternalTerminal(isSudo, processCwd, pythonPath, args, environmentVariables).then(resolve).catch(reject);
                     break;
                 }
                 default: {
@@ -200,5 +166,39 @@ export class LocalDebugClient extends DebugClient {
             return [vsDebugOptions.join(','), '-m', this.args.module].concat(programArgs);
         }
         return [vsDebugOptions.join(','), this.args.program].concat(programArgs);
+    }
+    private launchExternalTerminal(sudo: boolean, cwd: string, pythonPath: string, args: string[], env: {}) {
+        return new Promise((resolve, reject) => {
+            if (this.canLaunchTerminal) {
+                open({ wait: false, app: [pythonPath].concat(args), cwd, env, sudo: sudo }).then(proc => {
+                    this.pyProc = proc;
+                    resolve();
+                }, error => {
+                    if (!this.debugServer && this.debugServer.IsRunning) {
+                        return;
+                    }
+                    reject(error);
+                });
+            } else {
+                const command = sudo ? 'sudo' : pythonPath;
+                const commandArgs = sudo ? [pythonPath].concat(args) : args;
+                const isExternalTerminal = this.args.console === 'externalTerminal';
+                const consoleKind = isExternalTerminal ? 'external' : 'integrated';
+                const termArgs: DebugProtocol.RunInTerminalRequestArguments = {
+                    kind: consoleKind,
+                    title: 'Python Debug Console',
+                    cwd,
+                    args: [command].concat(commandArgs),
+                    env
+                };
+                this.debugSession.runInTerminalRequest(termArgs, 5000, (response) => {
+                    if (response.success) {
+                        resolve();
+                    } else {
+                        reject(response);
+                    }
+                });
+            }
+        });
     }
 }

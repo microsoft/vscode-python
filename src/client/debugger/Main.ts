@@ -249,7 +249,7 @@ export class PythonDebugger extends DebugSession {
         this.sendEvent(new TelemetryEvent(DEBUGGER, telemetryProps));
 
         this.launchArgs = args;
-        this.debugClient = CreateLaunchDebugClient(args, this);
+        this.debugClient = CreateLaunchDebugClient(args, this, this._supportsRunInTerminalRequest);
         //this.debugClient.on('exit', () => this.sendEvent(new TerminatedEvent()));
         this.configurationDone = new Promise(resolve => {
             this.configurationDonePromiseResolve = resolve;

@@ -11,8 +11,8 @@ import { LocalDebugClient } from './LocalDebugClient';
 export class NonDebugClient extends LocalDebugClient {
     protected args: LaunchRequestArguments;
     // tslint:disable-next-line:no-any
-    constructor(args: LaunchRequestArguments, debugSession: DebugSession) {
-        super(args, debugSession);
+    constructor(args: LaunchRequestArguments, debugSession: DebugSession, canLaunchTerminal: boolean) {
+        super(args, debugSession, canLaunchTerminal);
         this.args = args;
     }
 
