@@ -413,16 +413,15 @@ export function getWindowsLineEndingCount(document: TextDocument, offset: Number
 }
 
 export function arePathsSame(path1: string, path2: string) {
-    path1 = IS_WINDOWS ? path1.replace(/\//g, "\\") : path1;
-    path2 = IS_WINDOWS ? path2.replace(/\//g, "\\") : path2;
-    return path1.toUpperCase() === path2.toUpperCase();
+    path1 = path.normalize(path1);
+    path2 = path.normalize(path2);
+    if (IS_WINDOWS) {
+        return path1.toUpperCase() === path2.toUpperCase();
+    } else {
+        return path1 === path2;
+    }
 }
 
-export function areBasePathsSame(path1: string, path2: string) {
-    path1 = IS_WINDOWS ? path1.replace(/\//g, "\\") : path1;
-    path2 = IS_WINDOWS ? path2.replace(/\//g, "\\") : path2;
-    return path.dirname(path1).toUpperCase() === path.dirname(path2).toUpperCase();
-}
 export async function getInterpreterVersion(pythonPath: string) {
     return await new Promise<string>((resolve, reject) => {
         child_process.execFile(pythonPath, ['--version'], (error, stdout, stdErr) => {

@@ -2,9 +2,9 @@
 import * as _ from 'lodash';
 import { Disposable, Uri, workspace } from 'vscode';
 import { RegistryImplementation } from '../../common/registry';
-import { areBasePathsSame, arePathsSame, Is_64Bit, IS_WINDOWS } from '../../common/utils';
+import { arePathsSame, Is_64Bit, IS_WINDOWS } from '../../common/utils';
 import { IInterpreterLocatorService, PythonInterpreter } from '../contracts';
-import { IInterpreterVersionService, InterpreterVersionService } from '../interpreterVersion';
+import { InterpreterVersionService } from '../interpreterVersion';
 import { VirtualEnvironmentManager } from '../virtualEnvs';
 import { fixInterpreterDisplayName, fixInterpreterPath } from './helpers';
 import { CondaEnvFileService, getEnvironmentsFile as getCondaEnvFile } from './services/condaEnvFileService';
@@ -46,7 +46,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     }
     private async getInterpretersPerResource(resource?: Uri) {
         const locators = this.getLocators(resource);
-        const promises = locators.map(provider => provider.getInterpreters(resource));
+        const promises = locators.map(async provider => provider.getInterpreters(resource));
         const listOfInterpreters = await Promise.all(promises);
 
         // tslint:disable-next-line:underscore-consistent-invocation
@@ -54,8 +54,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             .map(fixInterpreterDisplayName)
             .map(fixInterpreterPath)
             .reduce<PythonInterpreter[]>((accumulator, current) => {
-                if (accumulator.findIndex(item => arePathsSame(item.path, current.path)) === -1 &&
-                    accumulator.findIndex(item => areBasePathsSame(item.path, current.path)) === -1) {
+                if (accumulator.findIndex(item => arePathsSame(item.path, current.path)) === -1) {
                     accumulator.push(current);
                 }
                 return accumulator;
