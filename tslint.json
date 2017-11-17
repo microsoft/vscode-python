@@ -45,5 +45,6 @@
         "completed-docs": false,
         "no-unsafe-any": false,
         "variable-name": false
+        "no-backbone-get-set-outside-model": false
     }
 }

@@ -5,7 +5,7 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 * Intellisense (autocompletion with support for PEP 484 and PEP 526)
 * Auto indenting
 * Code formatting ([autopep8](https://pypi.io/project/autopep8/), [yapf](https://pypi.io/project/yapf/), with config files)
-* Code refactoring (Rename, Extract Variable, Extract Method,Sort Imports)
+* Code refactoring (Rename, Extract Variable, Extract Method, Sort Imports)
 * Viewing references, code navigation, view signature
 * Excellent debugging support (remote debugging over SSH, mutliple threads, django, flask)
 * Running and debugging Unit tests ([unittest](https://docs.python.org/3/library/unittest.html#module-unittest), [pytest](https://pypi.io/project/pytest/), [nose](https://pypi.io/project/nose/), with config files)
@@ -28,7 +28,7 @@ For further information and details continue through to the [documentation](http
 * Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md) for more details
 * Any and all feedback is appreciated and welcome!
   - If someone has already [file an issue](https://github.com/Microsoft/vscode-python) that encompasses your feedback, please leave a 👍/👎 reaction on the issue
-  - Othewise please file a new issue
+  - Otherwise please file a new issue
 
 ## Feature Details
 * IDE-like Features

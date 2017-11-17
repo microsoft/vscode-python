@@ -2,7 +2,7 @@
 import * as _ from 'lodash';
 import { Disposable, Uri, workspace } from 'vscode';
 import { RegistryImplementation } from '../../common/registry';
-import { areBasePathsSame, arePathsSame, Is_64Bit, IS_WINDOWS } from '../../common/utils';
+import { arePathsSame, Is_64Bit, IS_WINDOWS } from '../../common/utils';
 import { IInterpreterLocatorService, PythonInterpreter } from '../contracts';
 import { InterpreterVersionService } from '../interpreterVersion';
 import { VirtualEnvironmentManager } from '../virtualEnvs';
@@ -55,8 +55,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             .map(fixInterpreterDisplayName)
             .map(fixInterpreterPath)
             .reduce<PythonInterpreter[]>((accumulator, current) => {
-                if (accumulator.findIndex(item => arePathsSame(item.path, current.path)) === -1 &&
-                    accumulator.findIndex(item => areBasePathsSame(item.path, current.path)) === -1) {
+                if (accumulator.findIndex(item => arePathsSame(item.path, current.path)) === -1) {
                     accumulator.push(current);
                 }
                 return accumulator;

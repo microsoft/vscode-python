@@ -1,9 +1,8 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { commands, ConfigurationTarget, Disposable, OutputChannel, Terminal, Uri, window, workspace } from 'vscode';
+import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import * as settings from './configSettings';
 import { isNotInstalledError } from './helpers';
-import { error } from './logger';
 import { execPythonFile, getFullyQualifiedPythonInterpreterPath, IS_WINDOWS } from './utils';
 
 export enum Product {
@@ -203,12 +202,13 @@ export class Installer implements vscode.Disposable {
             return InstallerResponse.Ignore;
         }
 
-        const installOption = ProductInstallationPrompt.has(product) ? ProductInstallationPrompt.get(product) : `Install ${productName}`;
+        // tslint:disable-next-line:no-non-null-assertion
+        const installOption = ProductInstallationPrompt.has(product) ? ProductInstallationPrompt.get(product)! : `Install ${productName}`;
         const disableOption = `Disable ${productTypeName}`;
         const dontShowAgain = 'Don\'t show this prompt again';
         const alternateFormatter = product === Product.autopep8 ? 'yapf' : 'autopep8';
         const useOtherFormatter = `Use '${alternateFormatter}' formatter`;
-        const options = [];
+        const options: string[] = [];
         options.push(installOption);
         if (productType === ProductType.Formatter) {
             options.push(...[useOtherFormatter]);
@@ -217,6 +217,9 @@ export class Installer implements vscode.Disposable {
             options.push(...[disableOption, dontShowAgain]);
         }
         const item = await window.showErrorMessage(`${productTypeName} ${productName} is not installed`, ...options);
+        if (!item) {
+            return InstallerResponse.Ignore;
+        }
         switch (item) {
             case installOption: {
                 return this.install(product, resource);
@@ -313,26 +316,28 @@ export class Installer implements vscode.Disposable {
         }
 
         return installationPromise
-            .then(() => this.isInstalled(product))
+            .then(async () => this.isInstalled(product))
             .then(isInstalled => isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore);
     }
 
     // tslint:disable-next-line:member-ordering
-    public isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined> {
+    public async isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined> {
         return isProductInstalled(product, resource);
     }
 
     // tslint:disable-next-line:member-ordering no-any
-    public uninstall(product: Product, resource?: Uri): Promise<any> {
+    public async uninstall(product: Product, resource?: Uri): Promise<any> {
         return uninstallproduct(product, resource);
     }
     // tslint:disable-next-line:member-ordering
-    public disableLinter(product: Product, resource: Uri) {
-        if (resource && !workspace.getWorkspaceFolder(resource)) {
+    public async disableLinter(product: Product, resource?: Uri) {
+        if (resource && workspace.getWorkspaceFolder(resource)) {
             // tslint:disable-next-line:no-non-null-assertion
             const settingToDisable = SettingToDisableProduct.get(product)!;
             const pythonConfig = workspace.getConfiguration('python', resource);
-            return pythonConfig.update(settingToDisable, false, ConfigurationTarget.Workspace);
+            const isMultiroot = Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;
+            const configTarget = isMultiroot ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
+            return pythonConfig.update(settingToDisable, false, configTarget);
         } else {
             const pythonConfig = workspace.getConfiguration('python');
             return pythonConfig.update('linting.enabledWithoutWorkspace', false, true);
@@ -382,7 +387,7 @@ async function isProductInstalled(product: Product, resource?: Uri): Promise<boo
 }
 
 // tslint:disable-next-line:no-any
-function uninstallproduct(product: Product, resource?: Uri): Promise<any> {
+async function uninstallproduct(product: Product, resource?: Uri): Promise<any> {
     if (!ProductUninstallScripts.has(product)) {
         return Promise.resolve();
     }

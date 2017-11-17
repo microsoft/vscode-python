@@ -42,7 +42,6 @@
     "Other"
   ],
   "activationEvents": [
-    "onDebug",
     "onLanguage:python",
     "onCommand:python.execInTerminal",
     "onCommand:python.sortImports",
