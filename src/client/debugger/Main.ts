@@ -242,7 +242,7 @@ export class PythonDebugger extends DebugSession {
         const telemetryProps: DebuggerTelemetry = {
             trigger: 'launch',
             console: args.console,
-            debugOptions: args.debugOptions.join(","),
+            debugOptions: (Array.isArray(args.debugOptions) ? args.debugOptions : []).join(","),
             pyspark: typeof args.pythonPath === 'string' && args.pythonPath.indexOf('spark-submit') > 0,
             hasEnvVars: args.env && typeof args.env === "object" && Object.keys(args.env).length > 0
         };

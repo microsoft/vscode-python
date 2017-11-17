@@ -18,14 +18,12 @@ const VALID_DEBUG_OPTIONS = [
     'DjangoDebugging'];
 
 export class LocalDebugClient extends DebugClient {
-    protected args: LaunchRequestArguments;
     protected pyProc: child_process.ChildProcess;
     protected pythonProcess: IPythonProcess;
     protected debugServer: BaseDebugServer;
     // tslint:disable-next-line:no-any
     constructor(args: any, debugSession: DebugSession, private canLaunchTerminal: boolean) {
         super(args, debugSession);
-        this.args = args;
     }
 
     public CreateDebugServer(pythonProcess: IPythonProcess): BaseDebugServer {
@@ -170,16 +168,6 @@ export class LocalDebugClient extends DebugClient {
     private launchExternalTerminal(sudo: boolean, cwd: string, pythonPath: string, args: string[], env: {}) {
         return new Promise((resolve, reject) => {
             if (this.canLaunchTerminal) {
-                open({ wait: false, app: [pythonPath].concat(args), cwd, env, sudo: sudo }).then(proc => {
-                    this.pyProc = proc;
-                    resolve();
-                }, error => {
-                    if (!this.debugServer && this.debugServer.IsRunning) {
-                        return;
-                    }
-                    reject(error);
-                });
-            } else {
                 const command = sudo ? 'sudo' : pythonPath;
                 const commandArgs = sudo ? [pythonPath].concat(args) : args;
                 const isExternalTerminal = this.args.console === 'externalTerminal';
@@ -197,6 +185,16 @@ export class LocalDebugClient extends DebugClient {
                     } else {
                         reject(response);
                     }
+                });
+            } else {
+                open({ wait: false, app: [pythonPath].concat(args), cwd, env, sudo: sudo }).then(proc => {
+                    this.pyProc = proc;
+                    resolve();
+                }, error => {
+                    if (!this.debugServer && this.debugServer.IsRunning) {
+                        return;
+                    }
+                    reject(error);
                 });
             }
         });
