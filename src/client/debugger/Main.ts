@@ -158,7 +158,7 @@ export class PythonDebugger extends DebugSession {
             this.launchArgs.console = 'none';
         }
         // If launching the integrated terminal is not supported, then defer to external terminal
-        // that will be displayed by our own code
+        // that will be displayed by our own code.
         if (!this._supportsRunInTerminalRequest && this.launchArgs && this.launchArgs.console === 'integratedTerminal') {
             this.launchArgs.console = 'externalTerminal';
         }

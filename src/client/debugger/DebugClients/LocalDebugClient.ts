@@ -152,13 +152,15 @@ export class LocalDebugClient extends DebugClient {
     // tslint:disable-next-line:member-ordering
     protected handleProcessOutput(proc: ChildProcess, failedToLaunch: (error: Error | string | Buffer) => void) {
         proc.on('error', error => {
-            // TODO: This condition makes no sense (refactor)
+            // If debug server has started, then don't display errors.
+            // The debug adapter will get this info from the debugger (e.g. ptvsd lib).
             if (!this.debugServer && this.debugServer.IsRunning) {
                 return;
             }
             if (!this.debugServer.IsRunning && typeof (error) === 'object' && error !== null) {
                 return failedToLaunch(error);
             }
+            // This could happen when the debugger didn't launch at all, e.g. python doesn't exist.
             this.displayError(error);
         });
         proc.stderr.setEncoding('utf8');
