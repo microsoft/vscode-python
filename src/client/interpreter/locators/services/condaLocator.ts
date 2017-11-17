@@ -2,12 +2,15 @@
 import * as child_process from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { IS_WINDOWS } from '../../../common/utils';
 import { VersionUtils } from '../../../common/versionUtils';
 import { ICondaLocatorService, IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
-const KNOWN_CONDA_LOCATIONS = ['~/anaconda3/bin/conda', '~/miniconda3/bin/conda'];
+const KNOWN_CONDA_LOCATIONS = ['~/anaconda/bin/conda', '~/miniconda/bin/conda',
+    '~/anaconda2/bin/conda', '~/miniconda2/bin/conda',
+    '~/anaconda3/bin/conda', '~/miniconda3/bin/conda'];
 
 export class CondaLocatorService implements ICondaLocatorService {
     constructor(private registryLookupForConda?: IInterpreterLocatorService) {
@@ -19,7 +22,7 @@ export class CondaLocatorService implements ICondaLocatorService {
         if (isAvailable) {
             return 'conda';
         }
-        if (this.registryLookupForConda) {
+        if (IS_WINDOWS && this.registryLookupForConda) {
             return this.registryLookupForConda.getInterpreters()
                 .then(interpreters => interpreters.filter(this.isCondaEnvironment))
                 .then(condaInterpreters => this.getLatestVersion(condaInterpreters))
