@@ -17,6 +17,7 @@ suite('ProcessService', () => {
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         const output = await result.out.toPromise();
+        expect(output.source).to.be.equal('stdout', 'Source is incorrect');
         expect(output.out).to.have.length.greaterThan(0, 'Invalid output length');
         const stdOut = output.out.replace(/\s+$/g, '');
         expect(stdOut).to.equal(printOutput, 'Output is incorrect');
