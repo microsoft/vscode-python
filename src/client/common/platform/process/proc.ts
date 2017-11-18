@@ -7,7 +7,7 @@ import { ExecutionResult, IBufferDecoder, IProcessService, ObservableExecutionRe
 
 export class ProcessService implements IProcessService {
     constructor(private decoder: IBufferDecoder) { }
-    public execObservable(file: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
+    public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         const encoding = options.encoding = typeof options.encoding === 'string' && options.encoding.length > 0 ? options.encoding : DEFAULT_ENCODING;
         const proc = spawn(file, args, options);
         let procExited = false;
@@ -51,7 +51,7 @@ export class ProcessService implements IProcessService {
 
         return { proc, out: output };
     }
-    public async exec(file: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
+    public async exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         const encoding = options.encoding = typeof options.encoding === 'string' && options.encoding.length > 0 ? options.encoding : DEFAULT_ENCODING;
         const proc = spawn(file, args, options);
         const deferred = createDeferred<ExecutionResult<string>>();
