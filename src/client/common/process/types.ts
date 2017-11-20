@@ -1,5 +1,5 @@
 import { ChildProcess, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
-import { Observable } from 'rxjs/rx';
+import * as Rx from 'rxjs';
 import { CancellationToken, Uri } from 'vscode';
 
 export interface IBufferDecoder {
@@ -12,7 +12,7 @@ export type Output<T extends string | Buffer> = {
 };
 export type ObservableExecutionResult<T extends string | Buffer> = {
     proc: ChildProcess;
-    out: Observable<Output<T>>;
+    out: Rx.Observable<Output<T>>;
 };
 
 // tslint:disable-next-line:interface-name

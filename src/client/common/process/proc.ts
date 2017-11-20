@@ -1,5 +1,5 @@
 import { spawn } from 'child_process';
-import { Observable } from 'rxjs/rx';
+import * as Rx from 'rxjs';
 import { Disposable } from 'vscode';
 import { createDeferred } from '../helpers';
 import { DEFAULT_ENCODING } from './constants';
@@ -12,7 +12,7 @@ export class ProcessService implements IProcessService {
         const proc = spawn(file, args, options);
         let procExited = false;
 
-        const output = new Observable<Output<string>>(subscriber => {
+        const output = new Rx.Observable<Output<string>>(subscriber => {
             const disposables: Disposable[] = [];
 
             const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
