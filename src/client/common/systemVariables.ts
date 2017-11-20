@@ -1,4 +1,4 @@
-import * as Types from './types';
+import * as Types from './sysTypes';
 import * as vscode from 'vscode';
 import * as Path from 'path';
 
