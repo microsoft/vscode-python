@@ -49,3 +49,9 @@ export interface IPythonExecutionService {
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
     execModule(module: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
+
+export class StdErrError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
+}

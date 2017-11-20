@@ -1,9 +1,9 @@
 import { spawn } from 'child_process';
 import { Observable } from 'rxjs/rx';
 import { Disposable } from 'vscode';
-import { createDeferred } from '../../helpers';
+import { createDeferred } from '../helpers';
 import { DEFAULT_ENCODING } from './constants';
-import { ExecutionResult, IBufferDecoder, IProcessService, ObservableExecutionResult, Output, SpawnOptions } from './types';
+import { ExecutionResult, IBufferDecoder, IProcessService, ObservableExecutionResult, Output, SpawnOptions, StdErrError } from './types';
 
 export class ProcessService implements IProcessService {
     constructor(private decoder: IBufferDecoder) { }
@@ -22,7 +22,7 @@ export class ProcessService implements IProcessService {
 
             if (options.cancellationToken) {
                 disposables.push(options.cancellationToken.onCancellationRequested(() => {
-                    if (procExited && !proc.killed) {
+                    if (!procExited && !proc.killed) {
                         proc.kill();
                         procExited = true;
                     }
@@ -30,8 +30,13 @@ export class ProcessService implements IProcessService {
             }
 
             const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-                source = options.mergeStdOutErr ? 'stdout' : source;
-                subscriber.next({ source, out: this.decoder.decode([data], encoding) });
+                const out = this.decoder.decode([data], encoding);
+                if (source === 'stderr' && options.throwOnStdErr) {
+                    subscriber.error(new StdErrError(out));
+                } else {
+                    source = options.mergeStdOutErr ? 'stdout' : source;
+                    subscriber.next({ source, out: out });
+                }
             };
 
             on(proc.stdout, 'data', (data: Buffer) => sendOutput('stdout', data));
@@ -85,9 +90,9 @@ export class ProcessService implements IProcessService {
             if (deferred.completed) {
                 return;
             }
-            const stderr = this.decoder.decode(stderrBuffers, encoding);
-            if (stderr.length > 0 && options.throwOnStdErr) {
-                deferred.reject(stderr);
+            const stderr: string | undefined = stderrBuffers.length === 0 ? undefined : this.decoder.decode(stderrBuffers, encoding);
+            if (stderr && stderr.length > 0 && options.throwOnStdErr) {
+                deferred.reject(new StdErrError(stderr));
             } else {
                 const stdout = this.decoder.decode(stdoutBuffers, encoding);
                 deferred.resolve({ stdout, stderr });
