@@ -162,7 +162,7 @@ suite('Multiroot Config Settings', () => {
     });
 
     // tslint:disable-next-line:no-invalid-template-strings
-    test('${workspaceRoot} variable in settings should be replaced with the right value', async () => {
+    test('${workspaceFolder} variable in settings should be replaced with the right value', async () => {
         const workspace2Uri = Uri.file(path.join(multirootPath, 'workspace2'));
         let fileToOpen = path.join(workspace2Uri.fsPath, 'file.py');
 

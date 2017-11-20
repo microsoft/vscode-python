@@ -131,27 +131,35 @@ export abstract class AbstractSystemVariables implements ISystemVariables {
 
 
 export class SystemVariables extends AbstractSystemVariables {
-    private _workspaceRoot: string;
-    private _workspaceRootFolderName: string;
+    private _workspaceFolder: string;
+    private _workspaceFolderName: string;
 
-    constructor(workspaceRoot?: string) {
+    constructor(workspaceFolder?: string) {
         super();
-        this._workspaceRoot = typeof workspaceRoot === 'string' ? workspaceRoot : __dirname;
-        this._workspaceRootFolderName = Path.basename(this._workspaceRoot);
+        this._workspaceFolder = typeof workspaceFolder === 'string' ? workspaceFolder : __dirname;
+        this._workspaceFolderName = Path.basename(this._workspaceFolder);
         Object.keys(process.env).forEach(key => {
             this[`env:${key}`] = this[`env.${key}`] = process.env[key];
         });
     }
 
     public get cwd(): string {
-        return this.workspaceRoot;
+        return this.workspaceFolder;
     }
 
     public get workspaceRoot(): string {
-        return this._workspaceRoot;
+        return this._workspaceFolder;
+    }
+
+    public get workspaceFolder(): string {
+        return this._workspaceFolder;
     }
 
     public get workspaceRootFolderName(): string {
-        return this._workspaceRootFolderName;
+        return this._workspaceFolderName;
+    }
+
+    public get workspaceFolderBasename(): string {
+        return this._workspaceFolderName;
     }
 }

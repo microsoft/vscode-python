@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
+import { PythonSettings } from '../../client/common/configSettings';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
 import { WorkspaceFolderPythonPathUpdaterService } from '../../client/interpreter/configuration/services/workspaceFolderUpdaterService';
@@ -39,6 +40,22 @@ suite('Multiroot Python Path Settings Updater', () => {
         assert.equal(folderValue, pythonPath, 'Workspace Python Path not updated');
     });
 
+    test('Updating Workspace Folder Python Path should work with relative paths', async () => {
+        const workspaceUri = workspace3Uri;
+        const workspaceFolder = workspace.getWorkspaceFolder(workspaceUri).uri;
+        const workspaceUpdater = new WorkspaceFolderPythonPathUpdaterService(workspaceFolder);
+        const pythonExec = `/xWorkspacePythonPath${new Date().getMilliseconds()}`;
+        // tslint:disable-next-line:no-invalid-template-strings
+        const rawPythonPath = path.join('${workspaceFolder}', pythonExec);
+        const pythonPath = path.join(workspaceFolder.fsPath, pythonExec);
+        await workspaceUpdater.updatePythonPath(pythonPath);
+        PythonSettings.dispose();
+        const folderValue = workspace.getConfiguration('python', workspace3Uri).inspect('pythonPath').workspaceFolderValue;
+        assert.equal(folderValue, rawPythonPath, 'Raw Workspace Python Path not updated');
+        const resolvedPythonPath = PythonSettings.getInstance(workspaceUri).pythonPath;
+        assert.equal(resolvedPythonPath, pythonPath, 'Resolved Workspace Python Path is incorrect');
+    });
+
     test('Updating Workspace Folder Python Path using the factor service should work', async () => {
         const workspaceUri = workspace3Uri;
         const factory = new PythonPathUpdaterServiceFactory();
@@ -58,7 +75,24 @@ suite('Multiroot Python Path Settings Updater', () => {
         assert.equal(folderValue, pythonPath, 'Workspace Python Path not updated');
     });
 
-    test('Python Path should be relative to workspace', async () => {
+    // tslint:disable-next-line:no-invalid-template-strings
+    test('Python Paths containing ${workspaceRoot should be resolved as ${workspaceFolder}', async () => {
+        const workspaceUri = workspace.getWorkspaceFolder(workspace3Uri).uri;
+        const pythonInterpreter = `xWorkspacePythonPath${new Date().getMilliseconds()}`;
+        // tslint:disable-next-line:no-invalid-template-strings
+        const pythonPath = path.join('${workspaceRoot}', 'x', 'y', 'z', pythonInterpreter);
+        const workspaceUpdater = new WorkspacePythonPathUpdaterService(workspaceUri);
+        await workspaceUpdater.updatePythonPath(pythonPath);
+        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath').workspaceValue;
+        const resolvedPythonPath = path.join(workspaceUri.fsPath, 'x', 'y', 'z', pythonInterpreter);
+        // tslint:disable-next-line:no-invalid-template-strings
+        assert.equal(workspaceValue, pythonPath, 'Workspace Python Path not updated');
+        PythonSettings.dispose();
+        assert.equal(PythonSettings.getInstance(workspace3Uri).pythonPath, resolvedPythonPath, 'Resolved Workspace Python Path is incorrect');
+    });
+
+    // tslint:disable-next-line:no-invalid-template-strings
+    test('Python Path should be relative to workspace when using ${workspaceFolder}', async () => {
         const workspaceUri = workspace.getWorkspaceFolder(workspace3Uri).uri;
         const pythonInterpreter = `xWorkspacePythonPath${new Date().getMilliseconds()}`;
         const pythonPath = path.join(workspaceUri.fsPath, 'x', 'y', 'z', pythonInterpreter);
@@ -66,6 +100,8 @@ suite('Multiroot Python Path Settings Updater', () => {
         await workspaceUpdater.updatePythonPath(pythonPath);
         const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath').workspaceValue;
         // tslint:disable-next-line:no-invalid-template-strings
-        assert.equal(workspaceValue, path.join('${workspaceRoot}', 'x', 'y', 'z', pythonInterpreter), 'Workspace Python Path not updated');
+        assert.equal(workspaceValue, path.join('${workspaceFolder}', 'x', 'y', 'z', pythonInterpreter), 'Workspace Python Path not updated');
+        PythonSettings.dispose();
+        assert.equal(PythonSettings.getInstance(workspace3Uri).pythonPath, pythonPath, 'Resolved Workspace Python Path is incorrect');
     });
 });
