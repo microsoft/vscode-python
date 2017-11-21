@@ -2,7 +2,7 @@ import { EnvironmentVariables } from '../variables/types';
 import { ExecutionResult, IProcessService, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from './types';
 
 export class PythonExecutionService implements IPythonExecutionService {
-    constructor(private pythonPath: string, private envVars: EnvironmentVariables | undefined, private procService: IProcessService) { }
+    constructor(private procService: IProcessService, private pythonPath: string, private envVars: EnvironmentVariables | undefined) { }
     public async getVersion(): Promise<string> {
         return this.procService.exec(this.pythonPath, ['--version'], { env: this.envVars, mergeStdOutErr: true })
             .then(output => output.stdout.trim());

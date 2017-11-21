@@ -1,3 +1,4 @@
+import { Uri } from 'vscode';
 
 export type EnvironmentVariables = Object & {
     [key: string]: string;
@@ -29,4 +30,8 @@ export interface ISystemVariables {
     resolveAny<T>(value: T): T;
     // tslint:disable-next-line:no-any
     [key: string]: any;
+}
+
+export interface IEnvironmentVariablesProvider {
+    getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined>;
 }
