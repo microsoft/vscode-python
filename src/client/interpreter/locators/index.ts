@@ -67,11 +67,11 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         // The order of the services is important.
         if (IS_WINDOWS) {
             const windowsRegistryProvider = new WindowsRegistryService(new RegistryImplementation(), Is_64Bit);
-            const condaLocator = new CondaLocatorService(windowsRegistryProvider);
+            const condaLocator = new CondaLocatorService(IS_WINDOWS, windowsRegistryProvider);
             locators.push(windowsRegistryProvider);
             locators.push(new CondaEnvService(condaLocator));
         } else {
-            const condaLocator = new CondaLocatorService();
+            const condaLocator = new CondaLocatorService(IS_WINDOWS);
             locators.push(new CondaEnvService(condaLocator));
         }
         // Supplements the above list of conda environments.

@@ -13,7 +13,7 @@ const KNOWN_CONDA_LOCATIONS = ['~/anaconda/bin/conda', '~/miniconda/bin/conda',
     '~/anaconda3/bin/conda', '~/miniconda3/bin/conda'];
 
 export class CondaLocatorService implements ICondaLocatorService {
-    constructor(private registryLookupForConda?: IInterpreterLocatorService) {
+    constructor(private isWindows: boolean, private registryLookupForConda?: IInterpreterLocatorService) {
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
@@ -22,7 +22,7 @@ export class CondaLocatorService implements ICondaLocatorService {
         if (isAvailable) {
             return 'conda';
         }
-        if (IS_WINDOWS && this.registryLookupForConda) {
+        if (this.isWindows && this.registryLookupForConda) {
             return this.registryLookupForConda.getInterpreters()
                 .then(interpreters => interpreters.filter(this.isCondaEnvironment))
                 .then(condaInterpreters => this.getLatestVersion(condaInterpreters))

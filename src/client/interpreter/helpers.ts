@@ -30,7 +30,7 @@ export function getActiveWorkspaceUri(): WorkspacePythonPath | undefined {
 }
 export async function getCondaVersion() {
     const windowsRegistryProvider = IS_WINDOWS ? new WindowsRegistryService(new RegistryImplementation(), Is_64Bit) : undefined;
-    const condaLocator = new CondaLocatorService(windowsRegistryProvider);
+    const condaLocator = new CondaLocatorService(IS_WINDOWS, windowsRegistryProvider);
 
     return condaLocator.getCondaFile()
         .then(async condaFile => {

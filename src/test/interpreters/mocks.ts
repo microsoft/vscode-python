@@ -71,8 +71,8 @@ export class MockInterpreterVersionProvider implements IInterpreterVersionServic
 
 // tslint:disable-next-line:max-classes-per-file
 export class MockCondaLocatorService extends CondaLocatorService {
-    constructor(registryLookupForConda?: IInterpreterLocatorService, private isCondaInEnv?: boolean) {
-        super(registryLookupForConda);
+    constructor(isWindows: boolean, registryLookupForConda?: IInterpreterLocatorService, private isCondaInEnv?: boolean) {
+        super(isWindows, registryLookupForConda);
     }
     public async isCondaInCurrentPath() {
         if (typeof this.isCondaInEnv === 'boolean') {
