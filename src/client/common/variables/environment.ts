@@ -1,12 +1,15 @@
 import * as fs from 'fs-extra';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { IS_WINDOWS } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
-export const IS_WINDOWS = /^win/.test(process.platform);
-export const WINDOWS_PATH_VARIABLE_NAME = 'Path';
-export const NON_WINDOWS_PATH_VARIABLE_NAME = 'PATH';
 
+const WINDOWS_PATH_VARIABLE_NAME = 'Path';
+const NON_WINDOWS_PATH_VARIABLE_NAME = 'PATH';
+
+@injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
-    constructor(private isWidows: boolean) { }
+    constructor( @inject(IS_WINDOWS) private isWidows: boolean) { }
     public async parseFile(filePath: string): Promise<EnvironmentVariables | undefined> {
         const exists = await fs.pathExists(filePath);
         if (!exists) {
@@ -29,6 +32,9 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         });
     }
     public mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables) {
+        if (!target) {
+            return;
+        }
         const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
         const settingsNotToMerge = ['PYTHONPATH', pathVariable];
         Object.keys(source).forEach(setting => {

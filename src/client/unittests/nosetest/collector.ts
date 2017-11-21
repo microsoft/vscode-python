@@ -4,8 +4,10 @@ import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { OutputChannel, Uri } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
+import { IServiceContainer } from '../../ioc/types';
+import { Options, run } from '../common/runner';
 import { convertFileToPackage, extractBetweenDelimiters } from '../common/testUtils';
-import { ITestsHelper, TestFile, TestFunction, Tests, TestSuite } from '../common/types';
+import { ITestsHelper, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestSuite } from '../common/types';
 import { execPythonFile } from './../../common/utils';
 
 const NOSE_WANT_FILE_PREFIX = 'nose.selector: DEBUG: wantFile ';
@@ -20,12 +22,12 @@ const argsToExcludeForDiscovery = ['-v', '--verbose',
     '--failed', '--process-restartworker', '--with-xunit'];
 const settingsInArgsToExcludeForDiscovery = ['--verbosity'];
 
-export function discoverTests(rootDirectory: string, args: string[], token: CancellationToken, ignoreCache: boolean, outChannel: OutputChannel, testsHelper: ITestsHelper): Promise<Tests> {
+export function discoverTests(serviceContainer: IServiceContainer, testsHelper: ITestsHelper, options: TestDiscoveryOptions): Promise<Tests> {
     let logOutputLines: string[] = [''];
     let testFiles: TestFile[] = [];
 
     // Remove unwanted arguments
-    args = args.filter(arg => {
+    const args = options.args.filter(arg => {
         if (argsToExcludeForDiscovery.indexOf(arg.trim()) !== -1) {
             return false;
         }
@@ -55,7 +57,7 @@ export function discoverTests(rootDirectory: string, args: string[], token: Canc
             if ((line.startsWith(NOSE_WANT_FILE_PREFIX) && line.endsWith(NOSE_WANT_FILE_SUFFIX)) ||
                 index === lines.length - 1) {
                 // process the previous lines
-                parseNoseTestModuleCollectionResult(rootDirectory, logOutputLines, testFiles);
+                parseNoseTestModuleCollectionResult(options.cwd, logOutputLines, testFiles);
                 logOutputLines = [''];
             }
 
@@ -76,9 +78,16 @@ export function discoverTests(rootDirectory: string, args: string[], token: Canc
         });
     }
 
-    return execPythonFile(rootDirectory, PythonSettings.getInstance(Uri.file(rootDirectory)).unitTest.nosetestPath, args.concat(['--collect-only', '-vvv']), rootDirectory, true)
+    const runOptions: Options = {
+        args: args.concat(['--collect-only', '-vvv']),
+        cwd: options.cwd,
+        workspaceFolder: options.workspaceFolder,
+        token: options.token,
+        outChannel: options.outChannel
+    };
+
+    return run(serviceContainer, 'nosetest', runOptions)
         .then(data => {
-            outChannel.appendLine(data);
             processOutput(data);
 
             // Exclude tests that don't have any functions or test suites

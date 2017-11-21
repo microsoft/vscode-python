@@ -3,27 +3,29 @@ import * as path from 'path';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
 import { createTemporaryFile } from '../../common/helpers';
-import { run } from '../common/runner';
-import { ITestDebugLauncher, ITestResultsService, Tests, TestsToRun } from '../common/types';
+import { IServiceContainer } from '../../ioc/types';
+import { Options, run } from '../common/runner';
+import { ITestDebugLauncher, ITestResultsService, TestRunOptions, Tests, TestsToRun } from '../common/types';
 import { PassCalculationFormulae, updateResultsFromXmlLogFile } from '../common/xUnitParser';
 
-export function runTest(testResultsService: ITestResultsService, debugLauncher: ITestDebugLauncher, rootDirectory: string, tests: Tests, args: string[], testsToRun?: TestsToRun, token?: CancellationToken, outChannel?: OutputChannel, debug?: boolean): Promise<Tests> {
+export function runTest(serviceContainer: IServiceContainer, testResultsService: ITestResultsService, debugLauncher: ITestDebugLauncher, options: TestRunOptions): Promise<Tests> {
     let testPaths = [];
-    if (testsToRun && testsToRun.testFolder) {
-        testPaths = testPaths.concat(testsToRun.testFolder.map(f => f.nameToRun));
+    if (options.testsToRun && options.testsToRun.testFolder) {
+        testPaths = testPaths.concat(options.testsToRun.testFolder.map(f => f.nameToRun));
     }
-    if (testsToRun && testsToRun.testFile) {
-        testPaths = testPaths.concat(testsToRun.testFile.map(f => f.nameToRun));
+    if (options.testsToRun && options.testsToRun.testFile) {
+        testPaths = testPaths.concat(options.testsToRun.testFile.map(f => f.nameToRun));
     }
-    if (testsToRun && testsToRun.testSuite) {
-        testPaths = testPaths.concat(testsToRun.testSuite.map(f => f.nameToRun));
+    if (options.testsToRun && options.testsToRun.testSuite) {
+        testPaths = testPaths.concat(options.testsToRun.testSuite.map(f => f.nameToRun));
     }
-    if (testsToRun && testsToRun.testFunction) {
-        testPaths = testPaths.concat(testsToRun.testFunction.map(f => f.nameToRun));
+    if (options.testsToRun && options.testsToRun.testFunction) {
+        testPaths = testPaths.concat(options.testsToRun.testFunction.map(f => f.nameToRun));
     }
 
     let xmlLogFile = '';
     let xmlLogFileCleanup: Function = null;
+    let args = options.args;
 
     return createTemporaryFile('.xml').then(xmlLogResult => {
         xmlLogFile = xmlLogResult.filePath;
@@ -33,19 +35,25 @@ export function runTest(testResultsService: ITestResultsService, debugLauncher: 
             args = args.filter(arg => arg.trim().startsWith('-'));
         }
         const testArgs = testPaths.concat(args, [`--junitxml=${xmlLogFile}`]);
-        const pythonSettings = PythonSettings.getInstance(Uri.file(rootDirectory));
-        if (debug) {
+        const pythonSettings = PythonSettings.getInstance(options.workspaceFolder);
+        if (options.debug) {
             const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');
-            const pytestlauncherargs = [rootDirectory, 'my_secret', pythonSettings.unitTest.debugPort.toString(), 'pytest'];
+            const pytestlauncherargs = [options.cwd, 'my_secret', pythonSettings.unitTest.debugPort.toString(), 'pytest'];
             const debuggerArgs = [testLauncherFile].concat(pytestlauncherargs).concat(testArgs);
             // tslint:disable-next-line:prefer-type-cast no-any
-            return debugLauncher.launchDebugger(rootDirectory, debuggerArgs, token, outChannel) as Promise<any>;
+            return debugLauncher.launchDebugger(options.cwd, debuggerArgs, options.token, options.outChannel) as Promise<any>;
         } else {
-            // tslint:disable-next-line:prefer-type-cast no-any
-            return run(pythonSettings.unitTest.pyTestPath, testArgs, rootDirectory, token, outChannel) as Promise<any>;
+            const runOptions: Options = {
+                args: testArgs,
+                cwd: options.cwd,
+                outChannel: options.outChannel,
+                token: options.token,
+                workspaceFolder: options.workspaceFolder
+            };
+            return run(serviceContainer, 'pytest', runOptions);
         }
     }).then(() => {
-        return updateResultsFromLogFiles(tests, xmlLogFile, testResultsService);
+        return updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
     }).then(result => {
         xmlLogFileCleanup();
         return result;

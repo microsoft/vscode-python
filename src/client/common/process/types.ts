@@ -3,6 +3,7 @@ import * as Rx from 'rxjs';
 import { CancellationToken, Uri } from 'vscode';
 import { EnvironmentVariables } from '../variables/types';
 
+export const IBufferDecoder = Symbol('IBufferDecoder');
 export interface IBufferDecoder {
     decode(buffers: Buffer[], encoding: string): string;
 }
@@ -19,7 +20,7 @@ export type ObservableExecutionResult<T extends string | Buffer> = {
 // tslint:disable-next-line:interface-name
 export type SpawnOptions = ChildProcessSpawnOptions & {
     encoding?: string;
-    cancellationToken?: CancellationToken;
+    token?: CancellationToken;
     mergeStdOutErr?: boolean;
     throwOnStdErr?: boolean;
 };
@@ -29,14 +30,21 @@ export type ExecutionResult<T extends string | Buffer> = {
     stderr?: string;
 };
 
+export const IProcessService = Symbol('IProcessService');
+
 export interface IProcessService {
     execObservable(file: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
     exec(file: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
+export const IPythonExecutionFactory = Symbol('IPythonExecutionFactory');
+
 export interface IPythonExecutionFactory {
     create(resource?: Uri): Promise<IPythonExecutionService>;
 }
+
+export const IPythonExecutionService = Symbol('IPythonExecutionService');
+
 export interface IPythonExecutionService {
     getVersion(): Promise<string>;
     getExecutablePath(): Promise<string>;

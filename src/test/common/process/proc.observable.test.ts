@@ -79,7 +79,7 @@ suite('ProcessService', () => {
             'print("1")', 'sys.stdout.flush()', 'time.sleep(10)',
             'print("2")', 'sys.stdout.flush()'];
         const cancellationToken = new CancellationTokenSource();
-        const result = procService.execObservable('python', ['-c', pythonCode.join(';')], { cancellationToken: cancellationToken.token });
+        const result = procService.execObservable('python', ['-c', pythonCode.join(';')], { token: cancellationToken.token });
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
@@ -103,7 +103,7 @@ suite('ProcessService', () => {
             'print("1")', 'sys.stdout.flush()', 'time.sleep(10)',
             'print("2")', 'sys.stdout.flush()'];
         const cancellationToken = new CancellationTokenSource();
-        const result = procService.execObservable('python', ['-c', pythonCode.join(';')], { cancellationToken: cancellationToken.token });
+        const result = procService.execObservable('python', ['-c', pythonCode.join(';')], { token: cancellationToken.token });
         let procKilled = false;
 
         expect(result).not.to.be.an('undefined', 'result is undefined');

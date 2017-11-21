@@ -1,6 +1,9 @@
+import { injectable } from 'inversify';
+import 'reflect-metadata';
 import { EnvironmentVariables } from '../variables/types';
 import { ExecutionResult, IProcessService, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from './types';
 
+@injectable()
 export class PythonExecutionService implements IPythonExecutionService {
     constructor(private procService: IProcessService, private pythonPath: string, private envVars: EnvironmentVariables | undefined) { }
     public async getVersion(): Promise<string> {

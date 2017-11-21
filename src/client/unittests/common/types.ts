@@ -1,6 +1,29 @@
 import { CancellationToken, Disposable, OutputChannel, Uri } from 'vscode';
 import { Product } from '../../common/installer';
+import { SpawnOptions } from '../../common/process/types';
 import { BaseTestManager } from './baseTestManager';
+
+export type TestProvider = 'nosetest' | 'pytest' | 'unittest';
+
+export type TestDiscoveryOptions = {
+    workspaceFolder: Uri;
+    cwd: string;
+    args: string[];
+    token?: CancellationToken;
+    ignoreCache: boolean;
+    outChannel: OutputChannel;
+};
+
+export type TestRunOptions = {
+    workspaceFolder: Uri;
+    cwd: string;
+    tests: Tests;
+    args: string[];
+    testsToRun?: TestsToRun;
+    token?: CancellationToken;
+    outChannel?: OutputChannel;
+    debug?: boolean;
+};
 
 export type TestFolder = TestResult & {
     name: string;

@@ -4,6 +4,8 @@ export type EnvironmentVariables = Object & {
     [key: string]: string;
 };
 
+export const IEnvironmentVariablesService = Symbol('IEnvironmentVariablesService');
+
 export interface IEnvironmentVariablesService {
     parseFile(filePath: string): Promise<EnvironmentVariables | undefined>;
     mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables): void;
@@ -32,6 +34,8 @@ export interface ISystemVariables {
     [key: string]: any;
 }
 
+export const IEnvironmentVariablesProvider = Symbol('IEnvironmentVariablesProvider');
+
 export interface IEnvironmentVariablesProvider {
-    getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined>;
+    getEnvironmentVariables(mergeWithProcEnvVariables: boolean, resource?: Uri): Promise<EnvironmentVariables | undefined>;
 }

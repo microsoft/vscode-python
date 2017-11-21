@@ -1,26 +1,42 @@
 'use strict';
-import * as vscode from 'vscode';
+import { OutputChannel, Uri } from 'vscode';
 import { Product } from '../../common/installer';
+import { IPythonExecutionFactory } from '../../common/process/types';
+import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/baseTestManager';
-import { ITestCollectionStorageService, ITestDebugLauncher, ITestResultsService, ITestsHelper, Tests, TestsToRun } from '../common/types';
+import { ITestCollectionStorageService, ITestDebugLauncher, ITestResultsService, ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
 import { discoverTests } from './collector';
 import { runTest } from './runner';
 
 export class TestManager extends BaseTestManager {
-    constructor(rootDirectory: string, outputChannel: vscode.OutputChannel,
+    constructor(workspaceFolder: Uri, rootDirectory: string, outputChannel: OutputChannel,
         testCollectionStorage: ITestCollectionStorageService,
-        testResultsService: ITestResultsService, testsHelper: ITestsHelper, private debugLauncher: ITestDebugLauncher) {
-        super('pytest', Product.pytest, rootDirectory, outputChannel, testCollectionStorage, testResultsService, testsHelper);
+        testResultsService: ITestResultsService, testsHelper: ITestsHelper, private debugLauncher: ITestDebugLauncher,
+        serviceContainer: IServiceContainer) {
+        super('pytest', Product.pytest, workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer);
     }
-    public discoverTestsImpl(ignoreCache: boolean): Promise<Tests> {
+    public async discoverTestsImpl(ignoreCache: boolean): Promise<Tests> {
         const args = this.settings.unitTest.pyTestArgs.slice(0);
-        return discoverTests(this.rootDirectory, args, this.testDiscoveryCancellationToken, ignoreCache, this.outputChannel, this.testsHelper);
+        const options: TestDiscoveryOptions = {
+            workspaceFolder: this.workspaceFolder,
+            cwd: this.rootDirectory, args,
+            token: this.testDiscoveryCancellationToken, ignoreCache,
+            outChannel: this.outputChannel
+        };
+        return discoverTests(this.serviceContainer, this.testsHelper, options);
     }
-    public runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<{}> {
+    public async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<{}> {
         const args = this.settings.unitTest.pyTestArgs.slice(0);
         if (runFailedTests === true && args.indexOf('--lf') === -1 && args.indexOf('--last-failed') === -1) {
             args.push('--last-failed');
         }
-        return runTest(this.testResultsService, this.debugLauncher, this.rootDirectory, tests, args, testsToRun, this.testRunnerCancellationToken, this.outputChannel, debug);
+        const options: TestRunOptions = {
+            workspaceFolder: this.workspaceFolder,
+            cwd: this.rootDirectory,
+            tests, args, testsToRun, debug,
+            token: this.testRunnerCancellationToken,
+            outChannel: this.outputChannel
+        };
+        return runTest(this.serviceContainer, this.testResultsService, this.debugLauncher, options);
     }
 }

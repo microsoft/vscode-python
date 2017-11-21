@@ -3,18 +3,20 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { OutputChannel } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
-import { ITestsHelper, TestFile, TestFunction, Tests, TestStatus, TestSuite } from '../common/types';
+import { IServiceContainer } from '../../ioc/types';
+import { Options, run } from '../common/runner';
+import { ITestsHelper, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestStatus, TestSuite } from '../common/types';
 import { execPythonFile } from './../../common/utils';
 
-export function discoverTests(rootDirectory: string, args: string[], token: vscode.CancellationToken, ignoreCache: boolean, outChannel: OutputChannel, testsHelper: ITestsHelper): Promise<Tests> {
+export function discoverTests(serviceContainer: IServiceContainer, testsHelper: ITestsHelper, options: TestDiscoveryOptions): Promise<Tests> {
     let startDirectory = '.';
     let pattern = 'test*.py';
-    const indexOfStartDir = args.findIndex(arg => arg.indexOf('-s') === 0);
+    const indexOfStartDir = options.args.findIndex(arg => arg.indexOf('-s') === 0);
     if (indexOfStartDir >= 0) {
-        const startDir = args[indexOfStartDir].trim();
-        if (startDir.trim() === '-s' && args.length >= indexOfStartDir) {
+        const startDir = options.args[indexOfStartDir].trim();
+        if (startDir.trim() === '-s' && options.args.length >= indexOfStartDir) {
             // Assume the next items is the directory
-            startDirectory = args[indexOfStartDir + 1];
+            startDirectory = options.args[indexOfStartDir + 1];
         } else {
             startDirectory = startDir.substring(2).trim();
             if (startDirectory.startsWith('=') || startDirectory.startsWith(' ')) {
@@ -22,12 +24,12 @@ export function discoverTests(rootDirectory: string, args: string[], token: vsco
             }
         }
     }
-    const indexOfPattern = args.findIndex(arg => arg.indexOf('-p') === 0);
+    const indexOfPattern = options.args.findIndex(arg => arg.indexOf('-p') === 0);
     if (indexOfPattern >= 0) {
-        const patternValue = args[indexOfPattern].trim();
-        if (patternValue.trim() === '-p' && args.length >= indexOfPattern) {
+        const patternValue = options.args[indexOfPattern].trim();
+        if (patternValue.trim() === '-p' && options.args.length >= indexOfPattern) {
             // Assume the next items is the directory
-            pattern = args[indexOfPattern + 1];
+            pattern = options.args[indexOfPattern + 1];
         } else {
             pattern = patternValue.substring(2).trim();
             if (pattern.startsWith('=')) {
@@ -51,7 +53,7 @@ for suite in suites._tests:
     const testItems: string[] = [];
     function processOutput(output: string) {
         output.split(/\r?\n/g).forEach((line, index, lines) => {
-            if (token && token.isCancellationRequested) {
+            if (options.token && options.token.isCancellationRequested) {
                 return;
             }
             if (!startedCollecting) {
@@ -67,18 +69,23 @@ for suite in suites._tests:
             testItems.push(line);
         });
     }
-    args = [];
-    return execPythonFile(rootDirectory, PythonSettings.getInstance(vscode.Uri.file(rootDirectory)).pythonPath, args.concat(['-c', pythonScript]), rootDirectory, true, null, token)
+    const runOptions: Options = {
+        args: ['-c', pythonScript],
+        cwd: options.cwd,
+        workspaceFolder: options.workspaceFolder,
+        token: options.token,
+        outChannel: options.outChannel
+    };
+    return run(serviceContainer, 'unittest', runOptions)
         .then(data => {
-            outChannel.appendLine(data);
             processOutput(data);
-            if (token && token.isCancellationRequested) {
+            if (options.token && options.token.isCancellationRequested) {
                 return Promise.reject<Tests>('cancelled');
             }
 
-            let testsDirectory = rootDirectory;
+            let testsDirectory = options.cwd;
             if (startDirectory.length > 1) {
-                testsDirectory = path.isAbsolute(startDirectory) ? startDirectory : path.resolve(rootDirectory, startDirectory);
+                testsDirectory = path.isAbsolute(startDirectory) ? startDirectory : path.resolve(options.cwd, startDirectory);
             }
             return parseTestIds(testsDirectory, testItems, testsHelper);
         });

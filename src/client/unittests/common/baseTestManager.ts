@@ -4,20 +4,19 @@ import { Uri, workspace } from 'vscode';
 import { IPythonSettings, PythonSettings } from '../../common/configSettings';
 import { isNotInstalledError } from '../../common/helpers';
 import { Installer, Product } from '../../common/installer';
+import { IServiceContainer } from '../../ioc/types';
 import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../telemetry/constants';
 import { sendTelemetryEvent } from '../../telemetry/index';
 import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../telemetry/types';
 import { CANCELLATION_REASON, CommandSource } from './constants';
 import { displayTestErrorMessage } from './testUtils';
-import { ITestCollectionStorageService, ITestResultsService, ITestsHelper, Tests, TestStatus, TestsToRun } from './types';
+import { ITestCollectionStorageService, ITestResultsService, ITestsHelper, TestProvider, Tests, TestStatus, TestsToRun } from './types';
 
 enum CancellationTokenType {
     testDiscovery,
     testRunner
 }
-type TestProvider = 'nosetest' | 'pytest' | 'unittest';
 export abstract class BaseTestManager {
-    public readonly workspace: Uri;
     protected readonly settings: IPythonSettings;
     private tests: Tests;
     // tslint:disable-next-line:variable-name
@@ -26,13 +25,12 @@ export abstract class BaseTestManager {
     private testRunnerCancellationTokenSource: vscode.CancellationTokenSource;
     private installer: Installer;
     private discoverTestsPromise: Promise<Tests>;
-    constructor(public readonly testProvider: TestProvider, private product: Product, protected rootDirectory: string,
+    constructor(public readonly testProvider: TestProvider, private product: Product, public readonly workspaceFolder: Uri, protected rootDirectory: string,
         protected outputChannel: vscode.OutputChannel, private testCollectionStorage: ITestCollectionStorageService,
-        protected testResultsService: ITestResultsService, protected testsHelper: ITestsHelper) {
+        protected testResultsService: ITestResultsService, protected testsHelper: ITestsHelper, protected serviceContainer: IServiceContainer) {
         this._status = TestStatus.Unknown;
         this.installer = new Installer();
         this.settings = PythonSettings.getInstance(this.rootDirectory ? Uri.file(this.rootDirectory) : undefined);
-        this.workspace = workspace.getWorkspaceFolder(Uri.file(this.rootDirectory)).uri;
     }
     protected get testDiscoveryCancellationToken(): vscode.CancellationToken | undefined {
         return this.testDiscoveryCancellationTokenSource ? this.testDiscoveryCancellationTokenSource.token : undefined;
@@ -122,7 +120,7 @@ export abstract class BaseTestManager {
             }).catch(reason => {
                 if (isNotInstalledError(reason) && !quietMode) {
                     // tslint:disable-next-line:no-floating-promises
-                    this.installer.promptToInstall(this.product, this.workspace);
+                    this.installer.promptToInstall(this.product, this.workspaceFolder);
                 }
 
                 this.tests = null;

@@ -67,7 +67,7 @@ suite('ProcessService', () => {
         const cancellationToken = new CancellationTokenSource();
         setTimeout(() => cancellationToken.cancel(), 3000);
 
-        const result = await procService.exec('python', ['-c', pythonCode.join(';')], { cancellationToken: cancellationToken.token });
+        const result = await procService.exec('python', ['-c', pythonCode.join(';')], { token: cancellationToken.token });
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         const values = result.stdout.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);

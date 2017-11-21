@@ -2,10 +2,12 @@
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { OutputChannel } from 'vscode';
+import { CancellationTokenSource, OutputChannel } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
+import { IServiceContainer } from '../../ioc/types';
+import { Options, run } from '../common/runner';
 import { convertFileToPackage, extractBetweenDelimiters } from '../common/testUtils';
-import { ITestsHelper, TestFile, TestFunction, Tests, TestSuite } from '../common/types';
+import { ITestsHelper, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestSuite } from '../common/types';
 import { execPythonFile } from './../../common/utils';
 
 const argsToExcludeForDiscovery = ['-x', '--exitfirst',
@@ -16,7 +18,7 @@ const argsToExcludeForDiscovery = ['-x', '--exitfirst',
     '--disable-pytest-warnings', '-l', '--showlocals'];
 const settingsInArgsToExcludeForDiscovery = [];
 
-export function discoverTests(rootDirectory: string, args: string[], token: vscode.CancellationToken, ignoreCache: boolean, outChannel: OutputChannel, testsHelper: ITestsHelper): Promise<Tests> {
+export function discoverTests(serviceContainer: IServiceContainer, testsHelper: ITestsHelper, options: TestDiscoveryOptions): Promise<Tests> {
     let logOutputLines: string[] = [''];
     const testFiles: TestFile[] = [];
     const parentNodes: { indent: number, item: TestFile | TestSuite }[] = [];
@@ -26,7 +28,7 @@ export function discoverTests(rootDirectory: string, args: string[], token: vsco
     let haveErrors = false;
 
     // Remove unwanted arguments
-    args = args.filter(arg => {
+    const args = options.args.filter(arg => {
         if (argsToExcludeForDiscovery.indexOf(arg.trim()) !== -1) {
             return false;
         }
@@ -35,17 +37,17 @@ export function discoverTests(rootDirectory: string, args: string[], token: vsco
         }
         return true;
     });
-    if (ignoreCache && args.indexOf('--cache-clear') === -1) {
+    if (options.ignoreCache && args.indexOf('--cache-clear') === -1) {
         args.push('--cache-clear');
     }
     function processOutput(output: string) {
         output.split(/\r?\n/g).forEach((line, index, lines) => {
-            if (token && token.isCancellationRequested) {
+            if (options.token && options.token.isCancellationRequested) {
                 return;
             }
             if (line.trim().startsWith('<Module \'') || index === lines.length - 1) {
                 // process the previous lines
-                parsePyTestModuleCollectionResult(rootDirectory, logOutputLines, testFiles, parentNodes);
+                parsePyTestModuleCollectionResult(options.cwd, logOutputLines, testFiles, parentNodes);
                 logOutputLines = [''];
             }
             if (errorLine.test(line)) {
@@ -56,12 +58,12 @@ export function discoverTests(rootDirectory: string, args: string[], token: vsco
             if (errorFileLine.test(line)) {
                 haveErrors = true;
                 if (logOutputLines.length !== 1 && logOutputLines[0].length !== 0) {
-                    parsePyTestModuleCollectionError(rootDirectory, logOutputLines, testFiles, parentNodes);
+                    parsePyTestModuleCollectionError(options.cwd, logOutputLines, testFiles, parentNodes);
                     logOutputLines = [''];
                 }
             }
             if (lastLineWithErrors.test(line) && haveErrors) {
-                parsePyTestModuleCollectionError(rootDirectory, logOutputLines, testFiles, parentNodes);
+                parsePyTestModuleCollectionError(options.cwd, logOutputLines, testFiles, parentNodes);
                 logOutputLines = [''];
             }
             if (index === 0) {
@@ -83,11 +85,18 @@ export function discoverTests(rootDirectory: string, args: string[], token: vsco
         });
     }
 
-    return execPythonFile(rootDirectory, PythonSettings.getInstance(vscode.Uri.file(rootDirectory)).unitTest.pyTestPath, args.concat(['--collect-only']), rootDirectory, false, null, token)
+    const runOptions: Options = {
+        args: args.concat(['--collect-only']),
+        cwd: options.cwd,
+        workspaceFolder: options.workspaceFolder,
+        token: options.token,
+        outChannel: options.outChannel
+    };
+
+    return run(serviceContainer, 'pytest', runOptions)
         .then(data => {
-            outChannel.appendLine(data);
             processOutput(data);
-            if (token && token.isCancellationRequested) {
+            if (options.token && options.token.isCancellationRequested) {
                 return Promise.reject<Tests>('cancelled');
             }
             return testsHelper.flattenTestFiles(testFiles);

@@ -1,28 +1,32 @@
+import { inject, injectable } from 'inversify';
 import { Disposable, FileSystemWatcher, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../configSettings';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
+@injectable()
 export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvider, Disposable {
-    private cache = new Map<string, EnvironmentVariables | undefined>();
+    private cache = new Map<string, { vars: EnvironmentVariables | undefined, mergedWithProc: EnvironmentVariables }>();
     private fileWatchers = new Map<string, FileSystemWatcher>();
     private disposables: Disposable[] = [];
 
-    constructor(private envVarsService: IEnvironmentVariablesService) { }
+    constructor( @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService) { }
 
     public dispose() {
         this.fileWatchers.forEach(watcher => {
             watcher.dispose();
         });
     }
-    public async getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
+    public async getEnvironmentVariables(mergeWithProcEnvVariables: boolean, resource?: Uri): Promise<EnvironmentVariables | undefined> {
         const settings = PythonSettings.getInstance(resource);
-        if (this.cache.has(settings.envFile)) {
-            return this.cache.get(settings.envFile);
+        if (!this.cache.has(settings.envFile)) {
+            this.createFileWatcher(settings.envFile);
+            const vars = await this.envVarsService.parseFile(settings.envFile);
+            const mergedVars = await this.envVarsService.parseFile(settings.envFile);
+            this.envVarsService.mergeVariables(process.env, mergedVars);
+            this.cache.set(settings.envFile, { vars, mergedWithProc: mergedVars });
         }
-        this.createFileWatcher(settings.envFile);
-        const vars = await this.envVarsService.parseFile(settings.envFile);
-        this.cache.set(settings.envFile, vars);
-        return vars;
+        const data = this.cache.get(settings.envFile);
+        return mergeWithProcEnvVariables ? data.mergedWithProc : data.vars;
     }
     private createFileWatcher(envFile: string) {
         if (this.fileWatchers.has(envFile)) {

@@ -1,10 +1,20 @@
 'use strict';
+import { Container } from 'inversify';
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
 import { createDeferred } from './common/helpers';
 import { PersistentStateFactory } from './common/persistentState';
+import { BufferDecoder } from './common/process/decoder';
+import { ProcessService } from './common/process/proc';
+import { PythonExecutionFactory } from './common/process/pythonExecutionFactory';
+import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
+import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
+import { IS_WINDOWS } from './common/utils';
+import { EnvironmentVariablesService } from './common/variables/environment';
+import { EnvironmentVariablesProvider } from './common/variables/environmentVariablesProvider';
+import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { SimpleConfigurationProvider } from './debugger';
 import { FeedbackService } from './feedback';
 import { InterpreterManager } from './interpreter';
@@ -12,6 +22,8 @@ import { SetInterpreterProvider } from './interpreter/configuration/setInterpret
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
 import { getCondaVersion } from './interpreter/helpers';
 import { InterpreterVersionService } from './interpreter/interpreterVersion';
+import { ServiceContainer } from './ioc/container';
+import { ServiceManager } from './ioc/serviceManager';
 import * as jup from './jupyter/main';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
@@ -45,8 +57,20 @@ let lintingOutChannel: vscode.OutputChannel;
 let jupMain: jup.Jupyter;
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
+
+let cont: Container;
+let serviceManager: ServiceManager;
+let serviceContainer: ServiceContainer;
+
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: vscode.ExtensionContext) {
+    cont = new Container();
+    serviceManager = new ServiceManager(cont);
+    serviceContainer = new ServiceContainer(cont);
+    commonRegisterTypes(serviceManager);
+    processRegisterTypes(serviceManager);
+    variableRegisterTypes(serviceManager);
+
     const pythonSettings = settings.PythonSettings.getInstance();
     // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated);
@@ -145,7 +169,10 @@ export async function activate(context: vscode.ExtensionContext) {
         // tslint:disable-next-line:no-unsafe-any
         linterProvider.documentHasJupyterCodeCells = documentHasJupyterCodeCells;
     }
-    tests.activate(context, unitTestOutChannel, symbolProvider);
+    // const procService = new ProcessService(new BufferDecoder());
+    // const envVarsProvider = new EnvironmentVariablesProvider(new EnvironmentVariablesService(IS_WINDOWS));
+    // const pythonExecutionFactory = new PythonExecutionFactory(procService, envVarsProvider);
+    tests.activate(context, unitTestOutChannel, symbolProvider, serviceContainer);
 
     context.subscriptions.push(new WorkspaceSymbols(lintingOutChannel));
 
