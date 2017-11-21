@@ -1,19 +1,35 @@
-import * as Types from './sysTypes';
-import * as vscode from 'vscode';
 import * as Path from 'path';
-
-/**
- * An interface for a JavaScript object that
- * acts a dictionary. The keys are strings.
- */
-export interface IStringDictionary<V> {
-    [name: string]: V;
-}
+import * as Types from './sysTypes';
+import { IStringDictionary, ISystemVariables } from './types';
+/* tslint:disable:rule1 no-any no-unnecessary-callback-wrapper jsdoc-format no-for-in prefer-const no-increment-decrement */
 
 export abstract class Parser {
-    protected log(message: string): void {
+
+    protected static merge<T>(destination: T, source: T, overwrite: boolean): void {
+        Object.keys(source).forEach((key) => {
+            const destValue = (destination as any as { [key: string]: string })[key];
+            const sourceValue = (source as any as { [key: string]: string })[key];
+            if (Types.isUndefined(sourceValue)) {
+                return;
+            }
+            if (Types.isUndefined(destValue)) {
+                (destination as any as { [key: string]: string })[key] = sourceValue;
+            } else {
+                if (overwrite) {
+                    if (Types.isObject(destValue) && Types.isObject(sourceValue)) {
+                        this.merge(destValue, sourceValue, overwrite);
+                    } else {
+                        (destination as any as { [key: string]: string })[key] = sourceValue;
+                    }
+                }
+            }
+        });
     }
 
+    // tslint:disable-next-line:no-empty
+    protected log(message: string): void { }
+
+    // tslint:disable-next-line:no-any
     protected is(value: any, func: (value: any) => boolean, wrongTypeState?: any, wrongTypeMessage?: string, undefinedState?: any, undefinedMessage?: string): boolean {
         if (Types.isUndefined(value)) {
             return false;
@@ -23,39 +39,8 @@ export abstract class Parser {
         }
         return true;
     }
-
-    protected static merge<T>(destination: T, source: T, overwrite: boolean): void {
-        Object.keys(source).forEach((key) => {
-            let destValue = destination[key];
-            let sourceValue = source[key];
-            if (Types.isUndefined(sourceValue)) {
-                return;
-            }
-            if (Types.isUndefined(destValue)) {
-                destination[key] = sourceValue;
-            } else {
-                if (overwrite) {
-                    if (Types.isObject(destValue) && Types.isObject(sourceValue)) {
-                        this.merge(destValue, sourceValue, overwrite);
-                    } else {
-                        destination[key] = sourceValue;
-                    }
-                }
-            }
-        });
-    }
 }
 
-
-export interface ISystemVariables {
-    resolve(value: string): string;
-    resolve(value: string[]): string[];
-    resolve(value: IStringDictionary<string>): IStringDictionary<string>;
-    resolve(value: IStringDictionary<string[]>): IStringDictionary<string[]>;
-    resolve(value: IStringDictionary<IStringDictionary<string>>): IStringDictionary<IStringDictionary<string>>;
-    resolveAny<T>(value: T): T;
-    [key: string]: any;
-}
 export abstract class AbstractSystemVariables implements ISystemVariables {
 
     public resolve(value: string): string;
@@ -63,6 +48,7 @@ export abstract class AbstractSystemVariables implements ISystemVariables {
     public resolve(value: IStringDictionary<string>): IStringDictionary<string>;
     public resolve(value: IStringDictionary<string[]>): IStringDictionary<string[]>;
     public resolve(value: IStringDictionary<IStringDictionary<string>>): IStringDictionary<IStringDictionary<string>>;
+    // tslint:disable-next-line:no-any
     public resolve(value: any): any {
         if (Types.isString(value)) {
             return this.__resolveString(value);
@@ -75,8 +61,9 @@ export abstract class AbstractSystemVariables implements ISystemVariables {
         return value;
     }
 
-    resolveAny<T>(value: T): T;
-    resolveAny<T>(value: any): any {
+    public resolveAny<T>(value: T): T;
+    // tslint:disable-next-line:no-any
+    public resolveAny(value: any): any {
         if (Types.isString(value)) {
             return this.__resolveString(value);
         } else if (Types.isArray(value)) {
@@ -89,9 +76,10 @@ export abstract class AbstractSystemVariables implements ISystemVariables {
     }
 
     private __resolveString(value: string): string {
-        let regexp = /\$\{(.*?)\}/g;
+        const regexp = /\$\{(.*?)\}/g;
         return value.replace(regexp, (match: string, name: string) => {
-            let newValue = (<any>this)[name];
+            // tslint:disable-next-line:no-any
+            const newValue = (<any>this)[name];
             if (Types.isString(newValue)) {
                 return newValue;
             } else {
@@ -101,19 +89,22 @@ export abstract class AbstractSystemVariables implements ISystemVariables {
     }
 
     private __resolveLiteral(values: IStringDictionary<string | IStringDictionary<string> | string[]>): IStringDictionary<string | IStringDictionary<string> | string[]> {
-        let result: IStringDictionary<string | IStringDictionary<string> | string[]> = Object.create(null);
+        const result: IStringDictionary<string | IStringDictionary<string> | string[]> = Object.create(null);
         Object.keys(values).forEach(key => {
-            let value = values[key];
+            const value = values[key];
+            // tslint:disable-next-line:no-any
             result[key] = <any>this.resolve(<any>value);
         });
         return result;
     }
 
     private __resolveAnyLiteral<T>(values: T): T;
-    private __resolveAnyLiteral<T>(values: any): any {
-        let result: IStringDictionary<string | IStringDictionary<string> | string[]> = Object.create(null);
+    // tslint:disable-next-line:no-any
+    private __resolveAnyLiteral(values: any): any {
+        const result: IStringDictionary<string | IStringDictionary<string> | string[]> = Object.create(null);
         Object.keys(values).forEach(key => {
-            let value = values[key];
+            const value = values[key];
+            // tslint:disable-next-line:no-any
             result[key] = <any>this.resolveAny(<any>value);
         });
         return result;
@@ -124,11 +115,11 @@ export abstract class AbstractSystemVariables implements ISystemVariables {
     }
 
     private __resolveAnyArray<T>(value: T[]): T[];
+    // tslint:disable-next-line:no-any
     private __resolveAnyArray(value: any[]): any[] {
         return value.map(s => this.resolveAny(s));
     }
 }
-
 
 export class SystemVariables extends AbstractSystemVariables {
     private _workspaceRoot: string;
@@ -139,7 +130,7 @@ export class SystemVariables extends AbstractSystemVariables {
         this._workspaceRoot = typeof workspaceRoot === 'string' ? workspaceRoot : __dirname;
         this._workspaceRootFolderName = Path.basename(this._workspaceRoot);
         Object.keys(process.env).forEach(key => {
-            this[`env:${key}`] = this[`env.${key}`] = process.env[key];
+            (this as any as { [key: string]: string })[`env:${key}`] = (this as any as { [key: string]: string })[`env.${key}`] = process.env[key];
         });
     }
 

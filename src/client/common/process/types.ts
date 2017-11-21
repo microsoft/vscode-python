@@ -1,6 +1,7 @@
 import { ChildProcess, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import * as Rx from 'rxjs';
 import { CancellationToken, Uri } from 'vscode';
+import { EnvironmentVariables } from '../variables/types';
 
 export interface IBufferDecoder {
     decode(buffers: Buffer[], encoding: string): string;
@@ -34,24 +35,26 @@ export interface IProcessService {
 }
 
 export interface IPythonExecutionFactory {
-    create(resource?: Uri): IPythonExecutionService;
+    create(resource?: Uri): Promise<IPythonExecutionService>;
 }
 export interface IPythonExecutionService {
-    isRunnable(): Promise<boolean>;
-
     getVersion(): Promise<string>;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
 
     execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
-    execModuleObservable(module: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
+    execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
 
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
-    execModule(module: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
+    execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
 export class StdErrError extends Error {
     constructor(message: string) {
         super(message);
     }
+}
+
+export interface IExecutionEnvironmentVariablesService {
+    getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined>;
 }

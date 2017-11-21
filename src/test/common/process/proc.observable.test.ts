@@ -21,7 +21,7 @@ suite('ProcessService', () => {
         const output = await result.out.toPromise();
         expect(output.source).to.be.equal('stdout', 'Source is incorrect');
         expect(output.out).to.have.length.greaterThan(0, 'Invalid output length');
-        const stdOut = output.out.replace(/\s+$/g, '');
+        const stdOut = output.out.trim();
         expect(stdOut).to.equal(printOutput, 'Output is incorrect');
     });
 
@@ -39,7 +39,7 @@ suite('ProcessService', () => {
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
             const expectedValue = outputs.shift();
-            if (expectedValue !== output.out.replace(/\s+$/g, '') || expectedValue === output.out) {
+            if (expectedValue !== output.out.trim() || expectedValue === output.out) {
                 done(`Received value ${output.out} is not same as the expectd value ${expectedValue}`);
             }
             if (output.source !== 'stdout') {
@@ -83,7 +83,7 @@ suite('ProcessService', () => {
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
-            const value = output.out.replace(/\s+$/g, '');
+            const value = output.out.trim();
             if (value === '1') {
                 cancellationToken.cancel();
             } else {
@@ -108,7 +108,7 @@ suite('ProcessService', () => {
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
-            const value = output.out.replace(/\s+$/g, '');
+            const value = output.out.trim();
             if (value === '1') {
                 procKilled = true;
                 result.proc.kill();
@@ -140,7 +140,7 @@ suite('ProcessService', () => {
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
-            const value = output.out.replace(/\s+$/g, '');
+            const value = output.out.trim();
             const expectedOutput = outputs.shift()!;
 
             expect(value).to.be.equal(expectedOutput.out, 'Expected output is incorrect');
@@ -167,7 +167,7 @@ suite('ProcessService', () => {
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
-            const value = output.out.replace(/\s+$/g, '');
+            const value = output.out.trim();
             const expectedOutput = outputs.shift()!;
 
             expect(value).to.be.equal(expectedOutput.out, 'Expected output is incorrect');

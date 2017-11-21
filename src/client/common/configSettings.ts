@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { InterpreterInfoCache } from './interpreterInfoCache';
-import { SystemVariables } from './systemVariables';
+import { SystemVariables } from './variables/systemVariables';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');

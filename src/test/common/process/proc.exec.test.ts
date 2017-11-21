@@ -19,7 +19,7 @@ suite('ProcessService', () => {
         const result = await procService.exec('python', ['-c', `print("${printOutput}")`]);
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
-        expect(result.stdout.replace(/\s+$/g, '')).to.be.equal(printOutput, 'Invalid output');
+        expect(result.stdout.trim()).to.be.equal(printOutput, 'Invalid output');
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
