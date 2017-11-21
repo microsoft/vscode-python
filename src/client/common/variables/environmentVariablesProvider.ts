@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, FileSystemWatcher, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../configSettings';
+import { IDiposableRegistry } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 @injectable()
@@ -9,7 +10,10 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     private fileWatchers = new Map<string, FileSystemWatcher>();
     private disposables: Disposable[] = [];
 
-    constructor( @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService) { }
+    constructor( @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
+        @inject(IDiposableRegistry) disposableRegistry: Disposable[]) {
+        disposableRegistry.push(this);
+    }
 
     public dispose() {
         this.fileWatchers.forEach(watcher => {

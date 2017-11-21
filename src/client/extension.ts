@@ -2,6 +2,7 @@
 import { Container } from 'inversify';
 import * as os from 'os';
 import * as vscode from 'vscode';
+import { Disposable } from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
 import { createDeferred } from './common/helpers';
@@ -11,6 +12,7 @@ import { ProcessService } from './common/process/proc';
 import { PythonExecutionFactory } from './common/process/pythonExecutionFactory';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
+import { IDiposableRegistry } from './common/types';
 import { IS_WINDOWS } from './common/utils';
 import { EnvironmentVariablesService } from './common/variables/environment';
 import { EnvironmentVariablesProvider } from './common/variables/environmentVariablesProvider';
@@ -67,6 +69,7 @@ export async function activate(context: vscode.ExtensionContext) {
     cont = new Container();
     serviceManager = new ServiceManager(cont);
     serviceContainer = new ServiceContainer(cont);
+    serviceManager.addSingletonInstance<Disposable[]>(IDiposableRegistry, context.subscriptions);
     commonRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);

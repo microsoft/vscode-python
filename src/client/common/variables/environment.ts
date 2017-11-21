@@ -1,7 +1,7 @@
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { IS_WINDOWS } from '../types';
+import { IsWindows } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 
 const WINDOWS_PATH_VARIABLE_NAME = 'Path';
@@ -9,7 +9,7 @@ const NON_WINDOWS_PATH_VARIABLE_NAME = 'PATH';
 
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
-    constructor( @inject(IS_WINDOWS) private isWidows: boolean) { }
+    constructor( @inject(IsWindows) private isWidows: boolean) { }
     public async parseFile(filePath: string): Promise<EnvironmentVariables | undefined> {
         const exists = await fs.pathExists(filePath);
         if (!exists) {
