@@ -76,7 +76,7 @@ suite('Multiroot Python Path Settings Updater', () => {
     });
 
     // tslint:disable-next-line:no-invalid-template-strings
-    test('Python Paths containing ${workspaceRoot should be resolved as ${workspaceFolder}', async () => {
+    test('Python Paths containing ${workspaceRoot} should be resolved as ${workspaceFolder}', async () => {
         const workspaceUri = workspace.getWorkspaceFolder(workspace3Uri).uri;
         const pythonInterpreter = `xWorkspacePythonPath${new Date().getMilliseconds()}`;
         // tslint:disable-next-line:no-invalid-template-strings
