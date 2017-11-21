@@ -37,7 +37,7 @@ export interface IPythonExecutionFactory {
     create(resource?: Uri): IPythonExecutionService;
 }
 export interface IPythonExecutionService {
-    isValidInterpreter(): Promise<boolean>;
+    isRunnable(): Promise<boolean>;
 
     getVersion(): Promise<string>;
     getExecutablePath(): Promise<string>;
