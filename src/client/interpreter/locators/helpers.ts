@@ -19,8 +19,3 @@ export function fixInterpreterDisplayName(item: PythonInterpreter) {
     }
     return item;
 }
-export function fixInterpreterPath(item: PythonInterpreter) {
-    // For some reason anaconda seems to use \\ in the registry path.
-    item.path = path.normalize(item.path);
-    return item;
-}
