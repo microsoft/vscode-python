@@ -28,9 +28,7 @@ export class FeedbackService implements Disposable {
     constructor(persistentStateFactory: IPersistentStateFactory) {
         this.showFeedbackPrompt = persistentStateFactory.createGlobalPersistentState('SHOW_FEEDBACK_PROMPT', true);
         this.userResponded = persistentStateFactory.createGlobalPersistentState('RESPONDED_TO_FEEDBACK', false);
-        if (this.showFeedbackPrompt.value && !this.userResponded.value) {
-            this.initialize();
-        }
+        this.initialize();
     }
     public dispose() {
         this.counters = undefined;
@@ -44,6 +42,9 @@ export class FeedbackService implements Disposable {
         // tslint:disable-next-line:no-void-expression
         let commandDisable = commands.registerCommand('python.updateFeedbackCounter', (telemetryEventName: string) => this.updateFeedbackCounter(telemetryEventName));
         this.disposables.push(commandDisable);
+        if (!this.showFeedbackPrompt.value || this.userResponded.value) {
+            return;
+        }
         // tslint:disable-next-line:no-void-expression
         commandDisable = workspace.onDidChangeTextDocument(changeEvent => this.handleChangesToTextDocument(changeEvent.document), this, this.disposables);
         this.disposables.push(commandDisable);
@@ -60,7 +61,8 @@ export class FeedbackService implements Disposable {
         if (!this.canShowPrompt) {
             return;
         }
-        this.counters.incrementEditCounter();
+        // tslint:disable-next-line:no-non-null-assertion
+        this.counters!.incrementEditCounter();
     }
     private updateFeedbackCounter(telemetryEventName: string): void {
         // Ignore feedback events.
@@ -70,7 +72,8 @@ export class FeedbackService implements Disposable {
         if (!this.canShowPrompt) {
             return;
         }
-        this.counters.incrementFeatureUsageCounter();
+        // tslint:disable-next-line:no-non-null-assertion
+        this.counters!.incrementFeatureUsageCounter();
     }
     private thresholdHandler() {
         if (!this.canShowPrompt) {

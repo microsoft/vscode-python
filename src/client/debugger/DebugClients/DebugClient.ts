@@ -14,7 +14,7 @@ export enum DebugType {
 }
 export abstract class DebugClient extends EventEmitter {
     protected debugSession: DebugSession;
-    constructor(args: any, debugSession: DebugSession) {
+    constructor(protected args: any, debugSession: DebugSession) {
         super();
         this.debugSession = debugSession;
     }

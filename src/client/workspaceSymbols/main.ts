@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
-import { Generator } from './generator';
+import { workspace } from 'vscode';
+import { Commands, PythonLanguage } from '../common/constants';
+import { isNotInstalledError } from '../common/helpers';
 import { Installer, InstallerResponse, Product } from '../common/installer';
 import { fsExistsAsync } from '../common/utils';
-import { isNotInstalledError } from '../common/helpers';
-import { PythonLanguage, Commands } from '../common/constants';
+import { Generator } from './generator';
 import { WorkspaceSymbolProvider } from './provider';
-import { workspace } from 'vscode';
 
 const MAX_NUMBER_OF_ATTEMPTS_TO_INSTALL_AND_BUILD = 2;
 
@@ -13,6 +13,8 @@ export class WorkspaceSymbols implements vscode.Disposable {
     private disposables: vscode.Disposable[];
     private generators: Generator[] = [];
     private installer: Installer;
+    // tslint:disable-next-line:no-any
+    private timeout: any;
     constructor(private outputChannel: vscode.OutputChannel) {
         this.disposables = [];
         this.disposables.push(this.outputChannel);
@@ -21,12 +23,14 @@ export class WorkspaceSymbols implements vscode.Disposable {
         this.registerCommands();
         this.initializeGenerators();
         vscode.languages.registerWorkspaceSymbolProvider(new WorkspaceSymbolProvider(this.generators, this.outputChannel));
-        this.buildWorkspaceSymbols(true);
         this.disposables.push(vscode.workspace.onDidChangeWorkspaceFolders(() => this.initializeGenerators()));
+    }
+    public dispose() {
+        this.disposables.forEach(d => d.dispose());
     }
     private initializeGenerators() {
         while (this.generators.length > 0) {
-            const generator = this.generators.shift();
+            const generator = this.generators.shift()!;
             generator.dispose();
         }
 
@@ -36,38 +40,36 @@ export class WorkspaceSymbols implements vscode.Disposable {
             });
         }
     }
-    registerCommands() {
-        this.disposables.push(vscode.commands.registerCommand(Commands.Build_Workspace_Symbols, (rebuild: boolean = true, token?: vscode.CancellationToken) => {
-            this.buildWorkspaceSymbols(rebuild, token);
+    private registerCommands() {
+        this.disposables.push(vscode.commands.registerCommand(Commands.Build_Workspace_Symbols, async (rebuild: boolean = true, token?: vscode.CancellationToken) => {
+            const promises = this.buildWorkspaceSymbols(rebuild, token);
+            return Promise.all(promises);
         }));
     }
-    registerOnSaveHandlers() {
+    private registerOnSaveHandlers() {
         this.disposables.push(vscode.workspace.onDidSaveTextDocument(this.onDidSaveTextDocument.bind(this)));
     }
-    onDidSaveTextDocument(textDocument: vscode.TextDocument) {
+    private onDidSaveTextDocument(textDocument: vscode.TextDocument) {
         if (textDocument.languageId === PythonLanguage.language) {
             this.rebuildTags();
         }
     }
-    private timeout: number;
-    rebuildTags() {
+    private rebuildTags() {
         if (this.timeout) {
-            clearTimeout(this.timeout);
+            clearTimeout(this.timeout!);
             this.timeout = null;
         }
         this.timeout = setTimeout(() => {
             this.buildWorkspaceSymbols(true);
         }, 5000);
     }
-    dispose() {
-        this.disposables.forEach(d => d.dispose());
-    }
-    async buildWorkspaceSymbols(rebuild: boolean = true, token?: vscode.CancellationToken): Promise<any> {
+    // tslint:disable-next-line:no-any
+    private buildWorkspaceSymbols(rebuild: boolean = true, token?: vscode.CancellationToken): Promise<any>[] {
         if (token && token.isCancellationRequested) {
-            return Promise.resolve([]);
+            return [];
         }
         if (this.generators.length === 0) {
-            return Promise.resolve([]);
+            return [];
         }
 
         let promptPromise: Promise<InstallerResponse>;
@@ -77,17 +79,16 @@ export class WorkspaceSymbols implements vscode.Disposable {
                 return;
             }
             const exists = await fsExistsAsync(generator.tagFilePath);
-            // if file doesn't exist, then run the ctag generator
-            // Or check if required to rebuild
+            // If file doesn't exist, then run the ctag generator,
+            // or check if required to rebuild.
             if (!rebuild && exists) {
                 return;
             }
-            for (let counter = 0; counter < MAX_NUMBER_OF_ATTEMPTS_TO_INSTALL_AND_BUILD; counter++) {
+            for (let counter = 0; counter < MAX_NUMBER_OF_ATTEMPTS_TO_INSTALL_AND_BUILD; counter += 1) {
                 try {
                     await generator.generateWorkspaceTags();
                     return;
-                }
-                catch (error) {
+                } catch (error) {
                     if (!isNotInstalledError(error)) {
                         this.outputChannel.show();
                         return;
@@ -96,13 +97,12 @@ export class WorkspaceSymbols implements vscode.Disposable {
                 if (!token || token.isCancellationRequested) {
                     return;
                 }
-                // Display prompt once for all workspaces
+                // Display prompt once for all workspaces.
                 if (promptPromise) {
                     promptResponse = await promptPromise;
                     continue;
-                }
-                else {
-                    promptPromise = this.installer.promptToInstall(Product.ctags, workspace.workspaceFolders[0].uri);
+                } else {
+                    promptPromise = this.installer.promptToInstall(Product.ctags, workspace.workspaceFolders[0]!.uri);
                     promptResponse = await promptPromise;
                 }
                 if (promptResponse !== InstallerResponse.Installed || (!token || token.isCancellationRequested)) {
@@ -112,4 +112,3 @@ export class WorkspaceSymbols implements vscode.Disposable {
         });
     }
 }
-

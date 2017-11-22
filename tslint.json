@@ -43,8 +43,13 @@
             "PromiseLike"
         ],
         "completed-docs": false,
-        "no-backbone-get-set-outside-model": false,
+        "no-void-expression": false,
+        "no-non-null-assertion": false, 
         "no-unsafe-any": false,
-        "no-non-null-assertion": false
+        "prefer-type-cast": false,
+        "function-name": false,
+        "variable-name": false,
+        "no-backbone-get-set-outside-model": false,
+        "underscore-consistent-invocation": false
     }
 }
