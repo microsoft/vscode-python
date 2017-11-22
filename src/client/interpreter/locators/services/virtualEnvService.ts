@@ -33,7 +33,11 @@ export class VirtualEnvService implements IInterpreterLocatorService {
             // tslint:disable-next-line:underscore-consistent-invocation
             .then(pathsWithInterpreters => _.flatten(pathsWithInterpreters))
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getVirtualEnvDetails(interpreter))))
-            .catch(() => [] as PythonInterpreter[]);    // Ignore exceptions.
+            .catch((err) => {
+                console.error('Python Extension (lookForInterpretersInVenvs):', err);
+                // Ignore exceptions.
+                return [] as PythonInterpreter[];
+            });
     }
     private getProspectiveDirectoriesForLookup(subDirs: string[]) {
         const dirToLookFor = IS_WINDOWS ? 'SCRIPTS' : 'BIN';

@@ -8,7 +8,10 @@ const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : 
 export function lookForInterpretersInDirectory(pathToCheck: string): Promise<string[]> {
     return fsReaddirAsync(pathToCheck)
         .then(subDirs => subDirs.filter(fileName => CheckPythonInterpreterRegEx.test(path.basename(fileName))))
-        .catch(() => [] as string[]);
+        .catch(err => {
+            console.error('Python Extension (lookForInterpretersInDirectory.fsReaddirAsync):', err);
+            return [] as string[];
+        });
 }
 
 export function fixInterpreterDisplayName(item: PythonInterpreter) {
