@@ -104,7 +104,7 @@ export class RefactorProxy extends vscode.Disposable {
     private initialize(pythonPath: string): Promise<string> {
         return new Promise<any>((resolve, reject) => {
             this._initializeReject = reject;
-            let environmentVariables = { 'PYTHONUNBUFFERED': '1' };
+            let environmentVariables: Object & { [key: string]: string } = { 'PYTHONUNBUFFERED': '1' };
             let customEnvironmentVars = getCustomEnvVarsSync(vscode.Uri.file(this.workspaceRoot));
             if (customEnvironmentVars) {
                 environmentVariables = mergeEnvVariables(environmentVariables, customEnvironmentVars);

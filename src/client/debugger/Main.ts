@@ -1,21 +1,21 @@
 "use strict";
 
-import { DebugSession, InitializedEvent, TerminatedEvent, StoppedEvent, OutputEvent, Thread, StackFrame, Scope, Source, Handles } from "vscode-debugadapter";
+import * as fs from "fs";
+import * as path from "path";
+import { DebugSession, Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread } from "vscode-debugadapter";
 import { ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
-import * as path from "path";
-import * as fs from "fs";
-import { PythonProcess } from "./PythonProcess";
-import { IPythonThread, IPythonModule, IPythonEvaluationResult, IPythonStackFrame, IDebugServer } from "./Common/Contracts";
-import { IPythonBreakpoint, PythonBreakpointConditionKind, PythonBreakpointPassCountKind, IPythonException, PythonEvaluationResultReprKind, enum_EXCEPTION_STATE } from "./Common/Contracts";
-import { BaseDebugServer } from "./DebugServers/BaseDebugServer";
-import { DebugClient } from "./DebugClients/DebugClient";
-import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients/DebugFactory";
-import { LaunchRequestArguments, AttachRequestArguments, DebugOptions, TelemetryEvent, PythonEvaluationResultFlags } from "./Common/Contracts";
-import { validatePath, getPythonExecutable } from './Common/Utils';
-import { isNotInstalledError } from '../common/helpers';
 import { DEBUGGER } from '../../client/telemetry/constants';
 import { DebuggerTelemetry } from '../../client/telemetry/types';
+import { isNotInstalledError } from '../common/helpers';
+import { enum_EXCEPTION_STATE, IPythonBreakpoint, IPythonException, PythonBreakpointConditionKind, PythonBreakpointPassCountKind, PythonEvaluationResultReprKind } from "./Common/Contracts";
+import { IDebugServer, IPythonEvaluationResult, IPythonModule, IPythonStackFrame, IPythonThread } from "./Common/Contracts";
+import { AttachRequestArguments, DebugOptions, LaunchRequestArguments, PythonEvaluationResultFlags, TelemetryEvent } from "./Common/Contracts";
+import { getPythonExecutable, validatePath } from './Common/Utils';
+import { DebugClient } from "./DebugClients/DebugClient";
+import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients/DebugFactory";
+import { BaseDebugServer } from "./DebugServers/BaseDebugServer";
+import { PythonProcess } from "./PythonProcess";
 
 const CHILD_ENUMEARATION_TIMEOUT = 5000;
 
@@ -37,6 +37,7 @@ export class PythonDebugger extends DebugSession {
     private configurationDonePromiseResolve: () => void;
     private lastException: IPythonException;
     private _supportsRunInTerminalRequest: boolean;
+    private terminateEventSent: boolean;
     public constructor(debuggerLinesStartAt1: boolean, isServer: boolean) {
         super(debuggerLinesStartAt1, isServer === true);
         this._variableHandles = new Handles<IDebugVariable>();
@@ -97,6 +98,8 @@ export class PythonDebugger extends DebugSession {
             this.pythonProcess.Kill();
             this.pythonProcess = null;
         }
+        this.terminateEventSent = true;
+        this.sendEvent(new TerminatedEvent());
     }
     private InitializeEventHandlers() {
         this.pythonProcess.on("last", arg => this.onLastCommand());
@@ -104,31 +107,26 @@ export class PythonDebugger extends DebugSession {
         this.pythonProcess.on("moduleLoaded", arg => this.onPythonModuleLoaded(arg));
         this.pythonProcess.on("threadCreated", arg => this.onPythonThreadCreated(arg));
         this.pythonProcess.on("processLoaded", arg => this.onPythonProcessLoaded(arg));
-        this.pythonProcess.on("output", (pyThread, output) => this.onDebuggerOutput(pyThread, output));
+        this.pythonProcess.on("output", (pyThread, output) => this.onDebuggerOutput(pyThread, output, 'stdout'));
         this.pythonProcess.on("exceptionRaised", (pyThread, ex) => this.onPythonException(pyThread, ex));
         this.pythonProcess.on("breakpointHit", (pyThread, breakpointId) => this.onBreakpointHit(pyThread, breakpointId));
         this.pythonProcess.on("stepCompleted", (pyThread) => this.onStepCompleted(pyThread));
         this.pythonProcess.on("detach", () => this.onDetachDebugger());
-        this.pythonProcess.on("error", ex => this.sendEvent(new OutputEvent(ex, "stderr")));
+        this.pythonProcess.on("error", ex => this.onDebuggerOutput(undefined, ex, 'stderr'));
         this.pythonProcess.on("asyncBreakCompleted", arg => this.onPythonProcessPaused(arg));
 
         this.debugServer.on("detach", () => this.onDetachDebugger());
     }
     private onLastCommand() {
-        // If we're running in terminal (integrated or external)
-        // Then don't stop the debug server
-        if (this.launchArgs && (this.launchArgs.console === "externalTerminal" ||
-            this.launchArgs.console === "integratedTerminal")) {
-            return;
-        }
-
-        // Else default behaviour as previous, which was to perform the same as onDetachDebugger
-        this.onDetachDebugger();
+        this.terminateEventSent = true;
+        // When running in terminals, and if there are any errors, the PTVSD library
+        // first sends the LAST command (meaning everything has ended) and then sends the stderr and stdout messages.
+        // I.e. to us, it looks as though everything is done and completed, when it isn't.
+        // A simple solution is to tell vscode that it has ended 500ms later (giving us time to receive any messages from stderr/stdout from ptvsd).
+        setTimeout(() => this.sendEvent(new TerminatedEvent()), 500);
     }
     private onDetachDebugger() {
         this.stopDebugServer();
-        this.sendEvent(new TerminatedEvent());
-        this.shutdown();
     }
     private onPythonThreadCreated(pyThread: IPythonThread) {
         this.sendEvent(new ThreadEvent("started", pyThread.Id));
@@ -150,39 +148,47 @@ export class PythonDebugger extends DebugSession {
     private onPythonModuleLoaded(module: IPythonModule) {
     }
     private debuggerHasLoaded: boolean;
-    private onPythonProcessLoaded(pyThread: IPythonThread) {
+    private onPythonProcessLoaded(pyThread?: IPythonThread) {
         this.debuggerHasLoaded = true;
-        this.sendResponse(this.entryResponse);
+        if (this.entryResponse) {
+            this.sendResponse(this.entryResponse);
+        }
         this.debuggerLoadedPromiseResolve();
         if (this.launchArgs && !this.launchArgs.console) {
-            this.launchArgs.console = this.launchArgs.externalConsole === true ? 'externalTerminal' : 'none';
+            this.launchArgs.console = 'none';
         }
-        // If launching the integrated terminal is not supported, then defer to external terminal 
-        // that will be displayed by our own code
+        // If launching the integrated terminal is not supported, then defer to external terminal
+        // that will be displayed by our own code.
         if (!this._supportsRunInTerminalRequest && this.launchArgs && this.launchArgs.console === 'integratedTerminal') {
             this.launchArgs.console = 'externalTerminal';
         }
-        if (this.launchArgs && this.launchArgs.stopOnEntry === true) {
-            this.sendEvent(new StoppedEvent("entry", pyThread.Id));
-        }
-        else if (this.launchArgs && this.launchArgs.stopOnEntry === false) {
-            this.configurationDone.then(() => {
-                this.pythonProcess.SendResumeThread(pyThread.Id);
-            });
-        }
-        else {
-            this.pythonProcess.SendResumeThread(pyThread.Id);
+        if (!this.launchArgs || this.launchArgs.noDebug !== true) {
+            // tslint:disable-next-line:no-non-null-assertion
+            const thread = pyThread!;
+            if (this.launchArgs && this.launchArgs.stopOnEntry === true) {
+                this.sendEvent(new StoppedEvent("entry", thread.Id));
+            } else if (this.launchArgs && this.launchArgs.stopOnEntry === false) {
+                this.configurationDone.then(() => {
+                    this.pythonProcess.SendResumeThread(thread.Id);
+                });
+            } else {
+                this.pythonProcess.SendResumeThread(thread.Id);
+            }
         }
     }
 
-    private onDebuggerOutput(pyThread: IPythonThread, output: string) {
-        if (!this.debuggerHasLoaded) {
+    private onDebuggerOutput(pyThread: IPythonThread | undefined, output: string, outputChannel: 'stdout' | 'stderr') {
+        if (this.entryResponse) {
+            // Sometimes we can get output from PTVSD even before things load.
+            // E.g. if the program didn't even run (e.g. simple one liner with invalid syntax).
+            // But we need to tell vscode that the debugging has started, so we can send error messages.
             this.sendResponse(this.entryResponse);
             this.debuggerLoadedPromiseResolve();
+            this.entryResponse = undefined;
         }
-        this.sendEvent(new OutputEvent(output, "stdout"));
+        this.sendEvent(new OutputEvent(output, outputChannel));
     }
-    private entryResponse: DebugProtocol.LaunchResponse;
+    private entryResponse?: DebugProtocol.LaunchResponse;
     private launchArgs: LaunchRequestArguments;
     private attachArgs: AttachRequestArguments;
     private canStartDebugger(): Promise<boolean> {
@@ -236,14 +242,14 @@ export class PythonDebugger extends DebugSession {
         const telemetryProps: DebuggerTelemetry = {
             trigger: 'launch',
             console: args.console,
-            debugOptions: args.debugOptions.join(","),
+            debugOptions: (Array.isArray(args.debugOptions) ? args.debugOptions : []).join(","),
             pyspark: typeof args.pythonPath === 'string' && args.pythonPath.indexOf('spark-submit') > 0,
             hasEnvVars: args.env && typeof args.env === "object" && Object.keys(args.env).length > 0
         };
         this.sendEvent(new TelemetryEvent(DEBUGGER, telemetryProps));
 
         this.launchArgs = args;
-        this.debugClient = CreateLaunchDebugClient(args, this);
+        this.debugClient = CreateLaunchDebugClient(args, this, this._supportsRunInTerminalRequest);
         //this.debugClient.on('exit', () => this.sendEvent(new TerminatedEvent()));
         this.configurationDone = new Promise(resolve => {
             this.configurationDonePromiseResolve = resolve;
@@ -273,6 +279,7 @@ export class PythonDebugger extends DebugSession {
         if (errorMsg.length > 0) {
             this.sendEvent(new OutputEvent(errorMsg + "\n", "stderr"));
         }
+        this.terminateEventSent = true;
         this.sendEvent(new TerminatedEvent());
     }
     protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments) {
@@ -339,6 +346,12 @@ export class PythonDebugger extends DebugSession {
     }
     protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
         this.debuggerLoaded.then(() => {
+            if (this.terminateEventSent) {
+                response.body = {
+                    breakpoints: []
+                };
+                return this.sendResponse(response);
+            }
             if (!this.registeredBreakpointsByFileName.has(args.source.path)) {
                 this.registeredBreakpointsByFileName.set(args.source.path, []);
             }
@@ -352,7 +365,7 @@ export class PythonDebugger extends DebugSession {
             // Always add new breakpoints, don't re-enable previous breakpoints
             // Cuz sometimes some breakpoints get added too early (e.g. in django) and don't get registeredBks
             // and the response comes back indicating it wasn't set properly
-            // However, at a later point in time, the program breaks at that point!!!            
+            // However, at a later point in time, the program breaks at that point!!!
             let linesToAddPromises = args.breakpoints.map(bk => {
                 return new Promise(resolve => {
                     let breakpoint: IPythonBreakpoint;
@@ -411,9 +424,11 @@ export class PythonDebugger extends DebugSession {
 
     protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
         let threads = [];
-        this.pythonProcess.Threads.forEach(t => {
-            threads.push(new Thread(t.Id, t.Name));
-        });
+        if (this.pythonProcess) {
+            this.pythonProcess.Threads.forEach(t => {
+                threads.push(new Thread(t.Id, t.Name));
+            });
+        }
 
         response.body = {
             threads: threads
@@ -452,11 +467,11 @@ export class PythonDebugger extends DebugSession {
     }
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
         this.debuggerLoaded.then(() => {
-            if (!this.pythonProcess.Threads.has(args.threadId)) {
+            if (this.terminateEventSent || !this.pythonProcess || !this.pythonProcess.Threads.has(args.threadId)) {
                 response.body = {
                     stackFrames: []
                 };
-                this.sendResponse(response);
+                return this.sendResponse(response);
             }
 
             let pyThread = this.pythonProcess.Threads.get(args.threadId);
@@ -506,7 +521,7 @@ export class PythonDebugger extends DebugSession {
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
         this.debuggerLoaded.then(() => {
             let frame = this._pythonStackFrames.get(args.frameId);
-            if (!frame) {
+            if (this.terminateEventSent || !frame || !this.pythonProcess) {
                 response.body = {
                     result: null,
                     variablesReference: 0
@@ -536,7 +551,7 @@ export class PythonDebugger extends DebugSession {
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
         this.debuggerLoaded.then(() => {
             let frame = this._pythonStackFrames.get(args.frameId);
-            if (!frame) {
+            if (this.terminateEventSent || !frame || !this.pythonProcess) {
                 response.body = {
                     scopes: []
                 };
@@ -645,6 +660,9 @@ export class PythonDebugger extends DebugSession {
     }
     protected setExceptionBreakPointsRequest(response: DebugProtocol.SetExceptionBreakpointsResponse, args: DebugProtocol.SetExceptionBreakpointsArguments): void {
         this.debuggerLoaded.then(() => {
+            if (this.terminateEventSent) {
+                return this.sendResponse(response);
+            }
             let mode = enum_EXCEPTION_STATE.BREAK_MODE_NEVER;
             if (args.filters.indexOf("uncaught") >= 0) {
                 mode = enum_EXCEPTION_STATE.BREAK_MODE_UNHANDLED;
@@ -683,7 +701,9 @@ export class PythonDebugger extends DebugSession {
             if (!exToIgnore.has('GeneratorExit')) {
                 exToIgnore.set('GeneratorExit', enum_EXCEPTION_STATE.BREAK_MODE_NEVER);
             }
-            this.pythonProcess.SendExceptionInfo(mode, exToIgnore);
+            if (this.pythonProcess) {
+                this.pythonProcess.SendExceptionInfo(mode, exToIgnore);
+            }
             this.sendResponse(response);
         });
     }

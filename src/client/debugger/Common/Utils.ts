@@ -1,11 +1,11 @@
-"use strict";
+'use strict';
 
-import { IPythonProcess, IPythonThread, IPythonModule, IPythonEvaluationResult } from "./Contracts";
-import * as path from "path";
-import * as fs from 'fs';
 import * as child_process from 'child_process';
-import { mergeEnvVariables, parseEnvFile } from '../../common/envFileParser';
+import * as fs from 'fs';
+import * as path from 'path';
 import * as untildify from 'untildify';
+import { mergeEnvVariables, mergePythonPath, parseEnvFile } from '../../common/envFileParser';
+import { IPythonEvaluationResult, IPythonModule, IPythonProcess, IPythonThread } from './Contracts';
 
 export const IS_WINDOWS = /^win/.test(process.platform);
 export const PATH_VARIABLE_NAME = IS_WINDOWS ? 'Path' : 'PATH';
@@ -38,7 +38,7 @@ export function validatePathSync(filePath: string): boolean {
     return exists;
 }
 
-export function CreatePythonThread(id: number, isWorker: boolean, process: IPythonProcess, name: string = ""): IPythonThread {
+export function CreatePythonThread(id: number, isWorker: boolean, process: IPythonProcess, name: string = ''): IPythonThread {
     return {
         IsWorkerThread: isWorker,
         Process: process,
@@ -50,15 +50,13 @@ export function CreatePythonThread(id: number, isWorker: boolean, process: IPyth
 
 export function CreatePythonModule(id: number, fileName: string): IPythonModule {
     let name = fileName;
-    if (typeof fileName === "string") {
+    if (typeof fileName === 'string') {
         try {
             name = path.basename(fileName);
-        }
-        catch (ex) {
-        }
-    }
-    else {
-        name = "";
+            // tslint:disable-next-line:no-empty
+        } catch  { }
+    } else {
+        name = '';
     }
 
     return {
@@ -74,7 +72,7 @@ export function FixupEscapedUnicodeChars(value: string): string {
 
 export function getPythonExecutable(pythonPath: string): string {
     pythonPath = untildify(pythonPath);
-    // If only 'python'
+    // If only 'python'.
     if (pythonPath === 'python' ||
         pythonPath.indexOf(path.sep) === -1 ||
         path.basename(pythonPath) === path.dirname(pythonPath)) {
@@ -84,21 +82,20 @@ export function getPythonExecutable(pythonPath: string): string {
     if (isValidPythonPath(pythonPath)) {
         return pythonPath;
     }
-    // Keep python right on top, for backwards compatibility
+    // Keep python right on top, for backwards compatibility.
     const KnownPythonExecutables = ['python', 'python4', 'python3.6', 'python3.5', 'python3', 'python2.7', 'python2'];
 
     for (let executableName of KnownPythonExecutables) {
-        // Suffix with 'python' for linux and 'osx', and 'python.exe' for 'windows'
+        // Suffix with 'python' for linux and 'osx', and 'python.exe' for 'windows'.
         if (IS_WINDOWS) {
-            executableName = executableName + '.exe';
+            executableName = `${executableName}.exe`;
             if (isValidPythonPath(path.join(pythonPath, executableName))) {
                 return path.join(pythonPath, executableName);
             }
             if (isValidPythonPath(path.join(pythonPath, 'scripts', executableName))) {
                 return path.join(pythonPath, 'scripts', executableName);
             }
-        }
-        else {
+        } else {
             if (isValidPythonPath(path.join(pythonPath, executableName))) {
                 return path.join(pythonPath, executableName);
             }
@@ -113,39 +110,36 @@ export function getPythonExecutable(pythonPath: string): string {
 
 function isValidPythonPath(pythonPath): boolean {
     try {
-        let output = child_process.execFileSync(pythonPath, ['-c', 'print(1234)'], { encoding: 'utf8' });
+        const output = child_process.execFileSync(pythonPath, ['-c', 'print(1234)'], { encoding: 'utf8' });
         return output.startsWith('1234');
-    }
-    catch (ex) {
+    } catch  {
         return false;
     }
 }
 
+type EnvVars = Object & { [key: string]: string };
 
-export function getCustomEnvVars(envVars: any, envFile: string): any {
-    let envFileVars = null;
+export function getCustomEnvVars(envVars: Object, envFile: string, mergeWithProcessEnvVars: boolean = true): EnvVars {
+    let envFileVars: EnvVars = null;
     if (typeof envFile === 'string' && envFile.length > 0 && fs.existsSync(envFile)) {
         try {
-            envFileVars = parseEnvFile(envFile);
-        }
-        catch (ex) {
+            envFileVars = parseEnvFile(envFile, mergeWithProcessEnvVars);
+        } catch (ex) {
             console.error('Failed to load env file');
             console.error(ex);
         }
     }
-    let configVars = null;
-    if (envVars && Object.keys(envVars).length > 0 && envFileVars) {
-        configVars = mergeEnvVariables(envVars, envFileVars);
+    if (envFileVars && Object.keys(envFileVars).length > 0) {
+        if (!envVars || Object.keys(envVars).length === 0) {
+            return envFileVars;
+        } else {
+            envVars = envVars || {};
+            return mergeEnvVariables(envVars as EnvVars, envFileVars);
+        }
     }
-    if (envVars && Object.keys(envVars).length > 0) {
-        configVars = envVars;
-    }
-    if (envFileVars) {
-        configVars = envFileVars;
-    }
-    if (configVars && typeof configVars === 'object' && Object.keys(configVars).length > 0) {
-        return configVars;
+    if (!envVars || Object.keys(envVars).length === 0) {
+        return null;
     }
 
-    return null;
+    return mergePythonPath(envVars as EnvVars, process.env.PYTHONPATH);
 }

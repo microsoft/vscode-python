@@ -45,7 +45,11 @@
         "completed-docs": false,
         "no-void-expression": false,
         "no-non-null-assertion": false, 
+        "no-unsafe-any": false,
+        "prefer-type-cast": false,
+        "function-name": false,
+        "variable-name": false,
         "no-backbone-get-set-outside-model": false,
-        "no-unsafe-any": false
+        "underscore-consistent-invocation": false
     }
 }
