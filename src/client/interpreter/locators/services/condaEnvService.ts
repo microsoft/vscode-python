@@ -96,7 +96,7 @@ export class CondaEnvService implements IInterpreterLocatorService {
                             resolve([]);
                         }
                     });
-                });
+                }).catch(() => []);
             });
     }
 }

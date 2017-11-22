@@ -29,7 +29,8 @@ export class CondaEnvFileService implements IInterpreterLocatorService {
             .then(promises => Promise.all(promises))
             .then(interpreterPaths => interpreterPaths.filter(item => item.length > 0))
             .then(interpreterPaths => interpreterPaths.map(item => this.getInterpreterDetails(item)))
-            .then(promises => Promise.all(promises));
+            .then(promises => Promise.all(promises))
+            .catch(() => [] as PythonInterpreter[]);    // Ignore errors in reading the file.
     }
     private async getInterpreterDetails(interpreter: string) {
         return this.versionService.getVersion(interpreter, path.basename(interpreter))

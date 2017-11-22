@@ -122,7 +122,7 @@ export class WindowsRegistryService implements IInterpreterLocatorService {
                     companyDisplayName: interpreterInfo.companyDisplayName
                 } as PythonInterpreter;
             })
-            .then(interpreter => interpreter ? fs.pathExists(interpreter.path).then(exists => exists ? interpreter : null) : null)
+            .then(interpreter => interpreter ? fs.pathExists(interpreter.path).catch(() => false).then(exists => exists ? interpreter : null) : null)
             .catch(error => {
                 console.error(`Failed to retrieve interpreter details for company ${companyKey},tag: ${tagKey}, hive: ${hive}, arch: ${arch}`);
                 console.error(error);

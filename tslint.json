@@ -47,6 +47,9 @@
         "no-unsafe-any": false,
         "underscore-consistent-invocation": false,
         "no-void-expression": false,
-        "no-non-null-assertion": false
+        "no-non-null-assertion": false,
+        "prefer-type-cast": false,
+        "variable-name": false,
+        "promise-function-async": false
     }
 }
