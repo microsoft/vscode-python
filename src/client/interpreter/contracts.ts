@@ -5,6 +5,10 @@ export interface IInterpreterLocatorService extends Disposable {
     getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
 }
 
+export interface ICondaLocatorService {
+    getCondaFile(): Promise<string>;
+}
+
 export type PythonInterpreter = {
     path: string;
     companyDisplayName?: string;

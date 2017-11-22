@@ -20,15 +20,16 @@ LAST = _vspu.to_bytes('LAST')
 OUTP = _vspu.to_bytes('OUTP')
 LOAD = _vspu.to_bytes('LOAD')
 
-def launch():
-    """Arguments are:
+def parse_argv():
+    """Parses arguments for use with the launcher.
+    Arguments are:
     1. Working directory.
     2. VS debugger port to connect to.
     3. GUID for the debug session.
     4. Debug options (not used).
     5. '-m' or '-c' to override the default run-as mode. [optional].
     6. Startup script name.
-    7. Script arguments
+    7. Script arguments.
     """
 
     # Change to directory we expected to start from.
@@ -56,8 +57,7 @@ def launch():
 
     pid = os.getpid()
 
-    run(filename, port_num, debug_id, pid, run_as)
-
+    return (filename, port_num, debug_id, pid, run_as)
 
 def run(file, port_num, debug_id, pid, run_as='script'):
     attach_process(port_num, pid, debug_id)
@@ -142,4 +142,5 @@ def is_same_py_file(file_1, file_2):
     return file_1 == file_2
 
 if __name__ == '__main__':
-    launch()
+    filename, port_num, debug_id, pid, run_as = parse_argv()
+    run(filename, port_num, debug_id, pid, run_as)

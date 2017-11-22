@@ -14,7 +14,7 @@ export class WorkspaceFolderPythonPathUpdaterService implements IPythonPathUpdat
         }
         if (pythonPath.startsWith(this.workspaceFolder.fsPath)) {
             // tslint:disable-next-line:no-invalid-template-strings
-            pythonPath = path.join('${workspaceRoot}', path.relative(this.workspaceFolder.fsPath, pythonPath));
+            pythonPath = path.join('${workspaceFolder}', path.relative(this.workspaceFolder.fsPath, pythonPath));
         }
         await pythonConfig.update('pythonPath', pythonPath, ConfigurationTarget.WorkspaceFolder);
     }

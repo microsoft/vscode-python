@@ -4,33 +4,19 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { VersionUtils } from '../../../common/versionUtils';
-import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
+import { ICondaLocatorService, IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
 import { AnacondaCompanyName, CONDA_RELATIVE_PY_PATH, CondaInfo } from './conda';
 import { CondaHelper } from './condaHelper';
 
 export class CondaEnvService implements IInterpreterLocatorService {
     private readonly condaHelper = new CondaHelper();
-    constructor(private registryLookupForConda?: IInterpreterLocatorService) {
+    constructor(private condaLocator: ICondaLocatorService) {
     }
     public async getInterpreters(resource?: Uri) {
         return this.getSuggestionsFromConda();
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
-    public async getCondaFile() {
-        if (this.registryLookupForConda) {
-            return this.registryLookupForConda.getInterpreters()
-                .then(interpreters => interpreters.filter(this.isCondaEnvironment))
-                .then(condaInterpreters => this.getLatestVersion(condaInterpreters))
-                .then(condaInterpreter => {
-                    return condaInterpreter ? path.join(path.dirname(condaInterpreter.path), 'conda.exe') : 'conda';
-                })
-                .then(async condaPath => {
-                    return fs.pathExists(condaPath).then(exists => exists ? condaPath : 'conda');
-                });
-        }
-        return Promise.resolve('conda');
-    }
     public isCondaEnvironment(interpreter: PythonInterpreter) {
         return (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
             (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('CONTINUUM') >= 0;
@@ -73,7 +59,7 @@ export class CondaEnvService implements IInterpreterLocatorService {
             .then(interpreters => interpreters.map(interpreter => interpreter!));
     }
     private async getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
-        return this.getCondaFile()
+        return this.condaLocator.getCondaFile()
             .then(async condaFile => {
                 return new Promise<PythonInterpreter[]>((resolve, reject) => {
                     // interrogate conda (if it's on the path) to find all environments.

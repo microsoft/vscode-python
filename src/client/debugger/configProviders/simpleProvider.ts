@@ -38,10 +38,11 @@ export class SimpleConfigurationProvider implements DebugConfigurationProvider {
         return undefined;
     }
     resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
-        if (Object.keys(debugConfiguration).length > 0) {
+        const keys = Object.keys(debugConfiguration);
+        const provideConfig = (debugConfiguration.noDebug === true && keys.length === 1) || keys.length === 0;
+        if (!provideConfig) {
             return debugConfiguration;
         }
-
         const config = debugConfiguration as PythonDebugConfiguration;
         const defaultProgram = this.getProgram(config);
         const workspaceFolder = this.getWorkspaceFolder(config);
@@ -58,7 +59,8 @@ export class SimpleConfigurationProvider implements DebugConfigurationProvider {
             env: {},
             debugOptions: [
                 'RedirectOutput'
-            ]
+            ],
+            noDebug: debugConfiguration.noDebug
         };
     }
 }

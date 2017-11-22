@@ -50,6 +50,7 @@
         "no-void-expression": false,
         "no-backbone-get-set-outside-model": false,
         "no-non-null-assertion": false,
-        "no-import-side-effect": false
+        "no-import-side-effect": false,
+        "underscore-consistent-invocation": false
     }
 }

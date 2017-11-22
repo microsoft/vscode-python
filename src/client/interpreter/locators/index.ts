@@ -9,6 +9,7 @@ import { VirtualEnvironmentManager } from '../virtualEnvs';
 import { fixInterpreterDisplayName, fixInterpreterPath } from './helpers';
 import { CondaEnvFileService, getEnvironmentsFile as getCondaEnvFile } from './services/condaEnvFileService';
 import { CondaEnvService } from './services/condaEnvService';
+import { CondaLocatorService } from './services/condaLocator';
 import { CurrentPathService } from './services/currentPathService';
 import { getKnownSearchPathsForInterpreters, KnownPathsService } from './services/KnownPathsService';
 import { getKnownSearchPathsForVirtualEnvs, VirtualEnvService } from './services/virtualEnvService';
@@ -66,10 +67,12 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         // The order of the services is important.
         if (IS_WINDOWS) {
             const windowsRegistryProvider = new WindowsRegistryService(new RegistryImplementation(), Is_64Bit);
+            const condaLocator = new CondaLocatorService(IS_WINDOWS, windowsRegistryProvider);
             locators.push(windowsRegistryProvider);
-            locators.push(new CondaEnvService(windowsRegistryProvider));
+            locators.push(new CondaEnvService(condaLocator));
         } else {
-            locators.push(new CondaEnvService());
+            const condaLocator = new CondaLocatorService(IS_WINDOWS);
+            locators.push(new CondaEnvService(condaLocator));
         }
         // Supplements the above list of conda environments.
         locators.push(new CondaEnvFileService(getCondaEnvFile(), versionService));

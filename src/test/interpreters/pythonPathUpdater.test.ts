@@ -1,8 +1,10 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
+import { PythonSettings } from '../../client/common/configSettings';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
+import { GlobalPythonPathUpdaterService } from '../../client/interpreter/configuration/services/globalUpdaterService';
 import { WorkspacePythonPathUpdaterService } from '../../client/interpreter/configuration/services/workspaceUpdaterService';
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
@@ -76,7 +78,7 @@ suite('Python Path Settings Updater', () => {
         assert.equal(workspaceValue, pythonPath, 'Workspace Python Path not updated');
     });
 
-    test('Python Path should be relative to workspace', async () => {
+    test('Python Path should be relative to workspaceFolder', async () => {
         const workspaceUri = workspace.getWorkspaceFolder(Uri.file(workspaceRoot)).uri;
         const pythonInterpreter = `xWorkspacePythonPath${new Date().getMilliseconds()}`;
         const pythonPath = path.join(workspaceUri.fsPath, 'x', 'y', 'z', pythonInterpreter);
@@ -84,6 +86,9 @@ suite('Python Path Settings Updater', () => {
         await workspaceUpdater.updatePythonPath(pythonPath);
         const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath').workspaceValue;
         // tslint:disable-next-line:no-invalid-template-strings
-        assert.equal(workspaceValue, path.join('${workspaceRoot}', 'x', 'y', 'z', pythonInterpreter), 'Workspace Python Path not updated');
+        assert.equal(workspaceValue, path.join('${workspaceFolder}', 'x', 'y', 'z', pythonInterpreter), 'Workspace Python Path not updated');
+        const resolvedPath = PythonSettings.getInstance(Uri.file(workspaceRoot)).pythonPath;
+        assert.equal(resolvedPath, pythonPath, 'Resolved Workspace Python Path not updated');
     });
+
 });

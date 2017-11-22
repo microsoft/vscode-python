@@ -12,6 +12,8 @@ const tsfmt = require('typescript-formatter');
 const tslint = require('tslint');
 const relative = require('relative');
 const ts = require('gulp-typescript');
+const watch = require('gulp-watch');
+const cp = require('child_process');
 
 /**
  * Hygiene works by creating cascading subsets of all our files and
@@ -212,47 +214,51 @@ const hygiene = exports.hygiene = (some, options) => {
 
 gulp.task('hygiene', () => hygiene());
 
-// this allows us to run hygiene as a git pre-commit hook.
-if (require.main === module) {
-    const cp = require('child_process');
+gulp.task('hygiene-watch', function () {
+    return watch(all, function () {
+        run(true, true);
+    });
+});
 
+function run(lintOnlyModifiedFiles, doNotExit) {
+    function exitProcessOnError(ex) {
+        console.error();
+        console.error(ex);
+        if (!doNotExit) {
+            process.exit(1);
+        }
+    }
     process.on('unhandledRejection', (reason, p) => {
         console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-        process.exit(1);
+        exitProcessOnError();
     });
 
     cp.exec('git config core.autocrlf', (err, out) => {
         const skipEOL = out.trim() === 'true';
-
-        if (process.argv.length > 2) {
+        if (!lintOnlyModifiedFiles && process.argv.length > 2) {
             return hygiene(process.argv.slice(2), {
                 skipEOL: skipEOL
-            }).on('error', err => {
-                console.error();
-                console.error(err);
-                process.exit(1);
-            });
+            }).on('error', exitProcessOnError);
         }
 
-        cp.exec('git diff --cached --name-only', {
+        const cmd = lintOnlyModifiedFiles ? 'git diff --name-only' : 'git diff --cached --name-only';
+        cp.exec(cmd, {
             maxBuffer: 2000 * 1024
         }, (err, out) => {
             if (err) {
-                console.error();
-                console.error(err);
-                process.exit(1);
+                exitProcessOnError(err);
             }
-
             const some = out
                 .split(/\r?\n/)
                 .filter(l => !!l);
+
             hygiene(some, {
                 skipEOL: skipEOL
-            }).on('error', err => {
-                console.error();
-                console.error(err);
-                process.exit(1);
-            });
+            }).on('error', exitProcessOnError);
         });
     });
+}
+// this allows us to run hygiene as a git pre-commit hook.
+if (require.main === module) {
+    run();
 }
