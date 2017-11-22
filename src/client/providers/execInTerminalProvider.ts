@@ -233,7 +233,7 @@ class DjangoContextInitializer implements vscode.Disposable {
         this.disposables.push(vscode.window.onDidChangeActiveTextEditor(() => this.ensureState()));
     }
     private getActiveWorkspace(): string | undefined {
-        if (!Array.isArray(workspace.workspaceFolders || workspace.workspaceFolders.length === 0)) {
+        if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
             return undefined;
         }
         if (workspace.workspaceFolders.length === 1) {
