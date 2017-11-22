@@ -9,10 +9,14 @@ import { ExecutionResult, IBufferDecoder, IProcessService, ObservableExecutionRe
 
 @injectable()
 export class ProcessService implements IProcessService {
-    constructor(@inject(IBufferDecoder) private decoder: IBufferDecoder) { }
+    constructor( @inject(IBufferDecoder) private decoder: IBufferDecoder) { }
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         const encoding = options.encoding = typeof options.encoding === 'string' && options.encoding.length > 0 ? options.encoding : DEFAULT_ENCODING;
-        const proc = spawn(file, args, options);
+        const spawnOptions = { ...options };
+        if (!spawnOptions.env || Object.keys(spawnOptions).length === 0) {
+            spawnOptions.env = process.env;
+        }
+        const proc = spawn(file, args, spawnOptions);
         let procExited = false;
 
         const output = new Rx.Observable<Output<string>>(subscriber => {
@@ -61,7 +65,11 @@ export class ProcessService implements IProcessService {
     }
     public async exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         const encoding = options.encoding = typeof options.encoding === 'string' && options.encoding.length > 0 ? options.encoding : DEFAULT_ENCODING;
-        const proc = spawn(file, args, options);
+        const spawnOptions = { ...options };
+        if (!spawnOptions.env || Object.keys(spawnOptions).length === 0) {
+            spawnOptions.env = process.env;
+        }
+        const proc = spawn(file, args, spawnOptions);
         const deferred = createDeferred<ExecutionResult<string>>();
         const disposables: Disposable[] = [];
 

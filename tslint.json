@@ -51,6 +51,8 @@
         "no-backbone-get-set-outside-model": false,
         "no-non-null-assertion": false,
         "no-import-side-effect": false,
-        "underscore-consistent-invocation": false
+        "underscore-consistent-invocation": false,
+        "promise-function-async": false,
+        "no-string-based-set-timeout": false
     }
 }

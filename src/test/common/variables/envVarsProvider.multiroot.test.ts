@@ -4,14 +4,13 @@ import * as fs from 'fs-extra';
 import { Container } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
-import { ConfigurationTarget, Disposable, env, Uri, workspace } from 'vscode';
-import { IS_WINDOWS, PythonSettings } from '../../../client/common/configSettings';
+import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
+import { IS_WINDOWS } from '../../../client/common/configSettings';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
 import { IDiposableRegistry } from '../../../client/common/types';
 import { IsWindows } from '../../../client/common/types';
 import { registerTypes as variablesRegisterTypes } from '../../../client/common/variables/serviceRegistry';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
-import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { clearPythonPathInWorkspaceFolder, updateSetting } from '../../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
@@ -26,7 +25,6 @@ const workspace4PyFile = Uri.file(path.join(workspace4Path.fsPath, 'one.py'));
 suite('Multiroot Environment Variables Provider', () => {
     let cont: Container;
     let serviceManager: ServiceManager;
-    let serviceContainer: ServiceContainer;
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
@@ -39,18 +37,13 @@ suite('Multiroot Environment Variables Provider', () => {
     setup(() => {
         cont = new Container();
         serviceManager = new ServiceManager(cont);
-        serviceContainer = new ServiceContainer(cont);
         serviceManager.addSingletonInstance<Disposable[]>(IDiposableRegistry, []);
         serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);
         return initializeTest();
     });
-    suiteTeardown(() => {
-        cont.unbindAll();
-        cont.unload();
-        return closeActiveWindows();
-    });
+    suiteTeardown(closeActiveWindows);
     teardown(async () => {
         cont.unbindAll();
         cont.unload();
@@ -72,7 +65,7 @@ suite('Multiroot Environment Variables Provider', () => {
         await updateSetting('envFile', '${workspaceRoot}/.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const envProvider = serviceManager.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
         const vars = await envProvider.getEnvironmentVariables(false, workspace4PyFile);
-        const expectedVars = { X1234PYEXTUNITTESTVAR: '1234', PYTHONPATH: '../workspace5' };
+
         expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
         expect(vars).to.to.have.property('X1234PYEXTUNITTESTVAR', '1234', 'X1234PYEXTUNITTESTVAR value is invalid');
         expect(vars).to.to.have.property('PYTHONPATH', '../workspace5', 'PYTHONPATH value is invalid');
@@ -85,7 +78,7 @@ suite('Multiroot Environment Variables Provider', () => {
         await updateSetting('envFile', '${workspaceRoot}/.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const envProvider = serviceManager.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
         const vars = await envProvider.getEnvironmentVariables(false, workspace4PyFile);
-        const expectedVars = { X1234PYEXTUNITTESTVAR: '1234', PYTHONPATH: '../workspace5' };
+
         expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
         expect(vars).to.to.have.property('X1234PYEXTUNITTESTVAR', '1234', 'X1234PYEXTUNITTESTVAR value is invalid');
         expect(vars).to.to.have.property('PYTHONPATH', '../workspace5', 'PYTHONPATH value is invalid');
@@ -99,7 +92,6 @@ suite('Multiroot Environment Variables Provider', () => {
         await updateSetting('envFile', '${workspaceRoot}/.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const envProvider = serviceManager.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
         const vars = await envProvider.getEnvironmentVariables(true, workspace4PyFile);
-        const expectedVars = { X1234PYEXTUNITTESTVAR: '1234', PYTHONPATH: '../workspace5' };
 
         expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
         expect(vars).to.to.have.property('X1234PYEXTUNITTESTVAR', '1234', 'X1234PYEXTUNITTESTVAR value is invalid');
