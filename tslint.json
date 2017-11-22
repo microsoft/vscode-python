@@ -44,6 +44,7 @@
         ],
         "completed-docs": false,
         "no-backbone-get-set-outside-model": false,
-        "no-unsafe-any": false
+        "no-unsafe-any": false,
+        "no-non-null-assertion": false
     }
 }
