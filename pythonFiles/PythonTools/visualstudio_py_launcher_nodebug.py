@@ -83,7 +83,7 @@ def run(file, port_num, debug_id, pid, run_as='script'):
 
 def attach_process(port_num, pid, debug_id):
     global conn
-    for i in xrange(50):
+    for i in range(50):
         try:
             conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             conn.connect(('127.0.0.1', port_num))
