@@ -1,4 +1,5 @@
 import * as fs from 'fs-extra';
+import 'reflect-metadata';
 import { EnvironmentVariablesService } from './variables/environment';
 import { EnvironmentVariables } from './variables/types';
 export const IS_WINDOWS = /^win/.test(process.platform);
