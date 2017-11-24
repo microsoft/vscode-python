@@ -1511,6 +1511,12 @@
                     "requirements-*.txt"
                 ],
                 "configuration": "./languages/pip-requirements.json"
+            },
+            {
+                "id": "yaml",
+                "filenames": [
+                    ".condarc"
+                ]
             }
         ],
         "grammars": [
