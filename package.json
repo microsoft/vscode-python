@@ -1519,6 +1519,18 @@
                 "scopeName": "source.pip-requirements",
                 "path": "./syntaxes/pip-requirements.tmLanguage.json"
             }
+        ],
+        "jsonValidation": [
+            {
+                "fileMatch": "meta.yaml",
+                "url": "./schemas/conda-meta.json"
+            }
+        ],
+        "yamlValidation": [
+            {
+                "fileMatch": "meta.yaml",
+                "url": "./schemas/conda-meta.json"
+            }
         ]
     },
     "scripts": {
