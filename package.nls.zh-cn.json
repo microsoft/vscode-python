@@ -19,7 +19,7 @@
     "python.command.python.execSelectionInDjangoShell.title": "在 Django Shell 运行选定内容",
     "python.command.jupyter.runSelectionLine.title": "运行选定内容／行",
     "python.command.jupyter.execCurrentCell.title": "运行当前 Cell",
-    "python.command.jupyter.execCurrentCellAndAdvance.title": "运行 Cell 和 Advance",
+    "python.command.jupyter.execCurrentCellAndAdvance.title": "运行当前 Cell 并移动到下一个 Cell",
     "python.command.jupyter.gotToPreviousCell.title": "转到前一个 Cell",
     "python.command.jupyter.gotToNextCell.title": "转到下一个 Cell",
     "python.command.python.goToPythonObject.title": "转到 Python 对象",
