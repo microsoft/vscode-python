@@ -49,8 +49,12 @@ export class VirtualEnvService implements IInterpreterLocatorService {
                 });
                 return scriptOrBinDirs.length === 1 ? scriptOrBinDirs[0] : '';
             })
-            // Ignore exceptions.
-            .catch(() => ''));
+            .catch((err) => {
+                console.error('Python Extension (getProspectiveDirectoriesForLookup):', err);
+                // Ignore exceptions.
+                return '';
+            }));
+
     }
     private async getVirtualEnvDetails(interpreter: string): Promise<PythonInterpreter> {
         return Promise.all([
