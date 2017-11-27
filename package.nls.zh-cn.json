@@ -43,8 +43,8 @@
     "python.snippet.launch.pyramid.description": "调试 Pyramid 应用",
     "python.snippet.launch.watson.label": "Python: Watson 应用",
     "python.snippet.launch.watson.description": "调试 Watson 应用",
-    "python.snippet.launch.attach.label": "Python: 链接",
-    "python.snippet.launch.attach.description": "链接远程调试器",
+    "python.snippet.launch.attach.label": "Python: 附加",
+    "python.snippet.launch.attach.description": "附加远程调试器",
     "python.snippet.launch.scrapy.label": "Python: Scrapy 应用",
     "python.snippet.launch.scrapy.description": "使用集成终端运行 Scrapy"
 }
