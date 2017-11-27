@@ -1,14 +1,15 @@
 "use strict";
 
 import * as net from "net";
-import {EventEmitter} from "events";
-import {FrameKind, IPythonProcess, IPythonThread, IPythonModule, IPythonEvaluationResult, IPythonStackFrame, IStepCommand} from "./Common/Contracts";
-import {IPythonBreakpoint, PythonBreakpointConditionKind, PythonBreakpointPassCountKind, IBreakpointCommand, IChildEnumCommand} from "./Common/Contracts";
-import {PythonEvaluationResultReprKind, IExecutionCommand, enum_EXCEPTION_STATE} from "./Common/Contracts";
-import {Commands} from "./ProxyCommands";
-import {IdDispenser} from "../common/idDispenser";
-import {PythonProcessCallbackHandler} from "./PythonProcessCallbackHandler";
-import {SocketStream} from "../common/comms/SocketStream";
+import { ChildProcess } from 'child_process';
+import { EventEmitter } from "events";
+import { FrameKind, IPythonProcess, IPythonThread, IPythonModule, IPythonEvaluationResult, IPythonStackFrame, IStepCommand } from "./Common/Contracts";
+import { IPythonBreakpoint, PythonBreakpointConditionKind, PythonBreakpointPassCountKind, IBreakpointCommand, IChildEnumCommand } from "./Common/Contracts";
+import { PythonEvaluationResultReprKind, IExecutionCommand, enum_EXCEPTION_STATE } from "./Common/Contracts";
+import { Commands } from "./ProxyCommands";
+import { IdDispenser } from "../common/idDispenser";
+import { PythonProcessCallbackHandler } from "./PythonProcessCallbackHandler";
+import { SocketStream } from "../common/comms/SocketStream";
 
 export class PythonProcess extends EventEmitter implements IPythonProcess {
     private id: number;
@@ -202,6 +203,9 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
     }
 
     public SendExceptionInfo(defaultBreakOnMode: enum_EXCEPTION_STATE, breakOn: Map<string, enum_EXCEPTION_STATE>) {
+        if (!this.stream) {
+            return;
+        }
         this.stream.Write(Commands.SetExceptionInfoCommandBytes);
         this.stream.WriteInt32(defaultBreakOnMode);
         if (breakOn === null || breakOn === undefined) {
@@ -225,7 +229,7 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
     public SendStepInto(threadId: number) {
         return this.sendStepCommand(threadId, Commands.StepIntoCommandBytes);
     }
-    // #endregion    
+    // #endregion
     private onBreakpointHit(pyThread: IPythonThread, breakpointId: number) {
         this._lastExecutedThread = pyThread;
         this.emit("breakpointHit", pyThread, breakpointId);
@@ -384,5 +388,21 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
     }
     public SetLineNumber(pythonStackFrame: IPythonStackFrame, lineNo: number) {
 
+    }
+    public attach(proc: ChildProcess): void {
+        proc.on('error', error => {
+            this.emit("error", undefined, error.toString());
+        });
+        proc.stderr.setEncoding('utf8');
+        proc.stdout.setEncoding('utf8');
+        proc.stderr.on('data', (error: string) => {
+            this.emit("error", error.toString());
+        });
+        proc.stdout.on('data', (d: string) => {
+            this.emit("output", undefined, d);
+        });
+        proc.on('close', () => {
+            this.emit('detach');
+        });
     }
 }

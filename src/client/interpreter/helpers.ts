@@ -3,7 +3,7 @@ import { ConfigurationTarget, window, workspace } from 'vscode';
 import { RegistryImplementation } from '../common/registry';
 import { Is_64Bit, IS_WINDOWS } from '../common/utils';
 import { WorkspacePythonPath } from './contracts';
-import { CondaEnvService } from './locators/services/condaEnvService';
+import { CondaLocatorService } from './locators/services/condaLocator';
 import { WindowsRegistryService } from './locators/services/windowsRegistryService';
 
 export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
@@ -29,14 +29,10 @@ export function getActiveWorkspaceUri(): WorkspacePythonPath | undefined {
     return undefined;
 }
 export async function getCondaVersion() {
-    let condaService: CondaEnvService;
-    if (IS_WINDOWS) {
-        const windowsRegistryProvider = new WindowsRegistryService(new RegistryImplementation(), Is_64Bit);
-        condaService = new CondaEnvService(windowsRegistryProvider);
-    } else {
-        condaService = new CondaEnvService();
-    }
-    return condaService.getCondaFile()
+    const windowsRegistryProvider = IS_WINDOWS ? new WindowsRegistryService(new RegistryImplementation(), Is_64Bit) : undefined;
+    const condaLocator = new CondaLocatorService(IS_WINDOWS, windowsRegistryProvider);
+
+    return condaLocator.getCondaFile()
         .then(async condaFile => {
             return new Promise<string>((resolve, reject) => {
                 child_process.execFile(condaFile, ['--version'], (_, stdout) => {
