@@ -54,7 +54,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         // tslint:disable-next-line:underscore-consistent-invocation
         return _.flatten(listOfInterpreters)
             .map(fixInterpreterDisplayName)
-            .map(item => { path.normalize(item.path); return item; })
+            .map(item => { item.path = path.normalize(item.path); return item; })
             .reduce<PythonInterpreter[]>((accumulator, current) => {
                 if (accumulator.findIndex(item => arePathsSame(item.path, current.path)) === -1) {
                     accumulator.push(current);
