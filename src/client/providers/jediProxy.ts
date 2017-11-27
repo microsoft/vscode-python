@@ -188,7 +188,7 @@ export class JediProxy implements vscode.Disposable {
     private spawnRetryAttempts = 0;
     private spawnProcess(dir: string) {
         try {
-            let environmentVariables = { 'PYTHONUNBUFFERED': '1' };
+            let environmentVariables: Object & { [key: string]: string } = { 'PYTHONUNBUFFERED': '1' };
             let customEnvironmentVars = getCustomEnvVarsSync(vscode.Uri.file(dir));
             if (customEnvironmentVars) {
                 environmentVariables = mergeEnvVariables(environmentVariables, customEnvironmentVars);

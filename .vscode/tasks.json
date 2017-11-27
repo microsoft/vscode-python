@@ -65,6 +65,24 @@
                     "fileLocation": "relative"
                 }
             ]
+        },
+        {
+            "type": "gulp",
+            "task": "hygiene-watch",
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$tsc",
+                {
+                    "base": "$tslint5",
+                    "fileLocation": "relative"
+                }
+            ]
         }
     ]
 }

@@ -19,11 +19,11 @@ export interface IRegistry {
 }
 
 export class RegistryImplementation implements IRegistry {
-    public getKeys(key: string, hive: Hive, arch?: Architecture) {
-        return getRegistryKeys({ hive: translateHive(hive), arch: translateArchitecture(arch), key });
+    public async getKeys(key: string, hive: Hive, arch?: Architecture) {
+        return getRegistryKeys({ hive: translateHive(hive)!, arch: translateArchitecture(arch), key });
     }
-    public getValue(key: string, hive: Hive, arch?: Architecture, name: string = '') {
-        return getRegistryValue({ hive: translateHive(hive), arch: translateArchitecture(arch), key }, name);
+    public async getValue(key: string, hive: Hive, arch?: Architecture, name: string = '') {
+        return getRegistryValue({ hive: translateHive(hive)!, arch: translateArchitecture(arch), key }, name);
     }
 }
 
@@ -38,28 +38,28 @@ export function getArchitectureDislayName(arch?: Architecture) {
     }
 }
 
-function getRegistryValue(options: Registry.Options, name: string = '') {
+async function getRegistryValue(options: Registry.Options, name: string = '') {
     return new Promise<string | undefined | null>((resolve, reject) => {
         new Registry(options).get(name, (error, result) => {
-            if (error) {
+            if (error || !result || typeof result.value !== 'string') {
                 return resolve(undefined);
             }
             resolve(result.value);
         });
     });
 }
-function getRegistryKeys(options: Registry.Options): Promise<string[]> {
+async function getRegistryKeys(options: Registry.Options): Promise<string[]> {
     // https://github.com/python/peps/blob/master/pep-0514.txt#L85
     return new Promise<string[]>((resolve, reject) => {
         new Registry(options).keys((error, result) => {
-            if (error) {
+            if (error || !Array.isArray(result)) {
                 return resolve([]);
             }
-            resolve(result.map(item => item.key));
+            resolve(result.filter(item => typeof item.key === 'string').map(item => item.key));
         });
     });
 }
-function translateArchitecture(arch?: Architecture): RegistryArchitectures | null | undefined {
+function translateArchitecture(arch?: Architecture): RegistryArchitectures | undefined {
     switch (arch) {
         case Architecture.x86:
             return RegistryArchitectures.x86;
@@ -69,7 +69,7 @@ function translateArchitecture(arch?: Architecture): RegistryArchitectures | nul
             return;
     }
 }
-function translateHive(hive: Hive): string | null | undefined {
+function translateHive(hive: Hive): string | undefined {
     switch (hive) {
         case Hive.HKCU:
             return Registry.HKCU;

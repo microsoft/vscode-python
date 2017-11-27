@@ -1,7 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-export function parseEnvFile(envFile: string): any {
+type EnvVars = Object & { [key: string]: string };
+
+export function parseEnvFile(envFile: string, mergeWithProcessEnvVars: boolean = true): EnvVars {
     const buffer = fs.readFileSync(envFile, 'utf8');
     const env = {};
     buffer.split('\n').forEach(line => {
@@ -14,28 +16,43 @@ export function parseEnvFile(envFile: string): any {
             env[r[1]] = value.replace(/(^['"]|['"]$)/g, '');
         }
     });
-    return mergeEnvVariables(env);
+    return mergeWithProcessEnvVars ? mergeEnvVariables(env, process.env) : mergePythonPath(env, process.env.PYTHONPATH);
 }
 
-export function mergeEnvVariables(newVariables: { [key: string]: string }, mergeWith: any = process.env): any {
-    for (let setting in mergeWith) {
-        if (setting === 'PYTHONPATH') {
-            let PYTHONPATH: string = newVariables['PYTHONPATH'];
-            if (typeof PYTHONPATH !== 'string') {
-                PYTHONPATH = '';
-            }
-            if (mergeWith['PYTHONPATH']) {
-                PYTHONPATH += (PYTHONPATH.length > 0 ? path.delimiter : '') + mergeWith['PYTHONPATH'];
-            }
-            if (PYTHONPATH.length > 0) {
-                newVariables[setting] = PYTHONPATH;
-            }
-            continue;
+/**
+ * Merge the target environment variables into the source.
+ * Note: The source variables are modified and returned (i.e. it modifies value passed in).
+ * @export
+ * @param {EnvVars} targetEnvVars target environment variables.
+ * @param {EnvVars} [sourceEnvVars=process.env] source environment variables (defaults to current process variables).
+ * @returns {EnvVars}
+ */
+export function mergeEnvVariables(targetEnvVars: EnvVars, sourceEnvVars: EnvVars = process.env): EnvVars {
+    Object.keys(sourceEnvVars).forEach(setting => {
+        if (targetEnvVars[setting] === undefined) {
+            targetEnvVars[setting] = sourceEnvVars[setting];
         }
-        if (!newVariables[setting]) {
-            newVariables[setting] = mergeWith[setting];
-        }
+    });
+    return mergePythonPath(targetEnvVars, sourceEnvVars.PYTHONPATH);
+}
+
+/**
+ * Merge the target PYTHONPATH value into the env variables passed.
+ * Note: The env variables passed in are modified and returned (i.e. it modifies value passed in).
+ * @export
+ * @param {EnvVars} env target environment variables.
+ * @param {string | undefined} [currentPythonPath] PYTHONPATH value.
+ * @returns {EnvVars}
+ */
+export function mergePythonPath(env: EnvVars, currentPythonPath: string | undefined): EnvVars {
+    if (typeof currentPythonPath !== 'string' || currentPythonPath.length === 0) {
+        return env;
     }
 
-    return newVariables;
+    if (typeof env.PYTHONPATH === 'string' && env.PYTHONPATH.length > 0) {
+        env.PYTHONPATH = env.PYTHONPATH + path.delimiter + currentPythonPath;
+    } else {
+        env.PYTHONPATH = currentPythonPath;
+    }
+    return env;
 }
