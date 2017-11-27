@@ -1532,6 +1532,10 @@
                 "url": "./schemas/condarc.json"
             },
             {
+                "fileMatch": "environment.yml",
+                "url": "./schemas/conda-environment.json"
+            },
+            {
                 "fileMatch": "meta.yaml",
                 "url": "./schemas/conda-meta.json"
             }
@@ -1540,6 +1544,10 @@
             {
                 "fileMatch": ".condarc",
                 "url": "./schemas/condarc.json"
+            },
+            {
+                "fileMatch": "environment.yml",
+                "url": "./schemas/conda-environment.json"
             },
             {
                 "fileMatch": "meta.yaml",
