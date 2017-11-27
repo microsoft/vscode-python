@@ -1511,6 +1511,12 @@
                     "requirements-*.txt"
                 ],
                 "configuration": "./languages/pip-requirements.json"
+            },
+            {
+                "id": "yaml",
+                "filenames": [
+                    ".condarc"
+                ]
             }
         ],
         "grammars": [
@@ -1522,11 +1528,19 @@
         ],
         "jsonValidation": [
             {
+                "fileMatch": ".condarc",
+                "url": "./schemas/condarc.json"
+            },
+            {
                 "fileMatch": "meta.yaml",
                 "url": "./schemas/conda-meta.json"
             }
         ],
         "yamlValidation": [
+            {
+                "fileMatch": ".condarc",
+                "url": "./schemas/condarc.json"
+            },
             {
                 "fileMatch": "meta.yaml",
                 "url": "./schemas/conda-meta.json"
