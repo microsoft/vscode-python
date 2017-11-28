@@ -10,7 +10,7 @@ type deprecatedFeatureInfo = {
     message: string;
     moreInfoUrl: string;
     commands?: string[];
-    settings?: string[];
+    setting?: string;
 };
 
 const jupyterDeprecationInfo: deprecatedFeatureInfo = {
@@ -27,7 +27,7 @@ const deprecatedFeatures: deprecatedFeatureInfo[] = [
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE',
         message: 'The setting \'python.formatting.formatOnSave\' is deprecated, please use \'editor.formatOnSave\'.',
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/309',
-        settings: ['formatting.formatOnSave']
+        setting: 'formatting.formatOnSave'
     }
 ];
 
@@ -54,11 +54,12 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
                 this.disposables.push(commands.registerCommand(cmd, () => this.notifyDeprecation(deprecatedInfo), this));
             });
         }
-        if (Array.isArray(deprecatedInfo.settings)) {
-            deprecatedInfo.settings.forEach(this.checkAndNotifyDeprecatedSettings.bind(this, deprecatedInfo));
+        if (deprecatedInfo.setting) {
+            this.checkAndNotifyDeprecatedSetting(deprecatedInfo);
         }
     }
-    private checkAndNotifyDeprecatedSettings(deprecatedInfo: deprecatedFeatureInfo, setting: string) {
+    private checkAndNotifyDeprecatedSetting(deprecatedInfo: deprecatedFeatureInfo) {
+        const setting = deprecatedInfo.setting!;
         let notify = false;
         if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
             workspace.workspaceFolders.forEach(wkspaceFolder => {

@@ -14,6 +14,7 @@ const relative = require('relative');
 const ts = require('gulp-typescript');
 const watch = require('gulp-watch');
 const cp = require('child_process');
+const colors = require('colors/safe');
 
 /**
  * Hygiene works by creating cascading subsets of all our files and
@@ -203,7 +204,7 @@ const hygiene = exports.hygiene = (some, options) => {
     return typescript
         .pipe(es.through(null, function () {
             if (errorCount > 0) {
-                this.emit('error', 'Hygiene failed with ' + errorCount + ' errors. Check \'gulpfile.js\'.');
+                this.emit('error', 'Hygiene failed with ' + errorCount + ' errors 👎. Check \'gulpfile.js\'.');
             } else {
                 this.emit('end');
             }
@@ -214,6 +215,8 @@ gulp.task('hygiene', () => hygiene());
 
 gulp.task('hygiene-watch', function () {
     return watch(all, function () {
+        console.clear();
+        console.log('Checking hygiene...');
         run(true, true);
     });
 });
@@ -221,7 +224,7 @@ gulp.task('hygiene-watch', function () {
 function run(lintOnlyModifiedFiles, doNotExit) {
     function exitProcessOnError(ex) {
         console.error();
-        console.error(ex);
+        console.error(colors.red(ex));
         if (!doNotExit) {
             process.exit(1);
         }
@@ -257,7 +260,13 @@ function run(lintOnlyModifiedFiles, doNotExit) {
         filesPromise.then(files => {
             hygiene(files, {
                 skipEOL: skipEOL
-            }).on('error', exitProcessOnError);
+            })
+                .on('end', () => {
+                    if (lintOnlyModifiedFiles && doNotExit) {
+                        console.log(colors.green('Hygiene passed with 0 errors 👍.'));
+                    }
+                })
+                .on('error', exitProcessOnError);
         }).catch(exitProcessOnError);
     });
 }
