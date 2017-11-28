@@ -181,7 +181,7 @@ const hygiene = exports.hygiene = (some, options) => {
                 }
             };
         }
-        const tsProject = ts.createProject('tsconfig.json', { strict: true });
+        const tsProject = ts.createProject('tsconfig.json', { strict: true, noImplicitAny: false });
         const reporter = customReporter();
         return tsProject(reporter);
     }

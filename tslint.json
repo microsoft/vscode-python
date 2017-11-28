@@ -51,6 +51,7 @@
         "prefer-type-cast": false,
         "promise-function-async": false,
         "function-name": false,
-        "variable-name": false
+        "variable-name": false,
+        "no-empty-interface": false
     }
 }

@@ -18,7 +18,6 @@ import { JediFactory } from './languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
 import { PythonDefinitionProvider } from './providers/definitionProvider';
 import { activateExecInTerminalProvider } from './providers/execInTerminalProvider';
-import { activateFormatOnSaveProvider } from './providers/formatOnSaveProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { PythonHoverProvider } from './providers/hoverProvider';
 import { LintProvider } from './providers/lintProvider';
@@ -73,7 +72,6 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, formatOutChannel);
-    context.subscriptions.push(activateFormatOnSaveProvider(PYTHON, formatOutChannel));
     const jediFactory = new JediFactory(context.asAbsolutePath('.'));
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 

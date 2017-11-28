@@ -13,7 +13,7 @@ export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'linting.flake8Enabled' | 'linting.pep8Enabled' | 'linting.pylamaEnabled' |
     'linting.prospectorEnabled' | 'linting.pydocstyleEnabled' | 'linting.mypyEnabled' |
     'unitTest.nosetestArgs' | 'unitTest.pyTestArgs' | 'unitTest.unittestArgs' |
-    'formatting.formatOnSave' | 'formatting.provider' | 'sortImports.args' |
+    'formatting.provider' | 'sortImports.args' |
     'unitTest.nosetestsEnabled' | 'unitTest.pyTestEnabled' | 'unitTest.unittestEnabled' |
     'linting.enabledWithoutWorkspace';
 
