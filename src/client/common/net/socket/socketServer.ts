@@ -2,7 +2,7 @@
 
 import * as net from "net";
 import { EventEmitter } from 'events';
-import { createDeferred } from '../helpers';
+import { createDeferred } from '../../helpers';
 
 export class SocketServer extends EventEmitter {
     private socketServer: net.Server = null;

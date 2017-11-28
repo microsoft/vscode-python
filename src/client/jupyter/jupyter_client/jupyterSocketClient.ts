@@ -1,8 +1,8 @@
 "use strict";
 
-import { SocketCallbackHandler } from "../../common/comms/socketCallbackHandler";
+import { SocketCallbackHandler } from "../../common/net/socket/socketCallbackHandler";
 import { Commands, ResponseCommands } from "./commands";
-import { SocketServer } from '../../common/comms/socketServer';
+import { SocketServer } from '../../common/net/socket/socketServer';
 import { IdDispenser } from '../../common/idDispenser';
 import { createDeferred, Deferred } from '../../common/helpers';
 import { KernelCommand } from './contracts';
@@ -218,7 +218,7 @@ export class JupyterSocketClient extends SocketCallbackHandler {
         this.stream.WriteString(id);
         this.stream.WriteString(code);
         def.promise.then(msg_id => {
-            // Do nothing, code moved to 
+            // Do nothing, code moved to
             // onCodeSentForExecution (so we have synchronous processing)
         }).catch(reason => {
             observable.onError(reason);

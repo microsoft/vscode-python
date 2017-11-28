@@ -241,20 +241,55 @@ function run(lintOnlyModifiedFiles, doNotExit) {
             }).on('error', exitProcessOnError);
         }
 
-        const cmd = lintOnlyModifiedFiles ? 'git diff --name-only' : 'git diff --cached --name-only';
-        cp.exec(cmd, {
+        let filesPromise;
+        if (lintOnlyModifiedFiles) {
+            filesPromise = Promise.all([getCachedFiles(), getModifiedFiles()]).then(filesList => {
+                const files1 = filesList[0];
+                const files2 = filesList[1];
+                files2.forEach(file => {
+                    if (files1.indexOf(file) === -1) {
+                        files1.push(file);
+                    }
+                });
+                return files1;
+            });
+        } else {
+            filesPromise = getCachedFiles();
+        }
+        filesPromise.then(files => {
+            hygiene(files, {
+                skipEOL: skipEOL
+            }).on('error', exitProcessOnError);
+        }).catch(exitProcessOnError);
+    });
+}
+function getCachedFiles() {
+    return new Promise(resolve => {
+        cp.exec('git diff --cached --name-only', {
             maxBuffer: 2000 * 1024
         }, (err, out) => {
             if (err) {
-                exitProcessOnError(err);
+                return reject(err);
             }
             const some = out
                 .split(/\r?\n/)
                 .filter(l => !!l);
-
-            hygiene(some, {
-                skipEOL: skipEOL
-            }).on('error', exitProcessOnError);
+            resolve(some);
+        });
+    });
+}
+function getModifiedFiles() {
+    return new Promise(resolve => {
+        cp.exec('git diff --name-only', {
+            maxBuffer: 2000 * 1024
+        }, (err, out) => {
+            if (err) {
+                return reject(err);
+            }
+            const some = out
+                .split(/\r?\n/)
+                .filter(l => !!l);
+            resolve(some);
         });
     });
 }

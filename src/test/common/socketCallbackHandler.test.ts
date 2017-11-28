@@ -10,9 +10,9 @@ import * as assert from 'assert';
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
-import { SocketStream } from '../../client/common/comms/SocketStream';
-import { SocketServer } from '../../client/common/comms/socketServer';
-import { SocketCallbackHandler } from '../../client/common/comms/socketCallbackHandler';
+import { SocketStream } from '../../client/common/net/socket/SocketStream';
+import { SocketServer } from '../../client/common/net/socket/socketServer';
+import { SocketCallbackHandler } from '../../client/common/net/socket/socketCallbackHandler';
 import { createDeferred, Deferred } from '../../client/common/helpers';
 import { IdDispenser } from '../../client/common/idDispenser';
 

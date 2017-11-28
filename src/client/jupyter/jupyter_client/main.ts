@@ -1,7 +1,7 @@
 "use strict";
 
 import { JupyterSocketClient } from './jupyterSocketClient';
-import { SocketServer } from '../../common/comms/socketServer';
+import { SocketServer } from '../../common/net/socket/socketServer';
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
