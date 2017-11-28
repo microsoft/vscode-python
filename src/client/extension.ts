@@ -13,7 +13,6 @@ import { SetInterpreterProvider } from './interpreter/configuration/setInterpret
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
 import { getCondaVersion } from './interpreter/helpers';
 import { InterpreterVersionService } from './interpreter/interpreterVersion';
-import * as jup from './jupyter/main';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
@@ -47,8 +46,9 @@ const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: vscode.ExtensionContext) {
+    const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
     const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
-    const deprecationManager = new FeatureDeprecationManager(persistentStateFactory);
+    context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled));
     const pythonSettings = settings.PythonSettings.getInstance();
     // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated);
@@ -121,7 +121,6 @@ export async function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
     }
 
-    const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
     // tslint:disable-next-line:promise-function-async
     const linterProvider = new LintProvider(context, lintingOutChannel, (a, b) => Promise.resolve(false));
     context.subscriptions.push();
@@ -139,8 +138,6 @@ export async function activate(context: vscode.ExtensionContext) {
             // tslint:disable-next-line:no-unsafe-any
             linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
         });
-    } else {
-        context.subscriptions.push(new jup.Jupyter(deprecationManager));
     }
     tests.activate(context, unitTestOutChannel, symbolProvider);
 

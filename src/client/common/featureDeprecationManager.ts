@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { window } from 'vscode';
+import { commands, Disposable, window } from 'vscode';
 import { launch } from './browser';
 import { IPersistentStateFactory } from './persistentState';
 
@@ -9,25 +9,42 @@ type deprecatedFeatureInfo = {
     doNotDisplayPromptStateKey: string;
     message: string;
     moreInfoUrl: string;
+    commands?: string[];
 };
 
-export interface IFeatureDeprecationManager {
-    notifyDeprecationOfJupyter(): void;
+const jupyterDeprecationInfo: deprecatedFeatureInfo = {
+    doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_JUPYTER',
+    message: 'This functionality has been moved to the \'Jupyter\' extension.',
+    moreInfoUrl: 'https://marketplace.visualstudio.com/items?itemName=donjayamanne.jupyter',
+    commands: ['jupyter.runSelectionLine', 'jupyter.execCurrentCell',
+        'jupyter.execCurrentCellAndAdvance', 'jupyter.gotToPreviousCell',
+        'jupyter.gotToNextCell']
+};
+
+export interface IFeatureDeprecationManager extends Disposable {
 }
 
-export class FeatureDeprecationManager {
-    constructor(private persistentStateFactory: IPersistentStateFactory) { }
-
-    public notifyDeprecationOfJupyter() {
-        const info: deprecatedFeatureInfo = {
-            doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_JUPYTER',
-            message: 'This functionality has been moved to the \'Jupyter\' extension.',
-            moreInfoUrl: 'https://marketplace.visualstudio.com/items?itemName=donjayamanne.jupyter'
-        };
-
-        this.notifyDeprecation(info);
+export class FeatureDeprecationManager implements IFeatureDeprecationManager {
+    private disposables: Disposable[] = [];
+    constructor(private persistentStateFactory: IPersistentStateFactory, private jupyterExtensionInstalled: boolean) {
+        this.handleDeprecationOfJupyter();
     }
-
+    public dispose() {
+        this.disposables.forEach(disposable => disposable.dispose());
+    }
+    private handleDeprecationOfJupyter() {
+        if (this.jupyterExtensionInstalled) {
+            return;
+        }
+        this.registerDeprecation(jupyterDeprecationInfo);
+    }
+    private registerDeprecation(deprecatedInfo: deprecatedFeatureInfo) {
+        if (Array.isArray(deprecatedInfo.commands)) {
+            deprecatedInfo.commands.forEach(cmd => {
+                this.disposables.push(commands.registerCommand(cmd, () => this.notifyDeprecation(deprecatedInfo), this));
+            });
+        }
+    }
     private async notifyDeprecation(deprecatedInfo: deprecatedFeatureInfo) {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(deprecatedInfo.doNotDisplayPromptStateKey, true);
         if (!notificationPromptEnabled.value) {
