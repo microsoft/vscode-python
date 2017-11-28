@@ -21,7 +21,7 @@ export class FeatureDeprecationManager {
     public notifyDeprecationOfJupyter() {
         const info: deprecatedFeatureInfo = {
             doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_JUPYTER',
-            message: 'This functionality has been moved to the extension \'Jupyter\'.',
+            message: 'This functionality has been moved to the \'Jupyter\' extension.',
             moreInfoUrl: 'https://marketplace.visualstudio.com/items?itemName=donjayamanne.jupyter'
         };
 
