@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { window } from 'vscode';
-import { launch } from './common/browser';
+import { launch } from './common/net/browser';
 import { IPersistentStateFactory, PersistentState } from './common/persistentState';
 
 const BANNER_URL = 'https://aka.ms/pvsc-at-msft';

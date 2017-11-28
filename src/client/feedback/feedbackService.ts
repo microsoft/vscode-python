@@ -3,8 +3,8 @@
 
 import { window } from 'vscode';
 import { commands, Disposable, TextDocument, workspace } from 'vscode';
-import { launch } from '../common/browser';
 import { PythonLanguage } from '../common/constants';
+import { launch } from '../common/net/browser';
 import { IPersistentStateFactory, PersistentState } from '../common/persistentState';
 import { FEEDBACK } from '../telemetry/constants';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
