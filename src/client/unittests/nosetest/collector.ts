@@ -1,14 +1,11 @@
 'use strict';
 import * as os from 'os';
 import * as path from 'path';
-import { CancellationToken } from 'vscode';
-import { OutputChannel, Uri } from 'vscode';
-import { PythonSettings } from '../../common/configSettings';
+import { CancellationTokenSource } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { Options, run } from '../common/runner';
 import { convertFileToPackage, extractBetweenDelimiters } from '../common/testUtils';
 import { ITestsHelper, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestSuite } from '../common/types';
-import { execPythonFile } from './../../common/utils';
 
 const NOSE_WANT_FILE_PREFIX = 'nose.selector: DEBUG: wantFile ';
 const NOSE_WANT_FILE_SUFFIX = '.py? True';
@@ -78,11 +75,12 @@ export function discoverTests(serviceContainer: IServiceContainer, testsHelper: 
         });
     }
 
+    const token = options.token ? options.token : new CancellationTokenSource().token;
     const runOptions: Options = {
         args: args.concat(['--collect-only', '-vvv']),
         cwd: options.cwd,
         workspaceFolder: options.workspaceFolder,
-        token: options.token,
+        token,
         outChannel: options.outChannel
     };
 

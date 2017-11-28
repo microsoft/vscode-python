@@ -1,14 +1,11 @@
 'use strict';
 import * as os from 'os';
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { CancellationTokenSource, OutputChannel } from 'vscode';
-import { PythonSettings } from '../../common/configSettings';
+import { CancellationTokenSource } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { Options, run } from '../common/runner';
 import { convertFileToPackage, extractBetweenDelimiters } from '../common/testUtils';
 import { ITestsHelper, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestSuite } from '../common/types';
-import { execPythonFile } from './../../common/utils';
 
 const argsToExcludeForDiscovery = ['-x', '--exitfirst',
     '--fixtures-per-test', '--pdb', '--runxfail',
@@ -16,7 +13,7 @@ const argsToExcludeForDiscovery = ['-x', '--exitfirst',
     '--cache-show', '--cache-clear',
     '-v', '--verbose', '-q', '-quiet',
     '--disable-pytest-warnings', '-l', '--showlocals'];
-const settingsInArgsToExcludeForDiscovery = [];
+const settingsInArgsToExcludeForDiscovery: string[] = [];
 
 export function discoverTests(serviceContainer: IServiceContainer, testsHelper: ITestsHelper, options: TestDiscoveryOptions): Promise<Tests> {
     let logOutputLines: string[] = [''];
@@ -85,11 +82,12 @@ export function discoverTests(serviceContainer: IServiceContainer, testsHelper: 
         });
     }
 
+    const token = options.token ? options.token : new CancellationTokenSource().token;
     const runOptions: Options = {
         args: args.concat(['--collect-only']),
         cwd: options.cwd,
         workspaceFolder: options.workspaceFolder,
-        token: options.token,
+        token,
         outChannel: options.outChannel
     };
 
@@ -151,33 +149,33 @@ function parsePyTestModuleCollectionResult(rootDirectory: string, lines: string[
 
         const parentNode = findParentOfCurrentItem(indent, parentNodes);
 
-        if (trimmedLine.startsWith('<Class \'') || trimmedLine.startsWith('<UnitTestCase \'')) {
+        if (parentNode && trimmedLine.startsWith('<Class \'') || trimmedLine.startsWith('<UnitTestCase \'')) {
             const isUnitTest = trimmedLine.startsWith('<UnitTestCase \'');
-            const rawName = `${parentNode.item.nameToRun}::${name}`;
-            const xmlName = `${parentNode.item.xmlName}.${name}`;
+            const rawName = `${parentNode!.item.nameToRun}::${name}`;
+            const xmlName = `${parentNode!.item.xmlName}.${name}`;
             const testSuite: TestSuite = { name: name, nameToRun: rawName, functions: [], suites: [], isUnitTest: isUnitTest, isInstance: false, xmlName: xmlName, time: 0 };
-            parentNode.item.suites.push(testSuite);
+            parentNode!.item.suites.push(testSuite);
             parentNodes.push({ indent: indent, item: testSuite });
             return;
         }
-        if (trimmedLine.startsWith('<Instance \'')) {
+        if (parentNode && trimmedLine.startsWith('<Instance \'')) {
             // tslint:disable-next-line:prefer-type-cast
-            const suite = (parentNode.item as TestSuite);
+            const suite = (parentNode!.item as TestSuite);
             // suite.rawName = suite.rawName + '::()';
             // suite.xmlName = suite.xmlName + '.()';
             suite.isInstance = true;
             return;
         }
-        if (trimmedLine.startsWith('<TestCaseFunction \'') || trimmedLine.startsWith('<Function \'')) {
-            const rawName = `${parentNode.item.nameToRun}::${name}`;
+        if (parentNode && trimmedLine.startsWith('<TestCaseFunction \'') || trimmedLine.startsWith('<Function \'')) {
+            const rawName = `${parentNode!.item.nameToRun}::${name}`;
             const fn: TestFunction = { name: name, nameToRun: rawName, time: 0 };
-            parentNode.item.functions.push(fn);
+            parentNode!.item.functions.push(fn);
             return;
         }
     });
 }
 
-function findParentOfCurrentItem(indentOfCurrentItem: number, parentNodes: { indent: number, item: TestFile | TestSuite }[]): { indent: number, item: TestFile | TestSuite } {
+function findParentOfCurrentItem(indentOfCurrentItem: number, parentNodes: { indent: number, item: TestFile | TestSuite }[]): { indent: number, item: TestFile | TestSuite } | undefined {
     while (parentNodes.length > 0) {
         const parentNode = parentNodes[parentNodes.length - 1];
         if (parentNode.indent < indentOfCurrentItem) {
@@ -187,7 +185,7 @@ function findParentOfCurrentItem(indentOfCurrentItem: number, parentNodes: { ind
         continue;
     }
 
-    return null;
+    return;
 }
 
 /* Sample output from py.test --collect-only

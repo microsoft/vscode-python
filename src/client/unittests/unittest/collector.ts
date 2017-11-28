@@ -1,12 +1,8 @@
 'use strict';
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { OutputChannel } from 'vscode';
-import { PythonSettings } from '../../common/configSettings';
 import { IServiceContainer } from '../../ioc/types';
 import { Options, run } from '../common/runner';
 import { ITestsHelper, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestStatus, TestSuite } from '../common/types';
-import { execPythonFile } from './../../common/utils';
 
 export function discoverTests(serviceContainer: IServiceContainer, testsHelper: ITestsHelper, options: TestDiscoveryOptions): Promise<Tests> {
     let startDirectory = '.';
@@ -109,8 +105,8 @@ function addTestId(rootDirectory: string, testId: string, testFiles: TestFile[])
 
     const paths = testIdParts.slice(0, testIdParts.length - 2);
     const filePath = `${path.join(rootDirectory, ...paths)}.py`;
-    const functionName = testIdParts.pop();
-    const className = testIdParts.pop();
+    const functionName = testIdParts.pop()!;
+    const className = testIdParts.pop()!;
 
     // Check if we already have this test file
     let testFile = testFiles.find(test => test.fullPath === filePath);
@@ -147,7 +143,7 @@ function addTestId(rootDirectory: string, testId: string, testFiles: TestFile[])
             status: TestStatus.Idle,
             time: 0
         };
-        testFile.suites.push(testSuite);
+        testFile.suites.push(testSuite!);
     }
 
     const testFunction: TestFunction = {
@@ -157,5 +153,5 @@ function addTestId(rootDirectory: string, testId: string, testFiles: TestFile[])
         time: 0
     };
 
-    testSuite.functions.push(testFunction);
+    testSuite!.functions.push(testFunction);
 }

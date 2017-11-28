@@ -1,12 +1,10 @@
 import * as path from 'path';
-import { CancellationToken, CancellationTokenSource, OutputChannel, Uri, window, workspace } from 'vscode';
+import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import { IPythonSettings, PythonSettings } from '../../common/configSettings';
-import { IProcessService, IPythonExecutionFactory, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from '../../common/process/types';
-import { IS_WINDOWS, PATH_VARIABLE_NAME } from '../../common/utils';
+import { IProcessService, IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../../common/process/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IServiceContainer } from '../../ioc/types';
-import { execPythonFile } from './../../common/utils';
-import { TestDiscoveryOptions, TestProvider } from './types';
+import { TestProvider } from './types';
 
 export type Options = {
     workspaceFolder: Uri;
