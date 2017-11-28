@@ -85,10 +85,6 @@ export function runTest(testManager: BaseTestManager, testResultsService: ITestR
             testArgs = testArgs.filter(arg => arg !== '--uf');
 
             testArgs.push(`--result-port=${port}`);
-            if (debug === true) {
-                const debugPort = PythonSettings.getInstance(Uri.file(rootDirectory)).unitTest.debugPort;
-                testArgs.push(...['--secret=my_secret', `--port=${debugPort}`]);
-            }
             testArgs.push(`--us=${startTestDiscoveryDirectory}`);
             if (testId.length > 0) {
                 testArgs.push(`-t${testId}`);
@@ -97,8 +93,12 @@ export function runTest(testManager: BaseTestManager, testResultsService: ITestR
                 testArgs.push(`--testFile=${testFile}`);
             }
             if (debug === true) {
-                // tslint:disable-next-line:prefer-type-cast no-any
-                return debugLauncher.launchDebugger(rootDirectory, [testLauncherFile].concat(testArgs), token, outChannel);
+                return debugLauncher.getPort(Uri.file(rootDirectory))
+                    .then(debugPort => {
+                        testArgs.push(...['--secret=my_secret', `--port=${debugPort}`]);
+                        // tslint:disable-next-line:prefer-type-cast no-any
+                        return debugLauncher.launchDebugger(rootDirectory, [testLauncherFile].concat(testArgs), debugPort, token, outChannel);
+                    });
             } else {
                 // tslint:disable-next-line:prefer-type-cast no-any
                 return run(PythonSettings.getInstance(Uri.file(rootDirectory)).pythonPath, [testLauncherFile].concat(testArgs), rootDirectory, token, outChannel);

@@ -148,5 +148,6 @@ export interface ITestResultsService {
 }
 
 export interface ITestDebugLauncher {
-    launchDebugger(rootDirectory: string, testArgs: string[], token?: CancellationToken, outChannel?: OutputChannel): Promise<Tests>;
+    getPort(resource?: Uri): Promise<number>;
+    launchDebugger(rootDirectory: string, testArgs: string[], port: number, token?: CancellationToken, outChannel?: OutputChannel): Promise<Tests>;
 }
