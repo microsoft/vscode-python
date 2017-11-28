@@ -62,11 +62,11 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         const setting = deprecatedInfo.setting!;
         let notify = false;
         if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
-            workspace.workspaceFolders.forEach(wkspaceFolder => {
+            workspace.workspaceFolders.forEach(workspaceFolder => {
                 if (notify) {
                     return;
                 }
-                const pythonConfig = workspace.getConfiguration('python', wkspaceFolder.uri);
+                const pythonConfig = workspace.getConfiguration('python', workspaceFolder.uri);
                 notify = pythonConfig.has(setting) && this.settingDeprecationNotified.indexOf(setting) === -1;
             });
         } else {
