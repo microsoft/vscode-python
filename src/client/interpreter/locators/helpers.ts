@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { getArchitectureDislayName } from '../../common/registry';
+import { getArchitectureDislayName } from '../../common/platform/registry';
 import { fsReaddirAsync, IS_WINDOWS } from '../../common/utils';
 import { PythonInterpreter } from '../contracts';
 

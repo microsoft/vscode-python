@@ -2,7 +2,7 @@
 import * as _ from 'lodash';
 import * as path from 'path';
 import { Disposable, Uri, workspace } from 'vscode';
-import { RegistryImplementation } from '../../common/registry';
+import { RegistryImplementation } from '../../common/platform/registry';
 import { arePathsSame, Is_64Bit, IS_WINDOWS } from '../../common/utils';
 import { IInterpreterLocatorService, PythonInterpreter } from '../contracts';
 import { InterpreterVersionService } from '../interpreterVersion';
