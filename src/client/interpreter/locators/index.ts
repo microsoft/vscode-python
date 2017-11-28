@@ -1,12 +1,13 @@
 'use strict';
 import * as _ from 'lodash';
+import * as path from 'path';
 import { Disposable, Uri, workspace } from 'vscode';
 import { RegistryImplementation } from '../../common/registry';
 import { arePathsSame, Is_64Bit, IS_WINDOWS } from '../../common/utils';
 import { IInterpreterLocatorService, PythonInterpreter } from '../contracts';
 import { InterpreterVersionService } from '../interpreterVersion';
 import { VirtualEnvironmentManager } from '../virtualEnvs';
-import { fixInterpreterDisplayName, fixInterpreterPath } from './helpers';
+import { fixInterpreterDisplayName } from './helpers';
 import { CondaEnvFileService, getEnvironmentsFile as getCondaEnvFile } from './services/condaEnvFileService';
 import { CondaEnvService } from './services/condaEnvService';
 import { CondaLocatorService } from './services/condaLocator';
@@ -53,7 +54,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         // tslint:disable-next-line:underscore-consistent-invocation
         return _.flatten(listOfInterpreters)
             .map(fixInterpreterDisplayName)
-            .map(fixInterpreterPath)
+            .map(item => { item.path = path.normalize(item.path); return item; })
             .reduce<PythonInterpreter[]>((accumulator, current) => {
                 if (accumulator.findIndex(item => arePathsSame(item.path, current.path)) === -1) {
                     accumulator.push(current);

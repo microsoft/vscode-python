@@ -49,6 +49,7 @@ export class CurrentPathService implements IInterpreterLocatorService {
                 resolve(getFirstNonEmptyLineFromMultilineString(stdout));
             });
         })
-            .then(value => value.length === 0 ? defaultValue : value);
+            .then(value => value.length === 0 ? defaultValue : value)
+            .catch(() => defaultValue);    // Ignore exceptions in getting the executable.
     }
 }
