@@ -180,7 +180,7 @@ const hygiene = exports.hygiene = (some, options) => {
                 }
             };
         }
-        const tsProject = ts.createProject('tsconfig.json', { strict: true, noImplicitAny: false });
+        const tsProject = ts.createProject('tsconfig.json', { strict: true, noImplicitAny: false, noImplicitThis: false });
         const reporter = customReporter();
         return tsProject(reporter);
     }
@@ -231,7 +231,7 @@ function run(lintOnlyModifiedFiles, doNotExit) {
         if (lintOnlyModifiedFiles && doNotExit) {
             console.log('Watching for changes...');
         }
-}
+    }
     process.on('unhandledRejection', (reason, p) => {
         console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
         exitProcessOnError();
