@@ -228,7 +228,10 @@ function run(lintOnlyModifiedFiles, doNotExit) {
         if (!doNotExit) {
             process.exit(1);
         }
-    }
+        if (lintOnlyModifiedFiles && doNotExit) {
+            console.log('Watching for changes...');
+        }
+}
     process.on('unhandledRejection', (reason, p) => {
         console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
         exitProcessOnError();
@@ -264,6 +267,7 @@ function run(lintOnlyModifiedFiles, doNotExit) {
                 .on('end', () => {
                     if (lintOnlyModifiedFiles && doNotExit) {
                         console.log(colors.green('Hygiene passed with 0 errors 👍.'));
+                        console.log('Watching for changes...');
                     }
                 })
                 .on('error', exitProcessOnError);
