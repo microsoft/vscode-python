@@ -1,12 +1,13 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import 'reflect-metadata';
+import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../platform/constants';
 import { IsWindows } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
-
-const WINDOWS_PATH_VARIABLE_NAME = 'Path';
-const NON_WINDOWS_PATH_VARIABLE_NAME = 'PATH';
 
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
@@ -57,7 +58,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
         return this.appendOrPrependPaths(vars, pathVariable, false, ...paths);
     }
-    public appendPath(vars: EnvironmentVariables, append: boolean, ...paths: string[]) {
+    public appendPath(vars: EnvironmentVariables, ...paths: string[]) {
         const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
         return this.appendOrPrependPaths(vars, pathVariable, true, ...paths);
     }

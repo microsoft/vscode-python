@@ -1,8 +1,12 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { Disposable, FileSystemWatcher, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../configSettings';
-import { IDiposableRegistry } from '../types';
+import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../platform/constants';
+import { IDiposableRegistry, IsWindows } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 @injectable()
@@ -12,7 +16,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     private disposables: Disposable[] = [];
 
     constructor( @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
-        @inject(IDiposableRegistry) disposableRegistry: Disposable[]) {
+        @inject(IDiposableRegistry) disposableRegistry: Disposable[], @inject(IsWindows) private isWidows: boolean) {
         disposableRegistry.push(this);
     }
 
@@ -26,11 +30,17 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         if (!this.cache.has(settings.envFile)) {
             this.createFileWatcher(settings.envFile);
             const vars = await this.envVarsService.parseFile(settings.envFile);
-            const mergedVars = await this.envVarsService.parseFile(settings.envFile);
-            this.envVarsService.mergeVariables(process.env, mergedVars);
-            this.cache.set(settings.envFile, { vars, mergedWithProc: mergedVars });
+            let mergedVars = await this.envVarsService.parseFile(settings.envFile);
+            if (!mergedVars || Object.keys(mergedVars).length === 0) {
+                mergedVars = { ...process.env };
+            }
+            this.envVarsService.mergeVariables(process.env, mergedVars!);
+            const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
+            this.envVarsService.appendPath(mergedVars!, process.env[pathVariable]);
+            this.envVarsService.appendPythonPath(mergedVars!, process.env.PYTHONPATH);
+            this.cache.set(settings.envFile, { vars, mergedWithProc: mergedVars! });
         }
-        const data = this.cache.get(settings.envFile);
+        const data = this.cache.get(settings.envFile)!;
         return mergeWithProcEnvVariables ? data.mergedWithProc : data.vars;
     }
     private createFileWatcher(envFile: string) {

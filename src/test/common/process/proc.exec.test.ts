@@ -1,6 +1,10 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { CancellationTokenSource } from 'vscode';
+import { PythonSettings } from '../../../client/common/configSettings';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { StdErrError } from '../../../client/common/process/types';
@@ -10,13 +14,18 @@ use(chaiAsPromised);
 
 // tslint:disable-next-line:max-func-body-length
 suite('ProcessService', () => {
+    let pythonPath: string;
+    suiteSetup(() => {
+        pythonPath = PythonSettings.getInstance().pythonPath;
+        return initialize();
+    });
     setup(initialize);
     teardown(initialize);
 
     test('exec should output print statements', async () => {
         const procService = new ProcessService(new BufferDecoder());
         const printOutput = '1234';
-        const result = await procService.exec('python', ['-c', `print("${printOutput}")`]);
+        const result = await procService.exec(pythonPath, ['-c', `print("${printOutput}")`]);
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         expect(result.stdout.trim()).to.be.equal(printOutput, 'Invalid output');
@@ -31,7 +40,7 @@ suite('ProcessService', () => {
             'print("1")', 'sys.stdout.flush()', 'time.sleep(1)',
             'print("2")', 'sys.stdout.flush()', 'time.sleep(1)',
             'print("3")'];
-        const result = await procService.exec('python', ['-c', pythonCode.join(';')]);
+        const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
@@ -48,7 +57,7 @@ suite('ProcessService', () => {
             'sys.stdout.write("1")', 'sys.stdout.flush()', 'time.sleep(1)',
             'sys.stdout.write("2")', 'sys.stdout.flush()', 'time.sleep(1)',
             'sys.stdout.write("3")'];
-        const result = await procService.exec('python', ['-c', pythonCode.join(';')]);
+        const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['123'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
@@ -67,7 +76,7 @@ suite('ProcessService', () => {
         const cancellationToken = new CancellationTokenSource();
         setTimeout(() => cancellationToken.cancel(), 3000);
 
-        const result = await procService.exec('python', ['-c', pythonCode.join(';')], { token: cancellationToken.token });
+        const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')], { token: cancellationToken.token });
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         const values = result.stdout.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
@@ -86,7 +95,7 @@ suite('ProcessService', () => {
             'sys.stderr.write("b")', 'sys.stderr.flush()', 'time.sleep(1)',
             'print("3")', 'sys.stdout.flush()', 'time.sleep(1)',
             'sys.stderr.write("c")', 'sys.stderr.flush()'];
-        const result = await procService.exec('python', ['-c', pythonCode.join(';')]);
+        const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const expectedStdout = ['1', '2', '3'];
         const expectedStderr = ['abc'];
 
@@ -108,7 +117,7 @@ suite('ProcessService', () => {
             'sys.stderr.write("b")', 'sys.stderr.flush()', 'time.sleep(1)',
             'sys.stdout.write("3")', 'sys.stdout.flush()', 'time.sleep(1)',
             'sys.stderr.write("c")', 'sys.stderr.flush()'];
-        const result = await procService.exec('python', ['-c', pythonCode.join(';')], { mergeStdOutErr: true });
+        const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')], { mergeStdOutErr: true });
         const expectedOutput = ['1a2b3c'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
@@ -120,7 +129,7 @@ suite('ProcessService', () => {
     test('exec should throw an error with stderr output', async () => {
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'sys.stderr.write("a")', 'sys.stderr.flush()'];
-        const result = procService.exec('python', ['-c', pythonCode.join(';')], { throwOnStdErr: true });
+        const result = procService.exec(pythonPath, ['-c', pythonCode.join(';')], { throwOnStdErr: true });
 
         await expect(result).to.eventually.be.rejectedWith(StdErrError, 'a', 'Expected error to be thrown');
     });
@@ -134,7 +143,7 @@ suite('ProcessService', () => {
 
     test('exec should exit without no output', async () => {
         const procService = new ProcessService(new BufferDecoder());
-        const result = await procService.exec('python', ['-c', 'import sys', 'sys.exit()']);
+        const result = await procService.exec(pythonPath, ['-c', 'import sys', 'sys.exit()']);
 
         expect(result.stdout).equals('', 'stdout is invalid');
         expect(result.stderr).equals(undefined, 'stderr is invalid');

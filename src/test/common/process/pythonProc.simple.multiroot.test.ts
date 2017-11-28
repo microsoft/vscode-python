@@ -1,9 +1,14 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import { execFile } from 'child_process';
 import { Container } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
+import { PythonSettings } from '../../../client/common/configSettings';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
 import { IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
 import { IDiposableRegistry, IsWindows } from '../../../client/common/types';
@@ -67,5 +72,49 @@ suite('PythonExecutableService', () => {
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], { cwd: path.dirname(workspace4PyFile.fsPath), throwOnStdErr: true });
 
         await expect(promise).to.eventually.have.property('stdout', `Hello${EOL}`);
+    });
+
+    test('Known modules such as \'os\' and \'sys\' should be deemed \'installed\'', async () => {
+        const pythonExecFactory = serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
+        const osModuleIsInstalled = pythonExecService.isModuleInstalled('os');
+        const sysModuleIsInstalled = pythonExecService.isModuleInstalled('sys');
+        await expect(osModuleIsInstalled).to.eventually.equal(true, 'os module is not installed');
+        await expect(sysModuleIsInstalled).to.eventually.equal(true, 'sys module is not installed');
+    });
+
+    test('Unknown modules such as \'xyzabc123\' be deemed \'not installed\'', async () => {
+        const pythonExecFactory = serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
+        const randomModuleName = `xyz123${new Date().getSeconds()}`;
+        const randomModuleIsInstalled = pythonExecService.isModuleInstalled(randomModuleName);
+        await expect(randomModuleIsInstalled).to.eventually.equal(false, `Random module '${randomModuleName}' is installed`);
+    });
+
+    test('Value for \'python --version\' should be returned as version information', async () => {
+        const pythonPath = PythonSettings.getInstance(workspace4Path).pythonPath;
+        const expectedVersion = await new Promise<string>(resolve => {
+            execFile(pythonPath, ['--version'], (error, stdout, stdErr) => {
+                const out = (typeof stdErr === 'string' ? stdErr : '') + EOL + (typeof stdout === 'string' ? stdout : '');
+                resolve(out.trim());
+            });
+        });
+        const pythonExecFactory = serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
+        const version = await pythonExecService.getVersion();
+        expect(version).to.equal(expectedVersion, 'Versions are not the same');
+    });
+
+    test('Ensure correct path to executable is returned', async () => {
+        const pythonPath = PythonSettings.getInstance(workspace4Path).pythonPath;
+        const expectedExecutablePath = await new Promise<string>(resolve => {
+            execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_error, stdout, _stdErr) => {
+                resolve(stdout.trim());
+            });
+        });
+        const pythonExecFactory = serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
+        const executablePath = await pythonExecService.getExecutablePath();
+        expect(executablePath).to.equal(expectedExecutablePath, 'Executable paths are not the same');
     });
 });

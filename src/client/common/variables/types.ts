@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { Uri } from 'vscode';
 
 export type EnvironmentVariables = Object & {
@@ -12,7 +15,7 @@ export interface IEnvironmentVariablesService {
     prependPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]): void;
     appendPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]): void;
     prependPath(vars: EnvironmentVariables, ...paths: string[]): void;
-    appendPath(vars: EnvironmentVariables, append: boolean, ...paths: string[]): void;
+    appendPath(vars: EnvironmentVariables, ...paths: string[]): void;
 }
 
 /**

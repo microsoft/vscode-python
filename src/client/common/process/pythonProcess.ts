@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { injectable } from 'inversify';
 import 'reflect-metadata';
 import { EnvironmentVariables } from '../variables/types';
@@ -16,7 +19,7 @@ export class PythonExecutionService implements IPythonExecutionService {
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         return this.procService.exec(this.pythonPath, ['-c', `import ${moduleName}`], { env: this.envVars, throwOnStdErr: true })
-            .then(() => true);
+            .then(() => true).catch(() => false);
     }
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {

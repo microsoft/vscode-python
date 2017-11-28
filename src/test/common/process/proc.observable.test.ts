@@ -1,6 +1,10 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { CancellationTokenSource } from 'vscode';
+import { PythonSettings } from '../../../client/common/configSettings';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { initialize } from './../../initialize';
@@ -9,13 +13,18 @@ use(chaiAsPromised);
 
 // tslint:disable-next-line:max-func-body-length
 suite('ProcessService', () => {
+    let pythonPath: string;
+    suiteSetup(() => {
+        pythonPath = PythonSettings.getInstance().pythonPath;
+        return initialize();
+    });
     setup(initialize);
     teardown(initialize);
 
     test('execObservable should output print statements', async () => {
         const procService = new ProcessService(new BufferDecoder());
         const printOutput = '1234';
-        const result = procService.execObservable('python', ['-c', `print("${printOutput}")`]);
+        const result = procService.execObservable(pythonPath, ['-c', `print("${printOutput}")`]);
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         const output = await result.out.toPromise();
@@ -33,7 +42,7 @@ suite('ProcessService', () => {
             'print("1")', 'sys.stdout.flush()', 'time.sleep(1)',
             'print("2")', 'sys.stdout.flush()', 'time.sleep(1)',
             'print("3")'];
-        const result = procService.execObservable('python', ['-c', pythonCode.join(';')]);
+        const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
@@ -56,7 +65,7 @@ suite('ProcessService', () => {
             'sys.stdout.write("1")', 'sys.stdout.flush()', 'time.sleep(1)',
             'sys.stdout.write("2")', 'sys.stdout.flush()', 'time.sleep(1)',
             'sys.stdout.write("3")'];
-        const result = procService.execObservable('python', ['-c', pythonCode.join(';')]);
+        const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
@@ -79,7 +88,7 @@ suite('ProcessService', () => {
             'print("1")', 'sys.stdout.flush()', 'time.sleep(10)',
             'print("2")', 'sys.stdout.flush()'];
         const cancellationToken = new CancellationTokenSource();
-        const result = procService.execObservable('python', ['-c', pythonCode.join(';')], { token: cancellationToken.token });
+        const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { token: cancellationToken.token });
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
@@ -103,7 +112,7 @@ suite('ProcessService', () => {
             'print("1")', 'sys.stdout.flush()', 'time.sleep(10)',
             'print("2")', 'sys.stdout.flush()'];
         const cancellationToken = new CancellationTokenSource();
-        const result = procService.execObservable('python', ['-c', pythonCode.join(';')], { token: cancellationToken.token });
+        const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { token: cancellationToken.token });
         let procKilled = false;
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
@@ -132,7 +141,7 @@ suite('ProcessService', () => {
             'sys.stderr.write("b")', 'sys.stderr.flush()', 'time.sleep(1)',
             'print("3")', 'sys.stdout.flush()', 'time.sleep(1)',
             'sys.stderr.write("c")', 'sys.stderr.flush()'];
-        const result = procService.execObservable('python', ['-c', pythonCode.join(';')]);
+        const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = [
             { out: '1', source: 'stdout' }, { out: 'a', source: 'stderr' },
             { out: '2', source: 'stdout' }, { out: 'b', source: 'stderr' },
@@ -159,7 +168,7 @@ suite('ProcessService', () => {
             'sys.stderr.write("b")', 'sys.stderr.flush()', 'time.sleep(1)',
             'print("3")', 'sys.stdout.flush()', 'time.sleep(1)',
             'sys.stderr.write("c")', 'sys.stderr.flush()'];
-        const result = procService.execObservable('python', ['-c', pythonCode.join(';')], { mergeStdOutErr: true });
+        const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { mergeStdOutErr: true });
         const outputs = [
             { out: '1', source: 'stdout' }, { out: 'a', source: 'stdout' },
             { out: '2', source: 'stdout' }, { out: 'b', source: 'stdout' },
@@ -178,7 +187,7 @@ suite('ProcessService', () => {
     test('execObservable should throw an error with stderr output', (done) => {
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'sys.stderr.write("a")', 'sys.stderr.flush()'];
-        const result = procService.execObservable('python', ['-c', pythonCode.join(';')], { throwOnStdErr: true });
+        const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { throwOnStdErr: true });
 
         expect(result).not.to.be.an('undefined', 'result is undefined.');
         result.out.subscribe(output => {
@@ -208,7 +217,7 @@ suite('ProcessService', () => {
 
     test('execObservable should exit without no output', (done) => {
         const procService = new ProcessService(new BufferDecoder());
-        const result = procService.execObservable('python', ['-c', 'import sys', 'sys.exit()']);
+        const result = procService.execObservable(pythonPath, ['-c', 'import sys', 'sys.exit()']);
 
         expect(result).not.to.be.an('undefined', 'result is undefined.');
         result.out.subscribe(output => {
