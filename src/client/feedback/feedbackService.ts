@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
-import * as child_process from 'child_process';
-import * as os from 'os';
 import { window } from 'vscode';
 import { commands, Disposable, TextDocument, workspace } from 'vscode';
+import { launch } from '../common/browser';
 import { PythonLanguage } from '../common/constants';
 import { IPersistentStateFactory, PersistentState } from '../common/persistentState';
 import { FEEDBACK } from '../telemetry/constants';
@@ -109,20 +106,7 @@ export class FeedbackService implements Disposable {
     @captureTelemetry(FEEDBACK, { action: 'accepted' })
     private displaySurvey() {
         this.userResponded.value = true;
-
-        let openCommand: string | undefined;
-        if (os.platform() === 'win32') {
-            openCommand = 'explorer';
-        } else if (os.platform() === 'darwin') {
-            openCommand = '/usr/bin/open';
-        } else {
-            openCommand = '/usr/bin/xdg-open';
-        }
-        if (!openCommand) {
-            console.error(`Unable to determine platform to capture user feedback in Python extension ${os.platform()}`);
-            console.error(`Survey link is: ${FEEDBACK_URL}`);
-        }
-        child_process.spawn(openCommand, [FEEDBACK_URL]);
+        launch(FEEDBACK_URL);
     }
     @captureTelemetry(FEEDBACK, { action: 'doNotShowAgain' })
     private doNotShowFeedbackAgain() {

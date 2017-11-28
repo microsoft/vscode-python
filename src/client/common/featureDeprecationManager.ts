@@ -83,7 +83,6 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         if (!notificationPromptEnabled.value) {
             return;
         }
-        this.settingDeprecationNotified.push(deprecatedInfo.doNotDisplayPromptStateKey);
         const moreInfo = 'Learn more';
         const doNotShowAgain = 'Never show again';
         const option = await window.showInformationMessage(deprecatedInfo.message, moreInfo, doNotShowAgain);

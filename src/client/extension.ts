@@ -3,6 +3,7 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
+import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { PersistentStateFactory } from './common/persistentState';
 import { SimpleConfigurationProvider } from './debugger';
@@ -12,7 +13,6 @@ import { SetInterpreterProvider } from './interpreter/configuration/setInterpret
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
 import { getCondaVersion } from './interpreter/helpers';
 import { InterpreterVersionService } from './interpreter/interpreterVersion';
-import * as jup from './jupyter/main';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
@@ -41,11 +41,13 @@ const PYTHON: vscode.DocumentFilter = { language: 'python' };
 let unitTestOutChannel: vscode.OutputChannel;
 let formatOutChannel: vscode.OutputChannel;
 let lintingOutChannel: vscode.OutputChannel;
-let jupMain: jup.Jupyter;
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: vscode.ExtensionContext) {
+    const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
+    const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
+    context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled));
     const pythonSettings = settings.PythonSettings.getInstance();
     // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated);
@@ -117,7 +119,6 @@ export async function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
     }
 
-    const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
     // tslint:disable-next-line:promise-function-async
     const linterProvider = new LintProvider(context, lintingOutChannel, (a, b) => Promise.resolve(false));
     context.subscriptions.push();
@@ -135,13 +136,6 @@ export async function activate(context: vscode.ExtensionContext) {
             // tslint:disable-next-line:no-unsafe-any
             linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
         });
-    } else {
-        jupMain = new jup.Jupyter(lintingOutChannel);
-        const documentHasJupyterCodeCells = jupMain.hasCodeCells.bind(jupMain);
-        jupMain.activate();
-        context.subscriptions.push(jupMain);
-        // tslint:disable-next-line:no-unsafe-any
-        linterProvider.documentHasJupyterCodeCells = documentHasJupyterCodeCells;
     }
     tests.activate(context, unitTestOutChannel, symbolProvider);
 
@@ -155,7 +149,6 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
     activationDeferred.resolve();
 
-    const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
     const feedbackService = new FeedbackService(persistentStateFactory);
     context.subscriptions.push(feedbackService);
     // tslint:disable-next-line:no-unused-expression

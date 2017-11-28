@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
-import * as child_process from 'child_process';
-import * as os from 'os';
 import { window } from 'vscode';
+import { launch } from './common/browser';
 import { IPersistentStateFactory, PersistentState } from './common/persistentState';
 
 const BANNER_URL = 'https://aka.ms/pvsc-at-msft';
@@ -31,17 +28,6 @@ export class BannerService {
         });
     }
     private displayBanner() {
-        let openCommand: string | undefined;
-        if (os.platform() === 'win32') {
-            openCommand = 'explorer';
-        } else if (os.platform() === 'darwin') {
-            openCommand = '/usr/bin/open';
-        } else {
-            openCommand = '/usr/bin/xdg-open';
-        }
-        if (!openCommand) {
-            console.error(`Unable open ${BANNER_URL} on platform '${os.platform()}'.`);
-        }
-        child_process.spawn(openCommand, [BANNER_URL]);
+        launch(BANNER_URL);
     }
 }

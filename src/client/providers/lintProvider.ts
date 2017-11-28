@@ -6,8 +6,7 @@ import * as vscode from 'vscode';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { ConfigSettingMonitor } from '../common/configSettingMonitor';
 import { PythonSettings } from '../common/configSettings';
-import { LinterErrors } from '../common/constants';
-import { PythonLanguage } from '../jupyter/common/constants';
+import { LinterErrors, PythonLanguage } from '../common/constants';
 import * as linter from '../linters/baseLinter';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { LINTING } from '../telemetry/constants';
@@ -33,7 +32,7 @@ function createDiagnostics(message: linter.ILintMessage, document: vscode.TextDo
     const position = new vscode.Position(message.line - 1, message.column);
     const range = new vscode.Range(position, position);
 
-    const severity = lintSeverityToVSSeverity.get(message.severity);
+    const severity = lintSeverityToVSSeverity.get(message.severity!)!;
     const diagnostic = new vscode.Diagnostic(range, `${message.code}:${message.message}`, severity);
     diagnostic.code = message.code;
     diagnostic.source = message.provider;
@@ -140,8 +139,8 @@ export class LintProvider implements vscode.Disposable {
         });
     }
 
-    // tslint:disable-next-line:member-ordering
-    private lastTimeout: number;
+    // tslint:disable-next-line:member-ordering no-any
+    private lastTimeout: any;
     private lintDocument(document: vscode.TextDocument, delay: number, trigger: 'auto' | 'save'): void {
         // Since this is a hack, lets wait for 2 seconds before linting
         // Give user to continue typing before we waste CPU time
@@ -171,7 +170,7 @@ export class LintProvider implements vscode.Disposable {
             return;
         }
         if (this.pendingLintings.has(document.uri.fsPath)) {
-            this.pendingLintings.get(document.uri.fsPath).cancel();
+            this.pendingLintings.get(document.uri.fsPath)!.cancel();
             this.pendingLintings.delete(document.uri.fsPath);
         }
 
