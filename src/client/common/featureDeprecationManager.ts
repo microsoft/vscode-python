@@ -38,7 +38,7 @@ const deprecatedFeatures: deprecatedFeatureInfo[] = [
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE',
         message: 'The setting \'python.linting.lintOnTextChange\' is deprecated, please enable \'python.linting.lintOnSave\' and \'files.autoSave\'.',
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/313',
-        setting: { setting: 'formatting.lintOnTextChange', values: ['true', true] }
+        setting: { setting: 'linting.lintOnTextChange', values: ['true', true] }
     }
 ];
 
