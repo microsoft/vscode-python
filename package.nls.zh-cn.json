@@ -1,5 +1,5 @@
 {
-    "python.command.python.sortImports.title": "对 import 进行排序",
+    "python.command.python.sortImports.title": "排序 import 语句",
     "python.command.python.startREPL.title": "启动 REPL",
     "python.command.python.buildWorkspaceSymbols.title": "构建工作区符号",
     "python.command.python.runtests.title": "运行所有单元测试",
