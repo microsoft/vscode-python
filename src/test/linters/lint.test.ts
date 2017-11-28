@@ -1,5 +1,4 @@
 import * as assert from 'assert';
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -113,7 +112,6 @@ suite('Linting', () => {
     const isPython3Deferred = createDeferred<boolean>();
     const isPython3 = isPython3Deferred.promise;
     suiteSetup(async () => {
-        pylintFileToLintLines = fs.readFileSync(fileToLint).toString('utf-8').split(/\r?\n/g);
         await initialize();
         const version = await execPythonFile(fileToLint, PythonSettings.getInstance(vscode.Uri.file(fileToLint)).pythonPath, ['--version'], __dirname, true);
         isPython3Deferred.resolve(version.indexOf('3.') >= 0);
