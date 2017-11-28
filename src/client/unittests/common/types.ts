@@ -179,5 +179,5 @@ export type launchOptions = {
 
 export interface ITestDebugLauncher {
     getPort(resource?: Uri): Promise<number>;
-    launchDebugger(options: launchOptions): Promise<Tests>;
+    launchDebugger(options: launchOptions): Promise<void>;
 }

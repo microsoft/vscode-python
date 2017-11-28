@@ -6,6 +6,8 @@ import { createDeferred } from './../../common/helpers';
 import { execPythonFile } from './../../common/utils';
 import { ITestDebugLauncher, launchOptions } from './types';
 
+const HAND_SHAKE = `READY${os.EOL}`;
+
 export class DebugLauncher implements ITestDebugLauncher {
     public getPort(resource?: Uri): Promise<number> {
         const pythonSettings = PythonSettings.getInstance(resource);
@@ -15,21 +17,21 @@ export class DebugLauncher implements ITestDebugLauncher {
     public async launchDebugger(options: launchOptions) {
         const pythonSettings = PythonSettings.getInstance(options.cwd ? Uri.file(options.cwd) : undefined);
         // tslint:disable-next-line:no-any
-        const def = createDeferred<any>();
+        const def = createDeferred<void>();
         // tslint:disable-next-line:no-any
-        const launchDef = createDeferred<any>();
+        const launchDef = createDeferred<void>();
+
         let outputChannelShown = false;
         let accumulatedData: string = '';
         execPythonFile(options.cwd, pythonSettings.pythonPath, options.args, options.cwd, true, (data: string) => {
             if (!launchDef.resolved) {
                 accumulatedData += data;
-                if (accumulatedData.startsWith(`READY${os.EOL}`)) {
-                    // debug socket server has started.
-                    launchDef.resolve();
-                    data = accumulatedData.substring((`READY${os.EOL}`).length);
-                } else {
+                if (!accumulatedData.startsWith(HAND_SHAKE)) {
                     return;
                 }
+                // Socket server has started, lets start the vs debugger.
+                launchDef.resolve();
+                data = accumulatedData.substring(HAND_SHAKE.length);
             }
 
             if (!outputChannelShown) {
@@ -37,43 +39,44 @@ export class DebugLauncher implements ITestDebugLauncher {
                 options.outChannel!.show();
             }
             options.outChannel!.append(data);
-        }, options.token).catch(reason => {
-            if (!def.rejected && !def.resolved) {
-                def.reject(reason);
-            }
-        }).then(() => {
-            if (!def.rejected && !def.resolved) {
-                def.resolve();
-            }
-        }).catch(reason => {
-            if (!def.rejected && !def.resolved) {
-                def.reject(reason);
-            }
-        });
-
-        launchDef.promise.then(() => {
-            if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
-                throw new Error('Please open a workspace');
-            }
-            let workspaceFolder = workspace.getWorkspaceFolder(Uri.file(options.cwd));
-            if (!workspaceFolder) {
-                workspaceFolder = workspace.workspaceFolders[0];
-            }
-            return debug.startDebugging(workspaceFolder, {
-                name: 'Debug Unit Test',
-                type: 'python',
-                request: 'attach',
-                localRoot: options.cwd,
-                remoteRoot: options.cwd,
-                port: options.port,
-                secret: 'my_secret',
-                host: 'localhost'
+        }, options.token)
+            .then(() => {
+                // Complete only when the process has completed.
+                if (!def.completed) {
+                    def.resolve();
+                }
+            })
+            .catch(reason => {
+                if (!def.completed) {
+                    def.reject(reason);
+                }
             });
-        }).catch(reason => {
-            if (!def.rejected && !def.resolved) {
-                def.reject(reason);
-            }
-        });
+
+        launchDef.promise
+            .then(() => {
+                if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
+                    throw new Error('Please open a workspace');
+                }
+                let workspaceFolder = workspace.getWorkspaceFolder(Uri.file(options.cwd));
+                if (!workspaceFolder) {
+                    workspaceFolder = workspace.workspaceFolders[0];
+                }
+                return debug.startDebugging(workspaceFolder, {
+                    name: 'Debug Unit Test',
+                    type: 'python',
+                    request: 'attach',
+                    localRoot: options.cwd,
+                    remoteRoot: options.cwd,
+                    port: options.port,
+                    secret: 'my_secret',
+                    host: 'localhost'
+                });
+            })
+            .catch(reason => {
+                if (!def.completed) {
+                    def.reject(reason);
+                }
+            });
 
         return def.promise;
     }
