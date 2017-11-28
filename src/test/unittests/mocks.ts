@@ -1,4 +1,4 @@
-import { CancellationToken, Disposable, OutputChannel } from 'vscode';
+import { CancellationToken, Disposable, OutputChannel, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../client/common/helpers';
 import { Product } from '../../client/common/installer';
 import { BaseTestManager } from '../../client/unittests/common/baseTestManager';
@@ -25,7 +25,10 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     constructor() {
         this._launched = createDeferred<boolean>();
     }
-    public async launchDebugger(rootDirectory: string, testArgs: string[], token?: CancellationToken, outChannel?: OutputChannel): Promise<Tests> {
+    public async getPort(resource?: Uri): Promise<number> {
+        return 0;
+    }
+    public async launchDebugger(rootDirectory: string, testArgs: string[], debugPort: number, token?: CancellationToken, outChannel?: OutputChannel): Promise<Tests> {
         this._launched.resolve(true);
         // tslint:disable-next-line:no-non-null-assertion
         this._token = token!;

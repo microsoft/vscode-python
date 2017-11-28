@@ -58,14 +58,17 @@ export function runTest(testResultsService: ITestResultsService, debugLauncher: 
     }
 
     return promiseToGetXmlLogFile.then(() => {
-        const pythonSettings = PythonSettings.getInstance(Uri.file(rootDirectory));
         if (debug === true) {
-            const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');
-            const nosetestlauncherargs = [rootDirectory, 'my_secret', pythonSettings.unitTest.debugPort.toString(), 'nose'];
-            const debuggerArgs = [testLauncherFile].concat(nosetestlauncherargs).concat(noseTestArgs.concat(testPaths));
-            // tslint:disable-next-line:prefer-type-cast no-any
-            return debugLauncher.launchDebugger(rootDirectory, debuggerArgs, token, outChannel) as Promise<any>;
+            return debugLauncher.getPort(Uri.file(rootDirectory))
+                .then(debugPort => {
+                    const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');
+                    const nosetestlauncherargs = [rootDirectory, 'my_secret', debugPort.toString(), 'nose'];
+                    const debuggerArgs = [testLauncherFile].concat(nosetestlauncherargs).concat(noseTestArgs.concat(testPaths));
+                    // tslint:disable-next-line:prefer-type-cast no-any
+                    return debugLauncher.launchDebugger(rootDirectory, debuggerArgs, debugPort, token, outChannel) as Promise<any>;
+                });
         } else {
+            const pythonSettings = PythonSettings.getInstance(Uri.file(rootDirectory));
             // tslint:disable-next-line:prefer-type-cast no-any
             return run(pythonSettings.unitTest.nosetestPath, noseTestArgs.concat(testPaths), rootDirectory, token, outChannel) as Promise<any>;
         }
