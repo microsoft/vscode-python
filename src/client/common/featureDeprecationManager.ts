@@ -71,11 +71,11 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     private checkAndNotifyDeprecatedSetting(deprecatedInfo: deprecatedFeatureInfo) {
         let notify = false;
         if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
-            workspace.workspaceFolders.forEach(wkspaceFolder => {
+            workspace.workspaceFolders.forEach(workspaceFolder => {
                 if (notify) {
                     return;
                 }
-                notify = this.isDeprecatedSettingAndValueUsed(workspace.getConfiguration('python', wkspaceFolder.uri), deprecatedInfo.setting!);
+                notify = this.isDeprecatedSettingAndValueUsed(workspace.getConfiguration('python', workspaceFolder.uri), deprecatedInfo.setting!);
             });
         } else {
             notify = this.isDeprecatedSettingAndValueUsed(workspace.getConfiguration('python'), deprecatedInfo.setting!);
