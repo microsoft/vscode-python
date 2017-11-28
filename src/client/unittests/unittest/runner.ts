@@ -1,7 +1,5 @@
 'use strict';
 import * as path from 'path';
-import { CancellationToken, OutputChannel, Uri } from 'vscode';
-import { PythonSettings } from '../../common/configSettings';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/baseTestManager';
 import { Options, run } from '../common/runner';
@@ -9,7 +7,7 @@ import { ITestDebugLauncher, ITestResultsService, TestRunOptions, Tests, TestSta
 import { Server } from './socketServer';
 type TestStatusMap = {
     status: TestStatus;
-    summaryProperty: string;
+    summaryProperty: 'passed' | 'failures' | 'errors' | 'skipped';
 };
 
 const outcomeMapping = new Map<string, TestStatusMap>();
@@ -45,15 +43,15 @@ export function runTest(serviceContainer: IServiceContainer, testManager: BaseTe
     // tslint:disable-next-line:no-empty
     server.on('log', (message: string, ...data: string[]) => {
     });
-    // tslint:disable-next-line:no-empty
-    server.on('connect', (data) => {
+    // tslint:disable-next-line:no-empty no-any
+    server.on('connect', (data: any) => {
     });
     // tslint:disable-next-line:no-empty
     server.on('start', (data: { test: string }) => {
     });
     server.on('result', (data: ITestData) => {
         const test = options.tests.testFunctions.find(t => t.testFunction.nameToRun === data.test);
-        const statusDetails = outcomeMapping.get(data.outcome);
+        const statusDetails = outcomeMapping.get(data.outcome)!;
         if (test) {
             test.testFunction.status = statusDetails.status;
             test.testFunction.message = data.message;
@@ -69,12 +67,12 @@ export function runTest(serviceContainer: IServiceContainer, testManager: BaseTe
             }
         }
     });
-    // tslint:disable-next-line:no-empty
-    server.on('socket.disconnected', (data) => {
+    // tslint:disable-next-line:no-empty no-any
+    server.on('socket.disconnected', (data: any) => {
     });
 
     return server.start().then(port => {
-        const testPaths: string[] = getIdsOfTestsToRun(options.tests, options.testsToRun);
+        const testPaths: string[] = getIdsOfTestsToRun(options.tests, options.testsToRun!);
         for (let counter = 0; counter < testPaths.length; counter += 1) {
             testPaths[counter] = `-t${testPaths[counter].trim()}`;
         }
@@ -86,10 +84,6 @@ export function runTest(serviceContainer: IServiceContainer, testManager: BaseTe
             testArgs = testArgs.filter(arg => arg !== '--uf');
 
             testArgs.push(`--result-port=${port}`);
-            if (options.debug === true) {
-                const debugPort = PythonSettings.getInstance(Uri.file(options.cwd)).unitTest.debugPort;
-                testArgs.push(...['--secret=my_secret', `--port=${debugPort}`]);
-            }
             testArgs.push(`--us=${startTestDiscoveryDirectory}`);
             if (testId.length > 0) {
                 testArgs.push(`-t${testId}`);
@@ -98,8 +92,13 @@ export function runTest(serviceContainer: IServiceContainer, testManager: BaseTe
                 testArgs.push(`--testFile=${testFile}`);
             }
             if (options.debug === true) {
-                // tslint:disable-next-line:prefer-type-cast no-any
-                return debugLauncher.launchDebugger(options.cwd, [testLauncherFile].concat(testArgs), options.token, options.outChannel);
+                return debugLauncher.getPort(options.workspaceFolder)
+                    .then(debugPort => {
+                        testArgs.push(...['--secret=my_secret', `--port=${debugPort}`]);
+                        const launchOptions = { cwd: options.cwd, args: [testLauncherFile].concat(testArgs), token: options.token, outChannel: options.outChannel, port: debugPort };
+                        // tslint:disable-next-line:prefer-type-cast no-any
+                        return debugLauncher.launchDebugger(launchOptions);
+                    });
             } else {
                 // tslint:disable-next-line:prefer-type-cast no-any
                 const runOptions: Options = {
@@ -120,22 +119,22 @@ export function runTest(serviceContainer: IServiceContainer, testManager: BaseTe
 
         // Ok, the ptvs test runner can only work with one test at a time
         let promise = Promise.resolve<string>('');
-        if (Array.isArray(options.testsToRun.testFile)) {
-            options.testsToRun.testFile.forEach(testFile => {
+        if (Array.isArray(options.testsToRun!.testFile)) {
+            options.testsToRun!.testFile!.forEach(testFile => {
                 // tslint:disable-next-line:prefer-type-cast no-any
                 promise = promise.then(() => runTestInternal(testFile.fullPath, testFile.nameToRun) as Promise<any>);
             });
         }
-        if (Array.isArray(options.testsToRun.testSuite)) {
-            options.testsToRun.testSuite.forEach(testSuite => {
-                const testFileName = options.tests.testSuites.find(t => t.testSuite === testSuite).parentTestFile.fullPath;
+        if (Array.isArray(options.testsToRun!.testSuite)) {
+            options.testsToRun!.testSuite!.forEach(testSuite => {
+                const testFileName = options.tests.testSuites.find(t => t.testSuite === testSuite)!.parentTestFile.fullPath;
                 // tslint:disable-next-line:prefer-type-cast no-any
                 promise = promise.then(() => runTestInternal(testFileName, testSuite.nameToRun) as Promise<any>);
             });
         }
-        if (Array.isArray(options.testsToRun.testFunction)) {
-            options.testsToRun.testFunction.forEach(testFn => {
-                const testFileName = options.tests.testFunctions.find(t => t.testFunction === testFn).parentTestFile.fullPath;
+        if (Array.isArray(options.testsToRun!.testFunction)) {
+            options.testsToRun!.testFunction!.forEach(testFn => {
+                const testFileName = options.tests.testFunctions.find(t => t.testFunction === testFn)!.parentTestFile.fullPath;
                 // tslint:disable-next-line:prefer-type-cast no-any
                 promise = promise.then(() => runTestInternal(testFileName, testFn.nameToRun) as Promise<any>);
             });
@@ -194,7 +193,7 @@ function buildTestArgs(args: string[]): string[] {
     return testArgs;
 }
 function getIdsOfTestsToRun(tests: Tests, testsToRun: TestsToRun): string[] {
-    const testIds = [];
+    const testIds: string[] = [];
     if (testsToRun && testsToRun.testFolder) {
         // Get test ids of files in these folders
         testsToRun.testFolder.map(folder => {

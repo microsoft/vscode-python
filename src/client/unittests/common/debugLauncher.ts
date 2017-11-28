@@ -1,31 +1,43 @@
+import * as getFreePort from 'get-port';
 import * as os from 'os';
-import { CancellationToken, debug, OutputChannel, Uri, workspace } from 'vscode';
+import { debug, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
 import { createDeferred } from './../../common/helpers';
 import { execPythonFile } from './../../common/utils';
-import { ITestDebugLauncher } from './types';
+import { ITestDebugLauncher, launchOptions } from './types';
 
 export class DebugLauncher implements ITestDebugLauncher {
-    public async launchDebugger(rootDirectory: string, testArgs: string[], token?: CancellationToken, outChannel?: OutputChannel) {
-        const pythonSettings = PythonSettings.getInstance(rootDirectory ? Uri.file(rootDirectory) : undefined);
+    public getPort(resource?: Uri): Promise<number> {
+        const pythonSettings = PythonSettings.getInstance(resource);
+        const port = pythonSettings.unitTest.debugPort;
+        return new Promise<number>((resolve, reject) => getFreePort({ host: 'localhost', port }).then(resolve, reject));
+    }
+    public async launchDebugger(options: launchOptions) {
+        const pythonSettings = PythonSettings.getInstance(options.cwd ? Uri.file(options.cwd) : undefined);
         // tslint:disable-next-line:no-any
         const def = createDeferred<any>();
         // tslint:disable-next-line:no-any
         const launchDef = createDeferred<any>();
         let outputChannelShown = false;
-        execPythonFile(rootDirectory, pythonSettings.pythonPath, testArgs, rootDirectory, true, (data: string) => {
-            if (data.startsWith(`READY${os.EOL}`)) {
-                // debug socket server has started.
-                launchDef.resolve();
-                data = data.substring((`READY${os.EOL}`).length);
+        let accumulatedData: string = '';
+        execPythonFile(options.cwd, pythonSettings.pythonPath, options.args, options.cwd, true, (data: string) => {
+            if (!launchDef.resolved) {
+                accumulatedData += data;
+                if (accumulatedData.startsWith(`READY${os.EOL}`)) {
+                    // debug socket server has started.
+                    launchDef.resolve();
+                    data = accumulatedData.substring((`READY${os.EOL}`).length);
+                } else {
+                    return;
+                }
             }
 
             if (!outputChannelShown) {
                 outputChannelShown = true;
-                outChannel.show();
+                options.outChannel!.show();
             }
-            outChannel.append(data);
-        }, token).catch(reason => {
+            options.outChannel!.append(data);
+        }, options.token).catch(reason => {
             if (!def.rejected && !def.resolved) {
                 def.reject(reason);
             }
@@ -43,7 +55,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
                 throw new Error('Please open a workspace');
             }
-            let workspaceFolder = workspace.getWorkspaceFolder(Uri.file(rootDirectory));
+            let workspaceFolder = workspace.getWorkspaceFolder(Uri.file(options.cwd));
             if (!workspaceFolder) {
                 workspaceFolder = workspace.workspaceFolders[0];
             }
@@ -51,9 +63,9 @@ export class DebugLauncher implements ITestDebugLauncher {
                 name: 'Debug Unit Test',
                 type: 'python',
                 request: 'attach',
-                localRoot: rootDirectory,
-                remoteRoot: rootDirectory,
-                port: pythonSettings.unitTest.debugPort,
+                localRoot: options.cwd,
+                remoteRoot: options.cwd,
+                port: options.port,
                 secret: 'my_secret',
                 host: 'localhost'
             });

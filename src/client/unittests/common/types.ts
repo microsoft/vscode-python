@@ -169,6 +169,15 @@ export interface ITestResultsService {
     updateResults(tests: Tests): void;
 }
 
+export type launchOptions = {
+    cwd: string;
+    args: string[];
+    token?: CancellationToken;
+    outChannel?: OutputChannel;
+    port: number;
+};
+
 export interface ITestDebugLauncher {
-    launchDebugger(rootDirectory: string, testArgs: string[], token?: CancellationToken, outChannel?: OutputChannel): Promise<Tests>;
+    getPort(resource?: Uri): Promise<number>;
+    launchDebugger(options: launchOptions): Promise<Tests>;
 }

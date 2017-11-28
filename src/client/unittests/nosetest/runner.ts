@@ -1,11 +1,9 @@
 'use strict';
 import * as path from 'path';
-import { CancellationToken, OutputChannel, Uri } from 'vscode';
-import { PythonSettings } from '../../common/configSettings';
 import { createTemporaryFile } from '../../common/helpers';
 import { IServiceContainer } from '../../ioc/types';
 import { Options, run } from '../common/runner';
-import { ITestDebugLauncher, ITestResultsService, TestRunOptions, Tests, TestsToRun } from '../common/types';
+import { ITestDebugLauncher, ITestResultsService, TestRunOptions, Tests } from '../common/types';
 import { PassCalculationFormulae, updateResultsFromXmlLogFile } from '../common/xUnitParser';
 
 const WITH_XUNIT = '--with-xunit';
@@ -13,7 +11,7 @@ const XUNIT_FILE = '--xunit-file';
 
 // tslint:disable-next-line:no-any
 export function runTest(serviceContainer: IServiceContainer, testResultsService: ITestResultsService, debugLauncher: ITestDebugLauncher, options: TestRunOptions): Promise<any> {
-    let testPaths = [];
+    let testPaths: string[] = [];
     if (options.testsToRun && options.testsToRun.testFolder) {
         testPaths = testPaths.concat(options.testsToRun.testFolder.map(f => f.nameToRun));
     }
@@ -59,13 +57,16 @@ export function runTest(serviceContainer: IServiceContainer, testResultsService:
     }
 
     return promiseToGetXmlLogFile.then(() => {
-        const pythonSettings = PythonSettings.getInstance(Uri.file(options.cwd));
         if (options.debug === true) {
-            const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');
-            const nosetestlauncherargs = [options.cwd, 'my_secret', pythonSettings.unitTest.debugPort.toString(), 'nose'];
-            const debuggerArgs = [testLauncherFile].concat(nosetestlauncherargs).concat(noseTestArgs.concat(testPaths));
-            // tslint:disable-next-line:prefer-type-cast no-any
-            return debugLauncher.launchDebugger(options.cwd, debuggerArgs, options.token, options.outChannel) as Promise<any>;
+            return debugLauncher.getPort(options.workspaceFolder)
+                .then(debugPort => {
+                    const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');
+                    const nosetestlauncherargs = [options.cwd, 'my_secret', debugPort.toString(), 'nose'];
+                    const debuggerArgs = [testLauncherFile].concat(nosetestlauncherargs).concat(noseTestArgs.concat(testPaths));
+                    const launchOptions = { cwd: options.cwd, args: debuggerArgs, token: options.token, outChannel: options.outChannel, port: debugPort };
+                    // tslint:disable-next-line:prefer-type-cast no-any
+                    return debugLauncher.launchDebugger(launchOptions) as Promise<any>;
+                });
         } else {
             // tslint:disable-next-line:prefer-type-cast no-any
             const runOptions: Options = {
