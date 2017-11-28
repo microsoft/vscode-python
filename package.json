@@ -957,12 +957,6 @@
 					"description": "Whether to lint Python files using mypy.",
 					"scope": "resource"
 				},
-				"python.linting.lintOnTextChange": {
-					"type": "boolean",
-					"default": true,
-					"description": "Whether to lint Python files when modified.",
-					"scope": "resource"
-				},
 				"python.linting.lintOnSave": {
 					"type": "boolean",
 					"default": true,

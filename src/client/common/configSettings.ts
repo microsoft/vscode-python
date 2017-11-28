@@ -84,7 +84,6 @@ export interface ILintingSettings {
     flake8Args: string[];
     pydocstyleEnabled: boolean;
     pydocstyleArgs: string[];
-    lintOnTextChange: boolean;
     lintOnSave: boolean;
     maxNumberOfProblems: number;
     pylintCategorySeverity: IPylintCategorySeverity;
@@ -242,7 +241,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             enabledWithoutWorkspace: false,
             ignorePatterns: [],
             flake8Args: [], flake8Enabled: false, flake8Path: 'flake',
-            lintOnSave: false, lintOnTextChange: false, maxNumberOfProblems: 100,
+            lintOnSave: false, maxNumberOfProblems: 100,
             mypyArgs: [], mypyEnabled: false, mypyPath: 'mypy',
             outputWindow: 'python', pep8Args: [], pep8Enabled: false, pep8Path: 'pep8',
             pylamaArgs: [], pylamaEnabled: false, pylamaPath: 'pylama',

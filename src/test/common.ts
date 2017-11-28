@@ -8,7 +8,7 @@ const fileInNonRootWorkspace = path.join(__dirname, '..', '..', 'src', 'test', '
 export const rootWorkspaceUri = getWorkspaceRoot();
 
 export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
-    'linting.lintOnSave' | 'linting.lintOnTextChange' |
+    'linting.lintOnSave' |
     'linting.enabled' | 'linting.pylintEnabled' |
     'linting.flake8Enabled' | 'linting.pep8Enabled' | 'linting.pylamaEnabled' |
     'linting.prospectorEnabled' | 'linting.pydocstyleEnabled' | 'linting.mypyEnabled' |

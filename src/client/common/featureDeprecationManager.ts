@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { commands, Disposable, window, workspace } from 'vscode';
+import { commands, Disposable, window, workspace, WorkspaceConfiguration } from 'vscode';
 import { launch } from './net/browser';
 import { IPersistentStateFactory } from './persistentState';
 
@@ -10,7 +10,12 @@ type deprecatedFeatureInfo = {
     message: string;
     moreInfoUrl: string;
     commands?: string[];
-    setting?: string;
+    setting?: deprecatedSettingAndValue;
+};
+
+type deprecatedSettingAndValue = {
+    setting: string;
+    values?: {}[];
 };
 
 const jupyterDeprecationInfo: deprecatedFeatureInfo = {
@@ -27,7 +32,13 @@ const deprecatedFeatures: deprecatedFeatureInfo[] = [
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE',
         message: 'The setting \'python.formatting.formatOnSave\' is deprecated, please use \'editor.formatOnSave\'.',
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/309',
-        setting: 'formatting.formatOnSave'
+        setting: { setting: 'formatting.formatOnSave', values: ['true', true] }
+    },
+    {
+        doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE',
+        message: 'The setting \'python.linting.lintOnTextChange\' is deprecated, please enable \'python.linting.lintOnSave\' and \'files.autoSave\'.',
+        moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/313',
+        setting: { setting: 'formatting.lintOnTextChange', values: ['true', true] }
     }
 ];
 
@@ -37,7 +48,6 @@ export interface IFeatureDeprecationManager extends Disposable {
 
 export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     private disposables: Disposable[] = [];
-    private settingDeprecationNotified: string[] = [];
     constructor(private persistentStateFactory: IPersistentStateFactory, private jupyterExtensionInstalled: boolean) { }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
@@ -59,25 +69,30 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         }
     }
     private checkAndNotifyDeprecatedSetting(deprecatedInfo: deprecatedFeatureInfo) {
-        const setting = deprecatedInfo.setting!;
         let notify = false;
         if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
             workspace.workspaceFolders.forEach(wkspaceFolder => {
                 if (notify) {
                     return;
                 }
-                const pythonConfig = workspace.getConfiguration('python', wkspaceFolder.uri);
-                notify = pythonConfig.has(setting) && this.settingDeprecationNotified.indexOf(setting) === -1;
+                notify = this.isDeprecatedSettingAndValueUsed(workspace.getConfiguration('python', wkspaceFolder.uri), deprecatedInfo.setting!);
             });
         } else {
-            const pythonConfig = workspace.getConfiguration('python');
-            notify = pythonConfig.has(setting) && this.settingDeprecationNotified.indexOf(setting) === -1;
+            notify = this.isDeprecatedSettingAndValueUsed(workspace.getConfiguration('python'), deprecatedInfo.setting!);
         }
 
         if (notify) {
-            this.settingDeprecationNotified.push(setting);
             this.notifyDeprecation(deprecatedInfo);
         }
+    }
+    private isDeprecatedSettingAndValueUsed(pythonConfig: WorkspaceConfiguration, deprecatedSetting: deprecatedSettingAndValue) {
+        if (!pythonConfig.has(deprecatedSetting.setting)) {
+            return false;
+        }
+        if (!Array.isArray(deprecatedSetting.values) || deprecatedSetting.values.length === 0) {
+            return true;
+        }
+        return deprecatedSetting.values.indexOf(pythonConfig.get(deprecatedSetting.setting)!) >= 0;
     }
     private async notifyDeprecation(deprecatedInfo: deprecatedFeatureInfo) {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(deprecatedInfo.doNotDisplayPromptStateKey, true);
