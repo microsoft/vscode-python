@@ -27,29 +27,6 @@ export namespace Commands {
     export const Update_SparkLibrary = 'python.updateSparkLibrary';
     export const Build_Workspace_Symbols = 'python.buildWorkspaceSymbols';
     export const Start_REPL = 'python.startREPL';
-    export namespace Jupyter {
-        export const Get_All_KernelSpecs_For_Language = 'jupyter.getAllKernelSpecsForLanguage';
-        export const Get_All_KernelSpecs = 'jupyter.getAllKernelSpecs';
-        export const Select_Kernel = 'jupyter.selectKernel';
-        export const Kernel_Options = 'jupyter.kernelOptions';
-        export const StartKernelForKernelSpeck = 'jupyter.sartKernelForKernelSpecs';
-        export const ExecuteRangeInKernel = 'jupyter.execRangeInKernel';
-        export const ExecuteSelectionOrLineInKernel = 'jupyter.runSelectionLine';
-        export namespace Cell {
-            export const ExecuteCurrentCell = 'jupyter.execCurrentCell';
-            export const ExecuteCurrentCellAndAdvance = 'jupyter.execCurrentCellAndAdvance';
-            export const AdcanceToCell = 'jupyter.advanceToNextCell';
-            export const DisplayCellMenu = 'jupyter.displayCellMenu';
-            export const GoToPreviousCell = 'jupyter.gotToPreviousCell';
-            export const GoToNextCell = 'jupyter.gotToNextCell';
-        }
-        export namespace Kernel {
-            export const Kernel_Interrupt = 'jupyter.kernelInterrupt';
-            export const Kernel_Restart = 'jupyter.kernelRestart';
-            export const Kernel_Shut_Down = 'jupyter.kernelShutDown';
-            export const Kernel_Details = 'jupyter.kernelDetails';
-        }
-    }
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';

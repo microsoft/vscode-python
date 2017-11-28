@@ -3,6 +3,7 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
+import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { PersistentStateFactory } from './common/persistentState';
 import { SimpleConfigurationProvider } from './debugger';
@@ -42,11 +43,12 @@ const PYTHON: vscode.DocumentFilter = { language: 'python' };
 let unitTestOutChannel: vscode.OutputChannel;
 let formatOutChannel: vscode.OutputChannel;
 let lintingOutChannel: vscode.OutputChannel;
-let jupMain: jup.Jupyter;
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: vscode.ExtensionContext) {
+    const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
+    const deprecationManager = new FeatureDeprecationManager(persistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
     // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated);
@@ -138,12 +140,7 @@ export async function activate(context: vscode.ExtensionContext) {
             linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
         });
     } else {
-        jupMain = new jup.Jupyter(lintingOutChannel);
-        const documentHasJupyterCodeCells = jupMain.hasCodeCells.bind(jupMain);
-        jupMain.activate();
-        context.subscriptions.push(jupMain);
-        // tslint:disable-next-line:no-unsafe-any
-        linterProvider.documentHasJupyterCodeCells = documentHasJupyterCodeCells;
+        context.subscriptions.push(new jup.Jupyter(deprecationManager));
     }
     tests.activate(context, unitTestOutChannel, symbolProvider);
 
@@ -157,7 +154,6 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
     activationDeferred.resolve();
 
-    const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
     const feedbackService = new FeedbackService(persistentStateFactory);
     context.subscriptions.push(feedbackService);
     // tslint:disable-next-line:no-unused-expression

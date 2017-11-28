@@ -850,12 +850,6 @@
             "type": "object",
             "title": "Python Configuration",
             "properties": {
-                "python.promptToInstallJupyter": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Display prompt to install Jupyter Extension.",
-                    "scope": "resource"
-                },
                 "python.pythonPath": {
                     "type": "string",
                     "default": "python",
@@ -1470,29 +1464,6 @@
                     "default": [],
                     "description": "Python launch arguments to use when executing a file in the terminal.",
                     "scope": "resource"
-                },
-                "python.jupyter.appendResults": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Whether to appen the results to results window, else clear and display.",
-                    "scope": "resource"
-                },
-                "python.jupyter.defaultKernel": {
-                    "type": "string",
-                    "default": "",
-                    "description": "Default kernel to be used. By default the first available kernel is used.",
-                    "scope": "resource"
-                },
-                "python.jupyter.startupCode": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "default": [
-                        "%matplotlib inline"
-                    ],
-                    "description": "Code executed when the kernel starts. Such as the default of '%matplotlib inline'. Individual lines can be placed in separate items of the array.",
-                    "scope": "resource"
                 }
             }
         },
@@ -1522,8 +1493,8 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "tsc -p ./ && webpack",
-        "compile": "webpack && tsc -watch -p ./",
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "precommit": "node gulpfile.js",
@@ -1538,9 +1509,7 @@
         "lodash": "^4.17.4",
         "minimatch": "^3.0.3",
         "named-js-regexp": "^1.3.1",
-        "rx": "^4.1.0",
         "semver": "^5.4.1",
-        "socket.io": "^1.4.8",
         "tmp": "0.0.29",
         "tree-kill": "^1.1.0",
         "uint64be": "^1.0.1",
@@ -1557,21 +1526,14 @@
         "@types/chai": "^4.0.4",
         "@types/chai-as-promised": "^7.1.0",
         "@types/fs-extra": "^4.0.2",
-        "@types/jquery": "^1.10.31",
         "@types/lodash": "^4.14.74",
         "@types/mocha": "^2.2.43",
         "@types/node": "^6.0.40",
-        "@types/rx": "^2.5.33",
         "@types/semver": "^5.4.0",
         "@types/sinon": "^2.3.2",
-        "@types/socket.io": "^1.4.27",
-        "@types/socket.io-client": "^1.4.27",
         "@types/uuid": "^3.3.27",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.0",
-        "babel-core": "^6.14.0",
-        "babel-loader": "^6.2.5",
-        "babel-preset-es2015": "^6.14.0",
         "chai": "^4.1.2",
         "chai-as-promised": "^7.1.1",
         "event-stream": "^3.3.4",
@@ -1580,20 +1542,15 @@
         "gulp-typescript": "^3.2.2",
         "gulp-watch": "^4.3.11",
         "husky": "^0.14.3",
-        "ignore-loader": "^0.1.1",
         "mocha": "^2.3.3",
         "relative": "^3.0.2",
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
         "sinon": "^2.3.6",
-        "transformime": "^3.1.2",
-        "transformime-marked": "0.0.1",
-        "ts-loader": "^2.3.4",
         "tslint": "^5.7.0",
         "tslint-eslint-rules": "^4.1.1",
         "tslint-microsoft-contrib": "^5.0.1",
         "typescript": "^2.5.2",
         "typescript-formatter": "^6.0.0",
-        "vscode": "^1.1.5",
-        "webpack": "^1.13.2"
+        "vscode": "^1.1.5"
     }
 }

@@ -40,7 +40,6 @@ const eolFilter = [
     '!.npmrc',
     '!.vscodeignore',
     '!LICENSE',
-    '!webpack.config.js',
     '!**/node_modules/**',
     '!**/*.{svg,exe,png,bmp,scpt,bat,cmd,cur,ttf,woff,eot,txt,md,json,yml}',
     '!out/**/*',
@@ -61,7 +60,6 @@ const indentationFilter = [
 const tslintFilter = [
     'src/**/*.ts',
     'test/**/*.ts',
-    '!webpack.config.js',
     '!**/node_modules/**',
     '!out/**/*',
     '!images/**/*',

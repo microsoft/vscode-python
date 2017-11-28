@@ -23,7 +23,6 @@ export interface IPythonSettings {
     unitTest: IUnitTestSettings;
     autoComplete: IAutoCompeteSettings;
     terminal: ITerminalSettings;
-    jupyter: JupyterSettings;
     sortImports: ISortImportSettings;
     workspaceSymbols: IWorkspaceSymbolSettings;
     envFile: string;
@@ -130,12 +129,6 @@ export interface ITerminalSettings {
     launchArgs: string[];
 }
 // tslint:disable-next-line:interface-name
-export interface JupyterSettings {
-    appendResults: boolean;
-    defaultKernel: string;
-    startupCode: string[];
-}
-
 // tslint:disable-next-line:no-string-literal
 const IS_TEST_EXECUTION = process.env['VSC_PYTHON_CI_TEST'] === '1';
 
@@ -153,7 +146,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     public autoComplete: IAutoCompeteSettings;
     public unitTest: IUnitTestSettings;
     public terminal: ITerminalSettings;
-    public jupyter: JupyterSettings;
     public sortImports: ISortImportSettings;
     public workspaceSymbols: IWorkspaceSymbolSettings;
 
@@ -389,13 +381,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.terminal = this.terminal ? this.terminal : {
             executeInFileDir: true,
             launchArgs: []
-        };
-
-        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        this.jupyter = pythonSettings.get<JupyterSettings>('jupyter')!;
-        // Support for travis.
-        this.jupyter = this.jupyter ? this.jupyter : {
-            appendResults: true, defaultKernel: '', startupCode: []
         };
 
         // If workspace config changes, then we could have a cascading effect of on change events.
