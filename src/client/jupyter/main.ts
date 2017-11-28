@@ -5,6 +5,7 @@ import { deprecatedCommands } from './constants';
 export class Jupyter implements Disposable {
     private disposables: Disposable[];
     constructor(private deprecationManager: IFeatureDeprecationManager) {
+        this.disposables = [];
         this.registerCommands();
     }
     public dispose() {
