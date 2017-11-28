@@ -25,7 +25,7 @@ const jupyterDeprecationInfo: deprecatedFeatureInfo = {
 const deprecatedFeatures: deprecatedFeatureInfo[] = [
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE',
-        message: 'The setting \'formatting.formatOnSave\' is deprecated, please use \'editor.formatOnSave\'.',
+        message: 'The setting \'python.formatting.formatOnSave\' is deprecated, please use \'editor.formatOnSave\'.',
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/309',
         settings: ['formatting.formatOnSave']
     }
@@ -46,7 +46,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         if (!this.jupyterExtensionInstalled) {
             deprecatedFeatures.push(jupyterDeprecationInfo);
         }
-        deprecatedFeatures.forEach(this.registerDeprecation);
+        deprecatedFeatures.forEach(this.registerDeprecation.bind(this));
     }
     private registerDeprecation(deprecatedInfo: deprecatedFeatureInfo) {
         if (Array.isArray(deprecatedInfo.commands)) {
