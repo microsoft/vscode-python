@@ -15,7 +15,7 @@
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],
-			"preLaunchTask": "compile"
+			"preLaunchTask": "Compile"
 		},
 		{
 			"name": "Launch Extension as debugServer", // https://code.visualstudio.com/docs/extensions/example-debuggers
@@ -30,7 +30,8 @@
 			"outFiles": [
 				"${workspaceFolder}/out/client/**/*.js"
 			],
-			"cwd": "${workspaceFolder}"
+			"cwd": "${workspaceFolder}",
+			"preLaunchTask": "Compile"
 		},
 		{
 			"name": "Launch Tests",
@@ -47,7 +48,7 @@
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],
-			"preLaunchTask": "compile"
+			"preLaunchTask": "Compile"
 		},
 		{
 			"name": "Launch Multiroot Tests",
@@ -64,7 +65,7 @@
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
 			],
-			"preLaunchTask": "compile"
+			"preLaunchTask": "Compile"
 		}
 	],
 	"compounds": [
