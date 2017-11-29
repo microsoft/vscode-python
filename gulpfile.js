@@ -84,7 +84,21 @@ function reportFailures(failures) {
     });
 }
 
-const hygiene = exports.hygiene = (some, options) => {
+
+/**
+ * @typedef {Object} hygieneOptions - creates a new type named 'SpecialType'
+ * @property {boolean=} skipEOL - skipEOL check.
+ * @property {boolean=} skipIndentationCheck - Skip indentation checks.
+ * @property {boolean=} skipFormatCheck - Skip format checks.
+ */
+
+/**
+  *
+  * @param {string[]} some
+  * @param {hygieneOptions} options
+  * @returns
+  */
+const hygiene = (some, options) => {
     options = options || {};
     let errorCount = 0;
     const eol = es.through(function (file) {
@@ -185,19 +199,29 @@ const hygiene = exports.hygiene = (some, options) => {
         return tsProject(reporter);
     }
 
-    const result = gulp.src(some || all, {
+    // Misc file checks.
+    let result = gulp.src(some || all, {
         base: '.'
     })
         .pipe(filter(f => !f.stat.isDirectory()))
         .pipe(filter(eolFilter))
         .pipe(options.skipEOL ? es.through() : eol)
-        .pipe(filter(indentationFilter))
-        .pipe(indentation);
+        .pipe(filter(indentationFilter));
 
-    const typescript = result
-        .pipe(filter(tslintFilter))
-        .pipe(formatting)
-        .pipe(tsl)
+    if (!options.skipIndentationCheck) {
+        result = result
+            .pipe(indentation);
+    }
+
+    // Type script checks.
+    let typescript = result
+        .pipe(filter(tslintFilter));
+
+    if (!options.skipFormatCheck) {
+        typescript = typescript
+            .pipe(formatting);
+    }
+    typescript = typescript.pipe(tsl)
         .pipe(tscFilesTracker)
         .pipe(tsc());
 
@@ -211,68 +235,109 @@ const hygiene = exports.hygiene = (some, options) => {
         }));
 };
 
+exports.hygiene = hygiene;
+
 gulp.task('hygiene', () => hygiene());
 
-gulp.task('hygiene-watch', function () {
-    return watch(all, function () {
-        console.clear();
-        console.log('Checking hygiene...');
-        run(true, true);
+gulp.task('hygiene-staged', () => run({ mode: 'changes' }));
+
+gulp.task('hygiene-watch', ['hygiene-staged', 'hygiene-watch-runner']);
+
+gulp.task('hygiene-watch-runner', function () {
+    return watch(all, { events: ['add', 'change'] }, function (event) {
+        // Skip indentation and formatting checks to speed up linting.
+        return run({ mode: 'watch', skipFormatCheck: true, skipIndentationCheck: true });
     });
 });
 
-function run(lintOnlyModifiedFiles, doNotExit) {
-    function exitProcessOnError(ex) {
+/**
+ * @typedef {Object} runOptions
+ * @property {boolean=} exitOnError - Exit on error.
+ * @property {'watch'|'changes'|'staged'} [mode=] - Mode.
+ * @property {string[]=} files - Optional list of files to be modified.
+ * @property {boolean=} skipIndentationCheck - Skip indentation checks.
+ * @property {boolean=} skipFormatCheck - Skip format checks.
+ */
+
+/**
+ * Run the linters.
+ * @param {runOptions} options
+ */
+function run(options) {
+    options = options ? options : {};
+    function exitHandler(ex) {
         console.error();
-        console.error(colors.red(ex));
-        if (!doNotExit) {
+        if (ex) {
+            console.error(colors.red(ex));
+        }
+        if (options.exitOnError) {
             process.exit(1);
         }
-        if (lintOnlyModifiedFiles && doNotExit) {
+        if (options.mode === 'watch') {
             console.log('Watching for changes...');
         }
     }
-    process.on('unhandledRejection', (reason, p) => {
+    process.once('unhandledRejection', (reason, p) => {
         console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-        exitProcessOnError();
+        exitHandler();
     });
 
     cp.exec('git config core.autocrlf', (err, out) => {
         const skipEOL = out.trim() === 'true';
-        if (!lintOnlyModifiedFiles && process.argv.length > 2) {
+        if (typeof options.mode !== 'string' && process.argv.length > 2) {
             return hygiene(process.argv.slice(2), {
                 skipEOL: skipEOL
-            }).on('error', exitProcessOnError);
+            }).once('error', exitHandler);
         }
 
-        let filesPromise;
-        if (lintOnlyModifiedFiles) {
-            filesPromise = Promise.all([getCachedFiles(), getModifiedFiles()]).then(filesList => {
-                const files1 = filesList[0];
-                const files2 = filesList[1];
-                files2.forEach(file => {
-                    if (files1.indexOf(file) === -1) {
-                        files1.push(file);
-                    }
-                });
-                return files1;
-            });
-        } else {
-            filesPromise = getCachedFiles();
-        }
-        filesPromise.then(files => {
-            hygiene(files, {
-                skipEOL: skipEOL
-            })
-                .on('end', () => {
-                    if (lintOnlyModifiedFiles && doNotExit) {
-                        console.log(colors.green('Hygiene passed with 0 errors 👍.'));
-                        console.log('Watching for changes...');
-                    }
+        getFilesToProcess(options)
+            .then(files => {
+                hygiene(files, {
+                    skipEOL: skipEOL,
+                    skipFormatCheck: options.skipFormatCheck,
+                    skipIndentationCheck: options.skipIndentationCheck
                 })
-                .on('error', exitProcessOnError);
-        }).catch(exitProcessOnError);
+                    .on('end', () => {
+                        if (options.mode === 'watch') {
+                            console.log(colors.green('Hygiene passed with 0 errors 👍.'));
+                            console.log('Watching for changes...');
+                        }
+                    })
+                    .on('error', exitHandler);
+            })
+            .catch(exitHandler);
     });
+}
+/**
+ * Gets a list of files to be processed.
+ * @param {runOptions} options
+ * @return {Promise<string[]>}
+ */
+function getFilesToProcess(options) {
+    switch (options.mode) {
+        case 'watch':
+        case 'changes': {
+            return Promise.all([getCachedFiles(), getModifiedFiles()])
+                .then(filesList => mergeFiles(filesList[0], filesList[1]));
+        }
+        default: {
+            return getCachedFiles();
+        }
+    }
+}
+/**
+ * Merges a list of files.
+ * @param {string[]} files1
+ * @param {string[]} files2
+ */
+function mergeFiles(files1, files2) {
+    const files = files2.slice();
+    files.forEach(file => {
+        if (files.indexOf(file) === -1) {
+            files.push(file);
+        }
+    });
+    return files;
 }
 function getCachedFiles() {
     return new Promise(resolve => {
@@ -306,5 +371,5 @@ function getModifiedFiles() {
 }
 // this allows us to run hygiene as a git pre-commit hook.
 if (require.main === module) {
-    run();
+    run({ exitOnError: true, mode: 'staged' });
 }

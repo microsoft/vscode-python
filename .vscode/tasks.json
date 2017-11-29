@@ -16,10 +16,9 @@
     },
     "tasks": [
         {
-            "label": "compile",
+            "label": "Compile",
             "type": "npm",
             "script": "compile",
-            "group": "build",
             "isBackground": true,
             "problemMatcher": [
                 "$tsc",
@@ -27,7 +26,46 @@
                     "base": "$tslint5",
                     "fileLocation": "relative"
                 }
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Hygiene (modified)",
+            "type": "gulp",
+            "task": "hygiene-modified",
+            "group": "build",
+            "problemMatcher": [
+                "$tsc",
+                {
+                    "base": "$tslint5",
+                    "fileLocation": "relative"
+                }
             ]
+        },
+        {
+            "label": "Hygiene",
+            "type": "gulp",
+            "task": "hygiene-watch",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$tsc",
+                {
+                    "base": "$tslint5",
+                    "fileLocation": "relative"
+                }
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "type": "npm",
@@ -44,6 +82,7 @@
             "problemMatcher": "$tsc-watch"
         },
         {
+            "label": "Hygiene (all)",
             "type": "gulp",
             "task": "hygiene",
             "problemMatcher": [
@@ -55,33 +94,10 @@
             ]
         },
         {
-            "label": "lint-staged",
-            "type": "npm",
-            "script": "lint-staged",
-            "problemMatcher": [
-                "$tsc",
-                {
-                    "base": "$tslint5",
-                    "fileLocation": "relative"
-                }
-            ]
-        },
-        {
             "type": "gulp",
-            "task": "hygiene-watch",
-            "isBackground": true,
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
+            "task": "hygiene-staged",
             "problemMatcher": [
-                "$tsc",
-                {
-                    "base": "$tslint5",
-                    "fileLocation": "relative"
-                }
+                "$tslint5"
             ]
         }
     ]
