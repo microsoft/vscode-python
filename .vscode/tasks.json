@@ -1,11 +1,3 @@
-// Available variables which can be used inside of strings.
-// ${workspaceRoot}: the root folder of the team
-// ${file}: the current opened file
-// ${fileBasename}: the current opened file's basename
-// ${fileDirname}: the current opened file's dirname
-// ${fileExtname}: the current opened file's extension
-// ${cwd}: the current working directory of the spawned process
-// A task runner that calls a custom npm script that compiles the extension.
 {
     "version": "2.0.0",
     "presentation": {
@@ -33,19 +25,6 @@
             }
         },
         {
-            "label": "Hygiene (modified)",
-            "type": "gulp",
-            "task": "hygiene-modified",
-            "group": "build",
-            "problemMatcher": [
-                "$tsc",
-                {
-                    "base": "$tslint5",
-                    "fileLocation": "relative"
-                }
-            ]
-        },
-        {
             "label": "Hygiene",
             "type": "gulp",
             "task": "hygiene-watch",
@@ -69,23 +48,10 @@
             }
         },
         {
-            "type": "npm",
-            "script": "lint",
-            "problemMatcher": {
-                "base": "$tslint5",
-                "fileLocation": "relative"
-            }
-        },
-        {
-            "type": "npm",
-            "script": "watch",
-            "isBackground": true,
-            "problemMatcher": "$tsc-watch"
-        },
-        {
-            "label": "Hygiene (all)",
+            "label": "Hygiene (modified)",
             "type": "gulp",
-            "task": "hygiene",
+            "task": "hygiene-modified",
+            "group": "build",
             "problemMatcher": [
                 "$tsc",
                 {
@@ -95,10 +61,15 @@
             ]
         },
         {
+            "label": "Hygiene (staged)",
             "type": "gulp",
             "task": "hygiene-staged",
             "problemMatcher": [
-                "$tslint5"
+                "$tsc",
+                {
+                    "base": "$tslint5",
+                    "fileLocation": "relative"
+                }
             ]
         }
     ]
