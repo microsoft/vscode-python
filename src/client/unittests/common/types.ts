@@ -177,6 +177,8 @@ export type launchOptions = {
     port: number;
 };
 
+export const ITestDebugLauncher = Symbol('ITestDebugLauncher');
+
 export interface ITestDebugLauncher {
     getPort(resource?: Uri): Promise<number>;
     launchDebugger(options: launchOptions): Promise<void>;

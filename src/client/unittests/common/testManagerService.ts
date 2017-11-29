@@ -6,7 +6,7 @@ import { TestManager as NoseTestManager } from '../nosetest/main';
 import { TestManager as PyTestTestManager } from '../pytest/main';
 import { TestManager as UnitTestTestManager } from '../unittest/main';
 import { BaseTestManager } from './baseTestManager';
-import { ITestCollectionStorageService, ITestDebugLauncher, ITestManagerService, ITestResultsService, ITestsHelper, UnitTestProduct } from './types';
+import { ITestCollectionStorageService, ITestManagerService, ITestResultsService, ITestsHelper, UnitTestProduct } from './types';
 
 type TestManagerInstanceInfo = { instance?: BaseTestManager, create(rootDirectory: string): BaseTestManager };
 
@@ -14,15 +14,15 @@ export class TestManagerService implements ITestManagerService {
     private testManagers = new Map<Product, TestManagerInstanceInfo>();
     constructor(private wkspace: Uri, private outChannel: OutputChannel,
         testCollectionStorage: ITestCollectionStorageService, testResultsService: ITestResultsService,
-        testsHelper: ITestsHelper, debugLauncher: ITestDebugLauncher, serviceContainer: IServiceContainer) {
+        testsHelper: ITestsHelper, serviceContainer: IServiceContainer) {
         this.testManagers.set(Product.nosetest, {
-            create: (rootDirectory: string) => new NoseTestManager(wkspace, rootDirectory, this.outChannel, testCollectionStorage, testResultsService, testsHelper, debugLauncher, serviceContainer)
+            create: (rootDirectory: string) => new NoseTestManager(wkspace, rootDirectory, this.outChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer)
         });
         this.testManagers.set(Product.pytest, {
-            create: (rootDirectory: string) => new PyTestTestManager(wkspace, rootDirectory, this.outChannel, testCollectionStorage, testResultsService, testsHelper, debugLauncher, serviceContainer)
+            create: (rootDirectory: string) => new PyTestTestManager(wkspace, rootDirectory, this.outChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer)
         });
         this.testManagers.set(Product.unittest, {
-            create: (rootDirectory: string) => new UnitTestTestManager(wkspace, rootDirectory, this.outChannel, testCollectionStorage, testResultsService, testsHelper, debugLauncher, serviceContainer)
+            create: (rootDirectory: string) => new UnitTestTestManager(wkspace, rootDirectory, this.outChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer)
         });
     }
     public dispose() {

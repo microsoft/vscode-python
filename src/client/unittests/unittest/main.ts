@@ -4,13 +4,13 @@ import { Uri } from 'vscode';
 import { Product } from '../../common/installer';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/baseTestManager';
-import { ITestCollectionStorageService, ITestDebugLauncher, ITestResultsService, ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
+import { ITestCollectionStorageService, ITestResultsService, ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
 import { discoverTests } from './collector';
 import { runTest } from './runner';
 export class TestManager extends BaseTestManager {
     constructor(workspaceFolder: Uri, rootDirectory: string, outputChannel: vscode.OutputChannel,
         testCollectionStorage: ITestCollectionStorageService,
-        testResultsService: ITestResultsService, testsHelper: ITestsHelper, private debugLauncher: ITestDebugLauncher,
+        testResultsService: ITestResultsService, testsHelper: ITestsHelper,
         serviceContainer: IServiceContainer) {
         super('unittest', Product.unittest, workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer);
     }
@@ -22,7 +22,7 @@ export class TestManager extends BaseTestManager {
         const options: TestDiscoveryOptions = {
             workspaceFolder: this.workspaceFolder,
             cwd: this.rootDirectory, args,
-            token: this.testDiscoveryCancellationToken, ignoreCache,
+            token: this.testDiscoveryCancellationToken!, ignoreCache,
             outChannel: this.outputChannel
         };
         // tslint:disable-next-line:no-non-null-assertion
@@ -40,9 +40,9 @@ export class TestManager extends BaseTestManager {
             workspaceFolder: this.workspaceFolder,
             cwd: this.rootDirectory,
             tests, args, testsToRun, debug,
-            token: this.testRunnerCancellationToken,
+            token: this.testRunnerCancellationToken!,
             outChannel: this.outputChannel
         };
-        return runTest(this.serviceContainer, this, this.testResultsService, this.debugLauncher, options);
+        return runTest(this.serviceContainer, this, this.testResultsService, options);
     }
 }

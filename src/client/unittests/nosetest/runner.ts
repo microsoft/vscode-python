@@ -10,7 +10,7 @@ const WITH_XUNIT = '--with-xunit';
 const XUNIT_FILE = '--xunit-file';
 
 // tslint:disable-next-line:no-any
-export function runTest(serviceContainer: IServiceContainer, testResultsService: ITestResultsService, debugLauncher: ITestDebugLauncher, options: TestRunOptions): Promise<any> {
+export function runTest(serviceContainer: IServiceContainer, testResultsService: ITestResultsService, options: TestRunOptions): Promise<any> {
     let testPaths: string[] = [];
     if (options.testsToRun && options.testsToRun.testFolder) {
         testPaths = testPaths.concat(options.testsToRun.testFolder.map(f => f.nameToRun));
@@ -58,6 +58,7 @@ export function runTest(serviceContainer: IServiceContainer, testResultsService:
 
     return promiseToGetXmlLogFile.then(() => {
         if (options.debug === true) {
+            const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
             return debugLauncher.getPort(options.workspaceFolder)
                 .then(debugPort => {
                     const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');

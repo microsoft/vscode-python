@@ -1,22 +1,16 @@
 'use strict';
 import { Container } from 'inversify';
 import * as os from 'os';
-import * as vscode from 'vscode';
 import { Disposable } from 'vscode';
+import * as vscode from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { PersistentStateFactory } from './common/persistentState';
-import { BufferDecoder } from './common/process/decoder';
-import { ProcessService } from './common/process/proc';
-import { PythonExecutionFactory } from './common/process/pythonExecutionFactory';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { IDiposableRegistry } from './common/types';
-import { IS_WINDOWS } from './common/utils';
-import { EnvironmentVariablesService } from './common/variables/environment';
-import { EnvironmentVariablesProvider } from './common/variables/environmentVariablesProvider';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { SimpleConfigurationProvider } from './debugger';
 import { FeedbackService } from './feedback';
@@ -49,6 +43,7 @@ import { EDITOR_LOAD } from './telemetry/constants';
 import { StopWatch } from './telemetry/stopWatch';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import * as tests from './unittests/main';
+import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
 import { WorkspaceSymbols } from './workspaceSymbols/main';
 
 const PYTHON: vscode.DocumentFilter = { language: 'python' };
@@ -71,6 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
     commonRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);
+    unitTestsRegisterTypes(serviceManager);
 
     const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
     const pythonSettings = settings.PythonSettings.getInstance();
@@ -163,9 +159,6 @@ export async function activate(context: vscode.ExtensionContext) {
             linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
         });
     }
-    // const procService = new ProcessService(new BufferDecoder());
-    // const envVarsProvider = new EnvironmentVariablesProvider(new EnvironmentVariablesService(IS_WINDOWS));
-    // const pythonExecutionFactory = new PythonExecutionFactory(procService, envVarsProvider);
     tests.activate(context, unitTestOutChannel, symbolProvider, serviceContainer);
 
     context.subscriptions.push(new WorkspaceSymbols(lintingOutChannel));

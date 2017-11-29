@@ -6,7 +6,7 @@ import { Options, run } from '../common/runner';
 import { ITestDebugLauncher, ITestResultsService, TestRunOptions, Tests } from '../common/types';
 import { PassCalculationFormulae, updateResultsFromXmlLogFile } from '../common/xUnitParser';
 
-export function runTest(serviceContainer: IServiceContainer, testResultsService: ITestResultsService, debugLauncher: ITestDebugLauncher, options: TestRunOptions): Promise<Tests> {
+export function runTest(serviceContainer: IServiceContainer, testResultsService: ITestResultsService, options: TestRunOptions): Promise<Tests> {
     let testPaths: string[] = [];
     if (options.testsToRun && options.testsToRun.testFolder) {
         testPaths = testPaths.concat(options.testsToRun.testFolder.map(f => f.nameToRun));
@@ -34,6 +34,7 @@ export function runTest(serviceContainer: IServiceContainer, testResultsService:
         }
         const testArgs = testPaths.concat(args, [`--junitxml=${xmlLogFile}`]);
         if (options.debug) {
+            const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
             return debugLauncher.getPort(options.workspaceFolder)
                 .then(debugPort => {
                     const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');

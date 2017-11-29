@@ -1,5 +1,5 @@
 'use strict';
-import { Uri, window, workspace } from 'vscode';
+import { Disposable, Uri, window, workspace } from 'vscode';
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import * as constants from '../common/constants';
@@ -10,7 +10,6 @@ import { sendTelemetryEvent } from '../telemetry/index';
 import { activateCodeLenses } from './codeLenses/main';
 import { BaseTestManager } from './common/baseTestManager';
 import { CANCELLATION_REASON, CommandSource } from './common/constants';
-import { DebugLauncher } from './common/debugLauncher';
 import { TestCollectionStorageService } from './common/storageService';
 import { TestManagerServiceFactory } from './common/testManagerServiceFactory';
 import { TestResultsService } from './common/testResultsService';
@@ -37,8 +36,7 @@ export function activate(context: vscode.ExtensionContext, outputChannel: vscode
     testCollectionStorage = new TestCollectionStorageService();
     const testResultsService = new TestResultsService();
     const testsHelper = new TestsHelper();
-    const debugLauncher = new DebugLauncher();
-    const testManagerServiceFactory = new TestManagerServiceFactory(outChannel, testCollectionStorage, testResultsService, testsHelper, debugLauncher, serviceContainer);
+    const testManagerServiceFactory = new TestManagerServiceFactory(outChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer);
     workspaceTestManagerService = new WorkspaceTestManagerService(outChannel, testManagerServiceFactory);
 
     context.subscriptions.push(autoResetTests());
@@ -92,7 +90,7 @@ function dispose() {
     testCollectionStorage.dispose();
 }
 function registerCommands(): vscode.Disposable[] {
-    const disposables = [];
+    const disposables: Disposable[] = [];
     disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Discover, (cmdSource: CommandSource = CommandSource.commandPalette, resource?: Uri) => {
         // Ignore the exceptions returned.
         // This command will be invoked else where in the extension.

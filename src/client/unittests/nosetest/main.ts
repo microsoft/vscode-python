@@ -1,18 +1,17 @@
 'use strict';
-import { OutputChannel, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import * as vscode from 'vscode';
-import { PythonSettings } from '../../common/configSettings';
 import { Product } from '../../common/installer';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/baseTestManager';
-import { ITestCollectionStorageService, ITestDebugLauncher, ITestResultsService, ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
+import { ITestCollectionStorageService, ITestResultsService, ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
 import { discoverTests } from './collector';
 import { runTest } from './runner';
 
 export class TestManager extends BaseTestManager {
     constructor(workspaceFolder: Uri, rootDirectory: string, outputChannel: vscode.OutputChannel,
         testCollectionStorage: ITestCollectionStorageService,
-        testResultsService: ITestResultsService, testsHelper: ITestsHelper, private debugLauncher: ITestDebugLauncher,
+        testResultsService: ITestResultsService, testsHelper: ITestsHelper,
         serviceContainer: IServiceContainer) {
         super('nosetest', Product.nosetest, workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer);
     }
@@ -21,7 +20,7 @@ export class TestManager extends BaseTestManager {
         const options: TestDiscoveryOptions = {
             workspaceFolder: this.workspaceFolder,
             cwd: this.rootDirectory, args,
-            token: this.testDiscoveryCancellationToken, ignoreCache,
+            token: this.testDiscoveryCancellationToken!, ignoreCache,
             outChannel: this.outputChannel
         };
         return discoverTests(this.serviceContainer, this.testsHelper, options);
@@ -39,10 +38,10 @@ export class TestManager extends BaseTestManager {
             workspaceFolder: Uri.file(this.rootDirectory),
             cwd: this.rootDirectory,
             tests, args, testsToRun,
-            token: this.testRunnerCancellationToken,
+            token: this.testRunnerCancellationToken!,
             outChannel: this.outputChannel,
             debug
         };
-        return runTest(this.serviceContainer, this.testResultsService, this.debugLauncher, options);
+        return runTest(this.serviceContainer, this.testResultsService, options);
     }
 }

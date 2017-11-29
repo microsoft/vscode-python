@@ -28,7 +28,7 @@ interface ITestData {
 }
 
 // tslint:disable-next-line:max-func-body-length
-export function runTest(serviceContainer: IServiceContainer, testManager: BaseTestManager, testResultsService: ITestResultsService, debugLauncher: ITestDebugLauncher, options: TestRunOptions): Promise<Tests> {
+export function runTest(serviceContainer: IServiceContainer, testManager: BaseTestManager, testResultsService: ITestResultsService, options: TestRunOptions): Promise<Tests> {
     options.tests.summary.errors = 0;
     options.tests.summary.failures = 0;
     options.tests.summary.passed = 0;
@@ -92,6 +92,7 @@ export function runTest(serviceContainer: IServiceContainer, testManager: BaseTe
                 testArgs.push(`--testFile=${testFile}`);
             }
             if (options.debug === true) {
+                const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
                 return debugLauncher.getPort(options.workspaceFolder)
                     .then(debugPort => {
                         testArgs.push(...['--secret=my_secret', `--port=${debugPort}`]);
