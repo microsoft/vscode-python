@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { Disposable } from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
+import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { PersistentStateFactory } from './common/persistentState';
 import { BufferDecoder } from './common/process/decoder';
@@ -26,13 +27,11 @@ import { getCondaVersion } from './interpreter/helpers';
 import { InterpreterVersionService } from './interpreter/interpreterVersion';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
-import * as jup from './jupyter/main';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
 import { PythonDefinitionProvider } from './providers/definitionProvider';
 import { activateExecInTerminalProvider } from './providers/execInTerminalProvider';
-import { activateFormatOnSaveProvider } from './providers/formatOnSaveProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { PythonHoverProvider } from './providers/hoverProvider';
 import { LintProvider } from './providers/lintProvider';
@@ -56,7 +55,6 @@ const PYTHON: vscode.DocumentFilter = { language: 'python' };
 let unitTestOutChannel: vscode.OutputChannel;
 let formatOutChannel: vscode.OutputChannel;
 let lintingOutChannel: vscode.OutputChannel;
-let jupMain: jup.Jupyter;
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
 
@@ -74,6 +72,7 @@ export async function activate(context: vscode.ExtensionContext) {
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);
 
+    const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
     const pythonSettings = settings.PythonSettings.getInstance();
     // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated);
@@ -100,7 +99,6 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, formatOutChannel);
-    context.subscriptions.push(activateFormatOnSaveProvider(PYTHON, formatOutChannel));
     const jediFactory = new JediFactory(context.asAbsolutePath('.'));
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
@@ -146,10 +144,10 @@ export async function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
     }
 
-    const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
     // tslint:disable-next-line:promise-function-async
     const linterProvider = new LintProvider(context, lintingOutChannel, (a, b) => Promise.resolve(false));
     context.subscriptions.push();
+    const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
     if (jupyterExtInstalled) {
         if (jupyterExtInstalled.isActive) {
             // tslint:disable-next-line:no-unsafe-any
@@ -164,13 +162,6 @@ export async function activate(context: vscode.ExtensionContext) {
             // tslint:disable-next-line:no-unsafe-any
             linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
         });
-    } else {
-        jupMain = new jup.Jupyter(lintingOutChannel);
-        const documentHasJupyterCodeCells = jupMain.hasCodeCells.bind(jupMain);
-        jupMain.activate();
-        context.subscriptions.push(jupMain);
-        // tslint:disable-next-line:no-unsafe-any
-        linterProvider.documentHasJupyterCodeCells = documentHasJupyterCodeCells;
     }
     // const procService = new ProcessService(new BufferDecoder());
     // const envVarsProvider = new EnvironmentVariablesProvider(new EnvironmentVariablesService(IS_WINDOWS));
@@ -187,11 +178,14 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
     activationDeferred.resolve();
 
-    const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
     const feedbackService = new FeedbackService(persistentStateFactory);
     context.subscriptions.push(feedbackService);
     // tslint:disable-next-line:no-unused-expression
     new BannerService(persistentStateFactory);
+
+    const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled);
+    deprecationMgr.initialize();
+    context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled));
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>) {

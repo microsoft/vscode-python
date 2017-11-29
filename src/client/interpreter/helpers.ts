@@ -1,6 +1,6 @@
 import * as child_process from 'child_process';
 import { ConfigurationTarget, window, workspace } from 'vscode';
-import { RegistryImplementation } from '../common/registry';
+import { RegistryImplementation } from '../common/platform/registry';
 import { Is_64Bit, IS_WINDOWS } from '../common/utils';
 import { WorkspacePythonPath } from './contracts';
 import { CondaLocatorService } from './locators/services/condaLocator';

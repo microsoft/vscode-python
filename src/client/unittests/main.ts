@@ -67,7 +67,7 @@ async function getTestManager(displayTestNotConfiguredMessage: boolean, resource
         await displayTestFrameworkError(wkspace, outChannel);
     }
 }
-let timeoutId: number;
+let timeoutId: NodeJS.Timer;
 async function onDocumentSaved(doc: vscode.TextDocument): Promise<void> {
     const testManager = await getTestManager(false, doc.uri);
     if (!testManager) {
@@ -158,7 +158,7 @@ async function selectAndRunTestMethod(cmdSource: CommandSource, resource: Uri, d
         return;
     }
 
-    const tests = testCollectionStorage.getTests(testManager.workspaceFolder);
+    const tests = testCollectionStorage.getTests(testManager.workspaceFolder)!;
     testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
     const selectedTestFn = await testDisplay.selectTestFunction(testManager.workspaceFolder.fsPath, tests);
     if (!selectedTestFn) {
@@ -178,7 +178,7 @@ async function selectAndRunTestFile(cmdSource: CommandSource) {
         return;
     }
 
-    const tests = testCollectionStorage.getTests(testManager.workspaceFolder);
+    const tests = testCollectionStorage.getTests(testManager.workspaceFolder)!;
     testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
     const selectedFile = await testDisplay.selectTestFile(testManager.workspaceFolder.fsPath, tests);
     if (!selectedFile) {
@@ -200,9 +200,9 @@ async function runCurrentTestFile(cmdSource: CommandSource) {
     } catch (ex) {
         return;
     }
-    const tests = testCollectionStorage.getTests(testManager.workspaceFolder);
+    const tests = testCollectionStorage.getTests(testManager.workspaceFolder)!;
     const testFiles = tests.testFiles.filter(testFile => {
-        return testFile.fullPath === window.activeTextEditor.document.uri.fsPath;
+        return testFile.fullPath === window.activeTextEditor!.document.uri.fsPath;
     });
     if (testFiles.length < 1) {
         return;
@@ -291,19 +291,6 @@ async function discoverTests(cmdSource: CommandSource, resource?: Uri, ignoreCac
         testResultDisplay.displayDiscoverStatus(discoveryPromise);
         await discoveryPromise;
     }
-}
-// tslint:disable-next-line:no-any
-function isTestsToRun(arg: any): arg is TestsToRun {
-    if (arg && arg.testFunction && Array.isArray(arg.testFunction)) {
-        return true;
-    }
-    if (arg && arg.testSuite && Array.isArray(arg.testSuite)) {
-        return true;
-    }
-    if (arg && arg.testFile && Array.isArray(arg.testFile)) {
-        return true;
-    }
-    return false;
 }
 async function runTestsImpl(cmdSource: CommandSource, resource?: Uri, testsToRun?: TestsToRun, runFailedTests?: boolean, debug: boolean = false) {
     const testManager = await getTestManager(true, resource);

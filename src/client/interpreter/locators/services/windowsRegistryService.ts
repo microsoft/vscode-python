@@ -2,7 +2,7 @@ import * as fs from 'fs-extra';
 import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { Architecture, Hive, IRegistry } from '../../../common/registry';
+import { Architecture, Hive, IRegistry } from '../../../common/platform/registry';
 import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
 
 // tslint:disable-next-line:variable-name

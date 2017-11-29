@@ -133,20 +133,20 @@ async function selectTestRunner(placeHolderMessage: string): Promise<UnitTestPro
         label: 'unittest',
         product: Product.unittest,
         description: 'Standard Python test framework',
-        detail: 'https://docs.python.org/2/library/unittest.html'
+        detail: 'https://docs.python.org/3/library/unittest.html'
     },
     {
         label: 'pytest',
         product: Product.pytest,
         description: 'Can run unittest (including trial) and nose test suites out of the box',
         // tslint:disable-next-line:no-http-string
-        detail: 'http://docs.pytest.org/en/latest/'
+        detail: 'http://docs.pytest.org/'
     },
     {
         label: 'nose',
         product: Product.nosetest,
         description: 'nose framework',
-        detail: 'https://docs.python.org/2/library/unittest.html'
+        detail: 'https://nose.readthedocs.io/'
     }];
     const options = {
         matchOnDescription: true,

@@ -1,16 +1,17 @@
 import * as assert from 'assert';
 import * as path from 'path';
-import { initialize, initializeTest } from '../initialize';
+import { Architecture, Hive } from '../../client/common/platform/registry';
 import { IS_WINDOWS } from '../../client/debugger/Common/Utils';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
+import { initialize, initializeTest } from '../initialize';
 import { MockRegistry } from './mocks';
-import { Architecture, Hive } from '../../client/common/registry';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 
+// tslint:disable-next-line:max-func-body-length
 suite('Interpreters from Windows Registry', () => {
-    suiteSetup(() => initialize());
-    setup(() => initializeTest());
+    suiteSetup(initialize);
+    setup(initializeTest);
     if (IS_WINDOWS) {
         test('Must return an empty list (x86)', async () => {
             const registry = new MockRegistry([], []);
@@ -36,7 +37,7 @@ suite('Interpreters from Windows Registry', () => {
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: Hive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1') },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: Hive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1', 'one.exe'), name: 'ExecutablePath' },
                 { key: '\\Software\\Python\\Company One\\Tag1', hive: Hive.HKCU, arch: Architecture.x86, value: 'Version.Tag1', name: 'Version' },
-                { key: '\\Software\\Python\\Company One\\Tag1', hive: Hive.HKCU, arch: Architecture.x86, value: 'DisplayName.Tag1', name: 'DisplayName' },
+                { key: '\\Software\\Python\\Company One\\Tag1', hive: Hive.HKCU, arch: Architecture.x86, value: 'DisplayName.Tag1', name: 'DisplayName' }
             ];
             const registry = new MockRegistry(registryKeys, registryValues);
             const winRegistry = new WindowsRegistryService(registry, false);
@@ -70,7 +71,7 @@ suite('Interpreters from Windows Registry', () => {
             assert.equal(interpreters[0].path, path.join(environmentsPath, 'path1', 'python.exe'), 'Incorrect path');
             assert.equal(interpreters[0].version, 'Tag1', 'Incorrect version');
         });
-        test(`Must ignore company 'PyLauncher'`, async () => {
+        test('Must ignore company \'PyLauncher\'', async () => {
             const registryKeys = [
                 { key: '\\Software\\Python', hive: Hive.HKCU, arch: Architecture.x86, values: ['\\Software\\Python\\PyLauncher'] },
                 { key: '\\Software\\Python\\PythonCore', hive: Hive.HKCU, arch: Architecture.x86, values: ['\\Software\\Python\\PyLauncher\\Tag1'] }
@@ -88,7 +89,7 @@ suite('Interpreters from Windows Registry', () => {
         test('Must return a single entry and when registry contains only the InstallPath', async () => {
             const registryKeys = [
                 { key: '\\Software\\Python', hive: Hive.HKCU, arch: Architecture.x86, values: ['\\Software\\Python\\Company One'] },
-                { key: '\\Software\\Python\\Company One', hive: Hive.HKCU, arch: Architecture.x86, values: ['\\Software\\Python\\Company One\\Tag1'] },
+                { key: '\\Software\\Python\\Company One', hive: Hive.HKCU, arch: Architecture.x86, values: ['\\Software\\Python\\Company One\\Tag1'] }
             ];
             const registryValues = [
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: Hive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1') }
@@ -187,6 +188,7 @@ suite('Interpreters from Windows Registry', () => {
                 { key: '\\Software\\Python\\Company Two\\Tag B\\InstallPath', hive: Hive.HKCU, arch: Architecture.x86, value: 'DisplayName.Tag B', name: 'DisplayName' },
                 { key: '\\Software\\Python\\Company Two\\Tag C\\InstallPath', hive: Hive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
 
+                // tslint:disable-next-line:no-any
                 { key: '\\Software\\Python\\Company Five\\Five !\\InstallPath', hive: Hive.HKCU, arch: Architecture.x86, value: <any>undefined },
 
                 { key: '\\Software\\Python\\Company Three\\Tag !\\InstallPath', hive: Hive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
@@ -245,6 +247,7 @@ suite('Interpreters from Windows Registry', () => {
                 { key: '\\Software\\Python\\Company Two\\Tag B\\InstallPath', hive: Hive.HKCU, arch: Architecture.x86, value: 'DisplayName.Tag B', name: 'DisplayName' },
                 { key: '\\Software\\Python\\Company Two\\Tag C\\InstallPath', hive: Hive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'non-existent-path', 'envs', 'numpy') },
 
+                // tslint:disable-next-line:no-any
                 { key: '\\Software\\Python\\Company Five\\Five !\\InstallPath', hive: Hive.HKCU, arch: Architecture.x86, value: <any>undefined },
 
                 { key: '\\Software\\Python\\Company Three\\Tag !\\InstallPath', hive: Hive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'non-existent-path', 'envs', 'numpy') },

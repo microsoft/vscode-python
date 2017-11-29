@@ -1,4 +1,4 @@
-import { Architecture, Hive, IRegistry } from '../../client/common/registry';
+import { Architecture, Hive, IRegistry } from '../../client/common/platform/registry';
 import { IInterpreterLocatorService, PythonInterpreter } from '../../client/interpreter/contracts';
 import { IInterpreterVersionService } from '../../client/interpreter/interpreterVersion';
 import { CondaLocatorService } from '../../client/interpreter/locators/services/condaLocator';

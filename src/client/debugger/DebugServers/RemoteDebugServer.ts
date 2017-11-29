@@ -4,7 +4,7 @@ import {DebugSession, OutputEvent} from "vscode-debugadapter";
 import {IPythonProcess, IDebugServer, AttachRequestArguments} from "../Common/Contracts";
 import * as net from "net";
 import {BaseDebugServer} from "./BaseDebugServer";
-import {SocketStream} from "../../common/comms/SocketStream";
+import {SocketStream} from "../../common/net/socket/SocketStream";
 
 const DebuggerProtocolVersion = 6; // must be kept in sync with PTVSDBG_VER in attach_server.py
 const DebuggerSignature = "PTVSDBG";
@@ -93,7 +93,7 @@ export class RemoteDebugServer extends BaseDebugServer {
                     }
 
                     // If we are talking the same protocol but different version, reply with signature + version before bailing out
-                    // so that ptvsd has a chance to gracefully close the socket on its side. 
+                    // so that ptvsd has a chance to gracefully close the socket on its side.
                     that.stream.EndTransaction();
                     that.stream.Write(DebuggerSignatureBytes);
                     that.stream.WriteInt64(DebuggerProtocolVersion);

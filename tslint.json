@@ -53,6 +53,8 @@
         "function-name": false,
         "variable-name": false,
         "no-import-side-effect": false,
-        "no-string-based-set-timeout": false
+        "no-string-based-set-timeout": false,
+        "no-floating-promises": false,
+        "no-empty-interface": false
     }
 }
