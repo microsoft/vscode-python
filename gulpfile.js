@@ -277,7 +277,7 @@ function run(options) {
             console.log('Watching for changes...');
         }
     }
-    process.once('unhandledRejection', (reason, p) => {
+    process.on('unhandledRejection', (reason, p) => {
         console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
         exitHandler();
     });
@@ -287,7 +287,7 @@ function run(options) {
         if (typeof options.mode !== 'string' && process.argv.length > 2) {
             return hygiene(process.argv.slice(2), {
                 skipEOL: skipEOL
-            }).once('error', exitHandler);
+            }).on('error', exitHandler);
         }
 
         getFilesToProcess(options)
