@@ -23,7 +23,6 @@ export interface IPythonSettings {
     unitTest: IUnitTestSettings;
     autoComplete: IAutoCompeteSettings;
     terminal: ITerminalSettings;
-    jupyter: JupyterSettings;
     sortImports: ISortImportSettings;
     workspaceSymbols: IWorkspaceSymbolSettings;
     envFile: string;
@@ -85,7 +84,6 @@ export interface ILintingSettings {
     flake8Args: string[];
     pydocstyleEnabled: boolean;
     pydocstyleArgs: string[];
-    lintOnTextChange: boolean;
     lintOnSave: boolean;
     maxNumberOfProblems: number;
     pylintCategorySeverity: IPylintCategorySeverity;
@@ -109,7 +107,6 @@ export interface IFormattingSettings {
     autopep8Args: string[];
     yapfPath: string;
     yapfArgs: string[];
-    formatOnSave: boolean;
     outputWindow: string;
 }
 export interface IAutoCompeteSettings {
@@ -130,12 +127,6 @@ export interface ITerminalSettings {
     launchArgs: string[];
 }
 // tslint:disable-next-line:interface-name
-export interface JupyterSettings {
-    appendResults: boolean;
-    defaultKernel: string;
-    startupCode: string[];
-}
-
 // tslint:disable-next-line:no-string-literal
 const IS_TEST_EXECUTION = process.env['VSC_PYTHON_CI_TEST'] === '1';
 
@@ -153,7 +144,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     public autoComplete: IAutoCompeteSettings;
     public unitTest: IUnitTestSettings;
     public terminal: ITerminalSettings;
-    public jupyter: JupyterSettings;
     public sortImports: ISortImportSettings;
     public workspaceSymbols: IWorkspaceSymbolSettings;
 
@@ -251,7 +241,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             enabledWithoutWorkspace: false,
             ignorePatterns: [],
             flake8Args: [], flake8Enabled: false, flake8Path: 'flake',
-            lintOnSave: false, lintOnTextChange: false, maxNumberOfProblems: 100,
+            lintOnSave: false, maxNumberOfProblems: 100,
             mypyArgs: [], mypyEnabled: false, mypyPath: 'mypy',
             outputWindow: 'python', pep8Args: [], pep8Enabled: false, pep8Path: 'pep8',
             pylamaArgs: [], pylamaEnabled: false, pylamaPath: 'pylama',
@@ -299,8 +289,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             autopep8Args: [], autopep8Path: 'autopep8',
             outputWindow: 'python',
             provider: 'autopep8',
-            yapfArgs: [], yapfPath: 'yapf',
-            formatOnSave: false
+            yapfArgs: [], yapfPath: 'yapf'
         };
         this.formatting.autopep8Path = getAbsolutePath(systemVariables.resolveAny(this.formatting.autopep8Path), workspaceRoot);
         this.formatting.yapfPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.yapfPath), workspaceRoot);
@@ -389,13 +378,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.terminal = this.terminal ? this.terminal : {
             executeInFileDir: true,
             launchArgs: []
-        };
-
-        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        this.jupyter = pythonSettings.get<JupyterSettings>('jupyter')!;
-        // Support for travis.
-        this.jupyter = this.jupyter ? this.jupyter : {
-            appendResults: true, defaultKernel: '', startupCode: []
         };
 
         // If workspace config changes, then we could have a cascading effect of on change events.

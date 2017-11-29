@@ -9,7 +9,7 @@ import { PythonEvaluationResultReprKind, IExecutionCommand, enum_EXCEPTION_STATE
 import { Commands } from "./ProxyCommands";
 import { IdDispenser } from "../common/idDispenser";
 import { PythonProcessCallbackHandler } from "./PythonProcessCallbackHandler";
-import { SocketStream } from "../common/comms/SocketStream";
+import { SocketStream } from "../common/net/socket/SocketStream";
 
 export class PythonProcess extends EventEmitter implements IPythonProcess {
     private id: number;

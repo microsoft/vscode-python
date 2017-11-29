@@ -1,3 +1,4 @@
+import * as getFreePort from 'get-port';
 import * as os from 'os';
 import { CancellationToken, debug, OutputChannel, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
@@ -5,19 +6,31 @@ import { createDeferred } from './../../common/helpers';
 import { execPythonFile } from './../../common/utils';
 import { ITestDebugLauncher } from './types';
 
+const HAND_SHAKE = `READY${os.EOL}`;
+
 export class DebugLauncher implements ITestDebugLauncher {
-    public async launchDebugger(rootDirectory: string, testArgs: string[], token?: CancellationToken, outChannel?: OutputChannel) {
+    public getPort(resource?: Uri): Promise<number> {
+        const pythonSettings = PythonSettings.getInstance(resource);
+        const port = pythonSettings.unitTest.debugPort;
+        return new Promise<number>((resolve, reject) => getFreePort({ host: 'localhost', port }).then(resolve, reject));
+    }
+    public async launchDebugger(rootDirectory: string, testArgs: string[], port: number, token?: CancellationToken, outChannel?: OutputChannel) {
         const pythonSettings = PythonSettings.getInstance(rootDirectory ? Uri.file(rootDirectory) : undefined);
         // tslint:disable-next-line:no-any
         const def = createDeferred<any>();
         // tslint:disable-next-line:no-any
         const launchDef = createDeferred<any>();
         let outputChannelShown = false;
+        let accumulatedData: string = '';
         execPythonFile(rootDirectory, pythonSettings.pythonPath, testArgs, rootDirectory, true, (data: string) => {
-            if (data.startsWith(`READY${os.EOL}`)) {
-                // debug socket server has started.
+            if (!launchDef.resolved) {
+                accumulatedData += data;
+                if (!accumulatedData.startsWith(HAND_SHAKE)) {
+                    return;
+                }
+                // Socket server has started, lets start the debugger.
                 launchDef.resolve();
-                data = data.substring((`READY${os.EOL}`).length);
+                data = accumulatedData.substring(HAND_SHAKE.length);
             }
 
             if (!outputChannelShown) {
@@ -53,7 +66,7 @@ export class DebugLauncher implements ITestDebugLauncher {
                 request: 'attach',
                 localRoot: rootDirectory,
                 remoteRoot: rootDirectory,
-                port: pythonSettings.unitTest.debugPort,
+                port,
                 secret: 'my_secret',
                 host: 'localhost'
             });

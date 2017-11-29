@@ -82,6 +82,9 @@ export class CondaEnvService implements IInterpreterLocatorService {
                             resolve([]);
                         }
                     });
+                }).catch((err) => {
+                    console.error('Python Extension (getSuggestionsFromConda):', err);
+                    return [];
                 });
             });
     }

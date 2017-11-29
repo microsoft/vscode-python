@@ -1,8 +1,8 @@
 "use strict";
 
-import { SocketCallbackHandler } from "../common/comms/socketCallbackHandler";
+import { SocketCallbackHandler } from "../common/net/socket/socketCallbackHandler";
 import { RequestCommands, ResponseCommands } from "./commands";
-import { SocketServer } from '../common/comms/socketServer';
+import { SocketServer } from '../common/net/socket/socketServer';
 import { IdDispenser } from '../common/idDispenser';
 import { createDeferred, Deferred } from '../common/helpers';
 import { OutputChannel, CancellationToken } from 'vscode';

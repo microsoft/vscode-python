@@ -4,7 +4,7 @@ import * as child_process from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { SocketClient } from './socketClient';
-import { SocketServer } from '../common/comms/socketServer';
+import { SocketServer } from '../common/net/socket/socketServer';
 import { createDeferred, Deferred } from '../common/helpers';
 import { PythonSettings } from '../common/configSettings';
 import { EventEmitter } from 'events';

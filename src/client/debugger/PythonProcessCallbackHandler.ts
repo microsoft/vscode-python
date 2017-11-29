@@ -5,7 +5,7 @@ import { IDjangoStackFrame, PythonEvaluationResultFlags, PythonLanguageVersion, 
 import * as utils from "./Common/Utils";
 import { EventEmitter } from "events";
 import { Commands } from "./ProxyCommands";
-import { SocketStream } from "../common/comms/SocketStream";
+import { SocketStream } from "../common/net/socket/SocketStream";
 import { ExtractTryStatements } from "./Common/TryParser";
 import * as path from "path";
 import {IdDispenser} from '../common/idDispenser';

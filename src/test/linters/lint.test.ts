@@ -1,5 +1,4 @@
 import * as assert from 'assert';
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -22,7 +21,6 @@ const pep8ConfigPath = path.join(pythoFilesPath, 'pep8config');
 const pydocstyleConfigPath27 = path.join(pythoFilesPath, 'pydocstyleconfig27');
 const pylintConfigPath = path.join(pythoFilesPath, 'pylintconfig');
 const fileToLint = path.join(pythoFilesPath, 'file.py');
-let pylintFileToLintLines: string[] = [];
 
 const pylintMessagesToBeReturned: baseLinter.ILintMessage[] = [
     { line: 24, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
@@ -114,7 +112,6 @@ suite('Linting', () => {
     const isPython3Deferred = createDeferred<boolean>();
     const isPython3 = isPython3Deferred.promise;
     suiteSetup(async () => {
-        pylintFileToLintLines = fs.readFileSync(fileToLint).toString('utf-8').split(/\r?\n/g);
         await initialize();
         const version = await execPythonFile(fileToLint, PythonSettings.getInstance(vscode.Uri.file(fileToLint)).pythonPath, ['--version'], __dirname, true);
         isPython3Deferred.resolve(version.indexOf('3.') >= 0);
@@ -135,7 +132,6 @@ suite('Linting', () => {
             await updateSetting('linting.enabled', true, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
         }
         await updateSetting('linting.lintOnSave', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
-        await updateSetting('linting.lintOnTextChange', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
         await updateSetting('linting.pylintEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
         await updateSetting('linting.flake8Enabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
         await updateSetting('linting.pep8Enabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
@@ -146,7 +142,6 @@ suite('Linting', () => {
 
         if (IS_MULTI_ROOT_TEST) {
             await updateSetting('linting.lintOnSave', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
-            await updateSetting('linting.lintOnTextChange', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
             await updateSetting('linting.pylintEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
             await updateSetting('linting.flake8Enabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
             await updateSetting('linting.pep8Enabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
@@ -164,8 +159,7 @@ suite('Linting', () => {
         const messages = await linter.lint(editor.document, cancelToken.token);
         if (enabled) {
             assert.notEqual(messages.length, 0, `No linter errors when linter is enabled, Output - ${output.output}`);
-        }
-        else {
+        } else {
             assert.equal(messages.length, 0, `Errors returned when linter is disabled, Output - ${output.output}`);
         }
     }
@@ -217,8 +211,7 @@ suite('Linting', () => {
         const messages = await linter.lint(editor.document, cancelToken.token);
         if (messagesToBeReceived.length === 0) {
             assert.equal(messages.length, 0, `No errors in linter, Output - ${outputChannel.output}`);
-        }
-        else {
+        } else {
             if (outputChannel.output.indexOf('ENOENT') === -1) {
                 // Pylint for Python Version 2.7 could return 80 linter messages, where as in 3.5 it might only return 1.
                 // Looks like pylint stops linting as soon as it comes across any ERRORS.

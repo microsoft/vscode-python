@@ -692,9 +692,8 @@ export class PythonDebugger extends DebugSession {
                 }
 
             }
-            // For some reason on python 3.5 iterating through generators throws the StopIteration, GeneratorExit Exceptions
-            // https://docs.python.org/2/library/exceptions.html#exceptions.StandardError
-            // Lets ignore them
+            // Ignore StopIteration and GeneratorExit as they are used for
+            // control flow and not error conditions.
             if (!exToIgnore.has('StopIteration')) {
                 exToIgnore.set('StopIteration', enum_EXCEPTION_STATE.BREAK_MODE_NEVER);
             }

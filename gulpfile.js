@@ -14,6 +14,7 @@ const relative = require('relative');
 const ts = require('gulp-typescript');
 const watch = require('gulp-watch');
 const cp = require('child_process');
+const colors = require('colors/safe');
 
 /**
  * Hygiene works by creating cascading subsets of all our files and
@@ -40,7 +41,6 @@ const eolFilter = [
     '!.npmrc',
     '!.vscodeignore',
     '!LICENSE',
-    '!webpack.config.js',
     '!**/node_modules/**',
     '!**/*.{svg,exe,png,bmp,scpt,bat,cmd,cur,ttf,woff,eot,txt,md,json,yml}',
     '!out/**/*',
@@ -61,7 +61,6 @@ const indentationFilter = [
 const tslintFilter = [
     'src/**/*.ts',
     'test/**/*.ts',
-    '!webpack.config.js',
     '!**/node_modules/**',
     '!out/**/*',
     '!images/**/*',
@@ -181,7 +180,7 @@ const hygiene = exports.hygiene = (some, options) => {
                 }
             };
         }
-        const tsProject = ts.createProject('tsconfig.json', { strict: true });
+        const tsProject = ts.createProject('tsconfig.json', { strict: true, noImplicitAny: false, noImplicitThis: false });
         const reporter = customReporter();
         return tsProject(reporter);
     }
@@ -205,7 +204,7 @@ const hygiene = exports.hygiene = (some, options) => {
     return typescript
         .pipe(es.through(null, function () {
             if (errorCount > 0) {
-                this.emit('error', 'Hygiene failed with ' + errorCount + ' errors. Check \'gulpfile.js\'.');
+                this.emit('error', 'Hygiene failed with ' + errorCount + ' errors 👎. Check \'gulpfile.js\'.');
             } else {
                 this.emit('end');
             }
@@ -216,6 +215,8 @@ gulp.task('hygiene', () => hygiene());
 
 gulp.task('hygiene-watch', function () {
     return watch(all, function () {
+        console.clear();
+        console.log('Checking hygiene...');
         run(true, true);
     });
 });
@@ -223,9 +224,12 @@ gulp.task('hygiene-watch', function () {
 function run(lintOnlyModifiedFiles, doNotExit) {
     function exitProcessOnError(ex) {
         console.error();
-        console.error(ex);
+        console.error(colors.red(ex));
         if (!doNotExit) {
             process.exit(1);
+        }
+        if (lintOnlyModifiedFiles && doNotExit) {
+            console.log('Watching for changes...');
         }
     }
     process.on('unhandledRejection', (reason, p) => {
@@ -241,20 +245,62 @@ function run(lintOnlyModifiedFiles, doNotExit) {
             }).on('error', exitProcessOnError);
         }
 
-        const cmd = lintOnlyModifiedFiles ? 'git diff --name-only' : 'git diff --cached --name-only';
-        cp.exec(cmd, {
+        let filesPromise;
+        if (lintOnlyModifiedFiles) {
+            filesPromise = Promise.all([getCachedFiles(), getModifiedFiles()]).then(filesList => {
+                const files1 = filesList[0];
+                const files2 = filesList[1];
+                files2.forEach(file => {
+                    if (files1.indexOf(file) === -1) {
+                        files1.push(file);
+                    }
+                });
+                return files1;
+            });
+        } else {
+            filesPromise = getCachedFiles();
+        }
+        filesPromise.then(files => {
+            hygiene(files, {
+                skipEOL: skipEOL
+            })
+                .on('end', () => {
+                    if (lintOnlyModifiedFiles && doNotExit) {
+                        console.log(colors.green('Hygiene passed with 0 errors 👍.'));
+                        console.log('Watching for changes...');
+                    }
+                })
+                .on('error', exitProcessOnError);
+        }).catch(exitProcessOnError);
+    });
+}
+function getCachedFiles() {
+    return new Promise(resolve => {
+        cp.exec('git diff --cached --name-only', {
             maxBuffer: 2000 * 1024
         }, (err, out) => {
             if (err) {
-                exitProcessOnError(err);
+                return reject(err);
             }
             const some = out
                 .split(/\r?\n/)
                 .filter(l => !!l);
-
-            hygiene(some, {
-                skipEOL: skipEOL
-            }).on('error', exitProcessOnError);
+            resolve(some);
+        });
+    });
+}
+function getModifiedFiles() {
+    return new Promise(resolve => {
+        cp.exec('git diff --name-only', {
+            maxBuffer: 2000 * 1024
+        }, (err, out) => {
+            if (err) {
+                return reject(err);
+            }
+            const some = out
+                .split(/\r?\n/)
+                .filter(l => !!l);
+            resolve(some);
         });
     });
 }
