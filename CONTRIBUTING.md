@@ -66,8 +66,6 @@ cd vscode-python
 npm install
 ```
 
-## Development workflow
-
 ### Incremental Build
 
 Run the `Compile` and `Hygiene` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
@@ -90,8 +88,6 @@ _Requirements_
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 2. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
 
-## Debugging the extension
-
 ### Standard Debugging
 
 Clone the repo into any directory and start debugging.
@@ -101,3 +97,8 @@ From there use the `Launch Extension` launch option.
 
 The easiest way to debug the Python Debugger (in our opinion) is to clone this git repo directory into [your](https://code.visualstudio.com/docs/extensions/install-extension#_your-extensions-folder) extensions directory.
 From there use the ```Extension + Debugger``` launch option.
+
+### Coding Standards
+
+Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-python/blob/master/CODING_STANDARDS.md).
+We have a per-commit hook to ensure the code committed will adhere to the above coding standards.
