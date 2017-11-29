@@ -147,6 +147,8 @@ export interface IWorkspaceTestManagerService extends Disposable {
     getPreferredTestManager(resource: Uri): UnitTestProduct | undefined;
 }
 
+export const ITestsHelper = Symbol('ITestsHelper');
+
 export interface ITestsHelper {
     flattenTestFiles(testFiles: TestFile[]): Tests;
     placeTestFilesIntoFolders(tests: Tests): void;
@@ -158,6 +160,8 @@ export interface ITestVisitor {
     visitTestFile(testFile: TestFile): void;
     visitTestFolder(testFile: TestFolder): void;
 }
+
+export const ITestCollectionStorageService = Symbol('ITestCollectionStorageService');
 
 export interface ITestCollectionStorageService extends Disposable {
     getTests(wkspace: Uri): Tests | undefined;

@@ -15,7 +15,7 @@ const argsToExcludeForDiscovery = ['-x', '--exitfirst',
     '--disable-pytest-warnings', '-l', '--showlocals'];
 const settingsInArgsToExcludeForDiscovery: string[] = [];
 
-export function discoverTests(serviceContainer: IServiceContainer, testsHelper: ITestsHelper, options: TestDiscoveryOptions): Promise<Tests> {
+export function discoverTests(serviceContainer: IServiceContainer, options: TestDiscoveryOptions): Promise<Tests> {
     let logOutputLines: string[] = [''];
     const testFiles: TestFile[] = [];
     const parentNodes: { indent: number, item: TestFile | TestSuite }[] = [];
@@ -97,6 +97,7 @@ export function discoverTests(serviceContainer: IServiceContainer, testsHelper: 
             if (options.token && options.token.isCancellationRequested) {
                 return Promise.reject<Tests>('cancelled');
             }
+            const testsHelper = serviceContainer.get<ITestsHelper>(ITestsHelper);
             return testsHelper.flattenTestFiles(testFiles);
         });
 }

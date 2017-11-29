@@ -3,16 +3,16 @@ import { OutputChannel, Uri } from 'vscode';
 import { Product } from '../../common/installer';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/baseTestManager';
-import { ITestCollectionStorageService, ITestResultsService, ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
+import { ITestCollectionStorageService, ITestResultsService, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
 import { discoverTests } from './collector';
 import { runTest } from './runner';
 
 export class TestManager extends BaseTestManager {
     constructor(workspaceFolder: Uri, rootDirectory: string, outputChannel: OutputChannel,
         testCollectionStorage: ITestCollectionStorageService,
-        testResultsService: ITestResultsService, testsHelper: ITestsHelper,
+        testResultsService: ITestResultsService,
         serviceContainer: IServiceContainer) {
-        super('pytest', Product.pytest, workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer);
+        super('pytest', Product.pytest, workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, serviceContainer);
     }
     public async discoverTestsImpl(ignoreCache: boolean): Promise<Tests> {
         const args = this.settings.unitTest.pyTestArgs.slice(0);
@@ -22,7 +22,7 @@ export class TestManager extends BaseTestManager {
             token: this.testDiscoveryCancellationToken!, ignoreCache,
             outChannel: this.outputChannel
         };
-        return discoverTests(this.serviceContainer, this.testsHelper, options);
+        return discoverTests(this.serviceContainer, options);
     }
     public async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<{}> {
         const args = this.settings.unitTest.pyTestArgs.slice(0);

@@ -19,7 +19,7 @@ const argsToExcludeForDiscovery = ['-v', '--verbose',
     '--failed', '--process-restartworker', '--with-xunit'];
 const settingsInArgsToExcludeForDiscovery = ['--verbosity'];
 
-export function discoverTests(serviceContainer: IServiceContainer, testsHelper: ITestsHelper, options: TestDiscoveryOptions): Promise<Tests> {
+export function discoverTests(serviceContainer: IServiceContainer, options: TestDiscoveryOptions): Promise<Tests> {
     let logOutputLines: string[] = [''];
     let testFiles: TestFile[] = [];
 
@@ -90,6 +90,7 @@ export function discoverTests(serviceContainer: IServiceContainer, testsHelper: 
 
             // Exclude tests that don't have any functions or test suites
             testFiles = testFiles.filter(testFile => testFile.suites.length > 0 || testFile.functions.length > 0);
+            const testsHelper = serviceContainer.get<ITestsHelper>(ITestsHelper);
             return testsHelper.flattenTestFiles(testFiles);
         });
 }

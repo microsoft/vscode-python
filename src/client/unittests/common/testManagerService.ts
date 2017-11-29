@@ -16,13 +16,13 @@ export class TestManagerService implements ITestManagerService {
         testCollectionStorage: ITestCollectionStorageService, testResultsService: ITestResultsService,
         testsHelper: ITestsHelper, serviceContainer: IServiceContainer) {
         this.testManagers.set(Product.nosetest, {
-            create: (rootDirectory: string) => new NoseTestManager(wkspace, rootDirectory, this.outChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer)
+            create: (rootDirectory: string) => new NoseTestManager(wkspace, rootDirectory, this.outChannel, testCollectionStorage, testResultsService, serviceContainer)
         });
         this.testManagers.set(Product.pytest, {
-            create: (rootDirectory: string) => new PyTestTestManager(wkspace, rootDirectory, this.outChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer)
+            create: (rootDirectory: string) => new PyTestTestManager(wkspace, rootDirectory, this.outChannel, testCollectionStorage, testResultsService, serviceContainer)
         });
         this.testManagers.set(Product.unittest, {
-            create: (rootDirectory: string) => new UnitTestTestManager(wkspace, rootDirectory, this.outChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer)
+            create: (rootDirectory: string) => new UnitTestTestManager(wkspace, rootDirectory, this.outChannel, testCollectionStorage, testResultsService, serviceContainer)
         });
     }
     public dispose() {

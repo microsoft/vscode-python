@@ -4,16 +4,16 @@ import * as vscode from 'vscode';
 import { Product } from '../../common/installer';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/baseTestManager';
-import { ITestCollectionStorageService, ITestResultsService, ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
+import { ITestCollectionStorageService, ITestResultsService, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
 import { discoverTests } from './collector';
 import { runTest } from './runner';
 
 export class TestManager extends BaseTestManager {
     constructor(workspaceFolder: Uri, rootDirectory: string, outputChannel: vscode.OutputChannel,
         testCollectionStorage: ITestCollectionStorageService,
-        testResultsService: ITestResultsService, testsHelper: ITestsHelper,
+        testResultsService: ITestResultsService,
         serviceContainer: IServiceContainer) {
-        super('nosetest', Product.nosetest, workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer);
+        super('nosetest', Product.nosetest, workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, serviceContainer);
     }
     public discoverTestsImpl(ignoreCache: boolean): Promise<Tests> {
         const args = this.settings.unitTest.nosetestArgs.slice(0);
@@ -23,7 +23,7 @@ export class TestManager extends BaseTestManager {
             token: this.testDiscoveryCancellationToken!, ignoreCache,
             outChannel: this.outputChannel
         };
-        return discoverTests(this.serviceContainer, this.testsHelper, options);
+        return discoverTests(this.serviceContainer, options);
     }
     // tslint:disable-next-line:no-any
     public runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<any> {

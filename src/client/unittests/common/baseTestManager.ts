@@ -10,7 +10,7 @@ import { sendTelemetryEvent } from '../../telemetry/index';
 import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../telemetry/types';
 import { CANCELLATION_REASON, CommandSource } from './constants';
 import { displayTestErrorMessage } from './testUtils';
-import { ITestCollectionStorageService, ITestResultsService, ITestsHelper, TestProvider, Tests, TestStatus, TestsToRun } from './types';
+import { ITestCollectionStorageService, ITestResultsService, TestProvider, Tests, TestStatus, TestsToRun } from './types';
 
 enum CancellationTokenType {
     testDiscovery,
@@ -18,16 +18,16 @@ enum CancellationTokenType {
 }
 export abstract class BaseTestManager {
     protected readonly settings: IPythonSettings;
-    private tests: Tests;
+    private tests?: Tests;
     // tslint:disable-next-line:variable-name
     private _status: TestStatus = TestStatus.Unknown;
-    private testDiscoveryCancellationTokenSource: vscode.CancellationTokenSource;
-    private testRunnerCancellationTokenSource: vscode.CancellationTokenSource;
+    private testDiscoveryCancellationTokenSource?: vscode.CancellationTokenSource;
+    private testRunnerCancellationTokenSource?: vscode.CancellationTokenSource;
     private installer: Installer;
-    private discoverTestsPromise: Promise<Tests>;
+    private discoverTestsPromise?: Promise<Tests>;
     constructor(public readonly testProvider: TestProvider, private product: Product, public readonly workspaceFolder: Uri, protected rootDirectory: string,
         protected outputChannel: vscode.OutputChannel, private testCollectionStorage: ITestCollectionStorageService,
-        protected testResultsService: ITestResultsService, protected testsHelper: ITestsHelper, protected serviceContainer: IServiceContainer) {
+        protected testResultsService: ITestResultsService, protected serviceContainer: IServiceContainer) {
         this._status = TestStatus.Unknown;
         this.installer = new Installer();
         this.settings = PythonSettings.getInstance(this.rootDirectory ? Uri.file(this.rootDirectory) : undefined);
@@ -58,23 +58,23 @@ export abstract class BaseTestManager {
     }
     public reset() {
         this._status = TestStatus.Unknown;
-        this.tests = null;
+        this.tests = undefined;
     }
     public resetTestResults() {
         if (!this.tests) {
             return;
         }
 
-        this.testResultsService.resetResults(this.tests);
+        this.testResultsService.resetResults(this.tests!);
     }
     public async discoverTests(cmdSource: CommandSource, ignoreCache: boolean = false, quietMode: boolean = false, userInitiated: boolean = false): Promise<Tests> {
         if (this.discoverTestsPromise) {
-            return this.discoverTestsPromise;
+            return this.discoverTestsPromise!;
         }
 
-        if (!ignoreCache && this.tests && this.tests.testFunctions.length > 0) {
+        if (!ignoreCache && this.tests! && this.tests!.testFunctions.length > 0) {
             this._status = TestStatus.Idle;
-            return Promise.resolve(this.tests);
+            return Promise.resolve(this.tests!);
         }
         this._status = TestStatus.Discovering;
 
@@ -96,7 +96,7 @@ export abstract class BaseTestManager {
                 this.tests = tests;
                 this._status = TestStatus.Idle;
                 this.resetTestResults();
-                this.discoverTestsPromise = null;
+                this.discoverTestsPromise = undefined;
 
                 // have errors in Discovering
                 let haveErrorsInDiscovering = false;
@@ -112,19 +112,19 @@ export abstract class BaseTestManager {
                 if (haveErrorsInDiscovering && !quietMode) {
                     displayTestErrorMessage('There were some errors in discovering unit tests');
                 }
-                const wkspace = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(this.rootDirectory)).uri;
+                const wkspace = workspace.getWorkspaceFolder(vscode.Uri.file(this.rootDirectory))!.uri;
                 this.testCollectionStorage.storeTests(wkspace, tests);
                 this.disposeCancellationToken(CancellationTokenType.testDiscovery);
                 sendTelemetryEvent(UNITTEST_DISCOVER, undefined, telementryProperties);
                 return tests;
-            }).catch(reason => {
-                if (isNotInstalledError(reason) && !quietMode) {
+            }).catch((reason: {}) => {
+                if (isNotInstalledError(reason as Error) && !quietMode) {
                     // tslint:disable-next-line:no-floating-promises
                     this.installer.promptToInstall(this.product, this.workspaceFolder);
                 }
 
-                this.tests = null;
-                this.discoverTestsPromise = null;
+                this.tests = undefined;
+                this.discoverTestsPromise = undefined;
                 if (this.testDiscoveryCancellationToken && this.testDiscoveryCancellationToken.isCancellationRequested) {
                     reason = CANCELLATION_REASON;
                     this._status = TestStatus.Idle;
@@ -134,9 +134,9 @@ export abstract class BaseTestManager {
                     this._status = TestStatus.Error;
                     this.outputChannel.appendLine('Test Discovery failed: ');
                     // tslint:disable-next-line:prefer-template
-                    this.outputChannel.appendLine('' + reason);
+                    this.outputChannel.appendLine(reason.toString());
                 }
-                const wkspace = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(this.rootDirectory)).uri;
+                const wkspace = workspace.getWorkspaceFolder(vscode.Uri.file(this.rootDirectory))!.uri;
                 this.testCollectionStorage.storeTests(wkspace, null);
                 this.disposeCancellationToken(CancellationTokenType.testDiscovery);
                 return Promise.reject(reason);
@@ -159,7 +159,7 @@ export abstract class BaseTestManager {
         };
         if (runFailedTests === true) {
             // tslint:disable-next-line:prefer-template
-            moreInfo.Run_Failed_Tests = runFailedTests + '';
+            moreInfo.Run_Failed_Tests = runFailedTests.toString();
             telementryProperties.scope = 'failed';
         }
         if (testsToRun && typeof testsToRun === 'object') {
@@ -207,7 +207,7 @@ export abstract class BaseTestManager {
                 this._status = TestStatus.Idle;
                 this.disposeCancellationToken(CancellationTokenType.testRunner);
                 sendTelemetryEvent(UNITTEST_RUN, undefined, telementryProperties);
-                return this.tests;
+                return this.tests!;
             }).catch(reason => {
                 if (this.testRunnerCancellationToken && this.testRunnerCancellationToken.isCancellationRequested) {
                     reason = CANCELLATION_REASON;
@@ -237,12 +237,12 @@ export abstract class BaseTestManager {
             if (this.testDiscoveryCancellationTokenSource) {
                 this.testDiscoveryCancellationTokenSource.dispose();
             }
-            this.testDiscoveryCancellationTokenSource = null;
+            this.testDiscoveryCancellationTokenSource = undefined;
         } else {
             if (this.testRunnerCancellationTokenSource) {
                 this.testRunnerCancellationTokenSource.dispose();
             }
-            this.testRunnerCancellationTokenSource = null;
+            this.testRunnerCancellationTokenSource = undefined;
         }
     }
 }

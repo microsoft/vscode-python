@@ -4,7 +4,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { Options, run } from '../common/runner';
 import { ITestsHelper, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestStatus, TestSuite } from '../common/types';
 
-export function discoverTests(serviceContainer: IServiceContainer, testsHelper: ITestsHelper, options: TestDiscoveryOptions): Promise<Tests> {
+export function discoverTests(serviceContainer: IServiceContainer, options: TestDiscoveryOptions): Promise<Tests> {
     let startDirectory = '.';
     let pattern = 'test*.py';
     const indexOfStartDir = options.args.findIndex(arg => arg.indexOf('-s') === 0);
@@ -83,6 +83,7 @@ for suite in suites._tests:
             if (startDirectory.length > 1) {
                 testsDirectory = path.isAbsolute(startDirectory) ? startDirectory : path.resolve(options.cwd, startDirectory);
             }
+            const testsHelper = serviceContainer.get<ITestsHelper>(ITestsHelper);
             return parseTestIds(testsDirectory, testItems, testsHelper);
         });
 }

@@ -1,6 +1,7 @@
 import * as testRunner from 'vscode/lib/testrunner';
-import { initializePython, IS_MULTI_ROOT_TEST } from './initialize';
+import { IS_MULTI_ROOT_TEST } from './initialize';
 process.env.VSC_PYTHON_CI_TEST = '1';
+process.env.IS_MULTI_ROOT_TEST = IS_MULTI_ROOT_TEST;
 
 // You can directly control Mocha options by uncommenting the following lines.
 // See https://github.com/mochajs/mocha/wiki/Using-mocha-programmatically#set-options for more info.
@@ -9,5 +10,5 @@ testRunner.configure({
     useColors: true,
     timeout: 25000,
     retries: 3
-});
+} as {});
 module.exports = testRunner;
