@@ -28,6 +28,7 @@
             "label": "Hygiene",
             "type": "gulp",
             "task": "hygiene-watch",
+            "isBackground": true,
             "presentation": {
                 "echo": true,
                 "reveal": "always",
