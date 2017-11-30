@@ -244,16 +244,32 @@ gulp.task('hygiene-staged', () => run({ mode: 'changes' }));
 gulp.task('hygiene-watch', ['hygiene-staged', 'hygiene-watch-runner']);
 
 gulp.task('hygiene-watch-runner', function () {
+    /**
+     * @type {Deferred}
+     */
+    let runPromise;
+
     return watch(all, { events: ['add', 'change'] }, function (event) {
+        // Damn bounce does not work, do our own checks.
         const start = new Date();
+        if (runPromise && !runPromise.completed) {
+            console.log(`[${start.toLocaleTimeString()}] Already running`);
+            return;
+        }
         console.log(`[${start.toLocaleTimeString()}] Starting '${colors.cyan('hygiene-watch-runner')}'...`);
+
+        runPromise = new Deferred();
         // Skip indentation and formatting checks to speed up linting.
-        return run({ mode: 'watch', skipFormatCheck: true, skipIndentationCheck: true })
+        run({ mode: 'watch', skipFormatCheck: true, skipIndentationCheck: true })
             .then(() => {
                 const end = new Date();
                 const time = (end.getTime() - start.getTime()) / 1000;
                 console.log(`[${end.toLocaleTimeString()}] Finished '${colors.cyan('hygiene-watch-runner')}' after ${time} seconds`);
-            });
+                runPromise.resolve();
+            })
+            .catch(runPromise.reject.bind);
+
+        return runPromise.promise;
     });
 });
 
@@ -406,3 +422,43 @@ function getModifiedFiles() {
 if (require.main === module) {
     run({ exitOnError: true, mode: 'staged' });
 }
+
+
+class Deferred {
+    constructor(scope) {
+        this.scope = scope;
+        this._resolved = false;
+        this._rejected = false;
+
+        this._promise = new Promise((resolve, reject) => {
+            this._resolve = resolve;
+            this._reject = reject;
+        });
+    }
+    resolve(value) {
+        this._resolve.apply(this.scope ? this.scope : this, arguments);
+        this._resolved = true;
+    }
+    /**
+     * Rejects the promise
+     * @param {any} reason
+     * @memberof Deferred
+     */
+    reject(reason) {
+        this._reject.apply(this.scope ? this.scope : this, arguments);
+        this._rejected = true;
+    }
+    get promise() {
+        return this._promise;
+    }
+    get resolved() {
+        return this._resolved === true;
+    }
+    get rejected() {
+        return this._rejected === true;
+    }
+    get completed() {
+        return this._rejected || this._resolved;
+    }
+}
+
