@@ -1,5 +1,5 @@
 import * as getFreePort from 'get-port';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import 'reflect-metadata';
 import { debug, Uri, workspace } from 'vscode';
@@ -10,6 +10,7 @@ import { ITestDebugLauncher, launchOptions } from './types';
 
 const HAND_SHAKE = `READY${os.EOL}`;
 
+@injectable()
 export class DebugLauncher implements ITestDebugLauncher {
     constructor( @inject(IPythonExecutionFactory) private pythonExecutionFactory: IPythonExecutionFactory) { }
     public getPort(resource?: Uri): Promise<number> {

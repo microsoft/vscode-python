@@ -1,18 +1,24 @@
 'use strict';
+import { inject, injectable, named } from 'inversify';
+import 'reflect-metadata';
 import { Uri } from 'vscode';
 import * as vscode from 'vscode';
 import { Product } from '../../common/installer';
+import { IOutputChannel } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { BaseTestManager } from '../common/baseTestManager';
+import { TEST_OUTPUT_CHANNEL } from '../common/constants';
+import { BaseTestManager } from '../common/managers/baseTestManager';
 import { ITestCollectionStorageService, ITestResultsService, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
 import { discoverTests } from './collector';
 import { runTest } from './runner';
 
+@injectable()
 export class TestManager extends BaseTestManager {
-    constructor(workspaceFolder: Uri, rootDirectory: string, outputChannel: vscode.OutputChannel,
-        testCollectionStorage: ITestCollectionStorageService,
-        testResultsService: ITestResultsService,
-        serviceContainer: IServiceContainer) {
+    constructor(workspaceFolder: Uri, rootDirectory: string,
+        @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) outputChannel: vscode.OutputChannel,
+        @inject(ITestCollectionStorageService) testCollectionStorage: ITestCollectionStorageService,
+        @inject(ITestResultsService) testResultsService: ITestResultsService,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('nosetest', Product.nosetest, workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, serviceContainer);
     }
     public discoverTestsImpl(ignoreCache: boolean): Promise<Tests> {

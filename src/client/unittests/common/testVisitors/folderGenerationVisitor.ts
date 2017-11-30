@@ -1,6 +1,9 @@
+import { injectable } from 'inversify';
 import * as path from 'path';
+import 'reflect-metadata';
 import { ITestVisitor, TestFile, TestFolder, TestFunction, TestSuite } from '../types';
 
+@injectable()
 export class TestFolderGenerationVisitor implements ITestVisitor {
     // tslint:disable-next-line:variable-name
     private _testFolders: TestFolder[] = [];
@@ -19,17 +22,16 @@ export class TestFolderGenerationVisitor implements ITestVisitor {
     public visitTestSuite(testSuite: TestSuite): void { }
     public visitTestFile(testFile: TestFile): void {
         // First get all the unique folders
-        const folders: string[] = [];
         const dir = path.dirname(testFile.name);
         if (this.folderMap.has(dir)) {
-            const folder = this.folderMap.get(dir);
+            const folder = this.folderMap.get(dir)!;
             folder.testFiles.push(testFile);
             return;
         }
 
         dir.split(path.sep).reduce((accumulatedPath, currentName, index) => {
             let newPath = currentName;
-            let parentFolder: TestFolder;
+            let parentFolder: TestFolder | undefined;
             if (accumulatedPath.length > 0) {
                 parentFolder = this.folderMap.get(accumulatedPath);
                 newPath = path.join(accumulatedPath, currentName);

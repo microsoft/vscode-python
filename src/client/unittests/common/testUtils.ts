@@ -1,11 +1,14 @@
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import * as vscode from 'vscode';
+import 'reflect-metadata';
 import { Uri, workspace } from 'vscode';
 import { window } from 'vscode';
+import * as vscode from 'vscode';
 import * as constants from '../../common/constants';
+import { Product } from '../../common/installer';
 import { CommandSource } from './constants';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
-import { TestFile, TestFolder, Tests, TestsToRun } from './types';
+import { ITestVisitor, TestFile, TestFolder, TestProvider, Tests, TestsToRun, UnitTestProduct } from './types';
 import { ITestsHelper } from './types';
 
 export async function selectTestWorkspace(): Promise<Uri | undefined> {
@@ -39,15 +42,32 @@ export function convertFileToPackage(filePath: string): string {
     return filePath.substring(0, lastIndex).replace(/\//g, '.').replace(/\\/g, '.');
 }
 
+@injectable()
 export class TestsHelper implements ITestsHelper {
+    constructor( @inject(ITestVisitor) @named('TestFlatteningVisitor') private flatteningVisitor: TestFlatteningVisitor) { }
+    public parseProviderName(product: UnitTestProduct): TestProvider {
+        switch (product) {
+            case Product.nosetest: {
+                return 'nosetest';
+            }
+            case Product.pytest: {
+                return 'pytest';
+            }
+            case Product.unittest: {
+                return 'unittest';
+            }
+            default: {
+                throw new Error(`Unknown Test Product ${product}`);
+            }
+        }
+    }
     public flattenTestFiles(testFiles: TestFile[]): Tests {
-        const flatteningVisitor = new TestFlatteningVisitor();
-        testFiles.forEach(testFile => flatteningVisitor.visitTestFile(testFile));
+        testFiles.forEach(testFile => this.flatteningVisitor.visitTestFile(testFile));
 
         const tests = <Tests>{
             testFiles: testFiles,
-            testFunctions: flatteningVisitor.flattenedTestFunctions,
-            testSuites: flatteningVisitor.flattenedTestSuites,
+            testFunctions: this.flatteningVisitor.flattenedTestFunctions,
+            testSuites: this.flatteningVisitor.flattenedTestSuites,
             testFolders: [],
             rootTestFolders: [],
             summary: { passed: 0, failures: 0, errors: 0, skipped: 0 }
@@ -74,7 +94,7 @@ export class TestsHelper implements ITestsHelper {
         folders.forEach(dir => {
             dir.split(path.sep).reduce((parentPath, currentName, index, values) => {
                 let newPath = currentName;
-                let parentFolder: TestFolder;
+                let parentFolder: TestFolder | undefined;
                 if (parentPath.length > 0) {
                     parentFolder = folderMap.get(parentPath);
                     newPath = path.join(parentPath, currentName);
@@ -83,7 +103,7 @@ export class TestsHelper implements ITestsHelper {
                     const testFolder: TestFolder = { name: newPath, testFiles: [], folders: [], nameToRun: newPath, time: 0 };
                     folderMap.set(newPath, testFolder);
                     if (parentFolder) {
-                        parentFolder.folders.push(testFolder);
+                        parentFolder!.folders.push(testFolder);
                     } else {
                         tests.rootTestFolders.push(testFolder);
                     }
@@ -96,11 +116,12 @@ export class TestsHelper implements ITestsHelper {
             }, '');
         });
     }
-    public parseTestName(name: string, rootDirectory: string, tests: Tests): TestsToRun {
+    public parseTestName(name: string, rootDirectory: string, tests: Tests): TestsToRun | undefined {
+        // tslint:disable-next-line:no-suspicious-comment
         // TODO: We need a better way to match (currently we have raw name, name, xmlname, etc = which one do we.
         // Use to identify a file given the full file name, similarly for a folder and function.
         // Perhaps something like a parser or methods like TestFunction.fromString()... something).
-        if (!tests) { return null; }
+        if (!tests) { return undefined; }
         const absolutePath = path.isAbsolute(name) ? name : path.resolve(rootDirectory, name);
         const testFolders = tests.testFolders.filter(folder => folder.nameToRun === name || folder.name === name || folder.name === absolutePath);
         if (testFolders.length > 0) { return { testFolder: testFolders }; }

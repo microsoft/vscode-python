@@ -1,22 +1,31 @@
 // import {TestFolder, TestsToRun, Tests, TestFile, TestSuite, TestFunction, TestStatus, FlattenedTestFunction, FlattenedTestSuite, CANCELLATION_REASON} from './contracts';
 import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
-import { IPythonSettings, PythonSettings } from '../../common/configSettings';
-import { isNotInstalledError } from '../../common/helpers';
-import { Installer, Product } from '../../common/installer';
-import { IServiceContainer } from '../../ioc/types';
-import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../telemetry/constants';
-import { sendTelemetryEvent } from '../../telemetry/index';
-import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../telemetry/types';
-import { CANCELLATION_REASON, CommandSource } from './constants';
-import { displayTestErrorMessage } from './testUtils';
-import { ITestCollectionStorageService, ITestResultsService, TestProvider, Tests, TestStatus, TestsToRun } from './types';
+import { IPythonSettings, PythonSettings } from '../../../common/configSettings';
+import { isNotInstalledError } from '../../../common/helpers';
+import { Installer, Product } from '../../../common/installer';
+import { IServiceContainer } from '../../../ioc/types';
+import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../../telemetry/constants';
+import { sendTelemetryEvent } from '../../../telemetry/index';
+import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../../telemetry/types';
+import { CANCELLATION_REASON, CommandSource } from './../constants';
+import { displayTestErrorMessage } from './../testUtils';
+import {
+    ITestCollectionStorageService,
+    ITestManager,
+    ITestResultsService,
+    TestProvider,
+    Tests,
+    TestStatus,
+    TestsToRun
+} from './../types';
 
 enum CancellationTokenType {
     testDiscovery,
     testRunner
 }
-export abstract class BaseTestManager {
+
+export abstract class BaseTestManager implements ITestManager {
     protected readonly settings: IPythonSettings;
     private tests?: Tests;
     // tslint:disable-next-line:variable-name

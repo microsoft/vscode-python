@@ -1,8 +1,8 @@
 import { CancellationToken, Disposable, OutputChannel, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../client/common/helpers';
 import { Product } from '../../client/common/installer';
-import { BaseTestManager } from '../../client/unittests/common/baseTestManager';
 import { CANCELLATION_REASON } from '../../client/unittests/common/constants';
+import { BaseTestManager } from '../../client/unittests/common/managers/baseTestManager';
 import { ITestCollectionStorageService, ITestDebugLauncher, ITestResultsService, ITestsHelper, launchOptions, Tests, TestsToRun } from '../../client/unittests/common/types';
 
 export class MockDebugLauncher implements ITestDebugLauncher, Disposable {

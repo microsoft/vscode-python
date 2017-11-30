@@ -1,32 +1,33 @@
+import { inject, injectable, named } from 'inversify';
+import 'reflect-metadata';
 import { Disposable, OutputChannel, Uri, workspace } from 'vscode';
-import { Product } from '../../common/installer';
-import { BaseTestManager } from './baseTestManager';
-import { TestManagerService } from './testManagerService';
-import { ITestManagerService, ITestManagerServiceFactory, IWorkspaceTestManagerService, UnitTestProduct } from './types';
+import { IOutputChannel } from '../../../common/types';
+import { TEST_OUTPUT_CHANNEL } from './../constants';
+import { ITestManager, ITestManagerService, ITestManagerServiceFactory, IWorkspaceTestManagerService, UnitTestProduct } from './../types';
 
+@injectable()
 export class WorkspaceTestManagerService implements IWorkspaceTestManagerService, Disposable {
     private workspaceTestManagers = new Map<string, ITestManagerService>();
-    private disposables: Disposable[] = [];
-    constructor(private outChannel: OutputChannel,
-        private testManagerServiceFactory: ITestManagerServiceFactory) {
+    constructor( @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private outChannel: OutputChannel,
+        @inject(ITestManagerServiceFactory) private testManagerServiceFactory: ITestManagerServiceFactory) {
     }
     public dispose() {
         this.workspaceTestManagers.forEach(info => info.dispose());
     }
-    public getTestManager(resource: Uri): BaseTestManager | undefined {
+    public getTestManager(resource: Uri): ITestManager | undefined {
         const wkspace = this.getWorkspace(resource);
         this.ensureTestManagerService(wkspace);
-        return this.workspaceTestManagers.get(wkspace.fsPath).getTestManager();
+        return this.workspaceTestManagers.get(wkspace.fsPath)!.getTestManager();
     }
     public getTestWorkingDirectory(resource: Uri) {
         const wkspace = this.getWorkspace(resource);
         this.ensureTestManagerService(wkspace);
-        return this.workspaceTestManagers.get(wkspace.fsPath).getTestWorkingDirectory();
+        return this.workspaceTestManagers.get(wkspace.fsPath)!.getTestWorkingDirectory();
     }
-    public getPreferredTestManager(resource: Uri): UnitTestProduct {
+    public getPreferredTestManager(resource: Uri): UnitTestProduct | undefined {
         const wkspace = this.getWorkspace(resource);
         this.ensureTestManagerService(wkspace);
-        return this.workspaceTestManagers.get(wkspace.fsPath).getPreferredTestManager();
+        return this.workspaceTestManagers.get(wkspace.fsPath)!.getPreferredTestManager();
     }
     private getWorkspace(resource: Uri): Uri {
         if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
@@ -47,7 +48,7 @@ export class WorkspaceTestManagerService implements IWorkspaceTestManagerService
     }
     private ensureTestManagerService(wkspace: Uri) {
         if (!this.workspaceTestManagers.has(wkspace.fsPath)) {
-            this.workspaceTestManagers.set(wkspace.fsPath, this.testManagerServiceFactory.createTestManagerService(wkspace));
+            this.workspaceTestManagers.set(wkspace.fsPath, this.testManagerServiceFactory(wkspace));
         }
     }
 }

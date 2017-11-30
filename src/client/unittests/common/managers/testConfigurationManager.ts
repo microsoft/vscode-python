@@ -1,10 +1,10 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { createDeferred } from '../../common/helpers';
-import { Installer } from '../../common/installer';
-import { getSubDirectories } from '../../common/utils';
-import { ITestConfigSettingsService, UnitTestProduct } from './types';
+import { createDeferred } from '../../../common/helpers';
+import { Installer } from '../../../common/installer';
+import { getSubDirectories } from '../../../common/utils';
+import { ITestConfigSettingsService, UnitTestProduct } from './../types';
 
 export abstract class TestConfigurationManager {
     constructor(protected workspace: Uri,

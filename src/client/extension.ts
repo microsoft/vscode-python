@@ -1,7 +1,7 @@
 'use strict';
 import { Container } from 'inversify';
 import * as os from 'os';
-import { Disposable } from 'vscode';
+import { Disposable, OutputChannel } from 'vscode';
 import * as vscode from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
@@ -10,7 +10,7 @@ import { createDeferred } from './common/helpers';
 import { PersistentStateFactory } from './common/persistentState';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
-import { IDiposableRegistry } from './common/types';
+import { IDiposableRegistry, IOutputChannel } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { SimpleConfigurationProvider } from './debugger';
 import { FeedbackService } from './feedback';
@@ -21,6 +21,7 @@ import { getCondaVersion } from './interpreter/helpers';
 import { InterpreterVersionService } from './interpreter/interpreterVersion';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
+import { IServiceContainer } from './ioc/types';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
@@ -42,6 +43,7 @@ import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { StopWatch } from './telemetry/stopWatch';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
+import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import * as tests from './unittests/main';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
 import { WorkspaceSymbols } from './workspaceSymbols/main';
@@ -62,6 +64,7 @@ export async function activate(context: vscode.ExtensionContext) {
     cont = new Container();
     serviceManager = new ServiceManager(cont);
     serviceContainer = new ServiceContainer(cont);
+    serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
     serviceManager.addSingletonInstance<Disposable[]>(IDiposableRegistry, context.subscriptions);
     commonRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
@@ -74,7 +77,7 @@ export async function activate(context: vscode.ExtensionContext) {
     sendStartupTelemetry(activated);
 
     lintingOutChannel = vscode.window.createOutputChannel(pythonSettings.linting.outputWindow);
-    formatOutChannel = lintingOutChannel;
+    unitTestOutChannel = formatOutChannel = lintingOutChannel;
     if (pythonSettings.linting.outputWindow !== pythonSettings.formatting.outputWindow) {
         formatOutChannel = vscode.window.createOutputChannel(pythonSettings.formatting.outputWindow);
         formatOutChannel.clear();
@@ -83,6 +86,8 @@ export async function activate(context: vscode.ExtensionContext) {
         unitTestOutChannel = vscode.window.createOutputChannel(pythonSettings.unitTest.outputWindow);
         unitTestOutChannel.clear();
     }
+
+    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
 
     sortImports.activate(context, formatOutChannel);
     const interpreterManager = new InterpreterManager();

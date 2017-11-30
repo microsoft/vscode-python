@@ -8,14 +8,9 @@ import { PythonSymbolProvider } from '../providers/symbolProvider';
 import { UNITTEST_STOP, UNITTEST_VIEW_OUTPUT } from '../telemetry/constants';
 import { sendTelemetryEvent } from '../telemetry/index';
 import { activateCodeLenses } from './codeLenses/main';
-import { BaseTestManager } from './common/baseTestManager';
 import { CANCELLATION_REASON, CommandSource } from './common/constants';
-import { TestCollectionStorageService } from './common/storageService';
-import { TestManagerServiceFactory } from './common/testManagerServiceFactory';
-import { TestResultsService } from './common/testResultsService';
-import { selectTestWorkspace, TestsHelper } from './common/testUtils';
-import { ITestCollectionStorageService, IWorkspaceTestManagerService, TestFile, TestFunction, TestStatus, TestsToRun } from './common/types';
-import { WorkspaceTestManagerService } from './common/workspaceTestManagerService';
+import { selectTestWorkspace } from './common/testUtils';
+import { ITestCollectionStorageService, ITestManager, IWorkspaceTestManagerService, TestFile, TestFunction, TestStatus, TestsToRun } from './common/types';
 import { displayTestFrameworkError } from './configuration';
 import { TestResultDisplay } from './display/main';
 import { TestDisplay } from './display/picker';
@@ -33,11 +28,8 @@ export function activate(context: vscode.ExtensionContext, outputChannel: vscode
     const disposables = registerCommands();
     context.subscriptions.push(...disposables);
 
-    testCollectionStorage = new TestCollectionStorageService();
-    const testResultsService = new TestResultsService();
-    const testsHelper = new TestsHelper();
-    const testManagerServiceFactory = new TestManagerServiceFactory(outChannel, testCollectionStorage, testResultsService, testsHelper, serviceContainer);
-    workspaceTestManagerService = new WorkspaceTestManagerService(outChannel, testManagerServiceFactory);
+    testCollectionStorage = serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
+    workspaceTestManagerService = serviceContainer.get<IWorkspaceTestManagerService>(IWorkspaceTestManagerService);
 
     context.subscriptions.push(autoResetTests());
     context.subscriptions.push(activateCodeLenses(onDidChange, symboldProvider, testCollectionStorage));
@@ -46,7 +38,7 @@ export function activate(context: vscode.ExtensionContext, outputChannel: vscode
     autoDiscoverTests();
 }
 
-async function getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<BaseTestManager | undefined | void> {
+async function getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void> {
     let wkspace: Uri | undefined;
     if (resource) {
         const wkspaceFolder = workspace.getWorkspaceFolder(resource);

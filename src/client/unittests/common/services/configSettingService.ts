@@ -1,6 +1,6 @@
 import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from 'vscode';
-import { Product } from '../../common/installer';
-import { ITestConfigSettingsService, UnitTestProduct } from './types';
+import { Product } from '../../../common/installer';
+import { ITestConfigSettingsService, UnitTestProduct } from './../types';
 
 export class TestConfigSettingsService implements ITestConfigSettingsService {
     private static getTestArgSetting(product: UnitTestProduct) {

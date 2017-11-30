@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { Installer, Product } from '../../common/installer';
-import { TestConfigurationManager } from '../common/testConfigurationManager';
+import { TestConfigurationManager } from '../common/managers/testConfigurationManager';
 import { ITestConfigSettingsService } from '../common/types';
 
 export class ConfigurationManager extends TestConfigurationManager {

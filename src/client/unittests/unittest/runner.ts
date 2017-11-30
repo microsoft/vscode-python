@@ -1,7 +1,7 @@
 'use strict';
 import * as path from 'path';
 import { IServiceContainer } from '../../ioc/types';
-import { BaseTestManager } from '../common/baseTestManager';
+import { BaseTestManager } from '../common/managers/baseTestManager';
 import { Options, run } from '../common/runner';
 import { ITestDebugLauncher, ITestResultsService, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
 import { Server } from './socketServer';

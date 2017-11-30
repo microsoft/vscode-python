@@ -1,3 +1,5 @@
+import { injectable } from 'inversify';
+import 'reflect-metadata';
 import { convertFileToPackage } from '../testUtils';
 import {
     FlattenedTestFunction,
@@ -9,6 +11,7 @@ import {
     TestSuite
 } from '../types';
 
+@injectable()
 export class TestFlatteningVisitor implements ITestVisitor {
     // tslint:disable-next-line:variable-name
     private _flattedTestFunctions = new Map<string, FlattenedTestFunction>();

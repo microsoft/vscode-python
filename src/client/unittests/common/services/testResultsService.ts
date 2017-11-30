@@ -1,13 +1,16 @@
-import { TestResultResetVisitor } from './testVisitors/resultResetVisitor';
-import { ITestResultsService, TestFile, TestFolder, Tests, TestStatus, TestSuite } from './types';
+import { inject, injectable, named } from 'inversify';
+import 'reflect-metadata';
+import { TestResultResetVisitor } from './../testVisitors/resultResetVisitor';
+import { ITestResultsService, ITestVisitor, TestFile, TestFolder, Tests, TestStatus, TestSuite } from './../types';
 
+@injectable()
 export class TestResultsService implements ITestResultsService {
+    constructor( @inject(ITestVisitor) @named('TestResultResetVisitor') private resultResetVisitor: ITestVisitor) { }
     public resetResults(tests: Tests): void {
-        const resultResetVisitor = new TestResultResetVisitor();
-        tests.testFolders.forEach(f => resultResetVisitor.visitTestFolder(f));
-        tests.testFunctions.forEach(fn => resultResetVisitor.visitTestFunction(fn.testFunction));
-        tests.testSuites.forEach(suite => resultResetVisitor.visitTestSuite(suite.testSuite));
-        tests.testFiles.forEach(testFile => resultResetVisitor.visitTestFile(testFile));
+        tests.testFolders.forEach(f => this.resultResetVisitor.visitTestFolder(f));
+        tests.testFunctions.forEach(fn => this.resultResetVisitor.visitTestFunction(fn.testFunction));
+        tests.testSuites.forEach(suite => this.resultResetVisitor.visitTestSuite(suite.testSuite));
+        tests.testFiles.forEach(testFile => this.resultResetVisitor.visitTestFile(testFile));
     }
     public updateResults(tests: Tests): void {
         tests.testFiles.forEach(test => this.updateTestFileResults(test));
@@ -32,8 +35,8 @@ export class TestResultsService implements ITestResultsService {
                 allFilesRan = false;
             }
 
-            testFolder.functionsFailed += fl.functionsFailed;
-            testFolder.functionsPassed += fl.functionsPassed;
+            testFolder.functionsFailed! += fl.functionsFailed!;
+            testFolder.functionsPassed! += fl.functionsPassed!;
         });
 
         let allFoldersPassed = true;
@@ -49,15 +52,15 @@ export class TestResultsService implements ITestResultsService {
                 allFoldersRan = false;
             }
 
-            testFolder.functionsFailed += folder.functionsFailed;
-            testFolder.functionsPassed += folder.functionsPassed;
+            testFolder.functionsFailed! += folder.functionsFailed!;
+            testFolder.functionsPassed! += folder.functionsPassed!;
         });
 
         if (allFilesRan && allFoldersRan) {
             testFolder.passed = allFilesPassed && allFoldersPassed;
             testFolder.status = testFolder.passed ? TestStatus.Idle : TestStatus.Fail;
         } else {
-            testFolder.passed = null;
+            testFolder.passed = undefined;
             testFolder.status = TestStatus.Unknown;
         }
     }
@@ -70,9 +73,9 @@ export class TestResultsService implements ITestResultsService {
             totalTime += fn.time;
             if (typeof fn.passed === 'boolean') {
                 if (fn.passed) {
-                    test.functionsPassed += 1;
+                    test.functionsPassed! += 1;
                 } else {
-                    test.functionsFailed += 1;
+                    test.functionsFailed! += 1;
                     allFunctionsPassed = false;
                 }
             } else {
@@ -94,8 +97,8 @@ export class TestResultsService implements ITestResultsService {
                 allSuitesRan = false;
             }
 
-            test.functionsFailed += suite.functionsFailed;
-            test.functionsPassed += suite.functionsPassed;
+            test.functionsFailed! += suite.functionsFailed!;
+            test.functionsPassed! += suite.functionsPassed!;
         });
 
         test.time = totalTime;
@@ -103,7 +106,7 @@ export class TestResultsService implements ITestResultsService {
             test.passed = allFunctionsPassed && allSuitesPassed;
             test.status = test.passed ? TestStatus.Idle : TestStatus.Error;
         } else {
-            test.passed = null;
+            test.passed = undefined;
             test.status = TestStatus.Unknown;
         }
     }

@@ -2,7 +2,7 @@
 import { OutputChannel, Uri } from 'vscode';
 import { Product } from '../../common/installer';
 import { IServiceContainer } from '../../ioc/types';
-import { BaseTestManager } from '../common/baseTestManager';
+import { BaseTestManager } from '../common/managers/baseTestManager';
 import { ITestCollectionStorageService, ITestResultsService, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
 import { discoverTests } from './collector';
 import { runTest } from './runner';
