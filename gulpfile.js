@@ -12,7 +12,7 @@ const tsfmt = require('typescript-formatter');
 const tslint = require('tslint');
 const relative = require('relative');
 const ts = require('gulp-typescript');
-const watch = require('gulp-watch');
+const watch = require('gulp-debounced-watch');
 const cp = require('child_process');
 const colors = require('colors/safe');
 
@@ -244,7 +244,7 @@ gulp.task('hygiene-staged', () => run({ mode: 'changes' }));
 gulp.task('hygiene-watch', ['hygiene-staged', 'hygiene-watch-runner']);
 
 gulp.task('hygiene-watch-runner', function () {
-    return watch(all, { events: ['add', 'change'] }, function (event) {
+    return watch(all, { events: ['add', 'change'], debounceTimeout: 2000 }, function (event) {
         // Skip indentation and formatting checks to speed up linting.
         return run({ mode: 'watch', skipFormatCheck: true, skipIndentationCheck: true });
     });
