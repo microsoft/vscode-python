@@ -48,19 +48,6 @@
             }
         },
         {
-            "label": "Hygiene (modified)",
-            "type": "gulp",
-            "task": "hygiene-modified",
-            "group": "build",
-            "problemMatcher": [
-                "$tsc",
-                {
-                    "base": "$tslint5",
-                    "fileLocation": "relative"
-                }
-            ]
-        },
-        {
             "label": "Hygiene (staged)",
             "type": "gulp",
             "task": "hygiene-staged",
