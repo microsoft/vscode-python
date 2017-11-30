@@ -3,7 +3,7 @@
 
 import { commands, Disposable, window, workspace, WorkspaceConfiguration } from 'vscode';
 import { launch } from './net/browser';
-import { IPersistentStateFactory } from './persistentState';
+import { IPersistentStateFactory } from './types';
 
 type deprecatedFeatureInfo = {
     doNotDisplayPromptStateKey: string;

@@ -3,18 +3,18 @@
 
 import 'reflect-metadata';
 import { OutputChannel, Uri } from 'vscode';
-import { IOutputChannel } from '../common/types';
-import { IServiceContainer, IServiceManager } from '../ioc/types';
-import { TEST_OUTPUT_CHANNEL } from './common/constants';
-import { DebugLauncher } from './common/debugLauncher';
-import { TestCollectionStorageService } from './common/services/storageService';
-import { TestManagerService } from './common/services/testManagerService';
-import { TestResultsService } from './common/services/testResultsService';
-import { WorkspaceTestManagerService } from './common/services/workspaceTestManagerService';
-import { TestsHelper } from './common/testUtils';
-import { TestFlatteningVisitor } from './common/testVisitors/flatteningVisitor';
-import { TestFolderGenerationVisitor } from './common/testVisitors/folderGenerationVisitor';
-import { TestResultResetVisitor } from './common/testVisitors/resultResetVisitor';
+import { IOutputChannel } from '../../client/common/types';
+import { IServiceContainer, IServiceManager } from '../../client/ioc/types';
+import { TEST_OUTPUT_CHANNEL } from '../../client/unittests/common/constants';
+import { DebugLauncher } from '../../client/unittests/common/debugLauncher';
+import { TestCollectionStorageService } from '../../client/unittests/common/services/storageService';
+import { TestManagerService } from '../../client/unittests/common/services/testManagerService';
+import { TestResultsService } from '../../client/unittests/common/services/testResultsService';
+import { WorkspaceTestManagerService } from '../../client/unittests/common/services/workspaceTestManagerService';
+import { TestsHelper } from '../../client/unittests/common/testUtils';
+import { TestFlatteningVisitor } from '../../client/unittests/common/testVisitors/flatteningVisitor';
+import { TestFolderGenerationVisitor } from '../../client/unittests/common/testVisitors/folderGenerationVisitor';
+import { TestResultResetVisitor } from '../../client/unittests/common/testVisitors/resultResetVisitor';
 import {
     ITestCollectionStorageService,
     ITestDebugLauncher,
@@ -27,10 +27,10 @@ import {
     ITestVisitor,
     IWorkspaceTestManagerService,
     TestProvider
-} from './common/types';
-import { TestManager as NoseTestManager } from './nosetest/main';
-import { TestManager as PyTestTestManager } from './pytest/main';
-import { TestManager as UnitTestTestManager } from './unittest/main';
+} from '../../client/unittests/common/types';
+import { TestManager as NoseTestManager } from '../../client/unittests/nosetest/main';
+import { TestManager as PyTestTestManager } from '../../client/unittests/pytest/main';
+import { TestManager as UnitTestTestManager } from '../../client/unittests/unittest/main';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestDebugLauncher>(ITestDebugLauncher, DebugLauncher);

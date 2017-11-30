@@ -1,16 +1,15 @@
 'use strict';
 import { Container } from 'inversify';
 import * as os from 'os';
-import { Disposable, OutputChannel } from 'vscode';
 import * as vscode from 'vscode';
+import { Disposable, Memento, OutputChannel } from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
-import { PersistentStateFactory } from './common/persistentState';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
-import { IDiposableRegistry, IOutputChannel } from './common/types';
+import { GLOBAL_MEMENTO, IDiposableRegistry, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { SimpleConfigurationProvider } from './debugger';
 import { FeedbackService } from './feedback';
@@ -66,12 +65,14 @@ export async function activate(context: vscode.ExtensionContext) {
     serviceContainer = new ServiceContainer(cont);
     serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
     serviceManager.addSingletonInstance<Disposable[]>(IDiposableRegistry, context.subscriptions);
+    serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
+    serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
     commonRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
 
-    const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
+    const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
     sendStartupTelemetry(activated);
 
