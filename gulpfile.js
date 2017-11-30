@@ -96,7 +96,7 @@ function reportFailures(failures) {
   *
   * @param {string[]} some
   * @param {hygieneOptions} options
-  * @returns
+  * @returns {NodeJS.EventEmitter}
   */
 const hygiene = (some, options) => {
     options = options || {};
@@ -237,7 +237,7 @@ const hygiene = (some, options) => {
 
 exports.hygiene = hygiene;
 
-gulp.task('hygiene', () => hygiene());
+gulp.task('hygiene', () => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }));
 
 gulp.task('hygiene-staged', () => run({ mode: 'changes' }));
 
@@ -245,15 +245,22 @@ gulp.task('hygiene-watch', ['hygiene-staged', 'hygiene-watch-runner']);
 
 gulp.task('hygiene-watch-runner', function () {
     return watch(all, { events: ['add', 'change'] }, function (event) {
+        const start = new Date();
+        console.log(`[${start.toLocaleTimeString()}] Starting '${colors.cyan('hygiene-watch-runner')}'...`);
         // Skip indentation and formatting checks to speed up linting.
-        return run({ mode: 'watch', skipFormatCheck: true, skipIndentationCheck: true });
+        return run({ mode: 'watch', skipFormatCheck: true, skipIndentationCheck: true })
+            .then(() => {
+                const end = new Date();
+                const time = (end.getTime() - start.getTime()) / 1000;
+                console.log(`[${end.toLocaleTimeString()}] Finished '${colors.cyan('hygiene-watch-runner')}' after ${time} seconds`);
+            });
     });
 });
 
 /**
  * @typedef {Object} runOptions
  * @property {boolean=} exitOnError - Exit on error.
- * @property {'watch'|'changes'|'staged'} [mode=] - Mode.
+ * @property {'watch'|'changes'|'staged'|'all'} [mode=] - Mode.
  * @property {string[]=} files - Optional list of files to be modified.
  * @property {boolean=} skipIndentationCheck - Skip indentation checks.
  * @property {boolean=} skipFormatCheck - Skip format checks.
@@ -262,50 +269,73 @@ gulp.task('hygiene-watch-runner', function () {
 /**
  * Run the linters.
  * @param {runOptions} options
+ * @param {Error} ex
+ */
+function exitHandler(options, ex) {
+    console.error();
+    if (ex) {
+        console.error(ex);
+        console.error(colors.red(ex));
+    }
+    if (options.exitOnError) {
+        process.exit(1);
+    }
+    if (options.mode === 'watch') {
+        console.log('Watching for changes...');
+    }
+}
+
+/**
+ * Run the linters.
+ * @param {runOptions} options
+ * @return {Promise<void>}
  */
 function run(options) {
     options = options ? options : {};
-    function exitHandler(ex) {
-        console.error();
-        if (ex) {
-            console.error(colors.red(ex));
-        }
-        if (options.exitOnError) {
-            process.exit(1);
-        }
-        if (options.mode === 'watch') {
-            console.log('Watching for changes...');
-        }
-    }
     process.once('unhandledRejection', (reason, p) => {
         console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-        exitHandler();
+        exitHandler(options);
     });
 
-    cp.exec('git config core.autocrlf', (err, out) => {
-        const skipEOL = out.trim() === 'true';
-        if (typeof options.mode !== 'string' && process.argv.length > 2) {
-            return hygiene(process.argv.slice(2), {
-                skipEOL: skipEOL
-            }).once('error', exitHandler);
-        }
-
-        getFilesToProcess(options)
-            .then(files => {
-                hygiene(files, {
-                    skipEOL: skipEOL,
-                    skipFormatCheck: options.skipFormatCheck,
-                    skipIndentationCheck: options.skipIndentationCheck
-                })
-                    .on('end', () => {
-                        if (options.mode === 'watch') {
-                            console.log(colors.green('Hygiene passed with 0 errors 👍.'));
-                            console.log('Watching for changes...');
-                        }
+    return getGitSkipEOL()
+        .then(skipEOL => {
+            if (typeof options.mode !== 'string' && process.argv.length > 2) {
+                return new Promise((resolve, reject) => {
+                    return hygiene(process.argv.slice(2), {
+                        skipEOL: skipEOL
                     })
-                    .on('error', exitHandler);
-            })
-            .catch(exitHandler);
+                        .once('error', reject)
+                        .once('end', resolve);
+                });
+            }
+
+            return getFilesToProcess(options)
+                .then(files => {
+                    return new Promise((resolve, reject) => {
+                        hygiene(files, {
+                            skipEOL: skipEOL,
+                            skipFormatCheck: options.skipFormatCheck,
+                            skipIndentationCheck: options.skipIndentationCheck
+                        })
+                            .once('end', () => {
+                                if (options.mode === 'watch') {
+                                    console.log(colors.green('Hygiene passed with 0 errors 👍.'));
+                                    console.log('Watching for changes...');
+                                }
+                                resolve();
+                            })
+                            .once('error', reject);
+                    });
+                });
+        })
+        .catch(exitHandler.bind(options));
+}
+function getGitSkipEOL() {
+    return new Promise(resolve => {
+        cp.exec('git config core.autocrlf', (err, out) => {
+            const skipEOL = out.trim() === 'true';
+            resolve(skipEOL);
+        });
     });
 }
 /**
@@ -315,6 +345,9 @@ function run(options) {
  */
 function getFilesToProcess(options) {
     switch (options.mode) {
+        case 'all': {
+            return Promise.resolve(all);
+        }
         case 'watch':
         case 'changes': {
             return Promise.all([getCachedFiles(), getModifiedFiles()])
