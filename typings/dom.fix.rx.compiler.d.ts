@@ -4,6 +4,7 @@
 /**
  * These are fake dom type definitions that rxjs depends on.
  * Another solution is to add the 'dom' lib to tsconfig, but that's even worse.
+ * We don't need dom, as the extension does nothing with the dom (dom = HTML entities and the like).
  */
 // tslint:disable: interface-name
 interface EventTarget { }

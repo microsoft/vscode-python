@@ -461,4 +461,3 @@ class Deferred {
         return this._rejected || this._resolved;
     }
 }
-
