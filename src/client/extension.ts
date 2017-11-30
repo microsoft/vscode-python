@@ -73,7 +73,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
     const pythonSettings = settings.PythonSettings.getInstance();
-    // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated);
 
     lintingOutChannel = vscode.window.createOutputChannel(pythonSettings.linting.outputWindow);
@@ -92,8 +91,8 @@ export async function activate(context: vscode.ExtensionContext) {
     sortImports.activate(context, formatOutChannel);
     const interpreterManager = new InterpreterManager();
     await interpreterManager.autoSetInterpreter();
-    // tslint:disable-next-line:no-floating-promises
-    interpreterManager.refresh();
+    interpreterManager.refresh()
+        .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
     context.subscriptions.push(interpreterManager);
     const interpreterVersionService = new InterpreterVersionService();
     context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService));
@@ -186,17 +185,18 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled));
 }
 
-async function sendStartupTelemetry(activatedPromise: Promise<void>) {
+function sendStartupTelemetry(activatedPromise: Promise<void>) {
     const stopWatch = new StopWatch();
-    // tslint:disable-next-line:no-floating-promises
-    activatedPromise.then(async () => {
-        const duration = stopWatch.elapsedTime;
-        let condaVersion: string | undefined;
-        try {
-            condaVersion = await getCondaVersion();
-            // tslint:disable-next-line:no-empty
-        } catch { }
-        const props = condaVersion ? { condaVersion } : undefined;
-        sendTelemetryEvent(EDITOR_LOAD, duration, props);
-    });
+    activatedPromise
+        .then(async () => {
+            const duration = stopWatch.elapsedTime;
+            let condaVersion: string | undefined;
+            try {
+                condaVersion = await getCondaVersion();
+                // tslint:disable-next-line:no-empty
+            } catch { }
+            const props = condaVersion ? { condaVersion } : undefined;
+            sendTelemetryEvent(EDITOR_LOAD, duration, props);
+        })
+        .catch(ex => console.error('Python Extension: sendStartupTelemetry', ex));
 }

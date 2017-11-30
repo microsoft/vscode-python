@@ -42,7 +42,7 @@ const eolFilter = [
     '!.vscodeignore',
     '!LICENSE',
     '!**/node_modules/**',
-    '!**/*.{svg,exe,png,bmp,scpt,bat,cmd,cur,ttf,woff,eot,txt,md,json,yml}',
+    '!**/*.{svg,exe,png,bmp,scpt,bat,cmd,cur,ttf,woff,eot,txt,md,json,yml,pyc}',
     '!out/**/*',
     '!images/**/*',
     '!.vscode/**/*',

@@ -82,7 +82,8 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         }
 
         if (notify) {
-            this.notifyDeprecation(deprecatedInfo);
+            this.notifyDeprecation(deprecatedInfo)
+                .catch(ex => console.error('Python Extension: notifyDeprecation', ex));
         }
     }
     private isDeprecatedSettingAndValueUsed(pythonConfig: WorkspaceConfiguration, deprecatedSetting: deprecatedSettingAndValue) {

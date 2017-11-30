@@ -278,7 +278,8 @@ async function discoverTests(cmdSource: CommandSource, resource?: Uri, ignoreCac
     if (testManager && (testManager.status !== TestStatus.Discovering && testManager.status !== TestStatus.Running)) {
         testResultDisplay = testResultDisplay ? testResultDisplay : new TestResultDisplay(outChannel, onDidChange);
         const discoveryPromise = testManager.discoverTests(cmdSource, ignoreCache, false, userInitiated);
-        testResultDisplay.displayDiscoverStatus(discoveryPromise);
+        testResultDisplay.displayDiscoverStatus(discoveryPromise)
+            .catch(ex => console.error('Python Extension: displayDiscoverStatus', ex));
         await discoveryPromise;
     }
 }

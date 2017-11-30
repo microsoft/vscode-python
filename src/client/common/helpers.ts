@@ -26,6 +26,7 @@ class DeferredImpl<T> implements Deferred<T> {
     private _rejected: boolean = false;
     private _promise: Promise<T>;
     constructor(private scope: any = null) {
+        // tslint:disable-next-line:promise-must-complete
         this._promise = new Promise<T>((res, rej) => {
             this._resolve = res;
             this._reject = rej;

@@ -157,8 +157,8 @@ export class TestResultDisplay {
         if (!haveTests) {
             vscode.window.showInformationMessage('No tests discovered, please check the configuration settings for the tests.', 'Disable Tests').then(item => {
                 if (item === 'Disable Tests') {
-                    // tslint:disable-next-line:no-floating-promises
-                    this.disableTests();
+                    this.disableTests()
+                        .catch(ex => console.error('Python Extension: disableTests', ex));
                 }
             });
         }

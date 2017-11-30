@@ -128,8 +128,8 @@ export abstract class BaseTestManager implements ITestManager {
                 return tests;
             }).catch((reason: {}) => {
                 if (isNotInstalledError(reason as Error) && !quietMode) {
-                    // tslint:disable-next-line:no-floating-promises
-                    this.installer.promptToInstall(this.product, this.workspaceFolder);
+                    this.installer.promptToInstall(this.product, this.workspaceFolder)
+                        .catch(ex => console.error('Python Extension: isNotInstalledError', ex));
                 }
 
                 this.tests = undefined;

@@ -9,7 +9,8 @@ export class NotInstalledErrorHandler extends StandardErrorHandler {
             return false;
         }
 
-        this.installer.promptToInstall(this.product, resource);
+        this.installer.promptToInstall(this.product, resource)
+            .catch(ex => console.error('Python Extension: NotInstalledErrorHandler.promptToInstall', ex));
         const customError = `Linting with ${this.id} failed.\nYou could either install the '${this.id}' linter or turn it off in setings.json via "python.linting.${this.id}Enabled = false".`;
         this.outputChannel.appendLine(`\n${customError}\n${error + ''}`);
         return true;

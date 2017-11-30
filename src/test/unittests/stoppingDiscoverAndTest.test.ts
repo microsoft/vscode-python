@@ -62,7 +62,6 @@
 //         const mockTestManager = new MockTestManagerWithRunningTests('unittest', Product.unittest, testFilesPath, outChannel, storageService, resultsService, testsHelper);
 //         const discoveryPromise = mockTestManager.discoverTests(CommandSource.auto);
 //         mockTestManager.discoveryDeferred.resolve(EmptyTests);
-//         // tslint:disable-next-line:no-floating-promises
 //         mockTestManager.runTest(CommandSource.ui);
 
 //         await expect(discoveryPromise).to.eventually.equal(EmptyTests);
@@ -78,7 +77,6 @@
 //         await new Promise(resolve => setTimeout(resolve, 1000));
 
 //         // User manually discovering tests will kill the existing test runner.
-//         // tslint:disable-next-line:no-floating-promises
 //         mockTestManager.discoverTests(CommandSource.ui, true, false, true);
 //         await expect(runPromise).to.eventually.be.rejectedWith(CANCELLATION_REASON);
 //     });

@@ -22,15 +22,12 @@ async function promptToEnableAndConfigureTestFramework(wkspace: Uri, outputChann
     const configMgr: TestConfigurationManager = createTestConfigurationManager(wkspace, selectedTestRunner, outputChannel);
     if (enableOnly) {
         // Ensure others are disabled
-        if (selectedTestRunner !== Product.unittest) {
-            createTestConfigurationManager(wkspace, Product.unittest, outputChannel).disable();
-        }
-        if (selectedTestRunner !== Product.pytest) {
-            createTestConfigurationManager(wkspace, Product.pytest, outputChannel).disable();
-        }
-        if (selectedTestRunner !== Product.nosetest) {
-            createTestConfigurationManager(wkspace, Product.nosetest, outputChannel).disable();
-        }
+        [Product.unittest, Product.pytest, Product.nosetest]
+            .filter(prod => selectedTestRunner !== prod)
+            .forEach(prod => {
+                createTestConfigurationManager(wkspace, prod, outputChannel).disable()
+                    .catch(ex => console.error('Python Extension: createTestConfigurationManager.disable', ex));
+            });
         return configMgr.enable();
     }
 

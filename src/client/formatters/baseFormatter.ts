@@ -82,7 +82,8 @@ export abstract class BaseFormatter {
                     `Custom arguments to the formatter can be defined in 'python.formatter.${this.Id}Args' setting of settings.json.`;
             } else {
                 customError += `\nYou could either install the '${this.Id}' formatter, turn it off or use another formatter.`;
-                this.installer.promptToInstall(this.product, resource);
+                this.installer.promptToInstall(this.product, resource)
+                    .catch(ex => console.error('Python Extension: promptToInstall', ex));
             }
         }
 

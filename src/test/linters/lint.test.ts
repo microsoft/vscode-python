@@ -239,15 +239,16 @@ suite('Linting', () => {
         const linter = new pydocstyle.Linter(ch);
         await testLinterMessages(linter, ch, fileToLint, pydocstyleMessagseToBeReturned);
     });
-    // tslint:disable-next-line:no-floating-promises
-    isPython3.then(value => {
-        const messagesToBeReturned = value ? filteredPylint3MessagesToBeReturned : filteredPylintMessagesToBeReturned;
-        test('PyLint with config in root', async () => {
-            const ch = new MockOutputChannel('Lint');
-            const linter = new pyLint.Linter(ch);
-            await testLinterMessages(linter, ch, path.join(pylintConfigPath, 'file.py'), messagesToBeReturned);
-        });
-    });
+    isPython3
+        .then(value => {
+            const messagesToBeReturned = value ? filteredPylint3MessagesToBeReturned : filteredPylintMessagesToBeReturned;
+            test('PyLint with config in root', async () => {
+                const ch = new MockOutputChannel('Lint');
+                const linter = new pyLint.Linter(ch);
+                await testLinterMessages(linter, ch, path.join(pylintConfigPath, 'file.py'), messagesToBeReturned);
+            });
+        })
+        .catch(ex => console.error('Python Extension Tests: isPython3', ex));
     test('Flake8 with config in root', async () => {
         const ch = new MockOutputChannel('Lint');
         const linter = new flake8.Linter(ch);
@@ -258,13 +259,14 @@ suite('Linting', () => {
         const linter = new pep8.Linter(ch);
         await testLinterMessages(linter, ch, path.join(pep8ConfigPath, 'file.py'), filteredPep88MessagesToBeReturned);
     });
-    // tslint:disable-next-line:no-floating-promises
-    isPython3.then(value => {
-        const messagesToBeReturned = value ? [] : fiteredPydocstyleMessagseToBeReturned;
-        test('Pydocstyle with config in root', async () => {
-            const ch = new MockOutputChannel('Lint');
-            const linter = new pydocstyle.Linter(ch);
-            await testLinterMessages(linter, ch, path.join(pydocstyleConfigPath27, 'file.py'), messagesToBeReturned);
-        });
-    });
+    isPython3
+        .then(value => {
+            const messagesToBeReturned = value ? [] : fiteredPydocstyleMessagseToBeReturned;
+            test('Pydocstyle with config in root', async () => {
+                const ch = new MockOutputChannel('Lint');
+                const linter = new pydocstyle.Linter(ch);
+                await testLinterMessages(linter, ch, path.join(pydocstyleConfigPath27, 'file.py'), messagesToBeReturned);
+            });
+        })
+        .catch(ex => console.error('Python Extension Tests: isPython3', ex));
 });

@@ -531,19 +531,21 @@ export class JediProxy implements vscode.Disposable {
         if (typeof PYTHONPATH === 'string' && PYTHONPATH.length > 0) {
             filePaths.push(Promise.resolve(PYTHONPATH.trim()));
         }
-        Promise.all<string>(filePaths).then(paths => {
-            // Last item return a path, we need only the folder
-            if (paths[1].length > 0) {
-                paths[1] = path.dirname(paths[1]);
-            }
+        Promise.all<string>(filePaths)
+            .then(paths => {
+                // Last item return a path, we need only the folder
+                if (paths[1].length > 0) {
+                    paths[1] = path.dirname(paths[1]);
+                }
 
-            // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages)
-            // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
-            if (IS_WINDOWS && paths[2].length > 0) {
-                paths.splice(3, 0, path.join(paths[2], ".."));
-            }
-            this.additionalAutoCopletePaths = paths.filter(p => p.length > 0);
-        });
+                // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages)
+                // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
+                if (IS_WINDOWS && paths[2].length > 0) {
+                    paths.splice(3, 0, path.join(paths[2], ".."));
+                }
+                this.additionalAutoCopletePaths = paths.filter(p => p.length > 0);
+            })
+            .catch(ex => console.error('Python Extension: jediProxy.filePaths', ex));
     }
 
     private getConfig() {

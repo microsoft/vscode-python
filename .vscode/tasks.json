@@ -71,6 +71,18 @@
                     "fileLocation": "relative"
                 }
             ]
+        },
+        {
+            "label": "Hygiene (all)",
+            "type": "gulp",
+            "task": "hygiene",
+            "problemMatcher": [
+                "$tsc",
+                {
+                    "base": "$tslint5",
+                    "fileLocation": "relative"
+                }
+            ]
         }
     ]
 }
