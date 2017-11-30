@@ -244,7 +244,7 @@ gulp.task('hygiene-staged', () => run({ mode: 'changes' }));
 gulp.task('hygiene-watch', ['hygiene-staged', 'hygiene-watch-runner']);
 
 gulp.task('hygiene-watch-runner', function () {
-    return watch(all, { events: ['add', 'change'], debounceTimeout: 2000 }, function (event) {
+    return watch(all, { events: ['add', 'change'] }, function (event) {
         // Skip indentation and formatting checks to speed up linting.
         return run({ mode: 'watch', skipFormatCheck: true, skipIndentationCheck: true });
     });
