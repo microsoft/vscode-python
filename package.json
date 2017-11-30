@@ -1529,7 +1529,7 @@
 		"fuzzy": "^0.1.3",
 		"get-port": "^3.2.0",
 		"iconv-lite": "^0.4.19",
-		"inversify": "^4.5.1",
+		"inversify": "^4.5.2",
 		"line-by-line": "^0.1.5",
 		"lodash": "^4.17.4",
 		"minimatch": "^3.0.3",
