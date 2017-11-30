@@ -30,13 +30,7 @@
         "export-name": false,
         "align": false,
         "linebreak-style": false,
-        "strict-boolean-expressions": [
-            true,
-            "allow-null-union",
-            "allow-undefined-union",
-            "allow-string",
-            "allow-number"
-        ],
+        "strict-boolean-expressions": false,
         "await-promise": [
             true,
             "Thenable",
@@ -52,6 +46,8 @@
         "promise-function-async": false,
         "function-name": false,
         "variable-name": false,
+        "no-import-side-effect": false,
+        "no-string-based-set-timeout": false,
         "no-floating-promises": false,
         "no-empty-interface": false
     }
