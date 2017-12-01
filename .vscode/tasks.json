@@ -48,10 +48,9 @@
             }
         },
         {
-            "label": "Hygiene (modified)",
+            "label": "Hygiene (staged)",
             "type": "gulp",
-            "task": "hygiene-modified",
-            "group": "build",
+            "task": "hygiene-staged",
             "problemMatcher": [
                 "$tsc",
                 {
@@ -61,9 +60,9 @@
             ]
         },
         {
-            "label": "Hygiene (staged)",
+            "label": "Hygiene (all)",
             "type": "gulp",
-            "task": "hygiene-staged",
+            "task": "hygiene",
             "problemMatcher": [
                 "$tsc",
                 {

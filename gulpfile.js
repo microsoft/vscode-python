@@ -12,7 +12,7 @@ const tsfmt = require('typescript-formatter');
 const tslint = require('tslint');
 const relative = require('relative');
 const ts = require('gulp-typescript');
-const watch = require('gulp-watch');
+const watch = require('gulp-debounced-watch');
 const cp = require('child_process');
 const colors = require('colors/safe');
 
@@ -42,7 +42,7 @@ const eolFilter = [
     '!.vscodeignore',
     '!LICENSE',
     '!**/node_modules/**',
-    '!**/*.{svg,exe,png,bmp,scpt,bat,cmd,cur,ttf,woff,eot,txt,md,json,yml}',
+    '!**/*.{svg,exe,png,bmp,scpt,bat,cmd,cur,ttf,woff,eot,txt,md,json,yml,pyc}',
     '!out/**/*',
     '!images/**/*',
     '!.vscode/**/*',
@@ -96,7 +96,7 @@ function reportFailures(failures) {
   *
   * @param {string[]} some
   * @param {hygieneOptions} options
-  * @returns
+  * @returns {NodeJS.EventEmitter}
   */
 const hygiene = (some, options) => {
     options = options || {};
@@ -115,12 +115,12 @@ const hygiene = (some, options) => {
             .toString('utf8')
             .split(/\r\n|\r|\n/)
             .forEach((line, i) => {
-                if (/^\s*$/.test(line)) {
+                if (/^\s*$/.test(line) || /^\S+.*$/.test(line)) {
                     // Empty or whitespace lines are OK.
                 } else if (/^(\s\s\s\s)+.*/.test(line)) {
                     // Good indent.
                 } else if (/^[\t]+.*/.test(line)) {
-                    console.error(file.relative + '(' + (i + 1) + ',1): Bad whitespace indentation');
+                    console.error(file.relative + '(' + (i + 1) + ',1): Bad whitespace indentation (use 4 spaces instead of tabs or other)');
                     errorCount++;
                 }
             });
@@ -137,7 +137,7 @@ const hygiene = (some, options) => {
             tsfmt: true
         }).then(result => {
             if (result.error) {
-                console.error(result.message);
+                console.error(result.message.trim());
                 errorCount++;
             }
             cb(null, file);
@@ -147,14 +147,14 @@ const hygiene = (some, options) => {
         });
     });
 
+    const program = require('tslint').Linter.createProgram("./tsconfig.json");
+    const linter = new tslint.Linter(options, program);
     const tsl = es.through(function (file) {
         const configuration = tslint.Configuration.findConfiguration(null, '.');
         const options = {
             formatter: 'json'
         };
         const contents = file.contents.toString('utf8');
-        const program = require('tslint').Linter.createProgram("./tsconfig.json");
-        const linter = new tslint.Linter(options, program);
         linter.lint(file.relative, contents, configuration.results);
         const result = linter.getResult();
         if (result.failureCount > 0 || result.errorCount > 0) {
@@ -206,12 +206,8 @@ const hygiene = (some, options) => {
         .pipe(filter(f => !f.stat.isDirectory()))
         .pipe(filter(eolFilter))
         .pipe(options.skipEOL ? es.through() : eol)
-        .pipe(filter(indentationFilter));
-
-    if (!options.skipIndentationCheck) {
-        result = result
-            .pipe(indentation);
-    }
+        .pipe(filter(indentationFilter))
+        .pipe(indentation);
 
     // Type script checks.
     let typescript = result
@@ -221,7 +217,9 @@ const hygiene = (some, options) => {
         typescript = typescript
             .pipe(formatting);
     }
-    typescript = typescript.pipe(tsl)
+
+    typescript = typescript
+        .pipe(tsl)
         .pipe(tscFilesTracker)
         .pipe(tsc());
 
@@ -237,23 +235,46 @@ const hygiene = (some, options) => {
 
 exports.hygiene = hygiene;
 
-gulp.task('hygiene', () => hygiene());
+gulp.task('hygiene', () => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }));
 
 gulp.task('hygiene-staged', () => run({ mode: 'changes' }));
 
 gulp.task('hygiene-watch', ['hygiene-staged', 'hygiene-watch-runner']);
 
 gulp.task('hygiene-watch-runner', function () {
+    /**
+     * @type {Deferred}
+     */
+    let runPromise;
+
     return watch(all, { events: ['add', 'change'] }, function (event) {
+        // Damn bounce does not work, do our own checks.
+        const start = new Date();
+        if (runPromise && !runPromise.completed) {
+            console.log(`[${start.toLocaleTimeString()}] Already running`);
+            return;
+        }
+        console.log(`[${start.toLocaleTimeString()}] Starting '${colors.cyan('hygiene-watch-runner')}'...`);
+
+        runPromise = new Deferred();
         // Skip indentation and formatting checks to speed up linting.
-        return run({ mode: 'watch', skipFormatCheck: true, skipIndentationCheck: true });
+        run({ mode: 'watch', skipFormatCheck: true, skipIndentationCheck: true })
+            .then(() => {
+                const end = new Date();
+                const time = (end.getTime() - start.getTime()) / 1000;
+                console.log(`[${end.toLocaleTimeString()}] Finished '${colors.cyan('hygiene-watch-runner')}' after ${time} seconds`);
+                runPromise.resolve();
+            })
+            .catch(runPromise.reject.bind);
+
+        return runPromise.promise;
     });
 });
 
 /**
  * @typedef {Object} runOptions
  * @property {boolean=} exitOnError - Exit on error.
- * @property {'watch'|'changes'|'staged'} [mode=] - Mode.
+ * @property {'watch'|'changes'|'staged'|'all'} [mode=] - Mode.
  * @property {string[]=} files - Optional list of files to be modified.
  * @property {boolean=} skipIndentationCheck - Skip indentation checks.
  * @property {boolean=} skipFormatCheck - Skip format checks.
@@ -262,50 +283,73 @@ gulp.task('hygiene-watch-runner', function () {
 /**
  * Run the linters.
  * @param {runOptions} options
+ * @param {Error} ex
+ */
+function exitHandler(options, ex) {
+    console.error();
+    if (ex) {
+        console.error(ex);
+        console.error(colors.red(ex));
+    }
+    if (options.exitOnError) {
+        process.exit(1);
+    }
+    if (options.mode === 'watch') {
+        console.log('Watching for changes...');
+    }
+}
+
+/**
+ * Run the linters.
+ * @param {runOptions} options
+ * @return {Promise<void>}
  */
 function run(options) {
     options = options ? options : {};
-    function exitHandler(ex) {
-        console.error();
-        if (ex) {
-            console.error(colors.red(ex));
-        }
-        if (options.exitOnError) {
-            process.exit(1);
-        }
-        if (options.mode === 'watch') {
-            console.log('Watching for changes...');
-        }
-    }
-    process.on('unhandledRejection', (reason, p) => {
+    process.once('unhandledRejection', (reason, p) => {
         console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-        exitHandler();
+        exitHandler(options);
     });
 
-    cp.exec('git config core.autocrlf', (err, out) => {
-        const skipEOL = out.trim() === 'true';
-        if (typeof options.mode !== 'string' && process.argv.length > 2) {
-            return hygiene(process.argv.slice(2), {
-                skipEOL: skipEOL
-            }).on('error', exitHandler);
-        }
-
-        getFilesToProcess(options)
-            .then(files => {
-                hygiene(files, {
-                    skipEOL: skipEOL,
-                    skipFormatCheck: options.skipFormatCheck,
-                    skipIndentationCheck: options.skipIndentationCheck
-                })
-                    .on('end', () => {
-                        if (options.mode === 'watch') {
-                            console.log(colors.green('Hygiene passed with 0 errors 👍.'));
-                            console.log('Watching for changes...');
-                        }
+    return getGitSkipEOL()
+        .then(skipEOL => {
+            if (typeof options.mode !== 'string' && process.argv.length > 2) {
+                return new Promise((resolve, reject) => {
+                    return hygiene(process.argv.slice(2), {
+                        skipEOL: skipEOL
                     })
-                    .on('error', exitHandler);
-            })
-            .catch(exitHandler);
+                        .once('error', reject)
+                        .once('end', resolve);
+                });
+            }
+
+            return getFilesToProcess(options)
+                .then(files => {
+                    return new Promise((resolve, reject) => {
+                        hygiene(files, {
+                            skipEOL: skipEOL,
+                            skipFormatCheck: options.skipFormatCheck,
+                            skipIndentationCheck: options.skipIndentationCheck
+                        })
+                            .once('end', () => {
+                                if (options.mode === 'watch') {
+                                    console.log(colors.green('Hygiene passed with 0 errors 👍.'));
+                                    console.log('Watching for changes...');
+                                }
+                                resolve();
+                            })
+                            .once('error', reject);
+                    });
+                });
+        })
+        .catch(exitHandler.bind(options));
+}
+function getGitSkipEOL() {
+    return new Promise(resolve => {
+        cp.exec('git config core.autocrlf', (err, out) => {
+            const skipEOL = out.trim() === 'true';
+            resolve(skipEOL);
+        });
     });
 }
 /**
@@ -315,6 +359,9 @@ function run(options) {
  */
 function getFilesToProcess(options) {
     switch (options.mode) {
+        case 'all': {
+            return Promise.resolve(all);
+        }
         case 'watch':
         case 'changes': {
             return Promise.all([getCachedFiles(), getModifiedFiles()])
@@ -369,7 +416,46 @@ function getModifiedFiles() {
         });
     });
 }
+
 // this allows us to run hygiene as a git pre-commit hook.
 if (require.main === module) {
     run({ exitOnError: true, mode: 'staged' });
+}
+
+class Deferred {
+    constructor(scope) {
+        this.scope = scope;
+        this._resolved = false;
+        this._rejected = false;
+
+        this._promise = new Promise((resolve, reject) => {
+            this._resolve = resolve;
+            this._reject = reject;
+        });
+    }
+    resolve(value) {
+        this._resolve.apply(this.scope ? this.scope : this, arguments);
+        this._resolved = true;
+    }
+    /**
+     * Rejects the promise
+     * @param {any} reason
+     * @memberof Deferred
+     */
+    reject(reason) {
+        this._reject.apply(this.scope ? this.scope : this, arguments);
+        this._rejected = true;
+    }
+    get promise() {
+        return this._promise;
+    }
+    get resolved() {
+        return this._resolved === true;
+    }
+    get rejected() {
+        return this._rejected === true;
+    }
+    get completed() {
+        return this._rejected || this._resolved;
+    }
 }
