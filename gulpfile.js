@@ -22,7 +22,7 @@ const colors = require('colors/safe');
  * named according to the checks performed on them. Each subset contains
  * the following one, as described in mathematical notation:
  *
- * all ⊃ eol ⊇ indentation ⊃ copyright ⊃ typescript
+ * all ⊃ eol ⊇ indentation ⊃ typescript
  */
 
 const all = [
@@ -115,12 +115,12 @@ const hygiene = (some, options) => {
             .toString('utf8')
             .split(/\r\n|\r|\n/)
             .forEach((line, i) => {
-                if (/^\s*$/.test(line)) {
+                if (/^\s*$/.test(line) || /^\S+.*$/.test(line)) {
                     // Empty or whitespace lines are OK.
                 } else if (/^(\s\s\s\s)+.*/.test(line)) {
                     // Good indent.
                 } else if (/^[\t]+.*/.test(line)) {
-                    console.error(file.relative + '(' + (i + 1) + ',1): Bad whitespace indentation');
+                    console.error(file.relative + '(' + (i + 1) + ',1): Bad whitespace indentation (use 4 spaces instead of tabs or other)');
                     errorCount++;
                 }
             });
@@ -137,7 +137,7 @@ const hygiene = (some, options) => {
             tsfmt: true
         }).then(result => {
             if (result.error) {
-                console.error(result.message);
+                console.error(result.message.trim());
                 errorCount++;
             }
             cb(null, file);
@@ -147,14 +147,14 @@ const hygiene = (some, options) => {
         });
     });
 
+    const program = require('tslint').Linter.createProgram("./tsconfig.json");
+    const linter = new tslint.Linter(options, program);
     const tsl = es.through(function (file) {
         const configuration = tslint.Configuration.findConfiguration(null, '.');
         const options = {
             formatter: 'json'
         };
         const contents = file.contents.toString('utf8');
-        const program = require('tslint').Linter.createProgram("./tsconfig.json");
-        const linter = new tslint.Linter(options, program);
         linter.lint(file.relative, contents, configuration.results);
         const result = linter.getResult();
         if (result.failureCount > 0 || result.errorCount > 0) {
@@ -206,12 +206,8 @@ const hygiene = (some, options) => {
         .pipe(filter(f => !f.stat.isDirectory()))
         .pipe(filter(eolFilter))
         .pipe(options.skipEOL ? es.through() : eol)
-        .pipe(filter(indentationFilter));
-
-    if (!options.skipIndentationCheck) {
-        result = result
-            .pipe(indentation);
-    }
+        .pipe(filter(indentationFilter))
+        .pipe(indentation);
 
     // Type script checks.
     let typescript = result
@@ -221,7 +217,9 @@ const hygiene = (some, options) => {
         typescript = typescript
             .pipe(formatting);
     }
-    typescript = typescript.pipe(tsl)
+
+    typescript = typescript
+        .pipe(tsl)
         .pipe(tscFilesTracker)
         .pipe(tsc());
 
@@ -418,11 +416,11 @@ function getModifiedFiles() {
         });
     });
 }
+
 // this allows us to run hygiene as a git pre-commit hook.
 if (require.main === module) {
     run({ exitOnError: true, mode: 'staged' });
 }
-
 
 class Deferred {
     constructor(scope) {
