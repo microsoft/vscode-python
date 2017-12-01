@@ -1,4 +1,5 @@
 ## Coding guidelines for TypeScript
+* The following standards are inspired from [Coding guidelines for TypeScript](https://github.com/Microsoft/TypeScript/wiki/Coding-guidelines).
 
 ### Names
 * Use PascalCase for type names.
@@ -41,3 +42,5 @@ Use single quotes for strings.
 
 * `else` goes on a the same line from the closing curly brace.
 * Use 4 spaces per indentation.
+
+

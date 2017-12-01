@@ -9,7 +9,7 @@
 4. Visual Studio Code
 5. Following VS Code extensions:
     * [TSLint](https://marketplace.visualstudio.com/items?itemName=eg2.tslint)
-    * [EditorConfig fot VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
+    * [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
 
 ### Setup
 
@@ -57,7 +57,7 @@ From there use the ```Extension + Debugger``` launch option.
 ### Coding Standards
 
 Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-python/blob/master/CODING_STANDARDS.md).
-We have a per-commit hook to ensure the code committed will adhere to the above coding standards.
+We have a pre-commit hook to ensure the code committed will adhere to the above coding standards.
 
 
 ## Development process
