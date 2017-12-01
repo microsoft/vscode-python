@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?><testsuite errors="0" failures="9" name="pytest" skips="0" tests="9" time="0.080"><testcase classname="test_root.Test_Root_test1" file="test_root.py" line="6" name="test_Root_A" time="0.0010533332824707031"><failure message="AssertionError: Not implemented">self = &lt;test_root.Test_Root_test1 testMethod=test_Root_A&gt;
+
+    def test_Root_A(self):
+&gt;       self.fail(&quot;Not implemented&quot;)
+E       AssertionError: Not implemented
+
+test_root.py:8: AssertionError</failure></testcase><testcase classname="tests.test_another_pytest" file="tests/test_another_pytest.py" line="15" name="test_parametrized_username[three]" time="0.0008268356323242188"><failure message="AssertionError: assert &apos;three&apos; in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]">non_parametrized_username = &apos;three&apos;
+
+    def test_parametrized_username(non_parametrized_username):
+&gt;       assert non_parametrized_username in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]
+E       AssertionError: assert &apos;three&apos; in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]
+
+tests/test_another_pytest.py:17: AssertionError</failure></testcase><testcase classname="tests.test_pytest" file="tests/test_pytest.py" line="38" name="test_parametrized_username[three]" time="0.0009989738464355469"><failure message="AssertionError: assert &apos;three&apos; in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]">non_parametrized_username = &apos;three&apos;
+
+    def test_parametrized_username(non_parametrized_username):
+&gt;       assert non_parametrized_username in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]
+E       AssertionError: assert &apos;three&apos; in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]
+
+tests/test_pytest.py:40: AssertionError</failure></testcase><testcase classname="tests.test_unittest_one.Test_test1" file="tests/test_unittest_one.py" line="6" name="test_A" time="0.00090789794921875"><failure message="AssertionError: Not implemented">self = &lt;test_unittest_one.Test_test1 testMethod=test_A&gt;
+
+    def test_A(self):
+&gt;       self.fail(&quot;Not implemented&quot;)
+E       AssertionError: Not implemented
+
+tests/test_unittest_one.py:8: AssertionError</failure></testcase><testcase classname="tests.test_unittest_two.Test_test2" file="tests/test_unittest_two.py" line="3" name="test_A2" time="0.0007557868957519531"><failure message="AssertionError: Not implemented">self = &lt;test_unittest_two.Test_test2 testMethod=test_A2&gt;
+
+    def test_A2(self):
+&gt;       self.fail(&quot;Not implemented&quot;)
+E       AssertionError: Not implemented
+
+tests/test_unittest_two.py:5: AssertionError</failure></testcase><testcase classname="tests.test_unittest_two.Test_test2" file="tests/test_unittest_two.py" line="9" name="test_C2" time="0.0006463527679443359"><failure message="AssertionError: 1 != 2 : Not equal">self = &lt;test_unittest_two.Test_test2 testMethod=test_C2&gt;
+
+    def test_C2(self):
+&gt;       self.assertEqual(1,2,&apos;Not equal&apos;)
+E       AssertionError: 1 != 2 : Not equal
+
+tests/test_unittest_two.py:11: AssertionError</failure></testcase><testcase classname="tests.test_unittest_two.Test_test2" file="tests/test_unittest_two.py" line="12" name="test_D2" time="0.00047707557678222656"><failure message="ArithmeticError">self = &lt;test_unittest_two.Test_test2 testMethod=test_D2&gt;
+
+    def test_D2(self):
+&gt;       raise ArithmeticError()
+E       ArithmeticError
+
+tests/test_unittest_two.py:14: ArithmeticError</failure></testcase><testcase classname="tests.test_unittest_two.Test_test2a" file="tests/test_unittest_two.py" line="17" name="test_222A2" time="0.00048279762268066406"><failure message="AssertionError: Not implemented">self = &lt;test_unittest_two.Test_test2a testMethod=test_222A2&gt;
+
+    def test_222A2(self):
+&gt;       self.fail(&quot;Not implemented&quot;)
+E       AssertionError: Not implemented
+
+tests/test_unittest_two.py:19: AssertionError</failure></testcase><testcase classname="tests.unittest_three_test.Test_test3" file="tests/unittest_three_test.py" line="4" name="test_A" time="0.000579833984375"><failure message="AssertionError: Not implemented">self = &lt;unittest_three_test.Test_test3 testMethod=test_A&gt;
+
+    def test_A(self):
+&gt;       self.fail(&quot;Not implemented&quot;)
+E       AssertionError: Not implemented
+
+tests/unittest_three_test.py:6: AssertionError</failure></testcase></testsuite>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?><testsuite errors="0" failures="9" name="pytest" skips="3" tests="29" time="0.116"><testcase classname="test_root.Test_Root_test1" file="test_root.py" line="6" name="test_Root_A" time="0.0031201839447021484"><failure message="AssertionError: Not implemented">self = &lt;test_root.Test_Root_test1 testMethod=test_Root_A&gt;
+
+    def test_Root_A(self):
+&gt;       self.fail(&quot;Not implemented&quot;)
+E       AssertionError: Not implemented
+
+test_root.py:8: AssertionError</failure></testcase><testcase classname="test_root.Test_Root_test1" file="test_root.py" line="9" name="test_Root_B" time="0.0005087852478027344"></testcase><testcase classname="test_root.Test_Root_test1" file="test_root.py" line="12" name="test_Root_c" time="0.0006210803985595703"><skipped message="demonstrating skipping" type="pytest.skip">test_root.py:12: &lt;py._xmlgen.raw object at 0x10a5a4048&gt;</skipped></testcase><testcase classname="tests.test_another_pytest" file="tests/test_another_pytest.py" line="12" name="test_username" time="0.0010895729064941406"></testcase><testcase classname="tests.test_another_pytest" file="tests/test_another_pytest.py" line="15" name="test_parametrized_username[one]" time="0.0007238388061523438"></testcase><testcase classname="tests.test_another_pytest" file="tests/test_another_pytest.py" line="15" name="test_parametrized_username[two]" time="0.0006742477416992188"></testcase><testcase classname="tests.test_another_pytest" file="tests/test_another_pytest.py" line="15" name="test_parametrized_username[three]" time="0.0008127689361572266"><failure message="AssertionError: assert &apos;three&apos; in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]">non_parametrized_username = &apos;three&apos;
+
+    def test_parametrized_username(non_parametrized_username):
+&gt;       assert non_parametrized_username in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]
+E       AssertionError: assert &apos;three&apos; in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]
+
+tests/test_another_pytest.py:17: AssertionError</failure></testcase><testcase classname="tests.test_pytest.Test_CheckMyApp" file="tests/test_pytest.py" line="6" name="test_simple_check" time="0.00054931640625"><skipped message="demonstrating skipping" type="pytest.skip">/Users/donjayamanne/anaconda3/lib/python3.6/site-packages/_pytest/nose.py:23: &lt;py._xmlgen.raw object at 0x10a5d04a8&gt;</skipped></testcase><testcase classname="tests.test_pytest.Test_CheckMyApp" file="tests/test_pytest.py" line="9" name="test_complex_check" time="0.0006327629089355469"></testcase><testcase classname="tests.test_pytest.Test_CheckMyApp.Test_NestedClassA.()" file="tests/test_pytest.py" line="13" name="test_nested_class_methodB" time="0.0007283687591552734"></testcase><testcase classname="tests.test_pytest.Test_CheckMyApp.Test_NestedClassA.().Test_nested_classB_Of_A.()" file="tests/test_pytest.py" line="16" name="test_d" time="0.0005033016204833984"></testcase><testcase classname="tests.test_pytest.Test_CheckMyApp.Test_NestedClassA.()" file="tests/test_pytest.py" line="18" name="test_nested_class_methodC" time="0.00046753883361816406"></testcase><testcase classname="tests.test_pytest.Test_CheckMyApp" file="tests/test_pytest.py" line="21" name="test_simple_check2" time="0.0005953311920166016"></testcase><testcase classname="tests.test_pytest.Test_CheckMyApp" file="tests/test_pytest.py" line="23" name="test_complex_check2" time="0.0006310939788818359"></testcase><testcase classname="tests.test_pytest" file="tests/test_pytest.py" line="35" name="test_username" time="0.0007598400115966797"></testcase><testcase classname="tests.test_pytest" file="tests/test_pytest.py" line="38" name="test_parametrized_username[one]" time="0.0015866756439208984"></testcase><testcase classname="tests.test_pytest" file="tests/test_pytest.py" line="38" name="test_parametrized_username[two]" time="0.0007665157318115234"></testcase><testcase classname="tests.test_pytest" file="tests/test_pytest.py" line="38" name="test_parametrized_username[three]" time="0.0008153915405273438"><failure message="AssertionError: assert &apos;three&apos; in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]">non_parametrized_username = &apos;three&apos;
+
+    def test_parametrized_username(non_parametrized_username):
+&gt;       assert non_parametrized_username in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]
+E       AssertionError: assert &apos;three&apos; in [&apos;one&apos;, &apos;two&apos;, &apos;threes&apos;]
+
+tests/test_pytest.py:40: AssertionError</failure></testcase><testcase classname="tests.test_unittest_one.Test_test1" file="tests/test_unittest_one.py" line="6" name="test_A" time="0.0005588531494140625"><failure message="AssertionError: Not implemented">self = &lt;test_unittest_one.Test_test1 testMethod=test_A&gt;
+
+    def test_A(self):
+&gt;       self.fail(&quot;Not implemented&quot;)
+E       AssertionError: Not implemented
+
+tests/test_unittest_one.py:8: AssertionError</failure></testcase><testcase classname="tests.test_unittest_one.Test_test1" file="tests/test_unittest_one.py" line="9" name="test_B" time="0.0004360675811767578"></testcase><testcase classname="tests.test_unittest_one.Test_test1" file="tests/test_unittest_one.py" line="12" name="test_c" time="0.00047278404235839844"><skipped message="demonstrating skipping" type="pytest.skip">tests/test_unittest_one.py:12: &lt;py._xmlgen.raw object at 0x10a5d8c50&gt;</skipped></testcase><testcase classname="tests.test_unittest_two.Test_test2" file="tests/test_unittest_two.py" line="3" name="test_A2" time="0.0005328655242919922"><failure message="AssertionError: Not implemented">self = &lt;test_unittest_two.Test_test2 testMethod=test_A2&gt;
+
+    def test_A2(self):
+&gt;       self.fail(&quot;Not implemented&quot;)
+E       AssertionError: Not implemented
+
+tests/test_unittest_two.py:5: AssertionError</failure></testcase><testcase classname="tests.test_unittest_two.Test_test2" file="tests/test_unittest_two.py" line="6" name="test_B2" time="0.0004265308380126953"></testcase><testcase classname="tests.test_unittest_two.Test_test2" file="tests/test_unittest_two.py" line="9" name="test_C2" time="0.0005896091461181641"><failure message="AssertionError: 1 != 2 : Not equal">self = &lt;test_unittest_two.Test_test2 testMethod=test_C2&gt;
+
+    def test_C2(self):
+&gt;       self.assertEqual(1,2,&apos;Not equal&apos;)
+E       AssertionError: 1 != 2 : Not equal
+
+tests/test_unittest_two.py:11: AssertionError</failure></testcase><testcase classname="tests.test_unittest_two.Test_test2" file="tests/test_unittest_two.py" line="12" name="test_D2" time="0.0006225109100341797"><failure message="ArithmeticError">self = &lt;test_unittest_two.Test_test2 testMethod=test_D2&gt;
+
+    def test_D2(self):
+&gt;       raise ArithmeticError()
+E       ArithmeticError
+
+tests/test_unittest_two.py:14: ArithmeticError</failure></testcase><testcase classname="tests.test_unittest_two.Test_test2a" file="tests/test_unittest_two.py" line="17" name="test_222A2" time="0.0007469654083251953"><failure message="AssertionError: Not implemented">self = &lt;test_unittest_two.Test_test2a testMethod=test_222A2&gt;
+
+    def test_222A2(self):
+&gt;       self.fail(&quot;Not implemented&quot;)
+E       AssertionError: Not implemented
+
+tests/test_unittest_two.py:19: AssertionError</failure></testcase><testcase classname="tests.test_unittest_two.Test_test2a" file="tests/test_unittest_two.py" line="20" name="test_222B2" time="0.0006690025329589844"></testcase><testcase classname="tests.unittest_three_test.Test_test3" file="tests/unittest_three_test.py" line="4" name="test_A" time="0.00055694580078125"><failure message="AssertionError: Not implemented">self = &lt;unittest_three_test.Test_test3 testMethod=test_A&gt;
+
+    def test_A(self):
+&gt;       self.fail(&quot;Not implemented&quot;)
+E       AssertionError: Not implemented
+
+tests/unittest_three_test.py:6: AssertionError</failure></testcase><testcase classname="tests.unittest_three_test.Test_test3" file="tests/unittest_three_test.py" line="7" name="test_B" time="0.0005049705505371094"></testcase></testsuite>

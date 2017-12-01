@@ -1,22 +1,17 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
-import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
-import { IProcessService, Output } from '../../client/common/process/types';
 import { CommandSource } from '../../client/unittests/common/constants';
-import { ITestManagerFactory, IUnitTestSocketServer, TestsToRun } from '../../client/unittests/common/types';
+import { ITestManagerFactory } from '../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
-import { MockProcessService } from '../mocks/proc';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
-import { MockUnitTestSocketServer } from './mocks';
 import { UnitTestIocContainer } from './serviceRegistry';
 
 const testFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles');
 const UNITTEST_TEST_FILES_PATH = path.join(testFilesPath, 'standard');
 const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(testFilesPath, 'single');
 const unitTestTestFilesCwdPath = path.join(testFilesPath, 'cwd', 'src');
-const unitTestSpecificTestFilesPath = path.join(testFilesPath, 'specificTest');
 const defaultUnitTestArgs = [
     '-v',
     '-s',
@@ -26,7 +21,7 @@ const defaultUnitTestArgs = [
 ];
 
 // tslint:disable-next-line:max-func-body-length
-suite('Unit Tests - unittest - discovery', () => {
+suite('Unit Tests - unittest - discovery against actual python process', () => {
     let ioc: UnitTestIocContainer;
     const rootDirectory = UNITTEST_TEST_FILES_PATH;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;

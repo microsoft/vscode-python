@@ -1,9 +1,12 @@
 import * as assert from 'assert';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { IProcessService } from '../../client/common/process/types';
 import { CommandSource } from '../../client/unittests/common/constants';
 import { ITestManagerFactory, TestFile, TestsToRun } from '../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
+import { MockProcessService } from '../mocks/proc';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 import { UnitTestIocContainer } from './serviceRegistry';
 
@@ -11,9 +14,10 @@ const UNITTEST_TEST_FILES_PATH = path.join(__dirname, '..', '..', '..', 'src', '
 const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'single');
 const UNITTEST_TEST_FILES_PATH_WITH_CONFIGS = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'unitestsWithConfigs');
 const unitTestTestFilesCwdPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'cwd', 'src');
+const PYTEST_RESULTS_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'pytestFiles', 'results');
 
 // tslint:disable-next-line:max-func-body-length
-suite('Unit Tests - pytest - discovery against actual python process', () => {
+suite('Unit Tests - pytest - run with mocked process output', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
     suiteSetup(async () => {
@@ -32,62 +36,45 @@ suite('Unit Tests - pytest - discovery against actual python process', () => {
     function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
-        ioc.registerProcessTypes();
         ioc.registerUnitTestTypes();
         ioc.registerVariableTypes();
+
+        // Mocks.
+        ioc.registerMockProcessTypes();
     }
 
-    test('Discover Tests (single test file)', async () => {
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_SINGLE_TEST_FILE_PATH);
-        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
-        assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
-        assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
-        assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'tests/test_one.py' && t.nameToRun === t.name), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_root.py' && t.nameToRun === t.name), true, 'Test File not found');
-    });
+    function injectTestDiscoveryOutput(outputFileName: string) {
+        const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+        procService.onExecObservable((file, args, options, callback) => {
+            if (args.some(arg => arg === '--collect-only')) {
+                callback({
+                    out: fs.readFileSync(path.join(PYTEST_RESULTS_PATH, outputFileName), 'utf8'),
+                    source: 'stdout'
+                });
+            }
+        });
+    }
 
-    test('Discover Tests (pattern = test_)', async () => {
-        await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
-        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
-        assert.equal(tests.testFiles.length, 6, 'Incorrect number of test files');
-        assert.equal(tests.testFunctions.length, 29, 'Incorrect number of test functions');
-        assert.equal(tests.testSuites.length, 8, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'tests/test_unittest_one.py' && t.nameToRun === t.name), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'tests/test_unittest_two.py' && t.nameToRun === t.name), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'tests/unittest_three_test.py' && t.nameToRun === t.name), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'tests/test_pytest.py' && t.nameToRun === t.name), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'tests/test_another_pytest.py' && t.nameToRun === t.name), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_root.py' && t.nameToRun === t.name), true, 'Test File not found');
-    });
+    function injectTestRunOutput(outputFileName: string, failedOutput: boolean = false) {
+        const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+        procService.onExecObservable((file, args, options, callback) => {
+            if (failedOutput && args.indexOf('--last-failed') === -1) {
+                return;
+            }
 
-    test('Discover Tests (pattern = _test)', async () => {
-        await updateSetting('unitTest.pyTestArgs', ['-k=_test.py'], rootWorkspaceUri, configTarget);
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
-        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
-        assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
-        assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
-        assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'tests/unittest_three_test.py' && t.nameToRun === t.name), true, 'Test File not found');
-    });
-
-    test('Discover Tests (with config)', async () => {
-        await updateSetting('unitTest.pyTestArgs', [], rootWorkspaceUri, configTarget);
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH_WITH_CONFIGS);
-        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
-        assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
-        assert.equal(tests.testFunctions.length, 14, 'Incorrect number of test functions');
-        assert.equal(tests.testSuites.length, 4, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'other/test_unittest_one.py' && t.nameToRun === t.name), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'other/test_pytest.py' && t.nameToRun === t.name), true, 'Test File not found');
-    });
+            const index = args.findIndex(arg => arg.startsWith('--junitxml='));
+            if (index >= 0) {
+                const fileName = args[index].substr('--junitxml='.length);
+                const contents = fs.readFileSync(path.join(PYTEST_RESULTS_PATH, outputFileName), 'utf8');
+                fs.writeFileSync(fileName, contents, 'utf8');
+                callback({ out: '', source: 'stdout' });
+            }
+        });
+    }
 
     test('Run Tests', async () => {
+        injectTestDiscoveryOutput('one.output');
+        injectTestRunOutput('one.xml');
         await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
@@ -98,7 +85,29 @@ suite('Unit Tests - pytest - discovery against actual python process', () => {
         assert.equal(results.summary.skipped, 3, 'skipped');
     });
 
+    test('Run Failed Tests', async () => {
+        injectTestDiscoveryOutput('two.output');
+        injectTestRunOutput('two.xml');
+        injectTestRunOutput('two.again.xml', true);
+        await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
+        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
+        const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
+        let results = await testManager.runTest(CommandSource.ui);
+        assert.equal(results.summary.errors, 0, 'Errors');
+        assert.equal(results.summary.failures, 9, 'Failures');
+        assert.equal(results.summary.passed, 17, 'Passed');
+        assert.equal(results.summary.skipped, 3, 'skipped');
+
+        results = await testManager.runTest(CommandSource.ui, undefined, true);
+        assert.equal(results.summary.errors, 0, 'Failed Errors');
+        assert.equal(results.summary.failures, 9, 'Failed Failures');
+        assert.equal(results.summary.passed, 0, 'Failed Passed');
+        assert.equal(results.summary.skipped, 0, 'Failed skipped');
+    });
+
     test('Run Specific Test File', async () => {
+        injectTestDiscoveryOutput('three.output');
+        injectTestRunOutput('three.xml');
         await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
@@ -121,6 +130,8 @@ suite('Unit Tests - pytest - discovery against actual python process', () => {
     });
 
     test('Run Specific Test Suite', async () => {
+        injectTestDiscoveryOutput('four.output');
+        injectTestRunOutput('four.xml');
         await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
@@ -134,6 +145,8 @@ suite('Unit Tests - pytest - discovery against actual python process', () => {
     });
 
     test('Run Specific Test Function', async () => {
+        injectTestDiscoveryOutput('five.output');
+        injectTestRunOutput('five.xml');
         await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
@@ -144,17 +157,5 @@ suite('Unit Tests - pytest - discovery against actual python process', () => {
         assert.equal(results.summary.failures, 1, 'Failures');
         assert.equal(results.summary.passed, 0, 'Passed');
         assert.equal(results.summary.skipped, 0, 'skipped');
-    });
-
-    test('Setting cwd should return tests', async () => {
-        await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('pytest', rootWorkspaceUri, unitTestTestFilesCwdPath);
-
-        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
-        assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
-        assert.equal(tests.testFolders.length, 1, 'Incorrect number of test folders');
-        assert.equal(tests.testFunctions.length, 1, 'Incorrect number of test functions');
-        assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
     });
 });
