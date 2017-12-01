@@ -26,7 +26,7 @@ const defaultUnitTestArgs = [
 ];
 
 // tslint:disable-next-line:max-func-body-length
-suite('Unit Tests - discovery - unittest', () => {
+suite('Unit Tests - unittest - discovery with mocked process output', () => {
     let ioc: UnitTestIocContainer;
     const rootDirectory = UNITTEST_TEST_FILES_PATH;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
