@@ -11,9 +11,6 @@ import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize'
 import { UnitTestIocContainer } from './serviceRegistry';
 
 const UNITTEST_TEST_FILES_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
-const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'single');
-const UNITTEST_TEST_FILES_PATH_WITH_CONFIGS = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'unitestsWithConfigs');
-const unitTestTestFilesCwdPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'cwd', 'src');
 const PYTEST_RESULTS_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'pytestFiles', 'results');
 
 // tslint:disable-next-line:max-func-body-length
@@ -46,7 +43,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     function injectTestDiscoveryOutput(outputFileName: string) {
         const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
         procService.onExecObservable((file, args, options, callback) => {
-            if (args.some(arg => arg === '--collect-only')) {
+            if (args.indexOf('--collect-only') >= 0) {
                 callback({
                     out: fs.readFileSync(path.join(PYTEST_RESULTS_PATH, outputFileName), 'utf8'),
                     source: 'stdout'

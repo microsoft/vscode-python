@@ -1,10 +1,9 @@
 import * as assert from 'assert';
-import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IProcessService } from '../../client/common/process/types';
 import { CommandSource } from '../../client/unittests/common/constants';
-import { ITestManagerFactory, TestFile, TestsToRun } from '../../client/unittests/common/types';
+import { ITestManagerFactory } from '../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockProcessService } from '../mocks/proc';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
@@ -45,7 +44,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
     function injectTestDiscoveryOutput(output: string) {
         const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
         procService.onExecObservable((file, args, options, callback) => {
-            if (args.some(arg => arg === '--collect-only')) {
+            if (args.indexOf('--collect-only') >= 0) {
                 callback({
                     out: output,
                     source: 'stdout'
