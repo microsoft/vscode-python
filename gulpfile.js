@@ -211,12 +211,8 @@ const hygiene = (some, options) => {
 
     // Type script checks.
     let typescript = result
-        .pipe(filter(tslintFilter));
-
-    if (!options.skipFormatCheck) {
-        typescript = typescript
-            .pipe(formatting);
-    }
+        .pipe(filter(tslintFilter))
+        .pipe(formatting);
 
     typescript = typescript
         .pipe(tsl)
