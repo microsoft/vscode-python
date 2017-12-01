@@ -6,6 +6,10 @@
 1. Node.js (>= 8.9.1, < 9.0.0)
 2. Python 2.7 or later (required only for testing the extension and running unit tests)
 3. Windows, OS X or Linux
+4. Visual Studio Code
+5. Following VS Code extensions:
+    * [TSLint](https://marketplace.visualstudio.com/items?itemName=eg2.tslint)
+    * [EditorConfig fot VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
 
 ### Setup
 
@@ -21,7 +25,10 @@ Run the `Compile` and `Hygiene` build Tasks from the [Command Palette](https://c
 
 ### Errors and Warnings
 
-TypeScript errors and warnings will be displayed in VS Code in the Problems Panel (`CTRL+SHIFT+M` or `⇧⌘M`)
+TypeScript errors and warnings will be displayed in VS Code in the following areas:
+* Problems Panel (`CTRL+SHIFT+M` or `⇧⌘M`)
+* Terminal running the `Compile` task
+* Terminal running the `Hygiene` task
 
 ### Validate your changes
 
