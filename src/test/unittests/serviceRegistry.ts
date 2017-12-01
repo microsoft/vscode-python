@@ -2,77 +2,82 @@
 // Licensed under the MIT License.
 
 import 'reflect-metadata';
-import { OutputChannel, Uri } from 'vscode';
-import { IOutputChannel } from '../../client/common/types';
-import { IServiceContainer, IServiceManager } from '../../client/ioc/types';
-import { TEST_OUTPUT_CHANNEL } from '../../client/unittests/common/constants';
-import { DebugLauncher } from '../../client/unittests/common/debugLauncher';
+import { Uri } from 'vscode';
+import { IServiceContainer } from '../../client/ioc/types';
+import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/unittests/common/constants';
 import { TestCollectionStorageService } from '../../client/unittests/common/services/storageService';
-import { TestManagerService } from '../../client/unittests/common/services/testManagerService';
 import { TestResultsService } from '../../client/unittests/common/services/testResultsService';
-import { WorkspaceTestManagerService } from '../../client/unittests/common/services/workspaceTestManagerService';
 import { TestsHelper } from '../../client/unittests/common/testUtils';
 import { TestFlatteningVisitor } from '../../client/unittests/common/testVisitors/flatteningVisitor';
 import { TestFolderGenerationVisitor } from '../../client/unittests/common/testVisitors/folderGenerationVisitor';
 import { TestResultResetVisitor } from '../../client/unittests/common/testVisitors/resultResetVisitor';
-import {
-    ITestCollectionStorageService,
-    ITestDebugLauncher,
-    ITestManager,
-    ITestManagerFactory,
-    ITestManagerService,
-    ITestManagerServiceFactory,
-    ITestResultsService,
-    ITestsHelper,
-    ITestVisitor,
-    IWorkspaceTestManagerService,
-    TestProvider
-} from '../../client/unittests/common/types';
+import { ITestCollectionStorageService, ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestResultsService, ITestsHelper, ITestsParser, ITestVisitor, TestProvider } from '../../client/unittests/common/types';
 import { TestManager as NoseTestManager } from '../../client/unittests/nosetest/main';
+import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/unittests/nosetest/services/discoveryService';
+import { TestsParser as NoseTestTestsParser } from '../../client/unittests/nosetest/services/parserService';
 import { TestManager as PyTestTestManager } from '../../client/unittests/pytest/main';
+import { TestDiscoveryService as PytestTestDiscoveryService } from '../../client/unittests/pytest/services/discoveryService';
+import { TestsParser as PytestTestsParser } from '../../client/unittests/pytest/services/parserService';
 import { TestManager as UnitTestTestManager } from '../../client/unittests/unittest/main';
+import { TestDiscoveryService as UnitTestTestDiscoveryService } from '../../client/unittests/unittest/services/discoveryService';
+import { TestsParser as UnitTestTestsParser } from '../../client/unittests/unittest/services/parserService';
+import { IocContainer } from '../serviceRegistry';
 
-export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<ITestDebugLauncher>(ITestDebugLauncher, DebugLauncher);
-    serviceManager.addSingleton<ITestCollectionStorageService>(ITestCollectionStorageService, TestCollectionStorageService);
-    serviceManager.addSingleton<IWorkspaceTestManagerService>(IWorkspaceTestManagerService, WorkspaceTestManagerService);
+export class UnitTestIocContainer extends IocContainer {
+    constructor() {
+        super();
+    }
 
-    serviceManager.add<ITestsHelper>(ITestsHelper, TestsHelper);
-    serviceManager.add<ITestResultsService>(ITestResultsService, TestResultsService);
+    public registerTestVisitors() {
+        this.serviceManager.add<ITestVisitor>(ITestVisitor, TestFlatteningVisitor, 'TestFlatteningVisitor');
+        this.serviceManager.add<ITestVisitor>(ITestVisitor, TestFolderGenerationVisitor, 'TestFolderGenerationVisitor');
+        this.serviceManager.add<ITestVisitor>(ITestVisitor, TestResultResetVisitor, 'TestResultResetVisitor');
+    }
 
-    serviceManager.add<ITestVisitor>(ITestVisitor, TestFlatteningVisitor, 'TestFlatteningVisitor');
-    serviceManager.add<ITestVisitor>(ITestVisitor, TestFolderGenerationVisitor, 'TestFolderGenerationVisitor');
-    serviceManager.add<ITestVisitor>(ITestVisitor, TestResultResetVisitor, 'TestResultResetVisitor');
+    public registerTestStorage() {
+        this.serviceManager.addSingleton<ITestCollectionStorageService>(ITestCollectionStorageService, TestCollectionStorageService);
+    }
 
-    serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
-        return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {
-            const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
-            const outputChannel = context.container.getNamed<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
-            const testCollectionStorage = context.container.get<ITestCollectionStorageService>(ITestCollectionStorageService);
-            const testResultsService = context.container.get<ITestResultsService>(ITestResultsService);
+    public registerTestsHelper() {
+        this.serviceManager.addSingleton<ITestsHelper>(ITestsHelper, TestsHelper);
+    }
 
-            switch (testProvider) {
-                case 'nosetest': {
-                    return new NoseTestManager(workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, serviceContainer);
+    public registerTestResultsHelper() {
+        this.serviceManager.add<ITestResultsService>(ITestResultsService, TestResultsService);
+    }
+
+    public registerTestParsers() {
+        this.serviceManager.add<ITestsParser>(ITestsParser, UnitTestTestsParser, UNITTEST_PROVIDER);
+        this.serviceManager.add<ITestsParser>(ITestsParser, PytestTestsParser, PYTEST_PROVIDER);
+        this.serviceManager.add<ITestsParser>(ITestsParser, NoseTestTestsParser, NOSETEST_PROVIDER);
+    }
+
+    public registerTestDiscoveryServices() {
+        this.serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, UnitTestTestDiscoveryService, UNITTEST_PROVIDER);
+        this.serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, PytestTestDiscoveryService, PYTEST_PROVIDER);
+        this.serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, NoseTestDiscoveryService, NOSETEST_PROVIDER);
+    }
+
+    public registerTestManagers() {
+        this.serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
+            return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {
+                const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
+
+                switch (testProvider) {
+                    case NOSETEST_PROVIDER: {
+                        return new NoseTestManager(workspaceFolder, rootDirectory, serviceContainer);
+                    }
+                    case PYTEST_PROVIDER: {
+                        return new PyTestTestManager(workspaceFolder, rootDirectory, serviceContainer);
+                    }
+                    case UNITTEST_PROVIDER: {
+                        return new UnitTestTestManager(workspaceFolder, rootDirectory, serviceContainer);
+                    }
+                    default: {
+                        throw new Error(`Unrecognized test provider '${testProvider}'`);
+                    }
                 }
-                case 'pytest': {
-                    return new PyTestTestManager(workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, serviceContainer);
-                }
-                case 'unittest': {
-                    return new UnitTestTestManager(workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, serviceContainer);
-                }
-                default: {
-                    throw new Error(`Unrecognized test provider '${testProvider}'`);
-                }
-            }
-        };
-    });
-
-    serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, (context) => {
-        return (workspaceFolder: Uri) => {
-            const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
-            const testsHelper = context.container.get<ITestsHelper>(ITestsHelper);
-            return new TestManagerService(workspaceFolder, testsHelper, serviceContainer);
-        };
-    });
+            };
+        });
+    }
 }

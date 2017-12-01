@@ -1,10 +1,14 @@
-import { CancellationToken, Disposable, OutputChannel, Uri } from 'vscode';
+import { injectable } from 'inversify';
+import 'reflect-metadata';
+import { CancellationToken, Disposable, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../client/common/helpers';
 import { Product } from '../../client/common/installer';
+import { IServiceContainer } from '../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../client/unittests/common/constants';
 import { BaseTestManager } from '../../client/unittests/common/managers/baseTestManager';
-import { ITestCollectionStorageService, ITestDebugLauncher, ITestResultsService, ITestsHelper, launchOptions, Tests, TestsToRun } from '../../client/unittests/common/types';
+import { ITestDebugLauncher, launchOptions, TestDiscoveryOptions, Tests, TestsToRun, TestProvider, ITestDiscoveryService } from '../../client/unittests/common/types';
 
+@injectable()
 export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     public get launched(): Promise<boolean> {
         return this._launched.promise;
@@ -46,28 +50,40 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     }
 }
 
-// export class MockTestManagerWithRunningTests extends BaseTestManager {
-//     // tslint:disable-next-line:no-any
-//     public readonly runnerDeferred = createDeferred<any>();
-//     // tslint:disable-next-line:no-any
-//     public readonly discoveryDeferred = createDeferred<Tests>();
-//     constructor(testRunnerId: 'nosetest' | 'pytest' | 'unittest', product: Product, rootDirectory: string,
-//         outputChannel: OutputChannel, storageService: ITestCollectionStorageService, resultsService: ITestResultsService, testsHelper: ITestsHelper) {
-//         super('nosetest', product, rootDirectory, outputChannel, storageService, resultsService, testsHelper);
-//     }
-//     // tslint:disable-next-line:no-any
-//     protected async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<any> {
-//         // tslint:disable-next-line:no-non-null-assertion
-//         this.testRunnerCancellationToken!.onCancellationRequested(() => {
-//             this.runnerDeferred.reject(CANCELLATION_REASON);
-//         });
-//         return this.runnerDeferred.promise;
-//     }
-//     protected async discoverTestsImpl(ignoreCache: boolean, debug?: boolean): Promise<Tests> {
-//         // tslint:disable-next-line:no-non-null-assertion
-//         this.testDiscoveryCancellationToken!.onCancellationRequested(() => {
-//             this.discoveryDeferred.reject(CANCELLATION_REASON);
-//         });
-//         return this.discoveryDeferred.promise;
-//     }
-// }
+@injectable()
+export class MockTestManagerWithRunningTests extends BaseTestManager {
+    // tslint:disable-next-line:no-any
+    public readonly runnerDeferred = createDeferred<any>();
+    // tslint:disable-next-line:no-any
+    public readonly discoveryDeferred = createDeferred<Tests>();
+    constructor(testProvider: TestProvider, product: Product, workspaceFolder: Uri, rootDirectory: string,
+        serviceContainer: IServiceContainer) {
+        super(testProvider, product, workspaceFolder, rootDirectory, serviceContainer);
+    }
+    protected getDiscoveryOptions(ignoreCache: boolean) {
+        return {} as TestDiscoveryOptions;
+    }
+    // tslint:disable-next-line:no-any
+    protected async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<any> {
+        // tslint:disable-next-line:no-non-null-assertion
+        this.testRunnerCancellationToken!.onCancellationRequested(() => {
+            this.runnerDeferred.reject(CANCELLATION_REASON);
+        });
+        return this.runnerDeferred.promise;
+    }
+    protected async discoverTestsImpl(ignoreCache: boolean, debug?: boolean): Promise<Tests> {
+        // tslint:disable-next-line:no-non-null-assertion
+        this.testDiscoveryCancellationToken!.onCancellationRequested(() => {
+            this.discoveryDeferred.reject(CANCELLATION_REASON);
+        });
+        return this.discoveryDeferred.promise;
+    }
+}
+
+@injectable()
+export class MockDiscoveryService implements ITestDiscoveryService {
+    constructor(private discoverPromise: Promise<Tests>) { }
+    public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
+        return this.discoverPromise;
+    }
+}

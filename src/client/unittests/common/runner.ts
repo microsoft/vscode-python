@@ -4,6 +4,7 @@ import { IPythonSettings, PythonSettings } from '../../common/configSettings';
 import { IProcessService, IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../../common/process/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IServiceContainer } from '../../ioc/types';
+import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';
 import { TestProvider } from './types';
 
 export type Options = {
@@ -22,7 +23,7 @@ export async function run(serviceContainer: IServiceContainer, testProvider: Tes
 
     let promise: Promise<ObservableExecutionResult<string>>;
 
-    if (!testExecutablePath && testProvider === 'unittest') {
+    if (!testExecutablePath && testProvider === UNITTEST_PROVIDER) {
         // Unit tests have a special way of being executed
         const pythonServiceFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecutionService = pythonServiceFactory.create(options.workspaceFolder);
@@ -59,11 +60,11 @@ export async function run(serviceContainer: IServiceContainer, testProvider: Tes
 function getExecutablePath(testProvider: TestProvider, settings: IPythonSettings): string | undefined {
     let testRunnerExecutablePath: string | undefined;
     switch (testProvider) {
-        case 'nosetest': {
+        case NOSETEST_PROVIDER: {
             testRunnerExecutablePath = settings.unitTest.nosetestPath;
             break;
         }
-        case 'pytest': {
+        case PYTEST_PROVIDER: {
             testRunnerExecutablePath = settings.unitTest.pyTestPath;
             break;
         }
@@ -75,13 +76,13 @@ function getExecutablePath(testProvider: TestProvider, settings: IPythonSettings
 }
 function getTestModuleName(testProvider: TestProvider) {
     switch (testProvider) {
-        case 'nosetest': {
+        case NOSETEST_PROVIDER: {
             return 'nose';
         }
-        case 'pytest': {
+        case PYTEST_PROVIDER: {
             return 'pytest';
         }
-        case 'unittest': {
+        case UNITTEST_PROVIDER: {
             return 'unittest';
         }
         default: {

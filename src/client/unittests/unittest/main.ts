@@ -1,32 +1,25 @@
 'use strict';
-import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { Product } from '../../common/installer';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/managers/baseTestManager';
-import { ITestCollectionStorageService, ITestResultsService, TestDiscoveryOptions, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
-import { discoverTests } from './collector';
+import { TestDiscoveryOptions, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
 import { runTest } from './runner';
 export class TestManager extends BaseTestManager {
-    constructor(workspaceFolder: Uri, rootDirectory: string, outputChannel: vscode.OutputChannel,
-        testCollectionStorage: ITestCollectionStorageService,
-        testResultsService: ITestResultsService,
-        serviceContainer: IServiceContainer) {
-        super('unittest', Product.unittest, workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, serviceContainer);
+    constructor(workspaceFolder: Uri, rootDirectory: string, serviceContainer: IServiceContainer) {
+        super('unittest', Product.unittest, workspaceFolder, rootDirectory, serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public configure() {
     }
-    public async discoverTestsImpl(ignoreCache: boolean): Promise<Tests> {
+    public getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions {
         const args = this.settings.unitTest.unittestArgs.slice(0);
-        const options: TestDiscoveryOptions = {
+        return {
             workspaceFolder: this.workspaceFolder,
             cwd: this.rootDirectory, args,
             token: this.testDiscoveryCancellationToken!, ignoreCache,
-            outChannel: this.outputChannel
+            outChannel:     this.outputChannel
         };
-        // tslint:disable-next-line:no-non-null-assertion
-        return discoverTests(this.serviceContainer, options);
     }
     public async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<{}> {
         const args = this.settings.unitTest.unittestArgs.slice(0);

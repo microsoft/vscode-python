@@ -1,35 +1,26 @@
-'use strict';
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { Uri } from 'vscode';
-import * as vscode from 'vscode';
 import { Product } from '../../common/installer';
-import { IOutputChannel } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { TEST_OUTPUT_CHANNEL } from '../common/constants';
 import { BaseTestManager } from '../common/managers/baseTestManager';
-import { ITestCollectionStorageService, ITestResultsService, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
-import { discoverTests } from './collector';
+import { TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
 import { runTest } from './runner';
 
 @injectable()
 export class TestManager extends BaseTestManager {
     constructor(workspaceFolder: Uri, rootDirectory: string,
-        @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) outputChannel: vscode.OutputChannel,
-        @inject(ITestCollectionStorageService) testCollectionStorage: ITestCollectionStorageService,
-        @inject(ITestResultsService) testResultsService: ITestResultsService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super('nosetest', Product.nosetest, workspaceFolder, rootDirectory, outputChannel, testCollectionStorage, testResultsService, serviceContainer);
+        super('nosetest', Product.nosetest, workspaceFolder, rootDirectory, serviceContainer);
     }
-    public discoverTestsImpl(ignoreCache: boolean): Promise<Tests> {
+    public getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions {
         const args = this.settings.unitTest.nosetestArgs.slice(0);
-        const options: TestDiscoveryOptions = {
+        return {
             workspaceFolder: this.workspaceFolder,
             cwd: this.rootDirectory, args,
             token: this.testDiscoveryCancellationToken!, ignoreCache,
             outChannel: this.outputChannel
         };
-        return discoverTests(this.serviceContainer, options);
     }
     // tslint:disable-next-line:no-any
     public runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<any> {

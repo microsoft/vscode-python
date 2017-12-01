@@ -214,3 +214,16 @@ export interface ITestManager extends Disposable {
     discoverTests(cmdSource: CommandSource, ignoreCache?: boolean, quietMode?: boolean, userInitiated?: boolean): Promise<Tests>;
     runTest(cmdSource: CommandSource, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<Tests>;
 }
+
+export const ITestDiscoveryService = Symbol('ITestDiscoveryService');
+
+export interface ITestDiscoveryService {
+    discoverTests(options: TestDiscoveryOptions): Promise<Tests>;
+}
+
+export const ITestsParser = Symbol('ITestsParser');
+export interface ITestsParser {
+    parse(content: string, options: ParserOptions): Tests;
+}
+
+export type ParserOptions = TestDiscoveryOptions;

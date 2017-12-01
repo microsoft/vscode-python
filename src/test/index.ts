@@ -9,6 +9,6 @@ testRunner.configure({
     ui: 'tdd',
     useColors: true,
     timeout: 25000,
-    retries: 3
+    grep: 'Unit Tests Stopping Discovery and Runner'
 } as {});
 module.exports = testRunner;

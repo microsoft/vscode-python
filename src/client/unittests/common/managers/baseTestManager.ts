@@ -1,19 +1,21 @@
-// import {TestFolder, TestsToRun, Tests, TestFile, TestSuite, TestFunction, TestStatus, FlattenedTestFunction, FlattenedTestSuite, CANCELLATION_REASON} from './contracts';
 import * as vscode from 'vscode';
-import { Uri, workspace } from 'vscode';
+import { Disposable, OutputChannel, Uri, workspace } from 'vscode';
 import { IPythonSettings, PythonSettings } from '../../../common/configSettings';
 import { isNotInstalledError } from '../../../common/helpers';
 import { Installer, Product } from '../../../common/installer';
+import { IDiposableRegistry, IOutputChannel } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry/index';
 import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../../telemetry/types';
-import { CANCELLATION_REASON, CommandSource } from './../constants';
+import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './../constants';
 import { displayTestErrorMessage } from './../testUtils';
 import {
     ITestCollectionStorageService,
+    ITestDiscoveryService,
     ITestManager,
     ITestResultsService,
+    TestDiscoveryOptions,
     TestProvider,
     Tests,
     TestStatus,
@@ -27,6 +29,15 @@ enum CancellationTokenType {
 
 export abstract class BaseTestManager implements ITestManager {
     protected readonly settings: IPythonSettings;
+    protected get outputChannel() {
+        return this._outputChannel;
+    }
+    protected get testResultsService() {
+        return this._testResultsService;
+    }
+    private testCollectionStorage: ITestCollectionStorageService;
+    private _testResultsService: ITestResultsService;
+    private _outputChannel: OutputChannel;
     private tests?: Tests;
     // tslint:disable-next-line:variable-name
     private _status: TestStatus = TestStatus.Unknown;
@@ -35,11 +46,15 @@ export abstract class BaseTestManager implements ITestManager {
     private installer: Installer;
     private discoverTestsPromise?: Promise<Tests>;
     constructor(public readonly testProvider: TestProvider, private product: Product, public readonly workspaceFolder: Uri, protected rootDirectory: string,
-        protected outputChannel: vscode.OutputChannel, private testCollectionStorage: ITestCollectionStorageService,
-        protected testResultsService: ITestResultsService, protected serviceContainer: IServiceContainer) {
+        protected serviceContainer: IServiceContainer) {
         this._status = TestStatus.Unknown;
         this.installer = new Installer();
         this.settings = PythonSettings.getInstance(this.rootDirectory ? Uri.file(this.rootDirectory) : undefined);
+        const disposables = serviceContainer.get<Disposable[]>(IDiposableRegistry);
+        disposables.push(this);
+        this._outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
+        this.testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
+        this._testResultsService = this.serviceContainer.get<ITestResultsService>(ITestResultsService);
     }
     protected get testDiscoveryCancellationToken(): vscode.CancellationToken | undefined {
         return this.testDiscoveryCancellationTokenSource ? this.testDiscoveryCancellationTokenSource.token : undefined;
@@ -100,7 +115,9 @@ export abstract class BaseTestManager implements ITestManager {
         };
 
         this.createCancellationToken(CancellationTokenType.testDiscovery);
-        return this.discoverTestsPromise = this.discoverTestsImpl(ignoreCache)
+        const discoveryOptions = this.getDiscoveryOptions(ignoreCache);
+        const discoveryService = this.serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, this.testProvider);
+        return discoveryService.discoverTests(discoveryOptions)
             .then(tests => {
                 this.tests = tests;
                 this._status = TestStatus.Idle;
@@ -232,7 +249,7 @@ export abstract class BaseTestManager implements ITestManager {
     }
     // tslint:disable-next-line:no-any
     protected abstract runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<any>;
-    protected abstract discoverTestsImpl(ignoreCache: boolean, debug?: boolean): Promise<Tests>;
+    protected abstract getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions;
     private createCancellationToken(tokenType: CancellationTokenType) {
         this.disposeCancellationToken(tokenType);
         if (tokenType === CancellationTokenType.testDiscovery) {

@@ -1,18 +1,16 @@
-import { Uri } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 import { PythonSettings } from '../../../common/configSettings';
 import { Product } from '../../../common/installer';
+import { IDiposableRegistry } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import {
-    ITestManager,
-    ITestManagerFactory,
-    ITestManagerService,
-    ITestsHelper,
-    UnitTestProduct
-} from './../types';
+import { ITestManager, ITestManagerFactory, ITestManagerService, ITestsHelper, UnitTestProduct } from './../types';
 
 export class TestManagerService implements ITestManagerService {
     private cachedTestManagers = new Map<Product, ITestManager>();
-    constructor(private wkspace: Uri, private testsHelper: ITestsHelper, private serviceContainer: IServiceContainer) { }
+    constructor(private wkspace: Uri, private testsHelper: ITestsHelper, private serviceContainer: IServiceContainer) {
+        const disposables = serviceContainer.get<Disposable[]>(IDiposableRegistry);
+        disposables.push(this);
+    }
     public dispose() {
         this.cachedTestManagers.forEach(info => {
             info.dispose();
