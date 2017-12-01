@@ -69,7 +69,8 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
     }
 
     private isPositionInsideString(document: vscode.TextDocument, position: vscode.Position): boolean {
-        const text = document.getText(new vscode.Range(new Position(0, 0), position));
+        const tokenizeTo = position.translate(1, 0);
+        const text = document.getText(new vscode.Range(new Position(0, 0), tokenizeTo));
         const t = new Tokenizer();
         return t.Tokenize(text).getItemContaining(document.offsetAt(position)) >= 0;
     }

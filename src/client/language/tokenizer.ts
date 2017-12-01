@@ -1,5 +1,6 @@
 'use strict';
 
+// tslint:disable-next-line:import-name
 import Char from 'typescript-char';
 import { CharacterStream } from './characterStream';
 import { ICharacterStream, ITextRangeCollection, IToken, ITokenizer, TextRange, TokenType } from './definitions';
@@ -109,11 +110,13 @@ export class Tokenizer implements ITokenizer {
         while (!this.cs.isEndOfStream() && this.cs.currentChar !== quote) {
             this.cs.moveNext();
         }
+        this.cs.moveNext();
     }
 
     private skipToTripleEndQuote(quote: number): void {
         while (!this.cs.isEndOfStream() && (this.cs.currentChar !== quote || this.cs.nextChar !== quote || this.cs.lookAhead(2) !== quote)) {
             this.cs.moveNext();
         }
+        this.cs.advance(3);
     }
 }
