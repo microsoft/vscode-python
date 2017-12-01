@@ -22,7 +22,7 @@ const colors = require('colors/safe');
  * named according to the checks performed on them. Each subset contains
  * the following one, as described in mathematical notation:
  *
- * all ⊃ eol ⊇ indentation ⊃ copyright ⊃ typescript
+ * all ⊃ eol ⊇ indentation ⊃ typescript
  */
 
 const all = [
