@@ -8,6 +8,8 @@ export interface ITextRange {
 }
 
 export class TextRange implements ITextRange {
+    public static readonly empty = TextRange.fromBounds(0, 0);
+
     public readonly start: number;
     public readonly length: number;
 

@@ -7,18 +7,15 @@ import { TextIterator } from './textIterator';
 
 export class CharacterStream implements ICharacterStream {
     private text: ITextIterator;
-    private pos: number;
-    private curChar: number;
-    private endOfStream: boolean;
+    private _position: number;
+    private _currentChar: number;
+    private _isEndOfStream: boolean;
 
     constructor(text: string | ITextIterator) {
-        const iter = text as ITextIterator;
-        const s = text as string;
-
-        this.text = iter !== null ? iter : new TextIterator(s);
-        this.pos = 0;
-        this.curChar = text.length > 0 ? text.charCodeAt(0) : 0;
-        this.endOfStream = text.length === 0;
+        this.text = typeof text === 'string' ? new TextIterator(text) : text;
+        this._position = 0;
+        this._currentChar = text.length > 0 ? text.charCodeAt(0) : 0;
+        this._isEndOfStream = text.length === 0;
     }
 
     public getText(): string {
@@ -26,16 +23,16 @@ export class CharacterStream implements ICharacterStream {
     }
 
     public get position(): number {
-        return this.pos;
+        return this._position;
     }
 
     public set position(value: number) {
-        this.pos = value;
+        this._position = value;
         this.checkBounds();
     }
 
     public get currentChar(): number {
-        return this.curChar;
+        return this._currentChar;
     }
 
     public get nextChar(): number {
@@ -47,11 +44,11 @@ export class CharacterStream implements ICharacterStream {
     }
 
     public isEndOfStream(): boolean {
-        return this.endOfStream;
+        return this._isEndOfStream;
     }
 
     public lookAhead(offset: number): number {
-        const pos = this.position + offset;
+        const pos = this._position + offset;
         return pos < 0 || pos >= this.text.length ? 0 : this.text.charCodeAt(pos);
     }
 
@@ -60,55 +57,55 @@ export class CharacterStream implements ICharacterStream {
     }
 
     public moveNext(): boolean {
-        if (this.pos < this.text.length - 1) {
+        if (this._position < this.text.length - 1) {
             // Most common case, no need to check bounds extensively
-            this.pos += 1;
-            this.curChar = this.text.charCodeAt(this.pos);
+            this._position += 1;
+            this._currentChar = this.text.charCodeAt(this._position);
             return true;
         }
         this.advance(1);
-        return !this.endOfStream;
+        return !this.isEndOfStream();
     }
 
     public isAtWhiteSpace(): boolean {
-        return this.curChar <= Char.Space || this.curChar === 0x200B;
+        return this.currentChar <= Char.Space || this.currentChar === 0x200B; // Unicode whitespace
     }
 
     public isAtLineBreak(): boolean {
-        return this.curChar === Char.CarriageReturn || this.curChar === Char.DataLineEscape;
+        return this.currentChar === Char.CarriageReturn || this.currentChar === Char.LineFeed;
     }
 
     public skipLineBreak(): void {
-        if (this.curChar === Char.CarriageReturn) {
+        if (this._currentChar === Char.CarriageReturn) {
             this.moveNext();
             if (this.currentChar === Char.LineFeed) {
                 this.moveNext();
             }
-        } else if (this.curChar === Char.LineFeed) {
+        } else if (this._currentChar === Char.LineFeed) {
             this.moveNext();
         }
     }
 
     public skipWhitespace(): void {
-        while (!this.endOfStream && this.isAtWhiteSpace()) {
+        while (!this.isEndOfStream() && this.isAtWhiteSpace()) {
             this.moveNext();
         }
     }
 
     public skipToEol(): void {
-        while (!this.endOfStream && !this.isAtLineBreak()) {
+        while (!this.isEndOfStream() && !this.isAtLineBreak()) {
             this.moveNext();
         }
     }
 
     public skipToWhitespace(): void {
-        while (!this.endOfStream && !this.isAtWhiteSpace()) {
+        while (!this.isEndOfStream() && !this.isAtWhiteSpace()) {
             this.moveNext();
         }
     }
 
     public isAtString(): boolean {
-        return this.curChar === 0x22 || this.curChar === 0x27;
+        return this.currentChar === Char.SingleQuote || this.currentChar === Char.DoubleQuote;
     }
 
     public charCodeAt(index: number): number {
@@ -120,15 +117,15 @@ export class CharacterStream implements ICharacterStream {
     }
 
     private checkBounds(): void {
-        if (this.pos < 0) {
-            this.pos = 0;
+        if (this._position < 0) {
+            this._position = 0;
         }
 
-        this.endOfStream = this.pos >= this.text.length;
-        if (this.endOfStream) {
-            this.pos = this.text.length;
+        this._isEndOfStream = this._position >= this.text.length;
+        if (this._isEndOfStream) {
+            this._position = this.text.length;
         }
 
-        this.curChar = this.endOfStream ? 0 : this.text.charCodeAt(this.pos);
+        this._currentChar = this._isEndOfStream ? 0 : this.text.charCodeAt(this._position);
     }
 }

@@ -11,8 +11,8 @@ export class TextIterator implements ITextIterator {
     }
 
     public charCodeAt(index: number): number {
-        if (index >= 0 && index < this.length) {
-            return this.text.charCodeAt[index];
+        if (index >= 0 && index < this.text.length) {
+            return this.text.charCodeAt(index);
         }
         return 0;
     }
