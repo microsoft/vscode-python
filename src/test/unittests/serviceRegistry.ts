@@ -1,17 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { MockUnitTestSocketServer } from './mocks';
 
 import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { IServiceContainer } from '../../client/ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/unittests/common/constants';
 import { TestCollectionStorageService } from '../../client/unittests/common/services/storageService';
+import { TestManagerService } from '../../client/unittests/common/services/testManagerService';
 import { TestResultsService } from '../../client/unittests/common/services/testResultsService';
 import { TestsHelper } from '../../client/unittests/common/testUtils';
 import { TestFlatteningVisitor } from '../../client/unittests/common/testVisitors/flatteningVisitor';
 import { TestFolderGenerationVisitor } from '../../client/unittests/common/testVisitors/folderGenerationVisitor';
 import { TestResultResetVisitor } from '../../client/unittests/common/testVisitors/resultResetVisitor';
-import { ITestCollectionStorageService, ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestResultsService, ITestsHelper, ITestsParser, ITestVisitor, TestProvider } from '../../client/unittests/common/types';
+import { ITestCollectionStorageService, ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory } from '../../client/unittests/common/types';
+import { ITestResultsService, ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, TestProvider } from '../../client/unittests/common/types';
 import { TestManager as NoseTestManager } from '../../client/unittests/nosetest/main';
 import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/unittests/nosetest/services/discoveryService';
 import { TestsParser as NoseTestTestsParser } from '../../client/unittests/nosetest/services/parserService';
@@ -79,5 +82,19 @@ export class UnitTestIocContainer extends IocContainer {
                 }
             };
         });
+    }
+
+    public registerTestManagerService() {
+        this.serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, (context) => {
+            return (workspaceFolder: Uri) => {
+                const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
+                const testsHelper = context.container.get<ITestsHelper>(ITestsHelper);
+                return new TestManagerService(workspaceFolder, testsHelper, serviceContainer);
+            };
+        });
+    }
+
+    public registerMockUnitTestSocketServer() {
+        this.serviceManager.addSingleton<IUnitTestSocketServer>(IUnitTestSocketServer, MockUnitTestSocketServer);
     }
 }

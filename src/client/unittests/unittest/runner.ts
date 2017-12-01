@@ -3,8 +3,8 @@ import * as path from 'path';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/managers/baseTestManager';
 import { Options, run } from '../common/runner';
-import { ITestDebugLauncher, ITestResultsService, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
-import { Server } from './socketServer';
+import { ITestDebugLauncher, ITestResultsService, IUnitTestSocketServer, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
+
 type TestStatusMap = {
     status: TestStatus;
     summaryProperty: 'passed' | 'failures' | 'errors' | 'skipped';
@@ -35,7 +35,7 @@ export function runTest(serviceContainer: IServiceContainer, testManager: BaseTe
     options.tests.summary.skipped = 0;
     let failFast = false;
     const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'visualstudio_py_testlauncher.py');
-    const server = new Server();
+    const server = serviceContainer.get<IUnitTestSocketServer>(IUnitTestSocketServer);
     server.on('error', (message: string, ...data: string[]) => {
         // tslint:disable-next-line:no-console
         console.log(`${message} ${data.join(' ')}`);

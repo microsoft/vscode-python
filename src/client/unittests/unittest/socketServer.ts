@@ -1,10 +1,11 @@
 'use strict';
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
+import { injectable } from 'inversify';
 import * as net from 'net';
 import * as os from 'os';
-import { Disposable } from 'vscode';
 import { createDeferred, Deferred } from '../../common/helpers';
+import { IUnitTestSocketServer } from '../common/types';
 
 // tslint:disable-next-line:variable-name
 const MaxConnections = 100;
@@ -21,9 +22,10 @@ function getIPType() {
     return IPType;
 }
 
-export class Server extends EventEmitter implements Disposable {
-    private server: net.Server;
-    private startedDef: Deferred<number>;
+@injectable()
+export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocketServer {
+    private server?: net.Server;
+    private startedDef?: Deferred<number>;
     private path: string;
     private sockets: net.Socket[] = [];
     private ipcBuffer: string = '';
@@ -39,30 +41,30 @@ export class Server extends EventEmitter implements Disposable {
     }
     public stop() {
         if (this.server) {
-            this.server.close();
-            this.server = null;
+            this.server!.close();
+            this.server = undefined;
         }
     }
     public start(): Promise<number> {
         this.startedDef = createDeferred<number>();
         fs.unlink(this.path, () => {
             this.server = net.createServer(this.connectionListener.bind(this));
-            this.server.maxConnections = MaxConnections;
-            this.server.on('error', (err) => {
+            this.server!.maxConnections = MaxConnections;
+            this.server!.on('error', (err) => {
                 if (this.startedDef) {
                     this.startedDef.reject(err);
-                    this.startedDef = null;
+                    this.startedDef = undefined;
                 }
                 this.emit('error', err);
             });
             this.log('starting server as', 'TCP');
-            this.server.listen(0, this.path, (socket: net.Socket) => {
-                this.startedDef.resolve(this.server.address().port);
-                this.startedDef = null;
+            this.server!.listen(0, this.path, (socket: net.Socket) => {
+                this.startedDef!.resolve(this.server!.address().port);
+                this.startedDef = undefined;
                 this.emit('start', socket);
             });
         });
-        return this.startedDef.promise;
+        return this.startedDef!.promise;
     }
 
     private connectionListener(socket: net.Socket) {

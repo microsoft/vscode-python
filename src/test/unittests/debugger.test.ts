@@ -59,6 +59,7 @@ suite('Unit Tests - debugging', () => {
         ioc.registerTestStorage();
         ioc.registerTestsHelper();
         ioc.registerTestManagers();
+        ioc.registerMockUnitTestSocketServer();
         ioc.serviceManager.addSingleton<ITestDebugLauncher>(ITestDebugLauncher, MockDebugLauncher);
     }
 

@@ -10,17 +10,8 @@ import { sendTelemetryEvent } from '../../../telemetry/index';
 import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../../telemetry/types';
 import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './../constants';
 import { displayTestErrorMessage } from './../testUtils';
-import {
-    ITestCollectionStorageService,
-    ITestDiscoveryService,
-    ITestManager,
-    ITestResultsService,
-    TestDiscoveryOptions,
-    TestProvider,
-    Tests,
-    TestStatus,
-    TestsToRun
-} from './../types';
+import { ITestCollectionStorageService, ITestDiscoveryService, ITestManager, ITestResultsService } from './../types';
+import { TestDiscoveryOptions, TestProvider, Tests, TestStatus, TestsToRun } from './../types';
 
 enum CancellationTokenType {
     testDiscovery,

@@ -1,17 +1,19 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
+import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
+import { IProcessService } from '../../client/common/process/types';
 import { CommandSource } from '../../client/unittests/common/constants';
-import { ITestManagerFactory, TestsToRun } from '../../client/unittests/common/types';
+import { ITestManagerFactory, IUnitTestSocketServer, TestsToRun } from '../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
+import { MockProcessService } from '../mocks/proc';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
+import { MockUnitTestSocketServer } from './mocks';
 import { UnitTestIocContainer } from './serviceRegistry';
 
 const testFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles');
 const UNITTEST_TEST_FILES_PATH = path.join(testFilesPath, 'standard');
-const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(testFilesPath, 'single');
-const unitTestTestFilesCwdPath = path.join(testFilesPath, 'cwd', 'src');
 const unitTestSpecificTestFilesPath = path.join(testFilesPath, 'specificTest');
 const defaultUnitTestArgs = [
     '-v',
@@ -22,7 +24,7 @@ const defaultUnitTestArgs = [
 ];
 
 // tslint:disable-next-line:max-func-body-length
-suite('Unit Tests - unittest', () => {
+suite('Unit Tests - run - unittest', () => {
     let ioc: UnitTestIocContainer;
     const rootDirectory = UNITTEST_TEST_FILES_PATH;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
@@ -38,6 +40,7 @@ suite('Unit Tests - unittest', () => {
         }
         await initializeTest();
         initializeDI();
+        ignoreTestLauncher();
     });
     teardown(async () => {
         ioc.dispose();
@@ -47,50 +50,82 @@ suite('Unit Tests - unittest', () => {
     function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
-        ioc.registerProcessTypes();
-        ioc.registerUnitTestTypes();
         ioc.registerVariableTypes();
+
+        // Mocks.
+        ioc.registerMockProcessTypes();
+        ioc.registerMockUnitTestSocketServer();
+
+        // Standard unit test stypes.
+        ioc.registerTestDiscoveryServices();
+        ioc.registerTestManagers();
+        ioc.registerTestManagerService();
+        ioc.registerTestParsers();
+        ioc.registerTestResultsHelper();
+        ioc.registerTestsHelper();
+        ioc.registerTestStorage();
+        ioc.registerTestVisitors();
     }
 
-    test('Discover Tests (single test file)', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, UNITTEST_SINGLE_TEST_FILE_PATH);
-        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
-        assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
-        assert.equal(tests.testFunctions.length, 3, 'Incorrect number of test functions');
-        assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_one.py' && t.nameToRun === 'Test_test1.test_A'), true, 'Test File not found');
-    });
-
-    test('Discover Tests', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, rootDirectory);
-        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
-        assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
-        assert.equal(tests.testFunctions.length, 9, 'Incorrect number of test functions');
-        assert.equal(tests.testSuites.length, 3, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_unittest_one.py' && t.nameToRun === 'Test_test1.test_A'), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_unittest_two.py' && t.nameToRun === 'Test_test2.test_A2'), true, 'Test File not found');
-    });
-
-    test('Discover Tests (pattern = *_test_*.py)', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=*_test*.py'], rootWorkspaceUri, configTarget);
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, rootDirectory);
-        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
-        assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
-        assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
-        assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'unittest_three_test.py' && t.nameToRun === 'Test_test3.test_A'), true, 'Test File not found');
-    });
+    function ignoreTestLauncher() {
+        const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+        // When running the python test launcher, just return.
+        procService.onExecObservable((file, args, options, callback) => {
+            if (args.length > 1 && args[0].endsWith('visualstudio_py_testlauncher.py')) {
+                callback({ out: '', source: 'stdout' });
+            }
+        });
+    }
+    function injectTestDiscoveryOutput(output: string) {
+        const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+        procService.onExecObservable((file, args, options, callback) => {
+            if (args.length > 1 && args[0] === '-c' && args[1].includes('import unittest') && args[1].includes('loader = unittest.TestLoader()')) {
+                callback({
+                    // Ensure any spaces added during code formatting or the like are removed
+                    out: output.split(/\r?\n/g).map(item => item.trim()).join(EOL),
+                    source: 'stdout'
+                });
+            }
+        });
+    }
+    function injectTestSocketServerResults(results: {}[]) {
+        // Add results to be sent by unit test socket server.
+        const socketServer = ioc.serviceContainer.get<MockUnitTestSocketServer>(IUnitTestSocketServer);
+        socketServer.reset();
+        socketServer.addResults(results);
+    }
 
     test('Run Tests', async () => {
         await updateSetting('unitTest.unittestArgs', ['-v', '-s', './tests', '-p', 'test_unittest*.py'], rootWorkspaceUri, configTarget);
+        // tslint:disable-next-line:no-multiline-string
+        injectTestDiscoveryOutput(`start
+        test_unittest_one.Test_test1.test_A
+        test_unittest_one.Test_test1.test_B
+        test_unittest_one.Test_test1.test_c
+        test_unittest_two.Test_test2.test_A2
+        test_unittest_two.Test_test2.test_B2
+        test_unittest_two.Test_test2.test_C2
+        test_unittest_two.Test_test2.test_D2
+        test_unittest_two.Test_test2a.test_222A2
+        test_unittest_two.Test_test2a.test_222B2
+        `);
+        const resultsToSend = [
+            { outcome: 'failed', traceback: 'AssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' },
+            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_B' },
+            { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_c' },
+            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2.test_A2' },
+            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2.test_B2' },
+            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_two.Test_test2.test_C2' },
+            { outcome: 'error', traceback: 'raise ArithmeticError()\nArithmeticError\n', message: '', test: 'test_unittest_two.Test_test2.test_D2' },
+            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2a.test_222A2' },
+            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2a.test_222B2' }
+        ];
+        injectTestSocketServerResults(resultsToSend);
+
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri, rootDirectory);
         const results = await testManager.runTest(CommandSource.ui);
+
         assert.equal(results.summary.errors, 1, 'Errors');
         assert.equal(results.summary.failures, 4, 'Failures');
         assert.equal(results.summary.passed, 3, 'Passed');
@@ -99,6 +134,32 @@ suite('Unit Tests - unittest', () => {
 
     test('Run Failed Tests', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
+        // tslint:disable-next-line:no-multiline-string
+        injectTestDiscoveryOutput(`start
+            test_unittest_one.Test_test1.test_A
+            test_unittest_one.Test_test1.test_B
+            test_unittest_one.Test_test1.test_c
+            test_unittest_two.Test_test2.test_A2
+            test_unittest_two.Test_test2.test_B2
+            test_unittest_two.Test_test2.test_C2
+            test_unittest_two.Test_test2.test_D2
+            test_unittest_two.Test_test2a.test_222A2
+            test_unittest_two.Test_test2a.test_222B2
+            `);
+
+        const resultsToSend = [
+            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' },
+            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_B' },
+            { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_c' },
+            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2.test_A2' },
+            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2.test_B2' },
+            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_two.Test_test2.test_C2' },
+            { outcome: 'error', traceback: 'raise ArithmeticError()\nArithmeticError\n', message: '', test: 'test_unittest_two.Test_test2.test_D2' },
+            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2a.test_222A2' },
+            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2a.test_222B2' }
+        ];
+        injectTestSocketServerResults(resultsToSend);
+
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri, rootDirectory);
         let results = await testManager.runTest(CommandSource.ui);
@@ -106,6 +167,15 @@ suite('Unit Tests - unittest', () => {
         assert.equal(results.summary.failures, 4, 'Failures');
         assert.equal(results.summary.passed, 3, 'Passed');
         assert.equal(results.summary.skipped, 1, 'skipped');
+
+        const failedResultsToSend = [
+            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' },
+            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2.test_A2' },
+            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_two.Test_test2.test_C2' },
+            { outcome: 'error', traceback: 'raise ArithmeticError()\nArithmeticError\n', message: '', test: 'test_unittest_two.Test_test2.test_D2' },
+            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2a.test_222A2' }
+        ];
+        injectTestSocketServerResults(failedResultsToSend);
 
         results = await testManager.runTest(CommandSource.ui, undefined, true);
         assert.equal(results.summary.errors, 1, 'Failed Errors');
@@ -116,6 +186,27 @@ suite('Unit Tests - unittest', () => {
 
     test('Run Specific Test File', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
+
+        // tslint:disable-next-line:no-multiline-string
+        injectTestDiscoveryOutput(`start
+        test_unittest_one.Test_test_one_1.test_1_1_1
+        test_unittest_one.Test_test_one_1.test_1_1_2
+        test_unittest_one.Test_test_one_1.test_1_1_3
+        test_unittest_one.Test_test_one_2.test_1_2_1
+        test_unittest_two.Test_test_two_1.test_1_1_1
+        test_unittest_two.Test_test_two_1.test_1_1_2
+        test_unittest_two.Test_test_two_1.test_1_1_3
+        test_unittest_two.Test_test_two_2.test_2_1_1
+        `);
+
+        const resultsToSend = [
+            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_1.test_1_1_1' },
+            { outcome: 'failed', traceback: 'AssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_one.Test_test_one_1.test_1_1_2' },
+            { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_1.test_1_1_3' },
+            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_2.test_1_2_1' }
+        ];
+        injectTestSocketServerResults(resultsToSend);
+
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri, unitTestSpecificTestFilesPath);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -133,6 +224,26 @@ suite('Unit Tests - unittest', () => {
 
     test('Run Specific Test Suite', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
+        // tslint:disable-next-line:no-multiline-string
+        injectTestDiscoveryOutput(`start
+        test_unittest_one.Test_test_one_1.test_1_1_1
+        test_unittest_one.Test_test_one_1.test_1_1_2
+        test_unittest_one.Test_test_one_1.test_1_1_3
+        test_unittest_one.Test_test_one_2.test_1_2_1
+        test_unittest_two.Test_test_two_1.test_1_1_1
+        test_unittest_two.Test_test_two_1.test_1_1_2
+        test_unittest_two.Test_test_two_1.test_1_1_3
+        test_unittest_two.Test_test_two_2.test_2_1_1
+        `);
+
+        const resultsToSend = [
+            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_1.test_1_1_1' },
+            { outcome: 'failed', traceback: 'AssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_one.Test_test_one_1.test_1_1_2' },
+            { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_1.test_1_1_3' },
+            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_2.test_1_2_1' }
+        ];
+        injectTestSocketServerResults(resultsToSend);
+
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri, unitTestSpecificTestFilesPath);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -150,6 +261,24 @@ suite('Unit Tests - unittest', () => {
 
     test('Run Specific Test Function', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
+        // tslint:disable-next-line:no-multiline-string
+        injectTestDiscoveryOutput(`start
+        test_unittest_one.Test_test1.test_A
+        test_unittest_one.Test_test1.test_B
+        test_unittest_one.Test_test1.test_c
+        test_unittest_two.Test_test2.test_A2
+        test_unittest_two.Test_test2.test_B2
+        test_unittest_two.Test_test2.test_C2
+        test_unittest_two.Test_test2.test_D2
+        test_unittest_two.Test_test2a.test_222A2
+        test_unittest_two.Test_test2a.test_222B2
+        `);
+
+        const resultsToSend = [
+            { outcome: 'failed', traceback: 'AssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' }
+        ];
+        injectTestSocketServerResults(resultsToSend);
+
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri, rootDirectory);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -159,17 +288,5 @@ suite('Unit Tests - unittest', () => {
         assert.equal(results.summary.failures, 1, 'Failures');
         assert.equal(results.summary.passed, 0, 'Passed');
         assert.equal(results.summary.skipped, 0, 'skipped');
-    });
-
-    test('Setting cwd should return tests', async () => {
-        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri, unitTestTestFilesCwdPath);
-
-        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
-        assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
-        assert.equal(tests.testFolders.length, 1, 'Incorrect number of test folders');
-        assert.equal(tests.testFunctions.length, 1, 'Incorrect number of test functions');
-        assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
     });
 });

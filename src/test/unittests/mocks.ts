@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import 'reflect-metadata';
 import { CancellationToken, Disposable, Uri } from 'vscode';
@@ -6,7 +7,7 @@ import { Product } from '../../client/common/installer';
 import { IServiceContainer } from '../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../client/unittests/common/constants';
 import { BaseTestManager } from '../../client/unittests/common/managers/baseTestManager';
-import { ITestDebugLauncher, launchOptions, TestDiscoveryOptions, Tests, TestsToRun, TestProvider, ITestDiscoveryService } from '../../client/unittests/common/types';
+import { ITestDebugLauncher, ITestDiscoveryService, IUnitTestSocketServer, launchOptions, TestDiscoveryOptions, TestProvider, Tests, TestsToRun } from '../../client/unittests/common/types';
 
 @injectable()
 export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
@@ -86,4 +87,27 @@ export class MockDiscoveryService implements ITestDiscoveryService {
     public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
         return this.discoverPromise;
     }
+}
+
+// tslint:disable-next-line:max-classes-per-file
+@injectable()
+export class MockUnitTestSocketServer extends EventEmitter implements IUnitTestSocketServer {
+    private results: {}[] = [];
+    public reset() {
+        this.removeAllListeners();
+    }
+    public addResults(results: {}[]) {
+        this.results.push(...results);
+    }
+    public async start(): Promise<number> {
+        this.results.forEach(result => {
+            this.emit('result', result);
+        });
+        this.results = [];
+        return 0;
+    }
+    // tslint:disable-next-line:no-empty
+    public stop(): void { }
+    // tslint:disable-next-line:no-empty
+    public dispose() { }
 }

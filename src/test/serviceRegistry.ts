@@ -4,18 +4,22 @@
 import { Container } from 'inversify';
 import 'reflect-metadata';
 import { Disposable, Memento, OutputChannel } from 'vscode';
+import { BufferDecoder } from '../client/common/process/decoder';
+import { ProcessService } from '../client/common/process/proc';
+import { PythonExecutionFactory } from '../client/common/process/pythonExecutionFactory';
 import { registerTypes as processRegisterTypes } from '../client/common/process/serviceRegistry';
+import { IBufferDecoder, IProcessService, IPythonExecutionFactory } from '../client/common/process/types';
 import { registerTypes as commonRegisterTypes } from '../client/common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDiposableRegistry, IMemento, IOutputChannel, WORKSPACE_MEMENTO } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
-import { NOSETEST_PROVIDER, PYTEST_PROVIDER, TEST_OUTPUT_CHANNEL, UNITTEST_PROVIDER } from '../client/unittests/common/constants';
-import { registerTypes as unitTestsRegisterTypes } from '../client/unittests/serviceRegistry';
+import { TEST_OUTPUT_CHANNEL } from '../client/unittests/common/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/unittests/serviceRegistry';
 import { MockOutputChannel } from './mockClasses';
 import { MockMemento } from './mocks/mementos';
+import { IOriginalProcessService, MockProcessService } from './mocks/proc';
 
 export class IocContainer {
     public readonly serviceManager: IServiceManager;
@@ -51,5 +55,12 @@ export class IocContainer {
     }
     public registerUnitTestTypes() {
         unittestsRegisterTypes(this.serviceManager);
+    }
+
+    public registerMockProcessTypes() {
+        this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
+        this.serviceManager.addSingleton<IProcessService>(IOriginalProcessService, ProcessService);
+        this.serviceManager.addSingleton<IProcessService>(IProcessService, MockProcessService);
+        this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
     }
 }

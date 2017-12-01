@@ -227,3 +227,10 @@ export interface ITestsParser {
 }
 
 export type ParserOptions = TestDiscoveryOptions;
+
+export const IUnitTestSocketServer = Symbol('IUnitTestSocketServer');
+export interface IUnitTestSocketServer extends Disposable {
+    on(event: string | symbol, listener: Function): this;
+    start(): Promise<number>;
+    stop(): void;
+}
