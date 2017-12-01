@@ -13,7 +13,7 @@
             "script": "compile",
             "isBackground": true,
             "problemMatcher": [
-                "$tsc",
+                "$tsc-watch",
                 {
                     "base": "$tslint5",
                     "fileLocation": "relative"
@@ -36,7 +36,7 @@
                 "panel": "shared"
             },
             "problemMatcher": [
-                "$tsc",
+                "$tsc-watch",
                 {
                     "base": "$tslint5",
                     "fileLocation": "relative"

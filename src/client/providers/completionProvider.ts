@@ -1,8 +1,9 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { ProviderResult, SnippetString, Uri } from 'vscode';
+import { Position, ProviderResult, SnippetString, Uri } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
+import { Tokenizer } from '../language/tokenizer';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
 import { COMPLETION } from '../telemetry/constants';
@@ -47,7 +48,7 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
             return Promise.resolve([]);
         }
         // If starts with a """ (possible doc string), then return
-        if (lineText.trim().startsWith('"""')) {
+        if (this.isPositionInsideString(document, position)) {
             return Promise.resolve([]);
         }
         const type = proxy.CommandType.Completions;
@@ -65,5 +66,11 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
         return this.jediFactory.getJediProxyHandler<proxy.ICompletionResult>(document.uri).sendCommand(cmd, token).then(data => {
             return PythonCompletionItemProvider.parseData(data, document.uri);
         });
+    }
+
+    private isPositionInsideString(document: vscode.TextDocument, position: vscode.Position): boolean {
+        const text = document.getText(new vscode.Range(new Position(0, 0), position));
+        const t = new Tokenizer();
+        return t.Tokenize(text).getItemContaining(document.offsetAt(position)) >= 0;
     }
 }
