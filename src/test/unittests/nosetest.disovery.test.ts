@@ -90,6 +90,8 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
+        console.log(JSON.stringify(tests.testFiles.map(item => item.name)));
+        console.log(JSON.stringify(tests.testFiles.map(item => item.nameToRun)));
         assert.equal(tests.testSuites.every(t => t.testSuite.name === t.testSuite.nameToRun.split(':')[1]), true, 'Suite name does not match class name');
     });
 
@@ -106,6 +108,8 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 5, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 16, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 6, 'Incorrect number of test suites');
+        console.log(JSON.stringify(tests.testFiles.map(item => item.name)));
+        console.log(JSON.stringify(tests.testFiles.map(item => item.nameToRun)));
         lookForTestFile(tests, path.join('tests', 'test_unittest_one.py'));
         lookForTestFile(tests, path.join('tests', 'test_unittest_two.py'));
         lookForTestFile(tests, path.join('tests', 'unittest_three_test.py'));
@@ -119,6 +123,8 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
+        console.log(JSON.stringify(tests.testFiles.map(item => item.name)));
+        console.log(JSON.stringify(tests.testFiles.map(item => item.nameToRun)));
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
@@ -132,6 +138,8 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
+        console.log(JSON.stringify(tests.testFiles.map(item => item.name)));
+        console.log(JSON.stringify(tests.testFiles.map(item => item.nameToRun)));
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 3, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
