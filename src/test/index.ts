@@ -9,6 +9,6 @@ testRunner.configure({
     useColors: true,
     timeout: 25000,
     retries: 3,
-    grep: 'Language.CharacterStream'
+    grep: 'Language.Tokenizer'
 } as {});
 module.exports = testRunner;

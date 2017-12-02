@@ -70,7 +70,8 @@ export interface ICharacterStream extends ITextIterator {
 }
 
 export enum TokenType {
-    String
+    String,
+    Comment
 }
 
 export interface IToken extends ITextRange {

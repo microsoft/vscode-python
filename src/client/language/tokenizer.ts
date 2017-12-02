@@ -73,7 +73,20 @@ export class Tokenizer implements ITokenizer {
             this.handleString(quoteType);
             return true;
         }
+        switch (this.cs.currentChar) {
+            case Char.Hash:
+                this.handleComment();
+                break;
+            default:
+                break;
+        }
         return false;
+    }
+
+    private handleComment(): void {
+        const start = this.cs.position;
+        this.cs.skipToEol();
+        this.tokens.push(new Token(TokenType.Comment, start, this.cs.position - start));
     }
 
     private getQuoteType(): QuoteType {
