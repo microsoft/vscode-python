@@ -4,12 +4,13 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { IProcessService } from '../../client/common/process/types';
 import { CommandSource } from '../../client/unittests/common/constants';
-import { ITestManagerFactory, Tests, TestsToRun } from '../../client/unittests/common/types';
+import { ITestManagerFactory, Tests } from '../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockProcessService } from '../mocks/proc';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 import { UnitTestIocContainer } from './serviceRegistry';
 
+const PYTHON_FILES_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles');
 const UNITTEST_TEST_FILES_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'noseFiles');
 const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'single');
 const filesToDelete = [
@@ -61,8 +62,11 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
         procService.onExecObservable((file, args, options, callback) => {
             if (args.indexOf('--collect-only') >= 0) {
+                let out = fs.readFileSync(path.join(UNITTEST_TEST_FILES_PATH, outputFileName), 'utf8');
+                // Value in the test files.
+                out = out.replace(/\/Users\/donjayamanne\/.vscode\/extensions\/pythonVSCode\/src\/test\/pythonFiles/g, PYTHON_FILES_PATH);
                 callback({
-                    out: fs.readFileSync(path.join(UNITTEST_TEST_FILES_PATH, outputFileName), 'utf8'),
+                    out,
                     source: 'stdout'
                 });
             }
@@ -77,8 +81,6 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
-        console.log(JSON.stringify(tests.testFiles.map(item => item.name)));
-        console.log(JSON.stringify(tests.testFiles.map(item => item.nameToRun)));
         assert.equal(tests.testFiles.some(t => t.name === path.join('tests', 'test_one.py') && t.nameToRun === t.name), true, 'Test File not found');
     });
 
@@ -90,8 +92,6 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
-        console.log(JSON.stringify(tests.testFiles.map(item => item.name)));
-        console.log(JSON.stringify(tests.testFiles.map(item => item.nameToRun)));
         assert.equal(tests.testSuites.every(t => t.testSuite.name === t.testSuite.nameToRun.split(':')[1]), true, 'Suite name does not match class name');
     });
 
@@ -108,8 +108,6 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 5, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 16, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 6, 'Incorrect number of test suites');
-        console.log(JSON.stringify(tests.testFiles.map(item => item.name)));
-        console.log(JSON.stringify(tests.testFiles.map(item => item.nameToRun)));
         lookForTestFile(tests, path.join('tests', 'test_unittest_one.py'));
         lookForTestFile(tests, path.join('tests', 'test_unittest_two.py'));
         lookForTestFile(tests, path.join('tests', 'unittest_three_test.py'));
@@ -123,8 +121,6 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
-        console.log(JSON.stringify(tests.testFiles.map(item => item.name)));
-        console.log(JSON.stringify(tests.testFiles.map(item => item.nameToRun)));
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
@@ -138,8 +134,6 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
-        console.log(JSON.stringify(tests.testFiles.map(item => item.name)));
-        console.log(JSON.stringify(tests.testFiles.map(item => item.nameToRun)));
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 3, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
