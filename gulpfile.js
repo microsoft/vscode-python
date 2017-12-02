@@ -338,7 +338,7 @@ function run(options) {
                     });
                 });
         })
-        .catch(exitHandler.bind(options));
+        .catch(exitHandler.bind(this, options));
 }
 function getGitSkipEOL() {
     return new Promise(resolve => {
