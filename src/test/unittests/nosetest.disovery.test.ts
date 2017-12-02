@@ -77,6 +77,8 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
+        console.log(JSON.stringify(tests.testFiles.map(item => item.name)));
+        console.log(JSON.stringify(tests.testFiles.map(item => item.nameToRun)));
         assert.equal(tests.testFiles.some(t => t.name === path.join('tests', 'test_one.py') && t.nameToRun === t.name), true, 'Test File not found');
     });
 

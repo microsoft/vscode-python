@@ -12,7 +12,8 @@ const options: MochaSetupOptions & { [key: string]: any } = {
     ui: 'tdd',
     useColors: true,
     timeout: 25000,
-    retries: 3
+    retries: 3,
+    grep: 'Unit Tests - nose - discovery with mocked process output'
 };
 testRunner.configure(options);
 module.exports = testRunner;
