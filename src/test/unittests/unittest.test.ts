@@ -46,7 +46,6 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerUnitTestTypes();
-        ioc.registerCommonTypes();
         ioc.registerProcessTypes();
     }
 
