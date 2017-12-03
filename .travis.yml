@@ -12,7 +12,7 @@ addons:
       - g++-4.9-multilib
       - libgtk2.0-0
       - libx11-dev
-      - libxkbfile-dev    
+      - libxkbfile-dev
       - libsecret-1-dev
       - python-dev
 matrix:
@@ -41,8 +41,9 @@ before_install: |
   git submodule update --init --recursive
   git clone https://github.com/creationix/nvm.git ./.nvm
   source ./.nvm/nvm.sh
-  nvm install 7.2.1
-  nvm use 7.2.1
+  nvm install 8.9.1
+  nvm use 8.9.1
+  npm i -g npm@5.5.1
   npm config set python `which python`
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     pyenv install $PYTHON
@@ -53,6 +54,6 @@ install:
   - pip install --upgrade -r requirements.txt
   - npm install
   - npm run vscode:prepublish
-  
+
 script:
   - npm test --silent
