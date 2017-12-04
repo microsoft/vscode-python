@@ -84,122 +84,122 @@
         "commands": [
             {
                 "command": "python.sortImports",
-                "title": "Sort Imports",
+                "title": "%python.command.python.sortImports.title%",
                 "category": "Python Refactor"
             },
             {
                 "command": "python.startREPL",
-                "title": "Start REPL",
+                "title": "%python.command.python.startREPL.title%",
                 "category": "Python"
             },
             {
                 "command": "python.buildWorkspaceSymbols",
-                "title": "Build Workspace Symbols",
+                "title": "%python.command.python.buildWorkspaceSymbols.title%",
                 "category": "Python"
             },
             {
                 "command": "python.runtests",
-                "title": "Run All Unit Tests",
+                "title": "%python.command.python.runtests.title%",
                 "category": "Python"
             },
             {
                 "command": "python.debugtests",
-                "title": "Debug All Unit Tests",
+                "title": "%python.command.python.debugtests.title%",
                 "category": "Python"
             },
             {
                 "command": "python.execInTerminal",
-                "title": "Run Python File in Terminal",
+                "title": "%python.command.python.execInTerminal.title%",
                 "category": "Python"
             },
             {
                 "command": "python.setInterpreter",
-                "title": "Select Interpreter",
+                "title": "%python.command.python.setInterpreter.title%",
                 "category": "Python"
             },
             {
                 "command": "python.updateSparkLibrary",
-                "title": "Update Workspace PySpark Libraries",
+                "title": "%python.command.python.updateSparkLibrary.title%",
                 "category": "Python"
             },
             {
                 "command": "python.refactorExtractVariable",
-                "title": "Extract Variable",
+                "title": "%python.command.python.refactorExtractVariable.title%",
                 "category": "Python Refactor"
             },
             {
                 "command": "python.refactorExtractMethod",
-                "title": "Extract Method",
+                "title": "%python.command.python.refactorExtractMethod.title%",
                 "category": "Python Refactor"
             },
             {
                 "command": "python.viewTestOutput",
-                "title": "Show Unit Test Output",
+                "title": "%python.command.python.viewTestOutput.title%",
                 "category": "Python"
             },
             {
                 "command": "python.selectAndRunTestMethod",
-                "title": "Run Unit Test Method ...",
+                "title": "%python.command.python.selectAndRunTestMethod.title%",
                 "category": "Python"
             },
             {
                 "command": "python.selectAndDebugTestMethod",
-                "title": "Debug Unit Test Method ...",
+                "title": "%python.command.python.selectAndDebugTestMethod.title%",
                 "category": "Python"
             },
             {
                 "command": "python.selectAndRunTestFile",
-                "title": "Run Unit Test File ...",
+                "title": "%python.command.python.selectAndRunTestFile.title%",
                 "category": "Python"
             },
             {
                 "command": "python.runCurrentTestFile",
-                "title": "Run Current Unit Test File",
+                "title": "%python.command.python.runCurrentTestFile.title%",
                 "category": "Python"
             },
             {
                 "command": "python.runFailedTests",
-                "title": "Run Failed Unit Tests",
+                "title": "%python.command.python.runFailedTests.title%",
                 "category": "Python"
             },
             {
                 "command": "python.execSelectionInTerminal",
-                "title": "Run Selection/Line in Python Terminal",
+                "title": "%python.command.python.execSelectionInTerminal.title%",
                 "category": "Python"
             },
             {
                 "command": "python.execSelectionInDjangoShell",
-                "title": "Run Selection/Line in Django Shell",
+                "title": "%python.command.python.execSelectionInDjangoShell.title%",
                 "category": "Python"
             },
             {
                 "command": "jupyter.runSelectionLine",
-                "title": "Run Selection/Line",
+                "title": "%python.command.jupyter.runSelectionLine.title%",
                 "category": "Jupyter"
             },
             {
                 "command": "jupyter.execCurrentCell",
-                "title": "Run Cell",
+                "title": "%python.command.jupyter.execCurrentCell.title%",
                 "category": "Jupyter"
             },
             {
                 "command": "jupyter.execCurrentCellAndAdvance",
-                "title": "Run Cell and Advance",
+                "title": "%python.command.jupyter.execCurrentCellAndAdvance.title%",
                 "category": "Jupyter"
             },
             {
                 "command": "jupyter.gotToPreviousCell",
-                "title": "Go to Previous Cell",
+                "title": "%python.command.jupyter.gotToPreviousCell.title%",
                 "category": "Jupyter"
             },
             {
                 "command": "jupyter.gotToNextCell",
-                "title": "Go to Next Cell",
+                "title": "%python.command.jupyter.gotToNextCell.title%",
                 "category": "Jupyter"
             },
             {
                 "command": "python.goToPythonObject",
-                "title": "Go to Python Object",
+                "title": "%python.command.python.goToPythonObject.title%",
                 "category": "Python"
             }
         ],
