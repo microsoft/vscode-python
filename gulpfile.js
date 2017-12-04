@@ -24,35 +24,12 @@ const debounce = require('debounce');
 * named according to the checks performed on them. Each subset contains
 * the following one, as described in mathematical notation:
 *
-* all ⊃ eol ⊇ indentation ⊃ typescript
+* all ⊃ indentation ⊃ typescript
 */
 
 const all = [
    'src/**/*',
    'src/client/**/*',
-];
-
-const eolFilter = [
-   '**',
-   '!.editorconfig',
-   '!.eslintrc',
-   '!.gitignore',
-   '!.gitmodules',
-   '!.jshintignore',
-   '!.jshintrc',
-   '!.npmrc',
-   '!.vscodeignore',
-   '!LICENSE',
-   '!**/node_modules/**',
-   '!**/*.{svg,exe,png,bmp,scpt,bat,cmd,cur,ttf,woff,eot,txt,md,json,yml,pyc}',
-   '!out/**/*',
-   '!images/**/*',
-   '!.vscode/**/*',
-   '!pythonFiles/**/*',
-   '!resources/**/*',
-   '!snippets/**/*',
-   '!syntaxes/**/*',
-   '!**/typings/**/*',
 ];
 
 const indentationFilter = [
@@ -98,7 +75,6 @@ function reportFailures(failures) {
 
 /**
 * @typedef {Object} hygieneOptions - creates a new type named 'SpecialType'
-* @property {boolean=} skipEOL - skipEOL check.
 * @property {'changes'|'staged'|'all'|'compile'} [mode=] - Mode.
 * @property {boolean=} skipIndentationCheck - Skip indentation checks.
 * @property {boolean=} skipFormatCheck - Skip format checks.
@@ -113,14 +89,6 @@ function reportFailures(failures) {
 const hygiene = (options) => {
    options = options || {};
    let errorCount = 0;
-   const eol = es.through(function (file) {
-       if (/\r\n?/g.test(file.contents.toString('utf8'))) {
-           console.error(file.relative + ': Bad EOL found');
-           errorCount++;
-       }
-
-       this.emit('data', file);
-   });
 
    const indentation = es.through(function (file) {
        file.contents
@@ -227,9 +195,7 @@ const hygiene = (options) => {
    const files = options.mode === 'compile' ? tsProject.src() : getFilesToProcess(options);
    const dest = options.mode === 'compile' ? './out' : '.';
    let result = files
-       .pipe(filter(f => !f.stat.isDirectory()))
-       .pipe(filter(eolFilter))
-       .pipe(options.skipEOL ? es.through() : eol);
+       .pipe(filter(f => !f.stat.isDirectory()));
 
    if (!options.skipIndentationCheck) {
        result = result.pipe(filter(indentationFilter))
@@ -307,23 +273,7 @@ function run(options) {
        exitHandler(options);
    });
 
-   const skipEOL = getGitSkipEOLSync()
-   return hygiene({
-       ...options,
-       skipEOL
-   });
-}
-function getGitSkipEOLSync() {
-   try {
-       const out = cp.execSync('git config core.autocrlf', { encoding: 'utf8', shell: true });
-       // const out = cp.execFileSync('git', ['config', 'core.autocrlf'], { encoding: 'utf8', shell: true });
-       const skipEOL = out.trim() === 'true';
-       return skipEOL;
-   }
-   catch (ex) {
-       // console.error(ex.message);
-       return false;
-   }
+   return hygiene(options);
 }
 function getStagedFilesSync() {
    const out = cp.execSync('git diff --cached --name-only', { encoding: 'utf8' });

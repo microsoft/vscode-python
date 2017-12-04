@@ -50,6 +50,7 @@
         "no-string-based-set-timeout": false,
         "no-floating-promises": false,
         "no-empty-interface": false,
-        "no-bitwise": false
+        "no-bitwise": false,
+        "eofline": true
     }
 }
