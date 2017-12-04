@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { expect } from 'chai';
 import { encode, encodingExists } from 'iconv-lite';
 import { BufferDecoder } from '../../../client/common/process/decoder';

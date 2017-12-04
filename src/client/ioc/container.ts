@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { EventEmitter } from 'events';
 import { Container, decorate, injectable, interfaces } from 'inversify';
 import { Abstract, IServiceContainer, Newable } from './types';

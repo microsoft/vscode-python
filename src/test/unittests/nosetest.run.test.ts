@@ -1,10 +1,13 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IProcessService } from '../../client/common/process/types';
 import { CommandSource } from '../../client/unittests/common/constants';
-import { ITestManagerFactory, Tests, TestsToRun } from '../../client/unittests/common/types';
+import { ITestManagerFactory, TestsToRun } from '../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockProcessService } from '../mocks/proc';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';

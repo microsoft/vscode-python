@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import * as iconv from 'iconv-lite';
 import { injectable } from 'inversify';
 import 'reflect-metadata';

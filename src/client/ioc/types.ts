@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { interfaces } from 'inversify';
 
 // tslint:disable-next-line:interface-name
