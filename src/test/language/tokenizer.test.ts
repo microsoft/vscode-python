@@ -18,9 +18,9 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.count, 3);
 
         const ranges = [1, 8, 10, 18, 29, 10];
-        for (let i = 0; i < ranges.length / 2; i += 2) {
-            assert.equal(tokens.getItemAt(i).start, ranges[i]);
-            assert.equal(tokens.getItemAt(i).length, ranges[i + 1]);
+        for (let i = 0; i < tokens.count; i += 1) {
+            assert.equal(tokens.getItemAt(i).start, ranges[2 * i]);
+            assert.equal(tokens.getItemAt(i).length, ranges[2 * i + 1]);
             assert.equal(tokens.getItemAt(i).type, TokenType.String);
         }
     });
