@@ -18,5 +18,5 @@
 	"python.unitTest.promptToConfigure": false,
 	"python.workspaceSymbols.enabled": false,
     "python.formatting.provider": "none",
-    "files.insertFinalNewline": false
+    "files.insertFinalNewline": true
 }
