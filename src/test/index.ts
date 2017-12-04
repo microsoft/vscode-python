@@ -8,7 +8,7 @@ process.env.IS_MULTI_ROOT_TEST = IS_MULTI_ROOT_TEST;
 // See https://github.com/mochajs/mocha/wiki/Using-mocha-programmatically#set-options for more info.
 // Hack, as retries is not supported as setting in tsd.
 // tslint:disable-next-line:no-any
-const options: MochaSetupOptions & { [key: string]: any } = {
+const options: MochaSetupOptions & { retries: number } = {
     ui: 'tdd',
     useColors: true,
     timeout: 25000,
