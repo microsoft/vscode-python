@@ -17,5 +17,6 @@
 	"python.linting.enabled": false,
 	"python.formatting.formatOnSave": false,
 	"python.unitTest.promptToConfigure": false,
-	"python.workspaceSymbols.enabled": false
+	"python.workspaceSymbols.enabled": false,
+	"python.formatting.provider": "yapf"
 }
