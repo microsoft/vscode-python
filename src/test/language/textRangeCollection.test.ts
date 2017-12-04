@@ -44,7 +44,7 @@ suite('Language.TextRangeCollection', () => {
         items.push(new TextRange(2, 1));
         items.push(new TextRange(4, 2));
         const c = new TextRangeCollection(items);
-        const results = [-1, -1, 0, -1, 1, 1, -1];
+        const results = [-1, -1, 0, -1, 1, -1, -1];
         for (let i = 0; i < results.length; i += 1) {
             const index = c.getItemAtPosition(i);
             assert.equal(index, results[i]);

@@ -51,7 +51,7 @@ export class TextRangeCollection<T extends ITextRange> implements ITextRangeColl
         let max = this.count - 1;
 
         while (min <= max) {
-            const mid = min + (max - min) / 2;
+            const mid = Math.floor(min + (max - min) / 2);
             const item = this.items[mid];
 
             if (item.start === position) {
@@ -82,7 +82,7 @@ export class TextRangeCollection<T extends ITextRange> implements ITextRangeColl
         let max = this.count - 1;
 
         while (min <= max) {
-            const mid = min + (max - min) / 2;
+            const mid = Math.floor(min + (max - min) / 2);
             const item = this.items[mid];
 
             if (item.contains(position)) {
