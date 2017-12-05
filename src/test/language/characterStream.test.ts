@@ -1,3 +1,7 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
+
 import * as assert from 'assert';
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';

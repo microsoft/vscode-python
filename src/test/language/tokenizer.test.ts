@@ -1,3 +1,7 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
+
 import * as assert from 'assert';
 import { TextRange, TokenType } from '../../client/language/definitions';
 import { TextRangeCollection } from '../../client/language/textRangeCollection';
