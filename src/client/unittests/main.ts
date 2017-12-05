@@ -1,21 +1,16 @@
 'use strict';
-import { Uri, window, workspace } from 'vscode';
+import { Disposable, Uri, window, workspace } from 'vscode';
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import * as constants from '../common/constants';
+import { IServiceContainer } from '../ioc/types';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
 import { UNITTEST_STOP, UNITTEST_VIEW_OUTPUT } from '../telemetry/constants';
 import { sendTelemetryEvent } from '../telemetry/index';
 import { activateCodeLenses } from './codeLenses/main';
-import { BaseTestManager } from './common/baseTestManager';
 import { CANCELLATION_REASON, CommandSource } from './common/constants';
-import { DebugLauncher } from './common/debugLauncher';
-import { TestCollectionStorageService } from './common/storageService';
-import { TestManagerServiceFactory } from './common/testManagerServiceFactory';
-import { TestResultsService } from './common/testResultsService';
-import { selectTestWorkspace, TestsHelper } from './common/testUtils';
-import { ITestCollectionStorageService, IWorkspaceTestManagerService, TestFile, TestFunction, TestStatus, TestsToRun } from './common/types';
-import { WorkspaceTestManagerService } from './common/workspaceTestManagerService';
+import { selectTestWorkspace } from './common/testUtils';
+import { ITestCollectionStorageService, ITestManager, IWorkspaceTestManagerService, TestFile, TestFunction, TestStatus, TestsToRun } from './common/types';
 import { displayTestFrameworkError } from './configuration';
 import { TestResultDisplay } from './display/main';
 import { TestDisplay } from './display/picker';
@@ -27,18 +22,14 @@ let outChannel: vscode.OutputChannel;
 const onDidChange: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
 let testCollectionStorage: ITestCollectionStorageService;
 
-export function activate(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel, symboldProvider: PythonSymbolProvider) {
+export function activate(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel, symboldProvider: PythonSymbolProvider, serviceContainer: IServiceContainer) {
     context.subscriptions.push({ dispose: dispose });
     outChannel = outputChannel;
     const disposables = registerCommands();
     context.subscriptions.push(...disposables);
 
-    testCollectionStorage = new TestCollectionStorageService();
-    const testResultsService = new TestResultsService();
-    const testsHelper = new TestsHelper();
-    const debugLauncher = new DebugLauncher();
-    const testManagerServiceFactory = new TestManagerServiceFactory(outChannel, testCollectionStorage, testResultsService, testsHelper, debugLauncher);
-    workspaceTestManagerService = new WorkspaceTestManagerService(outChannel, testManagerServiceFactory);
+    testCollectionStorage = serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
+    workspaceTestManagerService = serviceContainer.get<IWorkspaceTestManagerService>(IWorkspaceTestManagerService);
 
     context.subscriptions.push(autoResetTests());
     context.subscriptions.push(activateCodeLenses(onDidChange, symboldProvider, testCollectionStorage));
@@ -47,7 +38,7 @@ export function activate(context: vscode.ExtensionContext, outputChannel: vscode
     autoDiscoverTests();
 }
 
-async function getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<BaseTestManager | undefined | void> {
+async function getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void> {
     let wkspace: Uri | undefined;
     if (resource) {
         const wkspaceFolder = workspace.getWorkspaceFolder(resource);
@@ -91,7 +82,7 @@ function dispose() {
     testCollectionStorage.dispose();
 }
 function registerCommands(): vscode.Disposable[] {
-    const disposables = [];
+    const disposables: Disposable[] = [];
     disposables.push(vscode.commands.registerCommand(constants.Commands.Tests_Discover, (cmdSource: CommandSource = CommandSource.commandPalette, resource?: Uri) => {
         // Ignore the exceptions returned.
         // This command will be invoked else where in the extension.
@@ -135,7 +126,7 @@ async function displayUI(cmdSource: CommandSource) {
     }
 
     testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
-    testDisplay.displayTestUI(cmdSource, testManager.workspace);
+    testDisplay.displayTestUI(cmdSource, testManager.workspaceFolder);
 }
 async function displayPickerUI(cmdSource: CommandSource, file: Uri, testFunctions: TestFunction[], debug?: boolean) {
     const testManager = await getTestManager(true, file);
@@ -144,7 +135,7 @@ async function displayPickerUI(cmdSource: CommandSource, file: Uri, testFunction
     }
 
     testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
-    testDisplay.displayFunctionTestPickerUI(cmdSource, testManager.workspace, testManager.workingDirectory, file, testFunctions, debug);
+    testDisplay.displayFunctionTestPickerUI(cmdSource, testManager.workspaceFolder, testManager.workingDirectory, file, testFunctions, debug);
 }
 async function selectAndRunTestMethod(cmdSource: CommandSource, resource: Uri, debug?: boolean) {
     const testManager = await getTestManager(true, resource);
@@ -157,14 +148,14 @@ async function selectAndRunTestMethod(cmdSource: CommandSource, resource: Uri, d
         return;
     }
 
-    const tests = testCollectionStorage.getTests(testManager.workspace)!;
+    const tests = testCollectionStorage.getTests(testManager.workspaceFolder)!;
     testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
-    const selectedTestFn = await testDisplay.selectTestFunction(testManager.workspace.fsPath, tests);
+    const selectedTestFn = await testDisplay.selectTestFunction(testManager.workspaceFolder.fsPath, tests);
     if (!selectedTestFn) {
         return;
     }
     // tslint:disable-next-line:prefer-type-cast
-    await runTestsImpl(cmdSource, testManager.workspace, { testFunction: [selectedTestFn.testFunction] } as TestsToRun, debug);
+    await runTestsImpl(cmdSource, testManager.workspaceFolder, { testFunction: [selectedTestFn.testFunction] } as TestsToRun, debug);
 }
 async function selectAndRunTestFile(cmdSource: CommandSource) {
     const testManager = await getTestManager(true);
@@ -177,14 +168,14 @@ async function selectAndRunTestFile(cmdSource: CommandSource) {
         return;
     }
 
-    const tests = testCollectionStorage.getTests(testManager.workspace)!;
+    const tests = testCollectionStorage.getTests(testManager.workspaceFolder)!;
     testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
-    const selectedFile = await testDisplay.selectTestFile(testManager.workspace.fsPath, tests);
+    const selectedFile = await testDisplay.selectTestFile(testManager.workspaceFolder.fsPath, tests);
     if (!selectedFile) {
         return;
     }
     // tslint:disable-next-line:prefer-type-cast
-    await runTestsImpl(cmdSource, testManager.workspace, { testFile: [selectedFile] } as TestsToRun);
+    await runTestsImpl(cmdSource, testManager.workspaceFolder, { testFile: [selectedFile] } as TestsToRun);
 }
 async function runCurrentTestFile(cmdSource: CommandSource) {
     if (!window.activeTextEditor) {
@@ -199,7 +190,7 @@ async function runCurrentTestFile(cmdSource: CommandSource) {
     } catch (ex) {
         return;
     }
-    const tests = testCollectionStorage.getTests(testManager.workspace)!;
+    const tests = testCollectionStorage.getTests(testManager.workspaceFolder)!;
     const testFiles = tests.testFiles.filter(testFile => {
         return testFile.fullPath === window.activeTextEditor!.document.uri.fsPath;
     });
@@ -207,7 +198,7 @@ async function runCurrentTestFile(cmdSource: CommandSource) {
         return;
     }
     // tslint:disable-next-line:prefer-type-cast
-    await runTestsImpl(cmdSource, testManager.workspace, { testFile: [testFiles[0]] } as TestsToRun);
+    await runTestsImpl(cmdSource, testManager.workspaceFolder, { testFile: [testFiles[0]] } as TestsToRun);
 }
 async function displayStopUI(message: string) {
     const testManager = await getTestManager(true);
@@ -216,7 +207,7 @@ async function displayStopUI(message: string) {
     }
 
     testDisplay = testDisplay ? testDisplay : new TestDisplay(testCollectionStorage);
-    testDisplay.displayStopTestUI(testManager.workspace, message);
+    testDisplay.displayStopTestUI(testManager.workspaceFolder, message);
 }
 
 let uniTestSettingsString: string;
@@ -287,7 +278,8 @@ async function discoverTests(cmdSource: CommandSource, resource?: Uri, ignoreCac
     if (testManager && (testManager.status !== TestStatus.Discovering && testManager.status !== TestStatus.Running)) {
         testResultDisplay = testResultDisplay ? testResultDisplay : new TestResultDisplay(outChannel, onDidChange);
         const discoveryPromise = testManager.discoverTests(cmdSource, ignoreCache, false, userInitiated);
-        testResultDisplay.displayDiscoverStatus(discoveryPromise);
+        testResultDisplay.displayDiscoverStatus(discoveryPromise)
+            .catch(ex => console.error('Python Extension: displayDiscoverStatus', ex));
         await discoveryPromise;
     }
 }

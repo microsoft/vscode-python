@@ -1,8 +1,11 @@
+import { injectable } from 'inversify';
+import 'reflect-metadata';
 import { ITestVisitor, TestFile, TestFolder, TestFunction, TestStatus, TestSuite } from '../types';
 
+@injectable()
 export class TestResultResetVisitor implements ITestVisitor {
     public visitTestFunction(testFunction: TestFunction): void {
-        testFunction.passed = null;
+        testFunction.passed = undefined;
         testFunction.time = 0;
         testFunction.message = '';
         testFunction.traceback = '';
@@ -12,7 +15,7 @@ export class TestResultResetVisitor implements ITestVisitor {
         testFunction.functionsDidNotRun = 0;
     }
     public visitTestSuite(testSuite: TestSuite): void {
-        testSuite.passed = null;
+        testSuite.passed = undefined;
         testSuite.time = 0;
         testSuite.status = TestStatus.Unknown;
         testSuite.functionsFailed = 0;
@@ -20,7 +23,7 @@ export class TestResultResetVisitor implements ITestVisitor {
         testSuite.functionsDidNotRun = 0;
     }
     public visitTestFile(testFile: TestFile): void {
-        testFile.passed = null;
+        testFile.passed = undefined;
         testFile.time = 0;
         testFile.status = TestStatus.Unknown;
         testFile.functionsFailed = 0;
@@ -31,7 +34,7 @@ export class TestResultResetVisitor implements ITestVisitor {
         testFolder.functionsDidNotRun = 0;
         testFolder.functionsFailed = 0;
         testFolder.functionsPassed = 0;
-        testFolder.passed = null;
+        testFolder.passed = undefined;
         testFolder.status = TestStatus.Unknown;
     }
 }

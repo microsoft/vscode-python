@@ -217,7 +217,8 @@ class DjangoContextInitializer implements vscode.Disposable {
     private disposables: Disposable[] = [];
     constructor() {
         this.isDjangoProject = new ContextKey('python.isDjangoProject');
-        this.ensureState();
+        this.ensureState()
+            .catch(ex => console.error('Python Extension: ensureState', ex));
         this.disposables.push(vscode.workspace.onDidChangeWorkspaceFolders(() => this.updateContextKeyBasedOnActiveWorkspace()));
     }
 

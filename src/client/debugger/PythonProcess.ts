@@ -267,6 +267,7 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
     }
 
     public BindBreakpoint(brkpoint: IPythonBreakpoint): Promise<any> {
+        // tslint:disable-next-line:promise-must-complete
         return new Promise<IPythonThread>((resolve, reject) => {
             let bkCmd: IBreakpointCommand = {
                 Id: brkpoint.Id,
@@ -326,6 +327,7 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
         this.stream.Write(Commands.BreakAllCommandBytes);
     }
     public ExecuteText(text: string, reprKind: PythonEvaluationResultReprKind, stackFrame: IPythonStackFrame): Promise<IPythonEvaluationResult> {
+        // tslint:disable-next-line:promise-must-complete
         return new Promise<IPythonEvaluationResult>((resolve, reject) => {
             let executeId = this._idDispenser.Allocate();
             let cmd: IExecutionCommand = {

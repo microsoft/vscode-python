@@ -26,15 +26,13 @@ export class Linter extends baseLinter.BaseLinter {
             pydocstyleArgs = ProductExecutableAndArgs.get(Product.pydocstyle).args;
         }
 
-        return new Promise<baseLinter.ILintMessage[]>(resolve => {
-            this.run(pydocstylePath, pydocstyleArgs.concat([document.uri.fsPath]), document, null, cancellation).then(messages => {
-                // All messages in pep8 are treated as warnings for now
-                messages.forEach(msg => {
-                    msg.severity = baseLinter.LintMessageSeverity.Information;
-                });
-
-                resolve(messages);
+        return this.run(pydocstylePath, pydocstyleArgs.concat([document.uri.fsPath]), document, null, cancellation).then(messages => {
+            // All messages in pep8 are treated as warnings for now
+            messages.forEach(msg => {
+                msg.severity = baseLinter.LintMessageSeverity.Information;
             });
+
+            return messages;
         });
     }
 

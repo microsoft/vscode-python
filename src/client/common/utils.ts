@@ -1,6 +1,8 @@
 'use strict';
+// tslint:disable: no-any one-line no-suspicious-comment prefer-template prefer-const no-unnecessary-callback-wrapper no-function-expression no-string-literal no-control-regex no-shadowed-variable
 // TODO: Cleanup this place
 // Add options for execPythonFile
+
 import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as fsExtra from 'fs-extra';
@@ -60,7 +62,6 @@ async function getPythonInterpreterDirectory(resource?: Uri): Promise<string> {
         && cache.pythonSettingsPath === pythonFileName) {
         return cache.pythonInterpreterDirectory;
     }
-
 
     // Check if we have the path
     if (path.basename(pythonFileName) === pythonFileName) {

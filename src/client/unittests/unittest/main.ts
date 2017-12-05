@@ -1,23 +1,25 @@
 'use strict';
-import * as vscode from 'vscode';
+import { Uri } from 'vscode';
 import { Product } from '../../common/installer';
-import { BaseTestManager } from '../common/baseTestManager';
-import { ITestCollectionStorageService, ITestDebugLauncher, ITestResultsService, ITestsHelper, Tests, TestStatus, TestsToRun } from '../common/types';
-import { discoverTests } from './collector';
+import { IServiceContainer } from '../../ioc/types';
+import { BaseTestManager } from '../common/managers/baseTestManager';
+import { TestDiscoveryOptions, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
 import { runTest } from './runner';
 export class TestManager extends BaseTestManager {
-    constructor(rootDirectory: string, outputChannel: vscode.OutputChannel,
-        testCollectionStorage: ITestCollectionStorageService,
-        testResultsService: ITestResultsService, testsHelper: ITestsHelper, private debugLauncher: ITestDebugLauncher) {
-        super('unittest', Product.unittest, rootDirectory, outputChannel, testCollectionStorage, testResultsService, testsHelper);
+    constructor(workspaceFolder: Uri, rootDirectory: string, serviceContainer: IServiceContainer) {
+        super('unittest', Product.unittest, workspaceFolder, rootDirectory, serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public configure() {
     }
-    public async discoverTestsImpl(ignoreCache: boolean): Promise<Tests> {
+    public getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions {
         const args = this.settings.unitTest.unittestArgs.slice(0);
-        // tslint:disable-next-line:no-non-null-assertion
-        return discoverTests(this.rootDirectory, args, this.testDiscoveryCancellationToken!, ignoreCache, this.outputChannel, this.testsHelper);
+        return {
+            workspaceFolder: this.workspaceFolder,
+            cwd: this.rootDirectory, args,
+            token: this.testDiscoveryCancellationToken!, ignoreCache,
+            outChannel:     this.outputChannel
+        };
     }
     public async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<{}> {
         const args = this.settings.unitTest.unittestArgs.slice(0);
@@ -27,6 +29,13 @@ export class TestManager extends BaseTestManager {
                 return fn.testFunction.status === TestStatus.Error || fn.testFunction.status === TestStatus.Fail;
             }).map(fn => fn.testFunction);
         }
-        return runTest(this, this.testResultsService, this.debugLauncher, this.rootDirectory, tests, args, testsToRun, this.testRunnerCancellationToken, this.outputChannel, debug);
+        const options: TestRunOptions = {
+            workspaceFolder: this.workspaceFolder,
+            cwd: this.rootDirectory,
+            tests, args, testsToRun, debug,
+            token: this.testRunnerCancellationToken!,
+            outChannel: this.outputChannel
+        };
+        return runTest(this.serviceContainer, this, this.testResultsService, options);
     }
 }

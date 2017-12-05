@@ -1,22 +1,26 @@
-'use strict';
-import { OutputChannel } from 'vscode';
-import * as vscode from 'vscode';
-import { PythonSettings } from '../../common/configSettings';
+import { inject, injectable } from 'inversify';
+import 'reflect-metadata';
+import { Uri } from 'vscode';
 import { Product } from '../../common/installer';
-import { BaseTestManager } from '../common/baseTestManager';
-import { ITestCollectionStorageService, ITestDebugLauncher, ITestResultsService, ITestsHelper, Tests, TestsToRun } from '../common/types';
-import { discoverTests } from './collector';
+import { IServiceContainer } from '../../ioc/types';
+import { BaseTestManager } from '../common/managers/baseTestManager';
+import { TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
 import { runTest } from './runner';
 
+@injectable()
 export class TestManager extends BaseTestManager {
-    constructor(rootDirectory: string, outputChannel: vscode.OutputChannel,
-        testCollectionStorage: ITestCollectionStorageService,
-        testResultsService: ITestResultsService, testsHelper: ITestsHelper, private debugLauncher: ITestDebugLauncher) {
-        super('nosetest', Product.nosetest, rootDirectory, outputChannel, testCollectionStorage, testResultsService, testsHelper);
+    constructor(workspaceFolder: Uri, rootDirectory: string,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        super('nosetest', Product.nosetest, workspaceFolder, rootDirectory, serviceContainer);
     }
-    public discoverTestsImpl(ignoreCache: boolean): Promise<Tests> {
+    public getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions {
         const args = this.settings.unitTest.nosetestArgs.slice(0);
-        return discoverTests(this.rootDirectory, args, this.testDiscoveryCancellationToken, ignoreCache, this.outputChannel, this.testsHelper);
+        return {
+            workspaceFolder: this.workspaceFolder,
+            cwd: this.rootDirectory, args,
+            token: this.testDiscoveryCancellationToken!, ignoreCache,
+            outChannel: this.outputChannel
+        };
     }
     // tslint:disable-next-line:no-any
     public runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<any> {
@@ -27,6 +31,14 @@ export class TestManager extends BaseTestManager {
         if (!runFailedTests && args.indexOf('--with-id') === -1) {
             args.push('--with-id');
         }
-        return runTest(this.testResultsService, this.debugLauncher, this.rootDirectory, tests, args, testsToRun, this.testRunnerCancellationToken, this.outputChannel, debug);
+        const options: TestRunOptions = {
+            workspaceFolder: Uri.file(this.rootDirectory),
+            cwd: this.rootDirectory,
+            tests, args, testsToRun,
+            token: this.testRunnerCancellationToken!,
+            outChannel: this.outputChannel,
+            debug
+        };
+        return runTest(this.serviceContainer, this.testResultsService, options);
     }
 }

@@ -1,10 +1,15 @@
-import { CancellationToken, Disposable, OutputChannel, Uri } from 'vscode';
+import { EventEmitter } from 'events';
+import { injectable } from 'inversify';
+import 'reflect-metadata';
+import { CancellationToken, Disposable, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../client/common/helpers';
 import { Product } from '../../client/common/installer';
-import { BaseTestManager } from '../../client/unittests/common/baseTestManager';
+import { IServiceContainer } from '../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../client/unittests/common/constants';
-import { ITestCollectionStorageService, ITestDebugLauncher, ITestResultsService, ITestsHelper, Tests, TestsToRun } from '../../client/unittests/common/types';
+import { BaseTestManager } from '../../client/unittests/common/managers/baseTestManager';
+import { ITestDebugLauncher, ITestDiscoveryService, IUnitTestSocketServer, launchOptions, TestDiscoveryOptions, TestProvider, Tests, TestsToRun } from '../../client/unittests/common/types';
 
+@injectable()
 export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     public get launched(): Promise<boolean> {
         return this._launched.promise;
@@ -28,32 +33,36 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     public async getPort(resource?: Uri): Promise<number> {
         return 0;
     }
-    public async launchDebugger(rootDirectory: string, testArgs: string[], debugPort: number, token?: CancellationToken, outChannel?: OutputChannel): Promise<Tests> {
+    public async launchDebugger(options: launchOptions): Promise<void> {
         this._launched.resolve(true);
         // tslint:disable-next-line:no-non-null-assertion
-        this._token = token!;
+        this._token = options.token!;
         this._promise = createDeferred<Tests>();
         // tslint:disable-next-line:no-non-null-assertion
-        token!.onCancellationRequested(() => {
+        options.token!.onCancellationRequested(() => {
             if (this._promise) {
                 this._promise.reject('Mock-User Cancelled');
             }
         });
-        return this._promise.promise;
+        return this._promise.promise as {} as Promise<void>;
     }
     public dispose() {
         this._promise = undefined;
     }
 }
 
+@injectable()
 export class MockTestManagerWithRunningTests extends BaseTestManager {
     // tslint:disable-next-line:no-any
     public readonly runnerDeferred = createDeferred<any>();
     // tslint:disable-next-line:no-any
     public readonly discoveryDeferred = createDeferred<Tests>();
-    constructor(testRunnerId: 'nosetest' | 'pytest' | 'unittest', product: Product, rootDirectory: string,
-        outputChannel: OutputChannel, storageService: ITestCollectionStorageService, resultsService: ITestResultsService, testsHelper: ITestsHelper) {
-        super('nosetest', product, rootDirectory, outputChannel, storageService, resultsService, testsHelper);
+    constructor(testProvider: TestProvider, product: Product, workspaceFolder: Uri, rootDirectory: string,
+        serviceContainer: IServiceContainer) {
+        super(testProvider, product, workspaceFolder, rootDirectory, serviceContainer);
+    }
+    protected getDiscoveryOptions(ignoreCache: boolean) {
+        return {} as TestDiscoveryOptions;
     }
     // tslint:disable-next-line:no-any
     protected async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<any> {
@@ -70,4 +79,35 @@ export class MockTestManagerWithRunningTests extends BaseTestManager {
         });
         return this.discoveryDeferred.promise;
     }
+}
+
+@injectable()
+export class MockDiscoveryService implements ITestDiscoveryService {
+    constructor(private discoverPromise: Promise<Tests>) { }
+    public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
+        return this.discoverPromise;
+    }
+}
+
+// tslint:disable-next-line:max-classes-per-file
+@injectable()
+export class MockUnitTestSocketServer extends EventEmitter implements IUnitTestSocketServer {
+    private results: {}[] = [];
+    public reset() {
+        this.removeAllListeners();
+    }
+    public addResults(results: {}[]) {
+        this.results.push(...results);
+    }
+    public async start(): Promise<number> {
+        this.results.forEach(result => {
+            this.emit('result', result);
+        });
+        this.results = [];
+        return 0;
+    }
+    // tslint:disable-next-line:no-empty
+    public stop(): void { }
+    // tslint:disable-next-line:no-empty
+    public dispose() { }
 }

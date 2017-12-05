@@ -13,7 +13,7 @@ export class TestResultDisplay {
     private progressTimeout;
     private progressPrefix: string;
     // tslint:disable-next-line:no-any
-    constructor(private outputChannel: vscode.OutputChannel, private onDidChange: vscode.EventEmitter<any> = null) {
+    constructor(private outputChannel: vscode.OutputChannel, private onDidChange?: vscode.EventEmitter<any>) {
         this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     }
     public dispose() {
@@ -50,8 +50,8 @@ export class TestResultDisplay {
         this.clearProgressTicker();
 
         // Treat errors as a special case, as we generally wouldn't have any errors
-        const statusText = [];
-        const toolTip = [];
+        const statusText: string[] = [];
+        const toolTip: string[] = [];
         let foreColor = '';
 
         if (tests.summary.passed > 0) {
@@ -135,7 +135,7 @@ export class TestResultDisplay {
             if (settingsToDisable.length === 0) {
                 return def.resolve();
             }
-            pythonConfig.update(settingsToDisable.shift(), false)
+            pythonConfig.update(settingsToDisable.shift()!, false)
                 .then(disableTest.bind(this), disableTest.bind(this));
         }
 
@@ -157,8 +157,8 @@ export class TestResultDisplay {
         if (!haveTests) {
             vscode.window.showInformationMessage('No tests discovered, please check the configuration settings for the tests.', 'Disable Tests').then(item => {
                 if (item === 'Disable Tests') {
-                    // tslint:disable-next-line:no-floating-promises
-                    this.disableTests();
+                    this.disableTests()
+                        .catch(ex => console.error('Python Extension: disableTests', ex));
                 }
             });
         }
@@ -175,8 +175,10 @@ export class TestResultDisplay {
         if (reason !== CANCELLATION_REASON) {
             this.statusBar.text = '$(alert) Test discovery failed';
             this.statusBar.tooltip = 'Discovering Tests failed (view \'Python Test Log\' output panel for details)';
+            // tslint:disable-next-line:no-suspicious-comment
             // TODO: ignore this quitemode, always display the error message (inform the user).
             if (!isNotInstalledError(reason)) {
+                // tslint:disable-next-line:no-suspicious-comment
                 // TODO: show an option that will invoke a command 'python.test.configureTest' or similar.
                 // This will be hanlded by main.ts that will capture input from user and configure the tests.
                 vscode.window.showErrorMessage('There was an error in discovering tests, please check the configuration settings for the tests.');

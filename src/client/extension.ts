@@ -1,11 +1,16 @@
 'use strict';
+import { Container } from 'inversify';
 import * as os from 'os';
 import * as vscode from 'vscode';
+import { Disposable, Memento, OutputChannel } from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
-import { PersistentStateFactory } from './common/persistentState';
+import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
+import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
+import { GLOBAL_MEMENTO, IDiposableRegistry, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
+import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { SimpleConfigurationProvider } from './debugger';
 import { FeedbackService } from './feedback';
 import { InterpreterManager } from './interpreter';
@@ -13,6 +18,9 @@ import { SetInterpreterProvider } from './interpreter/configuration/setInterpret
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
 import { getCondaVersion } from './interpreter/helpers';
 import { InterpreterVersionService } from './interpreter/interpreterVersion';
+import { ServiceContainer } from './ioc/container';
+import { ServiceManager } from './ioc/serviceManager';
+import { IServiceContainer } from './ioc/types';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
@@ -34,7 +42,9 @@ import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { StopWatch } from './telemetry/stopWatch';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
+import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import * as tests from './unittests/main';
+import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
 import { WorkspaceSymbols } from './workspaceSymbols/main';
 
 const PYTHON: vscode.DocumentFilter = { language: 'python' };
@@ -43,15 +53,31 @@ let formatOutChannel: vscode.OutputChannel;
 let lintingOutChannel: vscode.OutputChannel;
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
+
+let cont: Container;
+let serviceManager: ServiceManager;
+let serviceContainer: ServiceContainer;
+
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: vscode.ExtensionContext) {
-    const persistentStateFactory = new PersistentStateFactory(context.globalState, context.workspaceState);
+    cont = new Container();
+    serviceManager = new ServiceManager(cont);
+    serviceContainer = new ServiceContainer(cont);
+    serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
+    serviceManager.addSingletonInstance<Disposable[]>(IDiposableRegistry, context.subscriptions);
+    serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
+    serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
+    commonRegisterTypes(serviceManager);
+    processRegisterTypes(serviceManager);
+    variableRegisterTypes(serviceManager);
+    unitTestsRegisterTypes(serviceManager);
+
+    const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
-    // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated);
 
     lintingOutChannel = vscode.window.createOutputChannel(pythonSettings.linting.outputWindow);
-    formatOutChannel = lintingOutChannel;
+    unitTestOutChannel = formatOutChannel = lintingOutChannel;
     if (pythonSettings.linting.outputWindow !== pythonSettings.formatting.outputWindow) {
         formatOutChannel = vscode.window.createOutputChannel(pythonSettings.formatting.outputWindow);
         formatOutChannel.clear();
@@ -61,11 +87,13 @@ export async function activate(context: vscode.ExtensionContext) {
         unitTestOutChannel.clear();
     }
 
+    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
+
     sortImports.activate(context, formatOutChannel);
     const interpreterManager = new InterpreterManager();
     await interpreterManager.autoSetInterpreter();
-    // tslint:disable-next-line:no-floating-promises
-    interpreterManager.refresh();
+    interpreterManager.refresh()
+        .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
     context.subscriptions.push(interpreterManager);
     const interpreterVersionService = new InterpreterVersionService();
     context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService));
@@ -136,7 +164,7 @@ export async function activate(context: vscode.ExtensionContext) {
             linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
         });
     }
-    tests.activate(context, unitTestOutChannel, symbolProvider);
+    tests.activate(context, unitTestOutChannel, symbolProvider, serviceContainer);
 
     context.subscriptions.push(new WorkspaceSymbols(lintingOutChannel));
 
@@ -158,17 +186,18 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled));
 }
 
-async function sendStartupTelemetry(activatedPromise: Promise<void>) {
+function sendStartupTelemetry(activatedPromise: Promise<void>) {
     const stopWatch = new StopWatch();
-    // tslint:disable-next-line:no-floating-promises
-    activatedPromise.then(async () => {
-        const duration = stopWatch.elapsedTime;
-        let condaVersion: string | undefined;
-        try {
-            condaVersion = await getCondaVersion();
-            // tslint:disable-next-line:no-empty
-        } catch { }
-        const props = condaVersion ? { condaVersion } : undefined;
-        sendTelemetryEvent(EDITOR_LOAD, duration, props);
-    });
+    activatedPromise
+        .then(async () => {
+            const duration = stopWatch.elapsedTime;
+            let condaVersion: string | undefined;
+            try {
+                condaVersion = await getCondaVersion();
+                // tslint:disable-next-line:no-empty
+            } catch { }
+            const props = condaVersion ? { condaVersion } : undefined;
+            sendTelemetryEvent(EDITOR_LOAD, duration, props);
+        })
+        .catch(ex => console.error('Python Extension: sendStartupTelemetry', ex));
 }

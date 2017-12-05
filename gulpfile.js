@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
+*  Copyright (c) Microsoft Corporation. All rights reserved.
+*  Licensed under the MIT License. See License.txt in the project root for license information.
+*--------------------------------------------------------------------------------------------*/
 
 'use strict';
 
@@ -12,446 +12,300 @@ const tsfmt = require('typescript-formatter');
 const tslint = require('tslint');
 const relative = require('relative');
 const ts = require('gulp-typescript');
-const watch = require('gulp-debounced-watch');
 const cp = require('child_process');
 const colors = require('colors/safe');
+const gitmodified = require('gulp-gitmodified');
+const path = require('path');
+const debounce = require('debounce');
 
 /**
- * Hygiene works by creating cascading subsets of all our files and
- * passing them through a sequence of checks. Here are the current subsets,
- * named according to the checks performed on them. Each subset contains
- * the following one, as described in mathematical notation:
- *
- * all ⊃ eol ⊇ indentation ⊃ typescript
- */
+* Hygiene works by creating cascading subsets of all our files and
+* passing them through a sequence of checks. Here are the current subsets,
+* named according to the checks performed on them. Each subset contains
+* the following one, as described in mathematical notation:
+*
+* all ⊃ indentation ⊃ typescript
+*/
 
 const all = [
-    'src/**/*',
-    'src/client/**/*',
-];
-
-const eolFilter = [
-    '**',
-    '!.editorconfig',
-    '!.eslintrc',
-    '!.gitignore',
-    '!.gitmodules',
-    '!.jshintignore',
-    '!.jshintrc',
-    '!.npmrc',
-    '!.vscodeignore',
-    '!LICENSE',
-    '!**/node_modules/**',
-    '!**/*.{svg,exe,png,bmp,scpt,bat,cmd,cur,ttf,woff,eot,txt,md,json,yml,pyc}',
-    '!out/**/*',
-    '!images/**/*',
-    '!.vscode/**/*',
-    '!pythonFiles/**/*',
-    '!resources/**/*',
-    '!snippets/**/*',
-    '!syntaxes/**/*',
-    '!**/typings/**/*',
+   'src/**/*',
+   'src/client/**/*',
 ];
 
 const indentationFilter = [
-    'src/**/*.ts',
-    '!**/typings/**/*',
+   'src/**/*.ts',
+   '!**/typings/**/*',
 ];
 
 const tslintFilter = [
-    'src/**/*.ts',
-    'test/**/*.ts',
-    '!**/node_modules/**',
-    '!out/**/*',
-    '!images/**/*',
-    '!.vscode/**/*',
-    '!pythonFiles/**/*',
-    '!resources/**/*',
-    '!snippets/**/*',
-    '!syntaxes/**/*',
-    '!**/typings/**/*',
+   'src/**/*.ts',
+   'test/**/*.ts',
+   '!**/node_modules/**',
+   '!out/**/*',
+   '!images/**/*',
+   '!.vscode/**/*',
+   '!pythonFiles/**/*',
+   '!resources/**/*',
+   '!snippets/**/*',
+   '!syntaxes/**/*',
+   '!**/typings/**/*',
 ];
-
-function reportFailures(failures) {
-    failures.forEach(failure => {
-        const name = failure.name || failure.fileName;
-        const position = failure.startPosition;
-        const line = position.lineAndCharacter ? position.lineAndCharacter.line : position.line;
-        const character = position.lineAndCharacter ? position.lineAndCharacter.character : position.character;
-
-        // Output in format similar to tslint for the linter to pickup.
-        console.error(`ERROR: (${failure.ruleName}) ${relative(__dirname, name)}[${line + 1}, ${character + 1}]: ${failure.failure}`);
-    });
-}
-
-
-/**
- * @typedef {Object} hygieneOptions - creates a new type named 'SpecialType'
- * @property {boolean=} skipEOL - skipEOL check.
- * @property {boolean=} skipIndentationCheck - Skip indentation checks.
- * @property {boolean=} skipFormatCheck - Skip format checks.
- */
-
-/**
-  *
-  * @param {string[]} some
-  * @param {hygieneOptions} options
-  * @returns {NodeJS.EventEmitter}
-  */
-const hygiene = (some, options) => {
-    options = options || {};
-    let errorCount = 0;
-    const eol = es.through(function (file) {
-        if (/\r\n?/g.test(file.contents.toString('utf8'))) {
-            console.error(file.relative + ': Bad EOL found');
-            errorCount++;
-        }
-
-        this.emit('data', file);
-    });
-
-    const indentation = es.through(function (file) {
-        file.contents
-            .toString('utf8')
-            .split(/\r\n|\r|\n/)
-            .forEach((line, i) => {
-                if (/^\s*$/.test(line) || /^\S+.*$/.test(line)) {
-                    // Empty or whitespace lines are OK.
-                } else if (/^(\s\s\s\s)+.*/.test(line)) {
-                    // Good indent.
-                } else if (/^[\t]+.*/.test(line)) {
-                    console.error(file.relative + '(' + (i + 1) + ',1): Bad whitespace indentation (use 4 spaces instead of tabs or other)');
-                    errorCount++;
-                }
-            });
-
-        this.emit('data', file);
-    });
-
-    const formatting = es.map(function (file, cb) {
-        tsfmt.processString(file.path, file.contents.toString('utf8'), {
-            verify: true,
-            tsconfig: true,
-            tslint: true,
-            editorconfig: true,
-            tsfmt: true
-        }).then(result => {
-            if (result.error) {
-                console.error(result.message.trim());
-                errorCount++;
-            }
-            cb(null, file);
-
-        }, err => {
-            cb(err);
-        });
-    });
-
-    const program = require('tslint').Linter.createProgram("./tsconfig.json");
-    const linter = new tslint.Linter(options, program);
-    const tsl = es.through(function (file) {
-        const configuration = tslint.Configuration.findConfiguration(null, '.');
-        const options = {
-            formatter: 'json'
-        };
-        const contents = file.contents.toString('utf8');
-        linter.lint(file.relative, contents, configuration.results);
-        const result = linter.getResult();
-        if (result.failureCount > 0 || result.errorCount > 0) {
-            reportFailures(result.failures);
-            if (result.failureCount) {
-                errorCount += result.failureCount;
-            }
-            if (result.errorCount) {
-                errorCount += result.errorCount;
-            }
-        }
-
-        this.emit('data', file);
-    });
-
-    const tsFiles = [];
-    const tscFilesTracker = es.through(function (file) {
-        tsFiles.push(file.path.replace(/\\/g, '/'));
-        tsFiles.push(file.path);
-        this.emit('data', file);
-    });
-
-    const tsc = function () {
-        function customReporter() {
-            return {
-                error: function (error) {
-                    const fullFilename = error.fullFilename || '';
-                    const relativeFilename = error.relativeFilename || '';
-                    if (tsFiles.findIndex(file => fullFilename === file || relativeFilename === file) === -1) {
-                        return;
-                    }
-                    errorCount += 1;
-                    console.error(error.message);
-                },
-                finish: function () {
-                    // forget the summary.
-                }
-            };
-        }
-        const tsProject = ts.createProject('tsconfig.json', { strict: true, noImplicitAny: false, noImplicitThis: false });
-        const reporter = customReporter();
-        return tsProject(reporter);
-    }
-
-    // Misc file checks.
-    let result = gulp.src(some || all, {
-        base: '.'
-    })
-        .pipe(filter(f => !f.stat.isDirectory()))
-        .pipe(filter(eolFilter))
-        .pipe(options.skipEOL ? es.through() : eol)
-        .pipe(filter(indentationFilter))
-        .pipe(indentation);
-
-    // Type script checks.
-    let typescript = result
-        .pipe(filter(tslintFilter))
-        .pipe(formatting);
-
-    typescript = typescript
-        .pipe(tsl)
-        .pipe(tscFilesTracker)
-        .pipe(tsc());
-
-    return typescript
-        .pipe(es.through(null, function () {
-            if (errorCount > 0) {
-                this.emit('error', 'Hygiene failed with ' + errorCount + ' errors 👎. Check \'gulpfile.js\'.');
-            } else {
-                this.emit('end');
-            }
-        }));
-};
-
-exports.hygiene = hygiene;
 
 gulp.task('hygiene', () => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }));
 
-gulp.task('hygiene-staged', () => run({ mode: 'changes' }));
+gulp.task('compile', () => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }));
 
-gulp.task('hygiene-watch', ['hygiene-staged', 'hygiene-watch-runner']);
+gulp.task('watch', ['hygiene-modified', 'hygiene-watch']);
 
-gulp.task('hygiene-watch-runner', function () {
-    /**
-     * @type {Deferred}
-     */
-    let runPromise;
+gulp.task('hygiene-watch', () => gulp.watch(all, debounce(() => run({ mode: 'changes' }), 1000)));
 
-    return watch(all, { events: ['add', 'change'] }, function (event) {
-        // Damn bounce does not work, do our own checks.
-        const start = new Date();
-        if (runPromise && !runPromise.completed) {
-            console.log(`[${start.toLocaleTimeString()}] Already running`);
-            return;
-        }
-        console.log(`[${start.toLocaleTimeString()}] Starting '${colors.cyan('hygiene-watch-runner')}'...`);
+gulp.task('hygiene-modified', ['compile'], () => run({ mode: 'changes' }));
 
-        runPromise = new Deferred();
-        // Skip indentation and formatting checks to speed up linting.
-        run({ mode: 'watch', skipFormatCheck: true, skipIndentationCheck: true })
-            .then(() => {
-                const end = new Date();
-                const time = (end.getTime() - start.getTime()) / 1000;
-                console.log(`[${end.toLocaleTimeString()}] Finished '${colors.cyan('hygiene-watch-runner')}' after ${time} seconds`);
-                runPromise.resolve();
-            })
-            .catch(runPromise.reject.bind);
+function reportFailures(failures) {
+   failures.forEach(failure => {
+       const name = failure.name || failure.fileName;
+       const position = failure.startPosition;
+       const line = position.lineAndCharacter ? position.lineAndCharacter.line : position.line;
+       const character = position.lineAndCharacter ? position.lineAndCharacter.character : position.character;
 
-        return runPromise.promise;
-    });
-});
+       // Output in format similar to tslint for the linter to pickup.
+       console.error(`ERROR: (${failure.ruleName}) ${relative(__dirname, name)}[${line + 1}, ${character + 1}]: ${failure.failure}`);
+   });
+}
 
 /**
- * @typedef {Object} runOptions
- * @property {boolean=} exitOnError - Exit on error.
- * @property {'watch'|'changes'|'staged'|'all'} [mode=] - Mode.
- * @property {string[]=} files - Optional list of files to be modified.
- * @property {boolean=} skipIndentationCheck - Skip indentation checks.
- * @property {boolean=} skipFormatCheck - Skip format checks.
- */
+* @typedef {Object} hygieneOptions - creates a new type named 'SpecialType'
+* @property {'changes'|'staged'|'all'|'compile'} [mode=] - Mode.
+* @property {boolean=} skipIndentationCheck - Skip indentation checks.
+* @property {boolean=} skipFormatCheck - Skip format checks.
+* @property {boolean=} skipLinter - Skip linter.
+*/
 
 /**
- * Run the linters.
- * @param {runOptions} options
- * @param {Error} ex
+ *
+ * @param {hygieneOptions} options
+ * @returns {NodeJS.ReadWriteStream}
  */
+const hygiene = (options) => {
+   options = options || {};
+   let errorCount = 0;
+
+   const indentation = es.through(function (file) {
+       file.contents
+           .toString('utf8')
+           .split(/\r\n|\r|\n/)
+           .forEach((line, i) => {
+               if (/^\s*$/.test(line) || /^\S+.*$/.test(line)) {
+                   // Empty or whitespace lines are OK.
+               } else if (/^(\s\s\s\s)+.*/.test(line)) {
+                   // Good indent.
+               } else if (/^[\t]+.*/.test(line)) {
+                   console.error(file.relative + '(' + (i + 1) + ',1): Bad whitespace indentation (use 4 spaces instead of tabs or other)');
+                   errorCount++;
+               }
+           });
+
+       this.emit('data', file);
+   });
+
+   const formatOptions = { verify: true, tsconfig: true, tslint: true, editorconfig: true, tsfmt: true };
+   const formatting = es.map(function (file, cb) {
+       tsfmt.processString(file.path, file.contents.toString('utf8'), formatOptions)
+           .then(result => {
+               if (result.error) {
+                   let message = result.message.trim();
+                   let formattedMessage = '';
+                   if (message.startsWith(__dirname)) {
+                       message = message.substr(__dirname.length);
+                       message = message.startsWith(path.sep) ? message.substr(1) : message;
+                       const index = message.indexOf('.ts ');
+                       if (index === -1) {
+                           formattedMessage = colors.red(message);
+                       } else {
+                           const file = message.substr(0, index + 3);
+                           const errorMessage = message.substr(index + 4).trim();
+                           formattedMessage = `${colors.red(file)} ${errorMessage}`;
+                       }
+                   } else {
+                       formattedMessage = colors.red(message);
+                   }
+                   console.error(formattedMessage);
+                   errorCount++;
+               }
+               cb(null, file);
+           })
+           .catch(cb);
+   });
+
+   const configuration = tslint.Configuration.findConfiguration(null, '.');
+   const program = tslint.Linter.createProgram('./tsconfig.json');
+   const linter = new tslint.Linter({ formatter: 'json' }, program);
+   const tsl = es.through(function (file) {
+       const contents = file.contents.toString('utf8');
+       // Don't print anything to the console, we'll do that.
+       // Yes this is a hack, but tslinter doesn't provide an option to prevent this.
+       const oldWarn = console.warn;
+       console.warn = () => { };
+       linter.lint(file.relative, contents, configuration.results);
+       console.warn = oldWarn;
+       const result = linter.getResult();
+       if (result.failureCount > 0 || result.errorCount > 0) {
+           reportFailures(result.failures);
+           if (result.failureCount) {
+               errorCount += result.failureCount;
+           }
+           if (result.errorCount) {
+               errorCount += result.errorCount;
+           }
+       }
+       this.emit('data', file);
+   });
+
+   const tsFiles = [];
+   const tscFilesTracker = es.through(function (file) {
+       tsFiles.push(file.path.replace(/\\/g, '/'));
+       tsFiles.push(file.path);
+       this.emit('data', file);
+   });
+
+   const tsOptions = options.mode === 'compile' ? undefined : { strict: true, noImplicitAny: false, noImplicitThis: false };
+   const tsProject = ts.createProject('tsconfig.json', tsOptions);
+
+   const tsc = function () {
+       function customReporter() {
+           return {
+               error: function (error) {
+                   const fullFilename = error.fullFilename || '';
+                   const relativeFilename = error.relativeFilename || '';
+                   if (tsFiles.findIndex(file => fullFilename === file || relativeFilename === file) === -1) {
+                       return;
+                   }
+                   errorCount += 1;
+                   console.error(error.message);
+               },
+               finish: function () {
+                  // forget the summary.
+               }
+           };
+       }
+       const reporter = customReporter();
+       return tsProject(reporter);
+   }
+
+   const files = options.mode === 'compile' ? tsProject.src() : getFilesToProcess(options);
+   const dest = options.mode === 'compile' ? './out' : '.';
+   let result = files
+       .pipe(filter(f => !f.stat.isDirectory()));
+
+   if (!options.skipIndentationCheck) {
+       result = result.pipe(filter(indentationFilter))
+           .pipe(indentation);
+   }
+
+   result = result
+       .pipe(filter(tslintFilter));
+
+   if (!options.skipFormatCheck) {
+       result = result
+           .pipe(formatting);
+   }
+
+   if (!options.skipLinter) {
+       result = result
+           .pipe(tsl);
+   }
+
+   result = result
+       .pipe(tscFilesTracker)
+       .pipe(tsc())
+       .js.pipe(gulp.dest(dest))
+       .pipe(es.through(null, function () {
+           if (errorCount > 0) {
+               const errorMessage = `Hygiene failed with ${colors.yellow(errorCount)} errors 👎 . Check 'gulpfile.js'.`;
+               console.error(colors.red(errorMessage));
+               exitHandler(options);
+           } else {
+               console.log(colors.green('Hygiene passed with 0 errors 👍.'));
+           }
+           // Reset error counter.
+           errorCount = 0;
+           this.emit('end');
+       }))
+       .on('error', exitHandler.bind(this, options));
+};
+
+/**
+* @typedef {Object} runOptions
+* @property {boolean=} exitOnError - Exit on error.
+* @property {'changes'|'staged'|'all'} [mode=] - Mode.
+* @property {string[]=} files - Optional list of files to be modified.
+* @property {boolean=} skipIndentationCheck - Skip indentation checks.
+* @property {boolean=} skipFormatCheck - Skip format checks.
+* @property {boolean=} skipLinter - Skip linter.
+ * @property {boolean=} watch - Watch mode.
+*/
+
+/**
+* Run the linters.
+* @param {runOptions} options
+* @param {Error} ex
+*/
 function exitHandler(options, ex) {
-    console.error();
-    if (ex) {
-        console.error(ex);
-        console.error(colors.red(ex));
-    }
-    if (options.exitOnError) {
-        process.exit(1);
-    }
-    if (options.mode === 'watch') {
-        console.log('Watching for changes...');
-    }
+   console.error();
+   if (ex) {
+       console.error(ex);
+       console.error(colors.red(ex));
+   }
+   if (options.exitOnError) {
+       console.log('exit');
+       process.exit(1);
+   }
 }
 
 /**
- * Run the linters.
- * @param {runOptions} options
- * @return {Promise<void>}
- */
+* Run the linters.
+* @param {runOptions} options
+*/
 function run(options) {
-    options = options ? options : {};
-    process.once('unhandledRejection', (reason, p) => {
-        console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-        exitHandler(options);
-    });
+   options = options ? options : {};
+   process.once('unhandledRejection', (reason, p) => {
+       console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+       exitHandler(options);
+   });
 
-    return getGitSkipEOL()
-        .then(skipEOL => {
-            if (typeof options.mode !== 'string' && process.argv.length > 2) {
-                return new Promise((resolve, reject) => {
-                    return hygiene(process.argv.slice(2), {
-                        skipEOL: skipEOL
-                    })
-                        .once('error', reject)
-                        .once('end', resolve);
-                });
-            }
+   return hygiene(options);
+}
+function getStagedFilesSync() {
+   const out = cp.execSync('git diff --cached --name-only', { encoding: 'utf8' });
+   const some = out
+       .split(/\r?\n/)
+       .filter(l => !!l);
+   return some;
+}
 
-            return getFilesToProcess(options)
-                .then(files => {
-                    return new Promise((resolve, reject) => {
-                        hygiene(files, {
-                            skipEOL: skipEOL,
-                            skipFormatCheck: options.skipFormatCheck,
-                            skipIndentationCheck: options.skipIndentationCheck
-                        })
-                            .once('end', () => {
-                                if (options.mode === 'watch') {
-                                    console.log(colors.green('Hygiene passed with 0 errors 👍.'));
-                                    console.log('Watching for changes...');
-                                }
-                                resolve();
-                            })
-                            .once('error', reject);
-                    });
-                });
-        })
-        .catch(exitHandler.bind(options));
-}
-function getGitSkipEOL() {
-    return new Promise(resolve => {
-        cp.exec('git config core.autocrlf', (err, out) => {
-            const skipEOL = out.trim() === 'true';
-            resolve(skipEOL);
-        });
-    });
-}
 /**
- * Gets a list of files to be processed.
- * @param {runOptions} options
- * @return {Promise<string[]>}
- */
+* @param {hygieneOptions} options
+*/
 function getFilesToProcess(options) {
-    switch (options.mode) {
-        case 'all': {
-            return Promise.resolve(all);
-        }
-        case 'watch':
-        case 'changes': {
-            return Promise.all([getCachedFiles(), getModifiedFiles()])
-                .then(filesList => mergeFiles(filesList[0], filesList[1]));
-        }
-        default: {
-            return getCachedFiles();
-        }
-    }
+   const mode = options ? options.mode : 'all';
+   const gulpSrcOptions = { base: '.' };
+
+   // If we need only modified files, then filter the glob.
+   if (options && options.mode === 'changes') {
+       return gulp.src(all, gulpSrcOptions)
+           .pipe(gitmodified('M', 'A', 'D', 'R', 'C', 'U', '??'));
+   }
+
+   if (options && options.mode === 'staged') {
+       return gulp.src(getStagedFilesSync(), gulpSrcOptions);
+   }
+
+   return gulp.src(all, gulpSrcOptions);
 }
-/**
- * Merges a list of files.
- * @param {string[]} files1
- * @param {string[]} files2
- */
-function mergeFiles(files1, files2) {
-    const files = files2.slice();
-    files.forEach(file => {
-        if (files.indexOf(file) === -1) {
-            files.push(file);
-        }
-    });
-    return files;
-}
-function getCachedFiles() {
-    return new Promise(resolve => {
-        cp.exec('git diff --cached --name-only', {
-            maxBuffer: 2000 * 1024
-        }, (err, out) => {
-            if (err) {
-                return reject(err);
-            }
-            const some = out
-                .split(/\r?\n/)
-                .filter(l => !!l);
-            resolve(some);
-        });
-    });
-}
-function getModifiedFiles() {
-    return new Promise(resolve => {
-        cp.exec('git diff --name-only', {
-            maxBuffer: 2000 * 1024
-        }, (err, out) => {
-            if (err) {
-                return reject(err);
-            }
-            const some = out
-                .split(/\r?\n/)
-                .filter(l => !!l);
-            resolve(some);
-        });
-    });
-}
+
+exports.hygiene = hygiene;
 
 // this allows us to run hygiene as a git pre-commit hook.
 if (require.main === module) {
-    run({ exitOnError: true, mode: 'staged' });
-}
-
-class Deferred {
-    constructor(scope) {
-        this.scope = scope;
-        this._resolved = false;
-        this._rejected = false;
-
-        this._promise = new Promise((resolve, reject) => {
-            this._resolve = resolve;
-            this._reject = reject;
-        });
-    }
-    resolve(value) {
-        this._resolve.apply(this.scope ? this.scope : this, arguments);
-        this._resolved = true;
-    }
-    /**
-     * Rejects the promise
-     * @param {any} reason
-     * @memberof Deferred
-     */
-    reject(reason) {
-        this._reject.apply(this.scope ? this.scope : this, arguments);
-        this._rejected = true;
-    }
-    get promise() {
-        return this._promise;
-    }
-    get resolved() {
-        return this._resolved === true;
-    }
-    get rejected() {
-        return this._rejected === true;
-    }
-    get completed() {
-        return this._rejected || this._resolved;
-    }
+   run({ exitOnError: true, mode: 'staged' });
 }

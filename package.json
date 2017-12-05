@@ -1551,7 +1551,7 @@
         "xml2js": "^0.4.17"
     },
     "devDependencies": {
-        "@types/chai": "^4.0.4",
+        "@types/chai": "4.0.6",
         "@types/chai-as-promised": "^7.1.0",
         "@types/fs-extra": "^4.0.2",
         "@types/get-port": "^3.2.0",
@@ -1567,10 +1567,12 @@
         "chai": "^4.1.2",
         "chai-as-promised": "^7.1.1",
         "colors": "^1.1.2",
+        "debounce": "^1.1.0",
         "event-stream": "^3.3.4",
         "gulp": "^3.9.1",
         "gulp-debounced-watch": "^1.0.4",
         "gulp-filter": "^5.0.1",
+        "gulp-gitmodified": "^1.1.1",
         "gulp-typescript": "^3.2.2",
         "gulp-watch": "^4.3.11",
         "husky": "^0.14.3",
@@ -1581,7 +1583,7 @@
         "tslint": "^5.7.0",
         "tslint-eslint-rules": "^4.1.1",
         "tslint-microsoft-contrib": "^5.0.1",
-        "typescript": "^2.5.2",
+        "typescript": "^2.6.2",
         "typescript-formatter": "^6.0.0",
         "vscode": "^1.1.5"
     }

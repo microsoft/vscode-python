@@ -2,6 +2,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import 'reflect-metadata';
 import { DebugSession, Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread } from "vscode-debugadapter";
 import { ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";

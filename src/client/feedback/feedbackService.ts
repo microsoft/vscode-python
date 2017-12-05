@@ -5,7 +5,7 @@ import { window } from 'vscode';
 import { commands, Disposable, TextDocument, workspace } from 'vscode';
 import { PythonLanguage } from '../common/constants';
 import { launch } from '../common/net/browser';
-import { IPersistentStateFactory, PersistentState } from '../common/persistentState';
+import { IPersistentState, IPersistentStateFactory } from '../common/types';
 import { FEEDBACK } from '../telemetry/constants';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
 import { FeedbackCounters } from './counters';
@@ -14,8 +14,8 @@ const FEEDBACK_URL = 'https://www.surveymonkey.com/r/293C9HY';
 
 export class FeedbackService implements Disposable {
     private counters?: FeedbackCounters;
-    private showFeedbackPrompt: PersistentState<boolean>;
-    private userResponded: PersistentState<boolean>;
+    private showFeedbackPrompt: IPersistentState<boolean>;
+    private userResponded: IPersistentState<boolean>;
     private promptDisplayed: boolean;
     private disposables: Disposable[] = [];
     private get canShowPrompt(): boolean {

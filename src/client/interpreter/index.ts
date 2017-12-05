@@ -83,8 +83,8 @@ export class InterpreterManager implements Disposable {
     }
     private onConfigChanged() {
         if (this.display) {
-            // tslint:disable-next-line:no-floating-promises
-            this.display.refresh();
+            this.display.refresh()
+                .catch(ex => console.error('Python Extension: display.refresh', ex));
         }
     }
 }

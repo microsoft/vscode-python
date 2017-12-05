@@ -108,7 +108,9 @@ export class LocalDebugClient extends DebugClient {
 
                     // Here we wait for the application to connect to the socket server.
                     // Only once connected do we know that the application has successfully launched.
-                    this.debugServer.DebugClientConnected.then(resolve);
+                    this.debugServer.DebugClientConnected
+                        .then(resolve)
+                        .catch(ex => console.error('Python Extension: debugServer.DebugClientConnected', ex));
                 }
             }
         });

@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { InterpreterInfoCache } from './interpreterInfoCache';
-import { SystemVariables } from './systemVariables';
+import { SystemVariables } from './variables/systemVariables';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');
@@ -126,9 +126,11 @@ export interface ITerminalSettings {
     executeInFileDir: boolean;
     launchArgs: string[];
 }
-// tslint:disable-next-line:interface-name
-// tslint:disable-next-line:no-string-literal
-const IS_TEST_EXECUTION = process.env['VSC_PYTHON_CI_TEST'] === '1';
+
+function isTestExecution(): boolean {
+    // tslint:disable-next-line:interface-name no-string-literal
+    return process.env['VSC_PYTHON_CI_TEST'] === '1';
+}
 
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
@@ -151,7 +153,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     private disposables: vscode.Disposable[] = [];
     // tslint:disable-next-line:variable-name
     private _pythonPath: string;
-
     constructor(workspaceFolder?: Uri) {
         super();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : vscode.Uri.file(__dirname);
@@ -178,7 +179,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     }
     // tslint:disable-next-line:function-name
     public static dispose() {
-        if (!IS_TEST_EXECUTION) {
+        if (!isTestExecution()) {
             throw new Error('Dispose can only be called from unit tests');
         }
         // tslint:disable-next-line:no-void-expression
@@ -332,7 +333,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             Object.assign<IUnitTestSettings, IUnitTestSettings>(this.unitTest, unitTestSettings);
         } else {
             this.unitTest = unitTestSettings;
-            if (IS_TEST_EXECUTION && !this.unitTest) {
+            if (isTestExecution() && !this.unitTest) {
                 // tslint:disable-next-line:prefer-type-cast
                 this.unitTest = {
                     nosetestArgs: [], pyTestArgs: [], unittestArgs: [],
@@ -369,7 +370,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             Object.assign<ITerminalSettings, ITerminalSettings>(this.terminal, terminalSettings);
         } else {
             this.terminal = terminalSettings;
-            if (IS_TEST_EXECUTION && !this.terminal) {
+            if (isTestExecution() && !this.terminal) {
                 // tslint:disable-next-line:prefer-type-cast
                 this.terminal = {} as ITerminalSettings;
             }
@@ -405,7 +406,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
 function getAbsolutePath(pathToCheck: string, rootDir: string): string {
     // tslint:disable-next-line:prefer-type-cast no-unsafe-any
     pathToCheck = untildify(pathToCheck) as string;
-    if (IS_TEST_EXECUTION && !pathToCheck) { return rootDir; }
+    if (isTestExecution() && !pathToCheck) { return rootDir; }
     if (pathToCheck.indexOf(path.sep) === -1) {
         return pathToCheck;
     }

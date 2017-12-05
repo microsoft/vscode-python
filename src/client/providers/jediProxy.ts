@@ -142,14 +142,14 @@ export class JediProxy implements vscode.Disposable {
         return this.cmdId++;
     }
 
-    // keep track of the directory so we can re-spawn the process
+    // keep track of the directory so we can re-spawn the process.
     private pythonProcessCWD = "";
     private initialize(dir: string) {
         this.pythonProcessCWD = dir;
         this.spawnProcess(path.join(dir, "pythonFiles"));
     }
 
-    // Check if settings changes
+    // Check if settings changes.
     private lastKnownPythonInterpreter: string;
     private onPythonSettingsChanged() {
         if (this.lastKnownPythonInterpreter === this.pythonSettings.pythonPath) {
@@ -200,11 +200,11 @@ export class JediProxy implements vscode.Disposable {
             if (typeof this.pythonSettings.jediPath !== 'string' || this.pythonSettings.jediPath.length === 0) {
                 if (Array.isArray(this.pythonSettings.devOptions) &&
                     this.pythonSettings.devOptions.some(item => item.toUpperCase().trim() === 'USERELEASEAUTOCOMP')) {
-                    // Use standard version of jedi library
+                    // Use standard version of jedi library.
                     args.push('std');
                 }
                 else {
-                    // Use preview version of jedi library
+                    // Use preview version of jedi library.
                     args.push('preview');
                 }
             }
@@ -242,8 +242,8 @@ export class JediProxy implements vscode.Disposable {
         });
         this.proc.stdout.setEncoding('utf8');
         this.proc.stdout.on("data", (data: string) => {
-            //Possible there was an exception in parsing the data returned
-            //So append the data then parse it
+            // Possible there was an exception in parsing the data returned,
+            // so append the data then parse it.
             var dataStr = this.previousData = this.previousData + data + "";
             var responses: any[];
             try {
@@ -251,8 +251,8 @@ export class JediProxy implements vscode.Disposable {
                 this.previousData = "";
             }
             catch (ex) {
-                // Possible we've only received part of the data, hence don't clear previousData
-                // Don't log errors when we haven't received the entire response
+                // Possible we've only received part of the data, hence don't clear previousData.
+                // Don't log errors when we haven't received the entire response.
                 if (ex.message.indexOf('Unexpected end of input') === -1 &&
                     ex.message.indexOf('Unexpected end of JSON input') === -1 &&
                     ex.message.indexOf('Unexpected token') === -1) {
@@ -263,8 +263,8 @@ export class JediProxy implements vscode.Disposable {
 
             responses.forEach((response) => {
                 // What's this, can't remember,
-                // Great example of poorly written code (this whole file is a mess)
-                // I think this needs to be removed, because this is misspelt, it is argments, 'U' is missing
+                // Great example of poorly written code (this whole file is a mess).
+                // I think this needs to be removed, because this is misspelt, it is argments, 'U' is missing,
                 // And that case is handled further down
                 // case CommandType.Arguments: {
                 // Rewrite this mess to use stratergy..
@@ -286,7 +286,7 @@ export class JediProxy implements vscode.Disposable {
                         // telemetryHelper.sendTelemetryEvent(cmd.telemetryEvent, null, cmd.delays.toMeasures());
                     }
 
-                    // Check if this command has expired
+                    // Check if this command has expired.
                     if (cmd.token.isCancellationRequested) {
                         cmd.deferred.resolve();
                         return;
@@ -416,7 +416,7 @@ export class JediProxy implements vscode.Disposable {
                     }
                 }
 
-                //Ok, check if too many pending requets
+                //Ok, check if too many pending requets.
                 if (this.commandQueue.length > 10) {
                     var items = this.commandQueue.splice(0, this.commandQueue.length - 10);
                     items.forEach(id => {
@@ -452,7 +452,7 @@ export class JediProxy implements vscode.Disposable {
         }
         catch (ex) {
             console.error(ex);
-            //If 'This socket is closed.' that means process didn't start at all (at least not properly)
+            //If 'This socket is closed.' that means process didn't start at all (at least not properly).
             if (ex.message === "This socket is closed.") {
 
                 this.killProcess();
@@ -499,20 +499,20 @@ export class JediProxy implements vscode.Disposable {
         });
     }
     private onConfigChanged() {
-        // We're only interested in changes to the python path
+        // We're only interested in changes to the python path.
         if (this.lastKnownPythonPath === this.pythonSettings.pythonPath) {
             return;
         }
 
         this.lastKnownPythonPath = this.pythonSettings.pythonPath;
         let filePaths = [
-            // Sysprefix
+            // Sysprefix.
             this.getPathFromPythonCommand(["-c", "import sys;print(sys.prefix)"]),
-            // exeucutable path
+            // exeucutable path.
             this.getPathFromPythonCommand(["-c", "import sys;print(sys.executable)"]),
-            // Python specific site packages
+            // Python specific site packages.
             this.getPathFromPythonCommand(["-c", "from distutils.sysconfig import get_python_lib; print(get_python_lib())"]),
-            // Python global site packages, as a fallback in case user hasn't installed them in custom environment
+            // Python global site packages, as a fallback in case user hasn't installed them in custom environment.
             this.getPathFromPythonCommand(["-m", "site", "--user-site"]),
         ];
 
@@ -531,23 +531,25 @@ export class JediProxy implements vscode.Disposable {
         if (typeof PYTHONPATH === 'string' && PYTHONPATH.length > 0) {
             filePaths.push(Promise.resolve(PYTHONPATH.trim()));
         }
-        Promise.all<string>(filePaths).then(paths => {
-            // Last item return a path, we need only the folder
-            if (paths[1].length > 0) {
-                paths[1] = path.dirname(paths[1]);
-            }
+        Promise.all<string>(filePaths)
+            .then(paths => {
+                // Last item return a path, we need only the folder.
+                if (paths[1].length > 0) {
+                    paths[1] = path.dirname(paths[1]);
+                }
 
-            // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages)
-            // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
-            if (IS_WINDOWS && paths[2].length > 0) {
-                paths.splice(3, 0, path.join(paths[2], ".."));
-            }
-            this.additionalAutoCopletePaths = paths.filter(p => p.length > 0);
-        });
+                // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages).
+                // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())".
+                if (IS_WINDOWS && paths[2].length > 0) {
+                    paths.splice(3, 0, path.join(paths[2], ".."));
+                }
+                this.additionalAutoCopletePaths = paths.filter(p => p.length > 0);
+            })
+            .catch(ex => console.error('Python Extension: jediProxy.filePaths', ex));
     }
 
     private getConfig() {
-        // Add support for paths relative to workspace
+        // Add support for paths relative to workspace.
         let extraPaths = this.pythonSettings.autoComplete.extraPaths.map(extraPath => {
             if (path.isAbsolute(extraPath)) {
                 return extraPath;
@@ -558,7 +560,7 @@ export class JediProxy implements vscode.Disposable {
             return path.join(this.workspacePath, extraPath);
         });
 
-        // Always add workspace path into extra paths
+        // Always add workspace path into extra paths.
         if (typeof this.workspacePath === 'string') {
             extraPaths.unshift(this.workspacePath);
         }

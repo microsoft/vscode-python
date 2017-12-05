@@ -1,13 +1,12 @@
 'use strict';
 import * as path from 'path';
-import * as vscode from 'vscode';
 import { OutputChannel, Uri } from 'vscode';
+import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { Installer, Product } from '../common/installer';
 import { getSubDirectories } from '../common/utils';
-import { TestConfigSettingsService } from './common/configSettingService';
-import { TestConfigurationManager } from './common/testConfigurationManager';
-import { selectTestWorkspace } from './common/testUtils';
+import { TestConfigurationManager } from './common/managers/testConfigurationManager';
+import { TestConfigSettingsService } from './common/services/configSettingService';
 import { UnitTestProduct } from './common/types';
 import { ConfigurationManager } from './nosetest/testConfigurationManager';
 import * as nose from './nosetest/testConfigurationManager';
@@ -23,15 +22,12 @@ async function promptToEnableAndConfigureTestFramework(wkspace: Uri, outputChann
     const configMgr: TestConfigurationManager = createTestConfigurationManager(wkspace, selectedTestRunner, outputChannel);
     if (enableOnly) {
         // Ensure others are disabled
-        if (selectedTestRunner !== Product.unittest) {
-            createTestConfigurationManager(wkspace, Product.unittest, outputChannel).disable();
-        }
-        if (selectedTestRunner !== Product.pytest) {
-            createTestConfigurationManager(wkspace, Product.pytest, outputChannel).disable();
-        }
-        if (selectedTestRunner !== Product.nosetest) {
-            createTestConfigurationManager(wkspace, Product.nosetest, outputChannel).disable();
-        }
+        [Product.unittest, Product.pytest, Product.nosetest]
+            .filter(prod => selectedTestRunner !== prod)
+            .forEach(prod => {
+                createTestConfigurationManager(wkspace, prod, outputChannel).disable()
+                    .catch(ex => console.error('Python Extension: createTestConfigurationManager.disable', ex));
+            });
         return configMgr.enable();
     }
 
@@ -83,7 +79,7 @@ export async function displayPromptToEnableTests(rootDir: string, outputChannel:
         return;
     }
     if (item === yes) {
-        await promptToEnableAndConfigureTestFramework(vscode.workspace.getWorkspaceFolder(vscode.Uri.file(rootDir)).uri, outputChannel);
+        await promptToEnableAndConfigureTestFramework(vscode.workspace.getWorkspaceFolder(vscode.Uri.file(rootDir))!.uri, outputChannel);
     } else {
         const pythonConfig = vscode.workspace.getConfiguration('python');
         await pythonConfig.update('unitTest.promptToConfigure', false);
