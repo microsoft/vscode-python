@@ -3,8 +3,8 @@
 import * as vscode from 'vscode';
 import { Position, ProviderResult, SnippetString, Uri } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { TokenType } from '../language/definitions';
 import { Tokenizer } from '../language/tokenizer';
+import { TokenType } from '../language/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
 import { COMPLETION } from '../telemetry/constants';

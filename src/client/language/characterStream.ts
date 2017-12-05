@@ -4,8 +4,8 @@
 
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
-import { ICharacterStream, ITextIterator } from './definitions';
 import { TextIterator } from './textIterator';
+import { ICharacterStream, ITextIterator } from './types';
 
 export class CharacterStream implements ICharacterStream {
     private text: ITextIterator;

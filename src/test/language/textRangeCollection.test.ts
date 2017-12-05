@@ -3,8 +3,8 @@
 'use strict';
 
 import * as assert from 'assert';
-import { TextRange } from '../../client/language/definitions';
 import { TextRangeCollection } from '../../client/language/textRangeCollection';
+import { TextRange } from '../../client/language/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Language.TextRangeCollection', () => {

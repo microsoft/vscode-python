@@ -3,8 +3,8 @@
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
 import { CharacterStream } from './characterStream';
-import { ICharacterStream, ITextRangeCollection, IToken, ITokenizer, TextRange, TokenType } from './definitions';
 import { TextRangeCollection } from './textRangeCollection';
+import { ICharacterStream, ITextRangeCollection, IToken, ITokenizer, TextRange, TokenType } from './types';
 
 enum QuoteType {
     None,

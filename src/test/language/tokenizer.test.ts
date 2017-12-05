@@ -3,9 +3,9 @@
 'use strict';
 
 import * as assert from 'assert';
-import { TextRange, TokenType } from '../../client/language/definitions';
 import { TextRangeCollection } from '../../client/language/textRangeCollection';
 import { Tokenizer } from '../../client/language/tokenizer';
+import { TextRange, TokenType } from '../../client/language/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Language.Tokenizer', () => {

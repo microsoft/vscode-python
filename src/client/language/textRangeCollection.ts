@@ -1,6 +1,6 @@
 'use strict';
 
-import { ITextRange, ITextRangeCollection } from './definitions';
+import { ITextRange, ITextRangeCollection } from './types';
 
 export class TextRangeCollection<T extends ITextRange> implements ITextRangeCollection<T> {
     private items: T[];

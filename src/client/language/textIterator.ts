@@ -1,7 +1,7 @@
 'use strict';
 
 import { Position, Range, TextDocument } from 'vscode';
-import { ITextIterator } from './definitions';
+import { ITextIterator } from './types';
 
 export class TextIterator implements ITextIterator {
     private text: string;
