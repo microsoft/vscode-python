@@ -176,9 +176,7 @@ suite('Autocomplete', () => {
     });
 
     // https://github.com/Microsoft/vscode-python/issues/110
-    test('Suppress in strings/comments', done => {
-        let textEditor: vscode.TextEditor;
-        let textDocument: vscode.TextDocument;
+    test('Suppress in strings/comments', async () => {
         const positions = [
             new vscode.Position(0, 1),  // false
             new vscode.Position(0, 9),  // true
@@ -194,20 +192,13 @@ suite('Autocomplete', () => {
         const expected = [
             false, true, false, false, false, false, false, false, false, false
         ];
-        vscode.workspace.openTextDocument(fileSuppress).then(document => {
-            textDocument = document;
-            return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
-            assert(vscode.window.activeTextEditor, 'No active editor');
-            textEditor = editor;
-            for (let i = 0; i < positions.length; i += 1) {
-              vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider',
-                textDocument.uri, positions[i]).then(list => {
-                    const result = list.items.filter(item => item.label === 'abs').length;
-                    assert.equal(result > 0, expected[i],
-                        `Expected ${expected[i]} at position ${positions[i].line}:${positions[i].character} but got ${result}`);
-                });
-            }
-        }).then(done, done);
+        const textDocument = await vscode.workspace.openTextDocument(fileSuppress);
+        await vscode.window.showTextDocument(textDocument);
+        for (let i = 0; i < positions.length; i += 1) {
+            const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, positions[i]);
+            const result = list.items.filter(item => item.label === 'abs').length;
+            assert.equal(result > 0, expected[i],
+                `Expected ${expected[i]} at position ${positions[i].line}:${positions[i].character} but got ${result}`);
+        }
     });
 });

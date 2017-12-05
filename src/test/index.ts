@@ -8,7 +8,6 @@ testRunner.configure({
     ui: 'tdd',
     useColors: true,
     timeout: 25000,
-    retries: 3,
-    grep: "Language.TextRangeCollection"
+    retries: 3
 } as {});
 module.exports = testRunner;
