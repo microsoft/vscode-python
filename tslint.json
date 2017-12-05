@@ -49,6 +49,8 @@
         "no-import-side-effect": false,
         "no-string-based-set-timeout": false,
         "no-floating-promises": false,
-        "no-empty-interface": false
+        "no-empty-interface": false,
+        "no-bitwise": false,
+        "eofline": true
     }
 }

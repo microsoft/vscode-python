@@ -60,6 +60,7 @@ export async function closeActiveWindows(): Promise<any> {
             return resolve();
         }
 
+        // tslint:disable-next-line:no-suspicious-comment
         // TODO: the visibleTextEditors variable doesn't seem to be
         // up to date after a onDidChangeActiveTextEditor event, not
         // even using a setTimeout 0... so we MUST poll :(

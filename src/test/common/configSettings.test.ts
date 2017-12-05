@@ -1,25 +1,15 @@
-//
-// Note: This example test is leveraging the Mocha test framework.
-// Please refer to their documentation on https://mochajs.org/ for help.
-//
-
-// The module 'assert' provides assertion methods from node
 import * as assert from 'assert';
-
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
-import * as vscode from 'vscode';
 import * as path from 'path';
-import { initialize, IS_MULTI_ROOT_TEST, IS_TRAVIS } from './../initialize';
+import * as vscode from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
-import { SystemVariables } from '../../client/common/systemVariables';
-import { rootWorkspaceUri } from '../common';
+import { SystemVariables } from '../../client/common/variables/systemVariables';
+import { initialize, IS_MULTI_ROOT_TEST } from './../initialize';
 
 const workspaceRoot = path.join(__dirname, '..', '..', '..', 'src', 'test');
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('Configuration Settings', () => {
-    setup(() => initialize());
+    setup(initialize);
 
     if (!IS_MULTI_ROOT_TEST) {
         test('Check Values', done => {
@@ -34,6 +24,7 @@ suite('Configuration Settings', () => {
                 if (settingValue) {
                     settingValue = systemVariables.resolve(settingValue);
                 }
+                // tslint:disable-next-line:no-any
                 assert.deepEqual(settingValue, (pythonSettings as any)[key], `Setting ${key} not the same`);
             });
 

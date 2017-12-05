@@ -1,29 +1,28 @@
 'use strict';
 import * as path from 'path';
-import { CancellationToken, OutputChannel, Uri } from 'vscode';
-import { PythonSettings } from '../../common/configSettings';
 import { createTemporaryFile } from '../../common/helpers';
-import { run } from '../common/runner';
-import { ITestDebugLauncher, ITestResultsService, Tests, TestsToRun } from '../common/types';
+import { IServiceContainer } from '../../ioc/types';
+import { Options, run } from '../common/runner';
+import { ITestDebugLauncher, ITestResultsService, TestRunOptions, Tests } from '../common/types';
 import { PassCalculationFormulae, updateResultsFromXmlLogFile } from '../common/xUnitParser';
 
 const WITH_XUNIT = '--with-xunit';
 const XUNIT_FILE = '--xunit-file';
 
 // tslint:disable-next-line:no-any
-export function runTest(testResultsService: ITestResultsService, debugLauncher: ITestDebugLauncher, rootDirectory: string, tests: Tests, args: string[], testsToRun?: TestsToRun, token?: CancellationToken, outChannel?: OutputChannel, debug?: boolean): Promise<any> {
-    let testPaths = [];
-    if (testsToRun && testsToRun.testFolder) {
-        testPaths = testPaths.concat(testsToRun.testFolder.map(f => f.nameToRun));
+export function runTest(serviceContainer: IServiceContainer, testResultsService: ITestResultsService, options: TestRunOptions): Promise<any> {
+    let testPaths: string[] = [];
+    if (options.testsToRun && options.testsToRun.testFolder) {
+        testPaths = testPaths.concat(options.testsToRun.testFolder.map(f => f.nameToRun));
     }
-    if (testsToRun && testsToRun.testFile) {
-        testPaths = testPaths.concat(testsToRun.testFile.map(f => f.nameToRun));
+    if (options.testsToRun && options.testsToRun.testFile) {
+        testPaths = testPaths.concat(options.testsToRun.testFile.map(f => f.nameToRun));
     }
-    if (testsToRun && testsToRun.testSuite) {
-        testPaths = testPaths.concat(testsToRun.testSuite.map(f => f.nameToRun));
+    if (options.testsToRun && options.testsToRun.testSuite) {
+        testPaths = testPaths.concat(options.testsToRun.testSuite.map(f => f.nameToRun));
     }
-    if (testsToRun && testsToRun.testFunction) {
-        testPaths = testPaths.concat(testsToRun.testFunction.map(f => f.nameToRun));
+    if (options.testsToRun && options.testsToRun.testFunction) {
+        testPaths = testPaths.concat(options.testsToRun.testFunction.map(f => f.nameToRun));
     }
 
     let xmlLogFile = '';
@@ -31,7 +30,7 @@ export function runTest(testResultsService: ITestResultsService, debugLauncher: 
     let xmlLogFileCleanup: Function = () => { };
 
     // Check if '--with-xunit' is in args list
-    const noseTestArgs = args.slice();
+    const noseTestArgs = options.args.slice();
     if (noseTestArgs.indexOf(WITH_XUNIT) === -1) {
         noseTestArgs.push(WITH_XUNIT);
     }
@@ -58,22 +57,30 @@ export function runTest(testResultsService: ITestResultsService, debugLauncher: 
     }
 
     return promiseToGetXmlLogFile.then(() => {
-        if (debug === true) {
-            return debugLauncher.getPort(Uri.file(rootDirectory))
+        if (options.debug === true) {
+            const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
+            return debugLauncher.getPort(options.workspaceFolder)
                 .then(debugPort => {
                     const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');
-                    const nosetestlauncherargs = [rootDirectory, 'my_secret', debugPort.toString(), 'nose'];
+                    const nosetestlauncherargs = [options.cwd, 'my_secret', debugPort.toString(), 'nose'];
                     const debuggerArgs = [testLauncherFile].concat(nosetestlauncherargs).concat(noseTestArgs.concat(testPaths));
+                    const launchOptions = { cwd: options.cwd, args: debuggerArgs, token: options.token, outChannel: options.outChannel, port: debugPort };
                     // tslint:disable-next-line:prefer-type-cast no-any
-                    return debugLauncher.launchDebugger(rootDirectory, debuggerArgs, debugPort, token, outChannel) as Promise<any>;
+                    return debugLauncher.launchDebugger(launchOptions) as Promise<any>;
                 });
         } else {
-            const pythonSettings = PythonSettings.getInstance(Uri.file(rootDirectory));
             // tslint:disable-next-line:prefer-type-cast no-any
-            return run(pythonSettings.unitTest.nosetestPath, noseTestArgs.concat(testPaths), rootDirectory, token, outChannel) as Promise<any>;
+            const runOptions: Options = {
+                args: noseTestArgs.concat(testPaths),
+                cwd: options.cwd,
+                outChannel: options.outChannel,
+                token: options.token,
+                workspaceFolder: options.workspaceFolder
+            };
+            return run(serviceContainer, 'nosetest', runOptions);
         }
     }).then(() => {
-        return updateResultsFromLogFiles(tests, xmlLogFile, testResultsService);
+        return updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
     }).then(result => {
         xmlLogFileCleanup();
         return result;

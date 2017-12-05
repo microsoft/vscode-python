@@ -3,12 +3,12 @@
 
 import { window } from 'vscode';
 import { launch } from './common/net/browser';
-import { IPersistentStateFactory, PersistentState } from './common/persistentState';
+import { IPersistentState, IPersistentStateFactory } from './common/types';
 
 const BANNER_URL = 'https://aka.ms/pvsc-at-msft';
 
 export class BannerService {
-    private shouldShowBanner: PersistentState<boolean>;
+    private shouldShowBanner: IPersistentState<boolean>;
     constructor(persistentStateFactory: IPersistentStateFactory) {
         this.shouldShowBanner = persistentStateFactory.createGlobalPersistentState('SHOW_NEW_PUBLISHER_BANNER', true);
         this.showBanner();

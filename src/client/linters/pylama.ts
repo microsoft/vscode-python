@@ -27,15 +27,13 @@ export class Linter extends baseLinter.BaseLinter {
             pylamaArgs = ProductExecutableAndArgs.get(Product.pylama).args;
         }
 
-        return new Promise<baseLinter.ILintMessage[]>(resolve => {
-            this.run(pylamaPath, pylamaArgs.concat(['--format=parsable', document.uri.fsPath]), document, this.getWorkspaceRootPath(document), cancellation, REGEX).then(messages => {
-                // All messages in pylama are treated as warnings for now
-                messages.forEach(msg => {
-                    msg.severity = baseLinter.LintMessageSeverity.Information;
-                });
-
-                resolve(messages);
+        return this.run(pylamaPath, pylamaArgs.concat(['--format=parsable', document.uri.fsPath]), document, this.getWorkspaceRootPath(document), cancellation, REGEX).then(messages => {
+            // All messages in pylama are treated as warnings for now.
+            messages.forEach(msg => {
+                msg.severity = baseLinter.LintMessageSeverity.Warning;
             });
+
+            return messages;
         });
     }
 }

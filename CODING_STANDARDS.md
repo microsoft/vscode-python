@@ -23,7 +23,8 @@ Use undefined. Do not use null.
 
 ### Comments
 
-Use JSDoc style comments for functions, interfaces, enums, and classes.
+* Comments must end with a period.
+* Use JSDoc style comments for functions, interfaces, enums, and classes.
 
 ### Strings
 
@@ -42,5 +43,4 @@ Use single quotes for strings.
 
 * `else` goes on a the same line from the closing curly brace.
 * Use 4 spaces per indentation.
-
-
+* All files must end with an empty line.

@@ -94,6 +94,7 @@ export class RefactorProxy extends vscode.Disposable {
     }
     private sendCommand<T>(command: string, telemetryEvent?: string): Promise<T> {
         return this.initialize(this.pythonSettings.pythonPath).then(() => {
+            // tslint:disable-next-line:promise-must-complete
             return new Promise<T>((resolve, reject) => {
                 this._commandResolve = resolve;
                 this._commandReject = reject;

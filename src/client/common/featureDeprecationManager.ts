@@ -3,7 +3,7 @@
 
 import { commands, Disposable, window, workspace, WorkspaceConfiguration } from 'vscode';
 import { launch } from './net/browser';
-import { IPersistentStateFactory } from './persistentState';
+import { IPersistentStateFactory } from './types';
 
 type deprecatedFeatureInfo = {
     doNotDisplayPromptStateKey: string;
@@ -82,7 +82,8 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         }
 
         if (notify) {
-            this.notifyDeprecation(deprecatedInfo);
+            this.notifyDeprecation(deprecatedInfo)
+                .catch(ex => console.error('Python Extension: notifyDeprecation', ex));
         }
     }
     private isDeprecatedSettingAndValueUsed(pythonConfig: WorkspaceConfiguration, deprecatedSetting: deprecatedSettingAndValue) {

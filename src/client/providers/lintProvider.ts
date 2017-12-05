@@ -94,7 +94,7 @@ export class LintProvider implements vscode.Disposable {
             if (e.languageId !== 'python' || !settings.linting.enabled) {
                 return;
             }
-            // Exclude files opened by vscode when showing a diff view
+            // Exclude files opened by vscode when showing a diff view.
             if (uriSchemesToIgnore.indexOf(e.uri.scheme) >= 0) {
                 return;
             }
@@ -109,7 +109,7 @@ export class LintProvider implements vscode.Disposable {
                 return;
             }
 
-            // Check if this document is still open as a duplicate editor
+            // Check if this document is still open as a duplicate editor.
             if (!this.isDocumentOpen(textDocument.uri) && this.diagnosticCollection.has(textDocument.uri)) {
                 this.diagnosticCollection.set(textDocument.uri, []);
             }
@@ -142,8 +142,8 @@ export class LintProvider implements vscode.Disposable {
     // tslint:disable-next-line:member-ordering no-any
     private lastTimeout: any;
     private lintDocument(document: vscode.TextDocument, delay: number, trigger: 'auto' | 'save'): void {
-        // Since this is a hack, lets wait for 2 seconds before linting
-        // Give user to continue typing before we waste CPU time
+        // Since this is a hack, lets wait for 2 seconds before linting.
+        // Give user to continue typing before we waste CPU time.
         if (this.lastTimeout) {
             clearTimeout(this.lastTimeout);
             this.lastTimeout = 0;
@@ -196,39 +196,42 @@ export class LintProvider implements vscode.Disposable {
                 sendTelemetryWhenDone(LINTING, promise, stopWatch, { tool: item.Id, hasCustomArgs, trigger, executableSpecified });
                 return promise;
             });
-        this.documentHasJupyterCodeCells(document, cancelToken.token).then(hasJupyterCodeCells => {
-            // linters will resolve asynchronously - keep a track of all
-            // diagnostics reported as them come in.
-            let diagnostics: vscode.Diagnostic[] = [];
+        this.documentHasJupyterCodeCells(document, cancelToken.token)
+            .then(hasJupyterCodeCells => {
+                // linters will resolve asynchronously - keep a track of all
+                // diagnostics reported as them come in.
+                let diagnostics: vscode.Diagnostic[] = [];
 
-            promises.forEach(p => {
-                p.then(msgs => {
-                    if (cancelToken.token.isCancellationRequested) {
-                        return;
-                    }
-
-                    // Build the message and suffix the message with the name of the linter used
-                    msgs.forEach(d => {
-                        // ignore magic commands from jupyter
-                        if (hasJupyterCodeCells && document.lineAt(d.line - 1).text.trim().startsWith('%') &&
-                            (d.code === LinterErrors.pylint.InvalidSyntax ||
-                                d.code === LinterErrors.prospector.InvalidSyntax ||
-                                d.code === LinterErrors.flake8.InvalidSyntax)) {
+                promises.forEach(p => {
+                    p.then(msgs => {
+                        if (cancelToken.token.isCancellationRequested) {
                             return;
                         }
-                        diagnostics.push(createDiagnostics(d, document));
-                    });
 
-                    // Limit the number of messages to the max value
-                    diagnostics = diagnostics.filter((value, index) => index <= settings.linting.maxNumberOfProblems);
+                        // Build the message and suffix the message with the name of the linter used.
+                        msgs.forEach(d => {
+                            // Ignore magic commands from jupyter.
+                            if (hasJupyterCodeCells && document.lineAt(d.line - 1).text.trim().startsWith('%') &&
+                                (d.code === LinterErrors.pylint.InvalidSyntax ||
+                                    d.code === LinterErrors.prospector.InvalidSyntax ||
+                                    d.code === LinterErrors.flake8.InvalidSyntax)) {
+                                return;
+                            }
+                            diagnostics.push(createDiagnostics(d, document));
+                        });
 
-                    if (!this.isDocumentOpen(document.uri)) {
-                        diagnostics = [];
-                    }
-                    // set all diagnostics found in this pass, as this method always clears existing diagnostics.
-                    this.diagnosticCollection.set(document.uri, diagnostics);
+                        // Limit the number of messages to the max value.
+                        diagnostics = diagnostics.filter((value, index) => index <= settings.linting.maxNumberOfProblems);
+
+                        if (!this.isDocumentOpen(document.uri)) {
+                            diagnostics = [];
+                        }
+                        // Set all diagnostics found in this pass, as this method always clears existing diagnostics.
+                        this.diagnosticCollection.set(document.uri, diagnostics);
+                    })
+                        .catch(ex => console.error('Python Extension: documentHasJupyterCodeCells.promises', ex));
                 });
-            });
-        });
+            })
+            .catch(ex => console.error('Python Extension: documentHasJupyterCodeCells', ex));
     }
 }

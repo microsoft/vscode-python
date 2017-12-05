@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { Installer, Product } from '../../common/installer';
-import { TestConfigurationManager } from '../common/testConfigurationManager';
+import { TestConfigurationManager } from '../common/managers/testConfigurationManager';
 import { ITestConfigSettingsService } from '../common/types';
 
 export class ConfigurationManager extends TestConfigurationManager {
@@ -22,7 +22,7 @@ export class ConfigurationManager extends TestConfigurationManager {
     }
     // tslint:disable-next-line:no-any
     public async configure(wkspace: Uri) {
-        const args = [];
+        const args: string[] = [];
         const configFileOptionLabel = 'Use existing config file';
         const options: vscode.QuickPickItem[] = [];
         const configFiles = await ConfigurationManager.configFilesExist(wkspace.fsPath);

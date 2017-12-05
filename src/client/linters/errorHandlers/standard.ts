@@ -11,7 +11,8 @@ export class StandardErrorHandler {
         window.showErrorMessage(message, 'Disable linter', 'View Errors').then(item => {
             switch (item) {
                 case 'Disable linter': {
-                    this.installer.disableLinter(this.product, resource);
+                    this.installer.disableLinter(this.product, resource)
+                        .catch(ex => console.error('Python Extension: StandardErrorHandler.displayLinterError', ex));
                     break;
                 }
                 case 'View Errors': {

@@ -23,7 +23,8 @@ export class PythonPathUpdaterService {
             console.error(reason);
         }
         // do not wait for this to complete
-        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath);
+        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath)
+            .catch(ex => console.error('Python Extension: sendTelemetry', ex));
     }
     private async sendTelemetry(duration: number, failed: boolean, trigger: 'ui' | 'shebang' | 'load', pythonPath: string) {
         let version: string | undefined;

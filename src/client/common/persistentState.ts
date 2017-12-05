@@ -3,9 +3,12 @@
 
 'use strict';
 
+import { inject, injectable, named } from 'inversify';
+import 'reflect-metadata';
 import { Memento } from 'vscode';
+import { GLOBAL_MEMENTO, IMemento, IPersistentState, IPersistentStateFactory, WORKSPACE_MEMENTO } from './types';
 
-export class PersistentState<T> {
+class PersistentState<T> implements IPersistentState<T>{
     constructor(private storage: Memento, private key: string, private defaultValue: T) { }
 
     public get value(): T {
@@ -17,17 +20,14 @@ export class PersistentState<T> {
     }
 }
 
-export interface IPersistentStateFactory {
-    createGlobalPersistentState<T>(key: string, defaultValue: T): PersistentState<T>;
-    createWorkspacePersistentState<T>(key: string, defaultValue: T): PersistentState<T>;
-}
-
+@injectable()
 export class PersistentStateFactory implements IPersistentStateFactory {
-    constructor(private globalState: Memento, private workspaceState: Memento) { }
-    public createGlobalPersistentState<T>(key: string, defaultValue: T): PersistentState<T> {
+    constructor( @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento) { }
+    public createGlobalPersistentState<T>(key: string, defaultValue: T): IPersistentState<T> {
         return new PersistentState<T>(this.globalState, key, defaultValue);
     }
-    public createWorkspacePersistentState<T>(key: string, defaultValue: T): PersistentState<T> {
+    public createWorkspacePersistentState<T>(key: string, defaultValue: T): IPersistentState<T> {
         return new PersistentState<T>(this.workspaceState, key, defaultValue);
     }
 }

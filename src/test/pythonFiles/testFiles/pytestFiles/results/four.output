@@ -1,0 +1,53 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.6.2, pytest-3.3.0, py-1.5.2, pluggy-0.6.0
+rootdir: /Users/donjayamanne/.vscode/extensions/pythonVSCode/src/test/pythonFiles/testFiles/standard, inifile:
+plugins: pylama-7.4.3
+collected 29 items
+<Module 'test_root.py'>
+  <UnitTestCase 'Test_Root_test1'>
+    <TestCaseFunction 'test_Root_A'>
+    <TestCaseFunction 'test_Root_B'>
+    <TestCaseFunction 'test_Root_c'>
+<Module 'tests/test_another_pytest.py'>
+  <Function 'test_username'>
+  <Function 'test_parametrized_username[one]'>
+  <Function 'test_parametrized_username[two]'>
+  <Function 'test_parametrized_username[three]'>
+<Module 'tests/test_pytest.py'>
+  <Class 'Test_CheckMyApp'>
+    <Instance '()'>
+      <Function 'test_simple_check'>
+      <Function 'test_complex_check'>
+      <Class 'Test_NestedClassA'>
+        <Instance '()'>
+          <Function 'test_nested_class_methodB'>
+          <Class 'Test_nested_classB_Of_A'>
+            <Instance '()'>
+              <Function 'test_d'>
+          <Function 'test_nested_class_methodC'>
+      <Function 'test_simple_check2'>
+      <Function 'test_complex_check2'>
+  <Function 'test_username'>
+  <Function 'test_parametrized_username[one]'>
+  <Function 'test_parametrized_username[two]'>
+  <Function 'test_parametrized_username[three]'>
+<Module 'tests/test_unittest_one.py'>
+  <UnitTestCase 'Test_test1'>
+    <TestCaseFunction 'test_A'>
+    <TestCaseFunction 'test_B'>
+    <TestCaseFunction 'test_c'>
+<Module 'tests/test_unittest_two.py'>
+  <UnitTestCase 'Test_test2'>
+    <TestCaseFunction 'test_A2'>
+    <TestCaseFunction 'test_B2'>
+    <TestCaseFunction 'test_C2'>
+    <TestCaseFunction 'test_D2'>
+  <UnitTestCase 'Test_test2a'>
+    <TestCaseFunction 'test_222A2'>
+    <TestCaseFunction 'test_222B2'>
+<Module 'tests/unittest_three_test.py'>
+  <UnitTestCase 'Test_test3'>
+    <TestCaseFunction 'test_A'>
+    <TestCaseFunction 'test_B'>
+
+========================= no tests ran in 0.05 seconds =========================

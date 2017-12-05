@@ -1,0 +1,17 @@
+import { Memento } from 'vscode';
+
+export class MockMemento implements Memento {
+    private map: Map<string, {}> = new Map<string, {}>();
+    // tslint:disable-next-line:no-any
+    public get(key: any, defaultValue?: any);
+    public get<T>(key: string, defaultValue?: T): T {
+        const exists = this.map.has(key);
+        // tslint:disable-next-line:no-any
+        return exists ? this.map.get(key) : defaultValue! as any;
+    }
+    // tslint:disable-next-line:no-any
+    public update(key: string, value: any): Thenable<void> {
+        this.map.set(key, value);
+        return Promise.resolve();
+    }
+}

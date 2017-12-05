@@ -151,7 +151,8 @@ function extractName(extensionDir: string, textEditor: vscode.TextEditor, range:
         }
     }).catch(error => {
         if (error === 'Not installed') {
-            installer.promptToInstall(Product.rope, textEditor.document.uri);
+            installer.promptToInstall(Product.rope, textEditor.document.uri)
+                .catch(ex => console.error('Python Extension: simpleRefactorProvider.promptToInstall', ex));
             return Promise.reject('');
         }
         let errorMessage = error + '';

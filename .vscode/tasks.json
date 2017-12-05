@@ -48,6 +48,26 @@
             }
         },
         {
+            // Task that will replace 'Compile' and 'Hygiene', after being battle-tested.
+            "label": "Watch",
+            "type": "gulp",
+            "task": "watch",
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": [
+                "$tsc-watch",
+                {
+                    "base": "$tslint5",
+                    "fileLocation": "relative"
+                }
+            ]
+        },
+        {
             "label": "Hygiene (staged)",
             "type": "gulp",
             "task": "hygiene-staged",
