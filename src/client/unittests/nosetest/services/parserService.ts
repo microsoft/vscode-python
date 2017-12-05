@@ -78,7 +78,7 @@ export class TestsParser implements ITestsParser {
                 // We need to display the path relative to the current directory.
                 fileName = fileName.substring(rootDirectory.length + 1);
                 // we don't care about the compiled file.
-                if (path.extname(fileName) === '.pyc') {
+                if (path.extname(fileName) === '.pyc' || path.extname(fileName) === '.pyo') {
                     fileName = fileName.substring(0, fileName.length - 1);
                 }
                 currentPackage = convertFileToPackage(fileName);
