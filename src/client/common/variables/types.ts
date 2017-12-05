@@ -20,7 +20,7 @@ export interface IEnvironmentVariablesService {
 
 /**
  * An interface for a JavaScript object that
- * acts a dictionary. The keys are strings.
+ * acts as a dictionary. The keys are strings.
  */
 export interface IStringDictionary<V> {
     [name: string]: V;

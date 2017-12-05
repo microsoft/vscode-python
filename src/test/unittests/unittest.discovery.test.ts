@@ -64,7 +64,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         procService.onExecObservable((file, args, options, callback) => {
             if (args.length > 1 && args[0] === '-c' && args[1].includes('import unittest') && args[1].includes('loader = unittest.TestLoader()')) {
                 callback({
-                    // Ensure any spaces added during code formatting or the like are removed
+                    // Ensure any spaces added during code formatting or the like are removed.
                     out: output.split(/\r?\n/g).map(item => item.trim()).join(EOL),
                     source: 'stdout'
                 });

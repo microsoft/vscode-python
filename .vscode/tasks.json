@@ -48,7 +48,7 @@
             }
         },
         {
-            // Task that will replace 'Compile' and 'Hygiene', after having been battle-tested.
+            // Task that will replace 'Compile' and 'Hygiene', after being battle-tested.
             "label": "Watch",
             "type": "gulp",
             "task": "watch",

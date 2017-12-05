@@ -28,9 +28,9 @@ export class Linter extends baseLinter.BaseLinter {
         }
 
         return this.run(pylamaPath, pylamaArgs.concat(['--format=parsable', document.uri.fsPath]), document, this.getWorkspaceRootPath(document), cancellation, REGEX).then(messages => {
-            // All messages in pylama are treated as warnings for now
+            // All messages in pylama are treated as warnings for now.
             messages.forEach(msg => {
-                msg.severity = baseLinter.LintMessageSeverity.Information;
+                msg.severity = baseLinter.LintMessageSeverity.Warning;
             });
 
             return messages;
