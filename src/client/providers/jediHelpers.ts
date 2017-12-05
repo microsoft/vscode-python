@@ -1,6 +1,10 @@
-import * as proxy from './jediProxy';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
+
 import { EOL } from 'os';
 import * as vscode from 'vscode';
+import * as proxy from './jediProxy';
 
 export function extractSignatureAndDocumentation(definition: proxy.IAutoCompleteItem, highlightCode: boolean = false): [string, string] {
     // Somtimes the signature of the function, class (whatever) is broken into multiple lines
@@ -20,18 +24,19 @@ export function extractSignatureAndDocumentation(definition: proxy.IAutoComplete
     let lines = txt.split(/\r?\n/);
     const startIndexOfDocString = firstLineOfRawDocString === '' ? -1 : lines.findIndex(line => line.indexOf(firstLineOfRawDocString) === 0);
 
-    let signatureLines = startIndexOfDocString === -1 ? [lines.shift()] : lines.splice(0, startIndexOfDocString);
+    const signatureLines = startIndexOfDocString === -1 ? [lines.shift()] : lines.splice(0, startIndexOfDocString);
     let signature = signatureLines.filter(line => line.trim().length > 0).join(EOL);
 
+    // tslint:disable-next-line:switch-default
     switch (definition.type) {
         case vscode.CompletionItemKind.Constructor:
         case vscode.CompletionItemKind.Function:
         case vscode.CompletionItemKind.Method: {
-            signature = 'def ' + signature;
+            signature = `def ${signature}`;
             break;
         }
         case vscode.CompletionItemKind.Class: {
-            signature = 'class ' + signature;
+            signature = `class ${signature}`;
             break;
         }
     }
@@ -50,37 +55,39 @@ export function extractSignatureAndDocumentation(definition: proxy.IAutoComplete
 
 export function highlightCode(docstring: string): string {
     /**********
-     * 
+     *
      * Magic. Do not touch. [What is the best comment in source code](https://stackoverflow.com/a/185106)
-     * 
+     *
      * This method uses several regexs to 'translate' reStructruedText syntax (Python doc syntax) to Markdown syntax.
-     * 
+     *
      * Let's just keep it unchanged unless a better solution becomes possible.
-     * 
+     *
      **********/
     // Add 2 line break before and after docstring (used to match a blank line)
     docstring = EOL + EOL + docstring.trim() + EOL + EOL;
     // Section title -> heading level 2
-    docstring = docstring.replace(/(.+\r?\n)[-=]+\r?\n/g, '## $1' + EOL);
+    docstring = docstring.replace(/(.+\r?\n)[-=]+\r?\n/g, `## $1${EOL}`);
     // Directives: '.. directive::' -> '**directive**'
     docstring = docstring.replace(/\.\. (.*)::/g, '**$1**');
     // Pattern of 'var : description'
-    let paramLinePattern = '[\\*\\w_]+ ?:[^:\r\n]+';
+    const paramLinePattern = '[\\*\\w_]+ ?:[^:\r\n]+';
     // Add new line after and before param line
     docstring = docstring.replace(new RegExp(`(${EOL + paramLinePattern})`, 'g'), `$1${EOL}`);
     docstring = docstring.replace(new RegExp(`(${EOL + paramLinePattern + EOL})`, 'g'), `${EOL}$1`);
     // 'var : description' -> '`var` description'
     docstring = docstring.replace(/\r?\n([\*\w]+) ?: ?([^:\r\n]+\r?\n)/g, `${EOL}\`$1\` $2`);
     // Doctest blocks: begin with `>>>` and end with blank line
+    // tslint:disable-next-line:prefer-template
     docstring = docstring.replace(/(>>>[\w\W]+?\r?\n)\r?\n/g, `${'```python' + EOL}$1${'```' + EOL + EOL}`);
     // Literal blocks: begin with `::` (literal blocks are indented or quoted; for simplicity, we end literal blocks with blank line)
+    // tslint:disable-next-line:prefer-template
     docstring = docstring.replace(/(\r?\n[^\.]*)::\r?\n\r?\n([\w\W]+?\r?\n)\r?\n/g, `$1${EOL + '```' + EOL}$2${'```' + EOL + EOL}`);
     // Remove indentation in Field lists and Literal blocks
     let inCodeBlock = false;
     let codeIndentation = 0;
-    let lines = docstring.split(/\r?\n/);
-    for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
+    const lines = docstring.split(/\r?\n/);
+    for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i];
         if (line.startsWith('```')) {
             inCodeBlock = !inCodeBlock;
             if (inCodeBlock) {
