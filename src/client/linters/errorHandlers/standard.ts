@@ -1,37 +1,45 @@
-'use strict';
 import { OutputChannel, Uri, window } from 'vscode';
-import { Installer, Product } from '../../common/installer';
+import { Product } from '../../common/installer';
+import { ExecutionInfo, IInstaller, ILogger } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
+import { ILinterHelper, LinterId } from '../types';
+import { BaseErrorHandler } from './baseErrorHandler';
 
-export class StandardErrorHandler {
-    constructor(protected id: string, protected product: Product, protected installer: Installer, protected outputChannel: OutputChannel) {
-
+export class StandardErrorHandler extends BaseErrorHandler {
+    constructor(product: Product, installer: IInstaller,
+        helper: ILinterHelper, logger: ILogger,
+        outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
+        super(product, installer, helper, logger, outputChannel, serviceContainer);
     }
-    private displayLinterError(resource: Uri) {
-        const message = `There was an error in running the linter '${this.id}'`;
-        window.showErrorMessage(message, 'Disable linter', 'View Errors').then(item => {
-            switch (item) {
-                case 'Disable linter': {
-                    this.installer.disableLinter(this.product, resource)
-                        .catch(ex => console.error('Python Extension: StandardErrorHandler.displayLinterError', ex));
-                    break;
-                }
-                case 'View Errors': {
-                    this.outputChannel.show();
-                    break;
-                }
-            }
-        });
-    }
-
-    public handleError(expectedFileName: string, fileName: string, error: Error, resource: Uri): boolean {
-        if (typeof error === 'string' && (error as string).indexOf("OSError: [Errno 2] No such file or directory: '/") > 0) {
-            return false;
+    public async handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean> {
+        if (typeof error === 'string' && (error as string).indexOf('OSError: [Errno 2] No such file or directory: \'/') > 0) {
+            return this.nextHandler ? this.nextHandler.handleError(error, resource, execInfo) : Promise.resolve(false);
         }
-        console.error('There was an error in running the linter');
-        console.error(error);
+        const linterId = this.helper.translateToId(execInfo.product!);
 
-        this.outputChannel.appendLine(`Linting with ${this.id} failed.\n${error + ''}`);
-        this.displayLinterError(resource);
+        this.logger.logError(`There was an error in running the linter ${linterId}`, error);
+        this.outputChannel.appendLine(`Linting with ${linterId} failed.`);
+        this.outputChannel.appendLine(error.toString());
+
+        this.displayLinterError(linterId, resource);
         return true;
+    }
+    private async displayLinterError(linterId: LinterId, resource: Uri) {
+        const message = `There was an error in running the linter '${linterId}'`;
+        const item = await window.showErrorMessage(message, 'Disable linter', 'View Errors');
+        switch (item) {
+            case 'Disable linter': {
+                this.installer.disableLinter(this.product, resource)
+                    .catch(this.logger.logError.bind(this, 'StandardErrorHandler.displayLinterError'));
+                break;
+            }
+            case 'View Errors': {
+                this.outputChannel.show();
+                break;
+            }
+            default: {
+                // Ignore this selection (e.g. user hit cancel).
+            }
+        }
     }
 }

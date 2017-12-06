@@ -15,6 +15,7 @@ import { registerTypes as variableRegisterTypes } from '../client/common/variabl
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
+import { registerTypes as lintersRegisterTypes } from '../client/linters/serviceRegistry';
 import { TEST_OUTPUT_CHANNEL } from '../client/unittests/common/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/unittests/serviceRegistry';
 import { MockOutputChannel } from './mockClasses';
@@ -55,6 +56,9 @@ export class IocContainer {
     }
     public registerUnitTestTypes() {
         unittestsRegisterTypes(this.serviceManager);
+    }
+    public registerLinterTypes() {
+        lintersRegisterTypes(this.serviceManager);
     }
 
     public registerMockProcessTypes() {

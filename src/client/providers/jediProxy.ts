@@ -1,16 +1,16 @@
 'use strict';
 
 import * as child_process from 'child_process';
-import * as vscode from 'vscode';
 import * as path from 'path';
+import * as vscode from 'vscode';
+import { IPythonSettings, PythonSettings } from '../common/configSettings';
+import { mergeEnvVariables } from '../common/envFileParser';
+import { createDeferred, Deferred } from '../common/helpers';
+import { execPythonFile, getCustomEnvVarsSync, validatePath } from '../common/utils';
+import { getCustomEnvVars } from '../common/utils';
+import * as telemetryHelper from '../telemetry';
 import * as settings from './../common/configSettings';
 import * as logger from './../common/logger';
-import * as telemetryHelper from '../telemetry';
-import { execPythonFile, getCustomEnvVarsSync, validatePath } from '../common/utils';
-import { createDeferred, Deferred } from '../common/helpers';
-import { getCustomEnvVars } from '../common/utils';
-import { mergeEnvVariables } from '../common/envFileParser';
-import { IPythonSettings, PythonSettings } from '../common/configSettings';
 
 const IS_WINDOWS = /^win/.test(process.platform);
 
@@ -114,12 +114,12 @@ export enum CommandType {
 }
 
 var commandNames = new Map<CommandType, string>();
-commandNames.set(CommandType.Arguments, "arguments");
-commandNames.set(CommandType.Completions, "completions");
-commandNames.set(CommandType.Definitions, "definitions");
-commandNames.set(CommandType.Hover, "tooltip");
-commandNames.set(CommandType.Usages, "usages");
-commandNames.set(CommandType.Symbols, "names");
+commandNames.set(CommandType.Arguments, 'arguments');
+commandNames.set(CommandType.Completions, 'completions');
+commandNames.set(CommandType.Definitions, 'definitions');
+commandNames.set(CommandType.Hover, 'tooltip');
+commandNames.set(CommandType.Usages, 'usages');
+commandNames.set(CommandType.Symbols, 'names');
 
 export class JediProxy implements vscode.Disposable {
     private proc: child_process.ChildProcess;
@@ -143,10 +143,10 @@ export class JediProxy implements vscode.Disposable {
     }
 
     // keep track of the directory so we can re-spawn the process.
-    private pythonProcessCWD = "";
+    private pythonProcessCWD = '';
     private initialize(dir: string) {
         this.pythonProcessCWD = dir;
-        this.spawnProcess(path.join(dir, "pythonFiles"));
+        this.spawnProcess(path.join(dir, 'pythonFiles'));
     }
 
     // Check if settings changes.
@@ -167,7 +167,7 @@ export class JediProxy implements vscode.Disposable {
         });
         this.commands.clear();
     }
-    private previousData = "";
+    private previousData = '';
     private commands = new Map<number, IExecutionCommand<ICommandResult>>();
     private commandQueue: number[] = [];
 
@@ -195,8 +195,7 @@ export class JediProxy implements vscode.Disposable {
             }
             environmentVariables = mergeEnvVariables(environmentVariables);
 
-            logger.log('child_process.spawn in jediProxy', 'Value of pythonSettings.pythonPath is :' + this.pythonSettings.pythonPath);
-            const args = ["completion.py"];
+            const args = ['completion.py'];
             if (typeof this.pythonSettings.jediPath !== 'string' || this.pythonSettings.jediPath.length === 0) {
                 if (Array.isArray(this.pythonSettings.devOptions) &&
                     this.pythonSettings.devOptions.some(item => item.toUpperCase().trim() === 'USERELEASEAUTOCOMP')) {
@@ -223,17 +222,17 @@ export class JediProxy implements vscode.Disposable {
             });
         }
         catch (ex) {
-            return this.handleError("spawnProcess", ex.message);
+            return this.handleError('spawnProcess', ex.message);
         }
         this.proc.stderr.setEncoding('utf8');
-        this.proc.stderr.on("data", (data: string) => {
-            this.handleError("stderr", data);
+        this.proc.stderr.on('data', (data: string) => {
+            this.handleError('stderr', data);
         });
-        this.proc.on("end", (end) => {
-            logger.error('spawnProcess.end', "End - " + end);
+        this.proc.on('end', (end) => {
+            logger.error('spawnProcess.end', 'End - ' + end);
         });
-        this.proc.on("error", error => {
-            this.handleError("error", error + '');
+        this.proc.on('error', error => {
+            this.handleError('error', error + '');
             this.spawnRetryAttempts++;
             if (this.spawnRetryAttempts < 10 && error && error.message &&
                 error.message.indexOf('This socket has been ended by the other party') >= 0) {
@@ -241,14 +240,14 @@ export class JediProxy implements vscode.Disposable {
             }
         });
         this.proc.stdout.setEncoding('utf8');
-        this.proc.stdout.on("data", (data: string) => {
+        this.proc.stdout.on('data', (data: string) => {
             // Possible there was an exception in parsing the data returned,
             // so append the data then parse it.
-            var dataStr = this.previousData = this.previousData + data + "";
+            var dataStr = this.previousData = this.previousData + data + '';
             var responses: any[];
             try {
                 responses = dataStr.split(/\r?\n/g).filter(line => line.length > 0).map(resp => JSON.parse(resp));
-                this.previousData = "";
+                this.previousData = '';
             }
             catch (ex) {
                 // Possible we've only received part of the data, hence don't clear previousData.
@@ -256,7 +255,7 @@ export class JediProxy implements vscode.Disposable {
                 if (ex.message.indexOf('Unexpected end of input') === -1 &&
                     ex.message.indexOf('Unexpected end of JSON input') === -1 &&
                     ex.message.indexOf('Unexpected token') === -1) {
-                    this.handleError("stdout", ex.message);
+                    this.handleError('stdout', ex.message);
                 }
                 return;
             }
@@ -268,15 +267,15 @@ export class JediProxy implements vscode.Disposable {
                 // And that case is handled further down
                 // case CommandType.Arguments: {
                 // Rewrite this mess to use stratergy..
-                if (response["argments"]) {
+                if (response['argments']) {
                     var index = this.commandQueue.indexOf(cmd.id);
                     this.commandQueue.splice(index, 1);
                     return;
                 }
-                var responseId = <number>response["id"];
+                var responseId = <number>response['id'];
 
                 var cmd = <IExecutionCommand<ICommandResult>>this.commands.get(responseId);
-                if (typeof cmd === "object" && cmd !== null) {
+                if (typeof cmd === 'object' && cmd !== null) {
                     this.commands.delete(responseId);
                     var index = this.commandQueue.indexOf(cmd.id);
                     this.commandQueue.splice(index, 1);
@@ -406,7 +405,7 @@ export class JediProxy implements vscode.Disposable {
                             break;
                         }
                         case CommandType.Arguments: {
-                            let defs = <any[]>response["results"];
+                            let defs = <any[]>response['results'];
                             cmd.deferred.resolve(<IArgumentsResult>{
                                 requestId: cmd.id,
                                 definitions: defs
@@ -437,7 +436,7 @@ export class JediProxy implements vscode.Disposable {
 
     public sendCommand<T extends ICommandResult>(cmd: ICommand<T>): Promise<T> {
         if (!this.proc) {
-            return Promise.reject(new Error("Python proc not initialized"));
+            return Promise.reject(new Error('Python proc not initialized'));
         }
         var executionCmd = <IExecutionCommand<T>>cmd;
         var payload = this.createPayload(executionCmd);
@@ -446,19 +445,19 @@ export class JediProxy implements vscode.Disposable {
         //     executionCmd.delays = new telemetryHelper.Delays();
         // }
         try {
-            this.proc.stdin.write(JSON.stringify(payload) + "\n");
+            this.proc.stdin.write(JSON.stringify(payload) + '\n');
             this.commands.set(executionCmd.id, executionCmd);
             this.commandQueue.push(executionCmd.id);
         }
         catch (ex) {
             console.error(ex);
             //If 'This socket is closed.' that means process didn't start at all (at least not properly).
-            if (ex.message === "This socket is closed.") {
+            if (ex.message === 'This socket is closed.') {
 
                 this.killProcess();
             }
             else {
-                this.handleError("sendCommand", ex.message);
+                this.handleError('sendCommand', ex.message);
             }
             return Promise.reject(ex);
         }
@@ -468,7 +467,7 @@ export class JediProxy implements vscode.Disposable {
     private createPayload<T extends ICommandResult>(cmd: IExecutionCommand<T>): any {
         var payload = {
             id: cmd.id,
-            prefix: "",
+            prefix: '',
             lookup: commandNames.get(cmd.command),
             path: cmd.fileName,
             source: cmd.source,
@@ -490,12 +489,12 @@ export class JediProxy implements vscode.Disposable {
     private getPathFromPythonCommand(args: string[]): Promise<string> {
         return execPythonFile(this.workspacePath, this.pythonSettings.pythonPath, args, this.workspacePath).then(stdout => {
             if (stdout.length === 0) {
-                return "";
+                return '';
             }
             let lines = stdout.split(/\r?\n/g).filter(line => line.length > 0);
             return validatePath(lines[0]);
         }).catch(() => {
-            return "";
+            return '';
         });
     }
     private onConfigChanged() {
@@ -507,13 +506,13 @@ export class JediProxy implements vscode.Disposable {
         this.lastKnownPythonPath = this.pythonSettings.pythonPath;
         let filePaths = [
             // Sysprefix.
-            this.getPathFromPythonCommand(["-c", "import sys;print(sys.prefix)"]),
+            this.getPathFromPythonCommand(['-c', 'import sys;print(sys.prefix)']),
             // exeucutable path.
-            this.getPathFromPythonCommand(["-c", "import sys;print(sys.executable)"]),
+            this.getPathFromPythonCommand(['-c', 'import sys;print(sys.executable)']),
             // Python specific site packages.
-            this.getPathFromPythonCommand(["-c", "from distutils.sysconfig import get_python_lib; print(get_python_lib())"]),
+            this.getPathFromPythonCommand(['-c', 'from distutils.sysconfig import get_python_lib; print(get_python_lib())']),
             // Python global site packages, as a fallback in case user hasn't installed them in custom environment.
-            this.getPathFromPythonCommand(["-m", "site", "--user-site"]),
+            this.getPathFromPythonCommand(['-m', 'site', '--user-site']),
         ];
 
         let PYTHONPATH: string = process.env['PYTHONPATH'];
@@ -541,7 +540,7 @@ export class JediProxy implements vscode.Disposable {
                 // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages).
                 // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())".
                 if (IS_WINDOWS && paths[2].length > 0) {
-                    paths.splice(3, 0, path.join(paths[2], ".."));
+                    paths.splice(3, 0, path.join(paths[2], '..'));
                 }
                 this.additionalAutoCopletePaths = paths.filter(p => p.length > 0);
             })

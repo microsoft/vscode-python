@@ -57,3 +57,5 @@ export namespace LinterErrors {
         export const InvalidSyntax = 'E999';
     }
 }
+
+export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';

@@ -44,7 +44,6 @@ export interface IUnitTestSettings {
     pyTestArgs: string[];
     unittestEnabled: boolean;
     unittestArgs: string[];
-    outputWindow: string;
     cwd?: string;
 }
 export interface IPylintCategorySeverity {
@@ -96,7 +95,6 @@ export interface ILintingSettings {
     pylamaPath: string;
     flake8Path: string;
     pydocstylePath: string;
-    outputWindow: string;
     mypyEnabled: boolean;
     mypyArgs: string[];
     mypyPath: string;
@@ -107,7 +105,6 @@ export interface IFormattingSettings {
     autopep8Args: string[];
     yapfPath: string;
     yapfArgs: string[];
-    outputWindow: string;
 }
 export interface IAutoCompeteSettings {
     addBrackets: boolean;
@@ -244,7 +241,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             flake8Args: [], flake8Enabled: false, flake8Path: 'flake',
             lintOnSave: false, maxNumberOfProblems: 100,
             mypyArgs: [], mypyEnabled: false, mypyPath: 'mypy',
-            outputWindow: 'python', pep8Args: [], pep8Enabled: false, pep8Path: 'pep8',
+            pep8Args: [], pep8Enabled: false, pep8Path: 'pep8',
             pylamaArgs: [], pylamaEnabled: false, pylamaPath: 'pylama',
             prospectorArgs: [], prospectorEnabled: false, prospectorPath: 'prospector',
             pydocstyleArgs: [], pydocstyleEnabled: false, pydocstylePath: 'pydocstyle',
@@ -288,7 +285,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         // Support for travis.
         this.formatting = this.formatting ? this.formatting : {
             autopep8Args: [], autopep8Path: 'autopep8',
-            outputWindow: 'python',
             provider: 'autopep8',
             yapfArgs: [], yapfPath: 'yapf'
         };
@@ -339,7 +335,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                     nosetestArgs: [], pyTestArgs: [], unittestArgs: [],
                     promptToConfigure: true, debugPort: 3000,
                     nosetestsEnabled: false, pyTestEnabled: false, unittestEnabled: false,
-                    nosetestPath: 'nosetests', pyTestPath: 'py.test', outputWindow: 'Python Test Log'
+                    nosetestPath: 'nosetests', pyTestPath: 'py.test'
                 } as IUnitTestSettings;
             }
         }
@@ -349,7 +345,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             promptToConfigure: true,
             debugPort: 3000,
             nosetestArgs: [], nosetestPath: 'nosetest', nosetestsEnabled: false,
-            outputWindow: 'python',
             pyTestArgs: [], pyTestEnabled: false, pyTestPath: 'pytest',
             unittestArgs: [], unittestEnabled: false
         };
