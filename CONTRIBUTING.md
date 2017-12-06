@@ -215,5 +215,5 @@ number for backwards-compatibility. As such, the major version
 is the current year, the minor version is the current month, and
 the micro version is how many releases there have been that month in
 the year (starting at 0). For example, the first release in July 2018
-would be `2017.7.0`, the second release that month would be
-`2017.7.1`, etc.
+would be `2018.7.0`, the second release that month would be
+`2018.7.1`, etc.
