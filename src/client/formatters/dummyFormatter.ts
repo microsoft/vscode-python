@@ -1,8 +1,6 @@
-'use strict';
-
 import * as vscode from 'vscode';
+import { Product } from '../common/types';
 import { BaseFormatter } from './baseFormatter';
-import { Product } from '../common/installer';
 
 export class DummyFormatter extends BaseFormatter {
     constructor(outputChannel: vscode.OutputChannel) {

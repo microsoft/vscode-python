@@ -3,8 +3,7 @@
 
 import { Uri } from 'vscode';
 import { ILintingSettings } from '../common/configSettings';
-import { Product } from '../common/installer';
-import { ExecutionInfo } from '../common/types';
+import { ExecutionInfo, Product } from '../common/types';
 
 export interface IErrorHandler {
     handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean>;

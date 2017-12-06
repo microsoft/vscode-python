@@ -1,6 +1,6 @@
 'use strict';
 import { Uri } from 'vscode';
-import { Product } from '../../common/installer';
+import { Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/managers/baseTestManager';
 import { TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';

@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 import { workspace } from 'vscode';
 import { Commands, PythonLanguage } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
-import { Installer, Product } from '../common/installer';
-import { InstallerResponse } from '../common/types';
+import { Installer } from '../common/installer/installer';
+import { InstallerResponse, Product } from '../common/types';
 import { fsExistsAsync } from '../common/utils';
 import { Generator } from './generator';
 import { WorkspaceSymbolProvider } from './provider';
@@ -103,7 +103,7 @@ export class WorkspaceSymbols implements vscode.Disposable {
                     promptResponse = await promptPromise;
                     continue;
                 } else {
-                    promptPromise = this.installer.promptToInstall(Product.ctags, workspace.workspaceFolders[0]!.uri);
+                    promptPromise = this.installer.promptToInstall(Product.ctags, workspace.workspaceFolders![0]!.uri);
                     promptResponse = await promptPromise;
                 }
                 if (promptResponse !== InstallerResponse.Installed || (!token || token.isCancellationRequested)) {

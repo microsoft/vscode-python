@@ -3,7 +3,8 @@
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { getTextEditsFromPatch } from '../common/editor';
-import { Installer, Product } from '../common/installer';
+import { Installer } from '../common/installer/installer';
+import { Product } from '../common/types';
 import { RefactorProxy } from '../refactor/proxy';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { REFACTOR_EXTRACT_FUNCTION, REFACTOR_EXTRACT_VAR } from '../telemetry/constants';

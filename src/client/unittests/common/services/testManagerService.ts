@@ -1,7 +1,6 @@
 import { Disposable, Uri } from 'vscode';
 import { PythonSettings } from '../../../common/configSettings';
-import { Product } from '../../../common/installer';
-import { IDiposableRegistry } from '../../../common/types';
+import { IDiposableRegistry, Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { ITestManager, ITestManagerFactory, ITestManagerService, ITestsHelper, UnitTestProduct } from './../types';
 

@@ -5,8 +5,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { isNotInstalledError } from '../common/helpers';
-import { Installer, Product } from '../common/installer';
-import * as settings from './../common/configSettings';
+import { Installer, Product } from '../common/installer/installer';
 import { getTempFileWithDocumentContents, getTextEditsFromPatch } from './../common/editor';
 import { execPythonFile } from './../common/utils';
 

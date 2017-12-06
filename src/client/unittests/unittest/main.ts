@@ -1,10 +1,10 @@
-'use strict';
 import { Uri } from 'vscode';
-import { Product } from '../../common/installer';
+import { Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/managers/baseTestManager';
 import { TestDiscoveryOptions, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
 import { runTest } from './runner';
+
 export class TestManager extends BaseTestManager {
     constructor(workspaceFolder: Uri, rootDirectory: string, serviceContainer: IServiceContainer) {
         super('unittest', Product.unittest, workspaceFolder, rootDirectory, serviceContainer);
@@ -18,7 +18,7 @@ export class TestManager extends BaseTestManager {
             workspaceFolder: this.workspaceFolder,
             cwd: this.rootDirectory, args,
             token: this.testDiscoveryCancellationToken!, ignoreCache,
-            outChannel:     this.outputChannel
+            outChannel: this.outputChannel
         };
     }
     public async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<{}> {

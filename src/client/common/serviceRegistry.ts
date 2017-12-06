@@ -4,7 +4,7 @@
 import 'reflect-metadata';
 import { Disposable } from 'vscode';
 import { IServiceManager } from '../ioc/types';
-import { Installer } from './installer';
+import { Installer } from './installer/installer';
 import { Logger } from './logger';
 import { PersistentStateFactory } from './persistentState';
 import { IS_WINDOWS as isWindows } from './platform/constants';

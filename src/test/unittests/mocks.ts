@@ -3,7 +3,7 @@ import { injectable } from 'inversify';
 import 'reflect-metadata';
 import { CancellationToken, Disposable, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../client/common/helpers';
-import { Product } from '../../client/common/installer';
+import { Product } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../client/unittests/common/constants';
 import { BaseTestManager } from '../../client/unittests/common/managers/baseTestManager';

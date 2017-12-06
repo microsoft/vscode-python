@@ -5,7 +5,7 @@ import { Uri, workspace } from 'vscode';
 import { window } from 'vscode';
 import * as vscode from 'vscode';
 import * as constants from '../../common/constants';
-import { Product } from '../../common/installer';
+import { Product } from '../../common/types';
 import { CommandSource } from './constants';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
 import { ITestVisitor, TestFile, TestFolder, TestProvider, Tests, TestsToRun, UnitTestProduct } from './types';

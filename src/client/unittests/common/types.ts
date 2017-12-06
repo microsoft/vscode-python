@@ -1,5 +1,5 @@
 import { CancellationToken, Disposable, OutputChannel, Uri } from 'vscode';
-import { Product } from '../../common/installer';
+import { Product } from '../../common/types';
 import { CommandSource } from './constants';
 
 export type TestProvider = 'nosetest' | 'pytest' | 'unittest';

@@ -1,7 +1,8 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
-import { Installer, Product } from '../../client/common/installer';
+import { Installer } from '../../client/common/installer/installer';
+import { Product } from '../../client/common/types';
 import { rootWorkspaceUri } from '../common';
 import { updateSetting } from '../common';
 import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';

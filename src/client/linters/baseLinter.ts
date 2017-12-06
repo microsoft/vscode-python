@@ -2,17 +2,15 @@ import * as path from 'path';
 import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
 import * as vscode from 'vscode';
 import { IPythonSettings, PythonSettings } from '../common/configSettings';
-import { Product } from '../common/installer';
 import { ExecutionResult, IProcessService, IPythonExecutionFactory } from '../common/process/types';
-import { ExecutionInfo, IInstaller, ILogger } from '../common/types';
+import { ExecutionInfo, IInstaller, ILogger, Product } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
-import { execPythonFile } from './../common/utils';
 import { ErrorHandler } from './errorHandlers/main';
 import { ILinterHelper, LinterId } from './types';
+// tslint:disable-next-line:no-require-imports no-var-requires
+const namedRegexp = require('named-js-regexp');
 
-// tslint:disable-next-line:variable-name
-let NamedRegexp = null;
 const REGEX = '(?<line>\\d+),(?<column>\\d+),(?<type>\\w+),(?<code>\\w\\d+):(?<message>.*)\\r?(\\n|$)';
 
 export interface IRegexGroup {
@@ -39,19 +37,14 @@ export enum LintMessageSeverity {
     Information
 }
 
-export function matchNamedRegEx(data, regex): IRegexGroup {
-    if (NamedRegexp === null) {
-        // tslint:disable-next-line:no-require-imports
-        NamedRegexp = require('named-js-regexp');
-    }
-
-    const compiledRegexp = NamedRegexp(regex, 'g');
+export function matchNamedRegEx(data, regex): IRegexGroup | undefined {
+    const compiledRegexp = namedRegexp(regex, 'g');
     const rawMatch = compiledRegexp.exec(data);
     if (rawMatch !== null) {
         return <IRegexGroup>rawMatch.groups();
     }
 
-    return null;
+    return undefined;
 }
 export abstract class BaseLinter {
     public Id: LinterId;
@@ -153,7 +146,7 @@ export abstract class BaseLinter {
     }
 
     private parseLine(line: string, regEx: string): ILintMessage | undefined {
-        const match = matchNamedRegEx(line, regEx);
+        const match = matchNamedRegEx(line, regEx)!;
         if (!match) {
             return;
         }

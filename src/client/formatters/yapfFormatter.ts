@@ -1,9 +1,7 @@
-'use strict';
-
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { Product } from '../common/installer';
-import {  sendTelemetryWhenDone} from '../telemetry';
+import { Product } from '../common/types';
+import { sendTelemetryWhenDone } from '../telemetry';
 import { FORMAT } from '../telemetry/constants';
 import { StopWatch } from '../telemetry/stopWatch';
 import { BaseFormatter } from './baseFormatter';

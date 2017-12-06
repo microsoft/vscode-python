@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { Product } from '../common/installer';
+import { Product } from '../common/installer/installer';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { FORMAT } from '../telemetry/constants';
 import { StopWatch } from '../telemetry/stopWatch';

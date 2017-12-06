@@ -1,10 +1,9 @@
-'use strict';
-
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
-import { Installer, Product } from '../common/installer';
+import { Installer } from '../common/installer/installer';
+import { Product } from '../common/types';
 import { RefactorProxy } from '../refactor/proxy';
 import { captureTelemetry } from '../telemetry';
 import { REFACTOR_RENAME } from '../telemetry/constants';

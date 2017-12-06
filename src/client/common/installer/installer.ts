@@ -4,13 +4,13 @@ import 'reflect-metadata';
 import 'reflect-metadata';
 import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import * as vscode from 'vscode';
-import * as settings from './configSettings';
-import { STANDARD_OUTPUT_CHANNEL } from './constants';
-import { isNotInstalledError } from './helpers';
-import { IInstaller, InstallerResponse, IOutputChannel, Product } from './types';
-import { execPythonFile, getFullyQualifiedPythonInterpreterPath, IS_WINDOWS } from './utils';
+import * as settings from '../configSettings';
+import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { isNotInstalledError } from '../helpers';
+import { IInstaller, InstallerResponse, IOutputChannel, Product } from '../types';
+import { execPythonFile, getFullyQualifiedPythonInterpreterPath, IS_WINDOWS } from '../utils';
 
-export { Product } from './types';
+export { Product } from '../types';
 
 // tslint:disable-next-line:variable-name
 const ProductInstallScripts = new Map<Product, string[]>();

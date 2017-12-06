@@ -1,3 +1,4 @@
+// tslint:disable-next-line:no-require-imports no-var-requires
 const tmp = require('tmp');
 
 export function isNotInstalledError(error: Error): boolean {
@@ -11,6 +12,7 @@ export function isNotInstalledError(error: Error): boolean {
     return errorObj.code === 'ENOENT' || errorObj.code === 127 || isModuleNoInstalledError;
 }
 
+// tslint:disable-next-line:interface-name
 export interface Deferred<T> {
     readonly promise: Promise<T>;
     readonly resolved: boolean;
@@ -36,12 +38,12 @@ class DeferredImpl<T> implements Deferred<T> {
             this._reject = rej;
         });
     }
-    resolve(value?: T | PromiseLike<T>) {
+    public resolve(value?: T | PromiseLike<T>) {
         this._resolve.apply(this.scope ? this.scope : this, arguments);
         this._resolved = true;
     }
     // tslint:disable-next-line:no-any
-    reject(reason?: any) {
+    public reject(reason?: any) {
         this._reject.apply(this.scope ? this.scope : this, arguments);
         this._rejected = true;
     }
@@ -58,8 +60,8 @@ class DeferredImpl<T> implements Deferred<T> {
         return this._rejected || this._resolved;
     }
 }
-    // tslint:disable-next-line:no-any
-    export function createDeferred<T>(scope: any = null): Deferred<T> {
+// tslint:disable-next-line:no-any
+export function createDeferred<T>(scope: any = null): Deferred<T> {
     return new DeferredImpl<T>(scope);
 }
 
@@ -71,7 +73,7 @@ export function createTemporaryFile(extension: string, temporaryDirectory?: stri
     }
 
     return new Promise<{ filePath: string, cleanupCallback: Function }>((resolve, reject) => {
-        tmp.file(options, function _tempFileCreated(err, tmpFile, fd, cleanupCallback) {
+        tmp.file(options, (err, tmpFile, fd, cleanupCallback) => {
             if (err) {
                 return reject(err);
             }

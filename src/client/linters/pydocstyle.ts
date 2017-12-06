@@ -1,8 +1,7 @@
 import * as path from 'path';
 import { OutputChannel } from 'vscode';
 import { CancellationToken, TextDocument } from 'vscode';
-import { Product } from '../common/installer';
-import { IInstaller, ILogger } from '../common/types';
+import { IInstaller, ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { IS_WINDOWS } from './../common/utils';
 import * as baseLinter from './baseLinter';
