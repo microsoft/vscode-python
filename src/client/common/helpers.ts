@@ -2,6 +2,7 @@ const tmp = require('tmp');
 
 export function isNotInstalledError(error: Error): boolean {
     const isError = typeof (error) === 'object' && error !== null;
+    // tslint:disable-next-line:no-any
     const errorObj = <any>error;
     if (!isError) {
         return false;
@@ -11,20 +12,23 @@ export function isNotInstalledError(error: Error): boolean {
 }
 
 export interface Deferred<T> {
-    resolve(value?: T | PromiseLike<T>);
-    reject(reason?: any);
     readonly promise: Promise<T>;
     readonly resolved: boolean;
     readonly rejected: boolean;
     readonly completed: boolean;
+    resolve(value?: T | PromiseLike<T>);
+    // tslint:disable-next-line:no-any
+    reject(reason?: any);
 }
 
 class DeferredImpl<T> implements Deferred<T> {
     private _resolve: (value?: T | PromiseLike<T>) => void;
+    // tslint:disable-next-line:no-any
     private _reject: (reason?: any) => void;
     private _resolved: boolean = false;
     private _rejected: boolean = false;
     private _promise: Promise<T>;
+    // tslint:disable-next-line:no-any
     constructor(private scope: any = null) {
         // tslint:disable-next-line:promise-must-complete
         this._promise = new Promise<T>((res, rej) => {
@@ -36,6 +40,7 @@ class DeferredImpl<T> implements Deferred<T> {
         this._resolve.apply(this.scope ? this.scope : this, arguments);
         this._resolved = true;
     }
+    // tslint:disable-next-line:no-any
     reject(reason?: any) {
         this._reject.apply(this.scope ? this.scope : this, arguments);
         this._rejected = true;
@@ -53,12 +58,14 @@ class DeferredImpl<T> implements Deferred<T> {
         return this._rejected || this._resolved;
     }
 }
-export function createDeferred<T>(scope: any = null): Deferred<T> {
+    // tslint:disable-next-line:no-any
+    export function createDeferred<T>(scope: any = null): Deferred<T> {
     return new DeferredImpl<T>(scope);
 }
 
 export function createTemporaryFile(extension: string, temporaryDirectory?: string): Promise<{ filePath: string, cleanupCallback: Function }> {
-    let options: any = { postfix: extension };
+    // tslint:disable-next-line:no-any
+    const options: any = { postfix: extension };
     if (temporaryDirectory) {
         options.dir = temporaryDirectory;
     }

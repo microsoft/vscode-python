@@ -1,8 +1,8 @@
 'use strict';
 import { Container } from 'inversify';
 import * as os from 'os';
-import { Disposable, Memento, OutputChannel } from 'vscode';
 import * as vscode from 'vscode';
+import { Disposable, Memento, OutputChannel } from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';

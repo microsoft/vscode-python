@@ -1,19 +1,21 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 // Note: This example test is leveraging the Mocha test framework.
 // Please refer to their documentation on https://mochajs.org/ for help.
-
 
 // The module 'assert' provides assertion methods from node
 import * as assert from 'assert';
 import { EOL } from 'os';
+import * as path from 'path';
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from 'vscode';
-import * as path from 'path';
 import * as settings from '../../client/common/configSettings';
-import { initialize, closeActiveWindows, initializeTest } from '../initialize';
-import { execPythonFile } from '../../client/common/utils';
 import { PythonSettings } from '../../client/common/configSettings';
+import { execPythonFile } from '../../client/common/utils';
 import { rootWorkspaceUri } from '../common';
+import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
 const fileOne = path.join(autoCompPath, 'one.py');
@@ -23,7 +25,9 @@ const fileLambda = path.join(autoCompPath, 'lamb.py');
 const fileDecorator = path.join(autoCompPath, 'deco.py');
 const fileEncoding = path.join(autoCompPath, 'four.py');
 const fileEncodingUsed = path.join(autoCompPath, 'five.py');
+const fileSuppress = path.join(autoCompPath, 'suppress.py');
 
+// tslint:disable-next-line:max-func-body-length
 suite('Autocomplete', () => {
     let isPython3: Promise<boolean>;
     suiteSetup(async () => {
@@ -31,9 +35,9 @@ suite('Autocomplete', () => {
         const version = await execPythonFile(rootWorkspaceUri, PythonSettings.getInstance(rootWorkspaceUri).pythonPath, ['--version'], __dirname, true);
         isPython3 = Promise.resolve(version.indexOf('3.') >= 0);
     });
-    setup(() => initializeTest());
-    suiteTeardown(() => closeActiveWindows());
-    teardown(() => closeActiveWindows());
+    setup(initializeTest);
+    suiteTeardown(closeActiveWindows);
+    teardown(closeActiveWindows);
 
     test('For "sys."', done => {
         let textEditor: vscode.TextEditor;
@@ -115,7 +119,7 @@ suite('Autocomplete', () => {
         const position = new vscode.Position(10, 9);
         const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
         assert.notEqual(list.items.filter(item => item.label === 'sleep').length, 0, 'sleep not found');
-        assert.notEqual(list.items.filter(item => item.documentation.toString().startsWith("Delay execution for a given number of seconds.  The argument may be")).length, 0, 'Documentation incorrect');
+        assert.notEqual(list.items.filter(item => item.documentation.toString().startsWith('Delay execution for a given number of seconds.  The argument may be')).length, 0, 'Documentation incorrect');
     });
 
     test('For custom class', done => {
@@ -172,5 +176,32 @@ suite('Autocomplete', () => {
             const documentation = `Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи. ${EOL}Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.`;
             assert.equal(list.items.filter(item => item.label === 'showMessage')[0].documentation, documentation, 'showMessage unicode documentation is incorrect');
         }).then(done, done);
+    });
+
+    // https://github.com/Microsoft/vscode-python/issues/110
+    test('Suppress in strings/comments', async () => {
+        const positions = [
+            new vscode.Position(0, 1),  // false
+            new vscode.Position(0, 9),  // true
+            new vscode.Position(0, 12), // false
+            new vscode.Position(1, 1),  // false
+            new vscode.Position(1, 3),  // false
+            new vscode.Position(2, 7),  // false
+            new vscode.Position(3, 0),  // false
+            new vscode.Position(4, 2),  // false
+            new vscode.Position(4, 8),  // false
+            new vscode.Position(5, 4)   // false
+        ];
+        const expected = [
+            false, true, false, false, false, false, false, false, false, false
+        ];
+        const textDocument = await vscode.workspace.openTextDocument(fileSuppress);
+        await vscode.window.showTextDocument(textDocument);
+        for (let i = 0; i < positions.length; i += 1) {
+            const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, positions[i]);
+            const result = list.items.filter(item => item.label === 'abs').length;
+            assert.equal(result > 0, expected[i],
+                `Expected ${expected[i]} at position ${positions[i].line}:${positions[i].character} but got ${result}`);
+        }
     });
 });

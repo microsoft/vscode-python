@@ -1,8 +1,10 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { ProviderResult, SnippetString, Uri } from 'vscode';
+import { Position, ProviderResult, SnippetString, Uri } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
+import { Tokenizer } from '../language/tokenizer';
+import { TokenType } from '../language/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
 import { COMPLETION } from '../telemetry/constants';
@@ -42,12 +44,8 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
         if (lineText.match(/^\s*\/\//)) {
             return Promise.resolve([]);
         }
-        // If starts with a comment, then return
-        if (lineText.trim().startsWith('#')) {
-            return Promise.resolve([]);
-        }
-        // If starts with a """ (possible doc string), then return
-        if (lineText.trim().startsWith('"""')) {
+        // Suppress completion inside string and comments
+        if (this.isPositionInsideStringOrComment(document, position)) {
             return Promise.resolve([]);
         }
         const type = proxy.CommandType.Completions;
@@ -65,5 +63,14 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
         return this.jediFactory.getJediProxyHandler<proxy.ICompletionResult>(document.uri).sendCommand(cmd, token).then(data => {
             return PythonCompletionItemProvider.parseData(data, document.uri);
         });
+    }
+
+    private isPositionInsideStringOrComment(document: vscode.TextDocument, position: vscode.Position): boolean {
+        const tokenizeTo = position.translate(1, 0);
+        const text = document.getText(new vscode.Range(new Position(0, 0), tokenizeTo));
+        const t = new Tokenizer();
+        const tokens = t.Tokenize(text);
+        const index = tokens.getItemContaining(document.offsetAt(position));
+        return index >= 0 && (tokens[index].TokenType === TokenType.String || tokens[index].TokenType === TokenType.Comment);
     }
 }
