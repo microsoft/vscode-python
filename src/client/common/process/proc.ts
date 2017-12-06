@@ -19,6 +19,10 @@ export class ProcessService implements IProcessService {
         if (!spawnOptions.env || Object.keys(spawnOptions).length === 0) {
             spawnOptions.env = process.env;
         }
+
+        // Always ensure we have unbuffered output.
+        spawnOptions.env.PYTHONUNBUFFERED = '1';
+
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
 
@@ -72,6 +76,10 @@ export class ProcessService implements IProcessService {
         if (!spawnOptions.env || Object.keys(spawnOptions).length === 0) {
             spawnOptions.env = process.env;
         }
+
+        // Always ensure we have unbuffered output.
+        spawnOptions.env.PYTHONUNBUFFERED = '1';
+
         const proc = spawn(file, args, spawnOptions);
         const deferred = createDeferred<ExecutionResult<string>>();
         const disposables: Disposable[] = [];

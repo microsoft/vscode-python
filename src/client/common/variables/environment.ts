@@ -11,7 +11,7 @@ import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
-    constructor( @inject(IsWindows) private isWidows: boolean) { }
+    constructor( @inject(IsWindows) private isWindows: boolean) { }
     public async parseFile(filePath: string): Promise<EnvironmentVariables | undefined> {
         const exists = await fs.pathExists(filePath);
         if (!exists) {
@@ -27,7 +27,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
                     return resolve(undefined);
                 }
                 this.appendPythonPath(vars, process.env.PYTHONPATH);
-                const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
+                const pathVariable = this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
                 this.appendPath(vars, process.env[pathVariable]);
                 resolve(vars);
             });
@@ -37,7 +37,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         if (!target) {
             return;
         }
-        const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
+        const pathVariable = this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
         const settingsNotToMerge = ['PYTHONPATH', pathVariable];
         Object.keys(source).forEach(setting => {
             if (settingsNotToMerge.indexOf(setting) >= 0) {
@@ -55,11 +55,11 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         return this.appendOrPrependPaths(vars, 'PYTHONPATH', true, ...pythonPaths);
     }
     public prependPath(vars: EnvironmentVariables, ...paths: string[]) {
-        const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
+        const pathVariable = this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
         return this.appendOrPrependPaths(vars, pathVariable, false, ...paths);
     }
     public appendPath(vars: EnvironmentVariables, ...paths: string[]) {
-        const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
+        const pathVariable = this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
         return this.appendOrPrependPaths(vars, pathVariable, true, ...paths);
     }
     private appendOrPrependPaths(vars: EnvironmentVariables, variableName: 'PATH' | 'Path' | 'PYTHONPATH', append: boolean, ...pythonPaths: string[]) {
