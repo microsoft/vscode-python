@@ -1,9 +1,9 @@
 'use strict';
 import * as path from 'path';
-import { OutputChannel, Uri } from 'vscode';
 import * as vscode from 'vscode';
+import { OutputChannel, Uri } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { Installer, Product } from '../common/installer';
+import { IInstaller, Product } from '../common/types';
 import { getSubDirectories } from '../common/utils';
 import { TestConfigurationManager } from './common/managers/testConfigurationManager';
 import { TestConfigSettingsService } from './common/services/configSettingService';
@@ -14,18 +14,18 @@ import * as pytest from './pytest/testConfigurationManager';
 import * as unittest from './unittest/testConfigurationManager';
 
 // tslint:disable-next-line:no-any
-async function promptToEnableAndConfigureTestFramework(wkspace: Uri, outputChannel: vscode.OutputChannel, messageToDisplay: string = 'Select a test framework/tool to enable', enableOnly: boolean = false) {
+async function promptToEnableAndConfigureTestFramework(wkspace: Uri, installer: IInstaller, outputChannel: vscode.OutputChannel, messageToDisplay: string = 'Select a test framework/tool to enable', enableOnly: boolean = false) {
     const selectedTestRunner = await selectTestRunner(messageToDisplay);
     if (typeof selectedTestRunner !== 'number') {
         return Promise.reject(null);
     }
-    const configMgr: TestConfigurationManager = createTestConfigurationManager(wkspace, selectedTestRunner, outputChannel);
+    const configMgr: TestConfigurationManager = createTestConfigurationManager(wkspace, selectedTestRunner, outputChannel, installer);
     if (enableOnly) {
         // Ensure others are disabled
         [Product.unittest, Product.pytest, Product.nosetest]
             .filter(prod => selectedTestRunner !== prod)
             .forEach(prod => {
-                createTestConfigurationManager(wkspace, prod, outputChannel).disable()
+                createTestConfigurationManager(wkspace, prod, outputChannel, installer).disable()
                     .catch(ex => console.error('Python Extension: createTestConfigurationManager.disable', ex));
             });
         return configMgr.enable();
@@ -37,24 +37,24 @@ async function promptToEnableAndConfigureTestFramework(wkspace: Uri, outputChann
         return enableTest(wkspace, configMgr).then(() => Promise.reject(reason));
     });
 }
-export function displayTestFrameworkError(wkspace: Uri, outputChannel: vscode.OutputChannel) {
+export function displayTestFrameworkError(wkspace: Uri, outputChannel: vscode.OutputChannel, installer: IInstaller) {
     const settings = PythonSettings.getInstance();
     let enabledCount = settings.unitTest.pyTestEnabled ? 1 : 0;
     enabledCount += settings.unitTest.nosetestsEnabled ? 1 : 0;
     enabledCount += settings.unitTest.unittestEnabled ? 1 : 0;
     if (enabledCount > 1) {
-        return promptToEnableAndConfigureTestFramework(wkspace, outputChannel, 'Enable only one of the test frameworks (unittest, pytest or nosetest).', true);
+        return promptToEnableAndConfigureTestFramework(wkspace, installer, outputChannel, 'Enable only one of the test frameworks (unittest, pytest or nosetest).', true);
     } else {
         const option = 'Enable and configure a Test Framework';
         return vscode.window.showInformationMessage('No test framework configured (unittest, pytest or nosetest)', option).then(item => {
             if (item === option) {
-                return promptToEnableAndConfigureTestFramework(wkspace, outputChannel);
+                return promptToEnableAndConfigureTestFramework(wkspace, installer, outputChannel);
             }
             return Promise.reject(null);
         });
     }
 }
-export async function displayPromptToEnableTests(rootDir: string, outputChannel: vscode.OutputChannel) {
+export async function displayPromptToEnableTests(rootDir: string, outputChannel: vscode.OutputChannel, installer: IInstaller) {
     const settings = PythonSettings.getInstance(vscode.Uri.file(rootDir));
     if (settings.unitTest.pyTestEnabled ||
         settings.unitTest.nosetestsEnabled ||
@@ -79,7 +79,7 @@ export async function displayPromptToEnableTests(rootDir: string, outputChannel:
         return;
     }
     if (item === yes) {
-        await promptToEnableAndConfigureTestFramework(vscode.workspace.getWorkspaceFolder(vscode.Uri.file(rootDir))!.uri, outputChannel);
+        await promptToEnableAndConfigureTestFramework(vscode.workspace.getWorkspaceFolder(vscode.Uri.file(rootDir))!.uri, installer, outputChannel);
     } else {
         const pythonConfig = vscode.workspace.getConfiguration('python');
         await pythonConfig.update('unitTest.promptToConfigure', false);
@@ -106,8 +106,7 @@ function checkForExistenceOfTests(rootDir: string): Promise<boolean> {
         return subDirs.map(dir => path.relative(rootDir, dir)).filter(dir => dir.match(/test/i)).length > 0;
     });
 }
-function createTestConfigurationManager(wkspace: Uri, product: Product, outputChannel: OutputChannel) {
-    const installer = new Installer(outputChannel);
+function createTestConfigurationManager(wkspace: Uri, product: Product, outputChannel: OutputChannel, installer: IInstaller) {
     const configSettingService = new TestConfigSettingsService();
     switch (product) {
         case Product.unittest: {
