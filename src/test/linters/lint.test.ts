@@ -117,7 +117,6 @@ const fiteredPydocstyleMessagseToBeReturned: baseLinter.ILintMessage[] = [
 // tslint:disable-next-line:max-func-body-length
 suite('Linting', () => {
     let ioc: UnitTestIocContainer;
-    let mockOutputChannel: OutputChannel;
     const isPython3Deferred = createDeferred<boolean>();
     const isPython3 = isPython3Deferred.promise;
     suiteSetup(async () => {
@@ -133,7 +132,6 @@ suite('Linting', () => {
     suiteTeardown(closeActiveWindows);
     teardown(async () => {
         ioc.dispose();
-        mockOutputChannel.dispose();
         await closeActiveWindows();
         await resetSettings();
     });
@@ -144,11 +142,11 @@ suite('Linting', () => {
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
-        ioc.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, mockOutputChannel = new MockOutputChannel('Linting'), STANDARD_OUTPUT_CHANNEL);
     }
 
     type LinterCtor = { new(outputChannel: OutputChannel, installer: IInstaller, helper: ILinterHelper, logger: ILogger, serviceContainer: IServiceContainer): BaseLinter };
     function createLinter(linter: Product) {
+        const mockOutputChannel = ioc.serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
         const logger = ioc.serviceContainer.get<ILogger>(ILogger);
         const linterHelper = ioc.serviceContainer.get<ILinterHelper>(ILinterHelper);

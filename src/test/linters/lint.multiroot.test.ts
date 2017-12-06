@@ -15,7 +15,6 @@ const multirootPath = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRo
 
 suite('Multiroot Linting', () => {
     let ioc: UnitTestIocContainer;
-    let mockOutputChannel: OutputChannel;
     suiteSetup(function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
@@ -40,10 +39,10 @@ suite('Multiroot Linting', () => {
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
-        mockOutputChannel = ioc.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
     }
 
     function createLinter(linter: Product) {
+        const mockOutputChannel = ioc.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
         const logger = ioc.serviceContainer.get<ILogger>(ILogger);
         const linterHelper = ioc.serviceContainer.get<ILinterHelper>(ILinterHelper);
