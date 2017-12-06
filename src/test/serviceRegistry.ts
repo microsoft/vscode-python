@@ -4,6 +4,7 @@
 import { Container } from 'inversify';
 import 'reflect-metadata';
 import { Disposable, Memento, OutputChannel } from 'vscode';
+import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
 import { BufferDecoder } from '../client/common/process/decoder';
 import { ProcessService } from '../client/common/process/proc';
 import { PythonExecutionFactory } from '../client/common/process/pythonExecutionFactory';
@@ -38,7 +39,12 @@ export class IocContainer {
         this.serviceManager.addSingleton<Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);
         this.serviceManager.addSingleton<Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);
 
-        this.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, new MockOutputChannel('Python Test - UnitTests'), TEST_OUTPUT_CHANNEL);
+        const stdOutputChannel = new MockOutputChannel('Python');
+        this.disposables.push(stdOutputChannel);
+        this.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, stdOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        const testOutputChannel = new MockOutputChannel('Python Test - UnitTests');
+        this.disposables.push(testOutputChannel);
+        this.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, testOutputChannel, TEST_OUTPUT_CHANNEL);
     }
 
     public dispose() {

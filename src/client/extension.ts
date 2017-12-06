@@ -2,7 +2,7 @@
 import { Container } from 'inversify';
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { Disposable, Memento, OutputChannel } from 'vscode';
+import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
@@ -66,6 +66,12 @@ export async function activate(context: vscode.ExtensionContext) {
     serviceManager.addSingletonInstance<Disposable[]>(IDiposableRegistry, context.subscriptions);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
+
+    const standardOutputChannel = window.createOutputChannel('Python');
+    const unitTestOutChannel = window.createOutputChannel('Python Test Log');
+    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
+    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
+
     commonRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);
@@ -75,13 +81,6 @@ export async function activate(context: vscode.ExtensionContext) {
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
     sendStartupTelemetry(activated);
-
-    const standardOutputChannel = vscode.window.createOutputChannel('Python');
-    const unitTestOutChannel = vscode.window.createOutputChannel('Python Test Log');
-    context.subscriptions.push(standardOutputChannel);
-    context.subscriptions.push(unitTestOutChannel);
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
 
     sortImports.activate(context, standardOutputChannel);
     const interpreterManager = new InterpreterManager();

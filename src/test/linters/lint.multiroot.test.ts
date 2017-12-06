@@ -2,14 +2,13 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { CancellationTokenSource, ConfigurationTarget, OutputChannel, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
-import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { IInstaller, ILogger, IOutputChannel, Product } from '../../client/common/types';
 import * as baseLinter from '../../client/linters/baseLinter';
 import * as flake8 from '../../client/linters/flake8';
 import * as pyLint from '../../client/linters/pylint';
 import { ILinterHelper } from '../../client/linters/types';
+import { TEST_OUTPUT_CHANNEL } from '../../client/unittests/common/constants';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
-import { MockOutputChannel } from '../mockClasses';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const multirootPath = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc');
@@ -31,7 +30,6 @@ suite('Multiroot Linting', () => {
     suiteTeardown(closeActiveWindows);
     teardown(async () => {
         ioc.dispose();
-        mockOutputChannel.dispose();
         await closeActiveWindows();
         PythonSettings.dispose();
     });
@@ -42,7 +40,7 @@ suite('Multiroot Linting', () => {
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
-        ioc.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, mockOutputChannel = new MockOutputChannel('Linting'), STANDARD_OUTPUT_CHANNEL);
+        mockOutputChannel = ioc.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
     }
 
     function createLinter(linter: Product) {
