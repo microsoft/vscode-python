@@ -140,7 +140,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // tslint:disable-next-line:promise-function-async
     const linterProvider = new LintProvider(context, standardOutputChannel, (a, b) => Promise.resolve(false), serviceContainer);
-    context.subscriptions.push();
+    context.subscriptions.push(linterProvider);
     const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
     if (jupyterExtInstalled) {
         if (jupyterExtInstalled.isActive) {
