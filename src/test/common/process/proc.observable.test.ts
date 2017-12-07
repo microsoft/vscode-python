@@ -36,12 +36,12 @@ suite('ProcessService', () => {
 
     test('execObservable should stream output with new lines', function (done) {
         // tslint:disable-next-line:no-invalid-this
-        this.timeout(6000);
+        this.timeout(5000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'import time',
-            'print("1")', 'sys.stdout.flush()', 'time.sleep(2)',
-            'print("2")', 'sys.stdout.flush()', 'time.sleep(2)',
-            'print("3")'];
+            'print("1")', 'sys.stdout.flush()', 'time.sleep(1)',
+            'print("2")', 'sys.stdout.flush()', 'time.sleep(1)',
+            'print("3")', 'sys.stdout.flush()', 'time.sleep(1)'];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
 
@@ -64,7 +64,7 @@ suite('ProcessService', () => {
         const pythonCode = ['import sys', 'import time',
             'sys.stdout.write("1")', 'sys.stdout.flush()', 'time.sleep(1)',
             'sys.stdout.write("2")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stdout.write("3")'];
+            'sys.stdout.write("3")', 'sys.stdout.flush()', 'time.sleep(1)'];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
 
@@ -86,7 +86,7 @@ suite('ProcessService', () => {
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'import time',
             'print("1")', 'sys.stdout.flush()', 'time.sleep(10)',
-            'print("2")', 'sys.stdout.flush()'];
+            'print("2")', 'sys.stdout.flush()', 'time.sleep(2)'];
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { token: cancellationToken.token });
 
@@ -110,7 +110,7 @@ suite('ProcessService', () => {
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'import time',
             'print("1")', 'sys.stdout.flush()', 'time.sleep(10)',
-            'print("2")', 'sys.stdout.flush()'];
+            'print("2")', 'sys.stdout.flush()', 'time.sleep(2)'];
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { token: cancellationToken.token });
         let procKilled = false;
@@ -140,7 +140,7 @@ suite('ProcessService', () => {
             'print("2")', 'sys.stdout.flush()', 'time.sleep(1)',
             'sys.stderr.write("b")', 'sys.stderr.flush()', 'time.sleep(1)',
             'print("3")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stderr.write("c")', 'sys.stderr.flush()'];
+            'sys.stderr.write("c")', 'sys.stderr.flush()', 'time.sleep(1)'];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = [
             { out: '1', source: 'stdout' }, { out: 'a', source: 'stderr' },
@@ -167,7 +167,7 @@ suite('ProcessService', () => {
             'print("2")', 'sys.stdout.flush()', 'time.sleep(1)',
             'sys.stderr.write("b")', 'sys.stderr.flush()', 'time.sleep(1)',
             'print("3")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stderr.write("c")', 'sys.stderr.flush()'];
+            'sys.stderr.write("c")', 'sys.stderr.flush()', 'time.sleep(1)'];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { mergeStdOutErr: true });
         const outputs = [
             { out: '1', source: 'stdout' }, { out: 'a', source: 'stdout' },
