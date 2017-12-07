@@ -1,5 +1,3 @@
-// tslint:disable-next-line:no-var-requires
-// tslint:disable-next-line:no-require-imports
 const tmp = require('tmp');
 
 export function isNotInstalledError(error: Error): boolean {
