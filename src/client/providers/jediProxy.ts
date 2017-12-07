@@ -306,7 +306,6 @@ export class JediProxy implements vscode.Disposable {
                 // I think this needs to be removed, because this is misspelt, it is argments, 'U' is missing,
                 // And that case is handled further down
                 // case CommandType.Arguments: {
-                // Rewrite this mess to use stratergy.
 
                 const responseId = JediProxy.getProperty<number>(response, 'id');
                 const cmd = <IExecutionCommand<ICommandResult>>this.commands.get(responseId);
