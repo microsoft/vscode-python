@@ -8,17 +8,17 @@ import { ModuleNotInstalledErrorHandler } from './notInstalled';
 import { StandardErrorHandler } from './standard';
 
 export class ErrorHandler implements IErrorHandler {
-    private handlder: BaseErrorHandler;
+    private handler: BaseErrorHandler;
     constructor(product: Product, installer: IInstaller,
         helper: ILinterHelper, logger: ILogger,
         outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
         // Create chain of handlers.
         const moduleNotInstalledErrorHandler = new ModuleNotInstalledErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
-        this.handlder = new StandardErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
-        this.handlder.setNextHandler(moduleNotInstalledErrorHandler);
+        this.handler = new StandardErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
+        this.handler.setNextHandler(moduleNotInstalledErrorHandler);
     }
 
     public handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean> {
-        return this.handlder.handleError(error, resource, execInfo);
+        return this.handler.handleError(error, resource, execInfo);
     }
 }
