@@ -1,5 +1,3 @@
-'use strict';
-
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -7,7 +5,10 @@ import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { ConfigSettingMonitor } from '../common/configSettingMonitor';
 import { PythonSettings } from '../common/configSettings';
 import { LinterErrors, PythonLanguage } from '../common/constants';
+import { IInstaller, ILogger } from '../common/types';
+import { IServiceContainer } from '../ioc/types';
 import * as linter from '../linters/baseLinter';
+import { ILinterHelper } from '../linters/types';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { LINTING } from '../telemetry/constants';
 import { StopWatch } from '../telemetry/stopWatch';
@@ -53,7 +54,7 @@ export class LintProvider implements vscode.Disposable {
     private disposables: vscode.Disposable[];
     private configMonitor: ConfigSettingMonitor;
     public constructor(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel,
-        public documentHasJupyterCodeCells: DocumentHasJupyterCodeCells) {
+        public documentHasJupyterCodeCells: DocumentHasJupyterCodeCells, private serviceContainer: IServiceContainer) {
         this.outputChannel = outputChannel;
         this.context = context;
         this.disposables = [];
@@ -72,13 +73,17 @@ export class LintProvider implements vscode.Disposable {
     private initialize() {
         this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
 
-        this.linters.push(new prospector.Linter(this.outputChannel));
-        this.linters.push(new pylint.Linter(this.outputChannel));
-        this.linters.push(new pep8.Linter(this.outputChannel));
-        this.linters.push(new pylama.Linter(this.outputChannel));
-        this.linters.push(new flake8.Linter(this.outputChannel));
-        this.linters.push(new pydocstyle.Linter(this.outputChannel));
-        this.linters.push(new mypy.Linter(this.outputChannel));
+        const helper = this.serviceContainer.get<ILinterHelper>(ILinterHelper);
+        const installer = this.serviceContainer.get<IInstaller>(IInstaller);
+        const logger = this.serviceContainer.get<ILogger>(ILogger);
+
+        this.linters.push(new prospector.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
+        this.linters.push(new pylint.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
+        this.linters.push(new pep8.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
+        this.linters.push(new pylama.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
+        this.linters.push(new flake8.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
+        this.linters.push(new pydocstyle.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
+        this.linters.push(new mypy.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
 
         let disposable = vscode.workspace.onDidSaveTextDocument((e) => {
             const settings = PythonSettings.getInstance(e.uri);

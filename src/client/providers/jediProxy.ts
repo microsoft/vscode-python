@@ -237,7 +237,6 @@ export class JediProxy implements vscode.Disposable {
             }
             environmentVariables = mergeEnvVariables(environmentVariables);
 
-            logger.log('child_process.spawn in jediProxy', `Value of pythonSettings.pythonPath is : ${this.pythonSettings.pythonPath}`);
             const args = ['completion.py'];
             if (typeof this.pythonSettings.jediPath !== 'string' || this.pythonSettings.jediPath.length === 0) {
                 if (Array.isArray(this.pythonSettings.devOptions) &&
@@ -301,8 +300,6 @@ export class JediProxy implements vscode.Disposable {
                 return;
             }
 
-            // tslint:disable-next-line:max-func-body-length
-            // tslint:disable-next-line:cyclomatic-complexity
             responses.forEach((response) => {
                 // What's this, can't remember,
                 // Great example of poorly written code (this whole file is a mess).
@@ -468,8 +465,7 @@ export class JediProxy implements vscode.Disposable {
                     moduleName: item.moduleName,
                     name: item.name
                 };
-            }
-            )
+            })
         };
         this.safeResolve(command, refResult);
     }

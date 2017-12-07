@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { createDeferred } from '../../../common/helpers';
-import { Installer } from '../../../common/installer';
+import { IInstaller } from '../../../common/types';
 import { getSubDirectories } from '../../../common/utils';
 import { ITestConfigSettingsService, UnitTestProduct } from './../types';
 
@@ -10,7 +10,7 @@ export abstract class TestConfigurationManager {
     constructor(protected workspace: Uri,
         protected product: UnitTestProduct,
         protected readonly outputChannel: vscode.OutputChannel,
-        protected installer: Installer,
+        protected installer: IInstaller,
         protected testConfigSettingsService: ITestConfigSettingsService) { }
     // tslint:disable-next-line:no-any
     public abstract configure(wkspace: Uri): Promise<any>;
@@ -27,16 +27,19 @@ export abstract class TestConfigurationManager {
             matchOnDetail: true,
             placeHolder: 'Select the directory containing the unit tests'
         };
-        let items: vscode.QuickPickItem[] = subDirs.map(dir => {
-            const dirName = path.relative(rootDir, dir);
-            if (dirName.indexOf('.') === 0) {
-                return null;
-            }
-            return <vscode.QuickPickItem>{
-                label: dirName,
-                description: ''
-            };
-        }).filter(item => item !== null);
+        let items: vscode.QuickPickItem[] = subDirs
+            .map(dir => {
+                const dirName = path.relative(rootDir, dir);
+                if (dirName.indexOf('.') === 0) {
+                    return;
+                }
+                return <vscode.QuickPickItem>{
+                    label: dirName,
+                    description: ''
+                };
+            })
+            .filter(item => item !== undefined)
+            .map(item => item!);
 
         items = [{ label: '.', description: 'Root directory' }, ...items];
         items = customOptions.concat(items);

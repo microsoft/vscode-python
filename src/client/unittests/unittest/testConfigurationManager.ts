@@ -1,11 +1,11 @@
 import { OutputChannel, Uri } from 'vscode';
-import { Installer, Product } from '../../common/installer';
+import { IInstaller, Product } from '../../common/types';
 import { TestConfigurationManager } from '../common/managers/testConfigurationManager';
 import { ITestConfigSettingsService } from '../common/types';
 
 export class ConfigurationManager extends TestConfigurationManager {
     constructor(workspace: Uri, outputChannel: OutputChannel,
-        installer: Installer, testConfigSettingsService: ITestConfigSettingsService) {
+        installer: IInstaller, testConfigSettingsService: ITestConfigSettingsService) {
         super(workspace, Product.unittest, outputChannel, installer, testConfigSettingsService);
     }
     // tslint:disable-next-line:no-any

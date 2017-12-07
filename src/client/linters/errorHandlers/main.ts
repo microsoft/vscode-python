@@ -1,22 +1,24 @@
-'use strict';
 import { OutputChannel, Uri } from 'vscode';
-import { Installer, Product } from '../../common/installer';
-import { InvalidArgumentsErrorHandler } from './invalidArgs';
-import { NotInstalledErrorHandler } from './notInstalled';
+import { Product } from '../../common/installer';
+import { ExecutionInfo, IInstaller, ILogger } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
+import { IErrorHandler, ILinterHelper } from '../types';
+import { BaseErrorHandler } from './baseErrorHandler';
+import { ModuleNotInstalledErrorHandler } from './notInstalled';
 import { StandardErrorHandler } from './standard';
 
-export class ErrorHandler {
-    // tslint:disable-next-line:variable-name
-    private _errorHandlers: StandardErrorHandler[] = [];
-    constructor(protected id: string, protected product: Product, protected installer: Installer, protected outputChannel: OutputChannel) {
-        this._errorHandlers = [
-            new InvalidArgumentsErrorHandler(this.id, this.product, this.installer, this.outputChannel),
-            new NotInstalledErrorHandler(this.id, this.product, this.installer, this.outputChannel),
-            new StandardErrorHandler(this.id, this.product, this.installer, this.outputChannel)
-        ];
+export class ErrorHandler implements IErrorHandler {
+    private handler: BaseErrorHandler;
+    constructor(product: Product, installer: IInstaller,
+        helper: ILinterHelper, logger: ILogger,
+        outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
+        // Create chain of handlers.
+        const moduleNotInstalledErrorHandler = new ModuleNotInstalledErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
+        this.handler = new StandardErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
+        this.handler.setNextHandler(moduleNotInstalledErrorHandler);
     }
 
-    public handleError(expectedFileName: string, fileName: string, error: Error, resource: Uri) {
-        this._errorHandlers.some(handler => handler.handleError(expectedFileName, fileName, error, resource));
+    public handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean> {
+        return this.handler.handleError(error, resource, execInfo);
     }
 }

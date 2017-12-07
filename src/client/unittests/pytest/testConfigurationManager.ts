@@ -2,13 +2,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { Installer, Product } from '../../common/installer';
+import { IInstaller, Product } from '../../common/types';
 import { TestConfigurationManager } from '../common/managers/testConfigurationManager';
 import { ITestConfigSettingsService } from '../common/types';
 
 export class ConfigurationManager extends TestConfigurationManager {
     constructor(workspace: Uri, outputChannel: vscode.OutputChannel,
-        installer: Installer, testConfigSettingsService: ITestConfigSettingsService) {
+        installer: IInstaller, testConfigSettingsService: ITestConfigSettingsService) {
         super(workspace, Product.pytest, outputChannel, installer, testConfigSettingsService);
     }
     private static async configFilesExist(rootDir: string): Promise<string[]> {
