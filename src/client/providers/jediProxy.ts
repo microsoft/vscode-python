@@ -5,10 +5,13 @@
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { PythonSettings } from '../common/configSettings';
+import { IPythonSettings, PythonSettings } from '../common/configSettings';
 import { mergeEnvVariables } from '../common/envFileParser';
 import { createDeferred, Deferred } from '../common/helpers';
 import { execPythonFile, getCustomEnvVarsSync, validatePath } from '../common/utils';
+import { getCustomEnvVars } from '../common/utils';
+import * as telemetryHelper from '../telemetry';
+import * as settings from './../common/configSettings';
 import * as logger from './../common/logger';
 
 const IS_WINDOWS = /^win/.test(process.platform);
@@ -188,6 +191,7 @@ export class JediProxy implements vscode.Disposable {
     }
 
     // keep track of the directory so we can re-spawn the process.
+    private pythonProcessCWD = '';
     private initialize(dir: string) {
         this.pythonProcessCWD = dir;
         this.spawnProcess(path.join(dir, 'pythonFiles'));
@@ -212,6 +216,9 @@ export class JediProxy implements vscode.Disposable {
         });
         this.commands.clear();
     }
+    private previousData = '';
+    private commands = new Map<number, IExecutionCommand<ICommandResult>>();
+    private commandQueue: number[] = [];
 
     private killProcess() {
         try {
@@ -237,7 +244,6 @@ export class JediProxy implements vscode.Disposable {
             }
             environmentVariables = mergeEnvVariables(environmentVariables);
 
-            logger.log('child_process.spawn in jediProxy', `Value of pythonSettings.pythonPath is : ${this.pythonSettings.pythonPath}`);
             const args = ['completion.py'];
             if (typeof this.pythonSettings.jediPath !== 'string' || this.pythonSettings.jediPath.length === 0) {
                 if (Array.isArray(this.pythonSettings.devOptions) &&
@@ -269,11 +275,11 @@ export class JediProxy implements vscode.Disposable {
             this.handleError('stderr', data);
         });
         this.proc.on('end', (end) => {
-            logger.error('spawnProcess.end', `End - ${end}`);
+            logger.error('spawnProcess.end', 'End - ' + end);
         });
         this.proc.on('error', error => {
-            this.handleError('error', `${error}`);
-            this.spawnRetryAttempts += 1;
+            this.handleError('error', error + '');
+            this.spawnRetryAttempts++;
             if (this.spawnRetryAttempts < 10 && error && error.message &&
                 error.message.indexOf('This socket has been ended by the other party') >= 0) {
                 this.spawnProcess(dir);
@@ -309,7 +315,6 @@ export class JediProxy implements vscode.Disposable {
                 // I think this needs to be removed, because this is misspelt, it is argments, 'U' is missing,
                 // And that case is handled further down
                 // case CommandType.Arguments: {
-                // Rewrite this mess to use stratergy.
 
                 const responseId = JediProxy.getProperty<number>(response, 'id');
                 const cmd = <IExecutionCommand<ICommandResult>>this.commands.get(responseId);
@@ -468,8 +473,7 @@ export class JediProxy implements vscode.Disposable {
                     moduleName: item.moduleName,
                     name: item.name
                 };
-            }
-            )
+            })
         };
         this.safeResolve(command, refResult);
     }

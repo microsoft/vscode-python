@@ -50,6 +50,7 @@ suite('Formatting', () => {
                 fs.unlinkSync(file);
             }
         });
+        ch.dispose();
         await closeActiveWindows();
     });
     teardown(async () => {

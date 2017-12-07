@@ -1,26 +1,16 @@
+import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
-import * as vscode from 'vscode';
+import 'reflect-metadata';
+import 'reflect-metadata';
 import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
+import * as vscode from 'vscode';
 import * as settings from './configSettings';
+import { STANDARD_OUTPUT_CHANNEL } from './constants';
 import { isNotInstalledError } from './helpers';
+import { IInstaller, InstallerResponse, IOutputChannel, Product } from './types';
 import { execPythonFile, getFullyQualifiedPythonInterpreterPath, IS_WINDOWS } from './utils';
 
-export enum Product {
-    pytest = 1,
-    nosetest = 2,
-    pylint = 3,
-    flake8 = 4,
-    pep8 = 5,
-    pylama = 6,
-    prospector = 7,
-    pydocstyle = 8,
-    yapf = 9,
-    autopep8 = 10,
-    mypy = 11,
-    unittest = 12,
-    ctags = 13,
-    rope = 14
-}
+export { Product } from './types';
 
 // tslint:disable-next-line:variable-name
 const ProductInstallScripts = new Map<Product, string[]>();
@@ -156,15 +146,11 @@ ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
 
 const IS_POWERSHELL = /powershell.exe$/i;
 
-export enum InstallerResponse {
-    Installed,
-    Disabled,
-    Ignore
-}
-export class Installer implements vscode.Disposable {
+@injectable()
+export class Installer implements IInstaller {
     private static terminal: vscode.Terminal | undefined | null;
     private disposables: vscode.Disposable[] = [];
-    constructor(private outputChannel?: vscode.OutputChannel) {
+    constructor( @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private outputChannel?: vscode.OutputChannel) {
         this.disposables.push(vscode.window.onDidCloseTerminal(term => {
             if (term === Installer.terminal) {
                 Installer.terminal = null;

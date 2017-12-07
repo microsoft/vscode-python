@@ -1,8 +1,9 @@
 'use strict';
-import { Disposable, Uri, window, workspace } from 'vscode';
 import * as vscode from 'vscode';
+import { Disposable, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import * as constants from '../common/constants';
+import { IInstaller } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
 import { UNITTEST_STOP, UNITTEST_VIEW_OUTPUT } from '../telemetry/constants';
@@ -21,8 +22,11 @@ let testDisplay: TestDisplay;
 let outChannel: vscode.OutputChannel;
 const onDidChange: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
 let testCollectionStorage: ITestCollectionStorageService;
+let _serviceContaner: IServiceContainer;
 
 export function activate(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel, symboldProvider: PythonSymbolProvider, serviceContainer: IServiceContainer) {
+    _serviceContaner = serviceContainer;
+
     context.subscriptions.push({ dispose: dispose });
     outChannel = outputChannel;
     const disposables = registerCommands();
@@ -37,7 +41,6 @@ export function activate(context: vscode.ExtensionContext, outputChannel: vscode
 
     autoDiscoverTests();
 }
-
 async function getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void> {
     let wkspace: Uri | undefined;
     if (resource) {
@@ -54,7 +57,7 @@ async function getTestManager(displayTestNotConfiguredMessage: boolean, resource
         return testManager;
     }
     if (displayTestNotConfiguredMessage) {
-        await displayTestFrameworkError(wkspace, outChannel);
+        await displayTestFrameworkError(wkspace, outChannel, _serviceContaner.get<IInstaller>(IInstaller));
     }
 }
 let timeoutId: NodeJS.Timer;

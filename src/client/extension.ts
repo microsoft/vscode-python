@@ -2,9 +2,10 @@
 import { Container } from 'inversify';
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { Disposable, Memento, OutputChannel } from 'vscode';
+import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
+import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
@@ -23,6 +24,7 @@ import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer } from './ioc/types';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
+import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
 import { PythonDefinitionProvider } from './providers/definitionProvider';
 import { activateExecInTerminalProvider } from './providers/execInTerminalProvider';
@@ -48,9 +50,6 @@ import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegi
 import { WorkspaceSymbols } from './workspaceSymbols/main';
 
 const PYTHON: vscode.DocumentFilter = { language: 'python' };
-let unitTestOutChannel: vscode.OutputChannel;
-let formatOutChannel: vscode.OutputChannel;
-let lintingOutChannel: vscode.OutputChannel;
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
 
@@ -67,29 +66,23 @@ export async function activate(context: vscode.ExtensionContext) {
     serviceManager.addSingletonInstance<Disposable[]>(IDiposableRegistry, context.subscriptions);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
+
+    const standardOutputChannel = window.createOutputChannel('Python');
+    const unitTestOutChannel = window.createOutputChannel('Python Test Log');
+    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
+    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
+
     commonRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
+    lintersRegisterTypes(serviceManager);
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
     sendStartupTelemetry(activated);
 
-    lintingOutChannel = vscode.window.createOutputChannel(pythonSettings.linting.outputWindow);
-    unitTestOutChannel = formatOutChannel = lintingOutChannel;
-    if (pythonSettings.linting.outputWindow !== pythonSettings.formatting.outputWindow) {
-        formatOutChannel = vscode.window.createOutputChannel(pythonSettings.formatting.outputWindow);
-        formatOutChannel.clear();
-    }
-    if (pythonSettings.linting.outputWindow !== pythonSettings.unitTest.outputWindow) {
-        unitTestOutChannel = vscode.window.createOutputChannel(pythonSettings.unitTest.outputWindow);
-        unitTestOutChannel.clear();
-    }
-
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
-
-    sortImports.activate(context, formatOutChannel);
+    sortImports.activate(context, standardOutputChannel);
     const interpreterManager = new InterpreterManager();
     await interpreterManager.autoSetInterpreter();
     interpreterManager.refresh()
@@ -99,7 +92,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService));
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
-    activateSimplePythonRefactorProvider(context, formatOutChannel);
+    activateSimplePythonRefactorProvider(context, standardOutputChannel);
     const jediFactory = new JediFactory(context.asAbsolutePath('.'));
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
@@ -126,7 +119,7 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(jediFactory);
-    context.subscriptions.push(vscode.languages.registerRenameProvider(PYTHON, new PythonRenameProvider(formatOutChannel)));
+    context.subscriptions.push(vscode.languages.registerRenameProvider(PYTHON, new PythonRenameProvider(standardOutputChannel)));
     const definitionProvider = new PythonDefinitionProvider(jediFactory);
     context.subscriptions.push(vscode.languages.registerDefinitionProvider(PYTHON, definitionProvider));
     context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
@@ -140,14 +133,14 @@ export async function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(PYTHON, new PythonSignatureProvider(jediFactory), '(', ','));
     }
     if (pythonSettings.formatting.provider !== 'none') {
-        const formatProvider = new PythonFormattingEditProvider(context, formatOutChannel);
+        const formatProvider = new PythonFormattingEditProvider(context, standardOutputChannel);
         context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
         context.subscriptions.push(vscode.languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
     }
 
     // tslint:disable-next-line:promise-function-async
-    const linterProvider = new LintProvider(context, lintingOutChannel, (a, b) => Promise.resolve(false));
-    context.subscriptions.push();
+    const linterProvider = new LintProvider(context, standardOutputChannel, (a, b) => Promise.resolve(false), serviceContainer);
+    context.subscriptions.push(linterProvider);
     const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
     if (jupyterExtInstalled) {
         if (jupyterExtInstalled.isActive) {
@@ -166,7 +159,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
     tests.activate(context, unitTestOutChannel, symbolProvider, serviceContainer);
 
-    context.subscriptions.push(new WorkspaceSymbols(lintingOutChannel));
+    context.subscriptions.push(new WorkspaceSymbols(standardOutputChannel));
 
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
     // In case we have CR LF
