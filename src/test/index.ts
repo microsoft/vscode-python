@@ -12,8 +12,7 @@ const options: MochaSetupOptions & { retries: number } = {
     ui: 'tdd',
     useColors: true,
     timeout: 25000,
-    retries: 3,
-    grep: 'Autocomplete'
+    retries: 3
 };
 testRunner.configure(options);
 module.exports = testRunner;
