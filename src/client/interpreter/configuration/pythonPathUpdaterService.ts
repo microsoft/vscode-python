@@ -3,6 +3,7 @@ import { ConfigurationTarget, Uri, window } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
 import { PYTHON_INTERPRETER } from '../../telemetry/constants';
 import { StopWatch } from '../../telemetry/stopWatch';
+import { PythonInterpreterTelemetry } from '../../telemetry/types';
 import { IInterpreterVersionService } from '../interpreterVersion';
 import { IPythonPathUpdaterServiceFactory } from './types';
 
@@ -27,8 +28,9 @@ export class PythonPathUpdaterService {
             .catch(ex => console.error('Python Extension: sendTelemetry', ex));
     }
     private async sendTelemetry(duration: number, failed: boolean, trigger: 'ui' | 'shebang' | 'load', pythonPath: string) {
-        let version: string | undefined;
-        let pipVersion: string | undefined;
+        const telemtryProperties: PythonInterpreterTelemetry = {
+            failed, trigger
+        };
         if (!failed) {
             const pyVersionPromise = this.interpreterVersionService.getVersion(pythonPath, '')
                 .then(pyVersion => pyVersion.length === 0 ? undefined : pyVersion);
@@ -36,11 +38,14 @@ export class PythonPathUpdaterService {
                 .then(value => value.length === 0 ? undefined : value)
                 .catch(() => undefined);
             const versions = await Promise.all([pyVersionPromise, pipVersionPromise]);
-            version = versions[0];
-            // tslint:disable-next-line:prefer-type-cast
-            pipVersion = versions[1] as string;
+            if (versions[0]) {
+                telemtryProperties.version = versions[0] as string;
+            }
+            if (versions[1]) {
+                telemtryProperties.pipVersion = versions[1] as string;
+            }
         }
-        sendTelemetryEvent(PYTHON_INTERPRETER, duration, { failed, trigger, version, pipVersion });
+        sendTelemetryEvent(PYTHON_INTERPRETER, duration, telemtryProperties);
     }
     private getPythonUpdaterService(configTarget: ConfigurationTarget, wkspace?: Uri) {
         switch (configTarget) {
