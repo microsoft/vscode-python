@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import 'reflect-metadata';
+import { Disposable } from 'vscode';
 import { IServiceManager } from '../ioc/types';
 import { CondaInstaller } from './installer/condaInstaller';
 import { Installer } from './installer/installer';

@@ -2,6 +2,7 @@ import * as path from 'path';
 import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
 import * as vscode from 'vscode';
 import { IPythonSettings, PythonSettings } from '../common/configSettings';
+import '../common/extensions';
 import { ExecutionResult, IProcessService, IPythonExecutionFactory } from '../common/process/types';
 import { ExecutionInfo, IInstaller, ILogger, Product } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
@@ -137,7 +138,7 @@ export abstract class BaseLinter {
         }
     }
     protected async parseMessages(output: string, document: TextDocument, token: CancellationToken, regEx: string) {
-        const outputLines = output.split(/\r?\n/g);
+        const outputLines = output.splitLines({ removeEmptyEntries: false, trim: false });
         return this.parseLines(outputLines, regEx);
     }
     protected handleError(error: Error, resource: Uri, execInfo: ExecutionInfo) {
