@@ -6,7 +6,7 @@ import { EOL } from 'os';
 import * as vscode from 'vscode';
 import * as proxy from './jediProxy';
 
-export function extractSignatureAndDocumentation(definition: proxy.IAutoCompleteItem, highlightCode: boolean = false): [string, string] {
+export function extractSignatureAndDocumentation(definition: proxy.IAutoCompleteItem, highlight: boolean = false): [string, string] {
     // Somtimes the signature of the function, class (whatever) is broken into multiple lines
     // Here's an example
     // ```python
@@ -42,9 +42,10 @@ export function extractSignatureAndDocumentation(definition: proxy.IAutoComplete
     }
 
     // check if we have any sample code in the documentation
-    if (highlightCode) {
+    if (highlight) {
         lines = lines.map(line => {
             if (line.trim().startsWith('>>> ')) {
+                // tslint:disable-next-line:prefer-template
                 return '```python\n' + line.substring(4).trim() + '\n```';
             }
             return line;

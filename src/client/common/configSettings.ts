@@ -127,7 +127,7 @@ export interface ITerminalSettings {
     launchArgs: string[];
 }
 
-function isTestExecution(): boolean {
+export function isTestExecution(): boolean {
     // tslint:disable-next-line:interface-name no-string-literal
     return process.env['VSC_PYTHON_CI_TEST'] === '1';
 }

@@ -3,6 +3,7 @@
 'use strict';
 
 import * as vscode from 'vscode';
+import { isTestExecution } from '../common/configSettings';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
 import { COMPLETION } from '../telemetry/constants';
@@ -16,12 +17,19 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
     }
 
     @captureTelemetry(COMPLETION)
-    public provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CompletionItem[]> {
-        return this.completionSource.getVsCodeCompletionItems(document, position, token);
+    public async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken):
+        Promise<vscode.CompletionItem[]> {
+        const items = await this.completionSource.getVsCodeCompletionItems(document, position, token);
+        if (isTestExecution()) {
+            for (let i = 0; i < Math.min(3, items.length); i += 1) {
+                items[i] = await this.resolveCompletionItem(items[i], token);
+            }
+        }
+        return items;
     }
 
-    public async resolveCompletionItem(item: vscode.CompletionItem): Promise<vscode.CompletionItem> {
-        item.documentation = await this.completionSource.getDocumentation(item);
+    public async resolveCompletionItem(item: vscode.CompletionItem, token: vscode.CancellationToken): Promise<vscode.CompletionItem> {
+        item.documentation = await this.completionSource.getDocumentation(item, token);
         return item;
     }
 }

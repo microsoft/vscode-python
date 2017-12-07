@@ -151,9 +151,10 @@ suite('Autocomplete', () => {
             const position = new vscode.Position(25, 4);
             return vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
         }).then(list => {
-            assert.equal(list.items.filter(item => item.label === 'bar').length, 1, 'bar not found');
+            const items = list.items.filter(item => item.label === 'bar');
+            assert.equal(items.length, 1, 'bar not found');
             const documentation = `说明 - keep this line, it works${EOL}delete following line, it works${EOL}如果存在需要等待审批或正在执行的任务，将不刷新页面`;
-            assert.equal(list.items.filter(item => item.label === 'bar')[0].documentation, documentation, 'unicode documentation is incorrect');
+            assert.equal(items[0].documentation, documentation, 'unicode documentation is incorrect');
         }).then(done, done);
     });
 
@@ -169,12 +170,14 @@ suite('Autocomplete', () => {
             const position = new vscode.Position(1, 5);
             return vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
         }).then(list => {
-            assert.equal(list.items.filter(item => item.label === 'Foo').length, 1, 'Foo not found');
-            assert.equal(list.items.filter(item => item.label === 'Foo')[0].documentation, '说明', 'Foo unicode documentation is incorrect');
+            let items = list.items.filter(item => item.label === 'Foo');
+            assert.equal(items.length, 1, 'Foo not found');
+            assert.equal(items[0].documentation, '说明', 'Foo unicode documentation is incorrect');
 
-            assert.equal(list.items.filter(item => item.label === 'showMessage').length, 1, 'showMessage not found');
+            items = list.items.filter(item => item.label === 'showMessage');
+            assert.equal(items.length, 1, 'showMessage not found');
             const documentation = `Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи. ${EOL}Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.`;
-            assert.equal(list.items.filter(item => item.label === 'showMessage')[0].documentation, documentation, 'showMessage unicode documentation is incorrect');
+            assert.equal(items[0].documentation, documentation, 'showMessage unicode documentation is incorrect');
         }).then(done, done);
     });
 

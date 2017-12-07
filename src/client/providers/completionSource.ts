@@ -42,7 +42,7 @@ export class CompletionSource {
         return this.toVsCodeCompletions(new DocumentPosition(document, position), result, document.uri);
     }
 
-    public async getDocumentation(completionItem: vscode.CompletionItem): Promise<string> {
+    public async getDocumentation(completionItem: vscode.CompletionItem, token: vscode.CancellationToken): Promise<string> {
         const documentPosition = DocumentPosition.fromObject(completionItem);
         if (documentPosition === undefined) {
             Promise.resolve<string>('');
@@ -53,15 +53,16 @@ export class CompletionSource {
         const position = documentPosition.position;
         const itemText = completionItem.insertText ? completionItem.insertText : completionItem.label;
         const wordRange = document.getWordRangeAtPosition(position);
-        let sourceText: string | null = null;
 
-        if (wordRange !== undefined) {
-            const leadingRange = new vscode.Range(new vscode.Position(0, 0), wordRange.start);
-            sourceText = `${document.getText(leadingRange)}${itemText}`;
-        }
+        const leadingRange = wordRange !== undefined
+            ? new vscode.Range(new vscode.Position(0, 0), wordRange.start)
+            : new vscode.Range(new vscode.Position(0, 0), position);
 
-        const cts = new vscode.CancellationTokenSource();
-        const hoverStrings = await this.hoverSource.getDocStrings(document, position, sourceText, cts.token);
+        const itemString = `${itemText}`;
+        const sourceText = `${document.getText(leadingRange)}${itemString}`;
+        const range = new vscode.Range(leadingRange.end, leadingRange.end.translate(0, itemString.length));
+
+        const hoverStrings = await this.hoverSource.getHoverStringsFromText(document.uri, document.fileName, range, sourceText, token);
         if (!hoverStrings || hoverStrings.length === 0) {
             return '';
         }

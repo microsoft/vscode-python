@@ -13,7 +13,7 @@ export class HoverSource {
 
     public async getVsCodeHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken)
         : Promise<vscode.Hover | undefined> {
-        const strings = await this.getHoverStrings(document, position, null, token);
+        const strings = await this.getHoverStringsFromDocument(document, position, token);
         if (!strings) {
             return;
         }
@@ -21,29 +21,29 @@ export class HoverSource {
     }
 
     // tslint:disable-next-line:no-any
-    public async getHoverStrings(document: vscode.TextDocument, position: vscode.Position, sourceText: string | null, token: vscode.CancellationToken): Promise<any[]> {
-        const result = await this.getHoverResult(document, position, sourceText, token);
-        if (!result || !result.items.length) {
-            return [];
-        }
-        const range = document.getWordRangeAtPosition(position);
-        if (!range || range.isEmpty) {
-            return [];
-        }
-        const word = document.getText(range);
-        return this.getHoverStringsFromResult(result, word, true);
-    }
-
-    // tslint:disable-next-line:no-any
-    public async getDocStrings(document: vscode.TextDocument, position: vscode.Position, sourceText: string | null, token: vscode.CancellationToken): Promise<any[]> {
-        const result = await this.getHoverResult(document, position, sourceText, token);
+    public async getHoverStringsFromText(documentUri: vscode.Uri, fileName: string, range: vscode.Range, sourceText: string, token: vscode.CancellationToken): Promise<any[]> {
+        const result = await this.getHoverResultFromTextRange(documentUri, fileName, range, sourceText, token);
         if (!result || !result.items.length) {
             return [];
         }
         return this.getHoverStringsFromResult(result, '', false);
     }
 
-    private async getHoverResult(document: vscode.TextDocument, position: vscode.Position, sourceText: string | null, token: vscode.CancellationToken)
+    // tslint:disable-next-line:no-any
+    private async getHoverStringsFromDocument(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<any[]> {
+        const range = document.getWordRangeAtPosition(position);
+        if (!range || range.isEmpty) {
+            return [];
+        }
+        const result = await this.getHoverResultFromDocument(document, position, token);
+        if (!result || !result.items.length) {
+            return [];
+        }
+        const word = document.getText(range);
+        return this.getHoverStringsFromResult(result, word, true);
+    }
+
+    private async getHoverResultFromDocument(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken)
         : Promise<proxy.IHoverResult | undefined> {
         if (document.lineAt(position.line).text.match(/^\s*\/\//)) {
             return;
@@ -55,14 +55,10 @@ export class HoverSource {
         if (!range || range.isEmpty) {
             return;
         }
-
-        if (sourceText === null && document.isDirty) {
-            sourceText = document.getText();
-        }
-        return await this.getHoverResultFromRange(document, range, sourceText, token);
+        return await this.getHoverResultFromDocumentRange(document, range, token);
     }
 
-    private async getHoverResultFromRange(document: vscode.TextDocument, range: vscode.Range, documentText: string | null, token: vscode.CancellationToken)
+    private async getHoverResultFromDocumentRange(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken)
         : Promise<proxy.IHoverResult | undefined> {
         const cmd: proxy.ICommand<proxy.IHoverResult> = {
             command: proxy.CommandType.Hover,
@@ -70,10 +66,22 @@ export class HoverSource {
             columnIndex: range.end.character,
             lineIndex: range.end.line
         };
-        if (documentText) {
-            cmd.source = documentText;
+        if (document.isDirty) {
+            cmd.source = document.getText();
         }
         return await this.jediFactory.getJediProxyHandler<proxy.IHoverResult>(document.uri).sendCommand(cmd, token);
+    }
+
+    private async getHoverResultFromTextRange(documentUri: vscode.Uri, fileName: string, range: vscode.Range, sourceText: string, token: vscode.CancellationToken)
+        : Promise<proxy.IHoverResult | undefined> {
+        const cmd: proxy.ICommand<proxy.IHoverResult> = {
+            command: proxy.CommandType.Hover,
+            fileName: fileName,
+            columnIndex: range.end.character,
+            lineIndex: range.end.line,
+            source: sourceText
+        };
+        return await this.jediFactory.getJediProxyHandler<proxy.IHoverResult>(documentUri).sendCommand(cmd, token);
     }
 
     // tslint:disable-next-line:no-any
