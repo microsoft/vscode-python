@@ -1,17 +1,19 @@
-'use strict';
+import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as path from 'path';
+import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { fsExistsAsync, IS_WINDOWS } from '../../../common/utils';
-import { IInterpreterLocatorService } from '../../contracts';
-import { IInterpreterVersionService } from '../../interpreterVersion';
+import { IInterpreterLocatorService, IInterpreterVersionService, IKnownSearchPathsForInterpreters, InterpreterType } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
+
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');
 
+@injectable()
 export class KnownPathsService implements IInterpreterLocatorService {
-    public constructor(private knownSearchPaths: string[],
-        private versionProvider: IInterpreterVersionService) { }
+    public constructor( @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: string[],
+        @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService) { }
     // tslint:disable-next-line:no-shadowed-variable
     public getInterpreters(_?: Uri) {
         return this.suggestionsFromKnownPaths();
@@ -31,7 +33,8 @@ export class KnownPathsService implements IInterpreterLocatorService {
             .then(displayName => {
                 return {
                     displayName,
-                    path: interpreter
+                    path: interpreter,
+                    type: InterpreterType.Unknown
                 };
             });
     }

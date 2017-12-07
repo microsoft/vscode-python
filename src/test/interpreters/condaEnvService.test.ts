@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IS_WINDOWS, PythonSettings } from '../../client/common/configSettings';
-import { PythonInterpreter } from '../../client/interpreter/contracts';
+import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { AnacondaCompanyName, AnacondaDisplayName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
 import { CondaLocatorService } from '../../client/interpreter/locators/services/condaLocator';
@@ -108,13 +108,13 @@ suite('Interpreters from Conda Environments', () => {
     });
     test('Must detect conda environments from a list', async () => {
         const registryInterpreters: PythonInterpreter[] = [
-            { displayName: 'One', path: 'c:/path1/one.exe', companyDisplayName: 'One 1' },
-            { displayName: 'Two', path: PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath, companyDisplayName: 'Two 2' },
-            { displayName: 'Three', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'Three 3' },
-            { displayName: 'Anaconda', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3' },
-            { displayName: 'xAnaconda', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3' },
-            { displayName: 'xnaconda', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'xContinuum Analytics, Inc.' },
-            { displayName: 'xnaconda', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Continuum Analytics, Inc.' }
+            { displayName: 'One', path: 'c:/path1/one.exe', companyDisplayName: 'One 1', type: InterpreterType.Unknown },
+            { displayName: 'Two', path: PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath, companyDisplayName: 'Two 2', type: InterpreterType.Unknown },
+            { displayName: 'Three', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'Three 3', type: InterpreterType.Unknown },
+            { displayName: 'Anaconda', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', type: InterpreterType.Unknown },
+            { displayName: 'xAnaconda', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', type: InterpreterType.Unknown },
+            { displayName: 'xnaconda', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'xContinuum Analytics, Inc.', type: InterpreterType.Unknown },
+            { displayName: 'xnaconda', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Continuum Analytics, Inc.', type: InterpreterType.Unknown }
         ];
         const mockRegistryProvider = new MockProvider(registryInterpreters);
         const condaProvider = new CondaEnvService(new CondaLocatorService(true, mockRegistryProvider));
@@ -129,15 +129,15 @@ suite('Interpreters from Conda Environments', () => {
     });
     test('Correctly identifies latest version when major version is different', async () => {
         const registryInterpreters: PythonInterpreter[] = [
-            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: '1' },
-            { displayName: 'Two', path: PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath, companyDisplayName: 'Two 2', version: '3.1.3' },
-            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: '2.10.1' },
+            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: '1', type: InterpreterType.Unknown },
+            { displayName: 'Two', path: PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath, companyDisplayName: 'Two 2', version: '3.1.3', type: InterpreterType.Unknown },
+            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: '2.10.1', type: InterpreterType.Unknown },
             // tslint:disable-next-line:no-any
-            { displayName: 'Four', path: path.join(environmentsPath, 'conda', 'envs', 'scipy'), companyDisplayName: 'Three 3', version: <any>null },
+            { displayName: 'Four', path: path.join(environmentsPath, 'conda', 'envs', 'scipy'), companyDisplayName: 'Three 3', version: <any>null, type: InterpreterType.Unknown },
             // tslint:disable-next-line:no-any
-            { displayName: 'Five', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Three 3', version: <any>undefined },
-            { displayName: 'Six', path: path.join(environmentsPath, 'conda', 'envs', 'scipy'), companyDisplayName: 'xContinuum Analytics, Inc.', version: '2' },
-            { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.' }
+            { displayName: 'Five', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Three 3', version: <any>undefined, type: InterpreterType.Unknown },
+            { displayName: 'Six', path: path.join(environmentsPath, 'conda', 'envs', 'scipy'), companyDisplayName: 'xContinuum Analytics, Inc.', version: '2', type: InterpreterType.Unknown },
+            { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.', type: InterpreterType.Unknown }
         ];
         const mockRegistryProvider = new MockProvider(registryInterpreters);
         const condaProvider = new CondaEnvService(new CondaLocatorService(true, mockRegistryProvider));
@@ -147,15 +147,15 @@ suite('Interpreters from Conda Environments', () => {
     });
     test('Correctly identifies latest version when major version is same', async () => {
         const registryInterpreters: PythonInterpreter[] = [
-            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: '1' },
-            { displayName: 'Two', path: PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath, companyDisplayName: 'Two 2', version: '2.11.3' },
-            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: '2.10.1' },
+            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: '1', type: InterpreterType.Unknown },
+            { displayName: 'Two', path: PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath, companyDisplayName: 'Two 2', version: '2.11.3', type: InterpreterType.Unknown },
+            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: '2.10.1', type: InterpreterType.Unknown },
             // tslint:disable-next-line:no-any
-            { displayName: 'Four', path: path.join(environmentsPath, 'conda', 'envs', 'scipy'), companyDisplayName: 'Three 3', version: <any>null },
+            { displayName: 'Four', path: path.join(environmentsPath, 'conda', 'envs', 'scipy'), companyDisplayName: 'Three 3', version: <any>null, type: InterpreterType.Unknown },
             // tslint:disable-next-line:no-any
-            { displayName: 'Five', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Three 3', version: <any>undefined },
-            { displayName: 'Six', path: path.join(environmentsPath, 'conda', 'envs', 'scipy'), companyDisplayName: 'xContinuum Analytics, Inc.', version: '2' },
-            { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.' }
+            { displayName: 'Five', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Three 3', version: <any>undefined, type: InterpreterType.Unknown },
+            { displayName: 'Six', path: path.join(environmentsPath, 'conda', 'envs', 'scipy'), companyDisplayName: 'xContinuum Analytics, Inc.', version: '2', type: InterpreterType.Unknown },
+            { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.', type: InterpreterType.Unknown }
         ];
         const mockRegistryProvider = new MockProvider(registryInterpreters);
         const condaProvider = new CondaEnvService(new CondaLocatorService(true, mockRegistryProvider));
@@ -166,10 +166,10 @@ suite('Interpreters from Conda Environments', () => {
     test('Must use Conda env from Registry to locate conda.exe', async () => {
         const condaPythonExePath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments', 'conda', 'Scripts', 'python.exe');
         const registryInterpreters: PythonInterpreter[] = [
-            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: '1' },
-            { displayName: 'Anaconda', path: condaPythonExePath, companyDisplayName: 'Two 2', version: '1.11.0' },
-            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: '2.10.1' },
-            { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.' }
+            { displayName: 'One', path: path.join(environmentsPath, 'path1', 'one.exe'), companyDisplayName: 'One 1', version: '1', type: InterpreterType.Unknown },
+            { displayName: 'Anaconda', path: condaPythonExePath, companyDisplayName: 'Two 2', version: '1.11.0', type: InterpreterType.Unknown },
+            { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: '2.10.1', type: InterpreterType.Unknown },
+            { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.', type: InterpreterType.Unknown }
         ];
         const mockRegistryProvider = new MockProvider(registryInterpreters);
         const condaProvider = new MockCondaLocatorService(true, mockRegistryProvider, false);

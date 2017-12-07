@@ -4,6 +4,7 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
+import { InterpreterType } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { getFirstNonEmptyLineFromMultilineString } from '../../client/interpreter/helpers';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
@@ -81,9 +82,9 @@ suite('Interpreters Display', () => {
         }).then(value => value.length === 0 ? PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath : value);
         const statusBar = new MockStatusBarItem();
         const interpreters = [
-            { displayName: 'One', path: 'c:/path1/one.exe', type: 'One 1' },
-            { displayName: 'Two', path: pythonPath, type: 'Two 2' },
-            { displayName: 'Three', path: 'c:/path3/three.exe', type: 'Three 3' }
+            { displayName: 'One', path: 'c:/path1/one.exe', type: InterpreterType.VirtualEnv },
+            { displayName: 'Two', path: pythonPath, type: InterpreterType.VirtualEnv },
+            { displayName: 'Three', path: 'c:/path3/three.exe', type: InterpreterType.VirtualEnv }
         ];
         const provider = new MockProvider(interpreters);
         const displayName = 'Mock Display Name';
@@ -102,9 +103,9 @@ suite('Interpreters Display', () => {
 
         const statusBar = new MockStatusBarItem();
         const interpreters = [
-            { displayName: 'One', path: 'c:/path1/one.exe', companyDisplayName: 'One 1' },
-            { displayName: 'Two', path: pythonPath, companyDisplayName: 'Two 2' },
-            { displayName: 'Three', path: 'c:/path3/three.exe', companyDisplayName: 'Three 3' }
+            { displayName: 'One', path: 'c:/path1/one.exe', companyDisplayName: 'One 1', type: InterpreterType.VirtualEnv },
+            { displayName: 'Two', path: pythonPath, companyDisplayName: 'Two 2', type: InterpreterType.VirtualEnv },
+            { displayName: 'Three', path: 'c:/path3/three.exe', companyDisplayName: 'Three 3', type: InterpreterType.VirtualEnv }
         ];
         const provider = new MockProvider(interpreters);
         const displayNameProvider = new MockInterpreterVersionProvider('');
@@ -117,9 +118,9 @@ suite('Interpreters Display', () => {
     test('Will update status prompting user to select an interpreter', async () => {
         const statusBar = new MockStatusBarItem();
         const interpreters = [
-            { displayName: 'One', path: 'c:/path1/one.exe', companyDisplayName: 'One 1' },
-            { displayName: 'Two', path: 'c:/asdf', companyDisplayName: 'Two 2' },
-            { displayName: 'Three', path: 'c:/path3/three.exe', companyDisplayName: 'Three 3' }
+            { displayName: 'One', path: 'c:/path1/one.exe', companyDisplayName: 'One 1', type: InterpreterType.VirtualEnv },
+            { displayName: 'Two', path: 'c:/asdf', companyDisplayName: 'Two 2', type: InterpreterType.VirtualEnv },
+            { displayName: 'Three', path: 'c:/path3/three.exe', companyDisplayName: 'Three 3', type: InterpreterType.VirtualEnv }
         ];
         const provider = new MockProvider(interpreters);
         const displayNameProvider = new MockInterpreterVersionProvider('', true);

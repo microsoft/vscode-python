@@ -1,37 +1,34 @@
-'use strict';
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, StatusBarAlignment, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
+import { IServiceContainer } from '../ioc/types';
 import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './configuration/pythonPathUpdaterServiceFactory';
+import { IInterpreterLocatorService, IInterpreterVersionService, INTERPRETER_LOCATOR_SERVICE } from './contracts';
 import { InterpreterDisplay } from './display';
 import { getActiveWorkspaceUri } from './helpers';
-import { InterpreterVersionService } from './interpreterVersion';
 import { PythonInterpreterLocatorService } from './locators';
-import { VirtualEnvironmentManager } from './virtualEnvs/index';
-import { VEnv } from './virtualEnvs/venv';
-import { VirtualEnv } from './virtualEnvs/virtualEnv';
+import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
 export class InterpreterManager implements Disposable {
     private disposables: Disposable[] = [];
     private display: InterpreterDisplay | null | undefined;
     private interpreterProvider: PythonInterpreterLocatorService;
     private pythonPathUpdaterService: PythonPathUpdaterService;
-    constructor() {
-        const virtualEnvMgr = new VirtualEnvironmentManager([new VEnv(), new VirtualEnv()]);
+    constructor(serviceContainer: IServiceContainer) {
+        const virtualEnvMgr = serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
         const statusBar = window.createStatusBarItem(StatusBarAlignment.Left);
-        this.interpreterProvider = new PythonInterpreterLocatorService(virtualEnvMgr);
-        const versionService = new InterpreterVersionService();
+        this.interpreterProvider = serviceContainer.get<PythonInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
+        const versionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
         this.display = new InterpreterDisplay(statusBar, this.interpreterProvider, virtualEnvMgr, versionService);
-        const interpreterVersionService = new InterpreterVersionService();
-        this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), interpreterVersionService);
+        this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), versionService);
         PythonSettings.getInstance().addListener('change', () => this.onConfigChanged());
         this.disposables.push(window.onDidChangeActiveTextEditor(() => this.refresh()));
         this.disposables.push(statusBar);
-        this.disposables.push(this.display);
+        this.disposables.push(this.display!);
     }
     public async refresh() {
-        return this.display.refresh();
+        return this.display!.refresh();
     }
     public getInterpreters(resource?: Uri) {
         return this.interpreterProvider.getInterpreters(resource);
@@ -72,7 +69,7 @@ export class InterpreterManager implements Disposable {
             return false;
         }
         const pythonConfig = workspace.getConfiguration('python', activeWorkspace.folderUri);
-        const pythonPathInConfig = pythonConfig.inspect<string>('pythonPath');
+        const pythonPathInConfig = pythonConfig.inspect<string>('pythonPath')!;
         if (activeWorkspace.configTarget === ConfigurationTarget.Workspace) {
             return pythonPathInConfig.workspaceValue === undefined || pythonPathInConfig.workspaceValue === 'python';
         }
@@ -83,7 +80,7 @@ export class InterpreterManager implements Disposable {
     }
     private onConfigChanged() {
         if (this.display) {
-            this.display.refresh()
+            this.display!.refresh()
                 .catch(ex => console.error('Python Extension: display.refresh', ex));
         }
     }

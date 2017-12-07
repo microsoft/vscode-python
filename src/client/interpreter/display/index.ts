@@ -1,20 +1,18 @@
-'use strict';
 import * as child_process from 'child_process';
 import { EOL } from 'os';
 import * as path from 'path';
 import { Disposable, StatusBarItem } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
 import * as utils from '../../common/utils';
-import { IInterpreterLocatorService } from '../contracts';
+import { IInterpreterLocatorService, IInterpreterVersionService } from '../contracts';
 import { getActiveWorkspaceUri, getFirstNonEmptyLineFromMultilineString } from '../helpers';
-import { IInterpreterVersionService } from '../interpreterVersion';
-import { VirtualEnvironmentManager } from '../virtualEnvs/index';
+import { IVirtualEnvironmentManager } from '../virtualEnvs/types';
 
 // tslint:disable-next-line:completed-docs
 export class InterpreterDisplay implements Disposable {
     constructor(private statusBar: StatusBarItem,
         private interpreterLocator: IInterpreterLocatorService,
-        private virtualEnvMgr: VirtualEnvironmentManager,
+        private virtualEnvMgr: IVirtualEnvironmentManager,
         private versionProvider: IInterpreterVersionService) {
 
         this.statusBar.command = 'python.setInterpreter';

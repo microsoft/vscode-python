@@ -18,8 +18,8 @@ export type LintingTelemetry = {
 export type PythonInterpreterTelemetry = {
     trigger: 'ui' | 'shebang' | 'load';
     failed: boolean;
-    version: string;
-    pipVersion: string;
+    version?: string;
+    pipVersion?: string;
 };
 export type CodeExecutionTelemetry = {
     scope: 'file' | 'selection';

@@ -10,7 +10,7 @@ import * as path from 'path';
 import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
 import { IS_WINDOWS } from '../../../client/common/configSettings';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
-import { IDiposableRegistry } from '../../../client/common/types';
+import { IDisposableRegistry } from '../../../client/common/types';
 import { IsWindows } from '../../../client/common/types';
 import { registerTypes as variablesRegisterTypes } from '../../../client/common/variables/serviceRegistry';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
@@ -40,7 +40,7 @@ suite('Multiroot Environment Variables Provider', () => {
     setup(() => {
         cont = new Container();
         serviceManager = new ServiceManager(cont);
-        serviceManager.addSingletonInstance<Disposable[]>(IDiposableRegistry, []);
+        serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, []);
         serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);

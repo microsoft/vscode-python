@@ -1,13 +1,13 @@
 import { Disposable, Uri } from 'vscode';
 import { PythonSettings } from '../../../common/configSettings';
-import { IDiposableRegistry, Product } from '../../../common/types';
+import { IDisposableRegistry, Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { ITestManager, ITestManagerFactory, ITestManagerService, ITestsHelper, UnitTestProduct } from './../types';
 
 export class TestManagerService implements ITestManagerService {
     private cachedTestManagers = new Map<Product, ITestManager>();
     constructor(private wkspace: Uri, private testsHelper: ITestsHelper, private serviceContainer: IServiceContainer) {
-        const disposables = serviceContainer.get<Disposable[]>(IDiposableRegistry);
+        const disposables = serviceContainer.get<Disposable[]>(IDisposableRegistry);
         disposables.push(this);
     }
     public dispose() {

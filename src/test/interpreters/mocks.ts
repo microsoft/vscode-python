@@ -1,8 +1,7 @@
-import { Architecture, Hive, IRegistry } from '../../client/common/platform/registry';
-import { IInterpreterLocatorService, PythonInterpreter } from '../../client/interpreter/contracts';
-import { IInterpreterVersionService } from '../../client/interpreter/interpreterVersion';
+import { Architecture, Hive, IRegistry } from '../../client/common/platform/types';
+import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CondaLocatorService } from '../../client/interpreter/locators/services/condaLocator';
-import { IVirtualEnvironment } from '../../client/interpreter/virtualEnvs/contracts';
+import { IVirtualEnvironmentIdentifier } from '../../client/interpreter/virtualEnvs/types';
 
 export class MockProvider implements IInterpreterLocatorService {
     constructor(private suggestions: PythonInterpreter[]) {
@@ -46,8 +45,8 @@ export class MockRegistry implements IRegistry {
     }
 }
 
-export class MockVirtualEnv implements IVirtualEnvironment {
-    constructor(private isDetected: boolean, public name: string) {
+export class MockVirtualEnv implements IVirtualEnvironmentIdentifier {
+    constructor(private isDetected: boolean, public name: string, public type: InterpreterType.VirtualEnv | InterpreterType.VEnv = InterpreterType.VirtualEnv) {
     }
     public async detect(pythonPath: string): Promise<boolean> {
         return Promise.resolve(this.isDetected);

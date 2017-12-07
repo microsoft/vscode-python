@@ -1,20 +1,22 @@
-'use strict';
+import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as path from 'path';
+import 'reflect-metadata';
 import { Uri, workspace } from 'vscode';
 import { fsReaddirAsync, IS_WINDOWS } from '../../../common/utils';
-import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
-import { IInterpreterVersionService } from '../../interpreterVersion';
-import { VirtualEnvironmentManager } from '../../virtualEnvs';
+import { IInterpreterLocatorService, IInterpreterVersionService, IKnownSearchPathsForVirtualEnvironments, InterpreterType, PythonInterpreter } from '../../contracts';
+import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { lookForInterpretersInDirectory } from '../helpers';
 import * as settings from './../../../common/configSettings';
+
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');
 
+@injectable()
 export class VirtualEnvService implements IInterpreterLocatorService {
-    public constructor(private knownSearchPaths: string[],
-        private virtualEnvMgr: VirtualEnvironmentManager,
-        private versionProvider: IInterpreterVersionService) { }
+    public constructor( @inject(IKnownSearchPathsForVirtualEnvironments) private knownSearchPaths: string[],
+        @inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
+        @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService) { }
     public async getInterpreters(resource?: Uri) {
         return this.suggestionsFromKnownVenvs();
     }
@@ -65,7 +67,8 @@ export class VirtualEnvService implements IInterpreterLocatorService {
                 const virtualEnvSuffix = virtualEnv ? virtualEnv.name : this.getVirtualEnvironmentRootDirectory(interpreter);
                 return {
                     displayName: `${displayName} (${virtualEnvSuffix})`.trim(),
-                    path: interpreter
+                    path: interpreter,
+                    type: virtualEnv ? virtualEnv.type : InterpreterType.Unknown
                 };
             });
     }

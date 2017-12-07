@@ -3,7 +3,7 @@ import { ConfigurationTarget, Uri, window } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
 import { PYTHON_INTERPRETER } from '../../telemetry/constants';
 import { StopWatch } from '../../telemetry/stopWatch';
-import { IInterpreterVersionService } from '../interpreterVersion';
+import { IInterpreterVersionService } from '../contracts';
 import { IPythonPathUpdaterServiceFactory } from './types';
 
 export class PythonPathUpdaterService {

@@ -10,15 +10,17 @@ import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
-import { GLOBAL_MEMENTO, IDiposableRegistry, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { SimpleConfigurationProvider } from './debugger';
 import { FeedbackService } from './feedback';
+import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { InterpreterManager } from './interpreter';
 import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
 import { getCondaVersion } from './interpreter/helpers';
 import { InterpreterVersionService } from './interpreter/interpreterVersion';
+import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer } from './ioc/types';
@@ -63,7 +65,7 @@ export async function activate(context: vscode.ExtensionContext) {
     serviceManager = new ServiceManager(cont);
     serviceContainer = new ServiceContainer(cont);
     serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
-    serviceManager.addSingletonInstance<Disposable[]>(IDiposableRegistry, context.subscriptions);
+    serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, context.subscriptions);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
 
@@ -77,13 +79,15 @@ export async function activate(context: vscode.ExtensionContext) {
     variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
     lintersRegisterTypes(serviceManager);
+    interpretersRegisterTypes(serviceManager);
+    formattersRegisterTypes(serviceManager);
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
     sendStartupTelemetry(activated);
 
     sortImports.activate(context, standardOutputChannel);
-    const interpreterManager = new InterpreterManager();
+    const interpreterManager = new InterpreterManager(serviceContainer);
     await interpreterManager.autoSetInterpreter();
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
@@ -92,7 +96,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService));
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
-    activateSimplePythonRefactorProvider(context, standardOutputChannel);
+    activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
     const jediFactory = new JediFactory(context.asAbsolutePath('.'));
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
@@ -119,7 +123,7 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(jediFactory);
-    context.subscriptions.push(vscode.languages.registerRenameProvider(PYTHON, new PythonRenameProvider(standardOutputChannel)));
+    context.subscriptions.push(vscode.languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer)));
     const definitionProvider = new PythonDefinitionProvider(jediFactory);
     context.subscriptions.push(vscode.languages.registerDefinitionProvider(PYTHON, definitionProvider));
     context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
@@ -133,7 +137,7 @@ export async function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(PYTHON, new PythonSignatureProvider(jediFactory), '(', ','));
     }
     if (pythonSettings.formatting.provider !== 'none') {
-        const formatProvider = new PythonFormattingEditProvider(context, standardOutputChannel);
+        const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
         context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
         context.subscriptions.push(vscode.languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
     }
@@ -159,7 +163,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
     tests.activate(context, unitTestOutChannel, symbolProvider, serviceContainer);
 
-    context.subscriptions.push(new WorkspaceSymbols(standardOutputChannel));
+    context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
 
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
     // In case we have CR LF

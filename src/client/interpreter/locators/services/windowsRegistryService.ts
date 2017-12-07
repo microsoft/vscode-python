@@ -1,9 +1,11 @@
 import * as fs from 'fs-extra';
+import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { Architecture, Hive, IRegistry } from '../../../common/platform/registry';
-import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
+import { Architecture, Hive, IRegistry } from '../../../common/platform/types';
+import { Is64Bit } from '../../../common/types';
+import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../contracts';
 
 // tslint:disable-next-line:variable-name
 const DefaultPythonExecutable = 'python.exe';
@@ -20,8 +22,9 @@ type CompanyInterpreter = {
     arch?: Architecture
 };
 
+@injectable()
 export class WindowsRegistryService implements IInterpreterLocatorService {
-    constructor(private registry: IRegistry, private is64Bit: boolean) {
+    constructor( @inject(IRegistry) private registry: IRegistry, @inject(Is64Bit) private is64Bit: boolean) {
 
     }
     // tslint:disable-next-line:variable-name
@@ -119,7 +122,8 @@ export class WindowsRegistryService implements IInterpreterLocatorService {
                     displayName,
                     path: executablePath,
                     version,
-                    companyDisplayName: interpreterInfo.companyDisplayName
+                    companyDisplayName: interpreterInfo.companyDisplayName,
+                    type: InterpreterType.Unknown
                 } as PythonInterpreter;
             })
             .then(interpreter => interpreter ? fs.pathExists(interpreter.path).catch(() => false).then(exists => exists ? interpreter : null) : null)

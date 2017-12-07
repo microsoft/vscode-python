@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as path from 'path';
-import { Architecture, Hive } from '../../client/common/platform/registry';
+import { Architecture, Hive } from '../../client/common/platform/types';
 import { IS_WINDOWS } from '../../client/debugger/Common/Utils';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
 import { initialize, initializeTest } from '../initialize';

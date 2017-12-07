@@ -11,7 +11,7 @@ import { PythonExecutionFactory } from '../client/common/process/pythonExecution
 import { registerTypes as processRegisterTypes } from '../client/common/process/serviceRegistry';
 import { IBufferDecoder, IProcessService, IPythonExecutionFactory } from '../client/common/process/types';
 import { registerTypes as commonRegisterTypes } from '../client/common/serviceRegistry';
-import { GLOBAL_MEMENTO, IDiposableRegistry, IMemento, IOutputChannel, WORKSPACE_MEMENTO } from '../client/common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento, IOutputChannel, WORKSPACE_MEMENTO } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
@@ -35,7 +35,7 @@ export class IocContainer {
         this.serviceContainer = new ServiceContainer(cont);
 
         this.serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, this.serviceContainer);
-        this.serviceManager.addSingletonInstance<Disposable[]>(IDiposableRegistry, this.disposables);
+        this.serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, this.disposables);
         this.serviceManager.addSingleton<Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);
         this.serviceManager.addSingleton<Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);
 

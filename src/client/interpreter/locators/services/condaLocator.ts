@@ -1,10 +1,12 @@
-'use strict';
 import * as child_process from 'child_process';
 import * as fs from 'fs-extra';
+import { inject, injectable, named, optional } from 'inversify';
 import * as path from 'path';
-import { IS_WINDOWS } from '../../../common/utils';
+import 'reflect-metadata';
+import { IsWindows } from '../../../common/types';
 import { VersionUtils } from '../../../common/versionUtils';
-import { ICondaLocatorService, IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
+import { ICondaLocatorService, IInterpreterLocatorService, PythonInterpreter, WINDOWS_REGISTRY_SERVICE } from '../../contracts';
+
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
@@ -12,12 +14,18 @@ const KNOWN_CONDA_LOCATIONS = ['~/anaconda/bin/conda', '~/miniconda/bin/conda',
     '~/anaconda2/bin/conda', '~/miniconda2/bin/conda',
     '~/anaconda3/bin/conda', '~/miniconda3/bin/conda'];
 
+@injectable()
 export class CondaLocatorService implements ICondaLocatorService {
-    constructor(private isWindows: boolean, private registryLookupForConda?: IInterpreterLocatorService) {
+    private condaFile: string | undefined;
+    constructor( @inject(IsWindows) private isWindows: boolean,
+        @inject(IInterpreterLocatorService) @named(WINDOWS_REGISTRY_SERVICE) @optional() private registryLookupForConda?: IInterpreterLocatorService) {
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
     public async getCondaFile(): Promise<string> {
+        if (this.condaFile) {
+            return this.condaFile!;
+        }
         const isAvailable = await this.isCondaInCurrentPath();
         if (isAvailable) {
             return 'conda';
@@ -33,7 +41,8 @@ export class CondaLocatorService implements ICondaLocatorService {
                     return fs.pathExists(condaPath).then(exists => exists ? condaPath : 'conda');
                 });
         }
-        return this.getCondaFileFromKnownLocations();
+        this.condaFile = await this.getCondaFileFromKnownLocations();
+        return this.condaFile!;
     }
     public isCondaEnvironment(interpreter: PythonInterpreter) {
         return (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
