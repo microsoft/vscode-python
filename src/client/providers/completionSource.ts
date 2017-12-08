@@ -15,12 +15,12 @@ class DocumentPosition {
 
     public static fromObject(item: object): DocumentPosition {
         // tslint:disable-next-line:no-any
-        return (item as any).documentPosition as DocumentPosition;
+        return (item as any)._documentPosition as DocumentPosition;
     }
 
     public attachTo(item: object): void {
         // tslint:disable-next-line:no-any
-        (item as any).documentPosition = this;
+        (item as any)._documentPosition = this;
     }
 }
 
@@ -45,7 +45,7 @@ export class CompletionSource {
     public async getDocumentation(completionItem: vscode.CompletionItem, token: vscode.CancellationToken): Promise<string> {
         const documentPosition = DocumentPosition.fromObject(completionItem);
         if (documentPosition === undefined) {
-            Promise.resolve<string>('');
+            return '';
         }
 
         // Supply hover source with simulated document text where item in question was 'already typed'.
@@ -79,7 +79,7 @@ export class CompletionSource {
         if (lineText.match(/^\s*\/\//)) {
             return undefined;
         }
-        // Suppress completion inside string and comments
+        // Suppress completion inside string and comments.
         if (this.isPositionInsideStringOrComment(document, position)) {
             return undefined;
         }
@@ -109,7 +109,7 @@ export class CompletionSource {
             (item.kind === vscode.SymbolKind.Function || item.kind === vscode.SymbolKind.Method)) {
             completionItem.insertText = new vscode.SnippetString(item.text).appendText('(').appendTabstop().appendText(')');
         }
-        // ensure the built in members are at the bottom
+        // Ensure the built in members are at the bottom.
         completionItem.sortText = (completionItem.label.startsWith('__') ? 'z' : (completionItem.label.startsWith('_') ? 'y' : '__')) + completionItem.label;
         documentPosition.attachTo(completionItem);
         return completionItem;
