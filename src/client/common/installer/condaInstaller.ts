@@ -38,20 +38,31 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
             return false;
         }
 
-        // Now we need to check if the current environment is a conda environment or not
+        // Now we need to check if the current environment is a conda environment or not.
+        const info = await this.getCurrentInterpreterInfo(resource);
+        return info.isConda === true;
     }
     protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
         const condaLocator = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
         const condaFile = await condaLocator.getCondaFile();
+
+        const info = await this.getCurrentInterpreterInfo(resource);
+        const args = ['install'];
+
+        if (info.envName) {
+            // If we have the name of the conda environment, then use that.
+            args.push('--name');
+            args.push(info.envName!);
+        } else {
+            // Else provide the full path to the environment path.
+            args.push('--prefix');
+            args.push(info.envPath);
+        }
         return {
-            args: ['pip', 'install', moduleName],
+            args,
             execPath: condaFile,
             moduleName: ''
         };
-    }
-    private async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
-        const interpreterLocator = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
-        return interpreterLocator.getInterpreters(resource);
     }
     private async getCurrentPythonPath(resource?: Uri): Promise<string> {
         const pythonPath = PythonSettings.getInstance(resource).pythonPath;
@@ -73,15 +84,15 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
 
         // Check if we have the info about the current python path.
         const info = interpreters.find(item => path.dirname(item.path) === path.dirname(currentPythonPath));
-        const pythonPath = info ? info.path : undefined;
+        const pythonPath = info ? info!.path : undefined;
         // tslint:disable-next-line:prefer-array-literal
         const pathsToRemove = new Array(CONDA_RELATIVE_PY_PATH.length).fill('..') as string[];
         const envPath = path.join(path.dirname(currentPythonPath), ...pathsToRemove);
         return {
-            isConda: !info && info.type === InterpreterType.Conda,
+            isConda: info && info!.type === InterpreterType.Conda,
             pythonPath: currentPythonPath,
             envPath,
-            envName: info ? info.envName : undefined
+            envName: info ? info!.envName : undefined
         };
     }
 }
