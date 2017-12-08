@@ -5,12 +5,13 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import 'reflect-metadata';
 import { Uri } from 'vscode';
-import { ICondaLocatorService, IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PythonInterpreter } from '../../interpreter/contracts';
+import { ICondaLocatorService, IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../interpreter/contracts';
 import { CONDA_RELATIVE_PY_PATH } from '../../interpreter/locators/services/conda';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonSettings } from '../configSettings';
-import { IProcessService, IPythonExecutionFactory } from '../process/types';
+import { IPythonExecutionFactory } from '../process/types';
 import { ExecutionInfo } from '../types';
+import { arePathsSame } from '../utils';
 import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller } from './types';
 
@@ -23,24 +24,27 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
     constructor( @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }
+    /**
+     * Checks whether we can use Conda as module installer for a given resource.
+     * We need to perform two checks:
+     * 1. Ensure we have conda.
+     * 2. Check if the current environment is a conda environment.
+     * @param {Uri} [resource=] Resource used to identify the workspace.
+     * @returns {Promise<boolean>} Whether conda is supported as a module installer or not.
+     */
     public async isSupported(resource?: Uri): Promise<boolean> {
         if (typeof this.isCondaAvailable === 'boolean') {
             return this.isCondaAvailable!;
         }
-        const processService = this.serviceContainer.get<IProcessService>(IProcessService);
         const condaLocator = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
-        const available = condaLocator.getCondaFile()
-            .then(condaFile => processService.exec(condaFile, ['--version'], {}))
-            .then(() => this.isCondaAvailable = true)
-            .catch(() => this.isCondaAvailable = false);
+        const available = await condaLocator.isCondaAvailable();
 
         if (!available) {
             return false;
         }
 
         // Now we need to check if the current environment is a conda environment or not.
-        const info = await this.getCurrentInterpreterInfo(resource);
-        return info.isConda === true;
+        return this.isCurrentEnvironmentACondaEnvironment(resource);
     }
     protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
         const condaLocator = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
@@ -73,6 +77,10 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
             return pythonPath;
         }
     }
+    private isCurrentEnvironmentACondaEnvironment(resource?: Uri) {
+        return this.getCurrentInterpreterInfo(resource)
+            .then(info => info && info.isConda === true).catch(() => false);
+    }
     private async getCurrentInterpreterInfo(resource?: Uri) {
         // Use this service, though it returns everything it is cached.
         const interpreterLocator = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
@@ -81,8 +89,8 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
         const [interpreters, currentPythonPath] = await Promise.all([interpretersPromise, pythonPathPromise]);
 
         // Check if we have the info about the current python path.
-        const info = interpreters.find(item => path.dirname(item.path) === path.dirname(currentPythonPath));
-        const pythonPath = info ? info!.path : undefined;
+        const pathToCompareWith = path.dirname(currentPythonPath);
+        const info = interpreters.find(item => arePathsSame(path.dirname(item.path), pathToCompareWith));
         // tslint:disable-next-line:prefer-array-literal
         const pathsToRemove = new Array(CONDA_RELATIVE_PY_PATH.length).fill('..') as string[];
         const envPath = path.join(path.dirname(currentPythonPath), ...pathsToRemove);

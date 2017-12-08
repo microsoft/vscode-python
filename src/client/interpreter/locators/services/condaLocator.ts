@@ -3,6 +3,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable, named, optional } from 'inversify';
 import * as path from 'path';
 import 'reflect-metadata';
+import { IProcessService } from '../../../common/process/types';
 import { IsWindows } from '../../../common/types';
 import { VersionUtils } from '../../../common/versionUtils';
 import { ICondaLocatorService, IInterpreterLocatorService, PythonInterpreter, WINDOWS_REGISTRY_SERVICE } from '../../contracts';
@@ -17,7 +18,9 @@ const KNOWN_CONDA_LOCATIONS = ['~/anaconda/bin/conda', '~/miniconda/bin/conda',
 @injectable()
 export class CondaLocatorService implements ICondaLocatorService {
     private condaFile: string | undefined;
+    private isAvailable: boolean | undefined;
     constructor( @inject(IsWindows) private isWindows: boolean,
+        @inject(IProcessService) private processService: IProcessService,
         @inject(IInterpreterLocatorService) @named(WINDOWS_REGISTRY_SERVICE) @optional() private registryLookupForConda?: IInterpreterLocatorService) {
     }
     // tslint:disable-next-line:no-empty
@@ -43,6 +46,17 @@ export class CondaLocatorService implements ICondaLocatorService {
         }
         this.condaFile = await this.getCondaFileFromKnownLocations();
         return this.condaFile!;
+    }
+    public async isCondaAvailable(): Promise<boolean> {
+        return this.getCondaVersion()
+            .then(() => this.isAvailable = true)
+            .catch(() => this.isAvailable = false);
+    }
+    public async getCondaVersion(): Promise<string | undefined> {
+        return this.getCondaFile()
+            .then(condaFile => this.processService.exec(condaFile, ['--version'], {}))
+            .then(result => result.stdout.trim())
+            .catch(() => undefined);
     }
     public isCondaEnvironment(interpreter: PythonInterpreter) {
         return (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||

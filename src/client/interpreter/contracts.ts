@@ -29,6 +29,8 @@ export const ICondaLocatorService = Symbol('ICondaLocatorService');
 
 export interface ICondaLocatorService {
     getCondaFile(): Promise<string>;
+    isCondaAvailable(): Promise<boolean>;
+    getCondaVersion(): Promise<string | undefined>;
 }
 
 export enum InterpreterType {

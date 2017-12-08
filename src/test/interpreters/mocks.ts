@@ -1,4 +1,5 @@
 import { Architecture, Hive, IRegistry } from '../../client/common/platform/types';
+import { IProcessService } from '../../client/common/process/types';
 import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CondaLocatorService } from '../../client/interpreter/locators/services/condaLocator';
 import { IVirtualEnvironmentIdentifier } from '../../client/interpreter/virtualEnvs/types';
@@ -70,8 +71,8 @@ export class MockInterpreterVersionProvider implements IInterpreterVersionServic
 
 // tslint:disable-next-line:max-classes-per-file
 export class MockCondaLocatorService extends CondaLocatorService {
-    constructor(isWindows: boolean, registryLookupForConda?: IInterpreterLocatorService, private isCondaInEnv?: boolean) {
-        super(isWindows, registryLookupForConda);
+    constructor(isWindows: boolean, procService: IProcessService, registryLookupForConda?: IInterpreterLocatorService, private isCondaInEnv?: boolean) {
+        super(isWindows, procService, registryLookupForConda);
     }
     public async isCondaInCurrentPath() {
         if (typeof this.isCondaInEnv === 'boolean') {

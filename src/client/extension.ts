@@ -10,15 +10,15 @@ import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
-import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { SimpleConfigurationProvider } from './debugger';
 import { FeedbackService } from './feedback';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { InterpreterManager } from './interpreter';
 import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
+import { ICondaLocatorService } from './interpreter/contracts';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
-import { getCondaVersion } from './interpreter/helpers';
 import { InterpreterVersionService } from './interpreter/interpreterVersion';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
@@ -55,15 +55,11 @@ const PYTHON: vscode.DocumentFilter = { language: 'python' };
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
 
-let cont: Container;
-let serviceManager: ServiceManager;
-let serviceContainer: ServiceContainer;
-
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: vscode.ExtensionContext) {
-    cont = new Container();
-    serviceManager = new ServiceManager(cont);
-    serviceContainer = new ServiceContainer(cont);
+    const cont = new Container();
+    const serviceManager = new ServiceManager(cont);
+    const serviceContainer = new ServiceContainer(cont);
     serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
     serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, context.subscriptions);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
@@ -84,11 +80,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
-    sendStartupTelemetry(activated);
+    sendStartupTelemetry(activated, serviceContainer);
 
     sortImports.activate(context, standardOutputChannel);
     const interpreterManager = new InterpreterManager(serviceContainer);
+    // This must be completed before we can continue.
     await interpreterManager.autoSetInterpreter();
+
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
     context.subscriptions.push(interpreterManager);
@@ -183,18 +181,17 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled));
 }
 
-function sendStartupTelemetry(activatedPromise: Promise<void>) {
+async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {
     const stopWatch = new StopWatch();
-    activatedPromise
-        .then(async () => {
-            const duration = stopWatch.elapsedTime;
-            let condaVersion: string | undefined;
-            try {
-                condaVersion = await getCondaVersion();
-                // tslint:disable-next-line:no-empty
-            } catch { }
-            const props = condaVersion ? { condaVersion } : undefined;
-            sendTelemetryEvent(EDITOR_LOAD, duration, props);
-        })
-        .catch(ex => console.error('Python Extension: sendStartupTelemetry', ex));
+    const logger = serviceContainer.get<ILogger>(ILogger);
+    try {
+        await activatedPromise;
+        const duration = stopWatch.elapsedTime;
+        const condaLocator = serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaVersion = await condaLocator.getCondaVersion().catch(() => undefined);
+        const props = condaVersion ? { condaVersion } : undefined;
+        sendTelemetryEvent(EDITOR_LOAD, duration, props);
+    } catch (ex) {
+        logger.logError('sendStartupTelemetry failed.', ex);
+    }
 }
