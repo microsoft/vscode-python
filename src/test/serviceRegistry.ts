@@ -13,6 +13,7 @@ import { IBufferDecoder, IProcessService, IPythonExecutionFactory } from '../cli
 import { registerTypes as commonRegisterTypes } from '../client/common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento, IOutputChannel, WORKSPACE_MEMENTO } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
+import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
@@ -65,6 +66,9 @@ export class IocContainer {
     }
     public registerLinterTypes() {
         lintersRegisterTypes(this.serviceManager);
+    }
+    public registerFormatterTypes() {
+        formattersRegisterTypes(this.serviceManager);
     }
 
     public registerMockProcessTypes() {

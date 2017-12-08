@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 export const IModuleInstaller = Symbol('IModuleInstaller');
 
 export interface IModuleInstaller {
-    readonly displayName;
-    installModule(name): Promise<void>;
+    readonly displayName: string;
+    installModule(name: string): Promise<void>;
     isSupported(resource?: Uri): Promise<boolean>;
 }

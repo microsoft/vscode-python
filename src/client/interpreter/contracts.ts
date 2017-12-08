@@ -45,6 +45,7 @@ export type PythonInterpreter = {
     version?: string;
     architecture?: Architecture;
     type: InterpreterType;
+    envName?: string;
 };
 
 export type WorkspacePythonPath = {

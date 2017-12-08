@@ -43,14 +43,16 @@ export class CondaEnvService implements IInterpreterLocatorService {
 
         const promises = envs
             .map(env => {
+                const envName = path.basename(env);
                 // If it is an environment, hence suffix with env name.
-                const interpreterDisplayName = env === info.default_prefix ? displayName : `${displayName} (${path.basename(env)})`;
+                const interpreterDisplayName = env === info.default_prefix ? displayName : `${displayName} (${envName})`;
                 // tslint:disable-next-line:no-unnecessary-local-variable
                 const interpreter: PythonInterpreter = {
                     path: path.join(env, ...CONDA_RELATIVE_PY_PATH),
                     displayName: interpreterDisplayName,
                     companyDisplayName: AnacondaCompanyName,
-                    type: InterpreterType.Conda
+                    type: InterpreterType.Conda,
+                    envName
                 };
                 return interpreter;
             })

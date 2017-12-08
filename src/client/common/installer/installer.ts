@@ -12,7 +12,7 @@ import { PythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IProcessService, IPythonExecutionFactory } from '../process/types';
 import { ITerminalService } from '../terminal/types';
-import { IInstaller, InstallerResponse, IOutputChannel, IsWindows, Product } from '../types';
+import { IInstaller, InstallerResponse, IOutputChannel, IsWindows, ModuleNamePurpose, Product } from '../types';
 import { IModuleInstaller } from './types';
 
 export { Product } from '../types';
@@ -30,7 +30,7 @@ ProductNames.set(Product.pylama, 'pylama');
 ProductNames.set(Product.prospector, 'prospector');
 ProductNames.set(Product.pydocstyle, 'pydocstyle');
 ProductNames.set(Product.pylint, 'pylint');
-ProductNames.set(Product.pytest, 'py.test');
+ProductNames.set(Product.pytest, 'pytest');
 ProductNames.set(Product.yapf, 'yapf');
 ProductNames.set(Product.rope, 'rope');
 
@@ -143,10 +143,12 @@ export class Installer implements IInstaller {
             }
         }
     }
-    public translateProductToModuleName(product: Product): string {
+    public translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string {
         switch (product) {
             case Product.mypy: return 'mypy';
-            case Product.nosetest: return 'nose';
+            case Product.nosetest: {
+                return purpose === ModuleNamePurpose.install ? 'nose' : 'nosetests';
+            }
             case Product.pylama: return 'pylama';
             case Product.prospector: return 'prospector';
             case Product.pylint: return 'pylint';
@@ -156,12 +158,17 @@ export class Installer implements IInstaller {
             case Product.pydocstyle: return 'pydocstyle';
             case Product.yapf: return 'yapf';
             case Product.flake8: return 'flake8';
+            case Product.unittest: return 'unittest';
+            case Product.rope: return 'rope';
             default: {
                 throw new Error(`Product ${product} cannot be installed as a Python Module.`);
             }
         }
     }
     public async install(product: Product, resource?: Uri): Promise<InstallerResponse> {
+        if (product === Product.unittest) {
+            return InstallerResponse.Installed;
+        }
         if (product === Product.ctags) {
             return this.installCTags();
         }
@@ -170,16 +177,19 @@ export class Installer implements IInstaller {
             return InstallerResponse.Ignore;
         }
 
-        const moduleName = this.translateProductToModuleName(product);
+        const moduleName = this.translateProductToModuleName(product, ModuleNamePurpose.install);
         await installer.installModule(moduleName);
 
         return this.isInstalled(product)
             .then(isInstalled => isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore);
     }
     public async isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined> {
+        if (product === Product.unittest) {
+            return true;
+        }
         let moduleName: string | undefined;
         try {
-            moduleName = this.translateProductToModuleName(product);
+            moduleName = this.translateProductToModuleName(product, ModuleNamePurpose.run);
             // tslint:disable-next-line:no-empty
         } catch { }
 
@@ -277,16 +287,16 @@ export class Installer implements IInstaller {
                 const settingsPropNames = testHelper.getSettingsPropertyNames(product);
                 if (!settingsPropNames.pathName) {
                     // E.g. in the case of UnitTests we don't allow customizing the paths.
-                    return this.translateProductToModuleName(product);
+                    return this.translateProductToModuleName(product, ModuleNamePurpose.run);
                 }
                 return settings.unitTest[settingsPropNames.pathName] as string;
             }
             case ProductType.Formatter: {
                 const formatHelper = this.serviceContainer.get<IFormatterHelper>(IFormatterHelper);
                 const settingsPropNames = formatHelper.getSettingsPropertyNames(product);
-                return settings.linting[settingsPropNames.pathName] as string;
+                return settings.formatting[settingsPropNames.pathName] as string;
             }
-            case ProductType.RefactoringLibrary: return this.translateProductToModuleName(product);
+            case ProductType.RefactoringLibrary: return this.translateProductToModuleName(product, ModuleNamePurpose.run);
             case ProductType.Linter: {
                 const linterHelper = this.serviceContainer.get<ILinterHelper>(ILinterHelper);
                 const settingsPropNames = linterHelper.getSettingsPropertyNames(product);

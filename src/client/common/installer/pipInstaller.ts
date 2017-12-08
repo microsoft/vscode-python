@@ -8,12 +8,16 @@ import { IServiceContainer } from '../../ioc/types';
 import { IPythonExecutionFactory } from '../process/types';
 import { ExecutionInfo } from '../types';
 import { ModuleInstaller } from './moduleInstaller';
+import { IModuleInstaller } from './types';
 
 @injectable()
-export class PipInstaller extends ModuleInstaller {
+export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
     private isCondaAvailable: boolean | undefined;
+    public get displayName() {
+        return 'Pip';
+    }
     constructor( @inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super('Pip', serviceContainer);
+        super(serviceContainer);
     }
     public isSupported(resource?: Uri): Promise<boolean> {
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
@@ -21,7 +25,7 @@ export class PipInstaller extends ModuleInstaller {
             .then(proc => proc.isModuleInstalled('pip'))
             .catch(() => false);
     }
-    protected getExecutionInfo(moduleName: string, resource?: Uri): ExecutionInfo {
+    protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
         const proxyArgs = [];
         const proxy = workspace.getConfiguration('http').get('proxy', '');
         if (proxy.length > 0) {
@@ -29,7 +33,7 @@ export class PipInstaller extends ModuleInstaller {
             proxyArgs.push(proxy);
         }
         return {
-            args: ['pip', ...proxyArgs, 'install', '-U', moduleName],
+            args: [...proxyArgs, 'install', '-U', moduleName],
             execPath: '',
             moduleName: 'pip'
         };

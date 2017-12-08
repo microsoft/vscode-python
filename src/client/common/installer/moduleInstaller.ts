@@ -1,21 +1,29 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { injectable } from 'inversify';
+import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
+import { PythonSettings } from '../configSettings';
 import { ITerminalService } from '../terminal/types';
 import { ExecutionInfo } from '../types';
 import { IModuleInstaller } from './types';
 
-export abstract class ModuleInstaller implements IModuleInstaller {
-    constructor(public readonly displayName, protected serviceContainer: IServiceContainer) {
-    }
+@injectable()
+export abstract class ModuleInstaller {
+    constructor(protected serviceContainer: IServiceContainer) { }
     public async installModule(name: string, resource?: Uri): Promise<void> {
-        const executionInfo = this.getExecutionInfo(name, resource);
+        const executionInfo = await this.getExecutionInfo(name, resource);
         const terminalService = this.serviceContainer.get<ITerminalService>(ITerminalService);
-        const executable = executionInfo.moduleName ? executionInfo.moduleName! : executionInfo.execPath!;
-        terminalService.sendCommand(executable, executionInfo.args);
+
+        if (executionInfo.moduleName) {
+            const pythonPath = PythonSettings.getInstance(resource).pythonPath;
+            terminalService.sendCommand(pythonPath, ['-m', 'pip'].concat(executionInfo.args));
+        } else {
+            terminalService.sendCommand(executionInfo.execPath, executionInfo.args);
+        }
     }
     public abstract isSupported(resource?: Uri): Promise<boolean>;
-    protected abstract getExecutionInfo(moduleName: string, resource?: Uri): ExecutionInfo;
+    protected abstract getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo>;
 }

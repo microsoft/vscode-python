@@ -161,7 +161,7 @@ export class TestsParser implements ITestsParser {
     }
 }
 
-    /* Sample output from py.test --collect-only
+    /* Sample output from pytest --collect-only
     <Module 'test_another.py'>
       <Class 'Test_CheckMyApp'>
         <Instance '()'>

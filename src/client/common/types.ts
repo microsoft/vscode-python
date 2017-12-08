@@ -60,6 +60,11 @@ export enum Product {
     rope = 14
 }
 
+export enum ModuleNamePurpose {
+    install = 1,
+    run = 2
+}
+
 export const IInstaller = Symbol('IInstaller');
 
 export interface IInstaller {
@@ -67,5 +72,5 @@ export interface IInstaller {
     install(product: Product, resource?: Uri): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined>;
     disableLinter(product: Product, resource?: Uri): Promise<void>;
-    translateProductToModuleName(product: Product): string;
+    translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
