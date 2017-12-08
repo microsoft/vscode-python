@@ -20,23 +20,21 @@ import { fixInterpreterDisplayName } from './helpers';
 
 @injectable()
 export class PythonInterpreterLocatorService implements IInterpreterLocatorService {
-    private interpretersPerResource: Map<string, PythonInterpreter[]>;
+    private interpretersPerResource: Map<string, Promise<PythonInterpreter[]>>;
     private disposables: Disposable[] = [];
     constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IsWindows) private isWindows: boolean) {
-        this.interpretersPerResource = new Map<string, PythonInterpreter[]>();
+        this.interpretersPerResource = new Map<string, Promise<PythonInterpreter[]>>();
         this.disposables.push(workspace.onDidChangeConfiguration(this.onConfigChanged, this));
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
     }
     public async getInterpreters(resource?: Uri) {
         const resourceKey = this.getResourceKey(resource);
         if (!this.interpretersPerResource.has(resourceKey)) {
-            const interpreters = await this.getInterpretersPerResource(resource);
-            this.interpretersPerResource.set(resourceKey, interpreters);
+            this.interpretersPerResource.set(resourceKey, this.getInterpretersPerResource(resource));
         }
 
-        // tslint:disable-next-line:no-non-null-assertion
-        return this.interpretersPerResource.get(resourceKey)!;
+        return await this.interpretersPerResource.get(resourceKey)!;
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());

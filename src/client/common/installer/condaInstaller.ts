@@ -68,9 +68,7 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
         const pythonPath = PythonSettings.getInstance(resource).pythonPath;
         if (path.basename(pythonPath) === pythonPath) {
             const pythonProc = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(resource);
-            const result = await pythonProc.exec(['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true });
-            const stdout = result.stdout.trim();
-            return stdout.length === 0 ? pythonPath : stdout;
+            return pythonProc.getExecutablePath().catch(() => pythonPath);
         } else {
             return pythonPath;
         }

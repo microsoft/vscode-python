@@ -8,6 +8,7 @@ import { IInterpreterLocatorService, IInterpreterVersionService, INTERPRETER_LOC
 import { InterpreterDisplay } from './display';
 import { getActiveWorkspaceUri } from './helpers';
 import { PythonInterpreterLocatorService } from './locators';
+import { VirtualEnvService } from './locators/services/virtualEnvService';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
 export class InterpreterManager implements Disposable {
@@ -15,7 +16,7 @@ export class InterpreterManager implements Disposable {
     private display: InterpreterDisplay | null | undefined;
     private interpreterProvider: PythonInterpreterLocatorService;
     private pythonPathUpdaterService: PythonPathUpdaterService;
-    constructor(serviceContainer: IServiceContainer) {
+    constructor(private serviceContainer: IServiceContainer) {
         const virtualEnvMgr = serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
         const statusBar = window.createStatusBarItem(StatusBarAlignment.Left);
         this.interpreterProvider = serviceContainer.get<PythonInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
@@ -41,10 +42,13 @@ export class InterpreterManager implements Disposable {
         if (!activeWorkspace) {
             return;
         }
+        const virtualEnvMgr = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
+        const versionService = this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
+        const virtualEnvInterpreterProvider = new VirtualEnvService([activeWorkspace.folderUri.fsPath], virtualEnvMgr, versionService);
         const interpreters = await this.interpreterProvider.getInterpreters(activeWorkspace.folderUri);
         const workspacePathUpper = activeWorkspace.folderUri.fsPath.toUpperCase();
         const interpretersInWorkspace = interpreters.filter(interpreter => interpreter.path.toUpperCase().startsWith(workspacePathUpper));
-        if (interpretersInWorkspace.length !== 1) {
+        if (interpretersInWorkspace.length === 0) {
             return;
         }
 
