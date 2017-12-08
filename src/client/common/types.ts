@@ -67,3 +67,9 @@ export interface IInstaller extends Disposable {
     isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined>;
     disableLinter(product: Product, resource?: Uri): Promise<void>;
 }
+
+export const IPathUtils = Symbol('IPathUtils');
+
+export interface IPathUtils {
+    getPathVariableName(): 'Path' | 'PATH';
+}

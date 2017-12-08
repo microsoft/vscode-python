@@ -4,6 +4,7 @@ import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { open } from '../../common/open';
+import { PathUtils } from '../../common/platform/pathUtils';
 import { EnvironmentVariablesService } from '../../common/variables/environment';
 import { EnvironmentVariables } from '../../common/variables/types';
 import { IDebugServer, IPythonProcess } from '../Common/Contracts';
@@ -19,10 +20,25 @@ const VALID_DEBUG_OPTIONS = [
     'BreakOnSystemExitZero',
     'DjangoDebugging'];
 
+enum DebugServerStatus {
+    Unknown = 1,
+    Running = 2,
+    NotRunning = 3
+}
+
 export class LocalDebugClient extends DebugClient {
     protected pyProc: child_process.ChildProcess | undefined;
     protected pythonProcess: IPythonProcess;
     protected debugServer: BaseDebugServer | undefined;
+    private get debugServerStatus(): DebugServerStatus {
+        if (this.debugServer && this.debugServer!.IsRunning) {
+            return DebugServerStatus.Running;
+        }
+        if (this.debugServer && !this.debugServer!.IsRunning) {
+            return DebugServerStatus.NotRunning;
+        }
+        return DebugServerStatus.Unknown;
+    }
     // tslint:disable-next-line:no-any
     constructor(args: any, debugSession: DebugSession, private canLaunchTerminal: boolean) {
         super(args, debugSession);
@@ -106,7 +122,7 @@ export class LocalDebugClient extends DebugClient {
                 default: {
                     // As we're spawning the process, we need to ensure all env variables are passed.
                     // Including those from the current process (i.e. everything, not just custom vars).
-                    const envParser = new EnvironmentVariablesService(IS_WINDOWS);
+                    const envParser = new EnvironmentVariablesService(new PathUtils(IS_WINDOWS));
                     envParser.mergeVariables(process.env as EnvironmentVariables, environmentVariables);
                     this.pyProc = child_process.spawn(pythonPath, args, { cwd: processCwd, env: environmentVariables });
                     this.handleProcessOutput(this.pyProc!, reject);
@@ -125,10 +141,11 @@ export class LocalDebugClient extends DebugClient {
         proc.on('error', error => {
             // If debug server has started, then don't display errors.
             // The debug adapter will get this info from the debugger (e.g. ptvsd lib).
-            if (!this.debugServer && this.debugServer!.IsRunning) {
+            const status = this.debugServerStatus;
+            if (status === DebugServerStatus.Running) {
                 return;
             }
-            if (!this.debugServer && !this.debugServer!.IsRunning && typeof (error) === 'object' && error !== null) {
+            if (status === DebugServerStatus.NotRunning && typeof (error) === 'object' && error !== null) {
                 return failedToLaunch(error);
             }
             // This could happen when the debugger didn't launch at all, e.g. python doesn't exist.
@@ -141,13 +158,14 @@ export class LocalDebugClient extends DebugClient {
 
             // Either way, we need some code in here so we read the stdout of the python process,
             // Else it just keep building up (related to issue #203 and #52).
-            if (this.debugServer && !this.debugServer!.IsRunning) {
+            if (this.debugServerStatus === DebugServerStatus.NotRunning) {
                 return failedToLaunch(error);
             }
         });
         proc.stdout.on('data', d => {
             // This is necessary so we read the stdout of the python process,
             // Else it just keep building up (related to issue #203 and #52).
+            // tslint:disable-next-line:prefer-const no-unused-variable
             let x = 0;
         });
     }
@@ -198,7 +216,7 @@ export class LocalDebugClient extends DebugClient {
                     this.pyProc = proc;
                     resolve();
                 }, error => {
-                    if (!this.debugServer && this.debugServer!.IsRunning) {
+                    if (this.debugServerStatus === DebugServerStatus.Running) {
                         return;
                     }
                     reject(error);
@@ -208,7 +226,7 @@ export class LocalDebugClient extends DebugClient {
     }
     private async getEnvironmentVariables(): Promise<EnvironmentVariables> {
         const args = this.args as LaunchRequestArguments;
-        const envParser = new EnvironmentVariablesService(IS_WINDOWS);
+        const envParser = new EnvironmentVariablesService(new PathUtils(IS_WINDOWS));
         const envFileVars = await envParser.parseFile(args.envFile);
 
         const hasEnvVars = args.env && Object.keys(args.env).length > 0;
