@@ -47,7 +47,8 @@ export class InterpreterManager implements Disposable {
         const interpreters = await this.interpreterProvider.getInterpreters(activeWorkspace.folderUri);
         const workspacePathUpper = activeWorkspace.folderUri.fsPath.toUpperCase();
         const interpretersInWorkspace = interpreters.filter(interpreter => interpreter.path.toUpperCase().startsWith(workspacePathUpper));
-        if (interpretersInWorkspace.length !== 1) {
+        // Always pick the first available one.
+        if (interpretersInWorkspace.length === 0) {
             return;
         }
 
@@ -73,6 +74,10 @@ export class InterpreterManager implements Disposable {
         }
         const pythonConfig = workspace.getConfiguration('python', activeWorkspace.folderUri);
         const pythonPathInConfig = pythonConfig.inspect<string>('pythonPath');
+        // If we have a value in user settings, then don't auto set the interpreter path.
+        if (pythonPathInConfig && pythonPathInConfig!.globalValue !== undefined && pythonPathInConfig!.globalValue !== 'python') {
+            return false;
+        }
         if (activeWorkspace.configTarget === ConfigurationTarget.Workspace) {
             return pythonPathInConfig.workspaceValue === undefined || pythonPathInConfig.workspaceValue === 'python';
         }
