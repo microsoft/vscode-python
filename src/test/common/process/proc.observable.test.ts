@@ -36,7 +36,7 @@ suite('ProcessService', () => {
 
     test('execObservable should stream output with new lines', function (done) {
         // tslint:disable-next-line:no-invalid-this
-        this.timeout(5000);
+        this.timeout(10000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'import time',
             'print("1")', 'sys.stdout.flush()', 'time.sleep(2)',
