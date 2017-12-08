@@ -47,6 +47,10 @@ suite('ProcessService', () => {
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
+            // Ignore line breaks.
+            if (output.out.trim().length === 0) {
+                return;
+            }
             const expectedValue = outputs.shift();
             if (expectedValue !== output.out.trim() && expectedValue === output.out) {
                 done(`Received value ${output.out} is not same as the expectd value ${expectedValue}`);
@@ -70,6 +74,10 @@ suite('ProcessService', () => {
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
+            // Ignore line breaks.
+            if (output.out.trim().length === 0) {
+                return;
+            }
             const expectedValue = outputs.shift();
             if (expectedValue !== output.out) {
                 done(`Received value ${output.out} is not same as the expectd value ${expectedValue}`);
@@ -118,6 +126,10 @@ suite('ProcessService', () => {
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
             const value = output.out.trim();
+            // Ignore line breaks.
+            if (value.length === 0) {
+                return;
+            }
             if (value === '1') {
                 procKilled = true;
                 result.proc.kill();
@@ -150,6 +162,10 @@ suite('ProcessService', () => {
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
             const value = output.out.trim();
+            // Ignore line breaks.
+            if (value.length === 0) {
+                return;
+            }
             const expectedOutput = outputs.shift()!;
 
             expect(value).to.be.equal(expectedOutput.out, 'Expected output is incorrect');
@@ -177,6 +193,10 @@ suite('ProcessService', () => {
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
             const value = output.out.trim();
+            // Ignore line breaks.
+            if (value.length === 0) {
+                return;
+            }
             const expectedOutput = outputs.shift()!;
 
             expect(value).to.be.equal(expectedOutput.out, 'Expected output is incorrect');
