@@ -1,7 +1,7 @@
 import * as child_process from 'child_process';
 import { EOL } from 'os';
 import * as path from 'path';
-import { Disposable, StatusBarItem } from 'vscode';
+import { Disposable, StatusBarItem, Uri } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
 import * as utils from '../../common/utils';
 import { IInterpreterLocatorService, IInterpreterVersionService } from '../contracts';
@@ -26,13 +26,13 @@ export class InterpreterDisplay implements Disposable {
             return;
         }
         const pythonPath = await this.getFullyQualifiedPathToInterpreter(PythonSettings.getInstance(wkspc.folderUri).pythonPath);
-        await this.updateDisplay(pythonPath);
+        await this.updateDisplay(pythonPath, wkspc.folderUri);
     }
-    private async getInterpreters() {
-        return this.interpreterLocator.getInterpreters();
+    private async getInterpreters(resource?: Uri) {
+        return this.interpreterLocator.getInterpreters(resource);
     }
-    private async updateDisplay(pythonPath: string) {
-        const interpreters = await this.getInterpreters();
+    private async updateDisplay(pythonPath: string, resource?: Uri) {
+        const interpreters = await this.getInterpreters(resource);
         const interpreter = interpreters.find(i => utils.arePathsSame(i.path, pythonPath));
 
         this.statusBar.color = '';
