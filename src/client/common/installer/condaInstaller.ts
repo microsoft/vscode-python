@@ -62,6 +62,7 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
             args.push('--prefix');
             args.push(info.envPath);
         }
+        args.push(moduleName);
         return {
             args,
             execPath: condaFile,

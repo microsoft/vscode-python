@@ -12,9 +12,9 @@ export class ErrorHandler implements IErrorHandler {
         helper: ILinterHelper, logger: ILogger,
         outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
         // Create chain of handlers.
-        const moduleNotInstalledErrorHandler = new ModuleNotInstalledErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
-        this.handlder = new StandardErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
-        this.handlder.setNextHandler(moduleNotInstalledErrorHandler);
+        const standardErrorHandler = new StandardErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
+        this.handlder = new ModuleNotInstalledErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
+        this.handlder.setNextHandler(standardErrorHandler);
     }
 
     public handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean> {

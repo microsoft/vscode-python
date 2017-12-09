@@ -121,7 +121,6 @@ suite('ProcessService', () => {
         const expectedOutput = ['1a2b3c'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
-        expect(result.stderr).to.equal(undefined, 'stderr not undefined');
         const outputs = result.stdout.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
         expect(outputs).to.deep.equal(expectedOutput, 'Output values are incorrect');
     });

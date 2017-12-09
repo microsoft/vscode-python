@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { Uri } from 'vscode';
+import { PythonSettings } from '../../common/configSettings';
 import { Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/managers/baseTestManager';
@@ -9,6 +10,9 @@ import { runTest } from './runner';
 
 @injectable()
 export class TestManager extends BaseTestManager {
+    public get enabled() {
+        return PythonSettings.getInstance(this.workspaceFolder).unitTest.nosetestsEnabled;
+    }
     constructor(workspaceFolder: Uri, rootDirectory: string,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('nosetest', Product.nosetest, workspaceFolder, rootDirectory, serviceContainer);

@@ -19,6 +19,7 @@ enum CancellationTokenType {
 
 export abstract class BaseTestManager implements ITestManager {
     protected readonly settings: IPythonSettings;
+    public abstract get enabled(): boolean;
     protected get outputChannel() {
         return this._outputChannel;
     }

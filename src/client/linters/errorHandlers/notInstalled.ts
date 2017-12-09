@@ -19,7 +19,7 @@ export class ModuleNotInstalledErrorHandler extends BaseErrorHandler {
 
         const pythonExecutionService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(resource);
         const isModuleInstalled = await pythonExecutionService.isModuleInstalled(execInfo.moduleName!);
-        if (!isModuleInstalled) {
+        if (isModuleInstalled) {
             return this.nextHandler ? await this.nextHandler.handleError(error, resource, execInfo) : false;
         }
 

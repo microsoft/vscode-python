@@ -215,6 +215,7 @@ export interface ITestManagerServiceFactory extends Function {
 export const ITestManager = Symbol('ITestManager');
 export interface ITestManager extends Disposable {
     readonly status: TestStatus;
+    readonly enabled: boolean;
     readonly workingDirectory: string;
     readonly workspaceFolder: Uri;
     stop(): void;

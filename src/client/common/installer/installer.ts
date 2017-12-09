@@ -12,7 +12,7 @@ import { PythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IProcessService, IPythonExecutionFactory } from '../process/types';
 import { ITerminalService } from '../terminal/types';
-import { IInstaller, InstallerResponse, IOutputChannel, IsWindows, ModuleNamePurpose, Product } from '../types';
+import { IInstaller, ILogger, InstallerResponse, IOutputChannel, IsWindows, ModuleNamePurpose, Product } from '../types';
 import { IModuleInstaller } from './types';
 
 export { Product } from '../types';
@@ -178,7 +178,9 @@ export class Installer implements IInstaller {
         }
 
         const moduleName = this.translateProductToModuleName(product, ModuleNamePurpose.install);
-        await installer.installModule(moduleName);
+        const logger = this.serviceContainer.get<ILogger>(ILogger);
+        await installer.installModule(moduleName)
+            .catch(logger.logError.bind(logger, `Error in installing the module '${moduleName}'`));
 
         return this.isInstalled(product)
             .then(isInstalled => isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore);
@@ -237,7 +239,9 @@ export class Installer implements IInstaller {
             this.outputChannel.show();
         } else {
             const terminalService = this.serviceContainer.get<ITerminalService>(ITerminalService);
-            terminalService.sendCommand(CTagsInsllationScript, []);
+            const logger = this.serviceContainer.get<ILogger>(ILogger);
+            terminalService.sendCommand(CTagsInsllationScript, [])
+                .catch(logger.logError.bind(logger, `Failed to install ctags. Script sent '${CTagsInsllationScript}'.`));
         }
         return InstallerResponse.Ignore;
     }
@@ -269,7 +273,7 @@ export class Installer implements IInstaller {
     }
     // tslint:disable-next-line:no-any
     private updateSetting(setting: string, value: any, resource?: Uri) {
-        if (resource && !workspace.getWorkspaceFolder(resource)) {
+        if (resource && workspace.getWorkspaceFolder(resource)) {
             const pythonConfig = workspace.getConfiguration('python', resource);
             return pythonConfig.update(setting, value, ConfigurationTarget.Workspace);
         } else {

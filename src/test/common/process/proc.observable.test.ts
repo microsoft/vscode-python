@@ -157,7 +157,7 @@ suite('ProcessService', () => {
         }, done, done);
     });
 
-    test('execObservable should merge stdout and stderr streams', function (done) {
+    test('execObservable should send stdout and stderr streams separately', function (done) {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(7000);
         const procService = new ProcessService(new BufferDecoder());
@@ -170,9 +170,9 @@ suite('ProcessService', () => {
             'sys.stderr.write("c")', 'sys.stderr.flush()'];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { mergeStdOutErr: true });
         const outputs = [
-            { out: '1', source: 'stdout' }, { out: 'a', source: 'stdout' },
-            { out: '2', source: 'stdout' }, { out: 'b', source: 'stdout' },
-            { out: '3', source: 'stdout' }, { out: 'c', source: 'stdout' }];
+            { out: '1', source: 'stdout' }, { out: 'a', source: 'stderr' },
+            { out: '2', source: 'stdout' }, { out: 'b', source: 'stderr' },
+            { out: '3', source: 'stdout' }, { out: 'c', source: 'stderr' }];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {

@@ -30,7 +30,7 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
 
 export type ExecutionResult<T extends string | Buffer> = {
     stdout: T;
-    stderr?: string;
+    stderr?: T;
 };
 
 export const IProcessService = Symbol('IProcessService');

@@ -1,4 +1,5 @@
 import { Uri } from 'vscode';
+import { PythonSettings } from '../../common/configSettings';
 import { Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/managers/baseTestManager';
@@ -6,6 +7,9 @@ import { TestDiscoveryOptions, TestRunOptions, Tests, TestStatus, TestsToRun } f
 import { runTest } from './runner';
 
 export class TestManager extends BaseTestManager {
+    public get enabled() {
+        return PythonSettings.getInstance(this.workspaceFolder).unitTest.unittestEnabled;
+    }
     constructor(workspaceFolder: Uri, rootDirectory: string, serviceContainer: IServiceContainer) {
         super('unittest', Product.unittest, workspaceFolder, rootDirectory, serviceContainer);
     }

@@ -55,6 +55,7 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
 export class MockTestManagerWithRunningTests extends BaseTestManager {
     // tslint:disable-next-line:no-any
     public readonly runnerDeferred = createDeferred<any>();
+    public readonly enabled = true;
     // tslint:disable-next-line:no-any
     public readonly discoveryDeferred = createDeferred<Tests>();
     constructor(testProvider: TestProvider, product: Product, workspaceFolder: Uri, rootDirectory: string,

@@ -1,3 +1,4 @@
+import { ModuleNotInstalledError } from './errors/moduleNotInstalledError';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const tmp = require('tmp');
 
@@ -8,6 +9,10 @@ export function isNotInstalledError(error: Error): boolean {
     if (!isError) {
         return false;
     }
+    if (error instanceof ModuleNotInstalledError) {
+        return true;
+    }
+
     const isModuleNoInstalledError = errorObj.code === 1 && error.message.indexOf('No module named') >= 0;
     return errorObj.code === 'ENOENT' || errorObj.code === 127 || isModuleNoInstalledError;
 }

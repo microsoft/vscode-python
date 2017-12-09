@@ -8,7 +8,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { PythonSettings } from '../configSettings';
 import { ITerminalService } from '../terminal/types';
 import { ExecutionInfo } from '../types';
-import { IModuleInstaller } from './types';
 
 @injectable()
 export abstract class ModuleInstaller {
@@ -19,9 +18,9 @@ export abstract class ModuleInstaller {
 
         if (executionInfo.moduleName) {
             const pythonPath = PythonSettings.getInstance(resource).pythonPath;
-            terminalService.sendCommand(pythonPath, ['-m', 'pip'].concat(executionInfo.args));
+            await terminalService.sendCommand(pythonPath, ['-m', 'pip'].concat(executionInfo.args));
         } else {
-            terminalService.sendCommand(executionInfo.execPath, executionInfo.args);
+            await terminalService.sendCommand(executionInfo.execPath!, executionInfo.args);
         }
     }
     public abstract isSupported(resource?: Uri): Promise<boolean>;

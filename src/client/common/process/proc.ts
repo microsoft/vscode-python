@@ -48,7 +48,6 @@ export class ProcessService implements IProcessService {
                 if (source === 'stderr' && options.throwOnStdErr) {
                     subscriber.error(new StdErrError(out));
                 } else {
-                    source = options.mergeStdOutErr ? 'stdout' : source;
                     subscriber.next({ source, out: out });
                 }
             };
@@ -103,6 +102,7 @@ export class ProcessService implements IProcessService {
         on(proc.stderr, 'data', (data: Buffer) => {
             if (options.mergeStdOutErr) {
                 stdoutBuffers.push(data);
+                stderrBuffers.push(data);
             } else {
                 stderrBuffers.push(data);
             }

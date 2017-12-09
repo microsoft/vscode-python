@@ -15,14 +15,12 @@ export class TerminalService implements ITerminalService {
     private terminal?: Terminal;
     private textPreviouslySentToTerminal: boolean = false;
     constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
-    public sendCommand(command: string, args: string[]): Promise<void> {
+    public async sendCommand(command: string, args: string[]): Promise<void> {
         const text = this.buildTerminalText(command, args);
-        return this.getTerminal()
-            .then(term => {
-                term.sendText(text, true);
-                term.show();
-                this.textPreviouslySentToTerminal = true;
-            });
+        const term = await this.getTerminal();
+        term.show(false);
+        term.sendText(text, true);
+        this.textPreviouslySentToTerminal = true;
     }
 
     private async getTerminal() {
@@ -30,6 +28,7 @@ export class TerminalService implements ITerminalService {
             return this.terminal!;
         }
         this.terminal = window.createTerminal('Python');
+        this.terminal.show(false);
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
         // However if we have already sent text to the terminal, then no need to wait
@@ -46,6 +45,8 @@ export class TerminalService implements ITerminalService {
         const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         disposables.push(this.terminal);
         disposables.push(handler);
+
+        return this.terminal;
     }
 
     private buildTerminalText(command: string, args: string[]) {

@@ -22,14 +22,14 @@ export class TestManagerService implements ITestManagerService {
         }
 
         // tslint:disable-next-line:no-non-null-assertion
-        const instance = this.cachedTestManagers.get(preferredTestManager);
-        if (!instance) {
+        if (!this.cachedTestManagers.has(preferredTestManager)) {
             const testDirectory = this.getTestWorkingDirectory();
             const testProvider = this.testsHelper.parseProviderName(preferredTestManager);
             const factory = this.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
             this.cachedTestManagers.set(preferredTestManager, factory(testProvider, this.wkspace, testDirectory));
         }
-        return this.cachedTestManagers.get(preferredTestManager)!;
+        const testManager = this.cachedTestManagers.get(preferredTestManager)!;
+        return testManager.enabled ? testManager : undefined;
     }
     public getTestWorkingDirectory() {
         const settings = PythonSettings.getInstance(this.wkspace);
