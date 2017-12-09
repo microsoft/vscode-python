@@ -74,3 +74,9 @@ export interface IInstaller {
     disableLinter(product: Product, resource?: Uri): Promise<void>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
+
+export const IPathUtils = Symbol('IPathUtils');
+
+export interface IPathUtils {
+    getPathVariableName(): 'Path' | 'PATH';
+}

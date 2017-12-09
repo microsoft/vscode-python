@@ -36,19 +36,23 @@ suite('ProcessService', () => {
 
     test('execObservable should stream output with new lines', function (done) {
         // tslint:disable-next-line:no-invalid-this
-        this.timeout(5000);
+        this.timeout(10000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'import time',
-            'print("1")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'print("2")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'print("3")'];
+            'print("1")', 'sys.stdout.flush()', 'time.sleep(2)',
+            'print("2")', 'sys.stdout.flush()', 'time.sleep(2)',
+            'print("3")', 'sys.stdout.flush()', 'time.sleep(2)'];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
+            // Ignore line breaks.
+            if (output.out.trim().length === 0) {
+                return;
+            }
             const expectedValue = outputs.shift();
-            if (expectedValue !== output.out.trim() || expectedValue === output.out) {
+            if (expectedValue !== output.out.trim() && expectedValue === output.out) {
                 done(`Received value ${output.out} is not same as the expectd value ${expectedValue}`);
             }
             if (output.source !== 'stdout') {
@@ -59,17 +63,21 @@ suite('ProcessService', () => {
 
     test('execObservable should stream output without new lines', function (done) {
         // tslint:disable-next-line:no-invalid-this
-        this.timeout(5000);
+        this.timeout(10000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'import time',
-            'sys.stdout.write("1")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stdout.write("2")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stdout.write("3")'];
+            'sys.stdout.write("1")', 'sys.stdout.flush()', 'time.sleep(2)',
+            'sys.stdout.write("2")', 'sys.stdout.flush()', 'time.sleep(2)',
+            'sys.stdout.write("3")', 'sys.stdout.flush()', 'time.sleep(2)'];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
+            // Ignore line breaks.
+            if (output.out.trim().length === 0) {
+                return;
+            }
             const expectedValue = outputs.shift();
             if (expectedValue !== output.out) {
                 done(`Received value ${output.out} is not same as the expectd value ${expectedValue}`);
@@ -86,7 +94,7 @@ suite('ProcessService', () => {
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'import time',
             'print("1")', 'sys.stdout.flush()', 'time.sleep(10)',
-            'print("2")', 'sys.stdout.flush()'];
+            'print("2")', 'sys.stdout.flush()', 'time.sleep(2)'];
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { token: cancellationToken.token });
 
@@ -110,7 +118,7 @@ suite('ProcessService', () => {
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'import time',
             'print("1")', 'sys.stdout.flush()', 'time.sleep(10)',
-            'print("2")', 'sys.stdout.flush()'];
+            'print("2")', 'sys.stdout.flush()', 'time.sleep(2)'];
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { token: cancellationToken.token });
         let procKilled = false;
@@ -118,6 +126,10 @@ suite('ProcessService', () => {
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
             const value = output.out.trim();
+            // Ignore line breaks.
+            if (value.length === 0) {
+                return;
+            }
             if (value === '1') {
                 procKilled = true;
                 result.proc.kill();
@@ -132,15 +144,15 @@ suite('ProcessService', () => {
 
     test('execObservable should stream stdout and stderr separately', function (done) {
         // tslint:disable-next-line:no-invalid-this
-        this.timeout(7000);
+        this.timeout(20000);
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'import time',
-            'print("1")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stderr.write("a")', 'sys.stderr.flush()', 'time.sleep(1)',
-            'print("2")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stderr.write("b")', 'sys.stderr.flush()', 'time.sleep(1)',
-            'print("3")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stderr.write("c")', 'sys.stderr.flush()'];
+            'print("1")', 'sys.stdout.flush()', 'time.sleep(2)',
+            'sys.stderr.write("a")', 'sys.stderr.flush()', 'time.sleep(2)',
+            'print("2")', 'sys.stdout.flush()', 'time.sleep(2)',
+            'sys.stderr.write("b")', 'sys.stderr.flush()', 'time.sleep(2)',
+            'print("3")', 'sys.stdout.flush()', 'time.sleep(2)',
+            'sys.stderr.write("c")', 'sys.stderr.flush()', 'time.sleep(2)'];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = [
             { out: '1', source: 'stdout' }, { out: 'a', source: 'stderr' },
@@ -150,6 +162,10 @@ suite('ProcessService', () => {
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
             const value = output.out.trim();
+            // Ignore line breaks.
+            if (value.length === 0) {
+                return;
+            }
             const expectedOutput = outputs.shift()!;
 
             expect(value).to.be.equal(expectedOutput.out, 'Expected output is incorrect');
@@ -167,7 +183,7 @@ suite('ProcessService', () => {
             'print("2")', 'sys.stdout.flush()', 'time.sleep(1)',
             'sys.stderr.write("b")', 'sys.stderr.flush()', 'time.sleep(1)',
             'print("3")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stderr.write("c")', 'sys.stderr.flush()'];
+            'sys.stderr.write("c")', 'sys.stderr.flush()', 'time.sleep(1)'];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { mergeStdOutErr: true });
         const outputs = [
             { out: '1', source: 'stdout' }, { out: 'a', source: 'stderr' },
@@ -177,6 +193,10 @@ suite('ProcessService', () => {
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
             const value = output.out.trim();
+            // Ignore line breaks.
+            if (value.length === 0) {
+                return;
+            }
             const expectedOutput = outputs.shift()!;
 
             expect(value).to.be.equal(expectedOutput.out, 'Expected output is incorrect');
