@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import 'reflect-metadata';
-import { Disposable } from 'vscode';
 import { IServiceManager } from '../ioc/types';
 import { CondaInstaller } from './installer/condaInstaller';
 import { Installer } from './installer/installer';
@@ -16,7 +15,7 @@ import { RegistryImplementation } from './platform/registry';
 import { IRegistry } from './platform/types';
 import { TerminalService } from './terminal/service';
 import { ITerminalService } from './terminal/types';
-import { IInstaller, ILogger, IPersistentStateFactory, Is64Bit, IsWindows } from './types';
+import { IInstaller, ILogger, IPathUtils, IPersistentStateFactory, Is64Bit, IsWindows } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);

@@ -4,7 +4,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { PYTHON_INTERPRETER } from '../../telemetry/constants';
 import { StopWatch } from '../../telemetry/stopWatch';
 import { PythonInterpreterTelemetry } from '../../telemetry/types';
-import { IInterpreterVersionService } from '../interpreterVersion';
+import { IInterpreterVersionService } from '../contracts';
 import { IPythonPathUpdaterServiceFactory } from './types';
 
 export class PythonPathUpdaterService {
