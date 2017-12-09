@@ -4,20 +4,20 @@ import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { EnumEx } from '../../client/common/enumUtils';
 import { createDeferred } from '../../client/common/helpers';
 import { Installer } from '../../client/common/installer/installer';
-import { PipInstaller } from '../../client/common/installer/pipInstaller';
 import { IModuleInstaller } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
+import { PathUtils } from '../../client/common/platform/pathUtils';
 import { IProcessService } from '../../client/common/process/types';
 import { ITerminalService } from '../../client/common/terminal/types';
-import { IInstaller, ILogger, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product } from '../../client/common/types';
+import { IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product } from '../../client/common/types';
 import { updateSetting } from '../common';
 import { rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { MockTerminalService } from '../mocks/terminalService';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
-import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST, IS_TRAVIS } from './../initialize';
+import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Installer', () => {
@@ -49,6 +49,7 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
         ioc.serviceManager.addSingleton<ILogger>(ILogger, Logger);
         ioc.serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
+        ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
 
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingleton<ITerminalService>(ITerminalService, MockTerminalService);
@@ -73,7 +74,7 @@ suite('Installer', () => {
             }
             callback({ stdout: '' });
         });
-        const isInstalled = await installer.isInstalled(product, resource);
+        await installer.isInstalled(product, resource);
         await checkInstalledDef.promise;
     }
     EnumEx.getNamesAndValues<Product>(Product).forEach(prod => {
@@ -89,10 +90,9 @@ suite('Installer', () => {
 
     async function testInstallingProduct(product: Product) {
         const installer = ioc.serviceContainer.get<Installer>(IInstaller);
-        const processService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
         const checkInstalledDef = createDeferred<boolean>();
         const moduleInstallers = ioc.serviceContainer.getAll<MockModuleInstaller>(IModuleInstaller);
-        const moduleInstallerOne = moduleInstallers.find(item => item.displayName === 'two');
+        const moduleInstallerOne = moduleInstallers.find(item => item.displayName === 'two')!;
 
         moduleInstallerOne.on('installModule', moduleName => {
             const installName = installer.translateProductToModuleName(product, ModuleNamePurpose.install);
@@ -100,7 +100,7 @@ suite('Installer', () => {
                 checkInstalledDef.resolve();
             }
         });
-        const isInstalled = await installer.install(product);
+        await installer.install(product);
         await checkInstalledDef.promise;
     }
     EnumEx.getNamesAndValues<Product>(Product).forEach(prod => {
