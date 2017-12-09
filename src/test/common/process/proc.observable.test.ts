@@ -21,19 +21,6 @@ suite('ProcessService', () => {
     setup(initialize);
     teardown(initialize);
 
-    test('execObservable should output print statements', async () => {
-        const procService = new ProcessService(new BufferDecoder());
-        const printOutput = '1234';
-        const result = procService.execObservable(pythonPath, ['-c', `print("${printOutput}")`]);
-
-        expect(result).not.to.be.an('undefined', 'result is undefined');
-        const output = await result.out.toPromise();
-        expect(output.source).to.be.equal('stdout', 'Source is incorrect');
-        expect(output.out).to.have.length.greaterThan(0, 'Invalid output length');
-        const stdOut = output.out.trim();
-        expect(stdOut).to.equal(printOutput, 'Output is incorrect');
-    });
-
     test('execObservable should stream output with new lines', function (done) {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(10000);
