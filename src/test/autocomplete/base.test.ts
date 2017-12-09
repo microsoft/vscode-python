@@ -118,8 +118,11 @@ suite('Autocomplete', () => {
         await vscode.window.showTextDocument(textDocument);
         const position = new vscode.Position(10, 9);
         const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
-        assert.notEqual(list.items.filter(item => item.label === 'sleep').length, 0, 'sleep not found');
-        assert.notEqual(list.items.filter(item => item.documentation.toString().startsWith('Delay execution for a given number of seconds.  The argument may be')).length, 0, 'Documentation incorrect');
+        
+        const items = list.items.filter(item => item.label === 'sleep');
+        assert.notEqual(items.length, 0, 'sleep not found');
+        
+        checkDocumentation(items[0].documentation, 'Delay execution for a given number of seconds.  The argument may be');
     });
 
     test('For custom class', done => {
@@ -153,8 +156,9 @@ suite('Autocomplete', () => {
         }).then(list => {
             const items = list.items.filter(item => item.label === 'bar');
             assert.equal(items.length, 1, 'bar not found');
-            const documentation = `说明 - keep this line, it works${EOL}delete following line, it works${EOL}如果存在需要等待审批或正在执行的任务，将不刷新页面`;
-            assert.equal(items[0].documentation, documentation, 'unicode documentation is incorrect');
+
+            const expected = `说明 - keep this line, it works${EOL}delete following line, it works${EOL}如果存在需要等待审批或正在执行的任务，将不刷新页面`;
+            checkDocumentation(items[0].documentation, expected);
         }).then(done, done);
     });
 
@@ -172,12 +176,13 @@ suite('Autocomplete', () => {
         }).then(list => {
             let items = list.items.filter(item => item.label === 'Foo');
             assert.equal(items.length, 1, 'Foo not found');
-            assert.equal(items[0].documentation, '说明', 'Foo unicode documentation is incorrect');
+            checkDocumentation(items[0].documentation, '说明');
 
             items = list.items.filter(item => item.label === 'showMessage');
             assert.equal(items.length, 1, 'showMessage not found');
-            const documentation = `Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи. ${EOL}Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.`;
-            assert.equal(items[0].documentation, documentation, 'showMessage unicode documentation is incorrect');
+            
+            const expected = `Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи. ${EOL}Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.`;
+            checkDocumentation(items[0].documentation, expected);
         }).then(done, done);
     });
 
@@ -208,3 +213,11 @@ suite('Autocomplete', () => {
         }
     });
 });
+
+function checkDocumentation(itemDoc: any, expectedContains: string): void {
+    const documentation = itemDoc as vscode.MarkdownString;
+    assert.notEqual(documentation, null, "Documentation is not MarkdownString");
+
+    assert.equal(documentation.value.indexOf(expectedContains) > 0, true, 'Documentation incorrect');
+    assert.equal(documentation.value.indexOf('```python'), 0, 'Documentation is not colorized as Python');
+}

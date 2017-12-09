@@ -7,7 +7,7 @@ import { PythonSettings } from '../common/configSettings';
 import { Tokenizer } from '../language/tokenizer';
 import { TokenType } from '../language/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
-import { HoverSource } from './hoverSource';
+import { ItemInfoSource, LanguageItemInfo } from './itemInfoSource';
 import * as proxy from './jediProxy';
 
 class DocumentPosition {
@@ -26,11 +26,11 @@ class DocumentPosition {
 
 export class CompletionSource {
     private jediFactory: JediFactory;
-    private hoverSource: HoverSource;
+    private itemInfoSource: ItemInfoSource;
 
     constructor(jediFactory: JediFactory) {
         this.jediFactory = jediFactory;
-        this.hoverSource = new HoverSource(jediFactory);
+        this.itemInfoSource = new ItemInfoSource(jediFactory);
     }
 
     public async getVsCodeCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken)
@@ -42,10 +42,10 @@ export class CompletionSource {
         return this.toVsCodeCompletions(new DocumentPosition(document, position), result, document.uri);
     }
 
-    public async getDocumentation(completionItem: vscode.CompletionItem, token: vscode.CancellationToken): Promise<string> {
+    public async getDocumentation(completionItem: vscode.CompletionItem, token: vscode.CancellationToken): Promise<LanguageItemInfo[] | undefined> {
         const documentPosition = DocumentPosition.fromObject(completionItem);
         if (documentPosition === undefined) {
-            return '';
+            return;
         }
 
         // Supply hover source with simulated document text where item in question was 'already typed'.
@@ -62,11 +62,7 @@ export class CompletionSource {
         const sourceText = `${document.getText(leadingRange)}${itemString}`;
         const range = new vscode.Range(leadingRange.end, leadingRange.end.translate(0, itemString.length));
 
-        const hoverStrings = await this.hoverSource.getHoverStringsFromText(document.uri, document.fileName, range, sourceText, token);
-        if (!hoverStrings || hoverStrings.length === 0) {
-            return '';
-        }
-        return hoverStrings.join('\n');
+        return await this.itemInfoSource.getItemInfoFromText(document.uri, document.fileName, range, sourceText, token);
     }
 
     private async getCompletionResult(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken)

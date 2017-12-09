@@ -4,18 +4,21 @@ import * as vscode from 'vscode';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
 import { HOVER_DEFINITION } from '../telemetry/constants';
-import { HoverSource } from './hoverSource';
+import { ItemInfoSource } from './itemInfoSource';
 
 export class PythonHoverProvider implements vscode.HoverProvider {
-    private hoverSource: HoverSource;
+    private itemInfoSource: ItemInfoSource;
 
     constructor(jediFactory: JediFactory) {
-        this.hoverSource = new HoverSource(jediFactory);
+        this.itemInfoSource = new ItemInfoSource(jediFactory);
     }
 
     @captureTelemetry(HOVER_DEFINITION)
     public async provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken)
         : Promise<vscode.Hover | undefined> {
-        return this.hoverSource.getVsCodeHover(document, position, token);
-    }
+            const itemInfos = await this.itemInfoSource.getItemInfoFromDocument(document, position, token);
+            if (itemInfos) {
+                return new vscode.Hover(itemInfos.map(item => item.tooltip));
+            }
+        }
 }
