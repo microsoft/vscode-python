@@ -9,12 +9,13 @@ import { PipInstaller } from '../../client/common/installer/pipInstaller';
 import { IModuleInstaller } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
+import { PathUtils } from '../../client/common/platform/pathUtils';
 import { IProcessService } from '../../client/common/process/types';
 import { ITerminalService } from '../../client/common/terminal/types';
-import { IInstaller, ILogger, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product } from '../../client/common/types';
+import { IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product } from '../../client/common/types';
 import { ICondaLocatorService } from '../../client/interpreter/contracts';
-import { updateSetting } from '../common';
 import { rootWorkspaceUri } from '../common';
+import { updateSetting } from '../common';
 import { MockCondaLocatorService } from '../interpreters/mocks';
 import { MockCondaLocator } from '../mocks/condaLocator';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
@@ -57,6 +58,7 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
         ioc.serviceManager.addSingleton<ICondaLocatorService>(ICondaLocatorService, MockCondaLocator);
+        ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
 
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingleton<ITerminalService>(ITerminalService, MockTerminalService);
