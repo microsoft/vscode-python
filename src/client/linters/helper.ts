@@ -1,10 +1,9 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import 'reflect-metadata';
-import { Uri, workspace } from 'vscode';
+import { Uri } from 'vscode';
 import { ILintingSettings, PythonSettings } from '../common/configSettings';
-import { Product, ProductExecutableAndArgs } from '../common/installer';
-import { ExecutionInfo } from '../common/types';
+import { ExecutionInfo, Product } from '../common/types';
 import { ILinterHelper, LinterId, LinterSettingsPropertyNames } from './types';
 
 @injectable()
@@ -22,7 +21,6 @@ export class LinterHelper implements ILinterHelper {
         this.linterIdMapping.set(Product.pylint, 'pylint');
     }
     public getExecutionInfo(linter: Product, customArgs: string[], resource?: Uri): ExecutionInfo {
-        const id = this.translateToId(linter);
         const settings = PythonSettings.getInstance(resource);
         const names = this.getSettingsPropertyNames(linter);
 

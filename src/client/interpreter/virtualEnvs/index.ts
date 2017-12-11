@@ -1,9 +1,11 @@
-import { IVirtualEnvironment } from './contracts';
+import { injectable, multiInject } from 'inversify';
+import { IVirtualEnvironmentIdentifier, IVirtualEnvironmentManager } from './types';
 
-export class VirtualEnvironmentManager {
-    constructor(private envs: IVirtualEnvironment[]) {
+@injectable()
+export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
+    constructor( @multiInject(IVirtualEnvironmentIdentifier) private envs: IVirtualEnvironmentIdentifier[]) {
     }
-    public detect(pythonPath: string): Promise<IVirtualEnvironment | void> {
+    public detect(pythonPath: string): Promise<IVirtualEnvironmentIdentifier | void> {
         const promises = this.envs
             .map(item => item.detect(pythonPath)
                 .then(result => {

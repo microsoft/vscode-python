@@ -10,15 +10,16 @@ import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
-import { GLOBAL_MEMENTO, IDiposableRegistry, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { SimpleConfigurationProvider } from './debugger';
-import { FeedbackService } from './feedback';
+import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { InterpreterManager } from './interpreter';
 import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
+import { ICondaLocatorService } from './interpreter/contracts';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
-import { getCondaVersion } from './interpreter/helpers';
 import { InterpreterVersionService } from './interpreter/interpreterVersion';
+import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer } from './ioc/types';
@@ -53,17 +54,13 @@ const PYTHON: vscode.DocumentFilter = { language: 'python' };
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
 
-let cont: Container;
-let serviceManager: ServiceManager;
-let serviceContainer: ServiceContainer;
-
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: vscode.ExtensionContext) {
-    cont = new Container();
-    serviceManager = new ServiceManager(cont);
-    serviceContainer = new ServiceContainer(cont);
+    const cont = new Container();
+    const serviceManager = new ServiceManager(cont);
+    const serviceContainer = new ServiceContainer(cont);
     serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
-    serviceManager.addSingletonInstance<Disposable[]>(IDiposableRegistry, context.subscriptions);
+    serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, context.subscriptions);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
 
@@ -77,14 +74,18 @@ export async function activate(context: vscode.ExtensionContext) {
     variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
     lintersRegisterTypes(serviceManager);
+    interpretersRegisterTypes(serviceManager);
+    formattersRegisterTypes(serviceManager);
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
-    sendStartupTelemetry(activated);
+    sendStartupTelemetry(activated, serviceContainer);
 
     sortImports.activate(context, standardOutputChannel);
-    const interpreterManager = new InterpreterManager();
+    const interpreterManager = new InterpreterManager(serviceContainer);
+    // This must be completed before we can continue.
     await interpreterManager.autoSetInterpreter();
+
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
     context.subscriptions.push(interpreterManager);
@@ -92,7 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService));
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
-    activateSimplePythonRefactorProvider(context, standardOutputChannel);
+    activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
     const jediFactory = new JediFactory(context.asAbsolutePath('.'));
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
@@ -119,7 +120,7 @@ export async function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(jediFactory);
-    context.subscriptions.push(vscode.languages.registerRenameProvider(PYTHON, new PythonRenameProvider(standardOutputChannel)));
+    context.subscriptions.push(vscode.languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer)));
     const definitionProvider = new PythonDefinitionProvider(jediFactory);
     context.subscriptions.push(vscode.languages.registerDefinitionProvider(PYTHON, definitionProvider));
     context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
@@ -133,7 +134,7 @@ export async function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(PYTHON, new PythonSignatureProvider(jediFactory), '(', ','));
     }
     if (pythonSettings.formatting.provider !== 'none') {
-        const formatProvider = new PythonFormattingEditProvider(context, standardOutputChannel);
+        const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
         context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
         context.subscriptions.push(vscode.languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
     }
@@ -159,7 +160,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
     tests.activate(context, unitTestOutChannel, symbolProvider, serviceContainer);
 
-    context.subscriptions.push(new WorkspaceSymbols(standardOutputChannel));
+    context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
 
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
     // In case we have CR LF
@@ -169,8 +170,6 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
     activationDeferred.resolve();
 
-    const feedbackService = new FeedbackService(persistentStateFactory);
-    context.subscriptions.push(feedbackService);
     // tslint:disable-next-line:no-unused-expression
     new BannerService(persistentStateFactory);
 
@@ -179,18 +178,17 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled));
 }
 
-function sendStartupTelemetry(activatedPromise: Promise<void>) {
+async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {
     const stopWatch = new StopWatch();
-    activatedPromise
-        .then(async () => {
-            const duration = stopWatch.elapsedTime;
-            let condaVersion: string | undefined;
-            try {
-                condaVersion = await getCondaVersion();
-                // tslint:disable-next-line:no-empty
-            } catch { }
-            const props = condaVersion ? { condaVersion } : undefined;
-            sendTelemetryEvent(EDITOR_LOAD, duration, props);
-        })
-        .catch(ex => console.error('Python Extension: sendStartupTelemetry', ex));
+    const logger = serviceContainer.get<ILogger>(ILogger);
+    try {
+        await activatedPromise;
+        const duration = stopWatch.elapsedTime;
+        const condaLocator = serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaVersion = await condaLocator.getCondaVersion().catch(() => undefined);
+        const props = condaVersion ? { condaVersion } : undefined;
+        sendTelemetryEvent(EDITOR_LOAD, duration, props);
+    } catch (ex) {
+        logger.logError('sendStartupTelemetry failed.', ex);
+    }
 }

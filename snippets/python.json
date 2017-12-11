@@ -200,7 +200,7 @@
             "async def ${1:funcname}(${2:parameter_list}):",
             "\t${3:pass}"
         ],
-        "description": "Code snippet for a async statement"
+        "description": "Code snippet for an async statement"
     },
     "async/for": {
         "prefix": "async/for",
@@ -208,7 +208,7 @@
             "async for ${1:target} in ${2:iter}:",
             "\t${3:block}"
         ],
-        "description": "Code snippet for a async for statement"
+        "description": "Code snippet for an async for statement"
     },
     "async/for/else": {
         "prefix": "async/for/else",
@@ -218,7 +218,7 @@
             "else:",
             "\t${4:block}"
         ],
-        "description": "Code snippet for a async for statement with else"
+        "description": "Code snippet for an async for statement with else"
     },
     "async/with": {
         "prefix": "async/with",
@@ -226,7 +226,7 @@
             "async with ${1:expr} as ${2:var}:",
             "\t${3:block}"
         ],
-        "description": "Code snippet for a async with statement"
+        "description": "Code snippet for an async with statement"
     },
     "ipdb": {
         "prefix": "ipdb",

@@ -1,16 +1,15 @@
-'use strict';
-
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { Product } from '../common/installer';
-import {  sendTelemetryWhenDone} from '../telemetry';
+import { Product } from '../common/types';
+import { IServiceContainer } from '../ioc/types';
+import { sendTelemetryWhenDone } from '../telemetry';
 import { FORMAT } from '../telemetry/constants';
 import { StopWatch } from '../telemetry/stopWatch';
 import { BaseFormatter } from './baseFormatter';
 
 export class YapfFormatter extends BaseFormatter {
-    constructor(outputChannel: vscode.OutputChannel) {
-        super('yapf', Product.yapf, outputChannel);
+    constructor(serviceContainer: IServiceContainer) {
+        super('yapf', Product.yapf, serviceContainer);
     }
 
     public formatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, range?: vscode.Range): Thenable<vscode.TextEdit[]> {

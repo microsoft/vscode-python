@@ -1,16 +1,19 @@
-'use strict';
 import * as child_process from 'child_process';
 import * as fs from 'fs-extra';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { VersionUtils } from '../../../common/versionUtils';
-import { ICondaLocatorService, IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
-import { AnacondaCompanyName, CONDA_RELATIVE_PY_PATH, CondaInfo } from './conda';
+import { ICondaLocatorService, IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { AnacondaCompanyName, AnacondaCompanyNames, CONDA_RELATIVE_PY_PATH, CondaInfo } from './conda';
 import { CondaHelper } from './condaHelper';
 
+@injectable()
 export class CondaEnvService implements IInterpreterLocatorService {
     private readonly condaHelper = new CondaHelper();
-    constructor(private condaLocator: ICondaLocatorService) {
+    constructor( @inject(ICondaLocatorService) private condaLocator: ICondaLocatorService,
+        @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService) {
     }
     public async getInterpreters(resource?: Uri) {
         return this.getSuggestionsFromConda();
@@ -30,7 +33,7 @@ export class CondaEnvService implements IInterpreterLocatorService {
         }
     }
     public async parseCondaInfo(info: CondaInfo) {
-        const displayName = this.condaHelper.getDisplayName(info);
+        const condaDisplayName = this.condaHelper.getDisplayName(info);
 
         // The root of the conda environment is itself a Python interpreter
         // envs reported as e.g.: /Users/bob/miniconda3/envs/someEnv.
@@ -40,23 +43,48 @@ export class CondaEnvService implements IInterpreterLocatorService {
         }
 
         const promises = envs
-            .map(env => {
+            .map(async env => {
+                const envName = path.basename(env);
+                const pythonPath = path.join(env, ...CONDA_RELATIVE_PY_PATH);
+
+                const existsPromise = fs.pathExists(pythonPath);
+                const versionPromise = this.versionService.getVersion(pythonPath, envName);
+
+                const [exists, version] = await Promise.all([existsPromise, versionPromise]);
+                if (!exists) {
+                    return;
+                }
+
+                const versionWithoutCompanyName = this.stripCompanyName(version);
+                const displayName = `${condaDisplayName} ${versionWithoutCompanyName}`.trim();
                 // If it is an environment, hence suffix with env name.
-                const interpreterDisplayName = env === info.default_prefix ? displayName : `${displayName} (${path.basename(env)})`;
+                const interpreterDisplayName = env === info.default_prefix ? displayName : `${displayName} (${envName})`;
                 // tslint:disable-next-line:no-unnecessary-local-variable
                 const interpreter: PythonInterpreter = {
-                    path: path.join(env, ...CONDA_RELATIVE_PY_PATH),
+                    path: pythonPath,
                     displayName: interpreterDisplayName,
-                    companyDisplayName: AnacondaCompanyName
+                    companyDisplayName: AnacondaCompanyName,
+                    type: InterpreterType.Conda,
+                    envName
                 };
                 return interpreter;
-            })
-            .map(async env => fs.pathExists(env.path).then(exists => exists ? env : null));
+            });
 
         return Promise.all(promises)
             .then(interpreters => interpreters.filter(interpreter => interpreter !== null && interpreter !== undefined))
             // tslint:disable-next-line:no-non-null-assertion
             .then(interpreters => interpreters.map(interpreter => interpreter!));
+    }
+    private stripCompanyName(content: string) {
+        // Strip company name from version.
+        const startOfCompanyName = AnacondaCompanyNames.reduce((index, companyName) => {
+            if (index > 0) {
+                return index;
+            }
+            return content.indexOf(`:: ${companyName}`);
+        }, -1);
+
+        return startOfCompanyName > 0 ? content.substring(0, startOfCompanyName).trim() : content;
     }
     private async getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
         return this.condaLocator.getCondaFile()

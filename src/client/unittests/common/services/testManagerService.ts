@@ -1,14 +1,13 @@
 import { Disposable, Uri } from 'vscode';
 import { PythonSettings } from '../../../common/configSettings';
-import { Product } from '../../../common/installer';
-import { IDiposableRegistry } from '../../../common/types';
+import { IDisposableRegistry, Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { ITestManager, ITestManagerFactory, ITestManagerService, ITestsHelper, UnitTestProduct } from './../types';
 
 export class TestManagerService implements ITestManagerService {
     private cachedTestManagers = new Map<Product, ITestManager>();
     constructor(private wkspace: Uri, private testsHelper: ITestsHelper, private serviceContainer: IServiceContainer) {
-        const disposables = serviceContainer.get<Disposable[]>(IDiposableRegistry);
+        const disposables = serviceContainer.get<Disposable[]>(IDisposableRegistry);
         disposables.push(this);
     }
     public dispose() {
@@ -23,14 +22,14 @@ export class TestManagerService implements ITestManagerService {
         }
 
         // tslint:disable-next-line:no-non-null-assertion
-        const instance = this.cachedTestManagers.get(preferredTestManager);
-        if (!instance) {
+        if (!this.cachedTestManagers.has(preferredTestManager)) {
             const testDirectory = this.getTestWorkingDirectory();
             const testProvider = this.testsHelper.parseProviderName(preferredTestManager);
             const factory = this.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
             this.cachedTestManagers.set(preferredTestManager, factory(testProvider, this.wkspace, testDirectory));
         }
-        return this.cachedTestManagers.get(preferredTestManager)!;
+        const testManager = this.cachedTestManagers.get(preferredTestManager)!;
+        return testManager.enabled ? testManager : undefined;
     }
     public getTestWorkingDirectory() {
         const settings = PythonSettings.getInstance(this.wkspace);

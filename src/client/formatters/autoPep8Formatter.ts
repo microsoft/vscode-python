@@ -1,16 +1,15 @@
-'use strict';
-
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { Product } from '../common/installer';
+import { Product } from '../common/installer/installer';
+import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { FORMAT } from '../telemetry/constants';
 import { StopWatch } from '../telemetry/stopWatch';
 import { BaseFormatter } from './baseFormatter';
 
 export class AutoPep8Formatter extends BaseFormatter {
-    constructor(outputChannel: vscode.OutputChannel) {
-        super('autopep8', Product.autopep8, outputChannel);
+    constructor(serviceContainer: IServiceContainer) {
+        super('autopep8', Product.autopep8, serviceContainer);
     }
 
     public formatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, range?: vscode.Range): Thenable<vscode.TextEdit[]> {

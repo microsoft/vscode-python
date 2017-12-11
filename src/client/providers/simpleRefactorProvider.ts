@@ -1,26 +1,26 @@
-'use strict';
-
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { getTextEditsFromPatch } from '../common/editor';
-import { Installer, Product } from '../common/installer';
+import { IInstaller, Product } from '../common/types';
+import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { REFACTOR_EXTRACT_FUNCTION, REFACTOR_EXTRACT_VAR } from '../telemetry/constants';
 import { StopWatch } from '../telemetry/stopWatch';
 
-interface RenameResponse {
+type RenameResponse = {
     results: [{ diff: string }];
-}
+};
 
-let installer: Installer;
+let installer: IInstaller;
 
-export function activateSimplePythonRefactorProvider(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) {
+export function activateSimplePythonRefactorProvider(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer) {
+    installer = serviceContainer.get<IInstaller>(IInstaller);
     let disposable = vscode.commands.registerCommand('python.refactorExtractVariable', () => {
         const stopWatch = new StopWatch();
         const promise = extractVariable(context.extensionPath,
-            vscode.window.activeTextEditor,
-            vscode.window.activeTextEditor.selection,
+            vscode.window.activeTextEditor!,
+            vscode.window.activeTextEditor!.selection,
             // tslint:disable-next-line:no-empty
             outputChannel).catch(() => { });
         sendTelemetryWhenDone(REFACTOR_EXTRACT_VAR, promise, stopWatch);
@@ -30,15 +30,13 @@ export function activateSimplePythonRefactorProvider(context: vscode.ExtensionCo
     disposable = vscode.commands.registerCommand('python.refactorExtractMethod', () => {
         const stopWatch = new StopWatch();
         const promise = extractMethod(context.extensionPath,
-            vscode.window.activeTextEditor,
-            vscode.window.activeTextEditor.selection,
+            vscode.window.activeTextEditor!,
+            vscode.window.activeTextEditor!.selection,
             // tslint:disable-next-line:no-empty
             outputChannel).catch(() => { });
         sendTelemetryWhenDone(REFACTOR_EXTRACT_FUNCTION, promise, stopWatch);
     });
     context.subscriptions.push(disposable);
-    installer = new Installer(outputChannel);
-    context.subscriptions.push(installer);
 }
 
 // Exported for unit testing
@@ -125,8 +123,8 @@ function extractName(extensionDir: string, textEditor: vscode.TextEditor, range:
         });
     }).then(done => {
         if (done && changeStartsAtLine >= 0) {
-            let newWordPosition: vscode.Position;
-            for (let lineNumber = changeStartsAtLine; lineNumber < textEditor.document.lineCount; lineNumber++) {
+            let newWordPosition: vscode.Position | undefined;
+            for (let lineNumber = changeStartsAtLine; lineNumber < textEditor.document.lineCount; lineNumber += 1) {
                 const line = textEditor.document.lineAt(lineNumber);
                 const indexOfWord = line.text.indexOf(newName);
                 if (indexOfWord >= 0) {
@@ -155,15 +153,15 @@ function extractName(extensionDir: string, textEditor: vscode.TextEditor, range:
                 .catch(ex => console.error('Python Extension: simpleRefactorProvider.promptToInstall', ex));
             return Promise.reject('');
         }
-        let errorMessage = error + '';
+        let errorMessage = `${error}`;
         if (typeof error === 'string') {
             errorMessage = error;
         }
         if (typeof error === 'object' && error.message) {
             errorMessage = error.message;
         }
-        outputChannel.appendLine('#'.repeat(10) + 'Refactor Output' + '#'.repeat(10));
-        outputChannel.appendLine('Error in refactoring:\n' + errorMessage);
+        outputChannel.appendLine(`${'#'.repeat(10)}Refactor Output${'#'.repeat(10)}`);
+        outputChannel.appendLine(`Error in refactoring:\n${errorMessage}`);
         vscode.window.showErrorMessage(`Cannot perform refactoring using selected element(s). (${errorMessage})`);
         return Promise.reject(error);
     });

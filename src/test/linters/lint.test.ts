@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { createDeferred } from '../../client/common/helpers';
-import { SettingToDisableProduct } from '../../client/common/installer';
+import { SettingToDisableProduct } from '../../client/common/installer/installer';
 import { IInstaller, ILogger, IOutputChannel, Product } from '../../client/common/types';
 import { execPythonFile } from '../../client/common/utils';
 import { IServiceContainer } from '../../client/ioc/types';

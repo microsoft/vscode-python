@@ -1,10 +1,7 @@
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
-import { DebugSession, OutputEvent } from 'vscode-debugadapter';
-import { IPythonProcess } from '../Common/Contracts';
+import { DebugSession } from 'vscode-debugadapter';
 import { LaunchRequestArguments } from '../Common/Contracts';
-import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
-import { LocalDebugServer } from '../DebugServers/LocalDebugServer';
 import { DebugType } from './DebugClient';
 import { LocalDebugClient } from './LocalDebugClient';
 
@@ -22,10 +19,10 @@ export class NonDebugClient extends LocalDebugClient {
         super.Stop();
         if (this.pyProc) {
             try {
-                this.pyProc.kill();
+                this.pyProc!.kill();
                 // tslint:disable-next-line:no-empty
             } catch { }
-            this.pyProc = null;
+            this.pyProc = undefined;
         }
     }
     protected handleProcessOutput(proc: ChildProcess, _failedToLaunch: (error: Error | string | Buffer) => void) {

@@ -1,12 +1,11 @@
-'use strict';
-
 import * as vscode from 'vscode';
+import { Product } from '../common/types';
+import { IServiceContainer } from '../ioc/types';
 import { BaseFormatter } from './baseFormatter';
-import { Product } from '../common/installer';
 
 export class DummyFormatter extends BaseFormatter {
-    constructor(outputChannel: vscode.OutputChannel) {
-        super('none', Product.yapf, outputChannel);
+    constructor(serviceContainer: IServiceContainer) {
+        super('none', Product.yapf, serviceContainer);
     }
 
     public formatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, range?: vscode.Range): Thenable<vscode.TextEdit[]> {

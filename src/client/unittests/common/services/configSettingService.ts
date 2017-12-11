@@ -1,5 +1,5 @@
-import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from 'vscode';
-import { Product } from '../../../common/installer';
+import { Uri, workspace, WorkspaceConfiguration } from 'vscode';
+import { Product } from '../../../common/types';
 import { ITestConfigSettingsService, UnitTestProduct } from './../types';
 
 export class TestConfigSettingsService implements ITestConfigSettingsService {
@@ -30,16 +30,12 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
     // tslint:disable-next-line:no-any
     private static async updateSetting(testDirectory: string | Uri, setting: string, value: any) {
         let pythonConfig: WorkspaceConfiguration;
-        let configTarget: ConfigurationTarget;
         const resource = typeof testDirectory === 'string' ? Uri.file(testDirectory) : testDirectory;
         if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
-            configTarget = ConfigurationTarget.Workspace;
             pythonConfig = workspace.getConfiguration('python');
         } else if (workspace.workspaceFolders.length === 1) {
-            configTarget = ConfigurationTarget.Workspace;
             pythonConfig = workspace.getConfiguration('python', workspace.workspaceFolders[0].uri);
         } else {
-            configTarget = ConfigurationTarget.Workspace;
             const workspaceFolder = workspace.getWorkspaceFolder(resource);
             if (!workspaceFolder) {
                 throw new Error(`Test directory does not belong to any workspace (${testDirectory})`);

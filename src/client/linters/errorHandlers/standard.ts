@@ -1,6 +1,5 @@
 import { OutputChannel, Uri, window } from 'vscode';
-import { Product } from '../../common/installer';
-import { ExecutionInfo, IInstaller, ILogger } from '../../common/types';
+import { ExecutionInfo, IInstaller, ILogger, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterHelper, LinterId } from '../types';
 import { BaseErrorHandler } from './baseErrorHandler';

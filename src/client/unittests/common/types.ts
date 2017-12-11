@@ -1,5 +1,6 @@
 import { CancellationToken, Disposable, OutputChannel, Uri } from 'vscode';
-import { Product } from '../../common/installer';
+import { IUnitTestSettings } from '../../common/configSettings';
+import { Product } from '../../common/types';
 import { CommandSource } from './constants';
 
 export type TestProvider = 'nosetest' | 'pytest' | 'unittest';
@@ -145,10 +146,17 @@ export interface IWorkspaceTestManagerService extends Disposable {
     getPreferredTestManager(resource: Uri): UnitTestProduct | undefined;
 }
 
+export type TestSettingsPropertyNames = {
+    enabledName: keyof IUnitTestSettings;
+    argsName: keyof IUnitTestSettings;
+    pathName?: keyof IUnitTestSettings;
+};
+
 export const ITestsHelper = Symbol('ITestsHelper');
 
 export interface ITestsHelper {
     parseProviderName(product: UnitTestProduct): TestProvider;
+    getSettingsPropertyNames(product: Product): TestSettingsPropertyNames;
     flattenTestFiles(testFiles: TestFile[]): Tests;
     placeTestFilesIntoFolders(tests: Tests): void;
 }
@@ -207,6 +215,7 @@ export interface ITestManagerServiceFactory extends Function {
 export const ITestManager = Symbol('ITestManager');
 export interface ITestManager extends Disposable {
     readonly status: TestStatus;
+    readonly enabled: boolean;
     readonly workingDirectory: string;
     readonly workspaceFolder: Uri;
     stop(): void;

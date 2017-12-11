@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { workspace } from 'vscode';
-import { Commands, PythonLanguage } from '../common/constants';
+import { OutputChannel, workspace } from 'vscode';
+import { Commands, PythonLanguage, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
-import { Installer, Product } from '../common/installer';
-import { InstallerResponse } from '../common/types';
+import { IInstaller, InstallerResponse, IOutputChannel, Product } from '../common/types';
 import { fsExistsAsync } from '../common/utils';
+import { IServiceContainer } from '../ioc/types';
 import { Generator } from './generator';
 import { WorkspaceSymbolProvider } from './provider';
 
@@ -13,14 +13,13 @@ const MAX_NUMBER_OF_ATTEMPTS_TO_INSTALL_AND_BUILD = 2;
 export class WorkspaceSymbols implements vscode.Disposable {
     private disposables: vscode.Disposable[];
     private generators: Generator[] = [];
-    private installer: Installer;
+    private readonly outputChannel: OutputChannel;
     // tslint:disable-next-line:no-any
     private timeout: any;
-    constructor(private outputChannel: vscode.OutputChannel) {
+    constructor(private serviceContainer: IServiceContainer) {
+        this.outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.disposables = [];
         this.disposables.push(this.outputChannel);
-        this.installer = new Installer();
-        this.disposables.push(this.installer);
         this.registerCommands();
         this.initializeGenerators();
         vscode.languages.registerWorkspaceSymbolProvider(new WorkspaceSymbolProvider(this.generators, this.outputChannel));
@@ -103,7 +102,8 @@ export class WorkspaceSymbols implements vscode.Disposable {
                     promptResponse = await promptPromise;
                     continue;
                 } else {
-                    promptPromise = this.installer.promptToInstall(Product.ctags, workspace.workspaceFolders[0]!.uri);
+                    const installer = this.serviceContainer.get<IInstaller>(IInstaller);
+                    promptPromise = installer.promptToInstall(Product.ctags, workspace.workspaceFolders![0]!.uri);
                     promptResponse = await promptPromise;
                 }
                 if (promptResponse !== InstallerResponse.Installed || (!token || token.isCancellationRequested)) {

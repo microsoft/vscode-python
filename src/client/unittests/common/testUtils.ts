@@ -1,14 +1,15 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import 'reflect-metadata';
+import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
 import { window } from 'vscode';
-import * as vscode from 'vscode';
+import { IUnitTestSettings } from '../../common/configSettings';
 import * as constants from '../../common/constants';
-import { Product } from '../../common/installer';
+import { Product } from '../../common/types';
 import { CommandSource } from './constants';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
-import { ITestVisitor, TestFile, TestFolder, TestProvider, Tests, TestsToRun, UnitTestProduct } from './types';
+import { ITestVisitor, TestFile, TestFolder, TestProvider, Tests, TestSettingsPropertyNames, TestsToRun, UnitTestProduct } from './types';
 import { ITestsHelper } from './types';
 
 export async function selectTestWorkspace(): Promise<Uri | undefined> {
@@ -47,17 +48,39 @@ export class TestsHelper implements ITestsHelper {
     constructor( @inject(ITestVisitor) @named('TestFlatteningVisitor') private flatteningVisitor: TestFlatteningVisitor) { }
     public parseProviderName(product: UnitTestProduct): TestProvider {
         switch (product) {
-            case Product.nosetest: {
-                return 'nosetest';
-            }
-            case Product.pytest: {
-                return 'pytest';
-            }
-            case Product.unittest: {
-                return 'unittest';
-            }
+            case Product.nosetest: return 'nosetest';
+            case Product.pytest: return 'pytest';
+            case Product.unittest: return 'unittest';
             default: {
                 throw new Error(`Unknown Test Product ${product}`);
+            }
+        }
+    }
+    public getSettingsPropertyNames(product: UnitTestProduct): TestSettingsPropertyNames {
+        const id = this.parseProviderName(product);
+        switch (id) {
+            case 'pytest': {
+                return {
+                    argsName: 'pyTestArgs' as keyof IUnitTestSettings,
+                    pathName: 'pyTestPath' as keyof IUnitTestSettings,
+                    enabledName: 'pyTestEnabled' as keyof IUnitTestSettings
+                };
+            }
+            case 'nosetest': {
+                return {
+                    argsName: 'nosetestArgs' as keyof IUnitTestSettings,
+                    pathName: 'nosetestPath' as keyof IUnitTestSettings,
+                    enabledName: 'nosetestsEnabled' as keyof IUnitTestSettings
+                };
+            }
+            case 'unittest': {
+                return {
+                    argsName: 'unittestArgs' as keyof IUnitTestSettings,
+                    enabledName: 'unittestEnabled' as keyof IUnitTestSettings
+                };
+            }
+            default: {
+                throw new Error(`Unknown Test Provider '${product}'`);
             }
         }
     }

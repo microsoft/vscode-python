@@ -1347,8 +1347,8 @@
 				},
 				"python.unitTest.pyTestPath": {
 					"type": "string",
-					"default": "py.test",
-					"description": "Path to pytest (py.test), you can use a custom version of pytest by modifying this setting to include the full path.",
+					"default": "pytest",
+					"description": "Path to pytest (pytest), you can use a custom version of pytest by modifying this setting to include the full path.",
 					"scope": "resource"
 				},
 				"python.unitTest.nosetestArgs": {

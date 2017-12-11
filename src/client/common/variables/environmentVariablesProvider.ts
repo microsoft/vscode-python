@@ -6,7 +6,7 @@ import 'reflect-metadata';
 import { Disposable, FileSystemWatcher, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../configSettings';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../platform/constants';
-import { IDiposableRegistry, IsWindows } from '../types';
+import { IDisposableRegistry, IsWindows } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 @injectable()
@@ -16,7 +16,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     private disposables: Disposable[] = [];
 
     constructor( @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
-        @inject(IDiposableRegistry) disposableRegistry: Disposable[], @inject(IsWindows) private isWidows: boolean) {
+        @inject(IDisposableRegistry) disposableRegistry: Disposable[], @inject(IsWindows) private isWidows: boolean) {
         disposableRegistry.push(this);
     }
 

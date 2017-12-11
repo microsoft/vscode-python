@@ -335,7 +335,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                     nosetestArgs: [], pyTestArgs: [], unittestArgs: [],
                     promptToConfigure: true, debugPort: 3000,
                     nosetestsEnabled: false, pyTestEnabled: false, unittestEnabled: false,
-                    nosetestPath: 'nosetests', pyTestPath: 'py.test'
+                    nosetestPath: 'nosetests', pyTestPath: 'pytest'
                 } as IUnitTestSettings;
             }
         }

@@ -1,9 +1,7 @@
 import { OutputChannel } from 'vscode';
 import { CancellationToken, TextDocument } from 'vscode';
-import { Product, ProductExecutableAndArgs } from '../common/installer';
-import { IInstaller, ILogger } from '../common/types';
+import { IInstaller, ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { execPythonFile } from './../common/utils';
 import * as baseLinter from './baseLinter';
 import { ILinterHelper } from './types';
 

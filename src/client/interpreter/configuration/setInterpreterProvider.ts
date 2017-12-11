@@ -1,11 +1,9 @@
-'use strict';
 import * as path from 'path';
 import { commands, ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri, window, workspace } from 'vscode';
 import { InterpreterManager } from '../';
 import * as settings from '../../common/configSettings';
-import { PythonInterpreter, WorkspacePythonPath } from '../contracts';
+import { IInterpreterVersionService, PythonInterpreter, WorkspacePythonPath } from '../contracts';
 import { ShebangCodeLensProvider } from '../display/shebangCodeLensProvider';
-import { IInterpreterVersionService } from '../interpreterVersion';
 import { PythonPathUpdaterService } from './pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './pythonPathUpdaterServiceFactory';
 
@@ -62,7 +60,7 @@ export class SetInterpreterProvider implements Disposable {
     private async setInterpreter() {
         const setInterpreterGlobally = !Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0;
         let configTarget = ConfigurationTarget.Global;
-        let wkspace: Uri;
+        let wkspace: Uri | undefined;
         if (!setInterpreterGlobally) {
             const targetConfig = await this.getWorkspaceToSetPythonPath();
             if (!targetConfig) {
@@ -90,13 +88,13 @@ export class SetInterpreterProvider implements Disposable {
     }
 
     private async setShebangInterpreter(): Promise<void> {
-        const shebang = await ShebangCodeLensProvider.detectShebang(window.activeTextEditor.document);
+        const shebang = await ShebangCodeLensProvider.detectShebang(window.activeTextEditor!.document);
         if (!shebang) {
             return;
         }
 
         const isGlobalChange = !Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0;
-        const workspaceFolder = workspace.getWorkspaceFolder(window.activeTextEditor.document.uri);
+        const workspaceFolder = workspace.getWorkspaceFolder(window.activeTextEditor!.document.uri);
         const isWorkspaceChange = Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length === 1;
 
         if (isGlobalChange) {
@@ -105,7 +103,7 @@ export class SetInterpreterProvider implements Disposable {
         }
 
         if (isWorkspaceChange || !workspaceFolder) {
-            await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Workspace, 'shebang', workspace.workspaceFolders[0].uri);
+            await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Workspace, 'shebang', workspace.workspaceFolders![0].uri);
             return;
         }
 

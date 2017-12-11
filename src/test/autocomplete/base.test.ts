@@ -118,10 +118,10 @@ suite('Autocomplete', () => {
         await vscode.window.showTextDocument(textDocument);
         const position = new vscode.Position(10, 9);
         const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
-        
+
         const items = list.items.filter(item => item.label === 'sleep');
         assert.notEqual(items.length, 0, 'sleep not found');
-        
+
         checkDocumentation(items[0].documentation, 'Delay execution for a given number of seconds.  The argument may be');
     });
 
@@ -180,7 +180,7 @@ suite('Autocomplete', () => {
 
             items = list.items.filter(item => item.label === 'showMessage');
             assert.equal(items.length, 1, 'showMessage not found');
-            
+
             const expected = `Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи. ${EOL}Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.`;
             checkDocumentation(items[0].documentation, expected);
         }).then(done, done);
@@ -214,9 +214,10 @@ suite('Autocomplete', () => {
     });
 });
 
+// tslint:disable-next-line:no-any
 function checkDocumentation(itemDoc: any, expectedContains: string): void {
     const documentation = itemDoc as vscode.MarkdownString;
-    assert.notEqual(documentation, null, "Documentation is not MarkdownString");
+    assert.notEqual(documentation, null, 'Documentation is not MarkdownString');
 
     assert.equal(documentation.value.indexOf(expectedContains) > 0, true, 'Documentation incorrect');
     assert.equal(documentation.value.indexOf('```python'), 0, 'Documentation is not colorized as Python');

@@ -1,6 +1,5 @@
 import { OutputChannel, Uri } from 'vscode';
-import { Product } from '../../common/installer';
-import { ExecutionInfo, IInstaller, ILogger } from '../../common/types';
+import { ExecutionInfo, IInstaller, ILogger, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IErrorHandler, ILinterHelper } from '../types';
 import { BaseErrorHandler } from './baseErrorHandler';
@@ -13,9 +12,9 @@ export class ErrorHandler implements IErrorHandler {
         helper: ILinterHelper, logger: ILogger,
         outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
         // Create chain of handlers.
-        const moduleNotInstalledErrorHandler = new ModuleNotInstalledErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
-        this.handler = new StandardErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
-        this.handler.setNextHandler(moduleNotInstalledErrorHandler);
+        const standardErrorHandler = new StandardErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
+        this.handler = new ModuleNotInstalledErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
+        this.handler.setNextHandler(standardErrorHandler);
     }
 
     public handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean> {

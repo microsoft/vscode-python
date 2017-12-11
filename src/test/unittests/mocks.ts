@@ -3,7 +3,7 @@ import { injectable } from 'inversify';
 import 'reflect-metadata';
 import { CancellationToken, Disposable, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../client/common/helpers';
-import { Product } from '../../client/common/installer';
+import { Product } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../client/unittests/common/constants';
 import { BaseTestManager } from '../../client/unittests/common/managers/baseTestManager';
@@ -55,6 +55,7 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
 export class MockTestManagerWithRunningTests extends BaseTestManager {
     // tslint:disable-next-line:no-any
     public readonly runnerDeferred = createDeferred<any>();
+    public readonly enabled = true;
     // tslint:disable-next-line:no-any
     public readonly discoveryDeferred = createDeferred<Tests>();
     constructor(testProvider: TestProvider, product: Product, workspaceFolder: Uri, rootDirectory: string,

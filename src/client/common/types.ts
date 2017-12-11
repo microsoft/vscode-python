@@ -1,12 +1,13 @@
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, Uri } from 'vscode';
-
+import { Uri } from 'vscode';
 export const IOutputChannel = Symbol('IOutputChannel');
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export const IsWindows = Symbol('IS_WINDOWS');
-export const IDiposableRegistry = Symbol('IDiposableRegistry');
+export const Is64Bit = Symbol('Is64Bit');
+export const IDisposableRegistry = Symbol('IDiposableRegistry');
 export const IMemento = Symbol('IGlobalMemento');
 export const GLOBAL_MEMENTO = Symbol('IGlobalMemento');
 export const WORKSPACE_MEMENTO = Symbol('IWorkspaceMemento');
@@ -23,7 +24,7 @@ export interface IPersistentStateFactory {
 }
 
 export type ExecutionInfo = {
-    execPath: string;
+    execPath?: string;
     moduleName?: string;
     args: string[];
     product?: Product;
@@ -59,11 +60,23 @@ export enum Product {
     rope = 14
 }
 
+export enum ModuleNamePurpose {
+    install = 1,
+    run = 2
+}
+
 export const IInstaller = Symbol('IInstaller');
 
-export interface IInstaller extends Disposable {
+export interface IInstaller {
     promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse>;
     install(product: Product, resource?: Uri): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined>;
     disableLinter(product: Product, resource?: Uri): Promise<void>;
+    translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
+}
+
+export const IPathUtils = Symbol('IPathUtils');
+
+export interface IPathUtils {
+    getPathVariableName(): 'Path' | 'PATH';
 }

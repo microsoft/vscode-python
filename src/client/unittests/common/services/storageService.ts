@@ -1,13 +1,13 @@
 import { inject, injectable } from 'inversify';
 import 'reflect-metadata';
 import { Disposable, Uri, workspace } from 'vscode';
-import { IDiposableRegistry } from '../../../common/types';
+import { IDisposableRegistry } from '../../../common/types';
 import { ITestCollectionStorageService, Tests } from './../types';
 
 @injectable()
 export class TestCollectionStorageService implements ITestCollectionStorageService {
     private testsIndexedByWorkspaceUri = new Map<string, Tests | undefined>();
-    constructor( @inject(IDiposableRegistry) disposables: Disposable[]) {
+    constructor( @inject(IDisposableRegistry) disposables: Disposable[]) {
         disposables.push(this);
     }
     public getTests(wkspace: Uri): Tests | undefined {
