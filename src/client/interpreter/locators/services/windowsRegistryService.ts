@@ -6,6 +6,7 @@ import { Uri } from 'vscode';
 import { Architecture, IRegistry, RegistryHive } from '../../../common/platform/types';
 import { Is64Bit } from '../../../common/types';
 import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
 
 // tslint:disable-next-line:variable-name
 const DefaultPythonExecutable = 'python.exe';
@@ -100,10 +101,11 @@ export class WindowsRegistryService implements IInterpreterLocatorService {
                     this.registry.getValue(key, hive, arch, 'ExecutablePath'),
                     // tslint:disable-next-line:no-non-null-assertion
                     this.getInterpreterDisplayName(tagKey, companyKey, hive, arch),
-                    this.registry.getValue(tagKey, hive, arch, 'Version'),
+                    this.registry.getValue(tagKey, hive, arch, 'SysVersion'),
                     this.getCompanyDisplayName(companyKey, hive, arch)
                 ])
                     .then(([installedPath, executablePath, displayName, version, companyDisplayName]) => {
+                        companyDisplayName = AnacondaCompanyNames.indexOf(companyDisplayName) === -1 ? companyDisplayName : AnacondaCompanyName;
                         // tslint:disable-next-line:prefer-type-cast
                         return { installPath: installedPath, executablePath, displayName, version, companyDisplayName } as InterpreterInformation;
                     });

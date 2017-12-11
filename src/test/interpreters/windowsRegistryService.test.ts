@@ -36,7 +36,7 @@ suite('Interpreters from Windows Registry', () => {
                 { key: '\\Software\\Python\\Company One', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Display Name for Company One', name: 'DisplayName' },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1') },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1', 'one.exe'), name: 'ExecutablePath' },
-                { key: '\\Software\\Python\\Company One\\Tag1', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Version.Tag1', name: 'Version' },
+                { key: '\\Software\\Python\\Company One\\Tag1', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Version.Tag1', name: 'SysVersion' },
                 { key: '\\Software\\Python\\Company One\\Tag1', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'DisplayName.Tag1', name: 'DisplayName' }
             ];
             const registry = new MockRegistry(registryKeys, registryValues);
@@ -119,14 +119,14 @@ suite('Interpreters from Windows Registry', () => {
                 { key: '\\Software\\Python\\Company One', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Display Name for Company One', name: 'DisplayName' },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1') },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1', 'python.exe'), name: 'ExecutablePath' },
-                { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path2'), name: 'Version' },
+                { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path2'), name: 'SysVersion' },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'DisplayName.Tag1', name: 'DisplayName' },
 
                 { key: '\\Software\\Python\\Company One\\Tag2\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path2') },
                 { key: '\\Software\\Python\\Company One\\Tag2\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path2', 'python.exe'), name: 'ExecutablePath' },
 
                 { key: '\\Software\\Python\\Company Two\\Tag A\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path3') },
-                { key: '\\Software\\Python\\Company Two\\Tag A\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Version.Tag A', name: 'Version' },
+                { key: '\\Software\\Python\\Company Two\\Tag A\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Version.Tag A', name: 'SysVersion' },
 
                 { key: '\\Software\\Python\\Company Two\\Tag B\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
                 { key: '\\Software\\Python\\Company Two\\Tag B\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'DisplayName.Tag B', name: 'DisplayName' },
@@ -175,14 +175,14 @@ suite('Interpreters from Windows Registry', () => {
                 { key: '\\Software\\Python\\Company One', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Display Name for Company One', name: 'DisplayName' },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'numpy', 'python.exe'), name: 'ExecutablePath' },
-                { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Version.Tag1', name: 'Version' },
+                { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Version.Tag1', name: 'SysVersion' },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'DisplayName.Tag1', name: 'DisplayName' },
 
                 { key: '\\Software\\Python\\Company One\\Tag2\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'scipy') },
                 { key: '\\Software\\Python\\Company One\\Tag2\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'scipy', 'python.exe'), name: 'ExecutablePath' },
 
                 { key: '\\Software\\Python\\Company Two\\Tag A\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1') },
-                { key: '\\Software\\Python\\Company Two\\Tag A\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Version.Tag A', name: 'Version' },
+                { key: '\\Software\\Python\\Company Two\\Tag A\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Version.Tag A', name: 'SysVersion' },
 
                 { key: '\\Software\\Python\\Company Two\\Tag B\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path2') },
                 { key: '\\Software\\Python\\Company Two\\Tag B\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'DisplayName.Tag B', name: 'DisplayName' },
@@ -234,14 +234,14 @@ suite('Interpreters from Windows Registry', () => {
                 { key: '\\Software\\Python\\Company One', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Display Name for Company One', name: 'DisplayName' },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'numpy', 'python.exe'), name: 'ExecutablePath' },
-                { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Version.Tag1', name: 'Version' },
+                { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Version.Tag1', name: 'SysVersion' },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'DisplayName.Tag1', name: 'DisplayName' },
 
                 { key: '\\Software\\Python\\Company One\\Tag2\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'non-existent-path', 'envs', 'scipy') },
                 { key: '\\Software\\Python\\Company One\\Tag2\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'non-existent-path', 'envs', 'scipy', 'python.exe'), name: 'ExecutablePath' },
 
                 { key: '\\Software\\Python\\Company Two\\Tag A\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'non-existent-path') },
-                { key: '\\Software\\Python\\Company Two\\Tag A\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Version.Tag A', name: 'Version' },
+                { key: '\\Software\\Python\\Company Two\\Tag A\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Version.Tag A', name: 'SysVersion' },
 
                 { key: '\\Software\\Python\\Company Two\\Tag B\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path2') },
                 { key: '\\Software\\Python\\Company Two\\Tag B\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'DisplayName.Tag B', name: 'DisplayName' },
