@@ -31,7 +31,7 @@ export class TerminalService implements ITerminalService {
         this.terminal.show(false);
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
-        // However if we have already sent text to the terminal, then no need to wait
+        // However if we have already sent text to the terminal, then no need to wait.
         if (!this.textPreviouslySentToTerminal) {
             await new Promise(resolve => setTimeout(resolve, 1000));
         }

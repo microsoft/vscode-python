@@ -112,9 +112,13 @@ time-critical as a new feature may be.
     * [tock] Begin applying any changes to the development process as
       agreed upon during the previous "tick" cycle
 * Day 7 (Monday)
-  * 3rd-party dependencies frozen to give CELA time to update TPN file
+  * 3rd-party dependencies frozen
+  * Ask CELA to update the TPN file
 * Day 14 (2nd Monday)
+  * Update the TPN file as instructed by CELA
+  * Bump version number
   * Code freeze
+  * Cut a `.vsix` file for testing
   * Go through
     [issues awaiting validation](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22awaiting+4-validation%22+is%3Aclosed)
     & validate they have been fixed (and not subsequently broken by
@@ -123,13 +127,14 @@ time-critical as a new feature may be.
     [documentation](https://code.visualstudio.com/docs/python/python-tutorial)
     -- including the
     [WOW](https://code.visualstudio.com/docs/languages/python) page)
-    -- is updated appropriately
+    -- has [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls)
   * Update the
     [changelog](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
-  * Write a post for the [team blog](https://aka.ms/pythonblog)
-  * Upload the new version of
-    [the extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
   * Tag the release in git
+  * Draft a post for the [team blog](https://aka.ms/pythonblog)
+
+Assuming no last-minute issues, the release should be made public
+later that same week.
 
 ### Issue triaging
 
