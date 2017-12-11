@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
-import { commands } from 'vscode';
 import { StopWatch } from './stopWatch';
 import { getTelemetryReporter } from './telemetry';
 import { TelemetryProperties } from './types';
@@ -18,11 +15,13 @@ export function sendTelemetryEvent(eventName: string, durationMs?: number, prope
         // tslint:disable-next-line:prefer-type-cast no-any
         const data = properties as any;
         Object.getOwnPropertyNames(data).forEach(prop => {
+            if (data[prop] === undefined || data[prop] === null) {
+                return;
+            }
             // tslint:disable-next-line:prefer-type-cast no-any  no-unsafe-any
             (customProperties as any)[prop] = typeof data[prop] === 'string' ? data[prop] : data[prop].toString();
         });
     }
-    commands.executeCommand('python.updateFeedbackCounter', eventName);
     reporter.sendTelemetryEvent(eventName, properties ? customProperties : undefined, measures);
 }
 

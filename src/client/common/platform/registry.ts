@@ -1,28 +1,19 @@
+import { injectable } from 'inversify';
+import 'reflect-metadata';
 import * as Registry from 'winreg';
+import { Architecture, IRegistry, RegistryHive } from './types';
+
 enum RegistryArchitectures {
     x86 = 'x86',
     x64 = 'x64'
 }
 
-export enum Architecture {
-    Unknown = 1,
-    x86 = 2,
-    x64 = 3
-}
-export enum Hive {
-    HKCU, HKLM
-}
-
-export interface IRegistry {
-    getKeys(key: string, hive: Hive, arch?: Architecture): Promise<string[]>;
-    getValue(key: string, hive: Hive, arch?: Architecture, name?: string): Promise<string | undefined | null>;
-}
-
+@injectable()
 export class RegistryImplementation implements IRegistry {
-    public async getKeys(key: string, hive: Hive, arch?: Architecture) {
+    public async getKeys(key: string, hive: RegistryHive, arch?: Architecture) {
         return getRegistryKeys({ hive: translateHive(hive)!, arch: translateArchitecture(arch), key });
     }
-    public async getValue(key: string, hive: Hive, arch?: Architecture, name: string = '') {
+    public async getValue(key: string, hive: RegistryHive, arch?: Architecture, name: string = '') {
         return getRegistryValue({ hive: translateHive(hive)!, arch: translateArchitecture(arch), key }, name);
     }
 }
@@ -69,11 +60,11 @@ function translateArchitecture(arch?: Architecture): RegistryArchitectures | und
             return;
     }
 }
-function translateHive(hive: Hive): string | undefined {
+function translateHive(hive: RegistryHive): string | undefined {
     switch (hive) {
-        case Hive.HKCU:
+        case RegistryHive.HKCU:
             return Registry.HKCU;
-        case Hive.HKLM:
+        case RegistryHive.HKLM:
             return Registry.HKLM;
         default:
             return;

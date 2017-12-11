@@ -1,5 +1,6 @@
-## Contribution
-* Please feel free to fork and submit pull requests
+# Contributing to the Python extension for Visual Studio Code
+
+## Contributing a pull request
 
 ### Prerequisites
 
@@ -13,7 +14,7 @@
 
 ### Setup
 
-```
+```shell
 git clone https://github.com/microsoft/vscode-python
 cd vscode-python
 npm install
@@ -40,9 +41,10 @@ Use the `Launch Extension` launch option.
 Run the Unit Tests via the `Launch Test` and `Launch Multiroot Tests`  launch option.
 Currently unit tests only run on [Travis](https://travis-ci.org/Microsoft/vscode-python)
 
-_Requirements_
+#### Requirements
+
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
-2. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
+1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
 
 ### Standard Debugging
 
@@ -58,7 +60,6 @@ From there use the ```Extension + Debugger``` launch option.
 
 Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-python/blob/master/CODING_STANDARDS.md).
 We have a pre-commit hook to ensure the code committed will adhere to the above coding standards.
-
 
 ## Development process
 
@@ -111,9 +112,13 @@ time-critical as a new feature may be.
     * [tock] Begin applying any changes to the development process as
       agreed upon during the previous "tick" cycle
 * Day 7 (Monday)
-  * 3rd-party dependencies frozen to give CELA time to update TPN file
+  * 3rd-party dependencies frozen
+  * Ask CELA to update the TPN file
 * Day 14 (2nd Monday)
+  * Update the TPN file as instructed by CELA
+  * Bump version number
   * Code freeze
+  * Cut a `.vsix` file for testing
   * Go through
     [issues awaiting validation](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22awaiting+4-validation%22+is%3Aclosed)
     & validate they have been fixed (and not subsequently broken by
@@ -122,13 +127,14 @@ time-critical as a new feature may be.
     [documentation](https://code.visualstudio.com/docs/python/python-tutorial)
     -- including the
     [WOW](https://code.visualstudio.com/docs/languages/python) page)
-    -- is updated appropriately
+    -- has [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls)
   * Update the
     [changelog](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
-  * Write a post for the [team blog](https://aka.ms/pythonblog)
-  * Upload the new version of
-    [the extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
   * Tag the release in git
+  * Draft a post for the [team blog](https://aka.ms/pythonblog)
+
+Assuming no last-minute issues, the release should be made public
+later that same week.
 
 ### Issue triaging
 
@@ -208,17 +214,11 @@ it should have an appropriate `closed-` label.
 ### Versioning
 
 Starting in 2018, the extension switched to
-[calendar versioning](http://calver.org/) from
-[semantic versioning](https://semver.org/) since the extension
-auto-updates and thus there is no need to care about its version
-number in terms of backwards-compatibility. As such, the major version
-is the current year, the minor version is the week of the year, and
-the micro version is how many releases there have been that week
-(starting at 0). For example, a release made on July 2, 2018 would
-have a version number of `2018.27.0`. To easily calculate the first
-release of a week, you can run the following Python code:
-```python
-import datetime
-year, week, _ = datetime.date.today().isocalendar()
-print(f"{year}.{week}.0")
-```
+[calendar versioning](http://calver.org/) since the extension
+auto-updates and thus there is no need to track its version
+number for backwards-compatibility. As such, the major version
+is the current year, the minor version is the current month, and
+the micro version is how many releases there have been that month in
+the year (starting at 0). For example, the first release in July 2018
+would be `2018.7.0`, the second release that month would be
+`2018.7.1`, etc.

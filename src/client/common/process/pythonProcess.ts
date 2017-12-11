@@ -3,6 +3,8 @@
 
 import { injectable } from 'inversify';
 import 'reflect-metadata';
+import { ErrorUtils } from '../errors/errorUtils';
+import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 import { EnvironmentVariables } from '../variables/types';
 import { ExecutionResult, IProcessService, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from './types';
 
@@ -48,6 +50,16 @@ export class PythonExecutionService implements IPythonExecutionService {
         if (this.envVars) {
             opts.env = this.envVars;
         }
-        return this.procService.exec(this.pythonPath, ['-m', moduleName, ...args], opts);
+        const result = await this.procService.exec(this.pythonPath, ['-m', moduleName, ...args], opts);
+
+        // If a module is not installed we'll have something in stderr.
+        if (moduleName && ErrorUtils.outputHasModuleNotInstalledError(moduleName!, result.stderr)) {
+            const isInstalled = await this.isModuleInstalled(moduleName!);
+            if (!isInstalled) {
+                throw new ModuleNotInstalledError(moduleName!);
+            }
+        }
+
+        return result;
     }
 }

@@ -5,13 +5,15 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import 'reflect-metadata';
-import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../platform/constants';
-import { IsWindows } from '../types';
+import { IPathUtils } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
-    constructor( @inject(IsWindows) private isWidows: boolean) { }
+    private readonly pathVariable: 'PATH' | 'Path';
+    constructor( @inject(IPathUtils) pathUtils: IPathUtils) {
+        this.pathVariable = pathUtils.getPathVariableName();
+    }
     public async parseFile(filePath: string): Promise<EnvironmentVariables | undefined> {
         const exists = await fs.pathExists(filePath);
         if (!exists) {
@@ -27,8 +29,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
                     return resolve(undefined);
                 }
                 this.appendPythonPath(vars, process.env.PYTHONPATH);
-                const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
-                this.appendPath(vars, process.env[pathVariable]);
+                this.appendPath(vars, process.env[this.pathVariable]);
                 resolve(vars);
             });
         });
@@ -37,8 +38,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         if (!target) {
             return;
         }
-        const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
-        const settingsNotToMerge = ['PYTHONPATH', pathVariable];
+        const settingsNotToMerge = ['PYTHONPATH', this.pathVariable];
         Object.keys(source).forEach(setting => {
             if (settingsNotToMerge.indexOf(setting) >= 0) {
                 return;
@@ -55,12 +55,10 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         return this.appendOrPrependPaths(vars, 'PYTHONPATH', true, ...pythonPaths);
     }
     public prependPath(vars: EnvironmentVariables, ...paths: string[]) {
-        const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
-        return this.appendOrPrependPaths(vars, pathVariable, false, ...paths);
+        return this.appendOrPrependPaths(vars, this.pathVariable, false, ...paths);
     }
     public appendPath(vars: EnvironmentVariables, ...paths: string[]) {
-        const pathVariable = this.isWidows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
-        return this.appendOrPrependPaths(vars, pathVariable, true, ...paths);
+        return this.appendOrPrependPaths(vars, this.pathVariable, true, ...paths);
     }
     private appendOrPrependPaths(vars: EnvironmentVariables, variableName: 'PATH' | 'Path' | 'PYTHONPATH', append: boolean, ...pythonPaths: string[]) {
         const pathToInsert = pythonPaths.filter(item => typeof item === 'string' && item.length > 0).join(path.delimiter);

@@ -2,8 +2,7 @@ import * as vscode from 'vscode';
 import { Disposable, OutputChannel, Uri, workspace } from 'vscode';
 import { IPythonSettings, PythonSettings } from '../../../common/configSettings';
 import { isNotInstalledError } from '../../../common/helpers';
-import { Installer, Product } from '../../../common/installer';
-import { IDiposableRegistry, IOutputChannel } from '../../../common/types';
+import { IDisposableRegistry, IInstaller, IOutputChannel, Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry/index';
@@ -20,6 +19,7 @@ enum CancellationTokenType {
 
 export abstract class BaseTestManager implements ITestManager {
     protected readonly settings: IPythonSettings;
+    public abstract get enabled(): boolean;
     protected get outputChannel() {
         return this._outputChannel;
     }
@@ -34,14 +34,19 @@ export abstract class BaseTestManager implements ITestManager {
     private _status: TestStatus = TestStatus.Unknown;
     private testDiscoveryCancellationTokenSource?: vscode.CancellationTokenSource;
     private testRunnerCancellationTokenSource?: vscode.CancellationTokenSource;
-    private installer: Installer;
+    private _installer: IInstaller;
     private discoverTestsPromise?: Promise<Tests>;
+    private get installer(): IInstaller {
+        if (!this._installer) {
+            this._installer = this.serviceContainer.get<IInstaller>(IInstaller);
+        }
+        return this._installer;
+    }
     constructor(public readonly testProvider: TestProvider, private product: Product, public readonly workspaceFolder: Uri, protected rootDirectory: string,
         protected serviceContainer: IServiceContainer) {
         this._status = TestStatus.Unknown;
-        this.installer = new Installer();
         this.settings = PythonSettings.getInstance(this.rootDirectory ? Uri.file(this.rootDirectory) : undefined);
-        const disposables = serviceContainer.get<Disposable[]>(IDiposableRegistry);
+        const disposables = serviceContainer.get<Disposable[]>(IDisposableRegistry);
         disposables.push(this);
         this._outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         this.testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);

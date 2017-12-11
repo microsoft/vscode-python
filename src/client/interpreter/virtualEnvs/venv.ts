@@ -1,13 +1,17 @@
-import { IVirtualEnvironment } from "./contracts";
+import { injectable } from 'inversify';
 import * as path from 'path';
+import 'reflect-metadata';
 import { fsExistsAsync } from '../../common/utils';
+import { InterpreterType } from '../contracts';
+import { IVirtualEnvironmentIdentifier } from './types';
 
 const pyEnvCfgFileName = 'pyvenv.cfg';
 
-export class VEnv implements IVirtualEnvironment {
+@injectable()
+export class VEnv implements IVirtualEnvironmentIdentifier {
     public readonly name: string = 'venv';
-
-    detect(pythonPath: string): Promise<boolean> {
+    public readonly type = InterpreterType.VEnv;
+    public detect(pythonPath: string): Promise<boolean> {
         const dir = path.dirname(pythonPath);
         const pyEnvCfgPath = path.join(dir, '..', pyEnvCfgFileName);
         return fsExistsAsync(pyEnvCfgPath);

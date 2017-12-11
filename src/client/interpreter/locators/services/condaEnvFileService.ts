@@ -1,15 +1,22 @@
-'use strict';
 import * as fs from 'fs-extra';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { IS_WINDOWS } from '../../../common/configSettings';
-import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
-import { IInterpreterVersionService } from '../../interpreterVersion';
+import {
+    ICondaEnvironmentFile,
+    IInterpreterLocatorService,
+    IInterpreterVersionService,
+    InterpreterType,
+    PythonInterpreter
+} from '../../contracts';
 import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName, CONDA_RELATIVE_PY_PATH } from './conda';
 
+@injectable()
 export class CondaEnvFileService implements IInterpreterLocatorService {
-    constructor(private condaEnvironmentFile: string,
-        private versionService: IInterpreterVersionService) {
+    constructor( @inject(ICondaEnvironmentFile) private condaEnvironmentFile: string,
+        @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService) {
     }
     public async getInterpreters(_?: Uri) {
         return this.getSuggestionsFromConda();
@@ -46,7 +53,8 @@ export class CondaEnvFileService implements IInterpreterLocatorService {
                     displayName: `${AnacondaDisplayName} ${version} (${envName})`,
                     path: interpreter,
                     companyDisplayName: AnacondaCompanyName,
-                    version: version
+                    version: version,
+                    type: InterpreterType.Conda
                 };
                 return info;
             });

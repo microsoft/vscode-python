@@ -66,30 +66,6 @@
                     "fileLocation": "relative"
                 }
             ]
-        },
-        {
-            "label": "Hygiene (staged)",
-            "type": "gulp",
-            "task": "hygiene-staged",
-            "problemMatcher": [
-                "$tsc",
-                {
-                    "base": "$tslint5",
-                    "fileLocation": "relative"
-                }
-            ]
-        },
-        {
-            "label": "Hygiene (all)",
-            "type": "gulp",
-            "task": "hygiene",
-            "problemMatcher": [
-                "$tsc",
-                {
-                    "base": "$tslint5",
-                    "fileLocation": "relative"
-                }
-            ]
         }
     ]
 }

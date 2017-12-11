@@ -1,13 +1,12 @@
 import * as child_process from 'child_process';
+import { injectable } from 'inversify';
+import 'reflect-metadata';
 import { getInterpreterVersion } from '../common/utils';
-
-export interface IInterpreterVersionService {
-    getVersion(pythonPath: string, defaultValue: string): Promise<string>;
-    getPipVersion(pythonPath: string): Promise<string>;
-}
+import { IInterpreterVersionService } from './contracts';
 
 const PIP_VERSION_REGEX = '\\d\\.\\d(\\.\\d)+';
 
+@injectable()
 export class InterpreterVersionService implements IInterpreterVersionService {
     public async getVersion(pythonPath: string, defaultValue: string): Promise<string> {
         return getInterpreterVersion(pythonPath)

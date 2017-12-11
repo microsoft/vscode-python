@@ -5,7 +5,7 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { Product } from '../../client/common/installer';
+import { Product } from '../../client/common/types';
 import { CANCELLATION_REASON, CommandSource, UNITTEST_PROVIDER } from '../../client/unittests/common/constants';
 import { ITestDiscoveryService } from '../../client/unittests/common/types';
 import { initialize, initializeTest } from '../initialize';

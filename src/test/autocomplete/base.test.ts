@@ -118,8 +118,11 @@ suite('Autocomplete', () => {
         await vscode.window.showTextDocument(textDocument);
         const position = new vscode.Position(10, 9);
         const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
-        assert.notEqual(list.items.filter(item => item.label === 'sleep').length, 0, 'sleep not found');
-        assert.notEqual(list.items.filter(item => item.documentation.toString().startsWith('Delay execution for a given number of seconds.  The argument may be')).length, 0, 'Documentation incorrect');
+
+        const items = list.items.filter(item => item.label === 'sleep');
+        assert.notEqual(items.length, 0, 'sleep not found');
+
+        checkDocumentation(items[0], 'Delay execution for a given number of seconds.  The argument may be');
     });
 
     test('For custom class', done => {
@@ -151,9 +154,11 @@ suite('Autocomplete', () => {
             const position = new vscode.Position(25, 4);
             return vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
         }).then(list => {
-            assert.equal(list.items.filter(item => item.label === 'bar').length, 1, 'bar not found');
-            const documentation = `说明 - keep this line, it works${EOL}delete following line, it works${EOL}如果存在需要等待审批或正在执行的任务，将不刷新页面`;
-            assert.equal(list.items.filter(item => item.label === 'bar')[0].documentation, documentation, 'unicode documentation is incorrect');
+            const items = list.items.filter(item => item.label === 'bar');
+            assert.equal(items.length, 1, 'bar not found');
+
+            const expected = `说明 - keep this line, it works${EOL}delete following line, it works${EOL}如果存在需要等待审批或正在执行的任务，将不刷新页面`;
+            checkDocumentation(items[0], expected);
         }).then(done, done);
     });
 
@@ -169,12 +174,15 @@ suite('Autocomplete', () => {
             const position = new vscode.Position(1, 5);
             return vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
         }).then(list => {
-            assert.equal(list.items.filter(item => item.label === 'Foo').length, 1, 'Foo not found');
-            assert.equal(list.items.filter(item => item.label === 'Foo')[0].documentation, '说明', 'Foo unicode documentation is incorrect');
+            let items = list.items.filter(item => item.label === 'Foo');
+            assert.equal(items.length, 1, 'Foo not found');
+            checkDocumentation(items[0], '说明');
 
-            assert.equal(list.items.filter(item => item.label === 'showMessage').length, 1, 'showMessage not found');
-            const documentation = `Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи. ${EOL}Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.`;
-            assert.equal(list.items.filter(item => item.label === 'showMessage')[0].documentation, documentation, 'showMessage unicode documentation is incorrect');
+            items = list.items.filter(item => item.label === 'showMessage');
+            assert.equal(items.length, 1, 'showMessage not found');
+
+            const expected = `Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи. ${EOL}Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.`;
+            checkDocumentation(items[0], expected);
         }).then(done, done);
     });
 
@@ -205,3 +213,13 @@ suite('Autocomplete', () => {
         }
     });
 });
+
+// tslint:disable-next-line:no-any
+function checkDocumentation(item: vscode.CompletionItem, expectedContains: string): void {
+    const documentation = item.documentation as vscode.MarkdownString;
+    assert.notEqual(documentation, null, 'Documentation is not MarkdownString');
+
+    const inDoc = documentation.value.indexOf(expectedContains) >= 0;
+    const inDetails = item.detail.indexOf(expectedContains) >= 0;
+    assert.equal(inDoc !== inDetails, true, 'Documentation incorrect');
+}

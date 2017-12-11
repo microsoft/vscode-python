@@ -1,13 +1,17 @@
-import { IVirtualEnvironment } from "./contracts";
+import { injectable } from 'inversify';
 import * as path from 'path';
+import 'reflect-metadata';
 import { fsExistsAsync } from '../../common/utils';
+import { InterpreterType } from '../contracts';
+import { IVirtualEnvironmentIdentifier } from './types';
 
 const OrigPrefixFile = 'orig-prefix.txt';
 
-export class VirtualEnv implements IVirtualEnvironment {
+@injectable()
+export class VirtualEnv implements IVirtualEnvironmentIdentifier {
     public readonly name: string = 'virtualenv';
-
-    detect(pythonPath: string): Promise<boolean> {
+    public readonly type = InterpreterType.VirtualEnv;
+    public detect(pythonPath: string): Promise<boolean> {
         const dir = path.dirname(pythonPath);
         const origPrefixFile = path.join(dir, '..', 'lib', OrigPrefixFile);
         return fsExistsAsync(origPrefixFile);

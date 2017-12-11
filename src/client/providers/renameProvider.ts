@@ -1,32 +1,33 @@
-'use strict';
-
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { OutputChannel, ProviderResult } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
+import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
-import { Installer, Product } from '../common/installer';
+import { IInstaller, IOutputChannel, Product } from '../common/types';
+import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
 import { captureTelemetry } from '../telemetry';
 import { REFACTOR_RENAME } from '../telemetry/constants';
 
 const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
-interface RenameResponse {
+type RenameResponse = {
     results: [{ diff: string }];
-}
+};
 
 export class PythonRenameProvider implements vscode.RenameProvider {
-    private installer: Installer;
-    constructor(private outputChannel: vscode.OutputChannel) {
-        this.installer = new Installer(outputChannel);
+    private readonly outputChannel: OutputChannel;
+    constructor(private serviceContainer: IServiceContainer) {
+        this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     }
     @captureTelemetry(REFACTOR_RENAME)
-    public provideRenameEdits(document: vscode.TextDocument, position: vscode.Position, newName: string, token: vscode.CancellationToken): Thenable<vscode.WorkspaceEdit> {
+    public provideRenameEdits(document: vscode.TextDocument, position: vscode.Position, newName: string, token: vscode.CancellationToken): ProviderResult<vscode.WorkspaceEdit> {
         return vscode.workspace.saveAll(false).then(() => {
             return this.doRename(document, position, newName, token);
         });
     }
 
-    private doRename(document: vscode.TextDocument, position: vscode.Position, newName: string, token: vscode.CancellationToken): Thenable<vscode.WorkspaceEdit> {
+    private doRename(document: vscode.TextDocument, position: vscode.Position, newName: string, token: vscode.CancellationToken): ProviderResult<vscode.WorkspaceEdit> {
         if (document.lineAt(position.line).text.match(/^\s*\/\//)) {
             return;
         }
@@ -56,7 +57,8 @@ export class PythonRenameProvider implements vscode.RenameProvider {
             return getWorkspaceEditsFromPatch(fileDiffs, workspaceRoot);
         }).catch(reason => {
             if (reason === 'Not installed') {
-                this.installer.promptToInstall(Product.rope, document.uri)
+                const installer = this.serviceContainer.get<IInstaller>(IInstaller);
+                installer.promptToInstall(Product.rope, document.uri)
                     .catch(ex => console.error('Python Extension: promptToInstall', ex));
                 return Promise.reject('');
             } else {

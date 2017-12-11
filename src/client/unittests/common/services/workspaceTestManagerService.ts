@@ -1,7 +1,7 @@
 import { inject, injectable, named } from 'inversify';
 import 'reflect-metadata';
 import { Disposable, OutputChannel, Uri, workspace } from 'vscode';
-import { IDiposableRegistry, IOutputChannel } from '../../../common/types';
+import { IDisposableRegistry, IOutputChannel } from '../../../common/types';
 import { TEST_OUTPUT_CHANNEL } from './../constants';
 import { ITestManager, ITestManagerService, ITestManagerServiceFactory, IWorkspaceTestManagerService, UnitTestProduct } from './../types';
 
@@ -10,7 +10,7 @@ export class WorkspaceTestManagerService implements IWorkspaceTestManagerService
     private workspaceTestManagers = new Map<string, ITestManagerService>();
     constructor( @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private outChannel: OutputChannel,
         @inject(ITestManagerServiceFactory) private testManagerServiceFactory: ITestManagerServiceFactory,
-        @inject(IDiposableRegistry) disposables: Disposable[]) {
+        @inject(IDisposableRegistry) disposables: Disposable[]) {
         disposables.push(this);
     }
     public dispose() {

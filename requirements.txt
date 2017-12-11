@@ -9,3 +9,4 @@ nose
 pytest
 fabric
 numba
+rope

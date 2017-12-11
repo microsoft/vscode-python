@@ -1,8 +1,8 @@
-import { Architecture, Hive, IRegistry } from '../../client/common/platform/registry';
-import { IInterpreterLocatorService, PythonInterpreter } from '../../client/interpreter/contracts';
-import { IInterpreterVersionService } from '../../client/interpreter/interpreterVersion';
+import { Architecture, IRegistry, RegistryHive } from '../../client/common/platform/types';
+import { IProcessService } from '../../client/common/process/types';
+import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CondaLocatorService } from '../../client/interpreter/locators/services/condaLocator';
-import { IVirtualEnvironment } from '../../client/interpreter/virtualEnvs/contracts';
+import { IVirtualEnvironmentIdentifier } from '../../client/interpreter/virtualEnvs/types';
 
 export class MockProvider implements IInterpreterLocatorService {
     constructor(private suggestions: PythonInterpreter[]) {
@@ -15,10 +15,10 @@ export class MockProvider implements IInterpreterLocatorService {
 }
 
 export class MockRegistry implements IRegistry {
-    constructor(private keys: { key: string, hive: Hive, arch?: Architecture, values: string[] }[],
-        private values: { key: string, hive: Hive, arch?: Architecture, value: string, name?: string }[]) {
+    constructor(private keys: { key: string, hive: RegistryHive, arch?: Architecture, values: string[] }[],
+        private values: { key: string, hive: RegistryHive, arch?: Architecture, value: string, name?: string }[]) {
     }
-    public async getKeys(key: string, hive: Hive, arch?: Architecture): Promise<string[]> {
+    public async getKeys(key: string, hive: RegistryHive, arch?: Architecture): Promise<string[]> {
         const items = this.keys.find(item => {
             if (typeof item.arch === 'number') {
                 return item.key === key && item.hive === hive && item.arch === arch;
@@ -28,7 +28,7 @@ export class MockRegistry implements IRegistry {
 
         return items ? Promise.resolve(items.values) : Promise.resolve([]);
     }
-    public async getValue(key: string, hive: Hive, arch?: Architecture, name?: string): Promise<string | undefined | null> {
+    public async getValue(key: string, hive: RegistryHive, arch?: Architecture, name?: string): Promise<string | undefined | null> {
         const items = this.values.find(item => {
             if (item.key !== key || item.hive !== hive) {
                 return false;
@@ -46,8 +46,8 @@ export class MockRegistry implements IRegistry {
     }
 }
 
-export class MockVirtualEnv implements IVirtualEnvironment {
-    constructor(private isDetected: boolean, public name: string) {
+export class MockVirtualEnv implements IVirtualEnvironmentIdentifier {
+    constructor(private isDetected: boolean, public name: string, public type: InterpreterType.VirtualEnv | InterpreterType.VEnv = InterpreterType.VirtualEnv) {
     }
     public async detect(pythonPath: string): Promise<boolean> {
         return Promise.resolve(this.isDetected);
@@ -71,8 +71,8 @@ export class MockInterpreterVersionProvider implements IInterpreterVersionServic
 
 // tslint:disable-next-line:max-classes-per-file
 export class MockCondaLocatorService extends CondaLocatorService {
-    constructor(isWindows: boolean, registryLookupForConda?: IInterpreterLocatorService, private isCondaInEnv?: boolean) {
-        super(isWindows, registryLookupForConda);
+    constructor(isWindows: boolean, procService: IProcessService, registryLookupForConda?: IInterpreterLocatorService, private isCondaInEnv?: boolean) {
+        super(isWindows, procService, registryLookupForConda);
     }
     public async isCondaInCurrentPath() {
         if (typeof this.isCondaInEnv === 'boolean') {

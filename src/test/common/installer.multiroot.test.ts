@@ -1,38 +1,46 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
-import { Installer, Product } from '../../client/common/installer';
+import { IInstaller, Product } from '../../client/common/types';
 import { rootWorkspaceUri } from '../common';
 import { updateSetting } from '../common';
+import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
-import { MockOutputChannel } from './../mockClasses';
 
 // tslint:disable-next-line:no-suspicious-comment
 // TODO: Need to mock the command runner, to check what commands are being sent.
 // Instead of altering the environment.
 
 suite('Installer', () => {
-    let outputChannel: MockOutputChannel;
-    let installer: Installer;
+    let ioc: UnitTestIocContainer;
     const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
-        outputChannel = new MockOutputChannel('Installer');
-        installer = new Installer(outputChannel);
         await initializeTest();
     });
     setup(async () => {
         await initializeTest();
         await resetSettings();
+        initializeDI();
     });
     suiteTeardown(async () => {
         await closeActiveWindows();
         await resetSettings();
     });
-    teardown(closeActiveWindows);
+    teardown(async () => {
+        ioc.dispose();
+        closeActiveWindows();
+    });
+
+    function initializeDI() {
+        ioc = new UnitTestIocContainer();
+        ioc.registerCommonTypes();
+        ioc.registerUnitTestTypes();
+        ioc.registerVariableTypes();
+    }
 
     async function resetSettings() {
         await updateSetting('linting.enabledWithoutWorkspace', true, undefined, ConfigurationTarget.Global);
@@ -47,6 +55,7 @@ suite('Installer', () => {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
+        const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
         await installer.disableLinter(Product.pylint, workspaceUri);
         const pythonWConfig = workspace.getConfiguration('python', workspaceUri);
         const value = pythonWConfig.inspect<boolean>('linting.pylintEnabled');

@@ -1,17 +1,18 @@
-'use strict';
 import * as child_process from 'child_process';
+import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as path from 'path';
+import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../../common/configSettings';
-import { IInterpreterLocatorService } from '../../contracts';
+import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType } from '../../contracts';
 import { getFirstNonEmptyLineFromMultilineString } from '../../helpers';
-import { IInterpreterVersionService } from '../../interpreterVersion';
-import { VirtualEnvironmentManager } from '../../virtualEnvs';
+import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 
+@injectable()
 export class CurrentPathService implements IInterpreterLocatorService {
-    public constructor(private virtualEnvMgr: VirtualEnvironmentManager,
-        private versionProvider: IInterpreterVersionService) { }
+    public constructor( @inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
+        @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService) { }
     public async getInterpreters(resource?: Uri) {
         return this.suggestionsFromKnownPaths();
     }
@@ -38,7 +39,8 @@ export class CurrentPathService implements IInterpreterLocatorService {
                 displayName += virtualEnv ? ` (${virtualEnv.name})` : '';
                 return {
                     displayName,
-                    path: interpreter
+                    path: interpreter,
+                    type: InterpreterType.Unknown
                 };
             });
     }

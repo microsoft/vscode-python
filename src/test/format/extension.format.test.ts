@@ -50,6 +50,7 @@ suite('Formatting', () => {
                 fs.unlinkSync(file);
             }
         });
+        ch.dispose();
         await closeActiveWindows();
     });
     teardown(async () => {
@@ -92,7 +93,7 @@ suite('Formatting', () => {
         });
         assert.equal(textEditor.document.getText(), formattedContents, 'Formatted text is not the same');
     }
-    test('AutoPep8', () => testFormatting(new AutoPep8Formatter(ch), formattedAutoPep8, autoPep8FileToFormat, 'autopep8.output'));
+    test('AutoPep8', () => testFormatting(new AutoPep8Formatter(ioc.serviceContainer), formattedAutoPep8, autoPep8FileToFormat, 'autopep8.output'));
 
-    test('Yapf', () => testFormatting(new YapfFormatter(ch), formattedYapf, yapfFileToFormat, 'yapf.output'));
+    test('Yapf', () => testFormatting(new YapfFormatter(ioc.serviceContainer), formattedYapf, yapfFileToFormat, 'yapf.output'));
 });
