@@ -255,7 +255,7 @@ export class Installer implements IInstaller {
         if (channels.length === 1) {
             return channels[0];
         }
-        const placeHolder = `Select an options to install ${productName}`;
+        const placeHolder = `Select an option to install ${productName}`;
         const options = channels.map(installer => {
             return {
                 label: `Install using ${installer.displayName}`,
