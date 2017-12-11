@@ -46,7 +46,7 @@ suite('ChildProc', () => {
                 output.push(data.trim());
             }
         }
-        await execPythonFile(undefined, 'python', ['-c', 'print(u\'öä\')'], __dirname, false, handleOutput);
+        await execPythonFile(undefined, 'python', ['-c', 'print(\'öä\')'], __dirname, false, handleOutput);
         assert.equal(output.length, 1, 'Ouput length incorrect');
         assert.equal(output[0], 'öä', 'Ouput value incorrect');
     });
