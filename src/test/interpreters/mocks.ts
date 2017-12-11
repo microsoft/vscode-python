@@ -1,4 +1,4 @@
-import { Architecture, Hive, IRegistry } from '../../client/common/platform/types';
+import { Architecture, IRegistry, RegistryHive } from '../../client/common/platform/types';
 import { IProcessService } from '../../client/common/process/types';
 import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CondaLocatorService } from '../../client/interpreter/locators/services/condaLocator';
@@ -15,10 +15,10 @@ export class MockProvider implements IInterpreterLocatorService {
 }
 
 export class MockRegistry implements IRegistry {
-    constructor(private keys: { key: string, hive: Hive, arch?: Architecture, values: string[] }[],
-        private values: { key: string, hive: Hive, arch?: Architecture, value: string, name?: string }[]) {
+    constructor(private keys: { key: string, hive: RegistryHive, arch?: Architecture, values: string[] }[],
+        private values: { key: string, hive: RegistryHive, arch?: Architecture, value: string, name?: string }[]) {
     }
-    public async getKeys(key: string, hive: Hive, arch?: Architecture): Promise<string[]> {
+    public async getKeys(key: string, hive: RegistryHive, arch?: Architecture): Promise<string[]> {
         const items = this.keys.find(item => {
             if (typeof item.arch === 'number') {
                 return item.key === key && item.hive === hive && item.arch === arch;
@@ -28,7 +28,7 @@ export class MockRegistry implements IRegistry {
 
         return items ? Promise.resolve(items.values) : Promise.resolve([]);
     }
-    public async getValue(key: string, hive: Hive, arch?: Architecture, name?: string): Promise<string | undefined | null> {
+    public async getValue(key: string, hive: RegistryHive, arch?: Architecture, name?: string): Promise<string | undefined | null> {
         const items = this.values.find(item => {
             if (item.key !== key || item.hive !== hive) {
                 return false;

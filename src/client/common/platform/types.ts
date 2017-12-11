@@ -6,13 +6,13 @@ export enum Architecture {
     x86 = 2,
     x64 = 3
 }
-export enum Hive {
+export enum RegistryHive {
     HKCU, HKLM
 }
 
 export const IRegistry = Symbol('IRegistry');
 
 export interface IRegistry {
-    getKeys(key: string, hive: Hive, arch?: Architecture): Promise<string[]>;
-    getValue(key: string, hive: Hive, arch?: Architecture, name?: string): Promise<string | undefined | null>;
+    getKeys(key: string, hive: RegistryHive, arch?: Architecture): Promise<string[]>;
+    getValue(key: string, hive: RegistryHive, arch?: Architecture, name?: string): Promise<string | undefined | null>;
 }

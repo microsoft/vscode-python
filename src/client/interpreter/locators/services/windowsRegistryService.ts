@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { Architecture, Hive, IRegistry } from '../../../common/platform/types';
+import { Architecture, IRegistry, RegistryHive } from '../../../common/platform/types';
 import { Is64Bit } from '../../../common/types';
 import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../contracts';
 
@@ -18,7 +18,7 @@ const PythonCoreComany = 'PYTHONCORE';
 
 type CompanyInterpreter = {
     companyKey: string,
-    hive: Hive,
+    hive: RegistryHive,
     arch?: Architecture
 };
 
@@ -37,12 +37,12 @@ export class WindowsRegistryService implements IInterpreterLocatorService {
         // https://github.com/python/peps/blob/master/pep-0514.txt#L357
         const hkcuArch = this.is64Bit ? undefined : Architecture.x86;
         const promises: Promise<CompanyInterpreter[]>[] = [
-            this.getCompanies(Hive.HKCU, hkcuArch),
-            this.getCompanies(Hive.HKLM, Architecture.x86)
+            this.getCompanies(RegistryHive.HKCU, hkcuArch),
+            this.getCompanies(RegistryHive.HKLM, Architecture.x86)
         ];
         // https://github.com/Microsoft/PTVS/blob/ebfc4ca8bab234d453f15ee426af3b208f3c143c/Python/Product/Cookiecutter/Shared/Interpreters/PythonRegistrySearch.cs#L44
         if (this.is64Bit) {
-            promises.push(this.getCompanies(Hive.HKLM, Architecture.x64));
+            promises.push(this.getCompanies(RegistryHive.HKLM, Architecture.x64));
         }
 
         const companies = await Promise.all<CompanyInterpreter[]>(promises);
@@ -65,7 +65,7 @@ export class WindowsRegistryService implements IInterpreterLocatorService {
                 return prev;
             }, []);
     }
-    private async getCompanies(hive: Hive, arch?: Architecture): Promise<CompanyInterpreter[]> {
+    private async getCompanies(hive: RegistryHive, arch?: Architecture): Promise<CompanyInterpreter[]> {
         return this.registry.getKeys('\\Software\\Python', hive, arch)
             .then(companyKeys => companyKeys
                 .filter(companyKey => CompaniesToIgnore.indexOf(path.basename(companyKey).toUpperCase()) === -1)
@@ -73,11 +73,11 @@ export class WindowsRegistryService implements IInterpreterLocatorService {
                     return { companyKey, hive, arch };
                 }));
     }
-    private async getInterpretersForCompany(companyKey: string, hive: Hive, arch?: Architecture) {
+    private async getInterpretersForCompany(companyKey: string, hive: RegistryHive, arch?: Architecture) {
         const tagKeys = await this.registry.getKeys(companyKey, hive, arch);
         return Promise.all(tagKeys.map(tagKey => this.getInreterpreterDetailsForCompany(tagKey, companyKey, hive, arch)));
     }
-    private getInreterpreterDetailsForCompany(tagKey: string, companyKey: string, hive: Hive, arch?: Architecture): Promise<PythonInterpreter | undefined | null> {
+    private getInreterpreterDetailsForCompany(tagKey: string, companyKey: string, hive: RegistryHive, arch?: Architecture): Promise<PythonInterpreter | undefined | null> {
         const key = `${tagKey}\\InstallPath`;
         type InterpreterInformation = null | undefined | {
             installPath: string,
@@ -133,13 +133,13 @@ export class WindowsRegistryService implements IInterpreterLocatorService {
                 return null;
             });
     }
-    private async getInterpreterDisplayName(tagKey: string, companyKey: string, hive: Hive, arch?: Architecture) {
+    private async getInterpreterDisplayName(tagKey: string, companyKey: string, hive: RegistryHive, arch?: Architecture) {
         const displayName = await this.registry.getValue(tagKey, hive, arch, 'DisplayName');
         if (displayName && displayName.length > 0) {
             return displayName;
         }
     }
-    private async  getCompanyDisplayName(companyKey: string, hive: Hive, arch?: Architecture) {
+    private async  getCompanyDisplayName(companyKey: string, hive: RegistryHive, arch?: Architecture) {
         const displayName = await this.registry.getValue(companyKey, hive, arch, 'DisplayName');
         if (displayName && displayName.length > 0) {
             return displayName;

@@ -221,8 +221,8 @@ const hygiene = (options) => {
         .pipe(filter(tslintFilter));
 
     if (!options.skipFormatCheck) {
-        result = result
-            .pipe(formatting);
+        // result = result
+        //     .pipe(formatting);
     }
 
     if (!options.skipLinter) {
