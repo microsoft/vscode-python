@@ -6,11 +6,13 @@ import { EOL } from 'os';
 import * as vscode from 'vscode';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import * as proxy from './jediProxy';
+import { IHoverItem } from './jediProxy';
 
 export class LanguageItemInfo {
     constructor(
         public tooltip: vscode.MarkdownString,
-        public description: string) { }
+        public detail: string,
+        public documentation: vscode.MarkdownString) { }
 }
 
 export class ItemInfoSource {
@@ -111,10 +113,11 @@ export class ItemInfoSource {
                 if (lines.length > 0 && item.signature.startsWith(currentWord) && lines[0].startsWith(currentWord) && lines[0].endsWith(')')) {
                     lines.shift();
                 }
-                const description = lines.join(EOL);
-                const descriptionWithHighlightedCode = this.highlightCode(description);           
-                const tooltip = new vscode.MarkdownString(['```python', signature, '```', descriptionWithHighlightedCode].join(EOL));
-                infos.push(new LanguageItemInfo(tooltip, description));
+
+                const dd = this.getDetailAndDescription(item, lines);
+                const descriptionWithHighlightedCode = this.highlightCode(dd[1]);
+                const tooltip = new vscode.MarkdownString(['y```python', signature, '```', descriptionWithHighlightedCode].join(EOL));
+                infos.push(new LanguageItemInfo(tooltip, dd[0], new vscode.MarkdownString(dd[1])));
 
                 const key = signature + lines.join('');
                 // Sometimes we have duplicate documentation, one with a period at the end.
@@ -122,7 +125,7 @@ export class ItemInfoSource {
                     return;
                 }
                 capturedInfo.push(key);
-                capturedInfo.push(`${key}.`);               
+                capturedInfo.push(`${key}.`);
                 return;
             }
 
@@ -130,8 +133,7 @@ export class ItemInfoSource {
                 const descriptionWithHighlightedCode = this.highlightCode(item.description);
                 // tslint:disable-next-line:prefer-template
                 const tooltip = new vscode.MarkdownString('```python' + `${EOL}${signature}${EOL}` + '```' + `${EOL}${descriptionWithHighlightedCode}`);
-                infos.push(new LanguageItemInfo(tooltip, item.description));
-                
+
                 const lines = item.description.split(EOL);
                 const key = signature + lines.join('');
                 // Sometimes we have duplicate documentation, one with a period at the end.
@@ -139,12 +141,29 @@ export class ItemInfoSource {
                     return;
                 }
 
+                const dd = this.getDetailAndDescription(item, lines);
+                infos.push(new LanguageItemInfo(tooltip, dd[0], new vscode.MarkdownString(dd[1])));
+
                 capturedInfo.push(key);
                 capturedInfo.push(`${key}.`);
                 return;
             }
         });
         return infos;
+    }
+
+    private getDetailAndDescription(item: IHoverItem, lines: string[]): [string, string] {
+        let detail: string;
+        let description: string;
+
+        if (item.signature && item.signature.length > 0) {
+            detail = lines.length > 0 ? lines[0] : '';
+            description = lines.filter((line, index) => index > 0).join(EOL);
+        } else {
+            detail = item.description;
+            description = lines.join(EOL);
+        }
+        return [detail, description];
     }
 
     private highlightCode(docstring: string): string {
@@ -185,7 +204,8 @@ export class ItemInfoSource {
             if (line.startsWith('```')) {
                 inCodeBlock = !inCodeBlock;
                 if (inCodeBlock) {
-                    codeIndentation = lines[i + 1].match(/^ */)[0].length;
+                    const match = lines[i + 1].match(/^ */);
+                    codeIndentation = match && match.length > 0 ? match[0].length : 0;
                 }
                 continue;
             }

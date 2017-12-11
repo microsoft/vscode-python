@@ -30,12 +30,10 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
         if (!item.documentation) {
             const itemInfos = await this.completionSource.getDocumentation(item, token);
             if (itemInfos && itemInfos.length > 0) {
-                // Only filling documentation since tooltip already contains
-                // all the necessary information and is colorized via markdown.
-                item.documentation = itemInfos[0].tooltip;
-                item.detail = '';
+                item.detail = itemInfos[0].detail;
+                item.documentation = itemInfos[0].documentation;
             }
-        }    
+        }
         return item;
     }
 }

@@ -1,3 +1,4 @@
+/* tslint:disable:no-require-imports no-var-requires */
 const tmp = require('tmp');
 
 export function isNotInstalledError(error: Error): boolean {

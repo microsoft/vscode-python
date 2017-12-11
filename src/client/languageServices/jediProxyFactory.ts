@@ -1,5 +1,5 @@
 import { Disposable, Uri, workspace } from 'vscode';
-import { JediProxy, JediProxyHandler, ICommandResult } from '../providers/jediProxy';
+import { ICommandResult, JediProxy, JediProxyHandler } from '../providers/jediProxy';
 
 export class JediFactory implements Disposable {
     private disposables: Disposable[];
@@ -20,8 +20,7 @@ export class JediFactory implements Disposable {
         if (!workspacePath) {
             if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
                 workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-            }
-            else {
+            } else {
                 workspacePath = __dirname;
             }
         }
