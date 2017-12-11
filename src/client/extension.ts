@@ -13,7 +13,6 @@ import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { SimpleConfigurationProvider } from './debugger';
-import { FeedbackService } from './feedback';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { InterpreterManager } from './interpreter';
 import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
@@ -171,8 +170,6 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
     activationDeferred.resolve();
 
-    const feedbackService = new FeedbackService(persistentStateFactory);
-    context.subscriptions.push(feedbackService);
     // tslint:disable-next-line:no-unused-expression
     new BannerService(persistentStateFactory);
 
