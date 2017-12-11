@@ -55,7 +55,7 @@ export class CondaEnvService implements IInterpreterLocatorService {
                     return;
                 }
 
-                const versionWithoutCompanyName = this.stripCompanyName(version);
+                const versionWithoutCompanyName = this.stripCondaDisplayName(this.stripCompanyName(version), condaDisplayName);
                 const displayName = `${condaDisplayName} ${versionWithoutCompanyName}`.trim();
                 // If it is an environment, hence suffix with env name.
                 const interpreterDisplayName = env === info.default_prefix ? displayName : `${displayName} (${envName})`;
@@ -85,6 +85,18 @@ export class CondaEnvService implements IInterpreterLocatorService {
         }, -1);
 
         return startOfCompanyName > 0 ? content.substring(0, startOfCompanyName).trim() : content;
+    }
+    private stripCondaDisplayName(content: string, condaDisplayName: string) {
+        // Strip company name from version.
+        if (content.endsWith(condaDisplayName)) {
+            let updatedContent = content.substr(0, content.indexOf(condaDisplayName)).trim();
+            if (updatedContent.endsWith('::')) {
+                updatedContent = updatedContent.substr(0, content.indexOf('::')).trim();
+            }
+            return updatedContent;
+        } else {
+            return content;
+        }
     }
     private async getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
         return this.condaLocator.getCondaFile()
