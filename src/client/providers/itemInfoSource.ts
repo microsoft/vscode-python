@@ -102,6 +102,8 @@ export class ItemInfoSource {
             }
             if (item.docstring) {
                 let lines = item.docstring.split(/\r?\n/);
+                const dnd = this.getDetailAndDescription(item, lines);
+
                 // If the docstring starts with the signature, then remove those lines from the docstring.
                 if (lines.length > 0 && item.signature.indexOf(lines[0]) === 0) {
                     lines.shift();
@@ -114,10 +116,9 @@ export class ItemInfoSource {
                     lines.shift();
                 }
 
-                const dd = this.getDetailAndDescription(item, lines);
-                const descriptionWithHighlightedCode = this.highlightCode(dd[1]);
+                const descriptionWithHighlightedCode = this.highlightCode(dnd[1]);
                 const tooltip = new vscode.MarkdownString(['y```python', signature, '```', descriptionWithHighlightedCode].join(EOL));
-                infos.push(new LanguageItemInfo(tooltip, dd[0], new vscode.MarkdownString(dd[1])));
+                infos.push(new LanguageItemInfo(tooltip, dnd[0], new vscode.MarkdownString(dnd[1])));
 
                 const key = signature + lines.join('');
                 // Sometimes we have duplicate documentation, one with a period at the end.
@@ -135,14 +136,14 @@ export class ItemInfoSource {
                 const tooltip = new vscode.MarkdownString('```python' + `${EOL}${signature}${EOL}` + '```' + `${EOL}${descriptionWithHighlightedCode}`);
 
                 const lines = item.description.split(EOL);
+                const dd = this.getDetailAndDescription(item, lines);
+                infos.push(new LanguageItemInfo(tooltip, dd[0], new vscode.MarkdownString(dd[1])));
+
                 const key = signature + lines.join('');
                 // Sometimes we have duplicate documentation, one with a period at the end.
                 if (capturedInfo.indexOf(key) >= 0 || capturedInfo.indexOf(`${key}.`) >= 0) {
                     return;
                 }
-
-                const dd = this.getDetailAndDescription(item, lines);
-                infos.push(new LanguageItemInfo(tooltip, dd[0], new vscode.MarkdownString(dd[1])));
 
                 capturedInfo.push(key);
                 capturedInfo.push(`${key}.`);
@@ -158,10 +159,10 @@ export class ItemInfoSource {
 
         if (item.signature && item.signature.length > 0) {
             detail = lines.length > 0 ? lines[0] : '';
-            description = lines.filter((line, index) => index > 0).join(EOL);
+            description = lines.filter((line, index) => index > 0).join(EOL).trim();
         } else {
             detail = item.description;
-            description = lines.join(EOL);
+            description = lines.join(EOL).trim();
         }
         return [detail, description];
     }

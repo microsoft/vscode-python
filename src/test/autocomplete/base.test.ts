@@ -122,7 +122,7 @@ suite('Autocomplete', () => {
         const items = list.items.filter(item => item.label === 'sleep');
         assert.notEqual(items.length, 0, 'sleep not found');
 
-        checkDocumentation(items[0].documentation, 'Delay execution for a given number of seconds.  The argument may be');
+        checkDocumentation(items[0], 'Delay execution for a given number of seconds.  The argument may be');
     });
 
     test('For custom class', done => {
@@ -158,7 +158,7 @@ suite('Autocomplete', () => {
             assert.equal(items.length, 1, 'bar not found');
 
             const expected = `说明 - keep this line, it works${EOL}delete following line, it works${EOL}如果存在需要等待审批或正在执行的任务，将不刷新页面`;
-            checkDocumentation(items[0].documentation, expected);
+            checkDocumentation(items[0], expected);
         }).then(done, done);
     });
 
@@ -176,13 +176,13 @@ suite('Autocomplete', () => {
         }).then(list => {
             let items = list.items.filter(item => item.label === 'Foo');
             assert.equal(items.length, 1, 'Foo not found');
-            checkDocumentation(items[0].documentation, '说明');
+            checkDocumentation(items[0], '说明');
 
             items = list.items.filter(item => item.label === 'showMessage');
             assert.equal(items.length, 1, 'showMessage not found');
 
             const expected = `Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи. ${EOL}Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.`;
-            checkDocumentation(items[0].documentation, expected);
+            checkDocumentation(items[0], expected);
         }).then(done, done);
     });
 
@@ -215,10 +215,11 @@ suite('Autocomplete', () => {
 });
 
 // tslint:disable-next-line:no-any
-function checkDocumentation(itemDoc: any, expectedContains: string): void {
-    const documentation = itemDoc as vscode.MarkdownString;
+function checkDocumentation(item: vscode.CompletionItem, expectedContains: string): void {
+    const documentation = item.documentation as vscode.MarkdownString;
     assert.notEqual(documentation, null, 'Documentation is not MarkdownString');
 
-    assert.equal(documentation.value.indexOf(expectedContains) > 0, true, 'Documentation incorrect');
-    assert.equal(documentation.value.indexOf('```python'), 0, 'Documentation is not colorized as Python');
+    const inDoc = documentation.value.indexOf(expectedContains) >= 0;
+    const inDetails = item.detail.indexOf(expectedContains) >= 0;
+    assert.equal(inDoc !== inDetails, true, 'Documentation incorrect');
 }
