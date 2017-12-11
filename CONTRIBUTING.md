@@ -115,6 +115,7 @@ time-critical as a new feature may be.
   * 3rd-party dependencies frozen
   * Ask CELA to update the TPN file
 * Day 14 (2nd Monday)
+  * Update the TPN file as instructed by CELA
   * Bump version number
   * Code freeze
   * Cut a `.vsix` file for testing
