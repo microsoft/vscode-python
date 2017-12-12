@@ -41,6 +41,6 @@ Use single quotes for strings.
     * `if (x < 10) { }`
     * `function f(x: number, y: string): void { }`
 
-* `else` goes on a the same line from the closing curly brace.
+* `else` goes on the same line from the closing curly brace.
 * Use 4 spaces per indentation.
 * All files must end with an empty line.
