@@ -15,9 +15,10 @@ export class ProcessService implements IProcessService {
     constructor( @inject(IBufferDecoder) private decoder: IBufferDecoder) { }
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         const encoding = options.encoding = typeof options.encoding === 'string' && options.encoding.length > 0 ? options.encoding : DEFAULT_ENCODING;
+        delete options.encoding;
         const spawnOptions = { ...options };
         if (!spawnOptions.env || Object.keys(spawnOptions).length === 0) {
-            spawnOptions.env = process.env;
+            spawnOptions.env = { ...process.env };
         }
 
         // Always ensure we have unbuffered output.
@@ -74,9 +75,10 @@ export class ProcessService implements IProcessService {
     }
     public async exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         const encoding = options.encoding = typeof options.encoding === 'string' && options.encoding.length > 0 ? options.encoding : DEFAULT_ENCODING;
+        delete options.encoding;
         const spawnOptions = { ...options };
         if (!spawnOptions.env || Object.keys(spawnOptions).length === 0) {
-            spawnOptions.env = process.env;
+            spawnOptions.env = { ...process.env };
         }
 
         // Always ensure we have unbuffered output.

@@ -35,7 +35,7 @@ suite('ProcessService', () => {
     test('exec should output print unicode characters', async () => {
         const procService = new ProcessService(new BufferDecoder());
         const printOutput = 'öä';
-        const result = await procService.exec(pythonPath, ['-c', `print(u"${printOutput}")`]);
+        const result = await procService.exec(pythonPath, ['-c', `print("${printOutput}")`]);
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         expect(result.stdout.trim()).to.be.equal(printOutput, 'Invalid output');
