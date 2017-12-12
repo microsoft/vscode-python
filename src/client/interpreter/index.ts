@@ -45,7 +45,7 @@ export class InterpreterManager implements Disposable {
         const virtualEnvMgr = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
         const versionService = this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
         const virtualEnvInterpreterProvider = new VirtualEnvService([activeWorkspace.folderUri.fsPath], virtualEnvMgr, versionService);
-        const interpreters = await this.interpreterProvider.getInterpreters(activeWorkspace.folderUri);
+        const interpreters = await virtualEnvInterpreterProvider.getInterpreters(activeWorkspace.folderUri);
         const workspacePathUpper = activeWorkspace.folderUri.fsPath.toUpperCase();
         const interpretersInWorkspace = interpreters.filter(interpreter => interpreter.path.toUpperCase().startsWith(workspacePathUpper));
         // Always pick the first available one.
@@ -80,10 +80,10 @@ export class InterpreterManager implements Disposable {
             return false;
         }
         if (activeWorkspace.configTarget === ConfigurationTarget.Workspace) {
-            return pythonPathInConfig.workspaceValue === undefined || pythonPathInConfig.workspaceValue === 'python';
+            return pythonPathInConfig!.workspaceValue === undefined || pythonPathInConfig!.workspaceValue === 'python';
         }
         if (activeWorkspace.configTarget === ConfigurationTarget.WorkspaceFolder) {
-            return pythonPathInConfig.workspaceFolderValue === undefined || pythonPathInConfig.workspaceFolderValue === 'python';
+            return pythonPathInConfig!.workspaceFolderValue === undefined || pythonPathInConfig!.workspaceFolderValue === 'python';
         }
         return false;
     }
