@@ -23,8 +23,9 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 ## [Documentation](https://code.visualstudio.com/docs/languages/python)
 For further information and details continue through to the [documentation](https://code.visualstudio.com/docs/languages/python).
 
-## Issues, Feature Requests, and Contributions
-* If you come across a problem with the extension please [file an issue](https://github.com/microsoft/vscode-python)
+## Questions, Issues, Feature Requests, and Contributions
+* If you have a question about how to accomplish something with the extension, please [ask on Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code+python)
+* If you come across a problem with the extension, please [file an issue](https://github.com/microsoft/vscode-python)
 * Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md) for more details
 * Any and all feedback is appreciated and welcome!
   - If someone has already [file an issue](https://github.com/Microsoft/vscode-python) that encompasses your feedback, please leave a 👍/👎 reaction on the issue
