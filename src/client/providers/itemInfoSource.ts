@@ -116,7 +116,7 @@ export class ItemInfoSource {
                     lines.shift();
                 }
 
-                const descriptionWithHighlightedCode = this.highlightCode(dnd[1]);
+                const descriptionWithHighlightedCode = this.highlightCode(lines.join(EOL));
                 const tooltip = new vscode.MarkdownString(['```python', signature, '```', descriptionWithHighlightedCode].join(EOL));
                 infos.push(new LanguageItemInfo(tooltip, dnd[0], new vscode.MarkdownString(dnd[1])));
 
