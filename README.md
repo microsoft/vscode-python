@@ -79,6 +79,15 @@ For further information and details continue through to the [documentation](http
 ![Unit Tests](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/unittest.gif)
 
 
+## Supported locales
+
+The extension is available in multiple languages thanks to external
+contributors (if you would like to contribute a translation, see the
+[pull request which added simplified Chinese](https://github.com/Microsoft/vscode-python/pull/240)):
+
+* `en`
+* `zh-cn`
+
 ## Data/Telemetry
 The Microsoft Python Extension for Visual Studio Code collects usage
 data and sends it to Microsoft to help improve our products and
