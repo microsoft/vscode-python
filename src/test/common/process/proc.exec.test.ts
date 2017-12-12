@@ -32,6 +32,16 @@ suite('ProcessService', () => {
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
+    test('exec should output print unicode characters', async () => {
+        const procService = new ProcessService(new BufferDecoder());
+        const printOutput = 'öä';
+        const result = await procService.exec(pythonPath, ['-c', `print(u"${printOutput}")`]);
+
+        expect(result).not.to.be.an('undefined', 'result is undefined');
+        expect(result.stdout.trim()).to.be.equal(printOutput, 'Invalid output');
+        expect(result.stderr).to.equal(undefined, 'stderr not undefined');
+    });
+
     test('exec should wait for completion of program with new lines', async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(5000);

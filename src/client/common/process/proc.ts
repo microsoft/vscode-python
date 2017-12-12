@@ -22,6 +22,9 @@ export class ProcessService implements IProcessService {
 
         // Always ensure we have unbuffered output.
         spawnOptions.env.PYTHONUNBUFFERED = '1';
+        if (!spawnOptions.env.PYTHONIOENCODING) {
+            spawnOptions.env.PYTHONIOENCODING = 'utf-8';
+        }
 
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
@@ -78,7 +81,9 @@ export class ProcessService implements IProcessService {
 
         // Always ensure we have unbuffered output.
         spawnOptions.env.PYTHONUNBUFFERED = '1';
-
+        if (!spawnOptions.env.PYTHONIOENCODING) {
+            spawnOptions.env.PYTHONIOENCODING = 'utf-8';
+        }
         const proc = spawn(file, args, spawnOptions);
         const deferred = createDeferred<ExecutionResult<string>>();
         const disposables: Disposable[] = [];
