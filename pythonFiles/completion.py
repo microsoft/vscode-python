@@ -208,16 +208,6 @@ class JediCompletion(object):
                 _completion['snippet'] = '%s=$1$0' % name
                 _completion['text'] = name
                 _completion['displayText'] = name
-            if self.show_doc_strings:
-                try:
-                    _completion['description'] = signature.docstring()
-                    _completion['raw_docstring'] = signature.docstring(raw=True)
-                except Exception:
-                    _completion['description'] = ''
-                    _completion['raw_docstring'] = ''
-            else:
-                _completion['description'] = self._generate_signature(
-                    signature)
             _completions.append(_completion)
 
         try:
@@ -227,22 +217,11 @@ class JediCompletion(object):
         except :
             completions = []
         for completion in completions:
-            if self.show_doc_strings:
-                try:
-                    description = completion.docstring()
-                except Exception:
-                    description = ''
-            else:
-                description = self._generate_signature(completion)
-
             try:
-                rawDocstring = completion.docstring(raw=True)
                 _completion = {
                     'text': completion.name,
                     'type': self._get_definition_type(completion),
                     'raw_type': completion.type,
-                    'description': description,
-                    'raw_docstring': rawDocstring,
                     'rightLabel': self._additional_info(completion)
                 }                
             except Exception:
@@ -252,11 +231,7 @@ class JediCompletion(object):
                 if c['text'] == _completion['text']:
                     c['type'] = _completion['type']
                     c['raw_type'] = _completion['raw_type']
-                    if len(c['description']) == 0 and len(c['raw_docstring']) == 0:
-                        c['description'] = _completion['description']
-                        c['raw_docstring'] = _completion['description']
-                    
-            
+                               
             if any([c['text'].split('=')[0] == _completion['text']
                     for c in _completions]):
                 # ignore function arguments we already have

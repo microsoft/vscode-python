@@ -1,15 +1,14 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 'use strict';
 
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IPythonSettings, PythonSettings } from '../common/configSettings';
+import { PythonSettings } from '../common/configSettings';
 import { mergeEnvVariables } from '../common/envFileParser';
 import { createDeferred, Deferred } from '../common/helpers';
 import { execPythonFile, getCustomEnvVarsSync, validatePath } from '../common/utils';
-import { getCustomEnvVars } from '../common/utils';
-import * as telemetryHelper from '../telemetry';
-import * as settings from './../common/configSettings';
 import * as logger from './../common/logger';
 
 const IS_WINDOWS = /^win/.test(process.platform);
@@ -88,20 +87,22 @@ pythonVSCodeSymbolMappings.set('list', vscode.SymbolKind.Array);
 
 function getMappedVSCodeType(pythonType: string): vscode.CompletionItemKind {
     if (pythonVSCodeTypeMappings.has(pythonType)) {
-        return pythonVSCodeTypeMappings.get(pythonType);
+        const value = pythonVSCodeTypeMappings.get(pythonType);
+        if (value) {
+            return value;
+        }
     }
-    else {
-        return vscode.CompletionItemKind.Keyword;
-    }
+    return vscode.CompletionItemKind.Keyword;
 }
 
 function getMappedVSCodeSymbol(pythonType: string): vscode.SymbolKind {
     if (pythonVSCodeSymbolMappings.has(pythonType)) {
-        return pythonVSCodeSymbolMappings.get(pythonType);
+        const value = pythonVSCodeSymbolMappings.get(pythonType);
+        if (value) {
+            return value;
+        }
     }
-    else {
-        return vscode.SymbolKind.Variable;
-    }
+    return vscode.SymbolKind.Variable;
 }
 
 export enum CommandType {
@@ -113,7 +114,7 @@ export enum CommandType {
     Symbols
 }
 
-var commandNames = new Map<CommandType, string>();
+const commandNames = new Map<CommandType, string>();
 commandNames.set(CommandType.Arguments, 'arguments');
 commandNames.set(CommandType.Completions, 'completions');
 commandNames.set(CommandType.Definitions, 'definitions');
@@ -122,35 +123,77 @@ commandNames.set(CommandType.Usages, 'usages');
 commandNames.set(CommandType.Symbols, 'names');
 
 export class JediProxy implements vscode.Disposable {
-    private proc: child_process.ChildProcess;
+    private proc: child_process.ChildProcess | null;
     private pythonSettings: PythonSettings;
+    private cmdId: number = 0;
+    private pythonProcessCWD = '';
+    private lastKnownPythonInterpreter: string;
+    private previousData = '';
+    private commands = new Map<number, IExecutionCommand<ICommandResult>>();
+    private commandQueue: number[] = [];
+    private spawnRetryAttempts = 0;
+    private lastKnownPythonPath: string;
+    private additionalAutoCopletePaths: string[] = [];
+    private workspacePath: string;
 
-    public constructor(private extensionRootDir: string, private workspacePath: string) {
+    public constructor(extensionRootDir: string, workspacePath: string) {
+        this.workspacePath = workspacePath;
         this.pythonSettings = PythonSettings.getInstance(vscode.Uri.file(workspacePath));
-        this.lastKnownPythonInterpreter = this.pythonSettings.pythonPath
+        this.lastKnownPythonInterpreter = this.pythonSettings.pythonPath;
         this.pythonSettings.on('change', this.onPythonSettingsChanged.bind(this));
         vscode.workspace.onDidChangeConfiguration(this.onConfigChanged.bind(this));
         this.onConfigChanged();
         this.initialize(extensionRootDir);
     }
+
+    private static getProperty<T>(o: object, name: string): T {
+        return <T>o[name];
+    }
+
     public dispose() {
         this.killProcess();
     }
-    private cmdId: number = 0;
 
     public getNextCommandId(): number {
-        return this.cmdId++;
+        const result = this.cmdId;
+        this.cmdId += 1;
+        return result;
+    }
+
+    public sendCommand<T extends ICommandResult>(cmd: ICommand<T>): Promise<T> {
+        if (!this.proc) {
+            return Promise.reject(new Error('Python proc not initialized'));
+        }
+        const executionCmd = <IExecutionCommand<T>>cmd;
+        const payload = this.createPayload(executionCmd);
+        executionCmd.deferred = createDeferred<T>();
+        // if (typeof executionCmd.telemetryEvent === 'string') {
+        //     executionCmd.delays = new telemetryHelper.Delays();
+        // }
+        try {
+            this.proc.stdin.write(`${JSON.stringify(payload)}\n`);
+            this.commands.set(executionCmd.id, executionCmd);
+            this.commandQueue.push(executionCmd.id);
+        } catch (ex) {
+            console.error(ex);
+            //If 'This socket is closed.' that means process didn't start at all (at least not properly).
+            if (ex.message === 'This socket is closed.') {
+                this.killProcess();
+            } else {
+                this.handleError('sendCommand', ex.message);
+            }
+            return Promise.reject(ex);
+        }
+        return executionCmd.deferred.promise;
     }
 
     // keep track of the directory so we can re-spawn the process.
-    private pythonProcessCWD = '';
     private initialize(dir: string) {
         this.pythonProcessCWD = dir;
         this.spawnProcess(path.join(dir, 'pythonFiles'));
     }
 
     // Check if settings changes.
-    private lastKnownPythonInterpreter: string;
     private onPythonSettingsChanged() {
         if (this.lastKnownPythonInterpreter === this.pythonSettings.pythonPath) {
             return;
@@ -163,33 +206,32 @@ export class JediProxy implements vscode.Disposable {
     private clearPendingRequests() {
         this.commandQueue = [];
         this.commands.forEach(item => {
-            item.deferred.resolve();
+            if (item.deferred !== undefined) {
+                item.deferred.resolve();
+            }
         });
         this.commands.clear();
     }
-    private previousData = '';
-    private commands = new Map<number, IExecutionCommand<ICommandResult>>();
-    private commandQueue: number[] = [];
 
     private killProcess() {
         try {
             if (this.proc) {
                 this.proc.kill();
             }
-        }
-        catch (ex) { }
+            // tslint:disable-next-line:no-empty
+        } catch (ex) { }
         this.proc = null;
     }
 
     private handleError(source: string, errorMessage: string) {
-        logger.error(source + ' jediProxy', `Error (${source}) ${errorMessage}`);
+        logger.error(`${source} jediProxy`, `Error (${source}) ${errorMessage}`);
     }
 
-    private spawnRetryAttempts = 0;
+    // tslint:disable-next-line:max-func-body-length
     private spawnProcess(dir: string) {
         try {
-            let environmentVariables: Object & { [key: string]: string } = { 'PYTHONUNBUFFERED': '1' };
-            let customEnvironmentVars = getCustomEnvVarsSync(vscode.Uri.file(dir));
+            let environmentVariables: Object & { [key: string]: string } = { PYTHONUNBUFFERED: '1' };
+            const customEnvironmentVars = getCustomEnvVarsSync(vscode.Uri.file(dir));
             if (customEnvironmentVars) {
                 environmentVariables = mergeEnvVariables(environmentVariables, customEnvironmentVars);
             }
@@ -201,27 +243,24 @@ export class JediProxy implements vscode.Disposable {
                     this.pythonSettings.devOptions.some(item => item.toUpperCase().trim() === 'USERELEASEAUTOCOMP')) {
                     // Use standard version of jedi library.
                     args.push('std');
-                }
-                else {
+                } else {
                     // Use preview version of jedi library.
                     args.push('preview');
                 }
-            }
-            else {
+            } else {
                 args.push('custom');
                 args.push(this.pythonSettings.jediPath);
             }
             if (Array.isArray(this.pythonSettings.autoComplete.preloadModules) &&
                 this.pythonSettings.autoComplete.preloadModules.length > 0) {
-                var modules = this.pythonSettings.autoComplete.preloadModules.filter(m => m.trim().length > 0).join(',');
+                const modules = this.pythonSettings.autoComplete.preloadModules.filter(m => m.trim().length > 0).join(',');
                 args.push(modules);
             }
             this.proc = child_process.spawn(this.pythonSettings.pythonPath, args, {
                 cwd: dir,
                 env: environmentVariables
             });
-        }
-        catch (ex) {
+        } catch (ex) {
             return this.handleError('spawnProcess', ex.message);
         }
         this.proc.stderr.setEncoding('utf8');
@@ -229,27 +268,28 @@ export class JediProxy implements vscode.Disposable {
             this.handleError('stderr', data);
         });
         this.proc.on('end', (end) => {
-            logger.error('spawnProcess.end', 'End - ' + end);
+            logger.error('spawnProcess.end', `End - ${end}`);
         });
         this.proc.on('error', error => {
-            this.handleError('error', error + '');
-            this.spawnRetryAttempts++;
+            this.handleError('error', `${error}`);
+            this.spawnRetryAttempts += 1;
             if (this.spawnRetryAttempts < 10 && error && error.message &&
                 error.message.indexOf('This socket has been ended by the other party') >= 0) {
                 this.spawnProcess(dir);
             }
         });
         this.proc.stdout.setEncoding('utf8');
+        // tslint:disable-next-line:max-func-body-length
         this.proc.stdout.on('data', (data: string) => {
             // Possible there was an exception in parsing the data returned,
             // so append the data then parse it.
-            var dataStr = this.previousData = this.previousData + data + '';
-            var responses: any[];
+            const dataStr = this.previousData = `${this.previousData}${data}`;
+            // tslint:disable-next-line:no-any
+            let responses: any[];
             try {
                 responses = dataStr.split(/\r?\n/g).filter(line => line.length > 0).map(resp => JSON.parse(resp));
                 this.previousData = '';
-            }
-            catch (ex) {
+            } catch (ex) {
                 // Possible we've only received part of the data, hence don't clear previousData.
                 // Don't log errors when we haven't received the entire response.
                 if (ex.message.indexOf('Unexpected end of input') === -1 &&
@@ -266,206 +306,199 @@ export class JediProxy implements vscode.Disposable {
                 // I think this needs to be removed, because this is misspelt, it is argments, 'U' is missing,
                 // And that case is handled further down
                 // case CommandType.Arguments: {
-                // Rewrite this mess to use stratergy..
-                if (response['argments']) {
-                    var index = this.commandQueue.indexOf(cmd.id);
-                    this.commandQueue.splice(index, 1);
+
+                const responseId = JediProxy.getProperty<number>(response, 'id');
+                const cmd = <IExecutionCommand<ICommandResult>>this.commands.get(responseId);
+                if (cmd === null) {
                     return;
                 }
-                var responseId = <number>response['id'];
 
-                var cmd = <IExecutionCommand<ICommandResult>>this.commands.get(responseId);
-                if (typeof cmd === 'object' && cmd !== null) {
-                    this.commands.delete(responseId);
-                    var index = this.commandQueue.indexOf(cmd.id);
+                if (JediProxy.getProperty<object>(response, 'arguments')) {
+                    this.commandQueue.splice(this.commandQueue.indexOf(cmd.id), 1);
+                    return;
+                }
+
+                this.commands.delete(responseId);
+                const index = this.commandQueue.indexOf(cmd.id);
+                if (index) {
                     this.commandQueue.splice(index, 1);
-
-                    if (cmd.delay && typeof cmd.telemetryEvent === 'string') {
-                        // cmd.delays.stop();
-                        // telemetryHelper.sendTelemetryEvent(cmd.telemetryEvent, null, cmd.delays.toMeasures());
-                    }
-
-                    // Check if this command has expired.
-                    if (cmd.token.isCancellationRequested) {
-                        cmd.deferred.resolve();
-                        return;
-                    }
-
-                    switch (cmd.command) {
-                        case CommandType.Completions: {
-                            let results = <IAutoCompleteItem[]>response['results'];
-                            results = Array.isArray(results) ? results : [];
-                            results.forEach(item => {
-                                const originalType = <string><any>item.type;
-                                item.type = getMappedVSCodeType(originalType);
-                                item.kind = getMappedVSCodeSymbol(originalType);
-                                item.rawType = getMappedVSCodeType(originalType);
-                            });
-
-                            let completionResult: ICompletionResult = {
-                                items: results,
-                                requestId: cmd.id
-                            };
-                            cmd.deferred.resolve(completionResult);
-                            break;
-                        }
-                        case CommandType.Definitions: {
-                            let defs = <any[]>response['results'];
-                            let defResult: IDefinitionResult = {
-                                requestId: cmd.id,
-                                definitions: []
-                            };
-                            if (defs.length > 0) {
-                                defResult.definitions = defs.map(def => {
-                                    const originalType = def.type as string;
-                                    return {
-                                        fileName: def.fileName,
-                                        text: def.text,
-                                        rawType: originalType,
-                                        type: getMappedVSCodeType(originalType),
-                                        kind: getMappedVSCodeSymbol(originalType),
-                                        container: def.container,
-                                        range: {
-                                            startLine: def.range.start_line,
-                                            startColumn: def.range.start_column,
-                                            endLine: def.range.end_line,
-                                            endColumn: def.range.end_column
-                                        }
-                                    };
-                                });
-                            }
-
-                            cmd.deferred.resolve(defResult);
-                            break;
-                        }
-                        case CommandType.Hover: {
-                            let defs = <any[]>response['results'];
-                            var defResult: IHoverResult = {
-                                requestId: cmd.id,
-                                items: defs.map(def => {
-                                    return {
-                                        kind: getMappedVSCodeSymbol(def.type),
-                                        description: def.description,
-                                        signature: def.signature,
-                                        docstring: def.docstring,
-                                        text: def.text
-                                    };
-                                })
-                            };
-
-                            cmd.deferred.resolve(defResult);
-                            break;
-                        }
-                        case CommandType.Symbols: {
-                            let defs = <any[]>response['results'];
-                            defs = Array.isArray(defs) ? defs : [];
-                            var defResults: ISymbolResult = {
-                                requestId: cmd.id,
-                                definitions: []
-                            };
-                            defResults.definitions = defs.map<IDefinition>(def => {
-                                const originalType = def.type as string;
-                                return {
-                                    fileName: def.fileName,
-                                    text: def.text,
-                                    rawType: originalType,
-                                    type: getMappedVSCodeType(originalType),
-                                    kind: getMappedVSCodeSymbol(originalType),
-                                    container: def.container,
-                                    range: {
-                                        startLine: def.range.start_line,
-                                        startColumn: def.range.start_column,
-                                        endLine: def.range.end_line,
-                                        endColumn: def.range.end_column
-                                    }
-                                };
-                            });
-
-                            cmd.deferred.resolve(defResults);
-                            break;
-                        }
-                        case CommandType.Usages: {
-                            let defs = <any[]>response['results'];
-                            defs = Array.isArray(defs) ? defs : [];
-                            var refResult: IReferenceResult = {
-                                requestId: cmd.id,
-                                references: defs.map(item => {
-                                    return {
-                                        columnIndex: item.column,
-                                        fileName: item.fileName,
-                                        lineIndex: item.line - 1,
-                                        moduleName: item.moduleName,
-                                        name: item.name
-                                    };
-                                }
-                                )
-                            };
-
-                            cmd.deferred.resolve(refResult);
-                            break;
-                        }
-                        case CommandType.Arguments: {
-                            let defs = <any[]>response['results'];
-                            cmd.deferred.resolve(<IArgumentsResult>{
-                                requestId: cmd.id,
-                                definitions: defs
-                            });
-                            break;
-                        }
-                    }
                 }
 
-                //Ok, check if too many pending requets.
-                if (this.commandQueue.length > 10) {
-                    var items = this.commandQueue.splice(0, this.commandQueue.length - 10);
-                    items.forEach(id => {
-                        if (this.commands.has(id)) {
-                            const cmd = this.commands.get(id);
-                            try {
-                                cmd.deferred.resolve(null);
-                            }
-                            catch (ex) {
-                            }
-                            this.commands.delete(id);
-                        }
-                    });
+                // Check if this command has expired.
+                if (cmd.token.isCancellationRequested) {
+                    this.safeResolve(cmd, undefined);
+                    return;
                 }
+
+                switch (cmd.command) {
+                    case CommandType.Completions:
+                        this.onCompletion(cmd, response);
+                        break;
+                    case CommandType.Definitions:
+                        this.onDefinition(cmd, response);
+                        break;
+                    case CommandType.Hover:
+                        this.onHover(cmd, response);
+                        break;
+                    case CommandType.Symbols:
+                        this.onSymbols(cmd, response);
+                        break;
+                    case CommandType.Usages:
+                        this.onUsages(cmd, response);
+                        break;
+                    case CommandType.Arguments:
+                        this.onArguments(cmd, response);
+                        break;
+                    default:
+                        break;
+                }
+                // Check if too many pending requets.
+                this.checkQueueLength();
             });
         });
     }
 
-    public sendCommand<T extends ICommandResult>(cmd: ICommand<T>): Promise<T> {
-        if (!this.proc) {
-            return Promise.reject(new Error('Python proc not initialized'));
-        }
-        var executionCmd = <IExecutionCommand<T>>cmd;
-        var payload = this.createPayload(executionCmd);
-        executionCmd.deferred = createDeferred<T>();
-        // if (typeof executionCmd.telemetryEvent === 'string') {
-        //     executionCmd.delays = new telemetryHelper.Delays();
-        // }
-        try {
-            this.proc.stdin.write(JSON.stringify(payload) + '\n');
-            this.commands.set(executionCmd.id, executionCmd);
-            this.commandQueue.push(executionCmd.id);
-        }
-        catch (ex) {
-            console.error(ex);
-            //If 'This socket is closed.' that means process didn't start at all (at least not properly).
-            if (ex.message === 'This socket is closed.') {
-
-                this.killProcess();
-            }
-            else {
-                this.handleError('sendCommand', ex.message);
-            }
-            return Promise.reject(ex);
-        }
-        return executionCmd.deferred.promise;
+    private onCompletion(command: IExecutionCommand<ICommandResult>, response: object): void {
+        let results = JediProxy.getProperty<IAutoCompleteItem[]>(response, 'results');
+        results = Array.isArray(results) ? results : [];
+        results.forEach(item => {
+            // tslint:disable-next-line:no-any
+            const originalType = <string><any>item.type;
+            item.type = getMappedVSCodeType(originalType);
+            item.kind = getMappedVSCodeSymbol(originalType);
+            item.rawType = getMappedVSCodeType(originalType);
+        });
+        const completionResult: ICompletionResult = {
+            items: results,
+            requestId: command.id
+        };
+        this.safeResolve(command, completionResult);
     }
 
+    private onDefinition(command: IExecutionCommand<ICommandResult>, response: object): void {
+        // tslint:disable-next-line:no-any
+        const defs = JediProxy.getProperty<any[]>(response, 'results');
+        const defResult: IDefinitionResult = {
+            requestId: command.id,
+            definitions: []
+        };
+        if (defs.length > 0) {
+            defResult.definitions = defs.map(def => {
+                const originalType = def.type as string;
+                return {
+                    fileName: def.fileName,
+                    text: def.text,
+                    rawType: originalType,
+                    type: getMappedVSCodeType(originalType),
+                    kind: getMappedVSCodeSymbol(originalType),
+                    container: def.container,
+                    range: {
+                        startLine: def.range.start_line,
+                        startColumn: def.range.start_column,
+                        endLine: def.range.end_line,
+                        endColumn: def.range.end_column
+                    }
+                };
+            });
+        }
+        this.safeResolve(command, defResult);
+    }
+
+    private onHover(command: IExecutionCommand<ICommandResult>, response: object): void {
+        // tslint:disable-next-line:no-any
+        const defs = JediProxy.getProperty<any[]>(response, 'results');
+        const defResult: IHoverResult = {
+            requestId: command.id,
+            items: defs.map(def => {
+                return {
+                    kind: getMappedVSCodeSymbol(def.type),
+                    description: def.description,
+                    signature: def.signature,
+                    docstring: def.docstring,
+                    text: def.text
+                };
+            })
+        };
+        this.safeResolve(command, defResult);
+    }
+
+    private onSymbols(command: IExecutionCommand<ICommandResult>, response: object): void {
+        // tslint:disable-next-line:no-any
+        let defs = JediProxy.getProperty<any[]>(response, 'results');
+        defs = Array.isArray(defs) ? defs : [];
+        const defResults: ISymbolResult = {
+            requestId: command.id,
+            definitions: []
+        };
+        defResults.definitions = defs.map<IDefinition>(def => {
+            const originalType = def.type as string;
+            return {
+                fileName: def.fileName,
+                text: def.text,
+                rawType: originalType,
+                type: getMappedVSCodeType(originalType),
+                kind: getMappedVSCodeSymbol(originalType),
+                container: def.container,
+                range: {
+                    startLine: def.range.start_line,
+                    startColumn: def.range.start_column,
+                    endLine: def.range.end_line,
+                    endColumn: def.range.end_column
+                }
+            };
+        });
+        this.safeResolve(command, defResults);
+    }
+
+    private onUsages(command: IExecutionCommand<ICommandResult>, response: object): void {
+        // tslint:disable-next-line:no-any
+        let defs = JediProxy.getProperty<any[]>(response, 'results');
+        defs = Array.isArray(defs) ? defs : [];
+        const refResult: IReferenceResult = {
+            requestId: command.id,
+            references: defs.map(item => {
+                return {
+                    columnIndex: item.column,
+                    fileName: item.fileName,
+                    lineIndex: item.line - 1,
+                    moduleName: item.moduleName,
+                    name: item.name
+                };
+            })
+        };
+        this.safeResolve(command, refResult);
+    }
+
+    private onArguments(command: IExecutionCommand<ICommandResult>, response: object): void {
+        // tslint:disable-next-line:no-any
+        const defs = JediProxy.getProperty<any[]>(response, 'results');
+        this.safeResolve(command, <IArgumentsResult>{
+            requestId: command.id,
+            definitions: defs
+        });
+    }
+
+    private checkQueueLength(): void {
+        if (this.commandQueue.length > 10) {
+            const items = this.commandQueue.splice(0, this.commandQueue.length - 10);
+            items.forEach(id => {
+                if (this.commands.has(id)) {
+                    const cmd1 = this.commands.get(id);
+                        try {
+                        this.safeResolve(cmd1, undefined);
+                        // tslint:disable-next-line:no-empty
+                    } catch (ex) {
+                    } finally {
+                        this.commands.delete(id);
+                    }
+                }
+            });
+        }
+    }
+
+    // tslint:disable-next-line:no-any
     private createPayload<T extends ICommandResult>(cmd: IExecutionCommand<T>): any {
-        var payload = {
+        const payload = {
             id: cmd.id,
             prefix: '',
             lookup: commandNames.get(cmd.command),
@@ -484,19 +517,18 @@ export class JediProxy implements vscode.Disposable {
         return payload;
     }
 
-    private lastKnownPythonPath: string = null;
-    private additionalAutoCopletePaths: string[] = [];
     private getPathFromPythonCommand(args: string[]): Promise<string> {
         return execPythonFile(this.workspacePath, this.pythonSettings.pythonPath, args, this.workspacePath).then(stdout => {
             if (stdout.length === 0) {
                 return '';
             }
-            let lines = stdout.split(/\r?\n/g).filter(line => line.length > 0);
+            const lines = stdout.split(/\r?\n/g).filter(line => line.length > 0);
             return validatePath(lines[0]);
         }).catch(() => {
             return '';
         });
     }
+
     private onConfigChanged() {
         // We're only interested in changes to the python path.
         if (this.lastKnownPythonPath === this.pythonSettings.pythonPath) {
@@ -504,7 +536,7 @@ export class JediProxy implements vscode.Disposable {
         }
 
         this.lastKnownPythonPath = this.pythonSettings.pythonPath;
-        let filePaths = [
+        const filePaths = [
             // Sysprefix.
             this.getPathFromPythonCommand(['-c', 'import sys;print(sys.prefix)']),
             // exeucutable path.
@@ -512,20 +544,20 @@ export class JediProxy implements vscode.Disposable {
             // Python specific site packages.
             this.getPathFromPythonCommand(['-c', 'from distutils.sysconfig import get_python_lib; print(get_python_lib())']),
             // Python global site packages, as a fallback in case user hasn't installed them in custom environment.
-            this.getPathFromPythonCommand(['-m', 'site', '--user-site']),
+            this.getPathFromPythonCommand(['-m', 'site', '--user-site'])
         ];
 
-        let PYTHONPATH: string = process.env['PYTHONPATH'];
+        let PYTHONPATH: string = JediProxy.getProperty<string>(process.env, 'PYTHONPATH');
         if (typeof PYTHONPATH !== 'string') {
             PYTHONPATH = '';
         }
-        let customEnvironmentVars = getCustomEnvVarsSync(vscode.Uri.file(this.pythonProcessCWD));
-        if (customEnvironmentVars && customEnvironmentVars['PYTHONPATH']) {
-            let PYTHONPATHFromEnvFile = customEnvironmentVars['PYTHONPATH'] as string;
+        const customEnvironmentVars = getCustomEnvVarsSync(vscode.Uri.file(this.pythonProcessCWD));
+        if (customEnvironmentVars && JediProxy.getProperty<string>(customEnvironmentVars, 'PYTHONPATH')) {
+            let PYTHONPATHFromEnvFile = JediProxy.getProperty<string>(customEnvironmentVars, 'PYTHONPATH');
             if (!path.isAbsolute(PYTHONPATHFromEnvFile) && this.workspacePath === 'string') {
                 PYTHONPATHFromEnvFile = path.resolve(this.workspacePath, PYTHONPATHFromEnvFile);
             }
-            PYTHONPATH += (PYTHONPATH.length > 0 ? + path.delimiter : '') + PYTHONPATHFromEnvFile;
+            PYTHONPATH += `${(PYTHONPATH.length > 0 ? + path.delimiter : '')}${PYTHONPATHFromEnvFile}`;
         }
         if (typeof PYTHONPATH === 'string' && PYTHONPATH.length > 0) {
             filePaths.push(Promise.resolve(PYTHONPATH.trim()));
@@ -549,7 +581,7 @@ export class JediProxy implements vscode.Disposable {
 
     private getConfig() {
         // Add support for paths relative to workspace.
-        let extraPaths = this.pythonSettings.autoComplete.extraPaths.map(extraPath => {
+        const extraPaths = this.pythonSettings.autoComplete.extraPaths.map(extraPath => {
             if (path.isAbsolute(extraPath)) {
                 return extraPath;
             }
@@ -564,7 +596,7 @@ export class JediProxy implements vscode.Disposable {
             extraPaths.unshift(this.workspacePath);
         }
 
-        let distinctExtraPaths = extraPaths.concat(this.additionalAutoCopletePaths)
+        const distinctExtraPaths = extraPaths.concat(this.additionalAutoCopletePaths)
             .filter(value => value.length > 0)
             .filter((value, index, self) => self.indexOf(value) === index);
 
@@ -576,7 +608,17 @@ export class JediProxy implements vscode.Disposable {
             fuzzyMatcher: true
         };
     }
+
+    private safeResolve(
+        command: IExecutionCommand<ICommandResult> | undefined | null,
+        result: ICommandResult | PromiseLike<ICommandResult> | undefined): void {
+        if (command && command.deferred) {
+            command.deferred.resolve(result);
+        }
+    }
 }
+
+// tslint:disable-next-line:no-unused-variable
 export interface ICommand<T extends ICommandResult> {
     telemetryEvent?: string;
     command: CommandType;
@@ -587,7 +629,7 @@ export interface ICommand<T extends ICommandResult> {
 }
 
 interface IExecutionCommand<T extends ICommandResult> extends ICommand<T> {
-    id?: number;
+    id: number;
     deferred?: Deferred<T>;
     token: vscode.CancellationToken;
     delay?: number;
@@ -650,7 +692,7 @@ export interface IAutoCompleteItem {
     raw_docstring: string;
     rightLabel: string;
 }
-interface IDefinitionRange {
+export interface IDefinitionRange {
     startLine: number;
     startColumn: number;
     endLine: number;
@@ -681,19 +723,25 @@ export class JediProxyHandler<R extends ICommandResult> implements vscode.Dispos
         return this.jediProxy;
     }
 
-    public constructor(private jediProxy: JediProxy = null) {
+    public constructor(private jediProxy: JediProxy) {
         this.commandCancellationTokenSources = new Map<CommandType, vscode.CancellationTokenSource>();
     }
+
     public dispose() {
-        this.jediProxy.dispose();
+        if (this.jediProxy) {
+            this.jediProxy.dispose();
+        }
     }
-    public sendCommand(cmd: ICommand<R>, token?: vscode.CancellationToken): Promise<R> {
-        var executionCmd = <IExecutionCommand<R>>cmd;
+
+    public sendCommand(cmd: ICommand<R>, token?: vscode.CancellationToken): Promise<R | undefined> {
+        const executionCmd = <IExecutionCommand<R>>cmd;
         executionCmd.id = executionCmd.id || this.jediProxy.getNextCommandId();
 
         if (this.commandCancellationTokenSources.has(cmd.command)) {
-            const cancellation = this.commandCancellationTokenSources.get(cmd.command);
-            cancellation.cancel();
+            const ct = this.commandCancellationTokenSources.get(cmd.command);
+            if (ct) {
+                ct.cancel();
+            }
         }
 
         const cancellation = new vscode.CancellationTokenSource();
@@ -707,10 +755,12 @@ export class JediProxyHandler<R extends ICommandResult> implements vscode.Dispos
             });
     }
 
-    public sendCommandNonCancellableCommand(cmd: ICommand<R>, token?: vscode.CancellationToken): Promise<R> {
-        var executionCmd = <IExecutionCommand<R>>cmd;
+    public sendCommandNonCancellableCommand(cmd: ICommand<R>, token?: vscode.CancellationToken): Promise<R | undefined> {
+        const executionCmd = <IExecutionCommand<R>>cmd;
         executionCmd.id = executionCmd.id || this.jediProxy.getNextCommandId();
-        executionCmd.token = token;
+        if (token) {
+            executionCmd.token = token;
+        }
 
         return this.jediProxy.sendCommand<R>(executionCmd)
             .catch(reason => {

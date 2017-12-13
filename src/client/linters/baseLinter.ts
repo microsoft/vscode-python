@@ -126,7 +126,7 @@ export abstract class BaseLinter {
         } else {
             const env = await this.serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider).getEnvironmentVariables(true, document.uri);
             const executionService = this.serviceContainer.get<IProcessService>(IProcessService);
-            executionPromise = executionService.exec(executionInfo.execPath!, args, { cwd, env, token: cancellation, mergeStdOutErr: true });
+            executionPromise = executionService.exec(executionInfo.execPath!, executionInfo.args, { cwd, env, token: cancellation, mergeStdOutErr: true });
         }
         try {
             const result = await executionPromise;
