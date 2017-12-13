@@ -130,7 +130,7 @@ time-critical as a new feature may be.
   * Make sure the
     [documentation](https://code.visualstudio.com/docs/python/python-tutorial)
     -- including the
-    [WOW](https://code.visualstudio.com/docs/languages/python) page)
+    [WOW](https://code.visualstudio.com/docs/languages/python) page
     -- has [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls)
   * Draft a post for the [team blog](https://aka.ms/pythonblog)
 
