@@ -46,5 +46,5 @@
 	"python.snippet.launch.attach.label": "Python: Подключить отладчик",
 	"python.snippet.launch.attach.description": "Подключить отладчик для удаленной отладки",
 	"python.snippet.launch.scrapy.label": "Python: Scrapy",
-	"python.snippet.launch.scrapy.description": "Scrapy в интергрированной консоли"
+	"python.snippet.launch.scrapy.description": "Scrapy в интегрированной консоли"
 }
