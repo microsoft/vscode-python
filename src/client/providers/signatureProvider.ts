@@ -1,5 +1,6 @@
 'use strict';
 
+import { EOL } from 'os';
 import * as vscode from 'vscode';
 import { CancellationToken, Position, SignatureHelp, TextDocument } from 'vscode';
 import { JediFactory } from '../languageServices/jediProxyFactory';
@@ -55,8 +56,13 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
                 signature.activeParameter = def.paramindex;
                 // Don't display the documentation, as vs code doesn't format the docmentation.
                 // i.e. line feeds are not respected, long content is stripped.
+                const docLines = def.docstring.splitLines();
+                const label = docLines[0].trim();
+                const documentation = docLines.length > 1 ? docLines.filter((line, index) => index > 0).join(EOL) : '';
+
                 const sig = <vscode.SignatureInformation>{
-                    label: def.description,
+                    label: label,
+                    documentation: documentation,
                     parameters: []
                 };
                 sig.parameters = def.params.map(arg => {
@@ -65,7 +71,7 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
                     }
                     return <vscode.ParameterInformation>{
                         documentation: arg.docstring.length > 0 ? arg.docstring : arg.description,
-                        label: arg.description.length > 0 ? arg.description : arg.name
+                        label: arg.name
                     };
                 });
                 signature.signatures.push(sig);
@@ -85,7 +91,7 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
             source: document.getText()
         };
         return this.jediFactory.getJediProxyHandler<proxy.IArgumentsResult>(document.uri).sendCommand(cmd, token).then(data => {
-            return PythonSignatureProvider.parseData(data);
+            return data ? PythonSignatureProvider.parseData(data) : undefined;
         });
     }
 }
