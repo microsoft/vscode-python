@@ -130,11 +130,13 @@ time-critical as a new feature may be.
     -- has [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls)
   * Update the
     [changelog](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
-  * Tag the release in git
+  * Create a branch for the release
+  * Unfreeze the `master` branch
   * Draft a post for the [team blog](https://aka.ms/pythonblog)
 
 Assuming no last-minute issues, the release should be made public
-later that same week.
+later that same week. After releasing, the previous release's branch
+is turned into a tag and its branch is deleted.
 
 ### Issue triaging
 
