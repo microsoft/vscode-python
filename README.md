@@ -10,27 +10,31 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 * Excellent debugging support (remote debugging over SSH, mutliple threads, django, flask)
 * Running and debugging Unit tests ([unittest](https://docs.python.org/3/library/unittest.html#module-unittest), [pytest](https://pypi.io/project/pytest/), [nose](https://pypi.io/project/nose/), with config files)
 * Execute file or code in a python terminal
-* Local help file (offline documentation)
 * Snippets
 
 ## Quick Start
+
 * Install the extension
 * optionally install `ctags` for Workspace Symbols, from [here](http://ctags.sourceforge.net/), or using `brew install ctags` on macOS
 * Select your Python interpreter
   + If it's already in your path then you're set
-  + Otherwise, to select a different Python Interpreter/Version (or use a virtual environment), use the command `Select Workspace Interpreter`)
+  + Otherwise, to select a different Python interpreter/version/environment (use the command `Select Workspace Interpreter` or look in the status bar)
 
 ## [Documentation](https://code.visualstudio.com/docs/languages/python)
+
 For further information and details continue through to the [documentation](https://code.visualstudio.com/docs/languages/python).
 
-## Issues, Feature Requests, and Contributions
-* If you come across a problem with the extension please [file an issue](https://github.com/microsoft/vscode-python)
+## Questions, Issues, Feature Requests, and Contributions
+
+* If you have a question about how to accomplish something with the extension, please [ask on Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code+python)
+* If you come across a problem with the extension, please [file an issue](https://github.com/microsoft/vscode-python)
 * Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md) for more details
 * Any and all feedback is appreciated and welcome!
   - If someone has already [file an issue](https://github.com/Microsoft/vscode-python) that encompasses your feedback, please leave a 👍/👎 reaction on the issue
   - Otherwise please file a new issue
 
 ## Feature Details
+
 * IDE-like Features
   + Automatic indenting
   + Code navigation ("Go to", "Find all" references)
@@ -78,7 +82,17 @@ For further information and details continue through to the [documentation](http
 ![Unit Tests](https://raw.githubusercontent.com/microsoft/vscode-python/master/images/unittest.gif)
 
 
+## Supported locales
+
+The extension is available in multiple languages thanks to external
+contributors (if you would like to contribute a translation, see the
+[pull request which added simplified Chinese](https://github.com/Microsoft/vscode-python/pull/240)):
+
+* `en`
+* `zh-cn`
+
 ## Data/Telemetry
+
 The Microsoft Python Extension for Visual Studio Code collects usage
 data and sends it to Microsoft to help improve our products and
 services. Read our
