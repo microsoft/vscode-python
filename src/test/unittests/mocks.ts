@@ -30,8 +30,8 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     constructor() {
         this._launched = createDeferred<boolean>();
     }
-    public async getPort(resource?: Uri): Promise<number> {
-        return 0;
+    public async getLaunchOptions(resource?: Uri): Promise<{ port: number, host: string }> {
+        return { port: 0, host: 'localhost' };
     }
     public async launchDebugger(options: launchOptions): Promise<void> {
         this._launched.resolve(true);
@@ -100,12 +100,12 @@ export class MockUnitTestSocketServer extends EventEmitter implements IUnitTestS
     public addResults(results: {}[]) {
         this.results.push(...results);
     }
-    public async start(): Promise<number> {
+    public async start(options: { port: number, host: string } = { port: 0, host: 'localhost' }): Promise<number> {
         this.results.forEach(result => {
             this.emit('result', result);
         });
         this.results = [];
-        return 0;
+        return typeof options.port === 'number' ? options.port! : 0;
     }
     // tslint:disable-next-line:no-empty
     public stop(): void { }
