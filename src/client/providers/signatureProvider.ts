@@ -57,12 +57,12 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
                 // Don't display the documentation, as vs code doesn't format the docmentation.
                 // i.e. line feeds are not respected, long content is stripped.
                 const docLines = def.docstring.splitLines();
-                const label = docLines[0].trim();
-                const documentation = docLines.length > 1 ? docLines.filter((line, index) => index > 0).join(EOL) : '';
+                const label = docLines.shift().trim();
+                const documentation = docLines.join(EOL).trim();
 
                 const sig = <vscode.SignatureInformation>{
-                    label: label,
-                    documentation: documentation,
+                    label,
+                    documentation,
                     parameters: []
                 };
                 sig.parameters = def.params.map(arg => {
@@ -91,7 +91,7 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
             source: document.getText()
         };
         return this.jediFactory.getJediProxyHandler<proxy.IArgumentsResult>(document.uri).sendCommand(cmd, token).then(data => {
-            return data ? PythonSignatureProvider.parseData(data) : undefined;
+            return data ? PythonSignatureProvider.parseData(data) : new SignatureHelp();
         });
     }
 }
