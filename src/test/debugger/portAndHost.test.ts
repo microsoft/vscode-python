@@ -88,21 +88,21 @@ suite('Standard Debugging', () => {
         await debugClient.waitForEvent('terminated');
     }
 
-    test('Confirm debuggig works if no port or host is provided', async () => {
-        await testDebuggingWithProvidedPort(undefined, 'localhost');
+    test('Confirm debuggig works if both port and host are not provided', async () => {
+        await testDebuggingWithProvidedPort();
     });
 
-    test('Confirm debuggig works if port=0 or host is not provided', async () => {
-        await testDebuggingWithProvidedPort(0);
-    });
-
-    test('Confirm debuggig works if port=0 or host=localhost', async () => {
+    test('Confirm debuggig works if port=0 and host=localhost', async () => {
         await testDebuggingWithProvidedPort(0, 'localhost');
     });
 
-    test('Confirm debuggig works if port=0 or host=127.0.0.1', async () => {
-        await testDebuggingWithProvidedPort(0, '127.0.0.1');
-    });
+    // test('Confirm debuggig works if port=0 or host=localhost', async () => {
+    //     await testDebuggingWithProvidedPort(0, 'localhost');
+    // });
+
+    // test('Confirm debuggig works if port=0 or host=127.0.0.1', async () => {
+    //     await testDebuggingWithProvidedPort(0, '127.0.0.1');
+    // });
 
     test('Confirm debuggig fails when an invalid host is provided', async () => {
         const promise = await testDebuggingWithProvidedPort(0, 'xyz123409924ple_ewf');
