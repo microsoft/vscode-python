@@ -32,8 +32,14 @@ suite('Standard Debugging', () => {
     });
     suiteTeardown(closeActiveWindows);
     teardown(async () => {
-        debugClient.stop();
-        await closeActiveWindows();
+        try {
+            debugClient.stop();
+            // tslint:disable-next-line:no-empty
+        } catch (ex) { }
+        try {
+            await closeActiveWindows();
+            // tslint:disable-next-line:no-empty
+        } catch (ex) { }
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
         await new Promise(resolve => setTimeout(resolve, 1000));
     });
