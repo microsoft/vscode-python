@@ -23,17 +23,14 @@ suite('Standard Debugging', () => {
     let debugClient: DebugClient;
     suiteSetup(initialize);
 
-    setup(async () => {
+    setup(() => new Promise(resolve => setTimeout(resolve, 1000)));
+    teardown(async () => {
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
         await new Promise(resolve => setTimeout(resolve, 1000));
-    });
-    teardown(async () => {
         try {
             debugClient.stop();
             // tslint:disable-next-line:no-empty
         } catch (ex) { }
-        // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
-        await new Promise(resolve => setTimeout(resolve, 1000));
     });
 
     async function startDebugger() {
@@ -92,21 +89,21 @@ suite('Standard Debugging', () => {
         await testDebuggingWithProvidedPort();
     });
 
-    test('Confirm debuggig works if port=0 and host=localhost', async () => {
+    test('Confirm debuggig works if port=0', async () => {
         await testDebuggingWithProvidedPort(0, 'localhost');
     });
 
-    // test('Confirm debuggig works if port=0 or host=localhost', async () => {
-    //     await testDebuggingWithProvidedPort(0, 'localhost');
-    // });
+    test('Confirm debuggig works if port=0 or host=localhost', async () => {
+        await testDebuggingWithProvidedPort(0, 'localhost');
+    });
 
-    // test('Confirm debuggig works if port=0 or host=127.0.0.1', async () => {
-    //     await testDebuggingWithProvidedPort(0, '127.0.0.1');
-    // });
+    test('Confirm debuggig works if port=0 or host=127.0.0.1', async () => {
+        await testDebuggingWithProvidedPort(0, '127.0.0.1');
+    });
 
     test('Confirm debuggig fails when an invalid host is provided', async () => {
-        const promise = await testDebuggingWithProvidedPort(0, 'xyz123409924ple_ewf');
-        // expect(promise).to.eventually.be.rejected.and.to.have.property('code', 'ENOTFOUND', 'Debugging failed for some other reason');
+        const promise = testDebuggingWithProvidedPort(0, 'xyz123409924ple_ewf');
+        expect(promise).to.eventually.be.rejected.and.to.have.property('code', 'ENOTFOUND', 'Debugging failed for some other reason');
     });
 
     test('Confirm debuggig fails when provided port is in use', async () => {
@@ -114,10 +111,10 @@ suite('Standard Debugging', () => {
         const server = net.createServer((s) => { });
         const port = await new Promise<number>((resolve, reject) => server.listen({ host: 'localhost', port: 0 }, () => resolve(server.address().port)));
         try {
-            const promise = await testDebuggingWithProvidedPort(port);
+            const promise = testDebuggingWithProvidedPort(port);
+            expect(promise).to.eventually.be.rejected.and.to.have.property('code', 'EADDRINUSE', 'Debugging failed for some other reason');
         } finally {
             server.close();
         }
-        // expect(promise).to.eventually.be.rejected.and.to.have.property('code', 'EADDRINUSE', 'Debugging failed for some other reason');
     });
 });
