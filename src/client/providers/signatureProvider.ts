@@ -71,7 +71,7 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
                     }
                     return <vscode.ParameterInformation>{
                         documentation: arg.docstring.length > 0 ? arg.docstring : arg.description,
-                        label: arg.name
+                        label: arg.name.trim()
                     };
                 });
                 signature.signatures.push(sig);
