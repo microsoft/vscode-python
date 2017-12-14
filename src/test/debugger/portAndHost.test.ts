@@ -113,7 +113,11 @@ suite('Standard Debugging', () => {
         // tslint:disable-next-line:no-empty
         const server = net.createServer((s) => { });
         const port = await new Promise<number>((resolve, reject) => server.listen({ host: 'localhost', port: 0 }, () => resolve(server.address().port)));
-        const promise = await testDebuggingWithProvidedPort(port);
+        try {
+            const promise = await testDebuggingWithProvidedPort(port);
+        } finally {
+            server.close();
+        }
         // expect(promise).to.eventually.be.rejected.and.to.have.property('code', 'EADDRINUSE', 'Debugging failed for some other reason');
     });
 });
