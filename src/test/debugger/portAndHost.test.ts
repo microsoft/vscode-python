@@ -23,7 +23,11 @@ suite('Standard Debugging', () => {
     let debugClient: DebugClient;
     suiteSetup(initialize);
 
-    setup(() => new Promise(resolve => setTimeout(resolve, 1000)));
+    setup(async () => {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        debugClient = new DebugClient('node', DEBUG_ADAPTER, 'python');
+        await debugClient.start();
+    });
     teardown(async () => {
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -33,10 +37,6 @@ suite('Standard Debugging', () => {
         } catch (ex) { }
     });
 
-    async function startDebugger() {
-        debugClient = new DebugClient('node', DEBUG_ADAPTER, 'python');
-        await debugClient.start();
-    }
     async function testDebuggingWithProvidedPort(port?: number | undefined, host?: string | undefined) {
         const args: LaunchRequestArguments = {
             program: path.join(debugFilesPath, 'simplePrint.py'),
@@ -49,7 +49,6 @@ suite('Standard Debugging', () => {
             port,
             host
         };
-        await startDebugger();
         const threadIdPromise = createDeferred<number>();
         debugClient.on('thread', (data: ThreadEvent) => {
             if (data.body.reason === 'started') {
