@@ -3,7 +3,6 @@
 'use strict';
 
 import * as assert from 'assert';
-import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -28,7 +27,6 @@ class SignatureHelpResult {
 suite('Signatures', () => {
     suiteSetup(async () => {
         await initialize();
-        const version = await execPythonFile(rootWorkspaceUri, PythonSettings.getInstance(rootWorkspaceUri).pythonPath, ['--version'], __dirname, true);
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
