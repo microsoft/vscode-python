@@ -24,6 +24,8 @@ suite('Standard Debugging', () => {
     suiteSetup(initialize);
 
     setup(async () => {
+        // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
+        await new Promise(resolve => setTimeout(resolve, 1000));
         await initializeTest();
         debugClient = new DebugClient('node', DEBUG_ADAPTER, 'python');
         return debugClient.start();
