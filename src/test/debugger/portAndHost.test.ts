@@ -32,6 +32,8 @@ suite('Standard Debugging', () => {
     teardown(async () => {
         debugClient.stop();
         await closeActiveWindows();
+        // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
+        await new Promise(resolve => setTimeout(resolve, 1000));
     });
 
     async function testDebuggingWithProvidedPort(port?: number | undefined, host?: string | undefined) {
