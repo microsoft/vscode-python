@@ -1,26 +1,22 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as fs from 'fs-extra';
 import * as getFreePort from 'get-port';
 import * as net from 'net';
 import * as path from 'path';
-import { CancellationTokenSource } from 'vscode';
 import { ThreadEvent } from 'vscode-debugadapter';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
-import { DebugProtocol } from 'vscode-debugprotocol';
 import { createDeferred } from '../../client/common/helpers';
-import { execPythonFile } from '../../client/common/utils';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
-import { MockProcessService } from '../mocks/proc';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 use(chaiAsPromised);
 
 const debugFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'debugging');
 
 const DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'Main.js');
-const PROJECT_ROOT = path.join(__dirname, '..', '..', '..');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Standard Debugging', () => {
@@ -66,8 +62,8 @@ suite('Standard Debugging', () => {
             pathFormat: 'path'
         });
 
-        const launchResponse = await debugClient.launch(args);
-        const initializeResponse = await initializePromise;
+        await debugClient.launch(args);
+        await initializePromise;
 
         // Wait till we get the thread of the program.
         const threadId = await threadIdPromise.promise;
