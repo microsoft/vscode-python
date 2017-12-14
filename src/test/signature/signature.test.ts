@@ -5,9 +5,6 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { PythonSettings } from '../../client/common/configSettings';
-import { execPythonFile } from '../../client/common/utils';
-import { rootWorkspaceUri } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'signature');
