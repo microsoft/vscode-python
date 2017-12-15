@@ -57,7 +57,6 @@ export abstract class BaseFormatter {
         const executionInfo = this.helper.getExecutionInfo(this.product, args, document.uri);
         // Check if required to run as a module or executable.
         if (executionInfo.moduleName) {
-            // const pythonExecutionService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(document.uri);
             executionPromise = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(document.uri)
                 .then(pythonExecutionService => pythonExecutionService.execModule(executionInfo.moduleName!, executionInfo.args.concat([filePath]), { cwd, throwOnStdErr: true, token }))
                 .then(output => output.stdout);
