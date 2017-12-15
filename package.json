@@ -635,7 +635,7 @@
 							},
 							"host": {
 								"type": "string",
-								"description": "IP Address of the of the local debug server (default is localhost or use 127.0.0.1).",
+								"description": "IP address of the of the local debug server (default is localhost).",
 								"default": "localhost"
 							}
 						}
