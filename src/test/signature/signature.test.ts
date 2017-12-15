@@ -5,12 +5,12 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { PythonSettings } from '../../client/common/configSettings';
+import { execPythonFile } from '../../client/common/utils';
+import { rootWorkspaceUri } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'signature');
-const fileOne = path.join(autoCompPath, 'one.py');
-const fileTwo = path.join(autoCompPath, 'two.py');
-const fileThree = path.join(autoCompPath, 'three.py');
 
 class SignatureHelpResult {
     constructor(
@@ -23,8 +23,11 @@ class SignatureHelpResult {
 
 // tslint:disable-next-line:max-func-body-length
 suite('Signatures', () => {
+    let isPython3: Promise<boolean>;
     suiteSetup(async () => {
         await initialize();
+        const version = await execPythonFile(rootWorkspaceUri, PythonSettings.getInstance(rootWorkspaceUri).pythonPath, ['--version'], __dirname, true);
+        isPython3 = Promise.resolve(version.indexOf('3.') >= 0);
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -44,7 +47,7 @@ suite('Signatures', () => {
             new SignatureHelpResult(5, 20, 0, 0, null)
         ];
 
-        const document = await openDocument(fileOne);
+        const document = await openDocument(path.join(autoCompPath, 'classCtor.py'));
         for (let i = 0; i < expected.length; i += 1) {
             await checkSignature(expected[i], document!.uri, i);
         }
@@ -67,15 +70,17 @@ suite('Signatures', () => {
             new SignatureHelpResult(1, 0, 1, 2, 'step')
         ];
 
-        const document = await openDocument(fileTwo);
+        const document = await openDocument(path.join(autoCompPath, 'basicSig.py'));
         for (let i = 0; i < expected.length; i += 1) {
             await checkSignature(expected[i], document!.uri, i);
         }
     });
 
     test('For ellipsis', async () => {
+        if (!await isPython3) {
+            return;
+        }
         const expected = [
-            new SignatureHelpResult(0, 4, 0, 0, null),
             new SignatureHelpResult(0, 5, 0, 0, null),
             new SignatureHelpResult(0, 6, 1, 0, 'value'),
             new SignatureHelpResult(0, 7, 1, 0, 'value'),
@@ -86,10 +91,22 @@ suite('Signatures', () => {
             new SignatureHelpResult(0, 12, 1, 2, 'sep')
         ];
 
-        const document = await openDocument(fileThree);
+        const document = await openDocument(path.join(autoCompPath, 'ellipsis.py'));
         for (let i = 0; i < expected.length; i += 1) {
             await checkSignature(expected[i], document!.uri, i);
         }
+    });
+
+    test('For pow', async () => {
+        let expected: SignatureHelpResult;
+        if (await isPython3) {
+            expected = new SignatureHelpResult(0, 4, 1, 0, null);
+        } else {
+            expected = new SignatureHelpResult(0, 4, 1, 0, 'x');
+        }
+
+        const document = await openDocument(path.join(autoCompPath, 'noSigPy3.py'));
+        await checkSignature(expected, document!.uri, 0);
     });
 });
 
@@ -105,7 +122,9 @@ async function checkSignature(expected: SignatureHelpResult, uri: vscode.Uri, ca
     assert.equal(actual!.signatures.length, expected.signaturesCount, `Signature count does not match, case ${caseIndex}`);
     if (expected.signaturesCount > 0) {
         assert.equal(actual!.activeParameter, expected.activeParameter, `Parameter index does not match, case ${caseIndex}`);
-        const parameter = actual!.signatures[0].parameters[expected.activeParameter];
-        assert.equal(parameter.label, expected.parameterName, `Parameter name is incorrect, case ${caseIndex}`);
+        if (expected.parameterName) {
+            const parameter = actual!.signatures[0].parameters[expected.activeParameter];
+            assert.equal(parameter.label, expected.parameterName, `Parameter name is incorrect, case ${caseIndex}`);
+        }
     }
 }
