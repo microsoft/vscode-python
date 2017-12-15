@@ -60,13 +60,14 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
                 // Some functions do not come with parameter docs
                 let label: string;
                 let documentation: string;
+                const validParamInfo = def.params && def.params.length > 0 && def.docstring.startsWith(`${def.name}(`);
 
-                if (def.params && def.params.length > 0) {
+                if (validParamInfo) {
                     const docLines = def.docstring.splitLines();
                     label = docLines.shift().trim();
                     documentation = docLines.join(EOL).trim();
                 } else {
-                    label = '';
+                    label = def.description;
                     documentation = def.docstring;
                 }
 
@@ -75,15 +76,18 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
                     documentation,
                     parameters: []
                 };
-                sig.parameters = def.params.map(arg => {
-                    if (arg.docstring.length === 0) {
-                        arg.docstring = extractParamDocString(arg.name, def.docstring);
-                    }
-                    return <vscode.ParameterInformation>{
-                        documentation: arg.docstring.length > 0 ? arg.docstring : arg.description,
-                        label: arg.name.trim()
-                    };
-                });
+
+                if (validParamInfo) {
+                    sig.parameters = def.params.map(arg => {
+                        if (arg.docstring.length === 0) {
+                            arg.docstring = extractParamDocString(arg.name, def.docstring);
+                        }
+                        return <vscode.ParameterInformation>{
+                            documentation: arg.docstring.length > 0 ? arg.docstring : arg.description,
+                            label: arg.name.trim()
+                        };
+                    });
+                }
                 signature.signatures.push(sig);
             });
             return signature;
