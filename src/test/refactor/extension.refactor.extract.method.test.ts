@@ -1,16 +1,16 @@
-import * as assert from 'assert';
+// tslint:disable:interface-name no-any max-func-body-length estrict-plus-operands
 
-// You can import and use all API from the \'vscode\' module
-// as well as import your extension to test it
-import * as vscode from 'vscode';
-import * as path from 'path';
+import * as assert from 'assert';
 import * as fs from 'fs-extra';
-import { PythonSettings } from '../../client/common/configSettings';
-import { initialize, closeActiveWindows, IS_TRAVIS, wait, initializeTest } from './../initialize';
+import * as path from 'path';
+import * as vscode from 'vscode';
 import { Position } from 'vscode';
+import { PythonSettings } from '../../client/common/configSettings';
+import { getTextEditsFromPatch } from '../../client/common/editor';
 import { extractMethod } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
-import { getTextEditsFromPatch } from '../../client/common/editor';
+import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { closeActiveWindows, initialize, initializeTest, IS_TRAVIS, wait } from './../initialize';
 import { MockOutputChannel } from './../mockClasses';
 
 const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
@@ -26,9 +26,11 @@ suite('Method Extraction', () => {
     const oldExecuteCommand = vscode.commands.executeCommand;
     const options: vscode.TextEditorOptions = { cursorStyle: vscode.TextEditorCursorStyle.Line, insertSpaces: true, lineNumbers: vscode.TextEditorLineNumbersStyle.Off, tabSize: 4 };
 
-    suiteSetup(() => {
+    let ioc: UnitTestIocContainer;
+    suiteSetup(async () => {
         fs.copySync(refactorSourceFile, refactorTargetFile, { overwrite: true });
-        return initialize();
+        await initialize();
+        initializeDI();
     });
     suiteTeardown(() => {
         vscode.commands.executeCommand = oldExecuteCommand;
@@ -48,20 +50,28 @@ suite('Method Extraction', () => {
         return closeActiveWindows();
     });
 
+    function initializeDI() {
+        ioc = new UnitTestIocContainer();
+        ioc.registerCommonTypes();
+        ioc.registerProcessTypes();
+        ioc.registerVariableTypes();
+    }
+
     function testingMethodExtraction(shouldError: boolean, startPos: Position, endPos: Position) {
         const pythonSettings = PythonSettings.getInstance(vscode.Uri.file(refactorTargetFile));
-        let rangeOfTextToExtract = new vscode.Range(startPos, endPos);
-        let proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile));
+        const rangeOfTextToExtract = new vscode.Range(startPos, endPos);
+        const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile), ioc.serviceContainer);
         let expectedTextEdits: vscode.TextEdit[];
         let ignoreErrorHandling = false;
         let mockTextDoc: vscode.TextDocument;
+        // tslint:disable-next-line:no-multiline-string
         const DIFF = `--- a/refactor.py\n+++ b/refactor.py\n@@ -237,9 +237,12 @@\n             try:\n                 self._process_request(self._input.readline())\n             except Exception as ex:\n-                message = ex.message + '  \\n' + traceback.format_exc()\n-                sys.stderr.write(str(len(message)) + ':' + message)\n-                sys.stderr.flush()\n+                self.myNewMethod(ex)\n+\n+    def myNewMethod(self, ex):\n+        message = ex.message + '  \\n' + traceback.format_exc()\n+        sys.stderr.write(str(len(message)) + ':' + message)\n+        sys.stderr.flush()\n \n if __name__ == '__main__':\n     RopeRefactoring().watch()\n`;
         return new Promise<vscode.TextDocument>((resolve, reject) => {
             vscode.workspace.openTextDocument(refactorTargetFile).then(textDocument => {
                 mockTextDoc = textDocument;
                 expectedTextEdits = getTextEditsFromPatch(textDocument.getText(), DIFF);
                 resolve();
-            }, error => reject(error));
+            }, reject);
         })
             .then(() => proxy.extractMethod<RenameResponse>(mockTextDoc, 'myNewMethod', refactorTargetFile, rangeOfTextToExtract, options))
             .then(response => {
@@ -69,16 +79,16 @@ suite('Method Extraction', () => {
                     ignoreErrorHandling = true;
                     assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
                 }
-                let textEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
+                const textEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
                 assert.equal(response.results.length, 1, 'Invalid number of items in response');
                 assert.equal(textEdits.length, expectedTextEdits.length, 'Invalid number of Text Edits');
                 textEdits.forEach(edit => {
-                    let foundEdit = expectedTextEdits.filter(item => item.newText === edit.newText && item.range.isEqual(edit.range));
+                    const foundEdit = expectedTextEdits.filter(item => item.newText === edit.newText && item.range.isEqual(edit.range));
                     assert.equal(foundEdit.length, 1, 'Edit not found');
                 });
-            }).catch(error => {
+            }).catch((error: any) => {
                 if (ignoreErrorHandling) {
-                    return Promise.reject(error);
+                    return Promise.reject(error!);
                 }
                 if (shouldError) {
                     // Wait a minute this shouldn't work, what's going on
@@ -86,27 +96,27 @@ suite('Method Extraction', () => {
                     return;
                 }
 
-                return Promise.reject(error);
+                return Promise.reject(error!);
             });
     }
 
-    test('Extract Method', done => {
-        let startPos = new vscode.Position(239, 0);
-        let endPos = new vscode.Position(241, 35);
-        testingMethodExtraction(false, startPos, endPos).then(() => done(), done);
+    test('Extract Method', async () => {
+        const startPos = new vscode.Position(239, 0);
+        const endPos = new vscode.Position(241, 35);
+        await testingMethodExtraction(false, startPos, endPos);
     });
 
-    test('Extract Method will fail if complete statements are not selected', done => {
-        let startPos = new vscode.Position(239, 30);
-        let endPos = new vscode.Position(241, 35);
-        testingMethodExtraction(true, startPos, endPos).then(() => done(), done);
+    test('Extract Method will fail if complete statements are not selected', async () => {
+        const startPos = new vscode.Position(239, 30);
+        const endPos = new vscode.Position(241, 35);
+        await testingMethodExtraction(true, startPos, endPos);
     });
 
     function testingMethodExtractionEndToEnd(shouldError: boolean, startPos: Position, endPos: Position) {
-        let ch = new MockOutputChannel('Python');
+        const ch = new MockOutputChannel('Python');
         let textDocument: vscode.TextDocument;
         let textEditor: vscode.TextEditor;
-        let rangeOfTextToExtract = new vscode.Range(startPos, endPos);
+        const rangeOfTextToExtract = new vscode.Range(startPos, endPos);
         let ignoreErrorHandling = false;
 
         return vscode.workspace.openTextDocument(refactorTargetFile).then(document => {
@@ -119,7 +129,7 @@ suite('Method Extraction', () => {
             textEditor = editor;
             return;
         }).then(() => {
-            return extractMethod(EXTENSION_DIR, textEditor, rangeOfTextToExtract, ch).then(() => {
+            return extractMethod(EXTENSION_DIR, textEditor, rangeOfTextToExtract, ch, ioc.serviceContainer).then(() => {
                 if (shouldError) {
                     ignoreErrorHandling = true;
                     assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
@@ -129,9 +139,9 @@ suite('Method Extraction', () => {
                 assert.equal(ch.output.length, 0, 'Output channel is not empty');
                 assert.equal(textDocument.lineAt(241).text.trim().indexOf('def newmethod'), 0, 'New Method not created');
                 assert.equal(textDocument.lineAt(239).text.trim().startsWith('self.newmethod'), true, 'New Method not being used');
-            }).catch(error => {
+            }).catch((error: any) => {
                 if (ignoreErrorHandling) {
-                    return Promise.reject(error);
+                    return Promise.reject(error!);
                 }
                 if (shouldError) {
                     // Wait a minute this shouldn't work, what's going on
@@ -139,7 +149,7 @@ suite('Method Extraction', () => {
                     return;
                 }
 
-                return Promise.reject(error);
+                return Promise.reject(error!);
             });
         }, error => {
             if (ignoreErrorHandling) {
@@ -148,9 +158,9 @@ suite('Method Extraction', () => {
             if (shouldError) {
                 // Wait a minute this shouldn't work, what's going on
                 assert.equal(true, true, 'Error raised as expected');
-            }
-            else {
-                assert.fail(error + '', null, 'Method extraction failed\n' + ch.output, '');
+            } else {
+                // tslint:disable-next-line:prefer-template restrict-plus-operands
+                assert.fail(error, null, 'Method extraction failed\n' + ch.output, '');
                 return Promise.reject(error);
             }
         });
@@ -158,16 +168,16 @@ suite('Method Extraction', () => {
 
     // This test fails on linux (text document not getting updated in time)
     if (!IS_TRAVIS) {
-        test('Extract Method (end to end)', done => {
-            let startPos = new vscode.Position(239, 0);
-            let endPos = new vscode.Position(241, 35);
-            testingMethodExtractionEndToEnd(false, startPos, endPos).then(() => done(), done);
+        test('Extract Method (end to end)', async () => {
+            const startPos = new vscode.Position(239, 0);
+            const endPos = new vscode.Position(241, 35);
+            await testingMethodExtractionEndToEnd(false, startPos, endPos);
         });
     }
 
-    test('Extract Method will fail if complete statements are not selected', done => {
-        let startPos = new vscode.Position(239, 30);
-        let endPos = new vscode.Position(241, 35);
-        testingMethodExtractionEndToEnd(true, startPos, endPos).then(() => done(), done);
+    test('Extract Method will fail if complete statements are not selected', async () => {
+        const startPos = new vscode.Position(239, 30);
+        const endPos = new vscode.Position(241, 35);
+        await testingMethodExtractionEndToEnd(true, startPos, endPos);
     });
 });

@@ -2,19 +2,20 @@
 * The following standards are inspired from [Coding guidelines for TypeScript](https://github.com/Microsoft/TypeScript/wiki/Coding-guidelines).
 
 ### Names
-* Use PascalCase for type names.
-* Use "I" as a prefix for interface names only when an interface is implemented by a class.
-* Use PascalCase for enum values.
-* Use camelCase for function names.
-* Use camelCase for property names and local variables.
-* Do not use "_" as a prefix for private properties (unless used as backing properties).
+
+* Use `PascalCase` for type names.
+* Use `I` as a prefix for interface names only when an interface is implemented by a class.
+* Use `PascalCase` for enum values.
+* Use `camelCase` for function names.
+* Use `camelCase` for property names and local variables.
+* Do not use `_` as a prefix for private properties (unless used as backing properties).
 * Use whole words in names when possible.
 
 ### Types
 
 * Do not export types/functions unless you need to share it across multiple components.
 * Do not introduce new types/values to the global namespace.
-* Shared types should be defined in 'types.ts'.
+* Shared types should be defined in `types.ts`.
 Within a file, type definitions should come first.
 
 ### null and undefined
@@ -41,6 +42,6 @@ Use single quotes for strings.
     * `if (x < 10) { }`
     * `function f(x: number, y: string): void { }`
 
-* `else` goes on a the same line from the closing curly brace.
+* `else` goes on the same line from the closing curly brace.
 * Use 4 spaces per indentation.
 * All files must end with an empty line.

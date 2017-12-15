@@ -123,18 +123,20 @@ time-critical as a new feature may be.
     [issues awaiting validation](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22awaiting+4-validation%22+is%3Aclosed)
     & validate they have been fixed (and not subsequently broken by
     later changes)
+  * Update the
+    [changelog](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
+  * Create a branch for the release
+  * Unfreeze the `master` branch
   * Make sure the
     [documentation](https://code.visualstudio.com/docs/python/python-tutorial)
     -- including the
-    [WOW](https://code.visualstudio.com/docs/languages/python) page)
+    [WOW](https://code.visualstudio.com/docs/languages/python) page
     -- has [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls)
-  * Update the
-    [changelog](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
-  * Tag the release in git
   * Draft a post for the [team blog](https://aka.ms/pythonblog)
 
 Assuming no last-minute issues, the release should be made public
-later that same week.
+later that same week. After releasing, the previous release's branch
+is turned into a tag and its branch is deleted.
 
 ### Issue triaging
 

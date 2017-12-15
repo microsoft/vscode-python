@@ -46,7 +46,7 @@ export class LocalDebugClient extends DebugClient {
 
     public CreateDebugServer(pythonProcess: IPythonProcess): BaseDebugServer {
         this.pythonProcess = pythonProcess;
-        this.debugServer = new LocalDebugServer(this.debugSession, this.pythonProcess);
+        this.debugServer = new LocalDebugServer(this.debugSession, this.pythonProcess, this.args);
         return this.debugServer;
     }
 

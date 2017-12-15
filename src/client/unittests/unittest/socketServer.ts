@@ -1,37 +1,21 @@
 'use strict';
 import { EventEmitter } from 'events';
-import * as fs from 'fs';
 import { injectable } from 'inversify';
 import * as net from 'net';
-import * as os from 'os';
 import { createDeferred, Deferred } from '../../common/helpers';
 import { IUnitTestSocketServer } from '../common/types';
 
 // tslint:disable-next-line:variable-name
 const MaxConnections = 100;
 
-function getIPType() {
-    const networkInterfaces = os.networkInterfaces();
-    // tslint:disable-next-line:variable-name
-    let IPType = '';
-    // tslint:disable-next-line:prefer-type-cast no-any
-    if (networkInterfaces && Array.isArray(networkInterfaces) && (networkInterfaces as any).length > 0) {
-        // getting the family of first network interface available
-        IPType = networkInterfaces[Object.keys(networkInterfaces)[0]][0].family;
-    }
-    return IPType;
-}
-
 @injectable()
 export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocketServer {
     private server?: net.Server;
     private startedDef?: Deferred<number>;
-    private path: string;
     private sockets: net.Socket[] = [];
     private ipcBuffer: string = '';
     constructor() {
         super();
-        this.path = (getIPType() === 'IPv6') ? '::1' : '127.0.0.1';
     }
     public get clientsConnected(): boolean {
         return this.sockets.length > 0;
@@ -45,24 +29,24 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
             this.server = undefined;
         }
     }
-    public start(): Promise<number> {
+    public start(options: { port?: number, host?: string } = { port: 0, host: 'localhost' }): Promise<number> {
         this.startedDef = createDeferred<number>();
-        fs.unlink(this.path, () => {
-            this.server = net.createServer(this.connectionListener.bind(this));
-            this.server!.maxConnections = MaxConnections;
-            this.server!.on('error', (err) => {
-                if (this.startedDef) {
-                    this.startedDef.reject(err);
-                    this.startedDef = undefined;
-                }
-                this.emit('error', err);
-            });
-            this.log('starting server as', 'TCP');
-            this.server!.listen(0, this.path, (socket: net.Socket) => {
-                this.startedDef!.resolve(this.server!.address().port);
+        this.server = net.createServer(this.connectionListener.bind(this));
+        this.server!.maxConnections = MaxConnections;
+        this.server!.on('error', (err) => {
+            if (this.startedDef) {
+                this.startedDef.reject(err);
                 this.startedDef = undefined;
-                this.emit('start', socket);
-            });
+            }
+            this.emit('error', err);
+        });
+        this.log('starting server as', 'TCP');
+        options.port = typeof options.port === 'number' ? options.port! : 0;
+        options.host = typeof options.host === 'string' && options.host!.trim().length > 0 ? options.host!.trim() : 'localhost';
+        this.server!.listen(options, (socket: net.Socket) => {
+            this.startedDef!.resolve(this.server!.address().port);
+            this.startedDef = undefined;
+            this.emit('start', socket);
         });
         return this.startedDef!.promise;
     }

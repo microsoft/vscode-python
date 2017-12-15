@@ -1,8 +1,10 @@
-"use strict";
-import * as net from "net";
+// tslint:disable:interface-name member-access no-single-line-block-comment no-any no-stateless-class member-ordering prefer-method-signature
+
+'use strict';
 import { ChildProcess } from 'child_process';
-import { DebugProtocol } from "vscode-debugprotocol";
-import { OutputEvent } from "vscode-debugadapter";
+import * as net from 'net';
+import { OutputEvent } from 'vscode-debugadapter';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 export class TelemetryEvent extends OutputEvent {
     body: {
@@ -14,25 +16,25 @@ export class TelemetryEvent extends OutputEvent {
         data?: any;
     };
     constructor(output: string, data?: any) {
-        super(output, "telemetry");
+        super(output, 'telemetry');
         if (data) {
             this.body.data = data;
         }
     }
 }
-export const DjangoApp = "DJANGO";
+export const DjangoApp = 'DJANGO';
 export enum DebugFlags {
     None = 0,
     IgnoreCommandBursts = 1
 }
 
 export class DebugOptions {
-    public static get WaitOnAbnormalExit(): string { return "WaitOnAbnormalExit"; }
-    public static get WaitOnNormalExit(): string { return "WaitOnNormalExit"; }
-    public static get RedirectOutput(): string { return "RedirectOutput"; }
-    public static get DjangoDebugging(): string { return "DjangoDebugging"; }
-    public static get DebugStdLib(): string { return "DebugStdLib"; }
-    public static get BreakOnSystemExitZero(): string { return "BreakOnSystemExitZero"; }
+    public static get WaitOnAbnormalExit(): string { return 'WaitOnAbnormalExit'; }
+    public static get WaitOnNormalExit(): string { return 'WaitOnNormalExit'; }
+    public static get RedirectOutput(): string { return 'RedirectOutput'; }
+    public static get DjangoDebugging(): string { return 'DjangoDebugging'; }
+    public static get DebugStdLib(): string { return 'DebugStdLib'; }
+    public static get BreakOnSystemExitZero(): string { return 'BreakOnSystemExitZero'; }
 }
 
 export interface ExceptionHandling {
@@ -55,7 +57,9 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
     env?: Object;
     envFile: string;
     exceptionHandling?: ExceptionHandling;
-    console?: "none" | "integratedTerminal" | "externalTerminal";
+    console?: 'none' | 'integratedTerminal' | 'externalTerminal';
+    port?: number;
+    host?: string;
 }
 
 export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
@@ -76,7 +80,8 @@ export enum FrameKind {
     None,
     Python,
     Django
-};
+}
+
 export enum enum_EXCEPTION_STATE {
     BREAK_MODE_NEVER = 0,
     BREAK_MODE_ALWAYS = 1,
@@ -99,7 +104,7 @@ export enum PythonEvaluationResultFlags {
     MethodCall = 2,
     SideEffects = 4,
     Raw = 8,
-    HasRawRepr = 16,
+    HasRawRepr = 16
 }
 
 export interface IPythonProcess extends NodeJS.EventEmitter {
@@ -138,13 +143,11 @@ export interface IPythonEvaluationResult {
     Frame: IPythonStackFrame;
 }
 
-
 export interface IPythonModule {
     ModuleId: number;
     Name: string;
     Filename: string;
 }
-
 
 export interface IPythonThread {
     IsWorkerThread: boolean;

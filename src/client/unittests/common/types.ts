@@ -190,12 +190,13 @@ export type launchOptions = {
     token?: CancellationToken;
     outChannel?: OutputChannel;
     port: number;
+    host: string;
 };
 
 export const ITestDebugLauncher = Symbol('ITestDebugLauncher');
 
 export interface ITestDebugLauncher {
-    getPort(resource?: Uri): Promise<number>;
+    getLaunchOptions(resource?: Uri): Promise<{ port: number, host: string }>;
     launchDebugger(options: launchOptions): Promise<void>;
 }
 
@@ -240,6 +241,6 @@ export type ParserOptions = TestDiscoveryOptions;
 export const IUnitTestSocketServer = Symbol('IUnitTestSocketServer');
 export interface IUnitTestSocketServer extends Disposable {
     on(event: string | symbol, listener: Function): this;
-    start(): Promise<number>;
+    start(options?: { port?: number, host?: string }): Promise<number>;
     stop(): void;
 }

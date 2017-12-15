@@ -1,16 +1,16 @@
-import * as assert from 'assert';
+// tslint:disable:interface-name no-any max-func-body-length estrict-plus-operands
 
-// You can import and use all API from the \'vscode\' module
-// as well as import your extension to test it
-import * as vscode from 'vscode';
-import * as path from 'path';
+import * as assert from 'assert';
 import * as fs from 'fs-extra';
-import { PythonSettings } from '../../client/common/configSettings';
-import { closeActiveWindows, initialize, initializeTest, IS_TRAVIS, wait } from './../initialize';
+import * as path from 'path';
+import * as vscode from 'vscode';
 import { Position } from 'vscode';
+import { PythonSettings } from '../../client/common/configSettings';
+import { getTextEditsFromPatch } from '../../client/common/editor';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
-import { getTextEditsFromPatch } from '../../client/common/editor';
+import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { closeActiveWindows, initialize, initializeTest, IS_TRAVIS, wait } from './../initialize';
 import { MockOutputChannel } from './../mockClasses';
 
 const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
@@ -25,6 +25,7 @@ suite('Variable Extraction', () => {
     // Hack hac hack
     const oldExecuteCommand = vscode.commands.executeCommand;
     const options: vscode.TextEditorOptions = { cursorStyle: vscode.TextEditorCursorStyle.Line, insertSpaces: true, lineNumbers: vscode.TextEditorLineNumbersStyle.Off, tabSize: 4 };
+    let ioc: UnitTestIocContainer;
     suiteSetup(async () => {
         fs.copySync(refactorSourceFile, refactorTargetFile, { overwrite: true });
         await initialize();
@@ -34,6 +35,7 @@ suite('Variable Extraction', () => {
         return closeActiveWindows();
     });
     setup(async () => {
+        initializeDI();
         if (fs.existsSync(refactorTargetFile)) {
             await wait(500);
             fs.unlinkSync(refactorTargetFile);
@@ -47,10 +49,17 @@ suite('Variable Extraction', () => {
         return closeActiveWindows();
     });
 
+    function initializeDI() {
+        ioc = new UnitTestIocContainer();
+        ioc.registerCommonTypes();
+        ioc.registerProcessTypes();
+        ioc.registerVariableTypes();
+    }
+
     function testingVariableExtraction(shouldError: boolean, startPos: Position, endPos: Position) {
         const pythonSettings = PythonSettings.getInstance(vscode.Uri.file(refactorTargetFile));
-        let rangeOfTextToExtract = new vscode.Range(startPos, endPos);
-        let proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile));
+        const rangeOfTextToExtract = new vscode.Range(startPos, endPos);
+        const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile), ioc.serviceContainer);
         let expectedTextEdits: vscode.TextEdit[];
         let ignoreErrorHandling = false;
         let mockTextDoc: vscode.TextDocument;
@@ -60,7 +69,7 @@ suite('Variable Extraction', () => {
                 mockTextDoc = textDocument;
                 expectedTextEdits = getTextEditsFromPatch(textDocument.getText(), DIFF);
                 resolve();
-            }, error => reject(error))
+            }, reject);
         })
             .then(() => proxy.extractVariable<RenameResponse>(mockTextDoc, 'myNewVariable', refactorTargetFile, rangeOfTextToExtract, options))
             .then(response => {
@@ -68,16 +77,16 @@ suite('Variable Extraction', () => {
                     ignoreErrorHandling = true;
                     assert.fail(null, null, 'Extraction should fail with an error', '');
                 }
-                let textEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
+                const textEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
                 assert.equal(response.results.length, 1, 'Invalid number of items in response');
                 assert.equal(textEdits.length, expectedTextEdits.length, 'Invalid number of Text Edits');
                 textEdits.forEach(edit => {
-                    let foundEdit = expectedTextEdits.filter(item => item.newText === edit.newText && item.range.isEqual(edit.range));
+                    const foundEdit = expectedTextEdits.filter(item => item.newText === edit.newText && item.range.isEqual(edit.range));
                     assert.equal(foundEdit.length, 1, 'Edit not found');
                 });
-            }).catch(error => {
+            }).catch((error: any) => {
                 if (ignoreErrorHandling) {
-                    return Promise.reject(error);
+                    return Promise.reject(error!);
                 }
                 if (shouldError) {
                     // Wait a minute this shouldn't work, what's going on
@@ -85,27 +94,27 @@ suite('Variable Extraction', () => {
                     return;
                 }
 
-                return Promise.reject(error);
+                return Promise.reject(error!);
             });
     }
 
-    test('Extract Variable', done => {
-        let startPos = new vscode.Position(234, 29);
-        let endPos = new vscode.Position(234, 38);
-        testingVariableExtraction(false, startPos, endPos).then(() => done(), done);
+    test('Extract Variable', async () => {
+        const startPos = new vscode.Position(234, 29);
+        const endPos = new vscode.Position(234, 38);
+        testingVariableExtraction(false, startPos, endPos);
     });
 
-    test('Extract Variable fails if whole string not selected', done => {
-        let startPos = new vscode.Position(234, 20);
-        let endPos = new vscode.Position(234, 38);
-        testingVariableExtraction(true, startPos, endPos).then(() => done(), done);
+    test('Extract Variable fails if whole string not selected', async () => {
+        const startPos = new vscode.Position(234, 20);
+        const endPos = new vscode.Position(234, 38);
+        testingVariableExtraction(true, startPos, endPos);
     });
 
     function testingVariableExtractionEndToEnd(shouldError: boolean, startPos: Position, endPos: Position) {
-        let ch = new MockOutputChannel('Python');
+        const ch = new MockOutputChannel('Python');
         let textDocument: vscode.TextDocument;
         let textEditor: vscode.TextEditor;
-        let rangeOfTextToExtract = new vscode.Range(startPos, endPos);
+        const rangeOfTextToExtract = new vscode.Range(startPos, endPos);
         let ignoreErrorHandling = false;
         return vscode.workspace.openTextDocument(refactorTargetFile).then(document => {
             textDocument = document;
@@ -117,7 +126,7 @@ suite('Variable Extraction', () => {
             textEditor = editor;
             return;
         }).then(() => {
-            return extractVariable(EXTENSION_DIR, textEditor, rangeOfTextToExtract, ch).then(() => {
+            return extractVariable(EXTENSION_DIR, textEditor, rangeOfTextToExtract, ch, ioc.serviceContainer).then(() => {
                 if (shouldError) {
                     ignoreErrorHandling = true;
                     assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
@@ -128,9 +137,9 @@ suite('Variable Extraction', () => {
                 assert.equal(textDocument.lineAt(234).text.trim().indexOf('newvariable'), 0, 'New Variable not created');
                 assert.equal(textDocument.lineAt(234).text.trim().endsWith('= "STARTED"'), true, 'Started Text Assigned to variable');
                 assert.equal(textDocument.lineAt(235).text.indexOf('(newvariable') >= 0, true, 'New Variable not being used');
-            }).catch(error => {
+            }).catch((error: any) => {
                 if (ignoreErrorHandling) {
-                    return Promise.reject(error);
+                    return Promise.reject(error!);
                 }
                 if (shouldError) {
                     // Wait a minute this shouldn't work, what's going on
@@ -138,7 +147,7 @@ suite('Variable Extraction', () => {
                     return;
                 }
 
-                return Promise.reject(error);
+                return Promise.reject(error)!;
             });
         }, error => {
             if (ignoreErrorHandling) {
@@ -147,8 +156,8 @@ suite('Variable Extraction', () => {
             if (shouldError) {
                 // Wait a minute this shouldn't work, what's going on
                 assert.equal(true, true, 'Error raised as expected');
-            }
-            else {
+            } else {
+                // tslint:disable-next-line:prefer-template restrict-plus-operands
                 assert.fail(error + '', null, 'Variable extraction failed\n' + ch.output, '');
                 return Promise.reject(error);
             }
@@ -157,16 +166,16 @@ suite('Variable Extraction', () => {
 
     // This test fails on linux (text document not getting updated in time)
     if (!IS_TRAVIS) {
-        test('Extract Variable (end to end)', done => {
-            let startPos = new vscode.Position(234, 29);
-            let endPos = new vscode.Position(234, 38);
-            testingVariableExtractionEndToEnd(false, startPos, endPos).then(() => done(), done);
+        test('Extract Variable (end to end)', async () => {
+            const startPos = new vscode.Position(234, 29);
+            const endPos = new vscode.Position(234, 38);
+            await testingVariableExtractionEndToEnd(false, startPos, endPos);
         });
     }
 
-    test('Extract Variable fails if whole string not selected (end to end)', done => {
-        let startPos = new vscode.Position(234, 20);
-        let endPos = new vscode.Position(234, 38);
-        testingVariableExtractionEndToEnd(true, startPos, endPos).then(() => done(), done);
+    test('Extract Variable fails if whole string not selected (end to end)', async () => {
+        const startPos = new vscode.Position(234, 20);
+        const endPos = new vscode.Position(234, 38);
+        await testingVariableExtractionEndToEnd(true, startPos, endPos);
     });
 });
