@@ -340,8 +340,8 @@ export function getSubDirectories(rootDir: string): Promise<string[]> {
                         subDirs.push(fullPath);
                     }
                 }
-                catch (ex) {
-                }
+                // tslint:disable-next-line:no-empty
+                catch (ex) {}
             });
             resolve(subDirs);
         });

@@ -1,5 +1,6 @@
 'use strict';
 
+import { EOL } from 'os';
 import * as vscode from 'vscode';
 import { CancellationToken, Position, SignatureHelp, TextDocument } from 'vscode';
 import { JediFactory } from '../languageServices/jediProxyFactory';
@@ -53,21 +54,40 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
 
             data.definitions.forEach(def => {
                 signature.activeParameter = def.paramindex;
-                // Don't display the documentation, as vs code doesn't format the docmentation.
+                // Don't display the documentation, as vs code doesn't format the documentation.
                 // i.e. line feeds are not respected, long content is stripped.
+
+                // Some functions do not come with parameter docs
+                let label: string;
+                let documentation: string;
+                const validParamInfo = def.params && def.params.length > 0 && def.docstring.startsWith(`${def.name}(`);
+
+                if (validParamInfo) {
+                    const docLines = def.docstring.splitLines();
+                    label = docLines.shift().trim();
+                    documentation = docLines.join(EOL).trim();
+                } else {
+                    label = def.description;
+                    documentation = def.docstring;
+                }
+
                 const sig = <vscode.SignatureInformation>{
-                    label: def.description,
+                    label,
+                    documentation,
                     parameters: []
                 };
-                sig.parameters = def.params.map(arg => {
-                    if (arg.docstring.length === 0) {
-                        arg.docstring = extractParamDocString(arg.name, def.docstring);
-                    }
-                    return <vscode.ParameterInformation>{
-                        documentation: arg.docstring.length > 0 ? arg.docstring : arg.description,
-                        label: arg.description.length > 0 ? arg.description : arg.name
-                    };
-                });
+
+                if (validParamInfo) {
+                    sig.parameters = def.params.map(arg => {
+                        if (arg.docstring.length === 0) {
+                            arg.docstring = extractParamDocString(arg.name, def.docstring);
+                        }
+                        return <vscode.ParameterInformation>{
+                            documentation: arg.docstring.length > 0 ? arg.docstring : arg.description,
+                            label: arg.name.trim()
+                        };
+                    });
+                }
                 signature.signatures.push(sig);
             });
             return signature;
@@ -85,7 +105,7 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
             source: document.getText()
         };
         return this.jediFactory.getJediProxyHandler<proxy.IArgumentsResult>(document.uri).sendCommand(cmd, token).then(data => {
-            return PythonSignatureProvider.parseData(data);
+            return data ? PythonSignatureProvider.parseData(data) : new SignatureHelp();
         });
     }
 }

@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { IPythonSettings } from '../common/configSettings';
+import '../common/extensions';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { getWindowsLineEndingCount, IS_WINDOWS } from '../common/utils';
@@ -140,7 +141,7 @@ export class RefactorProxy extends vscode.Disposable {
             return;
         }
         if (typeof errorResponse[0].message !== 'string' || errorResponse[0].message.length === 0) {
-            errorResponse[0].message = errorResponse[0].traceback.split(/\r?\n/g).pop()!;
+            errorResponse[0].message = errorResponse[0].traceback.splitLines().pop()!;
         }
         let errorMessage = errorResponse[0].message + '\n' + errorResponse[0].traceback;
 

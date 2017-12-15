@@ -2,7 +2,7 @@
 	"name": "python",
 	"displayName": "Python",
 	"description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-	"version": "0.9.0",
+	"version": "2018.1.0-alpha",
 	"publisher": "ms-python",
 	"author": {
 		"name": "Microsoft Corporation"
@@ -627,6 +627,16 @@
 								"type": "string",
 								"description": "Absolute path to a file containing environment variable definitions.",
 								"default": ""
+							},
+							"port": {
+								"type": "number",
+								"description": "Debug port (default is 0, resulting in the use of a dynamic port).",
+								"default": 0
+							},
+							"host": {
+								"type": "string",
+								"description": "IP address of the of the local debug server (default is localhost).",
+								"default": "localhost"
 							}
 						}
 					},
@@ -1321,6 +1331,12 @@
 					"description": "Port number used for debugging of unittests.",
 					"scope": "resource"
 				},
+				"python.unitTest.debugHost": {
+					"type": "number",
+					"default": "localhost",
+					"description": "IP Address of the of the local unit test server (default is localhost or use 127.0.0.1).",
+					"scope": "resource"
+				},
 				"python.unitTest.cwd": {
 					"type": "string",
 					"default": null,
@@ -1506,6 +1522,7 @@
 		"lint": "tslint src/**/*.ts -t verbose"
 	},
 	"dependencies": {
+		"arch": "^2.1.0",
 		"diff-match-patch": "^1.0.0",
 		"fs-extra": "^4.0.2",
 		"fuzzy": "^0.1.3",
@@ -1567,6 +1584,7 @@
 		"tslint-microsoft-contrib": "^5.0.1",
 		"typescript": "^2.6.2",
 		"typescript-formatter": "^6.0.0",
-		"vscode": "^1.1.5"
+		"vscode": "^1.1.5",
+		"vscode-debugadapter-testsupport": "^1.25.0"
 	}
 }

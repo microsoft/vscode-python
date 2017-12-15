@@ -1,38 +1,34 @@
-"use strict";
-
-import * as net from "net";
 import { EventEmitter } from 'events';
+import * as net from 'net';
 import { createDeferred } from '../../helpers';
 
 export class SocketServer extends EventEmitter {
-    private socketServer: net.Server = null;
+    private socketServer: net.Server | undefined;
     constructor() {
         super();
     }
 
     public Stop() {
-        if (this.socketServer === null) { return; }
+        if (!this.socketServer) { return; }
         try {
             this.socketServer.close();
-        }
-        catch (ex) { }
-        this.socketServer = null;
+            // tslint:disable-next-line:no-empty
+        } catch (ex) { }
+        this.socketServer = undefined;
     }
 
-    public Start(): Promise<number> {
+    public Start(options: { port?: number, host?: string } = {}): Promise<number> {
         const def = createDeferred<number>();
         this.socketServer = net.createServer(this.connectionListener.bind(this));
 
-        this.socketServer.listen(0, function (this: SocketServer) {
-            def.resolve(this.socketServer.address().port);
-        }.bind(this));
+        const port = typeof options.port === 'number' ? options.port! : 0;
+        const host = typeof options.host === 'string' ? options.host! : 'localhost';
+        this.socketServer!.listen({ port, host }, () => {
+            def.resolve(this.socketServer!.address().port);
+        });
 
-        this.socketServer.on("error", ex => {
+        this.socketServer!.on('error', ex => {
             console.error('Error in Socket Server', ex);
-            if (def.completed) {
-                // Ooops
-                debugger;
-            }
             const msg = `Failed to start the socket server. (Error: ${ex.message})`;
 
             def.reject(msg);
@@ -41,14 +37,14 @@ export class SocketServer extends EventEmitter {
     }
 
     private connectionListener(client: net.Socket) {
-        client.on("close", function () {
+        client.on('close', () => {
             this.emit('close', client);
-        }.bind(this));
-        client.on("data", function (data: Buffer) {
+        });
+        client.on('data', (data: Buffer) => {
             this.emit('data', client, data);
-        }.bind(this));
+        });
 
-        client.on("timeout", d => {
+        client.on('timeout', d => {
             // let msg = "Debugger client timedout, " + d;
         });
     }
