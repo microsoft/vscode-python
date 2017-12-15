@@ -10,6 +10,7 @@ import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'signature');
 const fileOne = path.join(autoCompPath, 'one.py');
 const fileTwo = path.join(autoCompPath, 'two.py');
+const fileThree = path.join(autoCompPath, 'three.py');
 
 class SignatureHelpResult {
     constructor(
@@ -44,8 +45,8 @@ suite('Signatures', () => {
         ];
 
         const document = await openDocument(fileOne);
-        for (const e of expected) {
-            await checkSignature(e, document!.uri);
+        for (let i = 0; i < expected.length; i += 1) {
+            await checkSignature(expected[i], document!.uri, i);
         }
     });
 
@@ -55,19 +56,39 @@ suite('Signatures', () => {
             new SignatureHelpResult(0, 1, 0, 0, null),
             new SignatureHelpResult(0, 2, 0, 0, null),
             new SignatureHelpResult(0, 3, 0, 0, null),
-            new SignatureHelpResult(0, 4, 1, 0, 'x'),
-            new SignatureHelpResult(0, 5, 1, 0, 'x'),
-            new SignatureHelpResult(0, 6, 1, 1, 'y'),
-            new SignatureHelpResult(0, 7, 1, 1, 'y'),
-            new SignatureHelpResult(0, 8, 1, 1, 'y'),
-            new SignatureHelpResult(0, 9, 1, 2, 'z'),
-            new SignatureHelpResult(0, 10, 1, 2, 'z'),
-            new SignatureHelpResult(1, 0, 1, 2, 'z')
+            new SignatureHelpResult(0, 4, 0, 0, null),
+            new SignatureHelpResult(0, 5, 0, 0, null),
+            new SignatureHelpResult(0, 6, 1, 0, 'start'),
+            new SignatureHelpResult(0, 7, 1, 0, 'start'),
+            new SignatureHelpResult(0, 8, 1, 1, 'stop'),
+            new SignatureHelpResult(0, 9, 1, 1, 'stop'),
+            new SignatureHelpResult(0, 10, 1, 1, 'stop'),
+            new SignatureHelpResult(0, 11, 1, 2, 'step'),
+            new SignatureHelpResult(1, 0, 1, 2, 'step')
         ];
 
         const document = await openDocument(fileTwo);
-        for (const e of expected) {
-            await checkSignature(e, document!.uri);
+        for (let i = 0; i < expected.length; i += 1) {
+            await checkSignature(expected[i], document!.uri, i);
+        }
+    });
+
+    test('For ellipsis', async () => {
+        const expected = [
+            new SignatureHelpResult(0, 4, 0, 0, null),
+            new SignatureHelpResult(0, 5, 0, 0, null),
+            new SignatureHelpResult(0, 6, 1, 0, 'value'),
+            new SignatureHelpResult(0, 7, 1, 0, 'value'),
+            new SignatureHelpResult(0, 8, 1, 1, '...'),
+            new SignatureHelpResult(0, 9, 1, 1, '...'),
+            new SignatureHelpResult(0, 10, 1, 1, '...'),
+            new SignatureHelpResult(0, 11, 1, 2, 'sep'),
+            new SignatureHelpResult(0, 12, 1, 2, 'sep')
+        ];
+
+        const document = await openDocument(fileThree);
+        for (let i = 0; i < expected.length; i += 1) {
+            await checkSignature(expected[i], document!.uri, i);
         }
     });
 });
@@ -78,13 +99,13 @@ async function openDocument(documentPath: string): Promise<vscode.TextDocument |
     return document;
 }
 
-async function checkSignature(expected: SignatureHelpResult, uri: vscode.Uri) {
+async function checkSignature(expected: SignatureHelpResult, uri: vscode.Uri, caseIndex: number) {
     const position = new vscode.Position(expected.line, expected.index);
     const actual = await vscode.commands.executeCommand<vscode.SignatureHelp>('vscode.executeSignatureHelpProvider', uri, position);
-    assert.equal(actual!.signatures.length, expected.signaturesCount);
+    assert.equal(actual!.signatures.length, expected.signaturesCount, `Signature count does not match, case ${caseIndex}`);
     if (expected.signaturesCount > 0) {
-        assert.equal(actual!.activeParameter, expected.activeParameter);
+        assert.equal(actual!.activeParameter, expected.activeParameter, `Parameter index does not match, case ${caseIndex}`);
         const parameter = actual!.signatures[0].parameters[expected.activeParameter];
-        assert.equal(parameter.label, expected.parameterName);
+        assert.equal(parameter.label, expected.parameterName, `Parameter name is incorrect, case ${caseIndex}`);
     }
 }

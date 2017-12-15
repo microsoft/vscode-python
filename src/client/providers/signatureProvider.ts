@@ -54,11 +54,21 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
 
             data.definitions.forEach(def => {
                 signature.activeParameter = def.paramindex;
-                // Don't display the documentation, as vs code doesn't format the docmentation.
+                // Don't display the documentation, as vs code doesn't format the documentation.
                 // i.e. line feeds are not respected, long content is stripped.
-                const docLines = def.docstring.splitLines();
-                const label = docLines.shift().trim();
-                const documentation = docLines.join(EOL).trim();
+
+                // Some functions do not come with parameter docs
+                let label: string;
+                let documentation: string;
+
+                if (def.params && def.params.length > 0) {
+                    const docLines = def.docstring.splitLines();
+                    label = docLines.shift().trim();
+                    documentation = docLines.join(EOL).trim();
+                } else {
+                    label = '';
+                    documentation = def.docstring;
+                }
 
                 const sig = <vscode.SignatureInformation>{
                     label,

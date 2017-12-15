@@ -1,1 +1,1 @@
-pow(c, 1, 
+range(c, 1, 
