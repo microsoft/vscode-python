@@ -13,10 +13,11 @@ const HAND_SHAKE = `READY${os.EOL}`;
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
     constructor( @inject(IPythonExecutionFactory) private pythonExecutionFactory: IPythonExecutionFactory) { }
-    public getPort(resource?: Uri): Promise<number> {
+    public async getLaunchOptions(resource?: Uri): Promise<{ port: number, host: string }> {
         const pythonSettings = PythonSettings.getInstance(resource);
-        const port = pythonSettings.unitTest.debugPort;
-        return new Promise<number>((resolve, reject) => getFreePort({ host: 'localhost', port }).then(resolve, reject));
+        const port = await getFreePort({ host: 'localhost', port: pythonSettings.unitTest.debugPort });
+        const host = typeof pythonSettings.unitTest.debugHost === 'string' && pythonSettings.unitTest.debugHost.trim().length > 0 ? pythonSettings.unitTest.debugHost.trim() : 'localhost';
+        return { port, host };
     }
     public async launchDebugger(options: launchOptions) {
         const cwdUri = options.cwd ? Uri.file(options.cwd) : undefined;
@@ -75,7 +76,7 @@ export class DebugLauncher implements ITestDebugLauncher {
                             remoteRoot: options.cwd,
                             port: options.port,
                             secret: 'my_secret',
-                            host: 'localhost'
+                            host: options.host
                         });
                     })
                     .catch(reason => {

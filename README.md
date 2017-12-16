@@ -90,6 +90,7 @@ contributors (if you would like to contribute a translation, see the
 
 * `en`
 * `ja`
+* `ru`
 * `zh-cn`
 
 ## Data/Telemetry

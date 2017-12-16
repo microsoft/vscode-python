@@ -22,7 +22,7 @@ export function activateSimplePythonRefactorProvider(context: vscode.ExtensionCo
             vscode.window.activeTextEditor!,
             vscode.window.activeTextEditor!.selection,
             // tslint:disable-next-line:no-empty
-            outputChannel).catch(() => { });
+            outputChannel, serviceContainer).catch(() => { });
         sendTelemetryWhenDone(REFACTOR_EXTRACT_VAR, promise, stopWatch);
     });
     context.subscriptions.push(disposable);
@@ -33,7 +33,7 @@ export function activateSimplePythonRefactorProvider(context: vscode.ExtensionCo
             vscode.window.activeTextEditor!,
             vscode.window.activeTextEditor!.selection,
             // tslint:disable-next-line:no-empty
-            outputChannel).catch(() => { });
+            outputChannel, serviceContainer).catch(() => { });
         sendTelemetryWhenDone(REFACTOR_EXTRACT_FUNCTION, promise, stopWatch);
     });
     context.subscriptions.push(disposable);
@@ -42,7 +42,7 @@ export function activateSimplePythonRefactorProvider(context: vscode.ExtensionCo
 // Exported for unit testing
 export function extractVariable(extensionDir: string, textEditor: vscode.TextEditor, range: vscode.Range,
     // tslint:disable-next-line:no-any
-    outputChannel: vscode.OutputChannel): Promise<any> {
+    outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer): Promise<any> {
 
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(textEditor.document.uri);
     if (!workspaceFolder && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
@@ -53,7 +53,7 @@ export function extractVariable(extensionDir: string, textEditor: vscode.TextEdi
 
     return validateDocumentForRefactor(textEditor).then(() => {
         const newName = `newvariable${new Date().getMilliseconds().toString()}`;
-        const proxy = new RefactorProxy(extensionDir, pythonSettings, workspaceRoot);
+        const proxy = new RefactorProxy(extensionDir, pythonSettings, workspaceRoot, serviceContainer);
         const rename = proxy.extractVariable<RenameResponse>(textEditor.document, newName, textEditor.document.uri.fsPath, range, textEditor.options).then(response => {
             return response.results[0].diff;
         });
@@ -65,7 +65,7 @@ export function extractVariable(extensionDir: string, textEditor: vscode.TextEdi
 // Exported for unit testing
 export function extractMethod(extensionDir: string, textEditor: vscode.TextEditor, range: vscode.Range,
     // tslint:disable-next-line:no-any
-    outputChannel: vscode.OutputChannel): Promise<any> {
+    outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer): Promise<any> {
 
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(textEditor.document.uri);
     if (!workspaceFolder && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
@@ -76,7 +76,7 @@ export function extractMethod(extensionDir: string, textEditor: vscode.TextEdito
 
     return validateDocumentForRefactor(textEditor).then(() => {
         const newName = `newmethod${new Date().getMilliseconds().toString()}`;
-        const proxy = new RefactorProxy(extensionDir, pythonSettings, workspaceRoot);
+        const proxy = new RefactorProxy(extensionDir, pythonSettings, workspaceRoot, serviceContainer);
         const rename = proxy.extractMethod<RenameResponse>(textEditor.document, newName, textEditor.document.uri.fsPath, range, textEditor.options).then(response => {
             return response.results[0].diff;
         });

@@ -51,7 +51,7 @@ export class PythonRenameProvider implements vscode.RenameProvider {
         const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
         const pythonSettings = PythonSettings.getInstance(workspaceFolder ? workspaceFolder.uri : undefined);
 
-        const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, workspaceRoot);
+        const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, workspaceRoot, this.serviceContainer);
         return proxy.rename<RenameResponse>(document, newName, document.uri.fsPath, range).then(response => {
             const fileDiffs = response.results.map(fileChanges => fileChanges.diff);
             return getWorkspaceEditsFromPatch(fileDiffs, workspaceRoot);

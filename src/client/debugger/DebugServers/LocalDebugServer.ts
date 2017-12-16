@@ -3,23 +3,23 @@
 import * as net from 'net';
 import { EOL } from 'os';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
-import { IDebugServer, IPythonProcess } from '../Common/Contracts';
+import { IDebugServer, IPythonProcess, LaunchRequestArguments } from '../Common/Contracts';
 import { BaseDebugServer } from './BaseDebugServer';
 
 export class LocalDebugServer extends BaseDebugServer {
-    private debugSocketServer: net.Server = null;
+    private debugSocketServer: net.Server | undefined;
 
-    constructor(debugSession: DebugSession, pythonProcess: IPythonProcess) {
+    constructor(debugSession: DebugSession, pythonProcess: IPythonProcess, private args: LaunchRequestArguments) {
         super(debugSession, pythonProcess);
     }
 
     public Stop() {
-        if (this.debugSocketServer === null) { return; }
+        if (!this.debugSocketServer) { return; }
         try {
             this.debugSocketServer.close();
             // tslint:disable-next-line:no-empty
         } catch { }
-        this.debugSocketServer = null;
+        this.debugSocketServer = undefined;
     }
 
     public async Start(): Promise<IDebugServer> {
@@ -61,7 +61,7 @@ export class LocalDebugServer extends BaseDebugServer {
                     reject(msg);
                 });
             });
-            this.debugSocketServer.on('error', ex => {
+            this.debugSocketServer!.on('error', ex => {
                 const exMessage = JSON.stringify(ex);
                 let msg = '';
                 // tslint:disable-next-line:no-any
@@ -77,8 +77,10 @@ export class LocalDebugServer extends BaseDebugServer {
                 reject(msg);
             });
 
-            this.debugSocketServer.listen(0, () => {
-                const server = this.debugSocketServer.address();
+            const port = typeof this.args.port === 'number' ? this.args.port! : 0;
+            const host = typeof this.args.host === 'string' && this.args.host.trim().length > 0 ? this.args.host!.trim() : 'localhost';
+            this.debugSocketServer!.listen({ port, host }, () => {
+                const server = this.debugSocketServer!.address();
                 resolve({ port: server.port });
             });
         });

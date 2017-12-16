@@ -28,7 +28,7 @@ interface ITestData {
 }
 
 // tslint:disable-next-line:max-func-body-length
-export function runTest(serviceContainer: IServiceContainer, testManager: BaseTestManager, testResultsService: ITestResultsService, options: TestRunOptions): Promise<Tests> {
+export async function runTest(serviceContainer: IServiceContainer, testManager: BaseTestManager, testResultsService: ITestResultsService, options: TestRunOptions): Promise<Tests> {
     options.tests.summary.errors = 0;
     options.tests.summary.failures = 0;
     options.tests.summary.passed = 0;
@@ -93,10 +93,10 @@ export function runTest(serviceContainer: IServiceContainer, testManager: BaseTe
             }
             if (options.debug === true) {
                 const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
-                return debugLauncher.getPort(options.workspaceFolder)
-                    .then(debugPort => {
-                        testArgs.push(...['--secret=my_secret', `--port=${debugPort}`]);
-                        const launchOptions = { cwd: options.cwd, args: [testLauncherFile].concat(testArgs), token: options.token, outChannel: options.outChannel, port: debugPort };
+                return debugLauncher.getLaunchOptions(options.workspaceFolder)
+                    .then(debugPortAndHost => {
+                        testArgs.push(...['--secret=my_secret', `--port=${debugPortAndHost.port}`]);
+                        const launchOptions = { cwd: options.cwd, args: [testLauncherFile].concat(testArgs), token: options.token, outChannel: options.outChannel, port: debugPortAndHost.port, host: debugPortAndHost.host };
                         // tslint:disable-next-line:prefer-type-cast no-any
                         return debugLauncher.launchDebugger(launchOptions);
                     });
@@ -149,7 +149,6 @@ export function runTest(serviceContainer: IServiceContainer, testManager: BaseTe
         return Promise.reject(reason);
     });
 }
-
 function getStartDirectory(args: string[]): string {
     let startDirectory = '.';
     const indexOfStartDir = args.findIndex(arg => arg.indexOf('-s') === 0 || arg.indexOf('--start-directory') === 0);

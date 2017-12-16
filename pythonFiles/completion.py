@@ -6,7 +6,6 @@ import json
 import traceback
 import platform
 
-WORD_RE = re.compile(r'\w')
 jediPreview = False
 
 class RedirectStdout(object):
@@ -111,8 +110,6 @@ class JediCompletion(object):
                     continue
                 if param.name == 'self' and pos == 0:
                     continue
-                if WORD_RE.match(param.name) is None:
-                    continue
                 try:
                     name, value = param.description.split('=')
                 except ValueError:
@@ -154,8 +151,6 @@ class JediCompletion(object):
                 if not param.name:
                     continue
                 if param.name == 'self' and pos == 0:
-                    continue
-                if WORD_RE.match(param.name) is None:
                     continue
                 try:
                     name, value = param.description.split('=')
