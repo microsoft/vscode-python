@@ -1,7 +1,7 @@
 {
-    "python.command.python.sortImports.title": "Imports を並び替える",
+    "python.command.python.sortImports.title": "import 文を並び替える",
     "python.command.python.startREPL.title": "REPL を開始",
-    "python.command.python.buildWorkspaceSymbols.title": "ワークスペース シンボルをビルド",
+    "python.command.python.buildWorkspaceSymbols.title": "ワークスペースのシンボルをビルド",
     "python.command.python.runtests.title": "すべての単体テストを実行",
     "python.command.python.debugtests.title": "すべての単体テストをデバッグ",
     "python.command.python.execInTerminal.title": "ターミナルで Python ファイルを実行",
@@ -19,7 +19,7 @@
     "python.command.python.execSelectionInDjangoShell.title": "Django シェルで選択範囲/行を実行",
     "python.command.jupyter.runSelectionLine.title": "選択範囲/行を実行",
     "python.command.jupyter.execCurrentCell.title": "セルを実行",
-    "python.command.jupyter.execCurrentCellAndAdvance.title": "セルとアドバンスを実行",
+    "python.command.jupyter.execCurrentCellAndAdvance.title": "セルを実行して次へ",
     "python.command.jupyter.gotToPreviousCell.title": "前のセルに移動",
     "python.command.jupyter.gotToNextCell.title": "次のセルに移動",
     "python.command.python.goToPythonObject.title": "Python オブジェクトに移動",
@@ -46,5 +46,5 @@
 	"python.snippet.launch.attach.label": "Python: アタッチ",
 	"python.snippet.launch.attach.description": "リモートデバッグのためにデバッガをアタッチ",
 	"python.snippet.launch.scrapy.label": "Python: Scrapy",
-	"python.snippet.launch.scrapy.description": "統合ターミナル/コンソールで Scrapy"
+	"python.snippet.launch.scrapy.description": "統合ターミナル/コンソールで Scrapy を実行"
 }
