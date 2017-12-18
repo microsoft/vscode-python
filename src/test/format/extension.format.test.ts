@@ -2,9 +2,8 @@ import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { CancellationTokenSource } from 'vscode';
-import { IProcessService } from '../../client/common/process/types';
-import { execPythonFile } from '../../client/common/utils';
+import { CancellationTokenSource, Uri } from 'vscode';
+import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
@@ -29,15 +28,17 @@ suite('Formatting', () => {
 
     suiteSetup(async () => {
         await initialize();
+        initializeDI();
         [autoPep8FileToFormat, autoPep8FileToAutoFormat, yapfFileToFormat, yapfFileToAutoFormat].forEach(file => {
             fs.copySync(originalUnformattedFile, file, { overwrite: true });
         });
         fs.ensureDirSync(path.dirname(autoPep8FileToFormat));
-        const yapf = execPythonFile(workspaceRootPath, 'yapf', [originalUnformattedFile], workspaceRootPath, false);
-        const autoPep8 = execPythonFile(workspaceRootPath, 'autopep8', [originalUnformattedFile], workspaceRootPath, false);
-        await Promise.all<string>([yapf, autoPep8]).then(formattedResults => {
-            formattedYapf = formattedResults[0];
-            formattedAutoPep8 = formattedResults[1];
+        const pythonProcess = await ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(Uri.file(workspaceRootPath));
+        const yapf = pythonProcess.execModule('yapf', [originalUnformattedFile], { cwd: workspaceRootPath });
+        const autoPep8 = pythonProcess.execModule('autopep8', [originalUnformattedFile], { cwd: workspaceRootPath });
+        await Promise.all([yapf, autoPep8]).then(formattedResults => {
+            formattedYapf = formattedResults[0].stdout;
+            formattedAutoPep8 = formattedResults[1].stdout;
         });
     });
     setup(async () => {
@@ -63,6 +64,7 @@ suite('Formatting', () => {
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerUnitTestTypes();
+        ioc.registerFormatterTypes();
 
         // Mocks.
         ioc.registerMockProcessTypes();
