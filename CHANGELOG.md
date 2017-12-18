@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 0.9.1 (18 December 2017)
+
+* Fixes the compatibility issue with the [Visual Studio Code Tools for AI
+](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.vscode-ai) extension by conditionally importing `reflect-metadata` [#432](https://github.com/Microsoft/vscode-python/issues/432)
+* Display runtime errors encountered when running a python program without debugging [#454](https://github.com/Microsoft/vscode-python/issues/454)
+
 ## Version 0.9.0 (14 December 2017)
 
 * Translated the commands to simplified Chinese [#240](https://github.com/Microsoft/vscode-python/pull/240) (thanks [Wai Sui kei](https://github.com/WaiSiuKei))
