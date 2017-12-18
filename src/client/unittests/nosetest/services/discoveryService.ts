@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import 'reflect-metadata';
 import { CancellationTokenSource } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
 import { NOSETEST_PROVIDER } from '../../common/constants';

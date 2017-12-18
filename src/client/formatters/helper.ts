@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import 'reflect-metadata';
 import { IFormattingSettings } from '../common/configSettings';
 import { Product } from '../common/types';
 import { FormatterId, FormatterSettingsPropertyNames, IFormatterHelper } from './types';

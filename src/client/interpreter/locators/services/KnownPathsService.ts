@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as path from 'path';
-import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { fsExistsAsync, IS_WINDOWS } from '../../../common/utils';
 import { IInterpreterLocatorService, IInterpreterVersionService, IKnownSearchPathsForInterpreters, InterpreterType } from '../../contracts';

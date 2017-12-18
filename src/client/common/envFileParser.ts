@@ -1,5 +1,4 @@
 import * as fs from 'fs-extra';
-import 'reflect-metadata';
 import { PathUtils } from './platform/pathUtils';
 import { EnvironmentVariablesService } from './variables/environment';
 import { EnvironmentVariables } from './variables/types';

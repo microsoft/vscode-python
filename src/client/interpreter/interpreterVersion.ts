@@ -1,6 +1,5 @@
 import * as child_process from 'child_process';
 import { injectable } from 'inversify';
-import 'reflect-metadata';
 import { getInterpreterVersion } from '../common/utils';
 import { IInterpreterVersionService } from './contracts';
 

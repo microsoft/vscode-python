@@ -1,5 +1,4 @@
 import { injectable } from 'inversify';
-import 'reflect-metadata';
 import { ITestVisitor, TestFile, TestFolder, TestFunction, TestStatus, TestSuite } from '../types';
 
 @injectable()

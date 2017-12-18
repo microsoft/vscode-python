@@ -1,7 +1,6 @@
 import * as getFreePort from 'get-port';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
-import 'reflect-metadata';
 import { debug, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
 import { IPythonExecutionFactory } from '../../common/process/types';

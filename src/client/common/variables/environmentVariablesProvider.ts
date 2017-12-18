@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import 'reflect-metadata';
 import { Disposable, FileSystemWatcher, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../configSettings';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../platform/constants';

@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import * as testRunner from 'vscode/lib/testrunner';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
 import { IS_MULTI_ROOT_TEST } from './initialize';

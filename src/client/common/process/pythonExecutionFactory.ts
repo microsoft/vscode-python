@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../configSettings';
 import { IEnvironmentVariablesProvider } from '../variables/types';

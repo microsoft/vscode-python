@@ -1,5 +1,4 @@
 import { inject, injectable, named } from 'inversify';
-import 'reflect-metadata';
 import { Disposable, OutputChannel, Uri, workspace } from 'vscode';
 import { IDisposableRegistry, IOutputChannel } from '../../../common/types';
 import { TEST_OUTPUT_CHANNEL } from './../constants';

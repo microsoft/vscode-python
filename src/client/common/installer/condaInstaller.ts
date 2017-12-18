@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { ICondaLocatorService, IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../interpreter/contracts';
 import { CONDA_RELATIVE_PY_PATH } from '../../interpreter/locators/services/conda';
