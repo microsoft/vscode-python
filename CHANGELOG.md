@@ -2,8 +2,7 @@
 
 ## Version 0.9.1 (19 December 2017)
 
-* Fixes the compatibility issue with the [Visual Studio Code Tools for AI
-](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.vscode-ai) [#432](https://github.com/Microsoft/vscode-python/issues/432)
+* Fixes the compatibility issue with the [Visual Studio Code Tools for AI](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.vscode-ai) [#432](https://github.com/Microsoft/vscode-python/issues/432)
 * Display runtime errors encountered when running a python program without debugging [#454](https://github.com/Microsoft/vscode-python/issues/454)
 
 ## Version 0.9.0 (14 December 2017)
