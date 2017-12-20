@@ -8,6 +8,7 @@ import * as settings from './common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
+import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
@@ -76,6 +77,7 @@ export async function activate(context: vscode.ExtensionContext) {
     lintersRegisterTypes(serviceManager);
     interpretersRegisterTypes(serviceManager);
     formattersRegisterTypes(serviceManager);
+    platformRegisterTypes(serviceManager);
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();

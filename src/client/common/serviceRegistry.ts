@@ -3,6 +3,8 @@
 
 import 'reflect-metadata';
 import { IServiceManager } from '../ioc/types';
+import { ApplicationShell } from './application/applicationShell';
+import { IApplicationShell } from './application/types';
 import { CondaInstaller } from './installer/condaInstaller';
 import { Installer } from './installer/installer';
 import { PipInstaller } from './installer/pipInstaller';
@@ -28,8 +30,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILogger>(ILogger, Logger);
     serviceManager.addSingleton<ITerminalService>(ITerminalService, TerminalService);
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
-
-    if (IS_WINDOWS) {
-        serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
-    }
+    serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
 }

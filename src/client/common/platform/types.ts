@@ -11,8 +11,25 @@ export enum RegistryHive {
 }
 
 export const IRegistry = Symbol('IRegistry');
-
 export interface IRegistry {
     getKeys(key: string, hive: RegistryHive, arch?: Architecture): Promise<string[]>;
     getValue(key: string, hive: RegistryHive, arch?: Architecture, name?: string): Promise<string | undefined | null>;
+}
+
+export const IPlatformService = Symbol('IPlatformService');
+export interface IPlatformService {
+    isWindows: boolean;
+    isMac: boolean;
+    isLinux: boolean;
+    is64bit: boolean;
+    pathVariableName: 'Path' | 'PATH';
+}
+
+export const IFileSystem = Symbol('IFileSystem');
+export interface IFileSystem {
+    directorySeparatorChar: string;
+    existsAsync(path: string): Promise<boolean>;
+    createDirectoryAsync(path: string): Promise<boolean>;
+    getSubDirectoriesAsync(rootDir: string): Promise<string[]>;
+    arePathsSame(path1: string, path2: string): boolean;
 }
