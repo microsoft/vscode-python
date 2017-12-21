@@ -8,6 +8,9 @@ import * as settings from './common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
+import { checkPythonInstallation } from './common/installer/pythonInstallation';
+import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
+import { IPythonInstallation } from './common/installer/types';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
@@ -78,6 +81,7 @@ export async function activate(context: vscode.ExtensionContext) {
     interpretersRegisterTypes(serviceManager);
     formattersRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
+    installerRegisterTypes(serviceManager);
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
@@ -85,6 +89,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     sortImports.activate(context, standardOutputChannel);
     const interpreterManager = new InterpreterManager(serviceContainer);
+    const passed = await checkPythonInstallation(serviceContainer, interpreterManager);
     // This must be completed before we can continue.
     await interpreterManager.autoSetInterpreter();
 

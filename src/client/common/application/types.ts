@@ -4,17 +4,6 @@
 
 import * as vscode from 'vscode';
 
-export const ITerminalService = Symbol('ITerminalService');
-export interface ITerminalService {
-    sendCommand(command: string, args: string[]): Promise<void>;
-}
-
-export const ILogger = Symbol('ILogger');
-export interface ILogger {
-    logError(message: string, error?: Error);
-    logWarning(message: string, error?: Error);
-}
-
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
     showInformationMessage(message: string, ...items: string[]): Thenable<string | undefined>;

@@ -2,10 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { injectable } from 'inversify';
 import { arch } from 'os';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
 import { IPlatformService } from './types';
 
+@injectable()
 export class PlatformService implements IPlatformService {
      private _isWindows: boolean;
      private _isMac: boolean;

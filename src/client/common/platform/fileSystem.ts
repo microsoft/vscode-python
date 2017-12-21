@@ -3,14 +3,14 @@
 'use strict';
 
 import * as fs from 'fs';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IServiceContainer } from '../../ioc/types';
 import { IFileSystem, IPlatformService } from './types';
 
+@injectable()
 export class FileSystem implements IFileSystem {
-
-    constructor(@inject(IServiceContainer) private platformService: IPlatformService) {}
+    constructor( @inject(IServiceContainer) private platformService: IPlatformService) { }
 
     public get directorySeparatorChar(): string {
         return this.platformService.isWindows ? '\\' : '/';
@@ -46,10 +46,20 @@ export class FileSystem implements IFileSystem {
                             subDirs.push(fullPath);
                         }
                         // tslint:disable-next-line:no-empty
-                    } catch (ex) {}
+                    } catch (ex) { }
                 });
                 resolve(subDirs);
             });
         });
+    }
+
+    public arePathsSame(path1: string, path2: string): boolean {
+        path1 = path.normalize(path1);
+        path2 = path.normalize(path2);
+        if (this.platformService.isWindows) {
+            return path1.toUpperCase() === path2.toUpperCase();
+        } else {
+            return path1 === path2;
+        }
     }
 }
