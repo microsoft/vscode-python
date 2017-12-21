@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as path from 'path';
 import { Disposable, Uri, workspace } from 'vscode';
+import { IPlatformService } from '../../common/platform/types';
 import { IDisposableRegistry, IsWindows } from '../../common/types';
 import { arePathsSame } from '../../common/utils';
 import { IServiceContainer } from '../../ioc/types';
@@ -22,11 +23,13 @@ import { fixInterpreterDisplayName } from './helpers';
 export class PythonInterpreterLocatorService implements IInterpreterLocatorService {
     private interpretersPerResource: Map<string, Promise<PythonInterpreter[]>>;
     private disposables: Disposable[] = [];
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IsWindows) private isWindows: boolean) {
+    private platform: IPlatformService;
+
+    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.interpretersPerResource = new Map<string, Promise<PythonInterpreter[]>>();
         this.disposables.push(workspace.onDidChangeConfiguration(this.onConfigChanged, this));
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
+        this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
     }
     public async getInterpreters(resource?: Uri) {
         const resourceKey = this.getResourceKey(resource);
@@ -59,6 +62,9 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             .map(fixInterpreterDisplayName)
             .map(item => { item.path = path.normalize(item.path); return item; })
             .reduce<PythonInterpreter[]>((accumulator, current) => {
+                if (this.platform.isMac && current.path === '/usr/bin/python') {
+                    return accumulator;
+                }
                 const existingItem = accumulator.find(item => arePathsSame(item.path, current.path));
                 if (!existingItem) {
                     accumulator.push(current);
@@ -74,14 +80,14 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     private getLocators(resource?: Uri) {
         const locators: IInterpreterLocatorService[] = [];
         // The order of the services is important.
-        if (this.isWindows) {
+        if (this.platform.isWindows) {
             locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE));
         }
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, CONDA_ENV_SERVICE));
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, CONDA_ENV_FILE_SERVICE));
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, VIRTUAL_ENV_SERVICE));
 
-        if (!this.isWindows) {
+        if (!this.platform.isWindows) {
             locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, KNOWN_PATH_SERVICE));
         }
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, CURRENT_PATH_SERVICE));
