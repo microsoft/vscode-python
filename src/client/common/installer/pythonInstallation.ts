@@ -10,6 +10,7 @@ import { OutputChannel } from 'vscode';
 import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
+import { PythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem, IPlatformService } from '../platform/types';
 import { IProcessService, IPythonExecutionService } from '../process/types';
@@ -18,27 +19,28 @@ import { IPythonInstallation } from './types';
 
 export class PythonInstaller {
     private locator: IInterpreterLocatorService;
-    private platform: IPlatformService;
     private process: IProcessService;
     private fs: IFileSystem;
     private outputChannel: OutputChannel;
-    private shell: IApplicationShell;
+    private _platform: IPlatformService;
+    private _shell: IApplicationShell;
 
     constructor(private serviceContainer: IServiceContainer) {
         this.locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
-    }
+   }
 
     public async checkPythonInstallation(): Promise<boolean> {
         let interpreters = await this.locator.getInterpreters();
         if (interpreters.length > 0) {
+            if (this.platform.isMac && PythonSettings.getInstance().pythonPath === 'python') {
+                await this.shell.showWarningMessage('Selected interpreter is Mac OS system Python which is not recommended. Please select different interpreter');
+            }
             return true;
         }
 
-        this.platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         this.process = this.serviceContainer.get<IProcessService>(IProcessService);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        this.shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
 
         if (this.platform.isWindows) {
             await this.shell.showErrorMessage('Python is not installed. Please download and install Python before using the extension.');
@@ -95,5 +97,19 @@ export class PythonInstaller {
                 resolve(!signal);
             });
         });
+    }
+
+    private get shell(): IApplicationShell {
+        if (!this._shell) {
+            this._shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        }
+        return this._shell;
+    }
+
+    private get platform(): IPlatformService {
+        if (!this._platform) {
+            this._platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
+        }
+        return this._platform;
     }
 }
