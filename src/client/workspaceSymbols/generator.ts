@@ -27,11 +27,10 @@ export class Generator implements vscode.Disposable {
     }
 
     private buildCmdArgs(): string[] {
-        const optionsFile = this.optionsFile.indexOf(' ') > 0 ? `"${this.optionsFile}"` : this.optionsFile;
         const exclusions = this.pythonSettings.workspaceSymbols.exclusionPatterns;
         const excludes = exclusions.length === 0 ? [] : exclusions.map(pattern => `--exclude=${pattern}`);
 
-        return [`--options=${optionsFile}`, '--languages=Python'].concat(excludes);
+        return [`--options=${this.optionsFile}`, '--languages=Python'].concat(excludes);
     }
 
     public async generateWorkspaceTags(): Promise<void> {
@@ -58,8 +57,7 @@ export class Generator implements vscode.Disposable {
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir);
         }
-        outputFile = outputFile.indexOf(' ') > 0 ? `"${outputFile}"` : outputFile;
-        args.push(`-o ${outputFile}`, '.');
+        args.push('-o', outputFile, '.');
         this.output.appendLine('-'.repeat(10) + 'Generating Tags' + '-'.repeat(10));
         this.output.appendLine(`${cmd} ${args.join(' ')}`);
         const promise = new Promise<void>((resolve, reject) => {
