@@ -1170,7 +1170,7 @@
 				},
 				"python.linting.pylintArgs": {
 					"type": "array",
-					"description": "Arguments passed in. Each argument is a separate item in the array.",
+					"description": "Arguments passed in. Each argument is a separate item in the array. --msg-template is set by VSCode and cannot be overridden here.",
 					"default": [],
 					"items": {
 						"type": "string"

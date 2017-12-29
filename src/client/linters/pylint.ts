@@ -11,7 +11,7 @@ export class Linter extends baseLinter.BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<baseLinter.ILintMessage[]> {
-        const messages = await this.run(['--msg-template=\'{line},{column},{category},{msg_id}:{msg}\'', '--reports=n', '--output-format=text', document.uri.fsPath], document, cancellation);
+        const messages = await this.run(['--msg-template=\'{line},{column},{category},{msg_id}:{msg} ({symbol})\'', '--reports=n', '--output-format=text', document.uri.fsPath], document, cancellation);
         messages.forEach(msg => {
             msg.severity = this.parseMessagesSeverity(msg.type, this.pythonSettings.linting.pylintCategorySeverity);
         });
