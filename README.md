@@ -43,6 +43,7 @@ contributors (if you would like to contribute a translation, see the
 * `ko-kr`
 * `ru`
 * `zh-cn`
+* `zh-tw`
 
 ## Questions, issues, feature requests, and contributions
 
