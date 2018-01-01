@@ -8,8 +8,10 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
 import { createDeferred } from '../../../client/common/helpers';
-import { IsWindows } from '../../../client/common/types';
+import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../../../client/common/platform/constants';
 import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
+import { IsWindows } from '../../../client/common/types';
+import { IS_WINDOWS } from '../../../client/common/utils';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { EnvironmentVariables } from '../../../client/common/variables/types';
@@ -27,6 +29,7 @@ const workspace4PyFile = Uri.file(path.join(workspace4Path.fsPath, 'one.py'));
 // tslint:disable-next-line:max-func-body-length
 suite('Multiroot Environment Variables Provider', () => {
     let ioc: UnitTestIocContainer;
+    const pathVariableName = IS_WINDOWS ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
@@ -139,7 +142,7 @@ suite('Multiroot Environment Variables Provider', () => {
         await updateSetting('envFile', '${workspaceRoot}/.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const processVariables = { ...process.env };
         processVariables.PYTHONPATH = '/usr/one/TWO';
-        processVariables.PATH = '/usr/one/THREE';
+        processVariables[pathVariableName] = '/usr/one/THREE';
         const envProvider = getVariablesProvider(processVariables);
         const vars = await envProvider.getEnvironmentVariables(workspace4PyFile);
 
@@ -147,7 +150,7 @@ suite('Multiroot Environment Variables Provider', () => {
         expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
         expect(vars).to.have.property('X1234PYEXTUNITTESTVAR', '1234', 'X1234PYEXTUNITTESTVAR value is invalid');
         expect(vars).to.have.property('PYTHONPATH', expectedPythonPath, 'PYTHONPATH value is invalid');
-        expect(vars).to.have.property('PATH', processVariables.PATH, 'PATH value is invalid');
+        expect(vars).to.have.property(pathVariableName, processVariables[pathVariableName], 'PATH value is invalid');
     });
 
     test('PATH from process variables should be included in in variables returned', async () => {
@@ -162,7 +165,7 @@ suite('Multiroot Environment Variables Provider', () => {
         expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
         expect(vars).to.have.property('X1234PYEXTUNITTESTVAR', '1234', 'X1234PYEXTUNITTESTVAR value is invalid');
         expect(vars).to.have.property('PYTHONPATH', expectedPythonPath, 'PYTHONPATH value is invalid');
-        expect(vars).to.have.property('PATH', processVariables.PATH, 'PATH value is invalid');
+        expect(vars).to.have.property(pathVariableName, processVariables[pathVariableName], 'PATH value is invalid');
     });
 
     test('PYTHONPATH and PATH from process variables should be merged with that in env file', async () => {
@@ -170,17 +173,17 @@ suite('Multiroot Environment Variables Provider', () => {
         await updateSetting('envFile', '${workspaceRoot}/.env5', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const processVariables = { ...process.env };
         processVariables.PYTHONPATH = '/usr/one/TWO';
-        processVariables.PATH = '/usr/one/THREE';
+        processVariables[pathVariableName] = '/usr/one/THREE';
         const envProvider = getVariablesProvider(processVariables);
         const vars = await envProvider.getEnvironmentVariables(workspace4PyFile);
 
         const expectedPythonPath = `/usr/one/three:/usr/one/four${path.delimiter}${processVariables.PYTHONPATH}`;
-        const expectedPath = `/usr/x:/usr/y${path.delimiter}${processVariables.PATH}`;
+        const expectedPath = `/usr/x:/usr/y${path.delimiter}${processVariables[pathVariableName]}`;
         expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
         expect(vars).to.have.property('X', '1', 'X value is invalid');
         expect(vars).to.have.property('Y', '2', 'Y value is invalid');
         expect(vars).to.have.property('PYTHONPATH', expectedPythonPath, 'PYTHONPATH value is invalid');
-        expect(vars).to.have.property('PATH', expectedPath, 'PATH value is invalid');
+        expect(vars).to.have.property(pathVariableName, expectedPath, 'PATH value is invalid');
     });
 
     test('PATH and PYTHONPATH from env file should be returned as is', async () => {
@@ -190,8 +193,8 @@ suite('Multiroot Environment Variables Provider', () => {
         if (processVariables.PYTHONPATH) {
             delete processVariables.PYTHONPATH;
         }
-        if (processVariables.PATH) {
-            delete processVariables.PATH;
+        if (processVariables[pathVariableName]) {
+            delete processVariables[pathVariableName];
         }
         const envProvider = getVariablesProvider(processVariables);
         const vars = await envProvider.getEnvironmentVariables(workspace4PyFile);
@@ -202,7 +205,7 @@ suite('Multiroot Environment Variables Provider', () => {
         expect(vars).to.have.property('X', '1', 'X value is invalid');
         expect(vars).to.have.property('Y', '2', 'Y value is invalid');
         expect(vars).to.have.property('PYTHONPATH', expectedPythonPath, 'PYTHONPATH value is invalid');
-        expect(vars).to.have.property('PATH', expectedPath, 'PATH value is invalid');
+        expect(vars).to.have.property(pathVariableName, expectedPath, 'PATH value is invalid');
     });
 
     test('PYTHONPATH and PATH from process variables should be included in variables returned', async () => {
@@ -210,14 +213,14 @@ suite('Multiroot Environment Variables Provider', () => {
         await updateSetting('envFile', '${workspaceRoot}/.env2', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const processVariables = { ...process.env };
         processVariables.PYTHONPATH = '/usr/one/TWO';
-        processVariables.PATH = '/usr/one/THREE';
+        processVariables[pathVariableName] = '/usr/one/THREE';
         const envProvider = getVariablesProvider(processVariables);
         const vars = await envProvider.getEnvironmentVariables(workspace4PyFile);
 
         expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
         expect(vars).to.have.property('X12345PYEXTUNITTESTVAR', '12345', 'X12345PYEXTUNITTESTVAR value is invalid');
         expect(vars).to.have.property('PYTHONPATH', processVariables.PYTHONPATH, 'PYTHONPATH value is invalid');
-        expect(vars).to.have.property('PATH', processVariables.PATH, 'PATH value is invalid');
+        expect(vars).to.have.property(pathVariableName, processVariables[pathVariableName], 'PATH value is invalid');
     });
 
     test('PYTHONPATH should not exist in variables returned', async () => {
@@ -227,14 +230,14 @@ suite('Multiroot Environment Variables Provider', () => {
         if (processVariables.PYTHONPATH) {
             delete processVariables.PYTHONPATH;
         }
-        processVariables.PATH = '/usr/one/THREE';
+        processVariables[pathVariableName] = '/usr/one/THREE';
         const envProvider = getVariablesProvider(processVariables);
         const vars = await envProvider.getEnvironmentVariables(workspace4PyFile);
 
         expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
         expect(vars).to.have.property('X12345PYEXTUNITTESTVAR', '12345', 'X12345PYEXTUNITTESTVAR value is invalid');
         expect(vars).to.not.have.property('PYTHONPATH');
-        expect(vars).to.have.property('PATH', processVariables.PATH, 'PATH value is invalid');
+        expect(vars).to.have.property(pathVariableName, processVariables[pathVariableName], 'PATH value is invalid');
     });
 
     test('Custom variables should not be merged with process environment varaibles', async () => {
