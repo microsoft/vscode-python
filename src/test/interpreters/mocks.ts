@@ -1,4 +1,4 @@
-import { injectable } from 'inversify/dts/annotation/injectable';
+import { injectable } from 'inversify';
 import { Architecture, IRegistry, RegistryHive } from '../../client/common/platform/types';
 import { IProcessService } from '../../client/common/process/types';
 import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
