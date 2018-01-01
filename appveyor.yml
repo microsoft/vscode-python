@@ -26,7 +26,6 @@ init:
 
 install:
   - ps: Install-Product node $env:nodejs_version
-  - npm i -g npm@5.5.1
   - npm i -g yarn
   - yarn
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
@@ -36,9 +35,9 @@ install:
   - "%PYTHON%/Scripts/pip.exe install --upgrade -r requirements.txt"
 
 test_script:
-  - npm run clean
-  - npm run vscode:prepublish
-  - npm run testSingleWorkspace --silent
-  - npm run testMultiWorkspace --silent
+  - yarn run clean
+  - yarn run vscode:prepublish
+  - yarn run testSingleWorkspace --silent
+  - yarn run testMultiWorkspace --silent
 
 build: off
