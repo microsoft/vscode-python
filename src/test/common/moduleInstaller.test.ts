@@ -11,6 +11,7 @@ import { IModuleInstaller } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
+import { Architecture } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
 import { ITerminalService } from '../../client/common/terminal/types';
@@ -25,7 +26,6 @@ import { MockProcessService } from '../mocks/proc';
 import { MockTerminalService } from '../mocks/terminalService';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST, IS_TRAVIS } from './../initialize';
-import { Architecture } from '../../client/common/platform/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Module Installer', () => {
