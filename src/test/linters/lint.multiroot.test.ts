@@ -62,8 +62,7 @@ suite('Multiroot Linting', () => {
         const fileToLint = path.join(multirootPath, workspaceFolderRelativePath, 'file.py');
         const cancelToken = new CancellationTokenSource();
         const document = await workspace.openTextDocument(fileToLint);
-        const editor = await window.showTextDocument(document);
-        const messages = await linter.lint(editor.document, cancelToken.token);
+        const messages = await linter.lint(document, cancelToken.token);
         const errorMessage = mustHaveErrors ? 'No errors returned by linter' : 'Errors returned by linter';
         assert.equal(messages.length > 0, mustHaveErrors, errorMessage);
     }
