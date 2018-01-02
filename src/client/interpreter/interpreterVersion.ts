@@ -1,4 +1,3 @@
-import * as child_process from 'child_process';
 import { inject, injectable } from 'inversify';
 import '../common/extensions';
 import { IProcessService } from '../common/process/types';
