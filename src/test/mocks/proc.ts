@@ -1,7 +1,6 @@
 import { spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { decorate, inject, injectable } from 'inversify';
-import 'reflect-metadata';
 import * as Rx from 'rxjs';
 import { Disposable } from 'vscode';
 import { ExecutionResult, IBufferDecoder, IProcessService, ObservableExecutionResult, Output, SpawnOptions } from '../../client/common/process/types';

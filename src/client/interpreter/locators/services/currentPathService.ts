@@ -2,7 +2,6 @@ import * as child_process from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as path from 'path';
-import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../../common/configSettings';
 import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType } from '../../contracts';

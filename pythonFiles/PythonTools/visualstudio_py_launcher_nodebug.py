@@ -114,7 +114,7 @@ def handle_exception(exc_type, exc_value, exc_tb):
     tb = traceback.extract_tb(exc_tb)
     for i in [0, -1]:
         while tb:
-            frame_file = path.normcase(tb[i][0])
+            frame_file = os.path.normcase(tb[i][0])
             if not any(is_same_py_file(frame_file, f) for f in do_not_debug):
                 break
             del tb[i]

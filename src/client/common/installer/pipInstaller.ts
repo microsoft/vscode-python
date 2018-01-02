@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import 'reflect-metadata';
 import { Uri, workspace } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { IPythonExecutionFactory } from '../process/types';

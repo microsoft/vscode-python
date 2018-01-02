@@ -2,7 +2,6 @@ import * as child_process from 'child_process';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { VersionUtils } from '../../../common/versionUtils';
 import { ICondaLocatorService, IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';

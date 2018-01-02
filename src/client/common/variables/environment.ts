@@ -4,7 +4,6 @@
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import 'reflect-metadata';
 import { IPathUtils } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 

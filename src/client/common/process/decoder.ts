@@ -3,7 +3,6 @@
 
 import * as iconv from 'iconv-lite';
 import { injectable } from 'inversify';
-import 'reflect-metadata';
 import { DEFAULT_ENCODING } from './constants';
 import { IBufferDecoder } from './types';
 

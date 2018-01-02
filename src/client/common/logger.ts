@@ -1,5 +1,4 @@
 import { injectable } from 'inversify';
-import 'reflect-metadata';
 import { ILogger } from './types';
 
 const PREFIX = 'Python Extension: ';

@@ -1,5 +1,4 @@
 import { injectable } from 'inversify';
-import 'reflect-metadata';
 import { createDeferred, Deferred } from '../../client/common/helpers';
 import { ITerminalService } from '../../client/common/terminal/types';
 

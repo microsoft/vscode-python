@@ -1,8 +1,12 @@
 "use strict";
 
+// This line should always be right on top.
+if (Reflect.metadata === undefined) {
+    // tslint:disable-next-line:no-require-imports no-var-requires
+    require('reflect-metadata');
+}
 import * as fs from "fs";
 import * as path from "path";
-import 'reflect-metadata';
 import { DebugSession, Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread } from "vscode-debugadapter";
 import { ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";

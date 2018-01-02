@@ -1,4 +1,9 @@
 'use strict';
+// This line should always be right on top.
+if (Reflect.metadata === undefined) {
+    // tslint:disable-next-line:no-require-imports no-var-requires
+    require('reflect-metadata');
+}
 import { Container } from 'inversify';
 import * as os from 'os';
 import * as vscode from 'vscode';

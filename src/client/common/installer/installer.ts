@@ -1,7 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
-import 'reflect-metadata';
 import { ConfigurationTarget, QuickPickItem, Uri, window, workspace } from 'vscode';
 import * as vscode from 'vscode';
 import { IFormatterHelper } from '../../formatters/types';

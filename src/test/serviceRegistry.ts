@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { Container } from 'inversify';
-import 'reflect-metadata';
 import { Disposable, Memento, OutputChannel } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
 import { BufferDecoder } from '../client/common/process/decoder';

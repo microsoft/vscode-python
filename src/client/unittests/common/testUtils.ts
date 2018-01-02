@@ -1,6 +1,5 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import 'reflect-metadata';
 import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
 import { window } from 'vscode';

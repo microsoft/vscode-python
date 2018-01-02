@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import 'reflect-metadata';
 import { Memento } from 'vscode';
 import { GLOBAL_MEMENTO, IMemento, IPersistentState, IPersistentStateFactory, WORKSPACE_MEMENTO } from './types';
 

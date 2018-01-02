@@ -1,6 +1,5 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
-import 'reflect-metadata';
 import { fsExistsAsync } from '../../common/utils';
 import { InterpreterType } from '../contracts';
 import { IVirtualEnvironmentIdentifier } from './types';

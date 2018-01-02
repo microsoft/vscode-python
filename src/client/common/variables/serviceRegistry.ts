@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line:no-import-side-effect
-import 'reflect-metadata';
 import { IServiceManager } from '../../ioc/types';
 import { EnvironmentVariablesService } from './environment';
 import { EnvironmentVariablesProvider } from './environmentVariablesProvider';

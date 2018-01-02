@@ -1,5 +1,4 @@
 import { inject, injectable, named } from 'inversify';
-import 'reflect-metadata';
 import { TestResultResetVisitor } from './../testVisitors/resultResetVisitor';
 import { ITestResultsService, ITestVisitor, TestFile, TestFolder, Tests, TestStatus, TestSuite } from './../types';
 

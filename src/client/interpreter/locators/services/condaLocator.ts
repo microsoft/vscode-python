@@ -2,7 +2,6 @@ import * as child_process from 'child_process';
 import * as fs from 'fs-extra';
 import { inject, injectable, named, optional } from 'inversify';
 import * as path from 'path';
-import 'reflect-metadata';
 import { IProcessService } from '../../../common/process/types';
 import { IsWindows } from '../../../common/types';
 import { VersionUtils } from '../../../common/versionUtils';
