@@ -2,15 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
-const opn = require('opn');
-
 import { inject } from 'inversify';
 import { OutputChannel } from 'vscode';
 import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
-import { PythonSettings } from '../configSettings';
+import { IPythonSettings, isTestExecution } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem, IPlatformService } from '../platform/types';
 import { IProcessService, IPythonExecutionService } from '../process/types';
@@ -29,27 +26,27 @@ export class PythonInstaller {
         this.locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
    }
 
-    public async checkPythonInstallation(): Promise<boolean> {
+    public async checkPythonInstallation(settings: IPythonSettings): Promise<boolean> {
         let interpreters = await this.locator.getInterpreters();
         if (interpreters.length > 0) {
-            if (this.platform.isMac && PythonSettings.getInstance().pythonPath === 'python') {
-                await this.shell.showWarningMessage('Selected interpreter is Mac OS system Python which is not recommended. Please select different interpreter');
+            if (this.platform.isMac && settings.pythonPath === 'python') {
+                await this.shell.showWarningMessage('Selected interpreter is MacOS system Python which is not recommended. Please select different interpreter');
             }
             return true;
+        }
+
+        if (this.platform.isWindows) {
+            await this.shell.showErrorMessage('Python is not installed. Please download and install Python before using the extension.');
+            this.shell.openUrl('https://www.python.org/downloads');
+            return false;
         }
 
         this.process = this.serviceContainer.get<IProcessService>(IProcessService);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
 
-        if (this.platform.isWindows) {
-            await this.shell.showErrorMessage('Python is not installed. Please download and install Python before using the extension.');
-            opn('https://www.python.org/downloads');
-            return false;
-        }
-
         if (this.platform.isMac) {
-            if (await this.shell.showErrorMessage('Python that comes with Mac OS is not supported. Would you like to install regular Python now?', 'Yes', 'No') === 'Yes') {
+            if (await this.shell.showErrorMessage('Python that comes with MacOS is not supported. Would you like to install regular Python now?', 'Yes', 'No') === 'Yes') {
                 const brewInstalled = await this.ensureBrew();
                 if (!brewInstalled) {
                     await this.shell.showErrorMessage('Unable to install Brew package manager');
@@ -92,6 +89,9 @@ export class PythonInstaller {
         return new Promise<boolean>((resolve, reject) => {
             if (failed) {
                 resolve(false);
+            }
+            if (isTestExecution()) {
+                resolve(true);
             }
             result.proc.on('exit', (code, signal) => {
                 resolve(!signal);

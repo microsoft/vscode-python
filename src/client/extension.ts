@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
+import { PythonSettings } from './common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
@@ -96,7 +97,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const interpreterManager = new InterpreterManager(serviceContainer);
 
     const pythonInstaller = new PythonInstaller(serviceContainer);
-    const passed = await pythonInstaller.checkPythonInstallation();
+    const passed = await pythonInstaller.checkPythonInstallation(PythonSettings.getInstance());
 
     // This must be completed before we can continue.
     await interpreterManager.autoSetInterpreter();

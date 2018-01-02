@@ -13,7 +13,8 @@ const options: MochaSetupOptions & { retries: number } = {
     ui: 'tdd',
     useColors: true,
     timeout: 25000,
-    retries: 3
+    retries: 3,
+    grep: 'Installation'
 };
 testRunner.configure(options);
 module.exports = testRunner;

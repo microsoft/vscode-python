@@ -184,4 +184,11 @@ export interface IApplicationShell {
      * @return A promise that resolves to a string the user provided or to `undefined` in case of dismissal.
      */
     showInputBox(options?: vscode.InputBoxOptions, token?: vscode.CancellationToken): Thenable<string | undefined>;
+
+    /**
+     * Opens URL in a default browser.
+     *
+     * @param url Url to open.
+     */
+    openUrl(url: string): void;
 }

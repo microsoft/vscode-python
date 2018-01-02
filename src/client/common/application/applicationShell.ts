@@ -2,6 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 
+// tslint:disable-next-line:no-require-imports no-var-requires
+const opn = require('opn');
+
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { IApplicationShell } from './types';
@@ -50,5 +53,8 @@ export class ApplicationShell implements IApplicationShell {
     }
     public showInputBox(options?: vscode.InputBoxOptions, token?: vscode.CancellationToken): Thenable<string> {
         return vscode.window.showInputBox(options, token);
+    }
+    public openUrl(url: string): void {
+        opn(url);
     }
 }

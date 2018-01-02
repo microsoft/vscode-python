@@ -1583,6 +1583,7 @@
 		"tslint": "^5.7.0",
 		"tslint-eslint-rules": "^4.1.1",
 		"tslint-microsoft-contrib": "^5.0.1",
+		"typemoq": "^2.1.0",
 		"typescript": "^2.6.2",
 		"typescript-formatter": "^6.0.0",
 		"vscode": "^1.1.5",
