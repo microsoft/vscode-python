@@ -1,5 +1,4 @@
 import { injectable } from 'inversify';
-import 'reflect-metadata';
 import { ICurrentProcess } from '../types';
 import { EnvironmentVariables } from '../variables/types';
 

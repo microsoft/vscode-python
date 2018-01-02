@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import 'reflect-metadata';
 import { ICurrentProcess } from '../../client/common/types';
 import { EnvironmentVariables } from '../../client/common/variables/types';
 
