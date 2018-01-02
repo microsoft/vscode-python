@@ -23,7 +23,7 @@ export class PlatformService implements IPlatformService {
         return this._isMac;
     }
     public get isLinux(): boolean {
-        return !(this.isWindows || this.isLinux);
+        return !(this.isWindows || this.isMac);
     }
     public get is64bit(): boolean {
         return arch() === 'x64';

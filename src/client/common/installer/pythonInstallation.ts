@@ -35,7 +35,8 @@ export class PythonInstaller {
             return true;
         }
 
-        if (this.platform.isWindows) {
+        if (!this.platform.isMac) {
+            // Windows or Linux
             await this.shell.showErrorMessage('Python is not installed. Please download and install Python before using the extension.');
             this.shell.openUrl('https://www.python.org/downloads');
             return false;
