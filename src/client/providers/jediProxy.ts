@@ -328,27 +328,9 @@ export class JediProxy implements vscode.Disposable {
                         return;
                     }
 
-                    switch (cmd.command) {
-                        case CommandType.Completions:
-                            this.onCompletion(cmd, response);
-                            break;
-                        case CommandType.Definitions:
-                            this.onDefinition(cmd, response);
-                            break;
-                        case CommandType.Hover:
-                            this.onHover(cmd, response);
-                            break;
-                        case CommandType.Symbols:
-                            this.onSymbols(cmd, response);
-                            break;
-                        case CommandType.Usages:
-                            this.onUsages(cmd, response);
-                            break;
-                        case CommandType.Arguments:
-                            this.onArguments(cmd, response);
-                            break;
-                        default:
-                            break;
+                    const handler = this.getCommandHandler(cmd.command);
+                    if (handler) {
+                        handler.call(this, cmd, response);
                     }
                     // Check if too many pending requests.
                     this.checkQueueLength();
@@ -358,7 +340,24 @@ export class JediProxy implements vscode.Disposable {
             error => this.handleError('subscription.error', `${error}`)
         );
     }
-
+    private getCommandHandler(command: CommandType): undefined | ((command: IExecutionCommand<ICommandResult>, response: object) => void) {
+        switch (command) {
+            case CommandType.Completions:
+                return this.onCompletion;
+            case CommandType.Definitions:
+                return this.onDefinition;
+            case CommandType.Hover:
+                return this.onHover;
+            case CommandType.Symbols:
+                return this.onSymbols;
+            case CommandType.Usages:
+                return this.onUsages;
+            case CommandType.Arguments:
+                return this.onArguments;
+            default:
+                return;
+        }
+    }
     private onCompletion(command: IExecutionCommand<ICommandResult>, response: object): void {
         let results = JediProxy.getProperty<IAutoCompleteItem[]>(response, 'results');
         results = Array.isArray(results) ? results : [];

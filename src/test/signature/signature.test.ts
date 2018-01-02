@@ -21,13 +21,12 @@ class SignatureHelpResult {
 
 // tslint:disable-next-line:max-func-body-length
 suite('Signatures', () => {
-    let isPython3: boolean;
+    let isPython2: boolean;
     let ioc: UnitTestIocContainer;
     suiteSetup(async () => {
         await initialize();
         initializeDI();
-        const version = await ioc.getPythonVersion(rootWorkspaceUri);
-        isPython3 = version.indexOf('3.') >= 0;
+        isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -86,7 +85,7 @@ suite('Signatures', () => {
     });
 
     test('For ellipsis', async function () {
-        if (!isPython3) {
+        if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
             return;
@@ -110,10 +109,10 @@ suite('Signatures', () => {
 
     test('For pow', async () => {
         let expected: SignatureHelpResult;
-        if (isPython3) {
-            expected = new SignatureHelpResult(0, 4, 1, 0, null);
-        } else {
+        if (isPython2) {
             expected = new SignatureHelpResult(0, 4, 1, 0, 'x');
+        } else {
+            expected = new SignatureHelpResult(0, 4, 1, 0, null);
         }
 
         const document = await openDocument(path.join(autoCompPath, 'noSigPy3.py'));
