@@ -76,6 +76,7 @@ export interface ILintingSettings {
     prospectorArgs: string[];
     pylintEnabled: boolean;
     pylintArgs: string[];
+    pylintMsgTemplate: string;
     pep8Enabled: boolean;
     pep8Args: string[];
     pylamaEnabled: boolean;
@@ -246,7 +247,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             pylamaArgs: [], pylamaEnabled: false, pylamaPath: 'pylama',
             prospectorArgs: [], prospectorEnabled: false, prospectorPath: 'prospector',
             pydocstyleArgs: [], pydocstyleEnabled: false, pydocstylePath: 'pydocstyle',
-            pylintArgs: [], pylintEnabled: false, pylintPath: 'pylint',
+            pylintArgs: [], pylintEnabled: false, pylintPath: 'pylint', pylintMsgTemplate: '{msg_id}:{msg}',
             pylintCategorySeverity: {
                 convention: vscode.DiagnosticSeverity.Hint,
                 error: vscode.DiagnosticSeverity.Error,

@@ -1170,7 +1170,7 @@
 				},
 				"python.linting.pylintArgs": {
 					"type": "array",
-					"description": "Arguments passed in. Each argument is a separate item in the array. --msg-template is set by VSCode and cannot be overridden here.",
+					"description": "Arguments passed in. Each argument is a separate item in the array. --msg-template is set by VSCode and cannot be overridden here. Use python.linting.pylintMsgTemplate instead.",
 					"default": [],
 					"items": {
 						"type": "string"
@@ -1214,6 +1214,12 @@
 					"items": {
 						"type": "string"
 					},
+					"scope": "resource"
+				},
+				"python.linting.pylintMsgTemplate": {
+					"type": "string",
+					"description": "Controls the message template for linting results, as a new-style python format string. The provided value will be appended to '{line},{column},{category},', which is required by VSCode. The previous message format, using numeric message codes, can be restored by setting this to '{msg_id}:{msg}'. Available fields are described at https://pylint.readthedocs.io/en/latest/user_guide/output.html.",
+					"default": "{msg} ({symbol})",
 					"scope": "resource"
 				},
 				"python.formatting.provider": {
