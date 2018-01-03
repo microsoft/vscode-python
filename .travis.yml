@@ -62,7 +62,7 @@ script:
   - yarn run testSingleWorkspace --silent
   - yarn run cover:enable
   - yarn run testMultiWorkspace --silent
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true"]; then
+  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         yarn run cover:upload
     fi
 # after_success: |
