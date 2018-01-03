@@ -16,6 +16,7 @@ const fileShebangEnv = path.join(autoCompPath, 'shebangEnv.py');
 const fileShebangInvalid = path.join(autoCompPath, 'shebangInvalid.py');
 const filePlain = path.join(autoCompPath, 'plain.py');
 
+// tslint:disable-next-line:max-func-body-length
 suite('Shebang detection', () => {
     let ioc: UnitTestIocContainer;
     suiteSetup(initialize);
