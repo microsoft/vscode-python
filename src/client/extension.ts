@@ -1,6 +1,7 @@
 'use strict';
 // This line should always be right on top.
-if (Reflect.metadata === undefined) {
+// tslint:disable-next-line:no-any
+if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }

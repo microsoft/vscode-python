@@ -119,15 +119,23 @@ suite('Installer', () => {
     test('Disable linting of files not contained in a workspace', async () => {
         const installer = ioc.serviceContainer.get<Installer>(IInstaller);
         await installer.disableLinter(Product.pylint, undefined);
-        const pythonConfig = workspace.getConfiguration('python');
+        // tslint:disable-next-line:no-any
+        const pythonConfig = workspace.getConfiguration('python', null as any as Uri);
         assert.equal(pythonConfig.get<boolean>('linting.enabledWithoutWorkspace'), false, 'Incorrect setting');
     });
 
-    test('Disable linting of files contained in a workspace', async function () {
+    test('Disable linting of files contained in a single workspace', async function () {
         if (IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
+        const installer = ioc.serviceContainer.get<Installer>(IInstaller);
+        await installer.disableLinter(Product.pylint, workspaceUri);
+        const pythonConfig = workspace.getConfiguration('python', workspaceUri);
+        assert.equal(pythonConfig.get<boolean>('linting.pylintEnabled'), false, 'Incorrect setting');
+    });
+
+    test('Disable linting of files contained in a any kind of workspace', async () => {
         const installer = ioc.serviceContainer.get<Installer>(IInstaller);
         await installer.disableLinter(Product.pylint, workspaceUri);
         const pythonConfig = workspace.getConfiguration('python', workspaceUri);

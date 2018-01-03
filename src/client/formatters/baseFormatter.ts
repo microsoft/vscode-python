@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { OutputChannel, TextEdit, Uri } from 'vscode';
@@ -74,7 +74,7 @@ export abstract class BaseFormatter {
             .then(edits => {
                 // Delete the temporary file created
                 if (tmpFileCreated) {
-                    fs.unlink(filePath);
+                    fs.unlinkSync(filePath);
                 }
                 return edits;
             });

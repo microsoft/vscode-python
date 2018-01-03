@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import { TextDocument, TextEdit } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
@@ -41,7 +41,7 @@ export class PythonImportSortProvider {
             return getTextEditsFromPatch(document.getText(), result.stdout);
         } finally {
             if (tmpFileCreated) {
-                fs.unlink(filePath);
+                fs.unlinkSync(filePath);
             }
         }
     }

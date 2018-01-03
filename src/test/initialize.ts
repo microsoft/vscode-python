@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { PythonSettings } from '../client/common/configSettings';
 import { activated } from '../client/extension';
+import { StopWatch } from '../client/telemetry/stopWatch';
 import { clearPythonPathInWorkspaceFolder, resetGlobalPythonPathSetting, setPythonPathInWorkspaceRoot } from './common';
 
 const dummyPythonFile = path.join(__dirname, '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
@@ -51,40 +52,10 @@ export async function wait(timeoutMilliseconds: number) {
     });
 }
 
-// tslint:disable-next-line:no-any
-export async function closeActiveWindows(): Promise<any> {
-    // https://github.com/Microsoft/vscode/blob/master/extensions/vscode-api-tests/src/utils.ts
-    return new Promise(resolve => {
-        if (vscode.window.visibleTextEditors.length === 0) {
-            return resolve();
-        }
-
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO: the visibleTextEditors variable doesn't seem to be
-        // up to date after a onDidChangeActiveTextEditor event, not
-        // even using a setTimeout 0... so we MUST poll :(
-        const interval = setInterval(() => {
-            if (vscode.window.visibleTextEditors.length > 0) {
-                return;
-            }
-
-            clearInterval(interval);
-            resolve();
-        }, 10);
-
-        setTimeout(() => {
-            if (vscode.window.visibleTextEditors.length === 0) {
-                return resolve();
-            }
-            vscode.commands.executeCommand('workbench.action.closeAllEditors')
-                // tslint:disable-next-line:no-any
-                .then(() => null, (err: any) => {
-                    clearInterval(interval);
-                    resolve();
-                });
-        }, 50);
-
-    });
+export async function closeActiveWindows(): Promise<void> {
+    return new Promise<void>((resolve, reject) => vscode.commands.executeCommand('workbench.action.closeAllEditors')
+        // tslint:disable-next-line:no-unnecessary-callback-wrapper
+        .then(() => resolve(), reject));
 }
 
 function getPythonPath(): string {

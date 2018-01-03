@@ -16,6 +16,7 @@ const fileShebangEnv = path.join(autoCompPath, 'shebangEnv.py');
 const fileShebangInvalid = path.join(autoCompPath, 'shebangInvalid.py');
 const filePlain = path.join(autoCompPath, 'plain.py');
 
+// tslint:disable-next-line:max-func-body-length
 suite('Shebang detection', () => {
     let ioc: UnitTestIocContainer;
     suiteSetup(initialize);
@@ -36,9 +37,9 @@ suite('Shebang detection', () => {
     }
     test('A code lens will appear when sheban python and python in settings are different', async () => {
         const pythonPath = 'someUnknownInterpreter';
-        const editor = await openFile(fileShebang);
-        PythonSettings.getInstance(editor.document.uri).pythonPath = pythonPath;
-        const codeLenses = await setupCodeLens(editor);
+        const document = await openFile(fileShebang);
+        PythonSettings.getInstance(document.uri).pythonPath = pythonPath;
+        const codeLenses = await setupCodeLens(document);
 
         assert.equal(codeLenses.length, 1, 'No CodeLens available');
         const codeLens = codeLenses[0];
@@ -49,24 +50,24 @@ suite('Shebang detection', () => {
     test('Code lens will not appear when sheban python and python in settings are the same', async () => {
         PythonSettings.dispose();
         const pythonPath = await getFullyQualifiedPathToInterpreter('python');
-        const editor = await openFile(fileShebang);
-        PythonSettings.getInstance(editor.document.uri).pythonPath = pythonPath!;
-        const codeLenses = await setupCodeLens(editor);
+        const document = await openFile(fileShebang);
+        PythonSettings.getInstance(document.uri).pythonPath = pythonPath!;
+        const codeLenses = await setupCodeLens(document);
         assert.equal(codeLenses.length, 0, 'CodeLens available although interpreters are equal');
 
     });
 
     test('Code lens will not appear when sheban python is invalid', async () => {
-        const editor = await openFile(fileShebangInvalid);
-        const codeLenses = await setupCodeLens(editor);
+        const document = await openFile(fileShebangInvalid);
+        const codeLenses = await setupCodeLens(document);
         assert.equal(codeLenses.length, 0, 'CodeLens available even when shebang is invalid');
     });
 
     if (!IS_WINDOWS) {
         test('A code lens will appear when shebang python uses env and python settings are different', async () => {
-            const editor = await openFile(fileShebangEnv);
-            PythonSettings.getInstance(editor.document.uri).pythonPath = 'p1';
-            const codeLenses = await setupCodeLens(editor);
+            const document = await openFile(fileShebangEnv);
+            PythonSettings.getInstance(document.uri).pythonPath = 'p1';
+            const codeLenses = await setupCodeLens(document);
 
             assert.equal(codeLenses.length, 1, 'No CodeLens available');
             const codeLens = codeLenses[0];
@@ -77,24 +78,21 @@ suite('Shebang detection', () => {
 
         test('Code lens will not appear even when shebang python uses env and python settings are the same', async () => {
             const pythonPath = await getFullyQualifiedPathToInterpreter('python');
-            const editor = await openFile(fileShebangEnv);
-            PythonSettings.getInstance(editor.document.uri).pythonPath = pythonPath!;
-            const codeLenses = await setupCodeLens(editor);
+            const document = await openFile(fileShebangEnv);
+            PythonSettings.getInstance(document.uri).pythonPath = pythonPath!;
+            const codeLenses = await setupCodeLens(document);
             assert.equal(codeLenses.length, 0, 'CodeLens available although interpreters are equal');
         });
     }
 
     test('Code lens will not appear as there is no shebang', async () => {
-        const editor = await openFile(filePlain);
-        const codeLenses = await setupCodeLens(editor);
+        const document = await openFile(filePlain);
+        const codeLenses = await setupCodeLens(document);
         assert.equal(codeLenses.length, 0, 'CodeLens available although no shebang');
     });
 
     async function openFile(fileName: string) {
-        const document = await vscode.workspace.openTextDocument(fileName);
-        const editor = await vscode.window.showTextDocument(document);
-        assert(vscode.window.activeTextEditor, 'No active editor');
-        return editor;
+        return vscode.workspace.openTextDocument(fileName);
     }
     async function getFullyQualifiedPathToInterpreter(pythonPath: string) {
         return new Promise<string>(resolve => {
@@ -104,8 +102,7 @@ suite('Shebang detection', () => {
         }).catch(() => undefined);
     }
 
-    async function setupCodeLens(editor: vscode.TextEditor) {
-        const document = editor.document;
+    async function setupCodeLens(document: vscode.TextDocument) {
         const processService = ioc.serviceContainer.get<IProcessService>(IProcessService);
         const codeLensProvider = new ShebangCodeLensProvider(processService);
         return await codeLensProvider.provideCodeLenses(document, new CancellationTokenSource().token);

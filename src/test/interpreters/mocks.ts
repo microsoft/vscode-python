@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { Architecture, IRegistry, RegistryHive } from '../../client/common/platform/types';
 import { IProcessService } from '../../client/common/process/types';
 import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
@@ -14,6 +15,7 @@ export class MockProvider implements IInterpreterLocatorService {
     public dispose() { }
 }
 
+@injectable()
 export class MockRegistry implements IRegistry {
     constructor(private keys: { key: string, hive: RegistryHive, arch?: Architecture, values: string[] }[],
         private values: { key: string, hive: RegistryHive, arch?: Architecture, value: string, name?: string }[]) {
@@ -46,6 +48,7 @@ export class MockRegistry implements IRegistry {
     }
 }
 
+@injectable()
 export class MockVirtualEnv implements IVirtualEnvironmentIdentifier {
     constructor(private isDetected: boolean, public name: string, public type: InterpreterType.VirtualEnv | InterpreterType.VEnv = InterpreterType.VirtualEnv) {
     }
@@ -55,6 +58,7 @@ export class MockVirtualEnv implements IVirtualEnvironmentIdentifier {
 }
 
 // tslint:disable-next-line:max-classes-per-file
+@injectable()
 export class MockInterpreterVersionProvider implements IInterpreterVersionService {
     constructor(private displayName: string, private useDefaultDisplayName: boolean = false,
         private pipVersionPromise?: Promise<string>) { }

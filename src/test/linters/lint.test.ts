@@ -193,9 +193,8 @@ suite('Linting', () => {
         const output = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         await updateSetting(setting, enabled, rootWorkspaceUri, IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace);
         const document = await vscode.workspace.openTextDocument(fileToLint);
-        const editor = await vscode.window.showTextDocument(document);
         const cancelToken = new vscode.CancellationTokenSource();
-        const messages = await linter.lint(editor.document, cancelToken.token);
+        const messages = await linter.lint(document, cancelToken.token);
         if (enabled) {
             assert.notEqual(messages.length, 0, `No linter errors when linter is enabled, Output - ${output.output}`);
         } else {
@@ -239,8 +238,7 @@ suite('Linting', () => {
         // tslint:disable-next-line:no-any prefer-type-cast
         await updateSetting(settingToEnable as any, true, rootWorkspaceUri, IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace);
         const document = await vscode.workspace.openTextDocument(pythonFile);
-        const editor = await vscode.window.showTextDocument(document);
-        const messages = await linter.lint(editor.document, cancelToken.token);
+        const messages = await linter.lint(document, cancelToken.token);
         if (messagesToBeReceived.length === 0) {
             assert.equal(messages.length, 0, `No errors in linter, Output - ${outputChannel.output}`);
         } else {
