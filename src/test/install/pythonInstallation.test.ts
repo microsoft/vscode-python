@@ -4,12 +4,12 @@
 
 import * as assert from 'assert';
 import { ChildProcess, SpawnOptions } from 'child_process';
-import { Container, interfaces } from 'inversify';
+import { Container } from 'inversify';
 import * as Rx from 'rxjs';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
-import { IPythonSettings, PythonSettings } from '../../client/common/configSettings';
+import { IPythonSettings } from '../../client/common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { PythonInstaller } from '../../client/common/installer/pythonInstallation';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
@@ -17,7 +17,6 @@ import { IProcessService, ObservableExecutionResult, Output } from '../../client
 import { IOutputChannel } from '../../client/common/types';
 import { IInterpreterLocatorService } from '../../client/interpreter/contracts';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
-import { PythonInterpreterLocatorService } from '../../client/interpreter/locators/index';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -108,7 +107,7 @@ suite('Installation', () => {
 
     test('Mac: Default Python, user refused install', async () => {
         const c = new TestContext(true);
-        let errorMessage: string;
+        let errorMessage = '';
 
         c.appShell
             .setup(x => x.showErrorMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
@@ -123,8 +122,8 @@ suite('Installation', () => {
 
     test('Mac: Default Python, Brew installation', async () => {
         const c = new TestContext(true);
-        let errorMessage: string;
-        let processName: string;
+        let errorMessage = '';
+        let processName = '';
         let args;
         let brewPath;
         let outputShown = false;
@@ -137,7 +136,7 @@ suite('Installation', () => {
             .callback((m: string) => errorMessage = m);
         c.locator.setup(x => x.getInterpreters()).returns(() => Promise.resolve([]));
         c.fileSystem
-            .setup(x => x.existsAsync(TypeMoq.It.isAnyString()))
+            .setup(x => x.directoryExistsAsync(TypeMoq.It.isAnyString()))
             .returns((p: string) => {
                 brewPath = p;
                 return Promise.resolve(false);
@@ -165,7 +164,7 @@ suite('Installation', () => {
             })
             .returns(() => brewInstallProcess);
 
-        let passed = await c.pythonInstaller.checkPythonInstallation(c.settings.object);
+        await c.pythonInstaller.checkPythonInstallation(c.settings.object);
 
         assert.notEqual(brewPath, undefined, 'Brew installer location not checked');
         assert.equal(brewPath, '/usr/local/bin/brew', 'Brew installer location is incorrect');
@@ -177,11 +176,11 @@ suite('Installation', () => {
         assert.equal(errorMessage.startsWith('Unable to install Brew'), true, 'Brew install failed message no shown');
 
         c.fileSystem
-            .setup(x => x.existsAsync(TypeMoq.It.isAnyString()))
+            .setup(x => x.directoryExistsAsync(TypeMoq.It.isAnyString()))
             .returns(() => Promise.resolve(true));
-        errorMessage = undefined;
+        errorMessage = '';
 
-        passed = await c.pythonInstaller.checkPythonInstallation(c.settings.object);
+        await c.pythonInstaller.checkPythonInstallation(c.settings.object);
         assert.equal(errorMessage, undefined, `Unexpected error message ${errorMessage}`);
         assert.equal(processName, 'brew', 'Brew installer name is incorrect');
         assert.equal(args[0], 'install', 'Brew "install" argument is incorrect');

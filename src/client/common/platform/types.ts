@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as fs from 'fs';
+
 export enum Architecture {
     Unknown = 1,
     x86 = 2,
@@ -28,8 +30,10 @@ export interface IPlatformService {
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
     directorySeparatorChar: string;
-    existsAsync(path: string): Promise<boolean>;
-    createDirectoryAsync(path: string): Promise<boolean>;
+    objectExistsAsync(path: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean>;
+    fileExistsAsync(path: string): Promise<boolean>;
+    directoryExistsAsync(path: string): Promise<boolean>;
+    createDirectoryAsync(path: string): Promise<void>;
     getSubDirectoriesAsync(rootDir: string): Promise<string[]>;
     arePathsSame(path1: string, path2: string): boolean;
 }

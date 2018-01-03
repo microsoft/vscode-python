@@ -3,6 +3,7 @@
 'use strict';
 
 import * as fs from 'fs';
+import * as fse from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IServiceContainer } from '../../ioc/types';
@@ -13,23 +14,30 @@ export class FileSystem implements IFileSystem {
     constructor( @inject(IServiceContainer) private platformService: IPlatformService) { }
 
     public get directorySeparatorChar(): string {
-        return this.platformService.isWindows ? '\\' : '/';
+        return path.sep;
     }
 
-    public existsAsync(filePath: string): Promise<boolean> {
+    public objectExistsAsync(filePath: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean> {
         return new Promise<boolean>(resolve => {
-            fs.exists(filePath, exists => {
-                return resolve(exists);
+            fse.stat(filePath, (error, stats) => {
+                if (error) {
+                    return resolve(false);
+                }
+                return resolve(statCheck(stats));
             });
         });
     }
 
-    public createDirectoryAsync(directoryPath: string): Promise<boolean> {
-        return new Promise<boolean>(resolve => {
-            fs.mkdir(directoryPath, error => {
-                return resolve(!error);
-            });
-        });
+    public fileExistsAsync(filePath: string): Promise<boolean> {
+        return this.objectExistsAsync(filePath, (stats) => stats.isFile());
+    }
+
+    public directoryExistsAsync(filePath: string): Promise<boolean> {
+        return this.objectExistsAsync(filePath, (stats) => stats.isDirectory());
+    }
+
+    public createDirectoryAsync(directoryPath: string): Promise<void> {
+        return fse.mkdirp(directoryPath);
     }
 
     public getSubDirectoriesAsync(rootDir: string): Promise<string[]> {

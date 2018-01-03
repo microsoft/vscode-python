@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject } from 'inversify';
 import { OutputChannel } from 'vscode';
 import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -10,9 +9,8 @@ import { IApplicationShell } from '../application/types';
 import { IPythonSettings, isTestExecution } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem, IPlatformService } from '../platform/types';
-import { IProcessService, IPythonExecutionService } from '../process/types';
+import { IProcessService } from '../process/types';
 import { IOutputChannel } from '../types';
-import { IPythonInstallation } from './types';
 
 export class PythonInstaller {
     private locator: IInterpreterLocatorService;
@@ -50,7 +48,8 @@ export class PythonInstaller {
             if (await this.shell.showErrorMessage('Python that comes with MacOS is not supported. Would you like to install regular Python now?', 'Yes', 'No') === 'Yes') {
                 const brewInstalled = await this.ensureBrew();
                 if (!brewInstalled) {
-                    await this.shell.showErrorMessage('Unable to install Brew package manager');
+                    await this.shell.showErrorMessage('Unable to install Homebrew package manager. Try installing it manually.');
+                    this.shell.openUrl('https://brew.sh');
                     return false;
                 }
                 await this.executeAndOutput('brew', ['install', 'python']);
@@ -62,7 +61,7 @@ export class PythonInstaller {
     }
 
     private isBrewInstalled(): Promise<boolean> {
-        return this.fs.existsAsync('/usr/local/bin/brew');
+        return this.fs.directoryExistsAsync('/usr/local/bin/brew');
     }
 
     private async ensureBrew(): Promise<boolean> {
