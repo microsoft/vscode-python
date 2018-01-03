@@ -9,13 +9,12 @@ const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pyth
 const filePep484 = path.join(autoCompPath, 'pep484.py');
 
 suite('Autocomplete PEP 484', () => {
-    let isPython3: boolean;
+    let isPython2: boolean;
     let ioc: UnitTestIocContainer;
     suiteSetup(async () => {
         await initialize();
         initializeDI();
-        const version = await ioc.getPythonVersion(rootWorkspaceUri);
-        isPython3 = version.indexOf('3.') >= 0;
+        isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -31,7 +30,7 @@ suite('Autocomplete PEP 484', () => {
     }
 
     test('argument', async function () {
-        if (!isPython3) {
+        if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
             return;
@@ -47,7 +46,7 @@ suite('Autocomplete PEP 484', () => {
     });
 
     test('return value', async () => {
-        if (!isPython3) {
+        if (isPython2) {
             return;
         }
         const textDocument = await vscode.workspace.openTextDocument(filePep484);

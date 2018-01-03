@@ -30,9 +30,10 @@ export class UnitTestIocContainer extends IocContainer {
     constructor() {
         super();
     }
-    public getPythonVersion(resource: Uri) {
+    public getPythonMajorVersion(resource: Uri) {
         return this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(resource)
-            .then(pythonProcess => pythonProcess.getVersion());
+            .then(pythonProcess => pythonProcess.exec(['-c', 'import sys;print(sys.version_info[0])'], {}))
+            .then(output => parseInt(output.stdout.trim(), 10));
     }
     public registerTestVisitors() {
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestFlatteningVisitor, 'TestFlatteningVisitor');
