@@ -43,9 +43,13 @@ script:
   - yarn run vscode:prepublish
   - yarn run cover:enable
   - yarn run testSingleWorkspace --silent
-  - bash <(curl -s https://codecov.io/bash)
+  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
+        bash <(curl -s https://codecov.io/bash);
+    fi
   - yarn run clean
   - yarn run vscode:prepublish
   - yarn run cover:enable
   - yarn run testMultiWorkspace --silent
-  - bash <(curl -s https://codecov.io/bash)
+  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
+        bash <(curl -s https://codecov.io/bash);
+    fi
