@@ -61,7 +61,7 @@ export class PythonInstaller {
     }
 
     private isBrewInstalled(): Promise<boolean> {
-        return this.fs.directoryExistsAsync('/usr/local/bin/brew');
+        return this.fs.fileExistsAsync('/usr/local/bin/brew');
     }
 
     private async ensureBrew(): Promise<boolean> {
