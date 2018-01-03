@@ -4,7 +4,7 @@ import * as path from 'path';
 import { OutputChannel, Uri } from 'vscode';
 import * as vscode from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
-import { Product, SettingToDisableProduct } from '../../client/common/installer/installer';
+import { Installer, Product, SettingToDisableProduct } from '../../client/common/installer/installer';
 import { IInstaller, ILogger, IOutputChannel } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { BaseLinter } from '../../client/linters/baseLinter';
@@ -122,6 +122,8 @@ suite('Linting', () => {
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
+
+        ioc.serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
     }
 
     type LinterCtor = { new(outputChannel: OutputChannel, installer: IInstaller, helper: ILinterHelper, logger: ILogger, serviceContainer: IServiceContainer): BaseLinter };
