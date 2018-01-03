@@ -8,6 +8,7 @@
     "reports": [
         "text-summary",
         "json-summary",
+        "json",
         "html",
         "lcov",
         "lcovonly"
