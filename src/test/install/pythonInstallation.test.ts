@@ -136,7 +136,7 @@ suite('Installation', () => {
             .callback((m: string) => errorMessage = m);
         c.locator.setup(x => x.getInterpreters()).returns(() => Promise.resolve([]));
         c.fileSystem
-            .setup(x => x.directoryExistsAsync(TypeMoq.It.isAnyString()))
+            .setup(x => x.fileExistsAsync(TypeMoq.It.isAnyString()))
             .returns((p: string) => {
                 brewPath = p;
                 return Promise.resolve(false);
@@ -152,9 +152,7 @@ suite('Installation', () => {
             source: 'stdout',
             out: 'started'
         };
-        const observable = new Rx.Observable<Output<string>>(subscriber => {
-            subscriber.next(processOutput);
-        });
+        const observable = new Rx.Observable<Output<string>>(subscriber => subscriber.next(processOutput));
         const brewInstallProcess: ObservableExecutionResult<string> = {
             proc: childProcess.object,
             out: observable
@@ -181,7 +179,7 @@ suite('Installation', () => {
         assert.equal(errorMessage.startsWith('Unable to install Homebrew'), true, 'Homebrew install failed message no shown');
 
         c.fileSystem
-            .setup(x => x.directoryExistsAsync(TypeMoq.It.isAnyString()))
+            .setup(x => x.fileExistsAsync(TypeMoq.It.isAnyString()))
             .returns(() => Promise.resolve(true));
         errorMessage = '';
 
