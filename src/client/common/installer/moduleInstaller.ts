@@ -39,8 +39,12 @@ export abstract class ModuleInstaller {
     private async isPathWritableAsync(directoryPath: string): Promise<boolean> {
         const filePath = `${directoryPath}${path.sep}___vscpTest___`;
         return new Promise<boolean>(resolve => {
-            fs.open(filePath, fs.constants.O_CREAT | fs.constants.O_RDWR, (error, stats) => {
-                fs.unlink(filePath);
+            fs.open(filePath, fs.constants.O_CREAT | fs.constants.O_RDWR, (error, fd) => {
+                if (!error) {
+                    fs.close(fd, (e) => {
+                        fs.unlink(filePath);
+                    });
+                }
                 return resolve(!error);
             });
         });
