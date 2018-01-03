@@ -25,6 +25,6 @@ export class InterpreterVersionService implements IInterpreterVersionService {
                 return matches[0].trim();
             }
         }
-        throw new Error(`Unable to determine Pip version from output '${output.stdout}'`);
+        throw new Error(`Unable to determine pip version from output '${output.stdout}'`);
     }
 }

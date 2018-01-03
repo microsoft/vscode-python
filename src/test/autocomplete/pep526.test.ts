@@ -9,13 +9,12 @@ const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pyth
 const filePep526 = path.join(autoCompPath, 'pep526.py');
 
 suite('Autocomplete PEP 526', () => {
-    let isPython3: boolean;
+    let isPython2: boolean;
     let ioc: UnitTestIocContainer;
     suiteSetup(async () => {
         await initialize();
         initializeDI();
-        const version = await ioc.getPythonVersion(rootWorkspaceUri);
-        isPython3 = version.indexOf('3.') >= 0;
+        isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -31,7 +30,7 @@ suite('Autocomplete PEP 526', () => {
     }
 
     test('variable (abc:str)', async function () {
-        if (!isPython3) {
+        if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
             return;
@@ -47,7 +46,7 @@ suite('Autocomplete PEP 526', () => {
     });
 
     test('variable (abc: str = "")', async function () {
-        if (!isPython3) {
+        if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
@@ -62,7 +61,7 @@ suite('Autocomplete PEP 526', () => {
     });
 
     test('variable (abc = UNKNOWN # type: str)', async function () {
-        if (!isPython3) {
+        if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
             return;
@@ -78,7 +77,7 @@ suite('Autocomplete PEP 526', () => {
     });
 
     test('class methods', async function () {
-        if (!isPython3) {
+        if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
             return;
@@ -96,7 +95,7 @@ suite('Autocomplete PEP 526', () => {
     });
 
     test('class method types', async function () {
-        if (!isPython3) {
+        if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
             return;

@@ -98,4 +98,13 @@ export class IocContainer {
         this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         this.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, MockProcess);
     }
+
+    public registerMockProcess() {
+        this.serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
+        this.serviceManager.addSingletonInstance<boolean>(Is64Bit, IS_64_BIT);
+
+        this.serviceManager.addSingleton<ILogger>(ILogger, Logger);
+        this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
+        this.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, MockProcess);
+    }
 }
