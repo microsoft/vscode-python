@@ -157,10 +157,8 @@ class CoverageRunner {
         // Hook up to the Require function so that when this is called, if any of our source files
         // are required, the instrumented version is pulled in instead. These instrumented versions
         // write to a global coverage variable with hit counts whenever they are accessed.
-        // this.transformer = this.instrumenter.instrumentSync.bind(this.instrumenter);
         const transformer = this.instrumenter.instrumentSync.bind(this.instrumenter);
         const hookOpts = { verbose: false, extensions: ['.js'] };
-        // istanbul.hook.hookRequire(this.matchFn, this.transformer, hookOpts);
         (<any>istanbul.hook).hookRequire(matchFn, transformer, hookOpts);
 
         // Initialize the global variable to store instrumentation details.
