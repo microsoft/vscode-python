@@ -63,7 +63,7 @@ script:
   - yarn run cover:enable
   - yarn run testMultiWorkspace --silent
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        yarn run cover:upload
+        yarn run cover:upload;
     fi
 # after_success: |
 #     if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "master" ]; then
