@@ -69,6 +69,17 @@ suite('Installation', () => {
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 
+    test('Disable checks', async () => {
+        const c = new TestContext(false);
+        let showErrorMessageCalled = false;
+
+        c.settings.setup(s => s.disableInstallationChecks).returns(() => true);
+        c.appShell.setup(x => x.showErrorMessage(TypeMoq.It.isAnyString())).callback(() => showErrorMessageCalled = true);
+        const passed = await c.pythonInstaller.checkPythonInstallation(c.settings.object);
+        assert.equal(passed, true, 'Disabling checks has no effect');
+        assert.equal(showErrorMessageCalled, false, 'Disabling checks has no effect');
+    });
+
     test('Windows: Python missing', async () => {
         const c = new TestContext(false);
         let showErrorMessageCalled = false;
