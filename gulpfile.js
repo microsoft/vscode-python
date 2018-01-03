@@ -309,7 +309,7 @@ function getFilesToProcess(options) {
     // If we need only modified files, then filter the glob.
     if (options && options.mode === 'changes') {
         return gulp.src(all, gulpSrcOptions)
-            .pipe(gitmodified('M', 'A', 'D', 'R', 'C', 'U', '??'));
+            .pipe(gitmodified(['M', 'A', 'D', 'R', 'C', 'U', '??']));
     }
 
     if (options && options.mode === 'staged') {

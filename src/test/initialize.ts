@@ -1,4 +1,3 @@
-import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -85,8 +84,6 @@ export async function closeActiveWindows(): Promise<any> {
                 });
         }, 50);
 
-    }).then(() => {
-        assert.equal(vscode.window.visibleTextEditors.length, 0);
     });
 }
 

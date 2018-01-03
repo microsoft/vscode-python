@@ -1,17 +1,18 @@
-'use strict';
-import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as vscode from 'vscode';
+import { TextDocument, TextEdit } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { getTempFileWithDocumentContents, getTextEditsFromPatch } from '../common/editor';
+import { ExecutionResult, IProcessService, IPythonExecutionFactory } from '../common/process/types';
 import { captureTelemetry } from '../telemetry';
 import { FORMAT_SORT_IMPORTS } from '../telemetry/constants';
 
 // tslint:disable-next-line:completed-docs
 export class PythonImportSortProvider {
+    constructor(private pythonExecutionFactory: IPythonExecutionFactory,
+        private processService: IProcessService) { }
     @captureTelemetry(FORMAT_SORT_IMPORTS)
-    public async sortImports(extensionDir: string, document: vscode.TextDocument): Promise<vscode.TextEdit[]> {
+    public async sortImports(extensionDir: string, document: TextDocument): Promise<TextEdit[]> {
         if (document.lineCount === 1) {
             return [];
         }
@@ -23,35 +24,25 @@ export class PythonImportSortProvider {
         const tmpFileCreated = document.isDirty;
         const filePath = tmpFileCreated ? await getTempFileWithDocumentContents(document) : document.fileName;
         const settings = PythonSettings.getInstance(document.uri);
-        const pythonPath = settings.pythonPath;
         const isort = settings.sortImports.path;
-        const args = settings.sortImports.args.join(' ');
-        let isortCmd = '';
+        const args = [filePath, '--diff'].concat(settings.sortImports.args);
+        let promise: Promise<ExecutionResult<string>>;
+
         if (typeof isort === 'string' && isort.length > 0) {
-            if (isort.indexOf(' ') > 0) {
-                isortCmd = `"${isort}" "${filePath}" --diff ${args}`;
-            } else {
-                isortCmd = `${isort} "${filePath}" --diff ${args}`;
-            }
+            // Lets just treat this as a standard tool.
+            promise = this.processService.exec(isort, args, { throwOnStdErr: true });
         } else {
-            if (pythonPath.indexOf(' ') > 0) {
-                isortCmd = `"${pythonPath}" "${importScript}" "${filePath}" --diff ${args}`;
-            } else {
-                isortCmd = `${pythonPath} "${importScript}" "${filePath}" --diff ${args}`;
+            promise = this.pythonExecutionFactory.create(document.uri)
+                .then(executionService => executionService.exec([importScript].concat(args), { throwOnStdErr: true }));
+        }
+
+        try {
+            const result = await promise;
+            return getTextEditsFromPatch(document.getText(), result.stdout);
+        } finally {
+            if (tmpFileCreated) {
+                fs.unlink(filePath);
             }
         }
-        // tslint:disable-next-line:promise-must-complete
-        return await new Promise<vscode.TextEdit[]>((resolve, reject) => {
-            child_process.exec(isortCmd, (error, stdout, stderr) => {
-                if (tmpFileCreated) {
-                    fs.unlink(filePath);
-                }
-                if (error || (stderr && stderr.length > 0)) {
-                    reject(error ? error : stderr);
-                } else {
-                    resolve(getTextEditsFromPatch(document.getText(), stdout));
-                }
-            });
-        });
     }
 }

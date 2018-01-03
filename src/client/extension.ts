@@ -16,9 +16,9 @@ import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { PythonInstaller } from './common/installer/pythonInstallation';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
-import { IPythonInstallation } from './common/installer/types';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
+import { IProcessService, IPythonExecutionFactory } from './common/process/types';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
@@ -26,9 +26,8 @@ import { SimpleConfigurationProvider } from './debugger';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { InterpreterManager } from './interpreter';
 import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
-import { ICondaLocatorService } from './interpreter/contracts';
+import { ICondaLocatorService, IInterpreterVersionService } from './interpreter/contracts';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
-import { InterpreterVersionService } from './interpreter/interpreterVersion';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
@@ -93,11 +92,11 @@ export async function activate(context: vscode.ExtensionContext) {
     const pythonSettings = settings.PythonSettings.getInstance();
     sendStartupTelemetry(activated, serviceContainer);
 
-    sortImports.activate(context, standardOutputChannel);
+    sortImports.activate(context, standardOutputChannel, serviceContainer);
     const interpreterManager = new InterpreterManager(serviceContainer);
 
     const pythonInstaller = new PythonInstaller(serviceContainer);
-    const passed = await pythonInstaller.checkPythonInstallation(PythonSettings.getInstance());
+    await pythonInstaller.checkPythonInstallation(PythonSettings.getInstance());
 
     // This must be completed before we can continue.
     await interpreterManager.autoSetInterpreter();
@@ -105,15 +104,16 @@ export async function activate(context: vscode.ExtensionContext) {
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
     context.subscriptions.push(interpreterManager);
-    const interpreterVersionService = new InterpreterVersionService();
-    context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService));
+    const processService = serviceContainer.get<IProcessService>(IProcessService);
+    const interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
+    context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService, processService));
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
-    const jediFactory = new JediFactory(context.asAbsolutePath('.'));
+    const jediFactory = new JediFactory(context.asAbsolutePath('.'), serviceContainer);
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
-    context.subscriptions.push(new ReplProvider());
+    context.subscriptions.push(new ReplProvider(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)));
 
     // Enable indentAction
     // tslint:disable-next-line:no-non-null-assertion
@@ -142,7 +142,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
     context.subscriptions.push(vscode.languages.registerReferenceProvider(PYTHON, new PythonReferenceProvider(jediFactory)));
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider(PYTHON, new PythonCompletionItemProvider(jediFactory), '.'));
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, new ShebangCodeLensProvider()));
+    context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, new ShebangCodeLensProvider(processService)));
 
     const symbolProvider = new PythonSymbolProvider(jediFactory);
     context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider(PYTHON, symbolProvider));

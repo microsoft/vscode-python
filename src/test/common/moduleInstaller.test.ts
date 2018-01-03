@@ -1,7 +1,6 @@
-import { assert, expect } from 'chai';
+import { expect } from 'chai';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
-import { EnumEx } from '../../client/common/enumUtils';
 import { createDeferred } from '../../client/common/helpers';
 import { CondaInstaller } from '../../client/common/installer/condaInstaller';
 import { Installer } from '../../client/common/installer/installer';
@@ -10,25 +9,24 @@ import { IModuleInstaller } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
+import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessService } from '../../client/common/process/types';
 import { ITerminalService } from '../../client/common/terminal/types';
-import { IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product } from '../../client/common/types';
+import { ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows } from '../../client/common/types';
 import { ICondaLocatorService } from '../../client/interpreter/contracts';
-import { rootWorkspaceUri } from '../common';
 import { updateSetting } from '../common';
+import { rootWorkspaceUri } from '../common';
 import { MockCondaLocatorService } from '../interpreters/mocks';
 import { MockCondaLocator } from '../mocks/condaLocator';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { MockTerminalService } from '../mocks/terminalService';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
-import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST, IS_TRAVIS } from './../initialize';
+import { closeActiveWindows, initializeTest } from './../initialize';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Module Installer', () => {
     let ioc: UnitTestIocContainer;
-    const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
-    const resource = IS_MULTI_ROOT_TEST ? workspaceUri : undefined;
     suiteSetup(initializeTest);
     setup(async () => {
         await initializeTest();
@@ -59,6 +57,7 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
         ioc.serviceManager.addSingleton<ICondaLocatorService>(ICondaLocatorService, MockCondaLocator);
         ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
+        ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
 
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingleton<ITerminalService>(ITerminalService, MockTerminalService);

@@ -8,11 +8,10 @@ import { Logger } from './logger';
 import { PersistentStateFactory } from './persistentState';
 import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
-import { RegistryImplementation } from './platform/registry';
-import { IRegistry } from './platform/types';
+import { CurrentProcess } from './process/currentProcess';
 import { TerminalService } from './terminal/service';
 import { ITerminalService } from './terminal/types';
-import { ILogger, IPathUtils, IPersistentStateFactory, Is64Bit, IsWindows } from './types';
+import { ICurrentProcess, ILogger, IPathUtils, IPersistentStateFactory, Is64Bit, IsWindows } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
@@ -23,5 +22,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalService>(ITerminalService, TerminalService);
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
-
+    serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
 }

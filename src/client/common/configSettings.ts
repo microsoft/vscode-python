@@ -5,7 +5,6 @@ import { EventEmitter } from 'events';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { InterpreterInfoCache } from './interpreterInfoCache';
 import { SystemVariables } from './variables/systemVariables';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -190,12 +189,10 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         // tslint:disable-next-line:no-unsafe-any
         this.disposables.forEach(disposable => disposable.dispose());
         this.disposables = [];
-        InterpreterInfoCache.clear();
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     private initializeSettings() {
-        InterpreterInfoCache.clear();
         const workspaceRoot = this.workspaceRoot.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(this.workspaceRoot ? this.workspaceRoot.fsPath : undefined);
         const pythonSettings = vscode.workspace.getConfiguration('python', this.workspaceRoot);

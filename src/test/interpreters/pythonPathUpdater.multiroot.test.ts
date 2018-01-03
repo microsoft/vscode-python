@@ -6,14 +6,16 @@ import { PythonPathUpdaterService } from '../../client/interpreter/configuration
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
 import { WorkspaceFolderPythonPathUpdaterService } from '../../client/interpreter/configuration/services/workspaceFolderUpdaterService';
 import { WorkspacePythonPathUpdaterService } from '../../client/interpreter/configuration/services/workspaceUpdaterService';
-import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
+import { IInterpreterVersionService } from '../../client/interpreter/contracts';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
+import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const multirootPath = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc');
 const workspace3Uri = Uri.file(path.join(multirootPath, 'workspace3'));
 
 // tslint:disable-next-line:max-func-body-length
 suite('Multiroot Python Path Settings Updater', () => {
+    let ioc: UnitTestIocContainer;
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
@@ -21,7 +23,10 @@ suite('Multiroot Python Path Settings Updater', () => {
         }
         await initialize();
     });
-    setup(initializeTest);
+    setup(async () => {
+        await initializeTest();
+        initializeDI();
+    });
     suiteTeardown(async () => {
         await closeActiveWindows();
         await initializeTest();
@@ -29,7 +34,16 @@ suite('Multiroot Python Path Settings Updater', () => {
     teardown(async () => {
         await closeActiveWindows();
         await initializeTest();
+        ioc.dispose();
     });
+
+    function initializeDI() {
+        ioc = new UnitTestIocContainer();
+        ioc.registerCommonTypes();
+        ioc.registerProcessTypes();
+        ioc.registerVariableTypes();
+        ioc.registerInterpreterTypes();
+    }
 
     test('Updating Workspace Folder Python Path should work', async () => {
         const workspaceUri = workspace3Uri;
@@ -75,7 +89,8 @@ suite('Multiroot Python Path Settings Updater', () => {
 
     test('Updating Workspace Python Path using the PythonPathUpdaterService should work', async () => {
         const workspaceUri = workspace3Uri;
-        const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), new InterpreterVersionService());
+        const interpreterVersionService = ioc.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
+        const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), interpreterVersionService);
         const pythonPath = `xWorkspacePythonPathFromUpdater${new Date().getMilliseconds()}`;
         await updaterService.updatePythonPath(pythonPath, ConfigurationTarget.WorkspaceFolder, 'ui', workspace.getWorkspaceFolder(workspaceUri)!.uri);
         const folderValue = workspace.getConfiguration('python', workspace3Uri).inspect('pythonPath')!.workspaceFolderValue!;

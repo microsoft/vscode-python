@@ -4,17 +4,21 @@ import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
-import { GlobalPythonPathUpdaterService } from '../../client/interpreter/configuration/services/globalUpdaterService';
 import { WorkspacePythonPathUpdaterService } from '../../client/interpreter/configuration/services/workspaceUpdaterService';
-import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
+import { IInterpreterVersionService } from '../../client/interpreter/contracts';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
+import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const workspaceRoot = path.join(__dirname, '..', '..', '..', 'src', 'test');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Python Path Settings Updater', () => {
+    let ioc: UnitTestIocContainer;
     suiteSetup(initialize);
-    setup(initializeTest);
+    setup(async () => {
+        await initializeTest();
+        initializeDI();
+    });
     suiteTeardown(async () => {
         await closeActiveWindows();
         await initializeTest();
@@ -22,7 +26,16 @@ suite('Python Path Settings Updater', () => {
     teardown(async () => {
         await closeActiveWindows();
         await initializeTest();
+        ioc.dispose();
     });
+
+    function initializeDI() {
+        ioc = new UnitTestIocContainer();
+        ioc.registerCommonTypes();
+        ioc.registerProcessTypes();
+        ioc.registerVariableTypes();
+        ioc.registerInterpreterTypes();
+    }
 
     // Create Github issue VS Code bug (global changes not reflected immediately)
 
@@ -52,39 +65,40 @@ suite('Python Path Settings Updater', () => {
 
     test('Updating Workspace Python Path should work', async () => {
         const workspaceUri = Uri.file(workspaceRoot);
-        const workspaceUpdater = new WorkspacePythonPathUpdaterService(workspace.getWorkspaceFolder(workspaceUri).uri);
+        const workspaceUpdater = new WorkspacePythonPathUpdaterService(workspace.getWorkspaceFolder(workspaceUri)!.uri);
         const pythonPath = `xWorkspacePythonPath${new Date().getMilliseconds()}`;
         await workspaceUpdater.updatePythonPath(pythonPath);
-        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath').workspaceValue;
+        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath')!.workspaceValue!;
         assert.equal(workspaceValue, pythonPath, 'Workspace Python Path not updated');
     });
 
     test('Updating Workspace Python Path using the factor service should work', async () => {
         const workspaceUri = Uri.file(workspaceRoot);
         const factory = new PythonPathUpdaterServiceFactory();
-        const workspaceUpdater = factory.getWorkspacePythonPathConfigurationService(workspace.getWorkspaceFolder(workspaceUri).uri);
+        const workspaceUpdater = factory.getWorkspacePythonPathConfigurationService(workspace.getWorkspaceFolder(workspaceUri)!.uri);
         const pythonPath = `xWorkspacePythonPathFromFactory${new Date().getMilliseconds()}`;
         await workspaceUpdater.updatePythonPath(pythonPath);
-        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath').workspaceValue;
+        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath')!.workspaceValue!;
         assert.equal(workspaceValue, pythonPath, 'Workspace Python Path not updated');
     });
 
     test('Updating Workspace Python Path using the PythonPathUpdaterService should work', async () => {
         const workspaceUri = Uri.file(workspaceRoot);
-        const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), new InterpreterVersionService());
+        const interpreterVersionService = ioc.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
+        const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), interpreterVersionService);
         const pythonPath = `xWorkspacePythonPathFromUpdater${new Date().getMilliseconds()}`;
-        await updaterService.updatePythonPath(pythonPath, ConfigurationTarget.Workspace, 'ui', workspace.getWorkspaceFolder(workspaceUri).uri);
-        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath').workspaceValue;
+        await updaterService.updatePythonPath(pythonPath, ConfigurationTarget.Workspace, 'ui', workspace.getWorkspaceFolder(workspaceUri)!.uri);
+        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath')!.workspaceValue!;
         assert.equal(workspaceValue, pythonPath, 'Workspace Python Path not updated');
     });
 
     test('Python Path should be relative to workspaceFolder', async () => {
-        const workspaceUri = workspace.getWorkspaceFolder(Uri.file(workspaceRoot)).uri;
+        const workspaceUri = workspace.getWorkspaceFolder(Uri.file(workspaceRoot))!.uri;
         const pythonInterpreter = `xWorkspacePythonPath${new Date().getMilliseconds()}`;
         const pythonPath = path.join(workspaceUri.fsPath, 'x', 'y', 'z', pythonInterpreter);
         const workspaceUpdater = new WorkspacePythonPathUpdaterService(workspaceUri);
         await workspaceUpdater.updatePythonPath(pythonPath);
-        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath').workspaceValue;
+        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath')!.workspaceValue!;
         // tslint:disable-next-line:no-invalid-template-strings
         assert.equal(workspaceValue, path.join('${workspaceFolder}', 'x', 'y', 'z', pythonInterpreter), 'Workspace Python Path not updated');
         const resolvedPath = PythonSettings.getInstance(Uri.file(workspaceRoot)).pythonPath;
