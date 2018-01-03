@@ -1,20 +1,6 @@
 language: python
 cache: pip
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-4.9
-      - g++-4.9
-      - gcc-4.9-multilib
-      - g++-4.9-multilib
-      - libgtk2.0-0
-      - libx11-dev
-      - libxkbfile-dev
-      - libsecret-1-dev
-      - python-dev
 matrix:
     include:
         # # Use the built in venv for linux builds
@@ -22,7 +8,6 @@ matrix:
           python: 2.7
         - os: linux
           python: 3.6
-          env: TRAVIS_UPLOAD_COVERAGE=true
         # # # Use generic language for osx
         # - os: osx
         #   language: generic
@@ -44,8 +29,6 @@ before_install: |
   source ./.nvm/nvm.sh
   nvm install 8.9.1
   nvm use 8.9.1
-  yarn global add vsce
-  yarn global add azure-cli
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     pyenv install $PYTHON
     pyenv global $PYTHON
@@ -57,17 +40,12 @@ install:
 
 script:
   - yarn run clean
-  - yarn run vscode:prepublish
-  - vsce package
-  - yarn run testSingleWorkspace --silent
   - yarn run cover:enable
+  - yarn run vscode:prepublish
+  - yarn run testSingleWorkspace --silent
+  - yarn run cover:upload
+  - yarn run clean
+  - yarn run cover:enable
+  - yarn run vscode:prepublish
   - yarn run testMultiWorkspace --silent
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        yarn run cover:upload;
-    fi
-# after_success: |
-#     if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "master" ]; then
-#         azure storage file upload --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --share python --source python*.vsix --path ms-python.vsix --quiet;
-#     else
-#         echo "Not uploading build for $TRAVIS_BRANCH";
-#     fi
+  - yarn run cover:upload
