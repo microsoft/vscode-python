@@ -25,13 +25,6 @@
             }
         },
         {
-            "label": "Coverage",
-            "type": "npm",
-            "script": "coverage",
-            "isBackground": true,
-            "problemMatcher": "$tsc"
-        },
-        {
             "label": "Hygiene",
             "type": "gulp",
             "task": "hygiene-watch",
