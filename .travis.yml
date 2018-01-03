@@ -44,18 +44,18 @@ script:
   - yarn run clean
   - yarn run vscode:prepublish
   - vsce package
-  - yarn run cover:enable
-  - yarn run testSingleWorkspace --silent
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
-  - yarn run clean
-  - yarn run vscode:prepublish
-  - yarn run cover:enable
-  - yarn run testMultiWorkspace --silent
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
+#   - yarn run cover:enable
+#   - yarn run testSingleWorkspace --silent
+#   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
+#         bash <(curl -s https://codecov.io/bash);
+#     fi
+#   - yarn run clean
+#   - yarn run vscode:prepublish
+#   - yarn run cover:enable
+#   - yarn run testMultiWorkspace --silent
+#   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
+#         bash <(curl -s https://codecov.io/bash);
+#     fi
 after_success:
   - if [[ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "UploadBuildsToAzure" ]  && [ -v $AZURE_STORAGE_ACCOUNT ]]; then
         azure storage file upload --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --share python --source python*.vsix --path ms-python-insiders.vsix --quiet;
