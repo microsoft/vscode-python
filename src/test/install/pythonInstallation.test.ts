@@ -143,6 +143,11 @@ suite('Installation', () => {
             });
 
         const childProcess = TypeMoq.Mock.ofType<ChildProcess>();
+        childProcess
+            .setup(p => p.on('exit', TypeMoq.It.isAny()))
+            .callback((e: string, listener: (code, signal) => void) => {
+                listener.call(0, undefined);
+            });
         const processOutput: Output<string> = {
             source: 'stdout',
             out: 'started'
@@ -171,9 +176,9 @@ suite('Installation', () => {
         assert.notEqual(processName, undefined, 'Brew installer not invoked');
         assert.equal(processName, '/usr/bin/ruby', 'Brew installer name is incorrect');
         assert.equal(args[0], '-e', 'Brew installer argument is incorrect');
-        assert.equal(args[1], '"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"', 'Brew installer argument is incorrect');
+        assert.equal(args[1], '"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"', 'Homebrew installer argument is incorrect');
         assert.equal(outputShown, true, 'Output panel not shown');
-        assert.equal(errorMessage.startsWith('Unable to install Brew'), true, 'Brew install failed message no shown');
+        assert.equal(errorMessage.startsWith('Unable to install Homebrew'), true, 'Homebrew install failed message no shown');
 
         c.fileSystem
             .setup(x => x.directoryExistsAsync(TypeMoq.It.isAnyString()))
@@ -181,7 +186,7 @@ suite('Installation', () => {
         errorMessage = '';
 
         await c.pythonInstaller.checkPythonInstallation(c.settings.object);
-        assert.equal(errorMessage, undefined, `Unexpected error message ${errorMessage}`);
+        assert.equal(errorMessage, '', `Unexpected error message ${errorMessage}`);
         assert.equal(processName, 'brew', 'Brew installer name is incorrect');
         assert.equal(args[0], 'install', 'Brew "install" argument is incorrect');
         assert.equal(args[1], 'python', 'Brew "python" argument is incorrect');

@@ -90,9 +90,6 @@ export class PythonInstaller {
             if (failed) {
                 resolve(false);
             }
-            if (isTestExecution()) {
-                resolve(true);
-            }
             result.proc.on('exit', (code, signal) => {
                 resolve(!signal);
             });
