@@ -99,7 +99,7 @@ export abstract class BaseFormatter {
         if (isNotInstalledError(error)) {
             const installer = this.serviceContainer.get<IInstaller>(IInstaller);
             const isInstalled = await installer.isInstalled(this.product, resource);
-            if (isInstalled) {
+            if (!isInstalled) {
                 customError += `\nYou could either install the '${this.Id}' formatter, turn it off or use another formatter.`;
                 installer.promptToInstall(this.product, resource).catch(ex => console.error('Python Extension: promptToInstall', ex));
             }

@@ -198,7 +198,7 @@ class JediCompletion(object):
             # we pass 'text' here only for fuzzy matcher
             if value:
                 _completion['snippet'] = '%s=${1:%s}$0' % (name, value)
-                _completion['text'] = '%s=%s' % (name, value)
+                _completion['text'] = '%s=' % (name)
             else:
                 _completion['snippet'] = '%s=$1$0' % name
                 _completion['text'] = name
