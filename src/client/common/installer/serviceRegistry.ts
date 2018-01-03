@@ -10,7 +10,6 @@ import { PipInstaller } from './pipInstaller';
 import { IModuleInstaller, IPythonInstallation } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
 }

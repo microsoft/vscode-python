@@ -122,8 +122,6 @@ suite('Linting', () => {
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
-
-        ioc.serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
     }
 
     type LinterCtor = { new(outputChannel: OutputChannel, installer: IInstaller, helper: ILinterHelper, logger: ILogger, serviceContainer: IServiceContainer): BaseLinter };
