@@ -22,13 +22,12 @@ const fileSuppress = path.join(autoCompPath, 'suppress.py');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Autocomplete', () => {
-    let isPython3: boolean;
+    let isPython2: boolean;
     let ioc: UnitTestIocContainer;
     suiteSetup(async () => {
         await initialize();
         initializeDI();
-        const version = await ioc.getPythonVersion(rootWorkspaceUri);
-        isPython3 = version.indexOf('3.') >= 0;
+        isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -80,7 +79,7 @@ suite('Autocomplete', () => {
 
     // https://github.com/DonJayamanne/pythonVSCode/issues/265
     test('For "lambda"', async function () {
-        if (!isPython3) {
+        if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
             return;
