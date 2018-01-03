@@ -19,7 +19,6 @@ const path = require('path');
 const debounce = require('debounce');
 const jeditor = require("gulp-json-editor");
 const del = require('del');
-const codecov = require('gulp-codecov');
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -65,8 +64,6 @@ gulp.task('hygiene-watch', () => gulp.watch(all, debounce(() => run({ mode: 'cha
 gulp.task('hygiene-modified', ['compile'], () => run({ mode: 'changes' }));
 
 gulp.task('clean', ['output:clean', 'cover:clean'], () => { });
-
-gulp.task('cover:upload', () => gulp.src('./coverage/lcov.info').pipe(codecov()));
 
 gulp.task('output:clean', () => del('coverage'));
 

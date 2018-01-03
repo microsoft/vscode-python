@@ -40,12 +40,12 @@ install:
 
 script:
   - yarn run clean
-  - yarn run cover:enable
   - yarn run vscode:prepublish
+  - yarn run cover:enable
   - yarn run testSingleWorkspace --silent
-  - yarn run cover:upload
+  - bash <(curl -s https://codecov.io/bash)
   - yarn run clean
-  - yarn run cover:enable
   - yarn run vscode:prepublish
+  - yarn run cover:enable
   - yarn run testMultiWorkspace --silent
-  - yarn run cover:upload
+  - bash <(curl -s https://codecov.io/bash)
