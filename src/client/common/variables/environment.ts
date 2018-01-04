@@ -18,18 +18,15 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         if (!exists) {
             return undefined;
         }
+        if (!fs.lstatSync(filePath).isFile()) {
+            return undefined;
+        }
         return new Promise<EnvironmentVariables | undefined>((resolve, reject) => {
             fs.readFile(filePath, 'utf8', (error, data) => {
                 if (error) {
                     return reject(error);
                 }
-                const vars = parseEnvironmentVariables(data)!;
-                if (!vars || Object.keys(vars).length === 0) {
-                    return resolve(undefined);
-                }
-                this.appendPythonPath(vars, process.env.PYTHONPATH);
-                this.appendPath(vars, process.env[this.pathVariable]);
-                resolve(vars);
+                resolve(parseEnvironmentVariables(data));
             });
         });
     }
@@ -47,28 +44,25 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             }
         });
     }
-    public prependPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]) {
-        return this.appendOrPrependPaths(vars, 'PYTHONPATH', false, ...pythonPaths);
-    }
     public appendPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]) {
-        return this.appendOrPrependPaths(vars, 'PYTHONPATH', true, ...pythonPaths);
-    }
-    public prependPath(vars: EnvironmentVariables, ...paths: string[]) {
-        return this.appendOrPrependPaths(vars, this.pathVariable, false, ...paths);
+        return this.appendPaths(vars, 'PYTHONPATH', ...pythonPaths);
     }
     public appendPath(vars: EnvironmentVariables, ...paths: string[]) {
-        return this.appendOrPrependPaths(vars, this.pathVariable, true, ...paths);
+        return this.appendPaths(vars, this.pathVariable, ...paths);
     }
-    private appendOrPrependPaths(vars: EnvironmentVariables, variableName: 'PATH' | 'Path' | 'PYTHONPATH', append: boolean, ...pythonPaths: string[]) {
-        const pathToInsert = pythonPaths.filter(item => typeof item === 'string' && item.length > 0).join(path.delimiter);
-        if (pathToInsert.length === 0) {
+    private appendPaths(vars: EnvironmentVariables, variableName: 'PATH' | 'Path' | 'PYTHONPATH', ...pathsToAppend: string[]) {
+        const valueToAppend = pathsToAppend
+            .filter(item => typeof item === 'string' && item.trim().length > 0)
+            .map(item => item.trim())
+            .join(path.delimiter);
+        if (valueToAppend.length === 0) {
             return vars;
         }
 
         if (typeof vars[variableName] === 'string' && vars[variableName].length > 0) {
-            vars[variableName] = append ? (vars[variableName] + path.delimiter + pathToInsert) : (pathToInsert + path.delimiter + vars[variableName]);
+            vars[variableName] = vars[variableName] + path.delimiter + valueToAppend;
         } else {
-            vars[variableName] = pathToInsert;
+            vars[variableName] = valueToAppend;
         }
         return vars;
     }

@@ -4,6 +4,7 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
+import { IProcessService } from '../../client/common/process/types';
 import { InterpreterType } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { getFirstNonEmptyLineFromMultilineString } from '../../client/interpreter/helpers';
@@ -11,6 +12,7 @@ import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs'
 import { clearPythonPathInWorkspaceFolder, rootWorkspaceUri, updateSetting } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { MockStatusBarItem } from '../mockClasses';
+import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockInterpreterVersionProvider } from './mocks';
 import { MockProvider, MockVirtualEnv } from './mocks';
 
@@ -18,24 +20,35 @@ const fileInNonRootWorkspace = path.join(__dirname, '..', '..', '..', 'src', 'te
 
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters Display', () => {
+    let ioc: UnitTestIocContainer;
+    let processService: IProcessService;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
     suiteSetup(initialize);
     setup(async () => {
+        initializeDI();
         await initializeTest();
         if (IS_MULTI_ROOT_TEST) {
             await initializeMultiRoot();
         }
     });
     teardown(async () => {
+        ioc.dispose();
         await clearPythonPathInWorkspaceFolder(fileInNonRootWorkspace);
         await initialize();
         await closeActiveWindows();
     });
+    function initializeDI() {
+        ioc = new UnitTestIocContainer();
+        ioc.registerCommonTypes();
+        ioc.registerVariableTypes();
+        ioc.registerProcessTypes();
+        processService = ioc.serviceContainer.get<IProcessService>(IProcessService);
+    }
     test('Must have command name', () => {
         const statusBar = new MockStatusBarItem();
         const displayNameProvider = new MockInterpreterVersionProvider('');
         // tslint:disable-next-line:no-unused-expression
-        new InterpreterDisplay(statusBar, new MockProvider([]), new VirtualEnvironmentManager([]), displayNameProvider);
+        new InterpreterDisplay(statusBar, new MockProvider([]), new VirtualEnvironmentManager([]), displayNameProvider, processService);
         assert.equal(statusBar.command, 'python.setInterpreter', 'Incorrect command name');
     });
     test('Must get display name from interpreter itself', async () => {
@@ -43,7 +56,7 @@ suite('Interpreters Display', () => {
         const provider = new MockProvider([]);
         const displayName = 'Mock Display Name';
         const displayNameProvider = new MockInterpreterVersionProvider(displayName);
-        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider);
+        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider, processService);
         await display.refresh();
 
         assert.equal(statusBar.text, displayName, 'Incorrect display name');
@@ -56,7 +69,7 @@ suite('Interpreters Display', () => {
         const env3 = new MockVirtualEnv(true, 'Mock 3');
         const displayName = 'Mock Display Name';
         const displayNameProvider = new MockInterpreterVersionProvider(displayName);
-        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([env1, env2, env3]), displayNameProvider);
+        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([env1, env2, env3]), displayNameProvider, processService);
         await display.refresh();
         assert.equal(statusBar.text, `${displayName} (${env2.name})`, 'Incorrect display name');
     });
@@ -65,7 +78,7 @@ suite('Interpreters Display', () => {
         const provider = new MockProvider([]);
         const displayName = 'Mock Display Name';
         const displayNameProvider = new MockInterpreterVersionProvider(displayName, true);
-        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider);
+        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider, processService);
         // Change interpreter to an invalid value
         const pythonPath = 'UnknownInterpreter';
         await updateSetting('pythonPath', pythonPath, rootWorkspaceUri, configTarget);
@@ -89,7 +102,7 @@ suite('Interpreters Display', () => {
         const provider = new MockProvider(interpreters);
         const displayName = 'Mock Display Name';
         const displayNameProvider = new MockInterpreterVersionProvider(displayName, true);
-        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider);
+        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider, processService);
         await display.refresh();
 
         assert.equal(statusBar.text, interpreters[1].displayName, 'Incorrect display name');
@@ -109,7 +122,7 @@ suite('Interpreters Display', () => {
         ];
         const provider = new MockProvider(interpreters);
         const displayNameProvider = new MockInterpreterVersionProvider('');
-        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider);
+        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider, processService);
         await display.refresh();
 
         assert.equal(statusBar.text, interpreters[1].displayName, 'Incorrect display name');
@@ -124,7 +137,7 @@ suite('Interpreters Display', () => {
         ];
         const provider = new MockProvider(interpreters);
         const displayNameProvider = new MockInterpreterVersionProvider('', true);
-        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider);
+        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider, processService);
         // Change interpreter to an invalid value
         const pythonPath = 'UnknownInterpreter';
         await updateSetting('pythonPath', pythonPath, rootWorkspaceUri, configTarget);

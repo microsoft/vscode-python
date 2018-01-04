@@ -1,0 +1,4 @@
+X=1
+Y=2
+PYTHONPATH=/usr/one/three:/usr/one/four
+PATH=/usr/x:/usr/y

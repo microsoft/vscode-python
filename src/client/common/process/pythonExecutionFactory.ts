@@ -14,7 +14,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IEnvironmentVariablesProvider) private envVarsService: IEnvironmentVariablesProvider) { }
     public async create(resource?: Uri): Promise<IPythonExecutionService> {
         const settings = PythonSettings.getInstance(resource);
-        return this.envVarsService.getEnvironmentVariables(true, resource)
+        return this.envVarsService.getEnvironmentVariables(resource)
             .then(customEnvVars => {
                 return new PythonExecutionService(this.procService, settings.pythonPath, customEnvVars);
             });

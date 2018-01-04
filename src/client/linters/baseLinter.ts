@@ -1,11 +1,10 @@
 import * as path from 'path';
-import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
 import * as vscode from 'vscode';
+import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
 import { IPythonSettings, PythonSettings } from '../common/configSettings';
 import '../common/extensions';
-import { ExecutionResult, IProcessService, IPythonExecutionFactory } from '../common/process/types';
+import { IPythonToolExecutionService } from '../common/process/types';
 import { ExecutionInfo, IInstaller, ILogger, Product } from '../common/types';
-import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/main';
 import { ILinterHelper, LinterId } from './types';
@@ -117,19 +116,9 @@ export abstract class BaseLinter {
     protected async run(args: string[], document: vscode.TextDocument, cancellation: vscode.CancellationToken, regEx: string = REGEX): Promise<ILintMessage[]> {
         const executionInfo = this.helper.getExecutionInfo(this.product, args, document.uri);
         const cwd = this.getWorkspaceRootPath(document);
-        let executionPromise: Promise<ExecutionResult<string>>;
-
-        // Check if required to run as a module or executable.
-        if (executionInfo.moduleName) {
-            const pythonExecutionService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(document.uri);
-            executionPromise = pythonExecutionService.execModule(executionInfo.moduleName!, executionInfo.args, { cwd, mergeStdOutErr: true, token: cancellation });
-        } else {
-            const env = await this.serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider).getEnvironmentVariables(true, document.uri);
-            const executionService = this.serviceContainer.get<IProcessService>(IProcessService);
-            executionPromise = executionService.exec(executionInfo.execPath!, executionInfo.args, { cwd, env, token: cancellation, mergeStdOutErr: true });
-        }
+        const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
         try {
-            const result = await executionPromise;
+            const result = await pythonToolsExecutionService.exec(executionInfo, {cwd, token: cancellation, mergeStdOutErr: true}, document.uri);
             this.displayLinterResultHeader(result.stdout);
             return await this.parseMessages(result.stdout, document, cancellation, regEx);
         } catch (error) {

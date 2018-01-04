@@ -1,17 +1,17 @@
-import * as child_process from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../../common/configSettings';
+import { IProcessService } from '../../../common/process/types';
 import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType } from '../../contracts';
-import { getFirstNonEmptyLineFromMultilineString } from '../../helpers';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 
 @injectable()
 export class CurrentPathService implements IInterpreterLocatorService {
     public constructor( @inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
-        @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService) { }
+        @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService,
+        @inject(IProcessService) private processService: IProcessService) { }
     public async getInterpreters(resource?: Uri) {
         return this.suggestionsFromKnownPaths();
     }
@@ -44,12 +44,8 @@ export class CurrentPathService implements IInterpreterLocatorService {
             });
     }
     private async getInterpreter(pythonPath: string, defaultValue: string) {
-        return new Promise<string>(resolve => {
-            // tslint:disable-next-line:variable-name
-            child_process.execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_err, stdout) => {
-                resolve(getFirstNonEmptyLineFromMultilineString(stdout));
-            });
-        })
+        return this.processService.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], {})
+            .then(output => output.stdout.trim())
             .then(value => value.length === 0 ? defaultValue : value)
             .catch(() => defaultValue);    // Ignore exceptions in getting the executable.
     }

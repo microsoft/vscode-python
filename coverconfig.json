@@ -1,0 +1,17 @@
+{
+    "enabled": false,
+    "relativeSourcePath": "../client",
+    "relativeCoverageDir": "../../coverage",
+    "ignorePatterns": [
+        "**/node_modules/**"
+    ],
+    "reports": [
+        "text-summary",
+        "json-summary",
+        "json",
+        "html",
+        "lcov",
+        "lcovonly"
+    ],
+    "verbose": false
+}

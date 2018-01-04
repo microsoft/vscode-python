@@ -1,80 +1,96 @@
 // A launch configuration that compiles the extension and then opens it inside a new window
 {
-	"version": "0.1.0",
-	"configurations": [
-		{
-			"name": "Launch Extension",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}"
-			],
-			"stopOnEntry": false,
-			"sourceMaps": true,
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"preLaunchTask": "Compile"
-		},
-		{
-			"name": "Launch Extension as debugServer", // https://code.visualstudio.com/docs/extensions/example-debuggers
-			"type": "node",
-			"request": "launch",
-			"program": "${workspaceFolder}/out/client/debugger/Main.js",
-			"stopOnEntry": false,
-			"args": [
-				"--server=4711"
-			],
-			"sourceMaps": true,
-			"outFiles": [
-				"${workspaceFolder}/out/client/**/*.js"
-			],
-			"cwd": "${workspaceFolder}",
-			"preLaunchTask": "Compile"
-		},
-		{
-			"name": "Launch Tests",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"${workspaceFolder}/src/test",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/test"
-			],
-			"stopOnEntry": false,
-			"sourceMaps": true,
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"preLaunchTask": "Compile"
-		},
-		{
-			"name": "Launch Multiroot Tests",
-			"type": "extensionHost",
-			"request": "launch",
-			"runtimeExecutable": "${execPath}",
-			"args": [
-				"${workspaceFolder}/src/testMultiRootWkspc/multi.code-workspace",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/test"
-			],
-			"stopOnEntry": false,
-			"sourceMaps": true,
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js"
-			],
-			"preLaunchTask": "Compile"
-		}
-	],
-	"compounds": [
-		{
-			"name": "Extension + Debugger",
-			"configurations": [
-				"Launch Extension",
-				"Launch Extension as debugServer"
-			]
-		}
-	]
+    "version": "0.1.0",
+    "configurations": [
+        {
+            "name": "Launch Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "Compile"
+        },
+        {
+            "name": "Launch Extension as debugServer", // https://code.visualstudio.com/docs/extensions/example-debuggers
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/out/client/debugger/Main.js",
+            "stopOnEntry": false,
+            "args": [
+                "--server=4711"
+            ],
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/client/**/*.js"
+            ],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Compile"
+        },
+        {
+            "name": "Launch Tests",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/test",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "Compile"
+        },
+        {
+            "name": "Launch Multiroot Tests",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/testMultiRootWkspc/multi.code-workspace",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "Compile"
+        },
+        {
+            "name": "Launch Tests (with code coverage)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/test",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ]
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Extension + Debugger",
+            "configurations": [
+                "Launch Extension",
+                "Launch Extension as debugServer"
+            ]
+        }
+    ]
 }
