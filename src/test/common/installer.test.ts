@@ -8,9 +8,10 @@ import { IModuleInstaller } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
+import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessService } from '../../client/common/process/types';
 import { ITerminalService } from '../../client/common/terminal/types';
-import { IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product } from '../../client/common/types';
+import { ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product } from '../../client/common/types';
 import { updateSetting } from '../common';
 import { rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
@@ -50,6 +51,7 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<ILogger>(ILogger, Logger);
         ioc.serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
         ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
+        ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
 
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingleton<ITerminalService>(ITerminalService, MockTerminalService);
@@ -81,7 +83,7 @@ suite('Installer', () => {
         test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));
-            if (prod.value === Product.ctags || prod.value === Product.unittest) {
+            if (prod.value === Product.ctags || prod.value === Product.unittest || prod.value === Product.isort) {
                 return;
             }
             await testCheckingIfProductIsInstalled(prod.value);
@@ -107,7 +109,7 @@ suite('Installer', () => {
         test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));
-            if (prod.value === Product.unittest || prod.value === Product.ctags) {
+            if (prod.value === Product.unittest || prod.value === Product.ctags || prod.value === Product.isort) {
                 return;
             }
             await testInstallingProduct(prod.value);
@@ -117,15 +119,23 @@ suite('Installer', () => {
     test('Disable linting of files not contained in a workspace', async () => {
         const installer = ioc.serviceContainer.get<Installer>(IInstaller);
         await installer.disableLinter(Product.pylint, undefined);
-        const pythonConfig = workspace.getConfiguration('python');
+        // tslint:disable-next-line:no-any
+        const pythonConfig = workspace.getConfiguration('python', null as any as Uri);
         assert.equal(pythonConfig.get<boolean>('linting.enabledWithoutWorkspace'), false, 'Incorrect setting');
     });
 
-    test('Disable linting of files contained in a workspace', async function () {
+    test('Disable linting of files contained in a single workspace', async function () {
         if (IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
+        const installer = ioc.serviceContainer.get<Installer>(IInstaller);
+        await installer.disableLinter(Product.pylint, workspaceUri);
+        const pythonConfig = workspace.getConfiguration('python', workspaceUri);
+        assert.equal(pythonConfig.get<boolean>('linting.pylintEnabled'), false, 'Incorrect setting');
+    });
+
+    test('Disable linting of files contained in a any kind of workspace', async () => {
         const installer = ioc.serviceContainer.get<Installer>(IInstaller);
         await installer.disableLinter(Product.pylint, workspaceUri);
         const pythonConfig = workspace.getConfiguration('python', workspaceUri);

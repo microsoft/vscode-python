@@ -1,40 +1,18 @@
 'use strict';
 // tslint:disable: no-any one-line no-suspicious-comment prefer-template prefer-const no-unnecessary-callback-wrapper no-function-expression no-string-literal no-control-regex no-shadowed-variable
-// TODO: Cleanup this place
-// Add options for execPythonFile
 
-import * as child_process from 'child_process';
 import * as fs from 'fs';
-import * as fsExtra from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { Position, Range, TextDocument, Uri } from 'vscode';
-import * as settings from './configSettings';
-import { parseEnvFile } from './envFileParser';
+import { Position, Range, TextDocument } from 'vscode';
 
 export const IS_WINDOWS = /^win/.test(process.platform);
 export const Is_64Bit = os.arch() === 'x64';
 export const PATH_VARIABLE_NAME = IS_WINDOWS ? 'Path' : 'PATH';
 
-const PathValidity: Map<string, boolean> = new Map<string, boolean>();
-export function validatePath(filePath: string): Promise<string> {
-    if (filePath.length === 0) {
-        return Promise.resolve('');
-    }
-    if (PathValidity.has(filePath)) {
-        return Promise.resolve(PathValidity.get(filePath) ? filePath : '');
-    }
-    return new Promise<string>(resolve => {
-        fs.exists(filePath, exists => {
-            PathValidity.set(filePath, exists);
-            return resolve(exists ? filePath : '');
-        });
-    });
-}
 export function fsExistsAsync(filePath: string): Promise<boolean> {
     return new Promise<boolean>(resolve => {
         fs.exists(filePath, exists => {
-            PathValidity.set(filePath, exists);
             return resolve(exists);
         });
     });
@@ -51,18 +29,6 @@ export function fsReaddirAsync(root: string): Promise<string[]> {
     });
 }
 
-export async function getPathFromPythonCommand(pythonPath: string): Promise<string> {
-    return await new Promise<string>((resolve, reject) => {
-        child_process.execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_, stdout) => {
-            if (stdout) {
-                const lines = stdout.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
-                resolve(lines.length > 0 ? lines[0] : '');
-            } else {
-                reject();
-            }
-        });
-    });
-}
 export function formatErrorForLogging(error: Error | string): string {
     let message: string = '';
     if (typeof error === 'string') {
@@ -108,45 +74,6 @@ export function getSubDirectories(rootDir: string): Promise<string[]> {
             resolve(subDirs);
         });
     });
-}
-
-export async function getCustomEnvVars(resource?: Uri): Promise<{} | undefined | null> {
-    const envFile = settings.PythonSettings.getInstance(resource).envFile;
-    if (typeof envFile !== 'string' || envFile.length === 0) {
-        return null;
-    }
-    const exists = await fsExtra.pathExists(envFile);
-    if (!exists) {
-        return null;
-    }
-    try {
-        const vars = parseEnvFile(envFile);
-        if (vars && typeof vars === 'object' && Object.keys(vars).length > 0) {
-            return vars;
-        }
-    } catch (ex) {
-        console.error('Failed to parse env file', ex);
-    }
-    return null;
-}
-export function getCustomEnvVarsSync(resource?: Uri): {} | undefined | null {
-    const envFile = settings.PythonSettings.getInstance(resource).envFile;
-    if (typeof envFile !== 'string' || envFile.length === 0) {
-        return null;
-    }
-    const exists = fsExtra.pathExistsSync(envFile);
-    if (!exists) {
-        return null;
-    }
-    try {
-        const vars = parseEnvFile(envFile);
-        if (vars && typeof vars === 'object' && Object.keys(vars).length > 0) {
-            return vars;
-        }
-    } catch (ex) {
-        console.error('Failed to parse env file', ex);
-    }
-    return null;
 }
 
 export function getWindowsLineEndingCount(document: TextDocument, offset: Number) {

@@ -78,7 +78,8 @@ suite('Python Path Settings Updater', () => {
         const workspaceUpdater = factory.getWorkspacePythonPathConfigurationService(workspace.getWorkspaceFolder(workspaceUri)!.uri);
         const pythonPath = `xWorkspacePythonPathFromFactory${new Date().getMilliseconds()}`;
         await workspaceUpdater.updatePythonPath(pythonPath);
-        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath')!.workspaceValue!;
+        // tslint:disable-next-line:no-any
+        const workspaceValue = workspace.getConfiguration('python', null as any as Uri).inspect('pythonPath')!.workspaceValue!;
         assert.equal(workspaceValue, pythonPath, 'Workspace Python Path not updated');
     });
 
@@ -88,7 +89,8 @@ suite('Python Path Settings Updater', () => {
         const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), interpreterVersionService);
         const pythonPath = `xWorkspacePythonPathFromUpdater${new Date().getMilliseconds()}`;
         await updaterService.updatePythonPath(pythonPath, ConfigurationTarget.Workspace, 'ui', workspace.getWorkspaceFolder(workspaceUri)!.uri);
-        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath')!.workspaceValue!;
+        // tslint:disable-next-line:no-any
+        const workspaceValue = workspace.getConfiguration('python', null as any as Uri).inspect('pythonPath')!.workspaceValue!;
         assert.equal(workspaceValue, pythonPath, 'Workspace Python Path not updated');
     });
 
@@ -98,7 +100,8 @@ suite('Python Path Settings Updater', () => {
         const pythonPath = path.join(workspaceUri.fsPath, 'x', 'y', 'z', pythonInterpreter);
         const workspaceUpdater = new WorkspacePythonPathUpdaterService(workspaceUri);
         await workspaceUpdater.updatePythonPath(pythonPath);
-        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath')!.workspaceValue!;
+        // tslint:disable-next-line:no-any
+        const workspaceValue = workspace.getConfiguration('python', null as any as Uri).inspect('pythonPath')!.workspaceValue!;
         // tslint:disable-next-line:no-invalid-template-strings
         assert.equal(workspaceValue, path.join('${workspaceFolder}', 'x', 'y', 'z', pythonInterpreter), 'Workspace Python Path not updated');
         const resolvedPath = PythonSettings.getInstance(Uri.file(workspaceRoot)).pythonPath;

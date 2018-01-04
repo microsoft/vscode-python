@@ -156,6 +156,7 @@ export const ITestsHelper = Symbol('ITestsHelper');
 
 export interface ITestsHelper {
     parseProviderName(product: UnitTestProduct): TestProvider;
+    parseProduct(provider: TestProvider): UnitTestProduct;
     getSettingsPropertyNames(product: Product): TestSettingsPropertyNames;
     flattenTestFiles(testFiles: TestFile[]): Tests;
     placeTestFilesIntoFolders(tests: Tests): void;

@@ -1,12 +1,11 @@
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { OutputChannel, TextEdit, Uri } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
-import { IProcessService, IPythonExecutionFactory } from '../common/process/types';
+import { IPythonToolExecutionService } from '../common/process/types';
 import { IInstaller, IOutputChannel, Product } from '../common/types';
-import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import { getTempFileWithDocumentContents, getTextEditsFromPatch } from './../common/editor';
 import { IFormatterHelper } from './types';
@@ -53,21 +52,11 @@ export abstract class BaseFormatter {
             return [];
         }
 
-        let executionPromise: Promise<string>;
         const executionInfo = this.helper.getExecutionInfo(this.product, args, document.uri);
-        // Check if required to run as a module or executable.
-        if (executionInfo.moduleName) {
-            executionPromise = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(document.uri)
-                .then(pythonExecutionService => pythonExecutionService.execModule(executionInfo.moduleName!, executionInfo.args.concat([filePath]), { cwd, throwOnStdErr: true, token }))
-                .then(output => output.stdout);
-        } else {
-            const executionService = this.serviceContainer.get<IProcessService>(IProcessService);
-            executionPromise = this.serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider).getEnvironmentVariables(true, document.uri)
-                .then(env => executionService.exec(executionInfo.execPath!, executionInfo.args.concat([filePath]), { cwd, env, throwOnStdErr: true, token }))
-                .then(output => output.stdout);
-        }
-
-        const promise = executionPromise
+        executionInfo.args.push(filePath);
+        const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
+        const promise = pythonToolsExecutionService.exec(executionInfo, { cwd, throwOnStdErr: true, token }, document.uri)
+            .then(output => output.stdout)
             .then(data => {
                 if (token && token.isCancellationRequested) {
                     return [] as TextEdit[];
@@ -85,7 +74,7 @@ export abstract class BaseFormatter {
             .then(edits => {
                 // Delete the temporary file created
                 if (tmpFileCreated) {
-                    fs.unlink(filePath);
+                    fs.unlinkSync(filePath);
                 }
                 return edits;
             });

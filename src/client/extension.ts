@@ -1,6 +1,7 @@
 'use strict';
 // This line should always be right on top.
-if (Reflect.metadata === undefined) {
+// tslint:disable-next-line:no-any
+if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
@@ -10,10 +11,15 @@ import * as vscode from 'vscode';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
+import { PythonSettings } from './common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
+import { PythonInstaller } from './common/installer/pythonInstallation';
+import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
+import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
+import { IProcessService, IPythonExecutionFactory } from './common/process/types';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
@@ -80,28 +86,35 @@ export async function activate(context: vscode.ExtensionContext) {
     lintersRegisterTypes(serviceManager);
     interpretersRegisterTypes(serviceManager);
     formattersRegisterTypes(serviceManager);
+    platformRegisterTypes(serviceManager);
+    installerRegisterTypes(serviceManager);
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
     sendStartupTelemetry(activated, serviceContainer);
 
-    sortImports.activate(context, standardOutputChannel);
+    sortImports.activate(context, standardOutputChannel, serviceContainer);
     const interpreterManager = new InterpreterManager(serviceContainer);
+
+    const pythonInstaller = new PythonInstaller(serviceContainer);
+    await pythonInstaller.checkPythonInstallation(PythonSettings.getInstance());
+
     // This must be completed before we can continue.
     await interpreterManager.autoSetInterpreter();
 
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
     context.subscriptions.push(interpreterManager);
+    const processService = serviceContainer.get<IProcessService>(IProcessService);
     const interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-    context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService));
+    context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService, processService));
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
     const jediFactory = new JediFactory(context.asAbsolutePath('.'), serviceContainer);
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
-    context.subscriptions.push(new ReplProvider());
+    context.subscriptions.push(new ReplProvider(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)));
 
     // Enable indentAction
     // tslint:disable-next-line:no-non-null-assertion
@@ -130,7 +143,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
     context.subscriptions.push(vscode.languages.registerReferenceProvider(PYTHON, new PythonReferenceProvider(jediFactory)));
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider(PYTHON, new PythonCompletionItemProvider(jediFactory), '.'));
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, new ShebangCodeLensProvider()));
+    context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, new ShebangCodeLensProvider(processService)));
 
     const symbolProvider = new PythonSymbolProvider(jediFactory);
     context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider(PYTHON, symbolProvider));

@@ -1,4 +1,3 @@
-import * as child_process from 'child_process';
 import * as fs from 'fs-extra';
 import { inject, injectable, named, optional } from 'inversify';
 import * as path from 'path';
@@ -70,15 +69,9 @@ export class CondaLocatorService implements ICondaLocatorService {
         }
     }
     public async isCondaInCurrentPath() {
-        return new Promise<boolean>((resolve, reject) => {
-            child_process.execFile('conda', ['--version'], (_, stdout) => {
-                if (stdout && stdout.length > 0) {
-                    resolve(true);
-                } else {
-                    resolve(false);
-                }
-            });
-        });
+        return this.processService.exec('conda', ['--version'])
+            .then(output => output.stdout.length > 0)
+            .catch(() => false);
     }
     private async getCondaFileFromKnownLocations(): Promise<string> {
         const condaFiles = await Promise.all(KNOWN_CONDA_LOCATIONS
