@@ -43,7 +43,6 @@ install:
 script:
   - yarn run clean
 #   - yarn run vscode:prepublish
-#   - vsce package
 #   - yarn run cover:enable
 #   - yarn run testSingleWorkspace --silent
 #   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then

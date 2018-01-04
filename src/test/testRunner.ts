@@ -1,6 +1,5 @@
-/*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
- *--------------------------------------------------------*/
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 // tslint:disable:no-require-imports no-var-requires import-name no-function-expression no-any prefer-template no-console no-var-self
 // Most of the source is in node_modules/vscode/lib/testrunner.js
@@ -94,10 +93,8 @@ function getCoverageOptions(testsRoot: string): ITestRunnerOptions | undefined {
 
 class CoverageRunner {
     private coverageVar: string = `$$cov_${new Date().getTime()}$$`;
-    // private transformer?: Instrumenter;
     private sourceFiles: string[] = [];
     private instrumenter: Instrumenter;
-    // private matchFn: any = undefined;
 
     private get coverage(): { [key: string]: CoverState } {
         if (global[this.coverageVar] === undefined || Object.keys(global[this.coverageVar]).length === 0) {
@@ -153,27 +150,23 @@ class CoverageRunner {
                 decache(fullPath);
             });
 
-        // this.matchFn = function (file): boolean { return fileMap[file]; };
         const matchFn = (file: string) => fileMap.has(file);
         this.sourceFiles = Array.from(fileMap.keys());
-        // this.matchFn.files = Object.keys(fileMap);
 
         // http://gotwarlost.github.io/istanbul/public/apidocs/classes/Hook.html#method_hookRequire.
         // Hook up to the Require function so that when this is called, if any of our source files
         // are required, the instrumented version is pulled in instead. These instrumented versions
         // write to a global coverage variable with hit counts whenever they are accessed.
-        // this.transformer = this.instrumenter.instrumentSync.bind(this.instrumenter);
         const transformer = this.instrumenter.instrumentSync.bind(this.instrumenter);
         const hookOpts = { verbose: false, extensions: ['.js'] };
-        // istanbul.hook.hookRequire(this.matchFn, this.transformer, hookOpts);
         (<any>istanbul.hook).hookRequire(matchFn, transformer, hookOpts);
 
         // Initialize the global variable to store instrumentation details.
         // http://gotwarlost.github.io/istanbul/public/apidocs/classes/Instrumenter.html.
         this.coverage = {};
 
-        // Hook the process exit event to handle reporting
-        // Only report coverage if the process is exiting successfully
+        // Hook the process exit event to handle reporting,
+        // Only report coverage if the process is exiting successfully.
         process.on('exit', () => this.reportCoverage());
     }
 
@@ -210,7 +203,7 @@ class CoverageRunner {
         const remappedCollector: istanbul.Collector = remapIstanbul.remap(coverage, {
             warn: warning => {
                 // We expect some warnings as any JS file without a typescript mapping will cause this.
-                // By default, we'll skip printing these to the console as it clutters it up
+                // By default, we'll skip printing these to the console as it clutters it up.
                 if (this.options.verbose) {
                     console.warn(warning);
                 }

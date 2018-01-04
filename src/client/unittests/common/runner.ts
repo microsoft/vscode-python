@@ -5,14 +5,12 @@ import { ErrorUtils } from '../../common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../common/errors/moduleNotInstalledError';
 import { IPythonToolExecutionService } from '../../common/process/types';
 import {
-    IProcessService,
     IPythonExecutionFactory,
     IPythonExecutionService,
     ObservableExecutionResult,
     SpawnOptions
 } from '../../common/process/types';
 import { ExecutionInfo } from '../../common/types';
-import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IServiceContainer } from '../../ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';
 import { ITestsHelper, TestProvider } from './types';

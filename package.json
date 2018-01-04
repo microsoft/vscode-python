@@ -919,6 +919,12 @@
 					},
 					"scope": "resource"
 				},
+				"python.disableInstallationCheck": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to check if Python is installed.",
+					"scope": "resource"
+				},
 				"python.linting.enabled": {
 					"type": "boolean",
 					"default": true,
@@ -1537,6 +1543,7 @@
 		"lodash": "^4.17.4",
 		"minimatch": "^3.0.3",
 		"named-js-regexp": "^1.3.1",
+		"opn": "^5.1.0",
 		"reflect-metadata": "^0.1.10",
 		"rxjs": "^5.5.2",
 		"semver": "^5.4.1",
@@ -1600,6 +1607,7 @@
 		"tslint": "^5.7.0",
 		"tslint-eslint-rules": "^4.1.1",
 		"tslint-microsoft-contrib": "^5.0.1",
+		"typemoq": "^2.1.0",
 		"typescript": "^2.6.2",
 		"typescript-formatter": "^6.0.0",
 		"vscode": "^1.1.5",
