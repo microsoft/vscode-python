@@ -57,7 +57,7 @@ script:
 #         bash <(curl -s https://codecov.io/bash);
 #     fi
 after_success:
-  - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "UploadBuilldsToAzure" ]  && [ -v $AZURE_STORAGE_ACCOUNT ]; then
+  - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "UploadBuilldsToAzure" ]  && [[ -v $AZURE_STORAGE_ACCOUNT ]]; then
         yarn run clean;
         yarn run vscode:prepublish;
         vsce package;
