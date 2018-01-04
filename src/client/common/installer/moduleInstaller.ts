@@ -8,9 +8,11 @@ import * as fs from 'fs';
 import { injectable } from 'inversify';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { IFileSystem } from '../platform/types';
 import { ITerminalService } from '../terminal/types';
 import { ExecutionInfo, IOutputChannel } from '../types';
 
@@ -24,15 +26,22 @@ export abstract class ModuleInstaller {
         if (executionInfo.moduleName) {
             const settings = PythonSettings.getInstance(resource);
             const args = ['-m', 'pip'].concat(executionInfo.args);
+            const pythonPath = settings.pythonPath;
 
-            if (settings.globalModuleInstallation) {
-                if (await this.isPathWritableAsync(path.dirname(settings.pythonPath))) {
-                    await terminalService.sendCommand(settings.pythonPath, args);
+            const locator = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
+            const fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
+            const currentInterpreter = (await locator.getInterpreters(resource)).filter(x => fileSystem.arePathsSame(x.path, pythonPath));
+
+            if (currentInterpreter[0].type !== InterpreterType.Unknown) {
+                await terminalService.sendCommand(pythonPath, args);
+            } else if (settings.globalModuleInstallation) {
+                if (await this.isPathWritableAsync(path.dirname(pythonPath))) {
+                    await terminalService.sendCommand(pythonPath, args);
                 } else {
-                    this.elevatedInstall(settings.pythonPath, args);
+                    this.elevatedInstall(pythonPath, args);
                 }
             } else {
-                await terminalService.sendCommand(settings.pythonPath, args.concat(['--user']));
+                await terminalService.sendCommand(pythonPath, args.concat(['--user']));
             }
         } else {
             await terminalService.sendCommand(executionInfo.execPath!, executionInfo.args);
