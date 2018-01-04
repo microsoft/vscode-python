@@ -59,7 +59,6 @@ after_success:
 #   - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "UploadBuilldsToAzure" ]  && [ $AZURE_STORAGE_ACCOUNT ]; then
   - if [ $AZURE_STORAGE_ACCOUNT ]; then
         yarn run clean;
-        yarn run vscode:prepublish;
         vsce package;
-        az storage blob upload --file python*.vsix --container-name $AZURE_STORAGE_CONTAINER --name ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
+        azure storage blob upload --file python*.vsix --container $AZURE_STORAGE_CONTAINER --blob ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
