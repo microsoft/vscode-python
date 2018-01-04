@@ -8,13 +8,16 @@ import { PipInstaller } from '../../client/common/installer/pipInstaller';
 import { IModuleInstaller } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
+import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PathUtils } from '../../client/common/platform/pathUtils';
-import { Architecture } from '../../client/common/platform/types';
+import { PlatformService } from '../../client/common/platform/platformService';
+import { Architecture, IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
 import { ITerminalService } from '../../client/common/terminal/types';
 import { ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows } from '../../client/common/types';
 import { ICondaLocatorService, IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../client/interpreter/contracts';
+import { PythonInterpreterLocatorService } from '../../client/interpreter/locators/index';
 import { updateSetting } from '../common';
 import { rootWorkspaceUri } from '../common';
 import { MockProvider } from '../interpreters/mocks';
@@ -60,6 +63,8 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingleton<ICondaLocatorService>(ICondaLocatorService, MockCondaLocator);
         ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
+        ioc.serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
+        ioc.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
 
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingleton<ITerminalService>(ITerminalService, MockTerminalService);
@@ -136,6 +141,9 @@ suite('Module Installer', () => {
     });
 
     test('Validate pip install arguments', async () => {
+        const mockInterpreterLocator = new MockProvider([{ path: 'python', type: InterpreterType.Unknown }]);
+        ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator, INTERPRETER_LOCATOR_SERVICE);
+
         const moduleName = 'xyz';
         const terminalService = ioc.serviceContainer.get<MockTerminalService>(ITerminalService);
 
@@ -148,10 +156,13 @@ suite('Module Installer', () => {
         const commandSent = await terminalService.commandSent;
         const commandParts = commandSent.split(' ');
         commandParts.shift();
-        expect(commandParts.join(' ')).equal(`-m pip install -U ${moduleName}`, 'Invalid command sent to terminal for installation.');
+        expect(commandParts.join(' ')).equal(`-m pip install -U ${moduleName} --user`, 'Invalid command sent to terminal for installation.');
     });
 
     test('Validate Conda install arguments', async () => {
+        const mockInterpreterLocator = new MockProvider([{ path: 'python', type: InterpreterType.Conda }]);
+        ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator, INTERPRETER_LOCATOR_SERVICE);
+
         const moduleName = 'xyz';
         const terminalService = ioc.serviceContainer.get<MockTerminalService>(ITerminalService);
 

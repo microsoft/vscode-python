@@ -8,7 +8,10 @@ import { Installer } from './installer/installer';
 import { Logger } from './logger';
 import { PersistentStateFactory } from './persistentState';
 import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
+import { FileSystem } from './platform/fileSystem';
 import { PathUtils } from './platform/pathUtils';
+import { PlatformService } from './platform/platformService';
+import { IFileSystem, IPlatformService } from './platform/types';
 import { CurrentProcess } from './process/currentProcess';
 import { TerminalService } from './terminal/service';
 import { ITerminalService } from './terminal/types';
@@ -25,4 +28,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
     serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
+    serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
+    serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
 }
