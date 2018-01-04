@@ -61,5 +61,5 @@ after_success:
         yarn run clean;
         yarn run vscode:prepublish;
         vsce package;
-        azure storage file upload --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --share $AZURE_STORAGE_SHARE --source python*.vsix --path ms-python-insiders.vsix --quiet;
+        azure storage blob upload --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --container $AZURE_STORAGE_CONTAINER --file python*.vsix --blob ms-python-insiders.vsix --quiet;
     fi
