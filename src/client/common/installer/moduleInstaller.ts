@@ -22,12 +22,17 @@ export abstract class ModuleInstaller {
         const terminalService = this.serviceContainer.get<ITerminalService>(ITerminalService);
 
         if (executionInfo.moduleName) {
-            const pythonPath = PythonSettings.getInstance(resource).pythonPath;
+            const settings = PythonSettings.getInstance(resource);
             const args = ['-m', 'pip'].concat(executionInfo.args);
-            if (await this.isPathWritableAsync(path.dirname(pythonPath))) {
-                await terminalService.sendCommand(pythonPath, args);
+
+            if (settings.globalModuleInstallation) {
+                if (await this.isPathWritableAsync(path.dirname(settings.pythonPath))) {
+                    await terminalService.sendCommand(settings.pythonPath, args);
+                } else {
+                    this.elevatedInstall(settings.pythonPath, args);
+                }
             } else {
-                this.elevatedInstall(pythonPath, args);
+                await terminalService.sendCommand(settings.pythonPath, args.concat(['--user']));
             }
         } else {
             await terminalService.sendCommand(executionInfo.execPath!, executionInfo.args);

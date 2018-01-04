@@ -27,6 +27,7 @@ export interface IPythonSettings {
     envFile: string;
     disablePromptForFeatures: string[];
     disableInstallationChecks: boolean;
+    globalModuleInstallation: boolean;
 }
 export interface ISortImportSettings {
     path: string;
@@ -147,6 +148,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     public sortImports: ISortImportSettings;
     public workspaceSymbols: IWorkspaceSymbolSettings;
     public disableInstallationChecks: boolean;
+    public globalModuleInstallation: boolean;
 
     private workspaceRoot: vscode.Uri;
     private disposables: vscode.Disposable[] = [];
@@ -224,7 +226,10 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         } else {
             this.linting = lintingSettings;
         }
+
         this.disableInstallationChecks = pythonSettings.get<boolean>('disableInstallationCheck') === true;
+        this.globalModuleInstallation = pythonSettings.get<boolean>('globalModuleInstallation') === true;
+
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const sortImportSettings = systemVariables.resolveAny(pythonSettings.get<ISortImportSettings>('sortImports'))!;
         if (this.sortImports) {
