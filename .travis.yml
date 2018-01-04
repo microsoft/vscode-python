@@ -29,8 +29,6 @@ before_install: |
   source ./.nvm/nvm.sh
   nvm install 8.9.1
   nvm use 8.9.1
-  yarn global add vsce
-  yarn global add azure-cli
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     pyenv install $PYTHON
     pyenv global $PYTHON
@@ -58,8 +56,11 @@ script:
 after_success:
 #   - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "UploadBuilldsToAzure" ]  && [ $AZURE_STORAGE_ACCOUNT ]; then
   - if [ $AZURE_STORAGE_ACCOUNT ]; then
+        yarn global add azure-cli;
+        yarn upgrade gblobal azure-cli;
+        yarn global add vsce;
         yarn run clean;
         yarn run vscode:prepublish;
         vsce package;
-        azure storage blob upload --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --container $AZURE_STORAGE_CONTAINER --file python*.vsix --blob ms-python-insiders.vsix --quiet;
+        az storage blob upload --file python*.vsix --container-name $AZURE_STORAGE_CONTAINER --name ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
