@@ -41,7 +41,7 @@ install:
   - yarn
 
 script:
-#   - yarn run clean
+  - yarn run clean
 #   - yarn run vscode:prepublish
 #   - vsce package
 #   - yarn run cover:enable
