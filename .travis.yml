@@ -57,15 +57,9 @@ script:
 #         bash <(curl -s https://codecov.io/bash);
 #     fi
 after_success:
-  - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "UploadBuilldsToAzure" ]; then
+  - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "UploadBuilldsToAzure" ]  && [ -v $AZURE_STORAGE_ACCOUNT ]; then
         yarn run clean;
         yarn run vscode:prepublish;
         vsce package;
         azure storage file upload --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --share $AZURE_STORAGE_SHARE --source python*.vsix --path ms-python-insiders.vsix --quiet;
     fi
-#   - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "UploadBuildsToAzure" ]; then
-#         azure storage file upload --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --share $AZURE_STORAGE_SHARE --source python*.vsix --path ms-python-insiders.vsix --quiet;
-#     fi
-#   - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "UploadBuildsToAzure" ]  && [ -v $AZURE_STORAGE_ACCOUNT ]; then
-#         azure storage file upload --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --share $AZURE_STORAGE_SHARE --source python*.vsix --path ms-python-insiders.vsix --quiet;
-#     fi
