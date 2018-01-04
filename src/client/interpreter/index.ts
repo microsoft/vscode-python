@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, StatusBarAlignment, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
+import { IProcessService } from '../common/process/types';
 import { IServiceContainer } from '../ioc/types';
 import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './configuration/pythonPathUpdaterServiceFactory';
@@ -21,7 +22,8 @@ export class InterpreterManager implements Disposable {
         const statusBar = window.createStatusBarItem(StatusBarAlignment.Left);
         this.interpreterProvider = serviceContainer.get<PythonInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
         const versionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-        this.display = new InterpreterDisplay(statusBar, this.interpreterProvider, virtualEnvMgr, versionService);
+        const processService = serviceContainer.get<IProcessService>(IProcessService);
+        this.display = new InterpreterDisplay(statusBar, this.interpreterProvider, virtualEnvMgr, versionService, processService);
         this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), versionService);
         PythonSettings.getInstance().addListener('change', () => this.onConfigChanged());
         this.disposables.push(window.onDidChangeActiveTextEditor(() => this.refresh()));

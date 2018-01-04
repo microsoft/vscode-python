@@ -3,10 +3,10 @@
 'use strict';
 
 import { OutputChannel } from 'vscode';
-import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE } from '../../interpreter/contracts';
+import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
-import { IPythonSettings, isTestExecution } from '../configSettings';
+import { IPythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem, IPlatformService } from '../platform/types';
 import { IProcessService } from '../process/types';
@@ -25,9 +25,14 @@ export class PythonInstaller {
    }
 
     public async checkPythonInstallation(settings: IPythonSettings): Promise<boolean> {
+        if (settings.disableInstallationChecks === true) {
+            return true;
+        }
         let interpreters = await this.locator.getInterpreters();
         if (interpreters.length > 0) {
-            if (this.platform.isMac && settings.pythonPath === 'python') {
+            if (this.platform.isMac &&
+                settings.pythonPath === 'python' &&
+                interpreters[0].type === InterpreterType.Unknown) {
                 await this.shell.showWarningMessage('Selected interpreter is MacOS system Python which is not recommended. Please select different interpreter');
             }
             return true;

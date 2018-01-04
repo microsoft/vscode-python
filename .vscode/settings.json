@@ -1,22 +1,23 @@
 // Place your settings in this file to overwrite default and user settings.
 {
-	"files.exclude": {
-		"out": true, // set this to true to hide the "out" folder with the compiled JS files
-		"**/*.pyc": true,
-		"**/__pycache__": true,
-		"node_modules": true,
-		".vscode-test": true,
-		"**/.mypy_cache/**": true,
-		"**/.ropeproject/**": true
-	},
-	"search.exclude": {
-		"out": true // set this to false to include "out" folder in search results
-	},
-	"typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
-	"tslint.enable": true,
-	"python.linting.enabled": false,
-	"python.unitTest.promptToConfigure": false,
-	"python.workspaceSymbols.enabled": false,
+    "files.exclude": {
+        "out": true, // set this to true to hide the "out" folder with the compiled JS files
+        "**/*.pyc": true,
+        "**/__pycache__": true,
+        "node_modules": true,
+        ".vscode-test": true,
+        "**/.mypy_cache/**": true,
+        "**/.ropeproject/**": true
+    },
+    "search.exclude": {
+        "out": true, // set this to false to include "out" folder in search results
+        "coverage": true
+    },
+    "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
+    "tslint.enable": true,
+    "python.linting.enabled": false,
+    "python.unitTest.promptToConfigure": false,
+    "python.workspaceSymbols.enabled": false,
     "python.formatting.provider": "none",
     "files.insertFinalNewline": true
 }

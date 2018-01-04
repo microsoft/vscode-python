@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { OutputChannel, workspace } from 'vscode';
-import { Commands, PythonLanguage, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { Commands, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
+import { IProcessService } from '../common/process/types';
 import { IInstaller, InstallerResponse, IOutputChannel, Product } from '../common/types';
 import { fsExistsAsync } from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
@@ -36,7 +37,8 @@ export class WorkspaceSymbols implements vscode.Disposable {
 
         if (Array.isArray(vscode.workspace.workspaceFolders)) {
             vscode.workspace.workspaceFolders.forEach(wkSpc => {
-                this.generators.push(new Generator(wkSpc.uri, this.outputChannel));
+                const processService = this.serviceContainer.get<IProcessService>(IProcessService);
+                this.generators.push(new Generator(wkSpc.uri, this.outputChannel, processService));
             });
         }
     }
@@ -45,23 +47,6 @@ export class WorkspaceSymbols implements vscode.Disposable {
             const promises = this.buildWorkspaceSymbols(rebuild, token);
             return Promise.all(promises);
         }));
-    }
-    private registerOnSaveHandlers() {
-        this.disposables.push(vscode.workspace.onDidSaveTextDocument(this.onDidSaveTextDocument.bind(this)));
-    }
-    private onDidSaveTextDocument(textDocument: vscode.TextDocument) {
-        if (textDocument.languageId === PythonLanguage.language) {
-            this.rebuildTags();
-        }
-    }
-    private rebuildTags() {
-        if (this.timeout) {
-            clearTimeout(this.timeout!);
-            this.timeout = null;
-        }
-        this.timeout = setTimeout(() => {
-            this.buildWorkspaceSymbols(true);
-        }, 5000);
     }
     // tslint:disable-next-line:no-any
     private buildWorkspaceSymbols(rebuild: boolean = true, token?: vscode.CancellationToken): Promise<any>[] {

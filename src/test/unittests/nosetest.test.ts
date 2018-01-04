@@ -6,6 +6,7 @@ import { CommandSource } from '../../client/unittests/common/constants';
 import { ITestManagerFactory } from '../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
+import { lookForTestFile } from './helper';
 import { UnitTestIocContainer } from './serviceRegistry';
 
 const UNITTEST_TEST_FILES_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'noseFiles');
@@ -61,6 +62,6 @@ suite('Unit Tests - nose - discovery against actual python process', () => {
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === path.join('tests', 'test_one.py') && t.nameToRun === t.name), true, 'Test File not found');
+        lookForTestFile(tests, path.join('tests', 'test_one.py'));
     });
 });

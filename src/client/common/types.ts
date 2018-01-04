@@ -3,6 +3,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
+import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export const IsWindows = Symbol('IS_WINDOWS');
@@ -57,7 +58,8 @@ export enum Product {
     mypy = 11,
     unittest = 12,
     ctags = 13,
-    rope = 14
+    rope = 14,
+    isort = 15
 }
 
 export enum ModuleNamePurpose {
@@ -79,4 +81,9 @@ export const IPathUtils = Symbol('IPathUtils');
 
 export interface IPathUtils {
     getPathVariableName(): 'Path' | 'PATH';
+}
+
+export const ICurrentProcess = Symbol('ICurrentProcess');
+export interface ICurrentProcess {
+    env: EnvironmentVariables;
 }

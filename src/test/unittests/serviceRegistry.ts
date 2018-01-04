@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
+import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/unittests/common/constants';
 import { TestCollectionStorageService } from '../../client/unittests/common/services/storageService';
@@ -11,8 +12,8 @@ import { TestsHelper } from '../../client/unittests/common/testUtils';
 import { TestFlatteningVisitor } from '../../client/unittests/common/testVisitors/flatteningVisitor';
 import { TestFolderGenerationVisitor } from '../../client/unittests/common/testVisitors/folderGenerationVisitor';
 import { TestResultResetVisitor } from '../../client/unittests/common/testVisitors/resultResetVisitor';
-import { ITestCollectionStorageService, ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory } from '../../client/unittests/common/types';
 import { ITestResultsService, ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, TestProvider } from '../../client/unittests/common/types';
+import { ITestCollectionStorageService, ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory } from '../../client/unittests/common/types';
 import { TestManager as NoseTestManager } from '../../client/unittests/nosetest/main';
 import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/unittests/nosetest/services/discoveryService';
 import { TestsParser as NoseTestTestsParser } from '../../client/unittests/nosetest/services/parserService';
@@ -29,7 +30,11 @@ export class UnitTestIocContainer extends IocContainer {
     constructor() {
         super();
     }
-
+    public getPythonMajorVersion(resource: Uri) {
+        return this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(resource)
+            .then(pythonProcess => pythonProcess.exec(['-c', 'import sys;print(sys.version_info[0])'], {}))
+            .then(output => parseInt(output.stdout.trim(), 10));
+    }
     public registerTestVisitors() {
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestFlatteningVisitor, 'TestFlatteningVisitor');
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestFolderGenerationVisitor, 'TestFolderGenerationVisitor');

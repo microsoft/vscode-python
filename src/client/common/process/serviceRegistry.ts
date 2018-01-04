@@ -5,10 +5,12 @@ import { IServiceManager } from '../../ioc/types';
 import { BufferDecoder } from './decoder';
 import { ProcessService } from './proc';
 import { PythonExecutionFactory } from './pythonExecutionFactory';
-import { IBufferDecoder, IProcessService, IPythonExecutionFactory } from './types';
+import { PythonToolExecutionService } from './pythonToolService';
+import { IBufferDecoder, IProcessService, IPythonExecutionFactory, IPythonToolExecutionService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
     serviceManager.addSingleton<IProcessService>(IProcessService, ProcessService);
     serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
+    serviceManager.addSingleton<IPythonToolExecutionService>(IPythonToolExecutionService, PythonToolExecutionService);
 }
