@@ -27,7 +27,7 @@ export class PythonInstaller {
             if (platform.isMac &&
                 settings.pythonPath === 'python' &&
                 interpreters[0].type === InterpreterType.Unknown) {
-                await this.shell.showWarningMessage('Selected interpreter is MacOS system Python which is not recommended. Please select different interpreter');
+                await this.shell.showWarningMessage('Selected interpreter is macOS system Python which is not recommended. Please select different interpreter');
             }
             return true;
         }
