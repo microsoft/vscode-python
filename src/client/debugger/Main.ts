@@ -22,6 +22,7 @@ import { DebugClient } from "./DebugClients/DebugClient";
 import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients/DebugFactory";
 import { BaseDebugServer } from "./DebugServers/BaseDebugServer";
 import { PythonProcess } from "./PythonProcess";
+import { IS_WINDOWS } from './Common/Utils';
 
 const CHILD_ENUMEARATION_TIMEOUT = 5000;
 
@@ -214,11 +215,12 @@ export class PythonDebugger extends DebugSession {
         catch (ex) {
         }
         if (Array.isArray(args.debugOptions) && args.debugOptions.indexOf("Pyramid") >= 0) {
+            const pserve = IS_WINDOWS ? "pserve.exe" : "pserve";
             if (fs.existsSync(args.pythonPath)) {
-                args.program = path.join(path.dirname(args.pythonPath), "pserve");
+                args.program = path.join(path.dirname(args.pythonPath), pserve);
             }
             else {
-                args.program = "pserve";
+                args.program = pserve;
             }
         }
         // Confirm the file exists
