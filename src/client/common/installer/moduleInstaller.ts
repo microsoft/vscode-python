@@ -30,9 +30,13 @@ export abstract class ModuleInstaller {
 
             const locator = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
             const fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
-            const currentInterpreter = (await locator.getInterpreters(resource)).filter(x => fileSystem.arePathsSame(x.path, pythonPath));
+            const interpreters = await locator.getInterpreters(resource);
 
-            if (currentInterpreter[0].type !== InterpreterType.Unknown) {
+            const currentInterpreter = interpreters.length > 1
+                ? interpreters.filter(x => fileSystem.arePathsSame(x.path, pythonPath))[0]
+                : interpreters[0];
+
+            if (!currentInterpreter || currentInterpreter.type !== InterpreterType.Unknown) {
                 await terminalService.sendCommand(pythonPath, args);
             } else if (settings.globalModuleInstallation) {
                 if (await this.isPathWritableAsync(path.dirname(pythonPath))) {
