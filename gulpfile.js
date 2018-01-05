@@ -61,6 +61,8 @@ gulp.task('watch', ['hygiene-modified', 'hygiene-watch']);
 
 gulp.task('hygiene-watch', () => gulp.watch(all, debounce(() => run({ mode: 'changes' }), 1000)));
 
+gulp.task('hygiene-all', () => run({ mode: 'all' }));
+
 gulp.task('hygiene-modified', ['compile'], () => run({ mode: 'changes' }));
 
 gulp.task('clean', ['output:clean', 'cover:clean'], () => { });
