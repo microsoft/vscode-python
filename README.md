@@ -90,6 +90,7 @@ contributors (if you would like to contribute a translation, see the
 
 * `en`
 * `ja`
+* `ko-kr`
 * `ru`
 * `zh-cn`
 
