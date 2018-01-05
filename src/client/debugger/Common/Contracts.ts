@@ -139,7 +139,7 @@ export interface IPythonEvaluationResult {
     ExceptionText?: string;
     Expression: string;
     ChildName: string;
-    Process: IPythonProcess;
+    Process?: IPythonProcess;
     Frame: IPythonStackFrame;
 }
 
