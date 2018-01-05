@@ -141,7 +141,7 @@ suite('Module Installer', () => {
     });
 
     test('Validate pip install arguments', async () => {
-        const mockInterpreterLocator = new MockProvider([{ path: 'python', type: InterpreterType.Unknown }]);
+        const mockInterpreterLocator = new MockProvider([{ path: await getCurrentPythonPath(), type: InterpreterType.Unknown }]);
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator, INTERPRETER_LOCATOR_SERVICE);
 
         const moduleName = 'xyz';
@@ -160,7 +160,7 @@ suite('Module Installer', () => {
     });
 
     test('Validate Conda install arguments', async () => {
-        const mockInterpreterLocator = new MockProvider([{ path: 'python', type: InterpreterType.Conda }]);
+        const mockInterpreterLocator = new MockProvider([{ path: await getCurrentPythonPath(), type: InterpreterType.Conda }]);
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator, INTERPRETER_LOCATOR_SERVICE);
 
         const moduleName = 'xyz';
