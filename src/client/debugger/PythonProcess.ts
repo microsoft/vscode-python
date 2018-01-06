@@ -1,10 +1,11 @@
+// tslint:disable:quotemark ordered-imports promise-must-complete member-ordering no-any prefer-template cyclomatic-complexity no-empty no-multiline-string one-line no-invalid-template-strings no-suspicious-comment no-var-self no-require-imports prefer-const
 "use strict";
 
 import * as net from "net";
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from "events";
-import { FrameKind, IPythonProcess, IPythonThread, IPythonModule, IPythonEvaluationResult, IPythonStackFrame, IStepCommand } from "./Common/Contracts";
-import { IPythonBreakpoint, PythonBreakpointConditionKind, PythonBreakpointPassCountKind, IBreakpointCommand, IChildEnumCommand } from "./Common/Contracts";
+import { IPythonProcess, IPythonThread, IPythonEvaluationResult, IPythonStackFrame } from "./Common/Contracts";
+import { IPythonBreakpoint, IBreakpointCommand, IChildEnumCommand } from "./Common/Contracts";
 import { PythonEvaluationResultReprKind, IExecutionCommand, enum_EXCEPTION_STATE } from "./Common/Contracts";
 import { Commands } from "./ProxyCommands";
 import { IdDispenser } from "../common/idDispenser";
@@ -45,7 +46,7 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
     public PendingExecuteCommands: Map<number, IExecutionCommand>;
     private executeCommandsQueue: IExecutionCommand[];
     private callbackHandler: PythonProcessCallbackHandler;
-    private stream: SocketStream = null;
+    private stream: SocketStream;
     private programDirectory: string;
     public get ProgramDirectory(): string {
         return this.programDirectory;
@@ -66,8 +67,8 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
         if (!this.isRemoteProcess && this.pid && typeof this.pid === "number") {
             try {
                 let kill = require("tree-kill");
-                kill(this.pid);
-                this.pid = null;
+                kill(this.pid!);
+                this.pid = undefined;
             }
             catch (ex) { }
         }
@@ -84,11 +85,11 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
     private guidRead: boolean;
     private statusRead: boolean;
     private pidRead: boolean;
-    private pid: number;
+    private pid?: number;
     private isRemoteProcess: Boolean;
     public Connect(buffer: Buffer, socket: net.Socket, isRemoteProcess: boolean = false): boolean {
         this.isRemoteProcess = isRemoteProcess;
-        if (this.stream === null) {
+        if (!this.stream) {
             this.stream = new SocketStream(socket, buffer);
         }
         else {
@@ -97,7 +98,7 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
         if (!isRemoteProcess) {
             if (!this.guidRead) {
                 this.stream.BeginTransaction();
-                let guid = this.stream.ReadString();
+                this.stream.ReadString();
                 if (this.stream.HasInsufficientDataForReading) {
                     this.stream.RollBackTransaction();
                     return false;
@@ -108,7 +109,7 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
 
             if (!this.statusRead) {
                 this.stream.BeginTransaction();
-                let result = this.stream.ReadInt32();
+                this.stream.ReadInt32();
                 if (this.stream.HasInsufficientDataForReading) {
                     this.stream.RollBackTransaction();
                     return false;
@@ -160,7 +161,7 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
         if (!this.isRemoteProcess) {
             if (!this.guidRead) {
                 this.stream.RollBackTransaction();
-                let guid = this.stream.ReadString();
+                this.stream.ReadString();
                 if (this.stream.HasInsufficientDataForReading) {
                     return;
                 }
@@ -169,7 +170,7 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
             }
             if (!this.statusRead) {
                 this.stream.BeginTransaction();
-                let result = this.stream.ReadInt32();
+                this.stream.ReadInt32();
                 if (this.stream.HasInsufficientDataForReading) {
                     this.stream.RollBackTransaction();
                     return;
@@ -236,7 +237,7 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
     }
     private onBreakpointSet(breakpointId: number, success: boolean) {
         // Find the last breakpoint command associated with this breakpoint
-        let index = this.breakpointCommands.findIndex(cmd => cmd.Id === breakpointId);
+        let index = this.breakpointCommands.findIndex(item => item.Id === breakpointId);
         if (index === -1) {
             // Hmm this is not possible, log this exception and carry on
             // this.emit("error", "command.breakpoint.hit", `Uknown Breakpoit Id ${breakpointId}`);
@@ -348,7 +349,7 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
             return;
         }
 
-        const cmd = this.executeCommandsQueue.shift();
+        const cmd = this.executeCommandsQueue.shift()!;
         this.PendingExecuteCommands.set(cmd.Id, cmd);
         this.stream.Write(Commands.ExecuteTextCommandBytes);
         this.stream.WriteString(cmd.Text);
@@ -362,9 +363,6 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
     public EnumChildren(text: string, stackFrame: IPythonStackFrame, timeout: number): Promise<IPythonEvaluationResult[]> {
         return new Promise<IPythonEvaluationResult[]>((resolve, reject) => {
             let executeId = this._idDispenser.Allocate();
-            if (typeof (executeId) !== "number") {
-                let y = "";
-            }
             let cmd: IChildEnumCommand = {
                 Id: executeId,
                 Frame: stackFrame,
