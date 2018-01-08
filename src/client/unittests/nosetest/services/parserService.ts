@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
-import 'reflect-metadata';
 import { convertFileToPackage, extractBetweenDelimiters } from '../../common/testUtils';
 import { ITestsHelper, ITestsParser, ParserOptions, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestStatus, TestSuite } from '../../common/types';
 

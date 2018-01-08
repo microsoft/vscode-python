@@ -1,5 +1,4 @@
 import { injectable } from 'inversify';
-import 'reflect-metadata';
 import * as Registry from 'winreg';
 import { Architecture, IRegistry, RegistryHive } from './types';
 

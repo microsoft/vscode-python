@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, StatusBarAlignment, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
+import { IProcessService } from '../common/process/types';
 import { IServiceContainer } from '../ioc/types';
 import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './configuration/pythonPathUpdaterServiceFactory';
@@ -21,7 +22,8 @@ export class InterpreterManager implements Disposable {
         const statusBar = window.createStatusBarItem(StatusBarAlignment.Left);
         this.interpreterProvider = serviceContainer.get<PythonInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
         const versionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-        this.display = new InterpreterDisplay(statusBar, this.interpreterProvider, virtualEnvMgr, versionService);
+        const processService = serviceContainer.get<IProcessService>(IProcessService);
+        this.display = new InterpreterDisplay(statusBar, this.interpreterProvider, virtualEnvMgr, versionService, processService);
         this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), versionService);
         PythonSettings.getInstance().addListener('change', () => this.onConfigChanged());
         this.disposables.push(window.onDidChangeActiveTextEditor(() => this.refresh()));
@@ -47,16 +49,17 @@ export class InterpreterManager implements Disposable {
         const virtualEnvInterpreterProvider = new VirtualEnvService([activeWorkspace.folderUri.fsPath], virtualEnvMgr, versionService);
         const interpreters = await virtualEnvInterpreterProvider.getInterpreters(activeWorkspace.folderUri);
         const workspacePathUpper = activeWorkspace.folderUri.fsPath.toUpperCase();
+
         const interpretersInWorkspace = interpreters.filter(interpreter => interpreter.path.toUpperCase().startsWith(workspacePathUpper));
-        // Always pick the first available one.
         if (interpretersInWorkspace.length === 0) {
             return;
         }
 
+        // Always pick the highest version by default.
         // Ensure this new environment is at the same level as the current workspace.
         // In windows the interpreter is under scripts/python.exe on linux it is under bin/python.
         // Meaning the sub directory must be either scripts, bin or other (but only one level deep).
-        const pythonPath = interpretersInWorkspace[0].path;
+        const pythonPath = interpretersInWorkspace.sort((a, b) => a.version > b.version ? 1 : -1)[0].path;
         const relativePath = path.dirname(pythonPath).substring(activeWorkspace.folderUri.fsPath.length);
         if (relativePath.split(path.sep).filter(l => l.length > 0).length === 2) {
             await this.pythonPathUpdaterService.updatePythonPath(pythonPath, activeWorkspace.configTarget, 'load', activeWorkspace.folderUri);

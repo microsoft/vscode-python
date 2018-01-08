@@ -3,7 +3,6 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { IFormattingSettings, PythonSettings } from '../common/configSettings';
 import { ExecutionInfo, Product } from '../common/types';

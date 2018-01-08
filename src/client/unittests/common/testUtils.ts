@@ -1,6 +1,5 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import 'reflect-metadata';
 import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
 import { window } from 'vscode';
@@ -53,6 +52,16 @@ export class TestsHelper implements ITestsHelper {
             case Product.unittest: return 'unittest';
             default: {
                 throw new Error(`Unknown Test Product ${product}`);
+            }
+        }
+    }
+    public parseProduct(provider: TestProvider): UnitTestProduct {
+        switch (provider) {
+            case 'nosetest': return Product.nosetest;
+            case 'pytest': return Product.pytest;
+            case 'unittest': return Product.unittest;
+            default: {
+                throw new Error(`Unknown Test Provider ${provider}`);
             }
         }
     }

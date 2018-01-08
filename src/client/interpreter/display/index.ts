@@ -1,11 +1,11 @@
-import * as child_process from 'child_process';
 import { EOL } from 'os';
 import * as path from 'path';
 import { Disposable, StatusBarItem, Uri } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
+import { IProcessService } from '../../common/process/types';
 import * as utils from '../../common/utils';
 import { IInterpreterLocatorService, IInterpreterVersionService } from '../contracts';
-import { getActiveWorkspaceUri, getFirstNonEmptyLineFromMultilineString } from '../helpers';
+import { getActiveWorkspaceUri } from '../helpers';
 import { IVirtualEnvironmentManager } from '../virtualEnvs/types';
 
 // tslint:disable-next-line:completed-docs
@@ -13,7 +13,8 @@ export class InterpreterDisplay implements Disposable {
     constructor(private statusBar: StatusBarItem,
         private interpreterLocator: IInterpreterLocatorService,
         private virtualEnvMgr: IVirtualEnvironmentManager,
-        private versionProvider: IInterpreterVersionService) {
+        private versionProvider: IInterpreterVersionService,
+        private processService: IProcessService) {
 
         this.statusBar.command = 'python.setInterpreter';
     }
@@ -69,11 +70,8 @@ export class InterpreterDisplay implements Disposable {
             .then(env => env ? env.name : '');
     }
     private async getFullyQualifiedPathToInterpreter(pythonPath: string) {
-        return new Promise<string>(resolve => {
-            child_process.execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_, stdout) => {
-                resolve(getFirstNonEmptyLineFromMultilineString(stdout));
-            });
-        })
+        return this.processService.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'])
+            .then(output => output.stdout.trim())
             .then(value => value.length === 0 ? pythonPath : value)
             .catch(() => pythonPath);
     }

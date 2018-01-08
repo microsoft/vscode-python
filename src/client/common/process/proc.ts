@@ -3,7 +3,6 @@
 
 import { spawn } from 'child_process';
 import { inject, injectable } from 'inversify';
-import 'reflect-metadata';
 import * as Rx from 'rxjs';
 import { Disposable } from 'vscode';
 import { createDeferred } from '../helpers';

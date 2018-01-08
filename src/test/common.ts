@@ -85,7 +85,8 @@ async function setPythonPathInWorkspace(resource: string | Uri | undefined, conf
     }
 }
 async function restoreGlobalPythonPathSetting(): Promise<void> {
-    const pythonConfig = workspace.getConfiguration('python');
+    // tslint:disable-next-line:no-any
+    const pythonConfig = workspace.getConfiguration('python', null as any as Uri);
     // tslint:disable-next-line:no-non-null-assertion
     const currentGlobalPythonPathSetting = pythonConfig.inspect('pythonPath')!.globalValue;
     // tslint:disable-next-line:no-use-before-declare

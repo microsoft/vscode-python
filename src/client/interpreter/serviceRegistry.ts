@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import 'reflect-metadata';
 import { IsWindows } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import {

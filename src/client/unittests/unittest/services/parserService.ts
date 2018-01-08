@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import 'reflect-metadata';
 import { ITestsHelper, ITestsParser, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestStatus, TestSuite } from '../../common/types';
 
 type UnitTestParserOptions = TestDiscoveryOptions & { startDirectory: string };

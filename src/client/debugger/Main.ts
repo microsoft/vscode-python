@@ -1,8 +1,13 @@
 "use strict";
 
+// This line should always be right on top.
+// tslint:disable-next-line:no-any
+if ((Reflect as any).metadata === undefined) {
+    // tslint:disable-next-line:no-require-imports no-var-requires
+    require('reflect-metadata');
+}
 import * as fs from "fs";
 import * as path from "path";
-import 'reflect-metadata';
 import { DebugSession, Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread } from "vscode-debugadapter";
 import { ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
@@ -17,6 +22,7 @@ import { DebugClient } from "./DebugClients/DebugClient";
 import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients/DebugFactory";
 import { BaseDebugServer } from "./DebugServers/BaseDebugServer";
 import { PythonProcess } from "./PythonProcess";
+import { IS_WINDOWS } from './Common/Utils';
 
 const CHILD_ENUMEARATION_TIMEOUT = 5000;
 
@@ -209,11 +215,12 @@ export class PythonDebugger extends DebugSession {
         catch (ex) {
         }
         if (Array.isArray(args.debugOptions) && args.debugOptions.indexOf("Pyramid") >= 0) {
+            const pserve = IS_WINDOWS ? "pserve.exe" : "pserve";
             if (fs.existsSync(args.pythonPath)) {
-                args.program = path.join(path.dirname(args.pythonPath), "pserve");
+                args.program = path.join(path.dirname(args.pythonPath), pserve);
             }
             else {
-                args.program = "pserve";
+                args.program = pserve;
             }
         }
         // Confirm the file exists

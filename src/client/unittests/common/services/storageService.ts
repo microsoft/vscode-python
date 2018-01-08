@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import 'reflect-metadata';
 import { Disposable, Uri, workspace } from 'vscode';
 import { IDisposableRegistry } from '../../../common/types';
 import { ITestCollectionStorageService, Tests } from './../types';

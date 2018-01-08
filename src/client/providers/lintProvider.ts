@@ -22,7 +22,7 @@ import * as pylint from './../linters/pylint';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const Minimatch = require('minimatch').Minimatch;
 
-const uriSchemesToIgnore = ['git', 'showModifications'];
+const uriSchemesToIgnore = ['git', 'showModifications', 'svn'];
 const lintSeverityToVSSeverity = new Map<linter.LintMessageSeverity, vscode.DiagnosticSeverity>();
 lintSeverityToVSSeverity.set(linter.LintMessageSeverity.Error, vscode.DiagnosticSeverity.Error);
 lintSeverityToVSSeverity.set(linter.LintMessageSeverity.Hint, vscode.DiagnosticSeverity.Hint);

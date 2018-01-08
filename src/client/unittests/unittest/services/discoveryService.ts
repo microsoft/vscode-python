@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import 'reflect-metadata';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import { Options, run } from '../../common/runner';

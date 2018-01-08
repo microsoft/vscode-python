@@ -89,6 +89,7 @@ contributors (if you would like to contribute a translation, see the
 [pull request which added simplified Chinese](https://github.com/Microsoft/vscode-python/pull/240)):
 
 * `en`
+* `ja`
 * `ru`
 * `zh-cn`
 

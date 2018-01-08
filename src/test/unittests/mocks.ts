@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
-import 'reflect-metadata';
 import { CancellationToken, Disposable, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../client/common/helpers';
 import { Product } from '../../client/common/types';

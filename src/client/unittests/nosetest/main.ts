@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import 'reflect-metadata';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
 import { Product } from '../../common/types';

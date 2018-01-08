@@ -1,13 +1,13 @@
-'use strict';
-
-import * as vscode from 'vscode';
-import * as sortProvider from './providers/importSortProvider';
 import * as os from 'os';
+import * as vscode from 'vscode';
+import { IProcessService, IPythonExecutionFactory } from './common/process/types';
+import { IServiceContainer } from './ioc/types';
+import * as sortProvider from './providers/importSortProvider';
 
-export function activate(context: vscode.ExtensionContext, outChannel: vscode.OutputChannel) {
-    let rootDir = context.asAbsolutePath('.');
-    let disposable = vscode.commands.registerCommand('python.sortImports', () => {
-        let activeEditor = vscode.window.activeTextEditor;
+export function activate(context: vscode.ExtensionContext, outChannel: vscode.OutputChannel, serviceContainer: IServiceContainer) {
+    const rootDir = context.asAbsolutePath('.');
+    const disposable = vscode.commands.registerCommand('python.sortImports', () => {
+        const activeEditor = vscode.window.activeTextEditor;
         if (!activeEditor || activeEditor.document.languageId !== 'python') {
             vscode.window.showErrorMessage('Please open a Python source file to sort the imports.');
             return Promise.resolve();
@@ -21,6 +21,7 @@ export function activate(context: vscode.ExtensionContext, outChannel: vscode.Ou
         const lastLine = activeEditor.document.lineAt(activeEditor.document.lineCount - 1);
         let emptyLineAdded = Promise.resolve(true);
         if (lastLine.text.trim().length > 0) {
+            // tslint:disable-next-line:no-any
             emptyLineAdded = new Promise<any>((resolve, reject) => {
                 activeEditor.edit(builder => {
                     builder.insert(lastLine.range.end, os.EOL);
@@ -28,17 +29,17 @@ export function activate(context: vscode.ExtensionContext, outChannel: vscode.Ou
             });
         }
         return emptyLineAdded.then(() => {
-            return new sortProvider.PythonImportSortProvider().sortImports(rootDir, activeEditor.document);
+            const processService = serviceContainer.get<IProcessService>(IProcessService);
+            const pythonExecutionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            return new sortProvider.PythonImportSortProvider(pythonExecutionFactory, processService).sortImports(rootDir, activeEditor.document);
         }).then(changes => {
-            if (changes.length === 0) {
+            if (!changes || changes!.length === 0) {
                 return;
             }
 
-            return activeEditor.edit(builder => {
-                changes.forEach(change => builder.replace(change.range, change.newText));
-            });
+            return new Promise((resolve, reject) => activeEditor.edit(builder => changes.forEach(change => builder.replace(change.range, change.newText))).then(resolve, reject));
         }).catch(error => {
-            let message = typeof error === 'string' ? error : (error.message ? error.message : error);
+            const message = typeof error === 'string' ? error : (error.message ? error.message : error);
             outChannel.appendLine(error);
             outChannel.show();
             vscode.window.showErrorMessage(message);

@@ -17,7 +17,7 @@
 ```shell
 git clone https://github.com/microsoft/vscode-python
 cd vscode-python
-npm install
+yarn install
 ```
 
 ### Incremental Build

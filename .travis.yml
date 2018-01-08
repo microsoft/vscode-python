@@ -1,20 +1,6 @@
 language: python
 cache: pip
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-4.9
-      - g++-4.9
-      - gcc-4.9-multilib
-      - g++-4.9-multilib
-      - libgtk2.0-0
-      - libx11-dev
-      - libxkbfile-dev
-      - libsecret-1-dev
-      - python-dev
 matrix:
     include:
         # # Use the built in venv for linux builds
@@ -43,8 +29,6 @@ before_install: |
   source ./.nvm/nvm.sh
   nvm install 8.9.1
   nvm use 8.9.1
-  npm i -g npm@5.5.1
-  npm config set python `which python`
   if [ "$TRAVIS_OS_NAME" == "osx" ]; then
     pyenv install $PYTHON
     pyenv global $PYTHON
@@ -52,8 +36,20 @@ before_install: |
   export TRAVIS_PYTHON_PATH=`which python`
 install:
   - pip install --upgrade -r requirements.txt
-  - npm install
-  - npm run vscode:prepublish
+  - yarn
 
 script:
-  - npm test --silent
+  - yarn run clean
+  - yarn run vscode:prepublish
+  - yarn run cover:enable
+  - yarn run testSingleWorkspace --silent
+  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
+        bash <(curl -s https://codecov.io/bash);
+    fi
+  - yarn run clean
+  - yarn run vscode:prepublish
+  - yarn run cover:enable
+  - yarn run testMultiWorkspace --silent
+  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
+        bash <(curl -s https://codecov.io/bash);
+    fi

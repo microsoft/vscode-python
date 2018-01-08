@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import 'reflect-metadata';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 import { EnvironmentVariables } from '../variables/types';

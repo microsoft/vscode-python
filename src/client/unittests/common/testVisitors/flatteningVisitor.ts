@@ -1,5 +1,4 @@
 import { injectable } from 'inversify';
-import 'reflect-metadata';
 import { convertFileToPackage } from '../testUtils';
 import {
     FlattenedTestFunction,

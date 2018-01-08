@@ -1,7 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
-import 'reflect-metadata';
 import { ConfigurationTarget, QuickPickItem, Uri, window, workspace } from 'vscode';
 import * as vscode from 'vscode';
 import { IFormatterHelper } from '../../formatters/types';
@@ -10,6 +9,7 @@ import { ILinterHelper } from '../../linters/types';
 import { ITestsHelper } from '../../unittests/common/types';
 import { PythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { IPlatformService } from '../platform/types';
 import { IProcessService, IPythonExecutionFactory } from '../process/types';
 import { ITerminalService } from '../terminal/types';
 import { IInstaller, ILogger, InstallerResponse, IOutputChannel, IsWindows, ModuleNamePurpose, Product } from '../types';
@@ -83,8 +83,7 @@ ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
 @injectable()
 export class Installer implements IInstaller {
     constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private outputChannel: vscode.OutputChannel,
-        @inject(IsWindows) private isWindows: boolean) {
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private outputChannel: vscode.OutputChannel) {
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
@@ -230,7 +229,7 @@ export class Installer implements IInstaller {
         return disablePromptForFeatures.indexOf(productName) === -1;
     }
     private installCTags() {
-        if (this.isWindows) {
+        if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
             this.outputChannel.appendLine('Install Universal Ctags Win32 to enable support for Workspace Symbols');
             this.outputChannel.appendLine('Download the CTags binary from the Universal CTags site.');
             this.outputChannel.appendLine('Option 1: Extract ctags.exe from the downloaded zip to any folder within your PATH so that Visual Studio Code can run it.');
