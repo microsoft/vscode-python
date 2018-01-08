@@ -16,7 +16,7 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.count, 0);
         assert.equal(tokens.length, 0);
     });
-    test('Strings 1', async () => {
+    test('Strings: unclosed', async () => {
         const t = new Tokenizer();
         const tokens = t.Tokenize(' "string" """line1\n#line2"""\t\'un#closed');
         assert.equal(tokens.count, 3);
@@ -28,7 +28,7 @@ suite('Language.Tokenizer', () => {
             assert.equal(tokens.getItemAt(i).type, TokenType.String);
         }
     });
-    test('Strings 2', async () => {
+    test('Strings: block next to regular, double-quoted', async () => {
         const t = new Tokenizer();
         const tokens = t.Tokenize('"string""""s2"""');
         assert.equal(tokens.count, 2);
@@ -40,7 +40,7 @@ suite('Language.Tokenizer', () => {
             assert.equal(tokens.getItemAt(i).type, TokenType.String);
         }
     });
-    test('Strings 3', async () => {
+    test('Strings: block next to block, double-quoted', async () => {
         const t = new Tokenizer();
         const tokens = t.Tokenize('""""""""');
         assert.equal(tokens.count, 2);
@@ -52,7 +52,7 @@ suite('Language.Tokenizer', () => {
             assert.equal(tokens.getItemAt(i).type, TokenType.String);
         }
     });
-    test('Strings 4', async () => {
+    test('Strings: unclosed sequence of quotes', async () => {
         const t = new Tokenizer();
         const tokens = t.Tokenize('"""""');
         assert.equal(tokens.count, 1);
