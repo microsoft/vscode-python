@@ -24,6 +24,7 @@ import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients
 import { BaseDebugServer } from "./DebugServers/BaseDebugServer";
 import { PythonProcess } from "./PythonProcess";
 import { IS_WINDOWS } from './Common/Utils';
+import { sendPerformanceTelemetry, capturePerformanceTelemetry, PerformanceTelemetryCondition } from "./Common/telemetry";
 
 const CHILD_ENUMEARATION_TIMEOUT = 5000;
 
@@ -55,6 +56,11 @@ export class PythonDebugger extends DebugSession {
         this.debuggerLoaded = new Promise(resolve => {
             this.debuggerLoadedPromiseResolve = resolve;
         });
+    }
+    // tslint:disable-next-line:no-unnecessary-override
+    @sendPerformanceTelemetry(PerformanceTelemetryCondition.stoppedEvent)
+    public sendEvent(event: DebugProtocol.Event): void {
+        super.sendEvent(event);
     }
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
         response.body!.supportsEvaluateForHovers = true;
@@ -156,6 +162,7 @@ export class PythonDebugger extends DebugSession {
     }
     private onPythonModuleLoaded(module: IPythonModule) {
     }
+    @sendPerformanceTelemetry(PerformanceTelemetryCondition.always)
     private onPythonProcessLoaded(pyThread?: IPythonThread) {
         if (this.entryResponse) {
             this.sendResponse(this.entryResponse);
@@ -201,6 +208,7 @@ export class PythonDebugger extends DebugSession {
     private canStartDebugger(): Promise<boolean> {
         return Promise.resolve(true);
     }
+    @capturePerformanceTelemetry('launch')
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
         // Some versions may still exist with incorrect launch.json values
         const setting = '${config.python.pythonPath}';
@@ -497,19 +505,23 @@ export class PythonDebugger extends DebugSession {
             });
         });
     }
+    @capturePerformanceTelemetry('stepIn')
     protected stepInRequest(response: DebugProtocol.StepInResponse): void {
         this.sendResponse(response);
         this.pythonProcess!.SendStepInto(this.pythonProcess!.LastExecutedThread.Id);
     }
+    @capturePerformanceTelemetry('stepOut')
     protected stepOutRequest(response: DebugProtocol.StepInResponse): void {
         this.sendResponse(response);
         this.pythonProcess!.SendStepOut(this.pythonProcess!.LastExecutedThread.Id);
     }
+    @capturePerformanceTelemetry('continue')
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
         this.pythonProcess!.SendContinue().then(() => {
             this.sendResponse(response);
         }).catch(error => this.sendErrorResponse(response, 2000, error));
     }
+    @capturePerformanceTelemetry('next')
     protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
         this.sendResponse(response);
         this.pythonProcess!.SendStepOver(this.pythonProcess!.LastExecutedThread.Id);
