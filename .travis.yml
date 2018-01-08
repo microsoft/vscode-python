@@ -30,10 +30,6 @@ before_install: |
   nvm install 8.9.1
   nvm use 8.9.1
   yarn global add vsce
-  if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    pyenv install $PYTHON
-    pyenv global $PYTHON
-  fi
   export TRAVIS_PYTHON_PATH=`which python`
   sudo apt-get update && sudo apt-get install azure-cli
   az --version
