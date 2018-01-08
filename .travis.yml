@@ -19,9 +19,7 @@ matrix:
 # Perform the manual steps on osx to install python 2.7.1 and 3.6.1 and set it as the global interpreter.
 # This way when the node unit tests will pick the right version of python (from global)
 before_install: |
-  sudo apt-get update
-  sudo apt-get install azure-cli
-  az --version
+  sudo apt-get -qq update
 #   if [ $TRAVIS_OS_NAME == "linux" ]; then
 #     export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
 #     sh -e /etc/init.d/xvfb start;
