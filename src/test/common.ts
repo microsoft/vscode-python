@@ -109,6 +109,10 @@ export async function deleteFile(file: string) {
     }
 }
 
+export async function sleep(milliseconds: number) {
+    return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
+}
+
 // tslint:disable-next-line:no-non-null-assertion
 const globalPythonPathSetting = workspace.getConfiguration('python').inspect('pythonPath')!.globalValue;
 export const clearPythonPathInWorkspaceFolder = async (resource: string | Uri) => retryAsync(setPythonPathInWorkspace)(resource, ConfigurationTarget.WorkspaceFolder);
