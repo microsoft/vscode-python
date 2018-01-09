@@ -1,7 +1,5 @@
 language: python
 cache: pip
-sudo: required
-dist: trusty
 
 matrix:
     include:
@@ -21,20 +19,19 @@ matrix:
 # Perform the manual steps on osx to install python 2.7.1 and 3.6.1 and set it as the global interpreter.
 # This way when the node unit tests will pick the right version of python (from global)
 before_install: |
-  sudo apt-get -qq update
-#   if [ $TRAVIS_OS_NAME == "linux" ]; then
-#     export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
-#     sh -e /etc/init.d/xvfb start;
-#     sleep 3;
-#   fi
-#   git submodule update --init --recursive
-#   git clone https://github.com/creationix/nvm.git ./.nvm
-#   source ./.nvm/nvm.sh
-#   nvm install 8.9.1
-#   nvm use 8.9.1
-#   yarn global add vsce
-#   export TRAVIS_PYTHON_PATH=`which python`
-  az --version
+  if [ $TRAVIS_OS_NAME == "linux" ]; then
+    export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
+    sh -e /etc/init.d/xvfb start;
+    sleep 3;
+  fi
+  git submodule update --init --recursive
+  git clone https://github.com/creationix/nvm.git ./.nvm
+  source ./.nvm/nvm.sh
+  nvm install 8.9.1
+  nvm use 8.9.1
+  yarn global add vsce
+  yarn global add azure-cli
+  export TRAVIS_PYTHON_PATH=`which python`
 install:
   - pip install --upgrade -r requirements.txt
   - yarn
@@ -56,7 +53,6 @@ script:
 #     fi
 after_success:
 #   - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "UploadBuilldsToAzure" ]  && [ $AZURE_STORAGE_ACCOUNT ]; then
-  - az --version
   - if [ $AZURE_STORAGE_ACCOUNT ]; then
         yarn run clean;
         vsce package;
