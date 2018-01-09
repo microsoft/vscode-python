@@ -34,7 +34,6 @@ before_install: |
 #   nvm use 8.9.1
 #   yarn global add vsce
 #   export TRAVIS_PYTHON_PATH=`which python`
-  sudo apt-get update && sudo apt-get install azure-cli
   az --version
 install:
   - pip install --upgrade -r requirements.txt
