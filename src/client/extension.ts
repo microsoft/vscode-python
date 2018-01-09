@@ -121,7 +121,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.languages.setLanguageConfiguration(PYTHON.language!, {
         onEnterRules: [
             {
-                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async).*?:\s*$/,
+                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async).*$/,
                 action: { indentAction: vscode.IndentAction.Indent }
             },
             {
