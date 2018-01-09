@@ -27,26 +27,22 @@ install:
 
 script:
   - yarn run clean
-#   - yarn run vscode:prepublish
-#   - yarn run cover:enable
-#   - yarn run testSingleWorkspace --silent
-#   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-#         bash <(curl -s https://codecov.io/bash);
-#     fi
-#   - yarn run clean
-#   - yarn run vscode:prepublish
-#   - yarn run cover:enable
-#   - yarn run testMultiWorkspace --silent
-#   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-#         bash <(curl -s https://codecov.io/bash);
-#     fi
+  - yarn run vscode:prepublish
+  - yarn run cover:enable
+  - yarn run testSingleWorkspace --silent
+  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
+        bash <(curl -s https://codecov.io/bash);
+    fi
+  - yarn run clean
+  - yarn run vscode:prepublish
+  - yarn run cover:enable
+  - yarn run testMultiWorkspace --silent
+  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
+        bash <(curl -s https://codecov.io/bash);
+    fi
 after_success:
-#   - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ $TRAVIS_BRANCH == "UploadBuilldsToAzure" ]  && [ $AZURE_STORAGE_ACCOUNT ]; then
-  - yarn run clean;
-  - vsce package;
-  - azure storage blob upload --container $AZURE_STORAGE_CONTAINER --blob ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --file python*.vsix;
-#   - if [ $AZURE_STORAGE_ACCOUNT ]; then
-#         yarn run clean;
-#         vsce package;
-#         azure storage blob upload --file python*.vsix --container $AZURE_STORAGE_CONTAINER --blob ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
-#     fi
+  - if [ $AZURE_STORAGE_ACCOUNT ]; then
+        yarn run clean;
+        vsce package;
+        azure storage blob upload --container $AZURE_STORAGE_CONTAINER --blob ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --file python*.vsix;
+    fi
