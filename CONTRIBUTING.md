@@ -70,73 +70,48 @@ smoothly, but it allows you to help out by noticing when a step is
 missed or to learn in case someday you become a project maintainer as
 well!
 
+### Helping others
+
+First and foremost, we try to be helpful to users of the extension.
+We monitor
+[Stack Overflow questions](https://stackoverflow.com/questions/tagged/visual-studio-code+python)
+to see where people might need help. We also try to respond to all
+issues in some way in a timely manner (typically in less than one
+business day, definitely no more than a week). We also answer
+questions that reach us in other ways, e.g. Twitter.
+
 ### Iteration/milestone cycle
 
-The extension aims for a two-week cycle with an appropriate
+The extension aims to do a new release every month. A
+[release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan)
+is created for each release to help track anything that requires a
+person to do (long term this project aims to automate as much of the
+development process as possible). The current issues being worked on
+for a release are tracked in a
 [milestone](https://github.com/Microsoft/vscode-python/milestones)
-which tracks what is actively being worked on/towards the next
-release.
+(which is actively updated as plans change).
 
-#### Tick-tock development process
+The overall schedule for a release is to code freeze for on the last
+Monday of the month to coincide with Visual Studio Code's code freeze.
+We then aim to release later that week so the latest version of the
+extension is already live by the time Visual Studio Code launches
+their new release. This is so we are ready to use any new features
+of Visual Studio Code the day they go live. We do bugfix-only releases
+between scheduled releases as necessary.
 
-Modeled after
-[Intel's tick-tock model](https://en.wikipedia.org/wiki/Tick-tock_model),
-our development cycle oscillates between two different focuses. In a
-"tick" cycle, we discuss potential changes to our development cycle.
-This allows to constantly improve how we develop the extension rather
-than simply let the process stagnate and develop outmodded approaches.
+All development is actively done in the `master` branch of the
+repository. It is what allows us to have an
+[insiders build](#insiders-build) which is expected to be stable at
+all times. We do keep the previous release as a branch in case the
+need for a bugfix release arises. But once a new release is made we
+convert the older branch into a tag and delete the branch as
+Visual Studio Code's automatic updating makes keeping old versions
+around unnecessary.
 
-In a "tock" cycle we apply any changes that were agree to by the team
-during the previous "tick" cycle. By taking an entire cycle to discuss
-and agree to any changes we provide enough time to reflect upon any
-proposed changes so we don't make needless changes.
-
-A "tock" cycle also aims to spend a week purely focused on cleaning up
-technical debt. This can be in the form of code refactorings, updating
-the code to support new checks introduced by TypeScript, etc. The goal
-is to keep the code base manageable long-term and to not end up
-calcifying any bad practices. This also provides a good opportunity to
-apply any development process changes to work that isn't flagged as
-time-critical as a new feature may be.
-
-#### Iteration schedule
-
-* Day 1 (Tuesday)
-  * Leave code freeze from previous cycle
-  * Incomplete items from the previous cycle are discussed
-    * Why didn't an item get completed?
-    * Should it transition to this new cycle or be dropped from the
-      schedule for now?
-    * [tick] Discuss if there's any issues with the current
-      development process
-    * [tock] Begin applying any changes to the development process as
-      agreed upon during the previous "tick" cycle
-* Day 7 (Monday)
-  * 3rd-party dependencies frozen
-  * Ask CELA to update the TPN file
-* Day 14 (2nd Monday)
-  * Update the TPN file as instructed by CELA
-  * Bump version number
-  * Code freeze
-  * Cut a `.vsix` file for testing
-  * Go through
-    [issues awaiting validation](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22awaiting+4-validation%22+is%3Aclosed)
-    & validate they have been fixed (and not subsequently broken by
-    later changes)
-  * Update the
-    [changelog](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
-  * Create a branch for the release
-  * Unfreeze the `master` branch
-  * Make sure the
-    [documentation](https://code.visualstudio.com/docs/python/python-tutorial)
-    -- including the
-    [WOW](https://code.visualstudio.com/docs/languages/python) page
-    -- has [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls)
-  * Draft a post for the [team blog](https://aka.ms/pythonblog)
-
-Assuming no last-minute issues, the release should be made public
-later that same week. After releasing, the previous release's branch
-is turned into a tag and its branch is deleted.
+Since we try to spend about 25% of our development time fixing bugs
+and removing technical debt, the week of a release is mostly spent
+focusing on that topic. That way we don't ignore the health of the
+code base by accidentally focusing on new features exclusively.
 
 ### Issue triaging
 
@@ -175,10 +150,8 @@ the issue from being closed.
   * [`verification`](https://github.com/Microsoft/vscode-python/labels/awaiting%201-verification):
     We need to verify that the issue can be replicated
 * [`2-PR`](https://github.com/Microsoft/vscode-python/labels/awaiting%202-PR):
-  The issue is valid and is now awaiting a pull request to address the
-  issue
-* [`3-merge`](https://github.com/Microsoft/vscode-python/labels/awaiting%203-merge):
-  A pull request has been created and is currently being reviewed
+  The issue is valid and is now awaiting a fix to be created and
+  merged into the `master` branch
 * [`4-validation`](https://github.com/Microsoft/vscode-python/labels/awaiting%204-validation):
   A pull request has been merged and resolution of the issue should be
   independently validated
@@ -197,19 +170,19 @@ it should have an appropriate `closed-` label.
      labeled `awaiting 2-PR`
    * If no issue exists, open one and wait for it to reach the
      `awaiting 2-PR` stage before submitting the pull request
-1. Open the pull request, mentioning the appropriate issue(s)
+1. Open the pull request, mentioning the appropriate issue(s) in the
+   pull request message body
    * The pull request is expected to have appropriate unit tests
    * The pull request must pass its CI run before merging will be
      considered
-1. [Maintainers only] Update referenced issues to the
-   `awaiting 3-merge` stage
+   * Code coverage is expected to not worsen
 1. Make sure all status checks are green (e.g. CLA check, CI, etc.)
 1. Address any review comments
 1. [Maintainers only] Merge the pull request
 1. [Maintainers only] Update affected issues to be:
    1. Closed (with an appropriate `closed-` label)
    1. The stage is set to `awaiting 4-validation`
-   1. The issue and pull request are attached to the current milestone
+   1. The issue(s) are attached to the current milestone
    1. Register OSS usage
    1. Email CELA about any 3rd-party usage changes
 
@@ -225,16 +198,25 @@ the year (starting at 0). For example, the first release in July 2018
 would be `2018.7.0`, the second release that month would be
 `2018.7.1`, etc.
 
-### Insiders Build
+## Insiders Build
 
 Starting in 2018, we started publishing the latest development
 build of the extension onto a cloud storage provider.
 If you are interested in helping us test our development builds or would like
 to stay ahead of the curve, then please feel free to download and install the
-extension from the following [location](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix). Once you have downloaded the [ms-python-insiders.vsix](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)
-file, please follow the instructions on [this page](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix) to install the extension.
+extension from the following
+[location](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix).
+Once you have downloaded the
+[ms-python-insiders.vsix](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)
+file, please follow the instructions on
+[this page](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix)
+to install the extension.
 
-The insiders build of the extension:
-* Will get replcaed with new releases published onto the [VS Code Marketplace](https://marketplace.visualstudio.com/VSCode).
-* Does not get updated with new insider build releases.
-* Is built everytime a PR is commited into the [master branch](https://github.com/Microsoft/vscode-python).
+The insiders build of the extension ...:
+
+* Will be replaced with new releases published onto the
+  [VS Code Marketplace](https://marketplace.visualstudio.com/VSCode).
+* Does not get updated with new insider build releases (if you want to
+  test a newer insiders build, uninstall the old version of the
+  extension and then install the new version)
+* Is built everytime a PR is commited into the [`master` branch](https://github.com/Microsoft/vscode-python).
