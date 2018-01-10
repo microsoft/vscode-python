@@ -30,6 +30,7 @@ export interface ILintMessage {
     type: string;
     severity?: LintMessageSeverity;
     provider: string;
+    messageContainsCode: boolean;
 }
 export enum LintMessageSeverity {
     Hint,
@@ -163,7 +164,8 @@ export abstract class BaseLinter {
             column: isNaN(match.column) || match.column === 0 ? 0 : match.column - this.columnOffset,
             line: match.line,
             type: match.type,
-            provider: this.Id
+            provider: this.Id,
+            messageContainsCode: false
         };
     }
     private parseLines(outputLines: string[], regEx: string): ILintMessage[] {

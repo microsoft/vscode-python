@@ -11,10 +11,23 @@ export class Linter extends baseLinter.BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<baseLinter.ILintMessage[]> {
-        const msgTemplate = `'{line},{column},{category},${this.pythonSettings.linting.pylintMsgTemplate}'`;
-        const messages = await this.run([`--msg-template=${msgTemplate}`, '--reports=n', '--output-format=text', document.uri.fsPath], document, cancellation);
+        let msgBody;
+        let regex;
+        if (this.pythonSettings.linting.pylintMsgTemplate === 'legacy') {
+            msgBody = '{msg_id}:{msg}';
+        } else if (this.pythonSettings.linting.pylintMsgTemplate === 'standard') {
+            msgBody = '{msg} ({symbol})';
+            regex = '(?<line>\\d+),(?<column>\\d+),(?<type>\\w+),(?<code>[a-z-]+):(?<message>.*)\\r?(\\n|$)';
+        }
+        let codeVar = '{symbol}';
+        if (msgBody.includes('{msg_id}') && !msgBody.includes('{symbol}')) {
+            codeVar = '{msg_id}';
+        }
+        const msgTemplate = `'{line},{column},{category},${codeVar}:${msgBody}'`;
+        const messages = await this.run([`--msg-template=${msgTemplate}`, '--reports=n', '--output-format=text', document.uri.fsPath], document, cancellation, regex);
         messages.forEach(msg => {
             msg.severity = this.parseMessagesSeverity(msg.type, this.pythonSettings.linting.pylintCategorySeverity);
+            msg.messageContainsCode = true;
         });
 
         return messages;
