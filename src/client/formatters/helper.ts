@@ -38,10 +38,10 @@ export class FormatterHelper implements IFormatterHelper {
 
         // If path information is not available, then treat it as a module,
         // except for prospector as that needs to be run as an executable (it's a Python package).
-        if (path.basename(execPath) === execPath && formatter !== Product.prospector) {
+        if (path.basename(execPath) === execPath) {
             moduleName = execPath;
         }
 
-        return { execPath, moduleName, args };
+        return { execPath, moduleName, args, product: formatter };
     }
 }

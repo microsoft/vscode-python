@@ -224,3 +224,17 @@ the micro version is how many releases there have been that month in
 the year (starting at 0). For example, the first release in July 2018
 would be `2018.7.0`, the second release that month would be
 `2018.7.1`, etc.
+
+### Insiders Build
+
+Starting in 2018, we started publishing the latest development
+build of the extension onto a cloud storage provider.
+If you are interested in helping us test our development builds or would like
+to stay ahead of the curve, then please feel free to download and install the
+extension from the following [location](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix). Once you have downloaded the [ms-python-insiders.vsix](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)
+file, please follow the instructions on [this page](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix) to install the extension.
+
+The insiders build of the extension:
+* Will get replcaed with new releases published onto the [VS Code Marketplace](https://marketplace.visualstudio.com/VSCode).
+* Does not get updated with new insider build releases.
+* Is built everytime a PR is commited into the [master branch](https://github.com/Microsoft/vscode-python).
