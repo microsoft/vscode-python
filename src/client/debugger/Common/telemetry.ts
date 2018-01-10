@@ -32,9 +32,13 @@ export function capturePerformanceTelemetry(action: DebugAction) {
 }
 
 export function sendPerformanceTelemetry(condition: PerformanceTelemetryCondition) {
-    return function (target: DebugSession, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (target: DebugSession, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         descriptor.value = function (...args: any[]) {
+            if (propertyKey === 'sendEvent' && args.length === 1 && args[0] instanceof TelemetryEvent) {
+                return originalMethod.apply(this, args);
+            }
+
             try {
                 const data = getPerformanceTelemetryData(condition, args);
                 if (data) {
