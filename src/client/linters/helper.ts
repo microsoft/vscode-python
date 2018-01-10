@@ -35,7 +35,7 @@ export class LinterHelper implements ILinterHelper {
             moduleName = execPath;
         }
 
-        return { execPath, moduleName, args };
+        return { execPath, moduleName, args, product: linter };
     }
     public translateToId(linter: Product): LinterId {
         if (this.linterIdMapping.has(linter)) {

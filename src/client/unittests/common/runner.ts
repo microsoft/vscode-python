@@ -3,17 +3,17 @@ import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import { IPythonSettings, PythonSettings } from '../../common/configSettings';
 import { ErrorUtils } from '../../common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../common/errors/moduleNotInstalledError';
+import { IPythonToolExecutionService } from '../../common/process/types';
 import {
-    IProcessService,
     IPythonExecutionFactory,
     IPythonExecutionService,
     ObservableExecutionResult,
     SpawnOptions
 } from '../../common/process/types';
-import { IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { ExecutionInfo } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';
-import { TestProvider } from './types';
+import { ITestsHelper, TestProvider } from './types';
 
 export type Options = {
     workspaceFolder: Uri;
@@ -36,21 +36,17 @@ export async function run(serviceContainer: IServiceContainer, testProvider: Tes
         // Unit tests have a special way of being executed
         const pythonServiceFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         pythonExecutionServicePromise = pythonServiceFactory.create(options.workspaceFolder);
-        promise = pythonExecutionServicePromise.then(executionService => {
-            return executionService.execObservable(options.args, { ...spawnOptions });
-        });
-    } else if (testExecutablePath) {
-        const processService = serviceContainer.get<IProcessService>(IProcessService);
-        const envVarsService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
-        promise = envVarsService.getEnvironmentVariables(true, options.workspaceFolder).then(executionService => {
-            return processService.execObservable(testExecutablePath, options.args, { ...spawnOptions });
-        });
+        promise = pythonExecutionServicePromise.then(executionService => executionService.execObservable(options.args, { ...spawnOptions }));
     } else {
-        const pythonServiceFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        pythonExecutionServicePromise = pythonServiceFactory.create(options.workspaceFolder);
-        promise = pythonExecutionServicePromise.then(executionService => {
-            return executionService.execModuleObservable(moduleName, options.args, { ...spawnOptions });
-        });
+        const pythonToolsExecutionService = serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
+        const testHelper = serviceContainer.get<ITestsHelper>(ITestsHelper);
+        const executionInfo: ExecutionInfo = {
+            execPath: testExecutablePath,
+            args: options.args,
+            moduleName: testExecutablePath && testExecutablePath.length > 0 ? undefined : moduleName,
+            product: testHelper.parseProduct(testProvider)
+        };
+        promise = pythonToolsExecutionService.execObservable(executionInfo, spawnOptions, options.workspaceFolder);
     }
 
     return promise.then(result => {

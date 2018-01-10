@@ -5,7 +5,6 @@ import { EventEmitter } from 'events';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { InterpreterInfoCache } from './interpreterInfoCache';
 import { SystemVariables } from './variables/systemVariables';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -27,6 +26,8 @@ export interface IPythonSettings {
     workspaceSymbols: IWorkspaceSymbolSettings;
     envFile: string;
     disablePromptForFeatures: string[];
+    disableInstallationChecks: boolean;
+    globalModuleInstallation: boolean;
 }
 export interface ISortImportSettings {
     path: string;
@@ -147,6 +148,8 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     public terminal: ITerminalSettings;
     public sortImports: ISortImportSettings;
     public workspaceSymbols: IWorkspaceSymbolSettings;
+    public disableInstallationChecks: boolean;
+    public globalModuleInstallation: boolean;
 
     private workspaceRoot: vscode.Uri;
     private disposables: vscode.Disposable[] = [];
@@ -189,12 +192,10 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         // tslint:disable-next-line:no-unsafe-any
         this.disposables.forEach(disposable => disposable.dispose());
         this.disposables = [];
-        InterpreterInfoCache.clear();
     }
 
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     private initializeSettings() {
-        InterpreterInfoCache.clear();
         const workspaceRoot = this.workspaceRoot.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(this.workspaceRoot ? this.workspaceRoot.fsPath : undefined);
         const pythonSettings = vscode.workspace.getConfiguration('python', this.workspaceRoot);
@@ -226,6 +227,10 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         } else {
             this.linting = lintingSettings;
         }
+
+        this.disableInstallationChecks = pythonSettings.get<boolean>('disableInstallationCheck') === true;
+        this.globalModuleInstallation = pythonSettings.get<boolean>('globalModuleInstallation') === true;
+
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const sortImportSettings = systemVariables.resolveAny(pythonSettings.get<ISortImportSettings>('sortImports'))!;
         if (this.sortImports) {

@@ -3,9 +3,11 @@ import * as fs from 'fs';
 import { EOL } from 'os';
 import * as path from 'path';
 import { commands, ConfigurationTarget, Position, Range, Uri, window, workspace } from 'vscode';
+import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
 import { PythonImportSortProvider } from '../../client/providers/importSortProvider';
 import { updateSetting } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
+import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const sortingPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'sorting');
 const fileToFormatWithoutConfig = path.join(sortingPath, 'noconfig', 'before.py');
@@ -18,9 +20,10 @@ const extensionDir = path.join(__dirname, '..', '..', '..');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Sorting', () => {
+    let ioc: UnitTestIocContainer;
+    let sorter: PythonImportSortProvider;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
     suiteSetup(initialize);
-    setup(initializeTest);
     suiteTeardown(async () => {
         fs.writeFileSync(fileToFormatWithConfig, fs.readFileSync(originalFileToFormatWithConfig));
         fs.writeFileSync(fileToFormatWithConfig1, fs.readFileSync(originalFileToFormatWithConfig1));
@@ -29,17 +32,30 @@ suite('Sorting', () => {
         await closeActiveWindows();
     });
     setup(async () => {
+        await initializeTest();
+        initializeDI();
         fs.writeFileSync(fileToFormatWithConfig, fs.readFileSync(originalFileToFormatWithConfig));
         fs.writeFileSync(fileToFormatWithoutConfig, fs.readFileSync(originalFileToFormatWithoutConfig));
         fs.writeFileSync(fileToFormatWithConfig1, fs.readFileSync(originalFileToFormatWithConfig1));
         await updateSetting('sortImports.args', [], Uri.file(sortingPath), configTarget);
         await closeActiveWindows();
+        const pythonExecutionFactory = ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const processService = ioc.serviceContainer.get<IProcessService>(IProcessService);
+        sorter = new PythonImportSortProvider(pythonExecutionFactory, processService);
     });
-
+    teardown(async () => {
+        ioc.dispose();
+        await closeActiveWindows();
+    });
+    function initializeDI() {
+        ioc = new UnitTestIocContainer();
+        ioc.registerCommonTypes();
+        ioc.registerVariableTypes();
+        ioc.registerProcessTypes();
+    }
     test('Without Config', async () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithoutConfig);
         await window.showTextDocument(textDocument);
-        const sorter = new PythonImportSortProvider();
         const edits = await sorter.sortImports(extensionDir, textDocument);
         assert.equal(edits.filter(value => value.newText === EOL && value.range.isEqual(new Range(2, 0, 2, 0))).length, 1, 'EOL not found');
         assert.equal(edits.filter(value => value.newText === '' && value.range.isEqual(new Range(3, 0, 4, 0))).length, 1, '"" not found');
@@ -58,7 +74,6 @@ suite('Sorting', () => {
     test('With Config', async () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
         await window.showTextDocument(textDocument);
-        const sorter = new PythonImportSortProvider();
         const edits = await sorter.sortImports(extensionDir, textDocument);
         const newValue = `from third_party import lib2${EOL}from third_party import lib3${EOL}from third_party import lib4${EOL}from third_party import lib5${EOL}from third_party import lib6${EOL}from third_party import lib7${EOL}from third_party import lib8${EOL}from third_party import lib9${EOL}`;
         assert.equal(edits.filter(value => value.newText === newValue && value.range.isEqual(new Range(0, 0, 3, 0))).length, 1, 'New Text not found');
@@ -79,7 +94,6 @@ suite('Sorting', () => {
         await editor.edit(builder => {
             builder.insert(new Position(0, 0), `from third_party import lib0${EOL}`);
         });
-        const sorter = new PythonImportSortProvider();
         const edits = await sorter.sortImports(extensionDir, textDocument);
         assert.notEqual(edits.length, 0, 'No edits');
     });

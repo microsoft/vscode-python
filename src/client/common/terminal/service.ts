@@ -4,7 +4,8 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, Terminal, Uri, window, workspace } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
-import { IDisposableRegistry, IsWindows } from '../types';
+import { IPlatformService } from '../platform/types';
+import { IDisposableRegistry } from '../types';
 import { ITerminalService } from './types';
 
 const IS_POWERSHELL = /powershell.exe$/i;
@@ -55,8 +56,8 @@ export class TerminalService implements ITerminalService {
     }
 
     private terminalIsPowershell(resource?: Uri) {
-        const isWindows = this.serviceContainer.get<boolean>(IsWindows);
-        if (!isWindows) {
+        const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
+        if (!platform.isWindows) {
             return false;
         }
         // tslint:disable-next-line:no-backbone-get-set-outside-model

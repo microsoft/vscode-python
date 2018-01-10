@@ -1,8 +1,8 @@
-import * as child_process from 'child_process';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { IProcessService } from '../../../common/process/types';
 import { VersionUtils } from '../../../common/versionUtils';
 import { ICondaLocatorService, IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
 import { AnacondaCompanyName, AnacondaCompanyNames, CONDA_RELATIVE_PY_PATH, CondaInfo } from './conda';
@@ -12,7 +12,8 @@ import { CondaHelper } from './condaHelper';
 export class CondaEnvService implements IInterpreterLocatorService {
     private readonly condaHelper = new CondaHelper();
     constructor( @inject(ICondaLocatorService) private condaLocator: ICondaLocatorService,
-        @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService) {
+        @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService,
+        @inject(IProcessService) private processService: IProcessService) {
     }
     public async getInterpreters(resource?: Uri) {
         return this.getSuggestionsFromConda();
@@ -99,32 +100,24 @@ export class CondaEnvService implements IInterpreterLocatorService {
     }
     private async getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
         return this.condaLocator.getCondaFile()
-            .then(async condaFile => {
-                return new Promise<PythonInterpreter[]>((resolve, reject) => {
-                    // interrogate conda (if it's on the path) to find all environments.
-                    child_process.execFile(condaFile, ['info', '--json'], (_, stdout) => {
-                        if (stdout.length === 0) {
-                            resolve([]);
-                            return;
-                        }
-
-                        try {
-                            // tslint:disable-next-line:prefer-type-cast
-                            const info = JSON.parse(stdout) as CondaInfo;
-                            resolve(this.parseCondaInfo(info));
-                        } catch (e) {
-                            // Failed because either:
-                            //   1. conda is not installed.
-                            //   2. `conda info --json` has changed signature.
-                            //   3. output of `conda info --json` has changed in structure.
-                            // In all cases, we can't offer conda pythonPath suggestions.
-                            resolve([]);
-                        }
-                    });
-                }).catch((err) => {
-                    console.error('Python Extension (getSuggestionsFromConda):', err);
+            .then(condaFile => this.processService.exec(condaFile, ['info', '--json']))
+            .then(output => output.stdout)
+            .then(stdout => {
+                if (stdout.length === 0) {
                     return [];
-                });
-            });
+                }
+
+                try {
+                    const info = JSON.parse(stdout) as CondaInfo;
+                    return this.parseCondaInfo(info);
+                } catch {
+                    // Failed because either:
+                    //   1. conda is not installed.
+                    //   2. `conda info --json` has changed signature.
+                    //   3. output of `conda info --json` has changed in structure.
+                    // In all cases, we can't offer conda pythonPath suggestions.
+                    return [];
+                }
+            }).catch(() => []);
     }
 }

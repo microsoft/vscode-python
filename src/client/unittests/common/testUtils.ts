@@ -55,6 +55,16 @@ export class TestsHelper implements ITestsHelper {
             }
         }
     }
+    public parseProduct(provider: TestProvider): UnitTestProduct {
+        switch (provider) {
+            case 'nosetest': return Product.nosetest;
+            case 'pytest': return Product.pytest;
+            case 'unittest': return Product.unittest;
+            default: {
+                throw new Error(`Unknown Test Provider ${provider}`);
+            }
+        }
+    }
     public getSettingsPropertyNames(product: UnitTestProduct): TestSettingsPropertyNames {
         const id = this.parseProviderName(product);
         switch (id) {

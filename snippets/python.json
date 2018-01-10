@@ -237,5 +237,10 @@
         "prefix": "pdb",
         "body": "import pdb; pdb.set_trace()",
         "description": "Code snippet for pdb debug"
-    }
+    },
+    "pudb": {
+        "prefix": "pudb",
+        "body": "import pudb; pudb.set_trace()",
+        "description": "Code snippet for pudb debug"
+    },
 }
