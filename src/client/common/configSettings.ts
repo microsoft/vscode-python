@@ -247,7 +247,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             pylamaArgs: [], pylamaEnabled: false, pylamaPath: 'pylama',
             prospectorArgs: [], prospectorEnabled: false, prospectorPath: 'prospector',
             pydocstyleArgs: [], pydocstyleEnabled: false, pydocstylePath: 'pydocstyle',
-            pylintArgs: [], pylintEnabled: false, pylintPath: 'pylint', pylintMsgTemplate: '{msg_id}:{msg}',
+            pylintArgs: [], pylintEnabled: false, pylintPath: 'pylint', pylintMsgTemplate: 'legacy',
             pylintCategorySeverity: {
                 convention: vscode.DiagnosticSeverity.Hint,
                 error: vscode.DiagnosticSeverity.Error,

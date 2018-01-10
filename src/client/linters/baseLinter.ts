@@ -30,7 +30,7 @@ export interface ILintMessage {
     type: string;
     severity?: LintMessageSeverity;
     provider: string;
-    messageContainsCode: boolean;
+    preformattedMessage?: boolean;
 }
 export enum LintMessageSeverity {
     Hint,
@@ -165,7 +165,7 @@ export abstract class BaseLinter {
             line: match.line,
             type: match.type,
             provider: this.Id,
-            messageContainsCode: false
+            preformattedMessage: false
         };
     }
     private parseLines(outputLines: string[], regEx: string): ILintMessage[] {

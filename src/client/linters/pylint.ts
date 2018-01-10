@@ -27,7 +27,7 @@ export class Linter extends baseLinter.BaseLinter {
         const messages = await this.run([`--msg-template=${msgTemplate}`, '--reports=n', '--output-format=text', document.uri.fsPath], document, cancellation, regex);
         messages.forEach(msg => {
             msg.severity = this.parseMessagesSeverity(msg.type, this.pythonSettings.linting.pylintCategorySeverity);
-            msg.messageContainsCode = true;
+            msg.preformattedMessage = true;
         });
 
         return messages;

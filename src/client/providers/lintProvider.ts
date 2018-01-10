@@ -35,7 +35,7 @@ function createDiagnostics(message: linter.ILintMessage, document: vscode.TextDo
 
     const severity = lintSeverityToVSSeverity.get(message.severity!)!;
     let formattedMessage;
-    if (message.messageContainsCode) {
+    if (message.preformattedMessage) {
         formattedMessage = message.message;
     } else {
         formattedMessage = `${message.code}:${message.message}`;
