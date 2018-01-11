@@ -1,8 +1,7 @@
 import * as assert from 'assert';
-import * as path from 'path';
-import { ILintingSettings, PythonSettings } from '../../client/common/configSettings';
+import { PythonSettings } from '../../client/common/configSettings';
 import { EnumEx } from '../../client/common/enumUtils';
-import { Product } from '../../client/common/types';
+import { ILintingSettings, Product } from '../../client/common/types';
 import { LinterHelper } from '../../client/linters/helper';
 import { LinterId } from '../../client/linters/types';
 import { initialize } from '../initialize';
@@ -28,10 +27,6 @@ suite('Linting - Helper', () => {
             const info = linterHelper.getExecutionInfo(linter, []);
             const names = linterHelper.getSettingsPropertyNames(linter);
             const execPath = settings.linting[names.pathName] as string;
-            let moduleName: string | undefined;
-            if (path.basename(execPath) === execPath && linter !== Product.prospector) {
-                moduleName = execPath;
-            }
 
             assert.equal(info.execPath, execPath, `Incorrect executable paths for product ${linterHelper.translateToId(linter)}`);
         });
@@ -43,7 +38,6 @@ suite('Linting - Helper', () => {
 
         [Product.flake8, Product.mypy, Product.pep8,
         Product.pydocstyle, Product.pylama, Product.pylint].forEach(linter => {
-            const info = linterHelper.getExecutionInfo(linter, []);
             const names = linterHelper.getSettingsPropertyNames(linter);
             const args: string[] = Array.isArray(settings.linting[names.argsName]) ? settings.linting[names.argsName] as string[] : [];
             const expectedArgs = args.concat(customArgs).join(',');

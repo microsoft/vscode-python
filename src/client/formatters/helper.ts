@@ -4,7 +4,8 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IFormattingSettings, PythonSettings } from '../common/configSettings';
+import { PythonSettings } from '../common/configSettings';
+import { IFormattingSettings } from '../common/types';
 import { ExecutionInfo, Product } from '../common/types';
 import { FormatterId, FormatterSettingsPropertyNames, IFormatterHelper } from './types';
 

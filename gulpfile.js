@@ -235,7 +235,7 @@ const hygiene = (options) => {
     const files = options.mode === 'compile' ? tsProject.src() : getFilesToProcess(options);
     const dest = options.mode === 'compile' ? './out' : '.';
     let result = files
-        .pipe(filter(f => !f.stat.isDirectory()));
+        .pipe(filter(f => f && f.stat && !f.stat.isDirectory()));
 
     if (!options.skipIndentationCheck) {
         result = result.pipe(filter(indentationFilter))

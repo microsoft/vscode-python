@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { IFormattingSettings } from '../common/configSettings';
-import { ExecutionInfo, Product } from '../common/types';
+import { ExecutionInfo, IFormattingSettings, Product } from '../common/types';
 
 export const IFormatterHelper = Symbol('IFormatterHelper');
 

@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { ILintingSettings } from '../common/configSettings';
-import { ExecutionInfo, Product } from '../common/types';
+import { ExecutionInfo, ILintingSettings, Product } from '../common/types';
 
 export interface IErrorHandler {
     handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean>;

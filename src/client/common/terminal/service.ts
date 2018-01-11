@@ -6,35 +6,75 @@ import { Disposable, Terminal, Uri, window, workspace } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { IPlatformService } from '../platform/types';
 import { IDisposableRegistry } from '../types';
-import { ITerminalService } from './types';
+import { ITerminalService, TerminalShellType } from './types';
 
-const IS_POWERSHELL = /powershell.exe$/i;
+const IS_BASH = /(bash.exe$|wsl.exe$|bash$|zsh$)/i;
+const IS_COMMAND = /cmd.exe$/i;
+const IS_POWERSHELL = /(powershell.exe$|pwsh$|powershell$)/i;
+const IS_FISH = /(fish$)/i;
 
 @injectable()
 export class TerminalService implements ITerminalService {
     private terminal?: Terminal;
-    private textPreviouslySentToTerminal: boolean = false;
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
-    public async sendCommand(command: string, args: string[]): Promise<void> {
-        const text = this.buildTerminalText(command, args);
-        const term = await this.getTerminal();
-        term.show(false);
-        term.sendText(text, true);
-        this.textPreviouslySentToTerminal = true;
-    }
+    private readonly detectableShells: Map<TerminalShellType, RegExp>;
+    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IPlatformService) private platformService: IPlatformService,
+        private title: string = 'Python') {
 
+        this.detectableShells = new Map<TerminalShellType, RegExp>();
+        this.detectableShells.set(TerminalShellType.powershell, IS_POWERSHELL);
+        this.detectableShells.set(TerminalShellType.bash, IS_BASH);
+        this.detectableShells.set(TerminalShellType.commandPrompt, IS_COMMAND);
+        this.detectableShells.set(TerminalShellType.fish, IS_FISH);
+    }
+    public async sendCommand(command: string, args: string[]): Promise<void> {
+        const text = this.buildCommandForTerminal(command, args);
+        const term = await this.getTerminal();
+        term.show();
+        term.sendText(text, true);
+    }
+    public async sendText(text: string): Promise<void> {
+        const term = await this.getTerminal();
+        term.show();
+        term.sendText(text);
+    }
+    public getShellType(resource?: Uri): TerminalShellType {
+        const shellPath = this.getTerminalShellPath(resource);
+        if (!shellPath || shellPath.length === 0) {
+            return TerminalShellType.other;
+        }
+        return Array.from(this.detectableShells.keys())
+            .reduce((matchedShell, shellToDetect) => {
+                if (matchedShell === TerminalShellType.other && this.detectableShells.get(shellToDetect)!.test(shellPath)) {
+                    return shellToDetect;
+                }
+                return matchedShell;
+            }, TerminalShellType.other);
+    }
+    private getTerminalShellPath(resource?: Uri): string {
+        const shellConfig = workspace.getConfiguration('terminal.integrated.shell', resource);
+        let osSection = '';
+        if (this.platformService.isWindows) {
+            osSection = 'windows';
+        } else if (this.platformService.isMac) {
+            osSection = 'osx';
+        } else if (this.platformService.isLinux) {
+            osSection = 'linux';
+        }
+        if (osSection.length === 0) {
+            return '';
+        }
+        return shellConfig.get<string>(osSection)!;
+    }
     private async getTerminal() {
         if (this.terminal) {
             return this.terminal!;
         }
-        this.terminal = window.createTerminal('Python');
-        this.terminal.show(false);
+        this.terminal = window.createTerminal(this.title);
+        this.terminal!.show();
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
-        // However if we have already sent text to the terminal, then no need to wait.
-        if (!this.textPreviouslySentToTerminal) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         const handler = window.onDidCloseTerminal((term) => {
             if (term === this.terminal) {
@@ -43,25 +83,16 @@ export class TerminalService implements ITerminalService {
         });
 
         const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        disposables.push(this.terminal);
+        disposables.push(this.terminal!);
         disposables.push(handler);
 
         return this.terminal;
     }
 
-    private buildTerminalText(command: string, args: string[]) {
+    private buildCommandForTerminal(command: string, args: string[]) {
         const executable = command.indexOf(' ') ? `"${command}"` : command;
-        const commandPrefix = this.terminalIsPowershell() ? '& ' : '';
+        const isPowershell = this.getShellType() === TerminalShellType.powershell;
+        const commandPrefix = isPowershell ? '& ' : '';
         return `${commandPrefix}${executable} ${args.join(' ')}`.trim();
-    }
-
-    private terminalIsPowershell(resource?: Uri) {
-        const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
-        if (!platform.isWindows) {
-            return false;
-        }
-        // tslint:disable-next-line:no-backbone-get-set-outside-model
-        const terminalName = workspace.getConfiguration('terminal.integrated.shell', resource).get<string>('windows');
-        return typeof terminalName === 'string' && IS_POWERSHELL.test(terminalName);
     }
 }

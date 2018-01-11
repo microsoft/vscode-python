@@ -10,8 +10,8 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import { BannerService } from './banner';
-import * as settings from './common/configSettings';
 import { PythonSettings } from './common/configSettings';
+import * as settings from './common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
@@ -38,7 +38,6 @@ import { JediFactory } from './languageServices/jediProxyFactory';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
 import { PythonDefinitionProvider } from './providers/definitionProvider';
-import { activateExecInTerminalProvider } from './providers/execInTerminalProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { PythonHoverProvider } from './providers/hoverProvider';
 import { LintProvider } from './providers/lintProvider';
@@ -54,6 +53,8 @@ import * as sortImports from './sortImports';
 import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { StopWatch } from './telemetry/stopWatch';
+import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
+import { ICodeExecutionManager } from './terminals/types';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import * as tests from './unittests/main';
@@ -88,6 +89,9 @@ export async function activate(context: vscode.ExtensionContext) {
     formattersRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
+    commonRegisterTerminalTypes(serviceManager);
+
+    serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
@@ -108,7 +112,6 @@ export async function activate(context: vscode.ExtensionContext) {
     const processService = serviceContainer.get<IProcessService>(IProcessService);
     const interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
     context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService, processService));
-    context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
     const jediFactory = new JediFactory(context.asAbsolutePath('.'), serviceContainer);
