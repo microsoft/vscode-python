@@ -3,8 +3,6 @@
 'use strict';
 
 // tslint:disable-next-line:import-name
-import { transferPromiseness } from 'chai-as-promised';
-// tslint:disable-next-line:import-name
 import Char from 'typescript-char';
 import { isBinary, isDecimal, isHex, isIdentifierChar, isIdentifierStartChar, isOctal } from './characters';
 import { CharacterStream } from './characterStream';
@@ -223,7 +221,7 @@ export class Tokenizer implements ITokenizer {
             this.cs.currentChar === Char.Plus || this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Period) {
             const candidate = this.cs.getText().substr(this.cs.position);
             const re = this.floatRegex.exec(candidate);
-            if (re.length > 0 && candidate.startsWith(re[0])) {
+            if (re && re.length > 0 && re[0] && candidate.startsWith(re[0])) {
                 this.tokens.push(new Token(TokenType.Number, start, re[0].length));
                 this.cs.position = start + re[0].length;
                 return true;
