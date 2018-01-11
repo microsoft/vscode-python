@@ -28,5 +28,4 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
     serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
-    serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
 }
