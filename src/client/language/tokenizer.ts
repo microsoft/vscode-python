@@ -3,7 +3,10 @@
 'use strict';
 
 // tslint:disable-next-line:import-name
+import { transferPromiseness } from 'chai-as-promised';
+// tslint:disable-next-line:import-name
 import Char from 'typescript-char';
+import { isBinary, isDecimal, isHex, isIdentifierChar, isIdentifierStartChar, isOctal } from './characters';
 import { CharacterStream } from './characterStream';
 import { TextRangeCollection } from './textRangeCollection';
 import { ICharacterStream, ITextRangeCollection, IToken, ITokenizer, TextRange, TokenType } from './types';
@@ -26,8 +29,20 @@ class Token extends TextRange implements IToken {
 }
 
 export class Tokenizer implements ITokenizer {
+    // private keywords = [
+    //     'and', 'assert', 'break', 'class', 'continue', 'def', 'del',
+    //     'elif', 'else', 'except', 'exec', 'False', 'finally', 'for', 'from',
+    //     'global', 'if', 'import', 'in', 'is', 'lambda', 'None', 'nonlocal',
+    //     'not', 'or', 'pass', 'print', 'raise', 'return', 'True', 'try',
+    //     'while', 'with', 'yield'
+    // ];
     private cs: ICharacterStream;
     private tokens: IToken[] = [];
+    private floatRegex = /[-+]?(?:(?:\d*\.\d+)|(?:\d+\.?))(?:[Ee][+-]?\d+)?/;
+
+    constructor() {
+        //this.floatRegex.compile();
+    }
 
     public Tokenize(text: string): ITextRangeCollection<IToken>;
     public Tokenize(text: string, start: number, length: number): ITextRangeCollection<IToken>;
@@ -79,8 +94,215 @@ export class Tokenizer implements ITokenizer {
             case Char.Hash:
                 this.handleComment();
                 break;
+            case Char.OpenParenthesis:
+                this.tokens.push(new Token(TokenType.OpenBrace, this.cs.position, 1));
+                break;
+            case Char.CloseParenthesis:
+                this.tokens.push(new Token(TokenType.CloseBrace, this.cs.position, 1));
+                break;
+            case Char.OpenBracket:
+                this.tokens.push(new Token(TokenType.OpenBracket, this.cs.position, 1));
+                break;
+            case Char.CloseBracket:
+                this.tokens.push(new Token(TokenType.CloseBracket, this.cs.position, 1));
+                break;
+            case Char.Comma:
+                this.tokens.push(new Token(TokenType.Comma, this.cs.position, 1));
+                break;
+            case Char.Semicolon:
+                this.tokens.push(new Token(TokenType.Semicolon, this.cs.position, 1));
+                break;
+            case Char.Colon:
+                this.tokens.push(new Token(TokenType.Colon, this.cs.position, 1));
+                break;
+            default:
+                if (this.isPossibleNumber()) {
+                    if (this.tryNumber()) {
+                        return true;
+                    }
+                }
+                if (!this.tryIdentifier()) {
+                    if (!this.tryOperator()) {
+                        this.handleUnknown();
+                    }
+                }
+                return true;
+        }
+        return false;
+    }
+
+    private tryIdentifier(): boolean {
+        const start = this.cs.position;
+        if (isIdentifierStartChar(this.cs.currentChar)) {
+            this.cs.moveNext();
+            while (isIdentifierChar(this.cs.currentChar)) {
+                this.cs.moveNext();
+            }
+        }
+        if (this.cs.position > start) {
+            // const text = this.cs.getText().substr(start, this.cs.position - start);
+            // const type = this.keywords.find((value, index) => value === text) ? TokenType.Keyword : TokenType.Identifier;
+            this.tokens.push(new Token(TokenType.Identifier, start, this.cs.position - start));
+            return true;
+        }
+        return false;
+    }
+
+    private isPossibleNumber(): boolean {
+        if (this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus) {
+            // Next character must be decimal or a dot otherwise
+            // it is not a number. No whitespace is allowed.
+            if (isDecimal(this.cs.nextChar) || this.cs.nextChar === Char.Period) {
+                // Check what previous token is, if any
+                if (this.tokens.length === 0) {
+                    // At the start of the file this can only be a number
+                    return true;
+                }
+
+                const prev = this.tokens[this.tokens.length - 1];
+                if (prev.type === TokenType.OpenBrace
+                    || prev.type === TokenType.OpenBracket
+                    || prev.type === TokenType.Comma
+                    || prev.type === TokenType.Semicolon
+                    || prev.type === TokenType.Operator) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (isDecimal(this.cs.currentChar)) {
+            return true;
+        }
+
+        if (this.cs.currentChar === Char.Period && isDecimal(this.cs.nextChar)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // tslint:disable-next-line:cyclomatic-complexity
+    private tryNumber(): boolean {
+        const start = this.cs.position;
+
+        if (this.cs.currentChar === Char._0) {
+            let radix = 0;
+            // Try hex
+            if (this.cs.nextChar === Char.x || this.cs.nextChar === Char.X) {
+                this.cs.advance(2);
+                while (isHex(this.cs.currentChar)) {
+                    this.cs.moveNext();
+                }
+                radix = 16;
+            }
+            // Try binary
+            if (this.cs.nextChar === Char.b || this.cs.nextChar === Char.B) {
+                this.cs.advance(2);
+                while (isBinary(this.cs.currentChar)) {
+                    this.cs.moveNext();
+                }
+                radix = 2;
+            }
+            // Try octal
+            if (this.cs.nextChar === Char.o || this.cs.nextChar === Char.O) {
+                this.cs.advance(2);
+                while (isOctal(this.cs.currentChar)) {
+                    this.cs.moveNext();
+                }
+                radix = 8;
+            }
+            const text = this.cs.getText().substr(start, this.cs.position - start);
+            if (radix > 0 && parseInt(text.substr(2), radix)) {
+                this.tokens.push(new Token(TokenType.Number, start, text.length));
+                return true;
+            }
+        }
+
+        if (isDecimal(this.cs.currentChar) ||
+            this.cs.currentChar === Char.Plus || this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Period) {
+            const candidate = this.cs.getText().substr(this.cs.position);
+            const re = this.floatRegex.exec(candidate);
+            if (re.length > 0 && candidate.startsWith(re[0])) {
+                this.tokens.push(new Token(TokenType.Number, start, re[0].length));
+                this.cs.position = start + re[0].length;
+                return true;
+            }
+        }
+
+        this.cs.position = start;
+        return false;
+    }
+
+    // tslint:disable-next-line:cyclomatic-complexity
+    private tryOperator(): boolean {
+        let length = 0;
+        const nextChar = this.cs.nextChar;
+        switch (this.cs.currentChar) {
+            case Char.Plus:
+            case Char.Hyphen:
+            case Char.Ampersand:
+            case Char.Bar:
+            case Char.Caret:
+            case Char.Equal:
+            case Char.ExclamationMark:
+            case Char.Equal:
+                length = nextChar === Char.Equal ? 2 : 1;
+                break;
+
+            case Char.Asterisk:
+                if (nextChar === Char.Asterisk) {
+                    length = this.cs.lookAhead(2) === Char.Equal ? 3 : 2;
+                } else {
+                    length = nextChar === Char.Equal ? 2 : 1;
+                }
+                break;
+
+            case Char.Slash:
+                if (nextChar === Char.Slash) {
+                    length = this.cs.lookAhead(2) === Char.Equal ? 3 : 2;
+                } else {
+                    length = nextChar === Char.Equal ? 2 : 1;
+                }
+                break;
+
+            case Char.Less:
+                if (nextChar === Char.Greater) {
+                    length = 2;
+                } else if (nextChar === Char.Less) {
+                    length = this.cs.lookAhead(2) === Char.Equal ? 3 : 2;
+                } else {
+                    length = 1;
+                }
+                break;
+
+            case Char.Greater:
+                if (nextChar === Char.Greater) {
+                    length = this.cs.lookAhead(2) === Char.Equal ? 3 : 2;
+                } else {
+                    length = 1;
+                }
+                break;
+
+            case Char.At:
+                length = nextChar === Char.Equal ? 2 : 0;
+                break;
+
             default:
                 break;
+        }
+        this.tokens.push(new Token(TokenType.Operator, this.cs.position, length));
+        this.cs.advance(length);
+        return length > 0;
+    }
+
+    private handleUnknown(): boolean {
+        const start = this.cs.position;
+        this.cs.skipToWhitespace();
+        const length = this.cs.position - start;
+        if (length > 0) {
+            this.tokens.push(new Token(TokenType.Unknown, start, length));
+            return true;
         }
         return false;
     }

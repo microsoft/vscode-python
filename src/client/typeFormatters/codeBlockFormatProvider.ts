@@ -1,15 +1,15 @@
-import { FormattingOptions, TextEdit, TextDocument } from 'vscode';
+import { FormattingOptions, TextDocument, TextEdit } from 'vscode';
 import { Position, Range, TextLine } from 'vscode';
 import { BlockRegEx } from './contracts';
 
 export class CodeBlockFormatProvider {
     constructor(private blockRegExp: BlockRegEx, private previousBlockRegExps: BlockRegEx[], private boundaryRegExps: BlockRegEx[]) {
     }
-    canProvideEdits(line: string): boolean {
+    public canProvideEdits(line: string): boolean {
         return this.blockRegExp.test(line);
     }
 
-    provideEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, line: TextLine): TextEdit[] {
+    public provideEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, line: TextLine): TextEdit[] {
         // We can have else for the following blocks:
         // if:
         // elif x:
@@ -17,7 +17,7 @@ export class CodeBlockFormatProvider {
         // while x:
 
         // We need to find a block statement that is less than or equal to this statement block (but not greater)
-        for (let lineNumber = position.line - 1; lineNumber >= 0; lineNumber--) {
+        for (let lineNumber = position.line - 1; lineNumber >= 0; lineNumber -= 1) {
             const prevLine = document.lineAt(lineNumber);
             const prevLineText = prevLine.text;
 
@@ -44,12 +44,12 @@ export class CodeBlockFormatProvider {
                 // current block cannot be at the same level as a preivous block
                 continue;
             }
+
             if (options.insertSpaces) {
                 return [
                     TextEdit.delete(new Range(startPosition, endPosition))
                 ];
-            }
-            else {
+            } else {
                 // Delete everything before the block and insert the same characters we have in the previous block
                 const prefixOfPreviousBlock = prevLineText.substring(0, startOfBlockInLine);
 

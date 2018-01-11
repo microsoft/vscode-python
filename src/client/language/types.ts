@@ -72,8 +72,20 @@ export interface ICharacterStream extends ITextIterator {
 }
 
 export enum TokenType {
+    Unknown,
     String,
-    Comment
+    Comment,
+    Keyword,
+    Number,
+    Identifier,
+    Operator,
+    Colon,
+    Semicolon,
+    Comma,
+    OpenBrace,
+    CloseBrace,
+    OpenBracket,
+    CloseBracket
 }
 
 export interface IToken extends ITextRange {

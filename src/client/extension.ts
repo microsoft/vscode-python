@@ -7,8 +7,8 @@ if ((Reflect as any).metadata === undefined) {
 }
 import { Container } from 'inversify';
 import * as os from 'os';
-import * as vscode from 'vscode';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
+import * as vscode from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
 import { PythonSettings } from './common/configSettings';
@@ -55,6 +55,7 @@ import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { StopWatch } from './telemetry/stopWatch';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
+import { OnEnterFormatter } from './typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import * as tests from './unittests/main';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
@@ -181,6 +182,8 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
 
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
+    context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
+
     // In case we have CR LF
     const triggerCharacters: string[] = os.EOL.split('');
     triggerCharacters.shift();
