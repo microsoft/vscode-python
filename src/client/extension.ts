@@ -26,7 +26,7 @@ import { registerTypes as variableRegisterTypes } from './common/variables/servi
 import { SimpleConfigurationProvider } from './debugger';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { InterpreterManager } from './interpreter';
-import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
+import { InterpreterSelector } from './interpreter/configuration/interpreterSelector';
 import { ICondaLocatorService, IInterpreterVersionService } from './interpreter/contracts';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
@@ -41,7 +41,7 @@ import { PythonDefinitionProvider } from './providers/definitionProvider';
 import { activateExecInTerminalProvider } from './providers/execInTerminalProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { PythonHoverProvider } from './providers/hoverProvider';
-import { LintProvider } from './providers/lintProvider';
+import { LinterProvider } from './providers/linterProvider';
 import { activateGoToObjectDefinitionProvider } from './providers/objectDefinitionProvider';
 import { PythonReferenceProvider } from './providers/referenceProvider';
 import { PythonRenameProvider } from './providers/renameProvider';
@@ -90,7 +90,6 @@ export async function activate(context: vscode.ExtensionContext) {
     installerRegisterTypes(serviceManager);
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
-    const pythonSettings = settings.PythonSettings.getInstance();
     sendStartupTelemetry(activated, serviceContainer);
 
     sortImports.activate(context, standardOutputChannel, serviceContainer);
@@ -105,39 +104,45 @@ export async function activate(context: vscode.ExtensionContext) {
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
     context.subscriptions.push(interpreterManager);
-    const processService = serviceContainer.get<IProcessService>(IProcessService);
+
     const interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-    context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService, processService));
+    const processService = serviceContainer.get<IProcessService>(IProcessService);
+
+    context.subscriptions.push(new InterpreterSelector(interpreterManager, interpreterVersionService, processService));
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
-    const jediFactory = new JediFactory(context.asAbsolutePath('.'), serviceContainer);
-    context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
     context.subscriptions.push(new ReplProvider(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)));
 
-    // Enable indentAction
-    // tslint:disable-next-line:no-non-null-assertion
-    vscode.languages.setLanguageConfiguration(PYTHON.language!, {
-        onEnterRules: [
-            {
-                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*/,
-                action: { indentAction: vscode.IndentAction.Indent }
-            },
-            {
-                beforeText: /^\s*#.*/,
-                afterText: /.+$/,
-                action: { indentAction: vscode.IndentAction.None, appendText: '# ' }
-            },
-            {
-                beforeText: /^\s+(continue|break|return)\b.*/,
-                afterText: /\s+$/,
-                action: { indentAction: vscode.IndentAction.Outdent }
-            }
-        ]
-    });
+    configureEditor(context, serviceContainer, unitTestOutChannel);
 
+    // tslint:disable-next-line:promise-function-async
+    const linterProvider = new LinterProvider(context, standardOutputChannel, (a, b) => Promise.resolve(false), serviceContainer);
+    context.subscriptions.push(linterProvider);
+
+    const jupyterExtInstalled = configureJupyter(linterProvider);
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
+    activationDeferred.resolve();
+
+    // tslint:disable-next-line:no-unused-expression
+    new BannerService(persistentStateFactory);
+
+    const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled);
+    deprecationMgr.initialize();
+    context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled));
+}
+
+function configureEditor(context: vscode.ExtensionContext, serviceContainer: ServiceContainer, unitTestOutChannel: OutputChannel) {
+    configureIndentActions();
+
+    const processService = serviceContainer.get<IProcessService>(IProcessService);
+    const pythonSettings = settings.PythonSettings.getInstance();
+
+    const jediFactory = new JediFactory(context.asAbsolutePath('.'), serviceContainer);
+    context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
     context.subscriptions.push(jediFactory);
+
     context.subscriptions.push(vscode.languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer)));
     const definitionProvider = new PythonDefinitionProvider(jediFactory);
     context.subscriptions.push(vscode.languages.registerDefinitionProvider(PYTHON, definitionProvider));
@@ -156,10 +161,14 @@ export async function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
         context.subscriptions.push(vscode.languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
     }
+    tests.activate(context, unitTestOutChannel, symbolProvider, serviceContainer);
 
-    // tslint:disable-next-line:promise-function-async
-    const linterProvider = new LintProvider(context, standardOutputChannel, (a, b) => Promise.resolve(false), serviceContainer);
-    context.subscriptions.push(linterProvider);
+    context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
+    context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
+}
+
+// tslint:disable-next-line:no-any
+function configureJupyter(linterProvider: LinterProvider): boolean {
     const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
     if (jupyterExtInstalled) {
         if (jupyterExtInstalled.isActive) {
@@ -175,25 +184,30 @@ export async function activate(context: vscode.ExtensionContext) {
             // tslint:disable-next-line:no-unsafe-any
             linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
         });
+        return true;
     }
-    tests.activate(context, unitTestOutChannel, symbolProvider, serviceContainer);
+    return false;
+}
 
-    context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
-
-    context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
-    // In case we have CR LF
-    const triggerCharacters: string[] = os.EOL.split('');
-    triggerCharacters.shift();
-
-    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
-    activationDeferred.resolve();
-
-    // tslint:disable-next-line:no-unused-expression
-    new BannerService(persistentStateFactory);
-
-    const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled);
-    deprecationMgr.initialize();
-    context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled));
+function configureIndentActions(): void {
+    vscode.languages.setLanguageConfiguration(PYTHON.language!, {
+        onEnterRules: [
+            {
+                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*/,
+                action: { indentAction: vscode.IndentAction.Indent }
+            },
+            {
+                beforeText: /^\s*#.*/,
+                afterText: /.+$/,
+                action: { indentAction: vscode.IndentAction.None, appendText: '# ' }
+            },
+            {
+                beforeText: /^\s+(continue|break|return)\b.*/,
+                afterText: /\s+$/,
+                action: { indentAction: vscode.IndentAction.Outdent }
+            }
+        ]
+    });
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {

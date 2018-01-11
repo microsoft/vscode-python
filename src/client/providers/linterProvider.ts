@@ -45,7 +45,7 @@ interface DocumentHasJupyterCodeCells {
     // tslint:disable-next-line:callable-types
     (doc: vscode.TextDocument, token: vscode.CancellationToken): Promise<Boolean>;
 }
-export class LintProvider implements vscode.Disposable {
+export class LinterProvider implements vscode.Disposable {
     private diagnosticCollection: vscode.DiagnosticCollection;
     private linters: linter.BaseLinter[] = [];
     private pendingLintings = new Map<string, vscode.CancellationTokenSource>();

@@ -3,20 +3,20 @@ import * as path from 'path';
 import { ILintingSettings, PythonSettings } from '../../client/common/configSettings';
 import { EnumEx } from '../../client/common/enumUtils';
 import { Product } from '../../client/common/types';
-import { LinterHelper } from '../../client/linters/helper';
+import { LinterCollection } from '../../client/linters/linterCollection';
 import { LinterId } from '../../client/linters/types';
 import { initialize } from '../initialize';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Linting - Helper', () => {
-    const linterHelper = new LinterHelper();
+    const linters = new LinterCollection();
     suiteSetup(initialize);
 
     test('Ensure product is set in Execution Info', async () => {
         [Product.flake8, Product.mypy, Product.pep8,
         Product.pydocstyle, Product.pylama, Product.pylint].forEach(linter => {
-            const info = linterHelper.getExecutionInfo(linter, []);
-            assert.equal(info.product, linter, `Incorrect products for ${linterHelper.translateToId(linter)}`);
+            const info = linters.getExecutionInfo(linter, []);
+            assert.equal(info.product, linter, `Incorrect products for ${linters.translateToId(linter)}`);
         });
     });
 
@@ -25,8 +25,8 @@ suite('Linting - Helper', () => {
 
         [Product.flake8, Product.mypy, Product.pep8,
         Product.pydocstyle, Product.pylama, Product.pylint].forEach(linter => {
-            const info = linterHelper.getExecutionInfo(linter, []);
-            const names = linterHelper.getSettingsPropertyNames(linter);
+            const info = linters.getExecutionInfo(linter, []);
+            const names = linters.getSettingsPropertyNames(linter);
             const execPath = settings.linting[names.pathName] as string;
             let moduleName: string | undefined;
             if (path.basename(execPath) === execPath && linter !== Product.prospector) {

@@ -9,8 +9,6 @@ export interface IErrorHandler {
     handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean>;
 }
 
-export const ILinterHelper = Symbol('ILinterHelper');
-
 export type LinterId = 'flake8' | 'mypy' | 'pep8' | 'prospector' | 'pydocstyle' | 'pylama' | 'pylint';
 
 export type LinterSettingsPropertyNames = {
@@ -19,8 +17,18 @@ export type LinterSettingsPropertyNames = {
     pathName: keyof ILintingSettings;
 };
 
-export interface ILinterHelper {
-    getExecutionInfo(linter: Product, customArgs: string[], resource?: Uri): ExecutionInfo;
-    translateToId(linter: Product): LinterId;
-    getSettingsPropertyNames(linter: Product): LinterSettingsPropertyNames;
+export interface ILinterInfo {
+    id: LinterId;
+    product: Product;
+}
+
+export interface ILinter extends ILinterInfo {
+    isEnabled(resource: Uri): boolean;
+    linterArgs(resource: Uri): string[];
+}
+
+export const ILinterManager = Symbol('ILinterManager');
+export interface ILinterManager {
+    getLinterInfos(): ILinterInfo[];
+    createLinter(info: ILinterInfo): ILinter;
 }

@@ -7,7 +7,8 @@ import { IPythonToolExecutionService } from '../common/process/types';
 import { ExecutionInfo, IInstaller, ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/main';
-import { ILinterHelper, LinterId } from './types';
+import { ILinterHelper, LinterId, ILinter } from './types';
+import { LinterInfo } from './linterInfo';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const namedRegexp = require('named-js-regexp');
 
@@ -46,26 +47,31 @@ export function matchNamedRegEx(data, regex): IRegexGroup | undefined {
 
     return undefined;
 }
-export abstract class BaseLinter {
-    public Id: LinterId;
+
+export abstract class BaseLinter extends LinterInfo implements ILinter {
+    private linterId: LinterId;
     private errorHandler: ErrorHandler;
     private _pythonSettings: IPythonSettings;
     protected get pythonSettings(): IPythonSettings {
         return this._pythonSettings;
     }
-    constructor(public product: Product, protected outputChannel: OutputChannel,
+    constructor(product: Product, protected outputChannel: OutputChannel,
         protected readonly installer: IInstaller,
         protected helper: ILinterHelper, protected logger: ILogger, protected serviceContainer: IServiceContainer,
         protected readonly columnOffset = 0) {
-        this.Id = this.helper.translateToId(product);
+        super(product);
+        this.linterId = this.helper.translateToId(product);
         this.errorHandler = new ErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
     }
-    public isEnabled(resource: Uri) {
+    public get id(): LinterId {
+        return this.linterId;
+    }
+    public isEnabled(resource: Uri): boolean {
         this._pythonSettings = PythonSettings.getInstance(resource);
         const names = this.helper.getSettingsPropertyNames(this.product);
         return this._pythonSettings.linting[names.enabledName] as boolean;
     }
-    public linterArgs(resource: Uri) {
+    public linterArgs(resource: Uri): string[] {
         this._pythonSettings = PythonSettings.getInstance(resource);
         const names = this.helper.getSettingsPropertyNames(this.product);
         return this._pythonSettings.linting[names.argsName] as string[];
@@ -83,6 +89,7 @@ export abstract class BaseLinter {
         this._pythonSettings = PythonSettings.getInstance(document.uri);
         return this.runLinter(document, cancellation);
     }
+
     protected getWorkspaceRootPath(document: vscode.TextDocument): string {
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
         const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
@@ -175,5 +182,31 @@ export abstract class BaseLinter {
     private displayLinterResultHeader(data: string) {
         this.outputChannel.append(`${'#'.repeat(10)}Linting Output - ${this.Id}${'#'.repeat(10)}\n`);
         this.outputChannel.append(data);
+    }
+    private getExecutionInfo(linter: Product, customArgs: string[], resource?: Uri): ExecutionInfo {
+        const settings = PythonSettings.getInstance(resource);
+        const names = this.getSettingsPropertyNames(linter);
+
+        const execPath = settings.linting[names.pathName] as string;
+        let args: string[] = Array.isArray(settings.linting[names.argsName]) ? settings.linting[names.argsName] as string[] : [];
+        args = args.concat(customArgs);
+
+        let moduleName: string | undefined;
+
+        // If path information is not available, then treat it as a module,
+        // Except for prospector as that needs to be run as an executable (its a python package).
+        if (path.basename(execPath) === execPath && linter !== Product.prospector) {
+            moduleName = execPath;
+        }
+
+        return { execPath, moduleName, args, product: linter };
+    }
+    private getSettingsPropertyNames(linter: Product): LinterSettingsPropertyNames {
+        const id = this.translateToId(linter);
+        return {
+            argsName: `${id}Args` as keyof ILintingSettings,
+            pathName: `${id}Path` as keyof ILintingSettings,
+            enabledName: `${id}Enabled` as keyof ILintingSettings
+        };
     }
 }
