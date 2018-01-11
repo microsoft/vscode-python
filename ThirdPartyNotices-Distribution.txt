@@ -10,8 +10,7 @@ Microsoft Python extension for Visual Studio Code incorporates components from t
 2.	Files from the Python Project (https://www.python.org/)
 3.	fuzzy (https://github.com/mattyork/fuzzy)
 4.	Get-port (https://github.com/sindresorhus/get-port)
-5.
-Go for Visual Studio Code (https://github.com/Microsoft/vscode-go)
+5.  Go for Visual Studio Code (https://github.com/Microsoft/vscode-go)
 6.	Google Diff Match and Patch  (https://github.com/GerHobbelt/google-diff-match-patch)
 7.	Iconv-lite (https://github.com/ashtuchkin/iconv-lite)
 8.	Inversify (https://github.com/inversify/InversifyJS)
