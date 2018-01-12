@@ -8,7 +8,6 @@ import { LinterErrors, PythonLanguage } from '../common/constants';
 import { IInstaller, ILogger } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import * as linter from '../linters/baseLinter';
-import { ILinterHelper } from '../linters/types';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { LINTING } from '../telemetry/constants';
 import { StopWatch } from '../telemetry/stopWatch';
@@ -72,18 +71,6 @@ export class LinterProvider implements vscode.Disposable {
 
     private initialize() {
         this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
-
-        const helper = this.serviceContainer.get<ILinterHelper>(ILinterHelper);
-        const installer = this.serviceContainer.get<IInstaller>(IInstaller);
-        const logger = this.serviceContainer.get<ILogger>(ILogger);
-
-        this.linters.push(new prospector.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
-        this.linters.push(new pylint.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
-        this.linters.push(new pep8.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
-        this.linters.push(new pylama.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
-        this.linters.push(new flake8.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
-        this.linters.push(new pydocstyle.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
-        this.linters.push(new mypy.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
 
         let disposable = vscode.workspace.onDidSaveTextDocument((e) => {
             const settings = PythonSettings.getInstance(e.uri);
@@ -189,16 +176,16 @@ export class LinterProvider implements vscode.Disposable {
         this.pendingLintings.set(document.uri.fsPath, cancelToken);
         this.outputChannel.clear();
         const promises: Promise<linter.ILintMessage[]>[] = this.linters
-            .filter(item => item.isEnabled(document.uri))
+            .filter(item => item.info.isEnabled(document.uri))
             .map(item => {
                 if (typeof workspaceRootPath !== 'string' && !settings.linting.enabledWithoutWorkspace) {
                     return Promise.resolve([]);
                 }
                 const stopWatch = new StopWatch();
                 const promise = item.lint(document, cancelToken.token);
-                const hasCustomArgs = item.linterArgs(document.uri).length > 0;
+                const hasCustomArgs = item.info.linterArgs(document.uri).length > 0;
                 const executableSpecified = item.isLinterExecutableSpecified(document.uri);
-                sendTelemetryWhenDone(LINTING, promise, stopWatch, { tool: item.Id, hasCustomArgs, trigger, executableSpecified });
+                sendTelemetryWhenDone(LINTING, promise, stopWatch, { tool: item.info.id, hasCustomArgs, trigger, executableSpecified });
                 return promise;
             });
         this.documentHasJupyterCodeCells(document, cancelToken.token)

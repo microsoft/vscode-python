@@ -9,12 +9,7 @@ import { IInstaller, ILogger, IOutputChannel } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { BaseLinter } from '../../client/linters/baseLinter';
 import * as baseLinter from '../../client/linters/baseLinter';
-import * as flake8 from '../../client/linters/flake8';
-import * as pep8 from '../../client/linters/pep8Linter';
-import * as prospector from '../../client/linters/prospector';
-import * as pydocstyle from '../../client/linters/pydocstyle';
-import * as pyLint from '../../client/linters/pylint';
-import { ILinterHelper } from '../../client/linters/types';
+import { LinterManager } from '../../client/linters/linterManager';
 import { deleteFile, PythonSettingKeys, rootWorkspaceUri, updateSetting } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { MockOutputChannel } from '../mockClasses';
@@ -124,44 +119,14 @@ suite('Linting', () => {
         ioc.registerVariableTypes();
     }
 
-    type LinterCtor = { new(outputChannel: OutputChannel, installer: IInstaller, helper: ILinterHelper, logger: ILogger, serviceContainer: IServiceContainer): BaseLinter };
-    function createLinter(linter: Product) {
+    function createLinter(product: Product) {
         const mockOutputChannel = ioc.serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
         const logger = ioc.serviceContainer.get<ILogger>(ILogger);
-        const linterHelper = ioc.serviceContainer.get<ILinterHelper>(ILinterHelper);
-
-        let linterCtor: LinterCtor;
-        switch (linter) {
-            case Product.pylint: {
-                linterCtor = pyLint.Linter;
-                break;
-            }
-            case Product.flake8: {
-                linterCtor = flake8.Linter;
-                break;
-            }
-            case Product.pep8: {
-                linterCtor = pep8.Linter;
-                break;
-            }
-            case Product.prospector: {
-                linterCtor = prospector.Linter;
-                break;
-            }
-            case Product.pydocstyle: {
-                linterCtor = pydocstyle.Linter;
-                break;
-            }
-            default: {
-                throw new Error('Not implemented for the unit tests');
-            }
-        }
-
-        if (linterCtor) {
-            return new linterCtor(mockOutputChannel, installer, linterHelper, logger, ioc.serviceContainer);
-        }
+        const linterManager = new LinterManager();
+        return linterManager.createLinter(product, mockOutputChannel, ioc.serviceContainer);
     }
+
     async function resetSettings() {
         // Don't run these updates in parallel, as they are updating the same file.
         await updateSetting('linting.enabled', true, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);

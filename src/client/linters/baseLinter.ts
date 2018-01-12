@@ -1,14 +1,14 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
-import { IPythonSettings, PythonSettings } from '../common/configSettings';
+import { ILintingSettings, IPythonSettings, PythonSettings } from '../common/configSettings';
 import '../common/extensions';
 import { IPythonToolExecutionService } from '../common/process/types';
 import { ExecutionInfo, IInstaller, ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { ErrorHandler } from './errorHandlers/main';
-import { ILinterHelper, LinterId, ILinter } from './types';
-import { LinterInfo } from './linterInfo';
+import { ErrorHandler } from './errorHandlers/errorHandler';
+import { ILinter, ILinterInfo, ILinterManager, LinterId } from './types';
+
 // tslint:disable-next-line:no-require-imports no-var-requires
 const namedRegexp = require('named-js-regexp');
 
@@ -48,42 +48,33 @@ export function matchNamedRegEx(data, regex): IRegexGroup | undefined {
     return undefined;
 }
 
-export abstract class BaseLinter extends LinterInfo implements ILinter {
-    private linterId: LinterId;
+export abstract class BaseLinter implements ILinter {
     private errorHandler: ErrorHandler;
     private _pythonSettings: IPythonSettings;
+    private _info: ILinterInfo;
+
     protected get pythonSettings(): IPythonSettings {
         return this._pythonSettings;
     }
-    constructor(product: Product, protected outputChannel: OutputChannel,
-        protected readonly installer: IInstaller,
-        protected helper: ILinterHelper, protected logger: ILogger, protected serviceContainer: IServiceContainer,
+
+    constructor(product: Product,
+        protected readonly outputChannel: OutputChannel,
+        protected readonly serviceContainer: IServiceContainer,
         protected readonly columnOffset = 0) {
-        super(product);
-        this.linterId = this.helper.translateToId(product);
-        this.errorHandler = new ErrorHandler(product, installer, helper, logger, outputChannel, serviceContainer);
+        this._info = serviceContainer.get<ILinterManager>(ILinterManager).getLinterInfo(product);
+        this.errorHandler = new ErrorHandler(this.info.product, outputChannel, serviceContainer);
     }
-    public get id(): LinterId {
-        return this.linterId;
+
+    public get info(): ILinterInfo {
+        return this._info;
     }
-    public isEnabled(resource: Uri): boolean {
-        this._pythonSettings = PythonSettings.getInstance(resource);
-        const names = this.helper.getSettingsPropertyNames(this.product);
-        return this._pythonSettings.linting[names.enabledName] as boolean;
-    }
-    public linterArgs(resource: Uri): string[] {
-        this._pythonSettings = PythonSettings.getInstance(resource);
-        const names = this.helper.getSettingsPropertyNames(this.product);
-        return this._pythonSettings.linting[names.argsName] as string[];
-    }
+
     public isLinterExecutableSpecified(resource: Uri) {
-        this._pythonSettings = PythonSettings.getInstance(resource);
-        const names = this.helper.getSettingsPropertyNames(this.product);
-        const executablePath = this._pythonSettings.linting[names.pathName] as string;
+        const executablePath = this.info.pathName(resource);
         return path.basename(executablePath).length > 0 && path.basename(executablePath) !== executablePath;
     }
     public async lint(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]> {
-        if (!this.isEnabled(document.uri)) {
+        if (!this.info.isEnabled(document.uri)) {
             return [];
         }
         this._pythonSettings = PythonSettings.getInstance(document.uri);
@@ -95,7 +86,11 @@ export abstract class BaseLinter extends LinterInfo implements ILinter {
         const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
         return typeof workspaceRootPath === 'string' ? workspaceRootPath : __dirname;
     }
+    protected get logger(): ILogger {
+        return this.serviceContainer.get<ILogger>(ILogger);
+    }
     protected abstract runLinter(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]>;
+
     // tslint:disable-next-line:no-any
     protected parseMessagesSeverity(error: string, categorySeverity: any): LintMessageSeverity {
         if (categorySeverity[error]) {
@@ -117,9 +112,9 @@ export abstract class BaseLinter extends LinterInfo implements ILinter {
                 }
             }
         }
-
         return LintMessageSeverity.Information;
     }
+
     protected async run(args: string[], document: vscode.TextDocument, cancellation: vscode.CancellationToken, regEx: string = REGEX): Promise<ILintMessage[]> {
         const executionInfo = this.helper.getExecutionInfo(this.product, args, document.uri);
         const cwd = this.getWorkspaceRootPath(document);
@@ -133,10 +128,12 @@ export abstract class BaseLinter extends LinterInfo implements ILinter {
             return [];
         }
     }
+
     protected async parseMessages(output: string, document: TextDocument, token: CancellationToken, regEx: string) {
         const outputLines = output.splitLines({ removeEmptyEntries: false, trim: false });
         return this.parseLines(outputLines, regEx);
     }
+
     protected handleError(error: Error, resource: Uri, execInfo: ExecutionInfo) {
         this.errorHandler.handleError(error, resource, execInfo)
             .catch(this.logger.logError.bind(this, 'Error in errorHandler.handleError'));
@@ -159,9 +156,10 @@ export abstract class BaseLinter extends LinterInfo implements ILinter {
             column: isNaN(match.column) || match.column === 0 ? 0 : match.column - this.columnOffset,
             line: match.line,
             type: match.type,
-            provider: this.Id
+            provider: this.info.id
         };
     }
+
     private parseLines(outputLines: string[], regEx: string): ILintMessage[] {
         return outputLines
             .filter((value, index) => index <= this.pythonSettings.linting.maxNumberOfProblems)
@@ -172,23 +170,25 @@ export abstract class BaseLinter extends LinterInfo implements ILinter {
                         return msg;
                     }
                 } catch (ex) {
-                    this.logger.logError(`Linter '${this.Id}' failed to parse the line '${line}.`, ex);
+                    this.logger.logError(`Linter '${this.info.id}' failed to parse the line '${line}.`, ex);
                 }
                 return;
             })
             .filter(item => item !== undefined)
             .map(item => item!);
     }
+
     private displayLinterResultHeader(data: string) {
-        this.outputChannel.append(`${'#'.repeat(10)}Linting Output - ${this.Id}${'#'.repeat(10)}\n`);
+        this.outputChannel.append(`${'#'.repeat(10)}Linting Output - ${this.info.id}${'#'.repeat(10)}\n`);
         this.outputChannel.append(data);
     }
+
     private getExecutionInfo(linter: Product, customArgs: string[], resource?: Uri): ExecutionInfo {
         const settings = PythonSettings.getInstance(resource);
-        const names = this.getSettingsPropertyNames(linter);
 
-        const execPath = settings.linting[names.pathName] as string;
-        let args: string[] = Array.isArray(settings.linting[names.argsName]) ? settings.linting[names.argsName] as string[] : [];
+        const execPath = this.info.pathName(resource);
+        const linterArgs = this.info.linterArgs;
+        let args: string[] = Array.isArray(linterArgs) ? linterArgs as string[] : [];
         args = args.concat(customArgs);
 
         let moduleName: string | undefined;
@@ -200,13 +200,5 @@ export abstract class BaseLinter extends LinterInfo implements ILinter {
         }
 
         return { execPath, moduleName, args, product: linter };
-    }
-    private getSettingsPropertyNames(linter: Product): LinterSettingsPropertyNames {
-        const id = this.translateToId(linter);
-        return {
-            argsName: `${id}Args` as keyof ILintingSettings,
-            pathName: `${id}Path` as keyof ILintingSettings,
-            enabledName: `${id}Enabled` as keyof ILintingSettings
-        };
     }
 }

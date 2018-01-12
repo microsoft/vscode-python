@@ -3,20 +3,21 @@ import * as path from 'path';
 import { ILintingSettings, PythonSettings } from '../../client/common/configSettings';
 import { EnumEx } from '../../client/common/enumUtils';
 import { Product } from '../../client/common/types';
-import { LinterCollection } from '../../client/linters/linterCollection';
+import { LinterManager } from '../../client/linters/linterManager';
 import { LinterId } from '../../client/linters/types';
 import { initialize } from '../initialize';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Linting - Helper', () => {
-    const linters = new LinterCollection();
+suite('Linting - Manager', () => {
+    const lm = new LinterManager();
     suiteSetup(initialize);
 
     test('Ensure product is set in Execution Info', async () => {
         [Product.flake8, Product.mypy, Product.pep8,
-        Product.pydocstyle, Product.pylama, Product.pylint].forEach(linter => {
-            const info = linters.getExecutionInfo(linter, []);
-            assert.equal(info.product, linter, `Incorrect products for ${linters.translateToId(linter)}`);
+            Product.pydocstyle, Product.pylama, Product.pylint].forEach(product => {
+            const info = lm.getLinterInfo(product);
+            const execInfo = info.getExecutionInfo([]);
+            assert.equal(info.product, product, `Incorrect information for ${product}`);
         });
     });
 
@@ -24,16 +25,15 @@ suite('Linting - Helper', () => {
         const settings = PythonSettings.getInstance();
 
         [Product.flake8, Product.mypy, Product.pep8,
-        Product.pydocstyle, Product.pylama, Product.pylint].forEach(linter => {
-            const info = linters.getExecutionInfo(linter, []);
-            const names = linters.getSettingsPropertyNames(linter);
-            const execPath = settings.linting[names.pathName] as string;
+        Product.pydocstyle, Product.pylama, Product.pylint].forEach(product => {
+            const info = lm.getLinterInfo(product);
+            const execInfo = info.getExecutionInfo([]);
+            const execPath = settings.linting[info.pathSettingName] as string;
             let moduleName: string | undefined;
-            if (path.basename(execPath) === execPath && linter !== Product.prospector) {
+            if (path.basename(execPath) === execPath && info.product !== Product.prospector) {
                 moduleName = execPath;
             }
-
-            assert.equal(info.execPath, execPath, `Incorrect executable paths for product ${linterHelper.translateToId(linter)}`);
+            assert.equal(execInfo.execPath, execPath, `Incorrect executable paths for product ${info.id}`);
         });
     });
 
@@ -42,32 +42,33 @@ suite('Linting - Helper', () => {
         const customArgs = ['1', '2', '3'];
 
         [Product.flake8, Product.mypy, Product.pep8,
-        Product.pydocstyle, Product.pylama, Product.pylint].forEach(linter => {
-            const info = linterHelper.getExecutionInfo(linter, []);
-            const names = linterHelper.getSettingsPropertyNames(linter);
-            const args: string[] = Array.isArray(settings.linting[names.argsName]) ? settings.linting[names.argsName] as string[] : [];
-            const expectedArgs = args.concat(customArgs).join(',');
+        Product.pydocstyle, Product.pylama, Product.pylint].forEach(product => {
+            const linter = lm.getLinterInfo(product);
+            const execInfo = linter.getExecutionInfo([]);
+            const args: string[] = Array.isArray(settings.linting[linter.argsSettingName]) ? settings.linting[linter.argsSettingName] as string[] : [];
+            const expectedArgs = args.join(',');
 
-            assert.equal(expectedArgs.endsWith(customArgs.join(',')), true, `Incorrect custom arguments for product ${linterHelper.translateToId(linter)}`);
-
+            assert.equal(expectedArgs.endsWith(customArgs.join(',')), true, `Incorrect custom arguments for product ${linter.id}`);
         });
     });
 
     test('Ensure correct setting names are returned', async () => {
         [Product.flake8, Product.mypy, Product.pep8,
-        Product.pydocstyle, Product.pylama, Product.pylint].forEach(linter => {
-            const translatedId = linterHelper.translateToId(linter)!;
+        Product.pydocstyle, Product.pylama, Product.pylint].forEach(product => {
+            const linter = lm.getLinterInfo(product);
             const settings = {
-                argsName: `${translatedId}Args` as keyof ILintingSettings,
-                pathName: `${translatedId}Path` as keyof ILintingSettings,
-                enabledName: `${translatedId}Enabled` as keyof ILintingSettings
+                argsName: `${linter.id}Args` as keyof ILintingSettings,
+                pathName: `${linter.id}Path` as keyof ILintingSettings,
+                enabledName: `${linter.id}Enabled` as keyof ILintingSettings
             };
 
-            assert.deepEqual(linterHelper.getSettingsPropertyNames(linter), settings, `Incorrect settings for product ${linterHelper.translateToId(linter)}`);
+            assert.equal(linter.argsSettingName, settings.argsName, `Incorrect args settings for product ${linter.id}`);
+            assert.equal(linter.pathSettingName, settings.pathName, `Incorrect path settings for product ${linter.id}`);
+            assert.equal(linter.enabledSettingName, settings.enabledName, `Incorrect enabled settings for product ${linter.id}`);
         });
     });
 
-    test('Ensure translation of ids works', async () => {
+    test('Ensure ids match products', async () => {
         const linterIdMapping = new Map<Product, LinterId>();
         linterIdMapping.set(Product.flake8, 'flake8');
         linterIdMapping.set(Product.mypy, 'mypy');
@@ -78,9 +79,9 @@ suite('Linting - Helper', () => {
         linterIdMapping.set(Product.pylint, 'pylint');
 
         [Product.flake8, Product.mypy, Product.pep8,
-        Product.pydocstyle, Product.pylama, Product.pylint].forEach(linter => {
-            const translatedId = linterHelper.translateToId(linter);
-            assert.equal(translatedId, linterIdMapping.get(linter)!, `Incorrect translation for product ${linterHelper.translateToId(linter)}`);
+        Product.pydocstyle, Product.pylama, Product.pylint].forEach(product => {
+            const linter = lm.getLinterInfo(product);
+            assert.equal(linter.id, linterIdMapping.get(product)!, `Incorrect translation for product ${linter.id}`);
         });
     });
 

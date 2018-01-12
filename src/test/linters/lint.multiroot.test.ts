@@ -4,9 +4,8 @@ import { CancellationTokenSource, ConfigurationTarget, OutputChannel, Uri, windo
 import { PythonSettings } from '../../client/common/configSettings';
 import { IInstaller, ILogger, IOutputChannel, Product } from '../../client/common/types';
 import * as baseLinter from '../../client/linters/baseLinter';
-import * as flake8 from '../../client/linters/flake8';
-import * as pyLint from '../../client/linters/pylint';
-import { ILinterHelper } from '../../client/linters/types';
+import { LinterManager } from '../../client/linters/linterManager';
+import { ILinter } from '../../client/linters/types';
 import { TEST_OUTPUT_CHANNEL } from '../../client/unittests/common/constants';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -41,24 +40,11 @@ suite('Multiroot Linting', () => {
         ioc.registerVariableTypes();
     }
 
-    function createLinter(linter: Product) {
+    function createLinter(linter: Product): ILinter {
         const mockOutputChannel = ioc.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
-        const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
-        const logger = ioc.serviceContainer.get<ILogger>(ILogger);
-        const linterHelper = ioc.serviceContainer.get<ILinterHelper>(ILinterHelper);
-        switch (linter) {
-            case Product.pylint: {
-                return new pyLint.Linter(mockOutputChannel, installer, linterHelper, logger, ioc.serviceContainer);
-            }
-            case Product.flake8: {
-                return new flake8.Linter(mockOutputChannel, installer, linterHelper, logger, ioc.serviceContainer);
-            }
-            default: {
-                throw new Error('Not implemented for the unit tests');
-            }
-        }
+        return new LinterManager().createLinter(linter, mockOutputChannel, ioc.serviceContainer);
     }
-    async function testLinterInWorkspaceFolder(linter: baseLinter.BaseLinter, workspaceFolderRelativePath: string, mustHaveErrors: boolean) {
+    async function testLinterInWorkspaceFolder(linter: ILinter, workspaceFolderRelativePath: string, mustHaveErrors: boolean) {
         const fileToLint = path.join(multirootPath, workspaceFolderRelativePath, 'file.py');
         const cancelToken = new CancellationTokenSource();
         const document = await workspace.openTextDocument(fileToLint);

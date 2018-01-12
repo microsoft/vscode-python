@@ -5,7 +5,7 @@ import { ConfigurationTarget, QuickPickItem, Uri, window, workspace } from 'vsco
 import * as vscode from 'vscode';
 import { IFormatterHelper } from '../../formatters/types';
 import { IServiceContainer } from '../../ioc/types';
-import { ILinterCollection } from '../../linters/types';
+import { ILinterManager } from '../../linters/types';
 import { ITestsHelper } from '../../unittests/common/types';
 import { PythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
@@ -301,9 +301,8 @@ export class Installer implements IInstaller {
             }
             case ProductType.RefactoringLibrary: return this.translateProductToModuleName(product, ModuleNamePurpose.run);
             case ProductType.Linter: {
-                const linterHelper = this.serviceContainer.get<ILinterCollection>(ILinterCollection);
-                const settingsPropNames = linterHelper.getSettingsPropertyNames(product);
-                return settings.linting[settingsPropNames.pathName] as string;
+                const linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
+                return linterManager.getLinterInfo(product).pathName(resource);
             }
             default: {
                 throw new Error(`Unrecognized Product '${product}'`);

@@ -1,41 +1,61 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Product } from '../common/types';
+import * as path from 'path';
+import { Uri } from 'vscode';
+import { ILintingSettings, PythonSettings } from '../common/configSettings';
+import { ExecutionInfo, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
-import { Linter } from './pep8Linter';
-
-let linters: ILinterInfo[];
-
-export function getLinterInfos(): ILinterInfo {
-    if (!linters) {
-        LinterInfo.linterIdMapping = new Map<Product, LinterId>();
-
-        this.linterIdMapping.set(Product.flake8, 'flake8');
-        this.linterIdMapping.set(Product.mypy, 'mypy');
-        this.linterIdMapping.set(Product.pep8, 'pep8');
-        this.linterIdMapping.set(Product.prospector, 'prospector');
-        this.linterIdMapping.set(Product.pydocstyle, 'pydocstyle');
-        this.linterIdMapping.set(Product.pylama, 'pylama');
-        this.linterIdMapping.set(Product.pylint, 'pylint');
-    }
-}
 
 export class LinterInfo implements ILinterInfo {
-
     private _id: LinterId;
     private _product: Product;
 
-    constructor(product: Product) {
-        LinterInfo.initialize();
+    constructor(product: Product, id: LinterId) {
         this._product = product;
-        this._id = LinterInfo.linterIdMapping[product];
+        this._id = id;
     }
-
     public get id(): LinterId {
         return this._id;
     }
     public get product(): Product {
         return this._product;
+    }
+
+    public get pathSettingName(): string {
+        return `${this.id}Path`;
+    }
+    public get argsSettingName(): string {
+        return `${this.id}Args`;
+    }
+    public get enabledSettingName(): string {
+        return `${this.id}Enabled`;
+    }
+
+    public pathName(resource?: Uri): string {
+        const settings = PythonSettings.getInstance(resource);
+        return settings.linting[this.pathSettingName] as string;
+    }
+    public isEnabled(resource?: Uri): boolean {
+        const settings = PythonSettings.getInstance(resource);
+        return settings.linting[this.enabledSettingName] as boolean;
+    }
+    public linterArgs(resource?: Uri): string[] {
+        const settings = PythonSettings.getInstance(resource);
+        const args = settings.linting[this.argsSettingName];
+        return Array.isArray(args) ? args as string[] : [];
+    }
+    public getExecutionInfo(customArgs: string[], resource?: Uri): ExecutionInfo {
+        const execPath = this.pathName(resource);
+        const args = this.linterArgs(resource).concat(customArgs);
+        let moduleName: string | undefined;
+
+        // If path information is not available, then treat it as a module,
+        // Except for prospector as that needs to be run as an executable (its a python package).
+        if (path.basename(execPath) === execPath && this.product !== Product.prospector) {
+            moduleName = execPath;
+        }
+
+        return { execPath, moduleName, args, product: this.product };
     }
 }
