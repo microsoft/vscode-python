@@ -64,7 +64,9 @@
 		"onCommand:python.buildWorkspaceSymbols",
 		"onCommand:python.updateSparkLibrary",
 		"onCommand:python.startREPL",
-		"onCommand:python.goToPythonObject"
+		"onCommand:python.goToPythonObject",
+		"onCommand:python.setLinter",
+		"onCommand:python.enableLinting"
 	],
 	"main": "./out/client/extension",
 	"contributes": {
@@ -200,6 +202,16 @@
 			{
 				"command": "python.goToPythonObject",
 				"title": "%python.command.python.goToPythonObject.title%",
+				"category": "Python"
+			},
+			{
+				"command": "python.setLinter",
+				"title": "%python.command.python.setLinter.title%",
+				"category": "Python"
+			},
+			{
+				"command": "python.enableLinting",
+				"title": "%python.command.python.enableLinting.title%",
 				"category": "Python"
 			}
 		],

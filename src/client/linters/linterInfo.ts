@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { ILintingSettings, PythonSettings } from '../common/configSettings';
+import { PythonSettings } from '../common/configSettings';
 import { ExecutionInfo, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
 
@@ -32,6 +32,10 @@ export class LinterInfo implements ILinterInfo {
         return `${this.id}Enabled`;
     }
 
+    public enable(enabled: boolean, resource?: Uri): void {
+        const settings = PythonSettings.getInstance(resource);
+        settings.linting[this.enabledSettingName] = enabled;
+    }
     public pathName(resource?: Uri): string {
         const settings = PythonSettings.getInstance(resource);
         return settings.linting[this.pathSettingName] as string;

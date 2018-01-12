@@ -23,6 +23,8 @@
     "python.command.jupyter.gotToPreviousCell.title": "Перейти к предыдущей ячейке",
     "python.command.jupyter.gotToNextCell.title": "Перейти к следующей ячейке",
     "python.command.python.goToPythonObject.title": "Перейти к объекту Python",
+    "python.command.python.setLinter.title": "Выбрать анализатор кода",
+    "python.command.python.enableLinting.title": "Включить анализатор кода",
 	"python.snippet.launch.standard.label": "Python",
 	"python.snippet.launch.standard.description": "Отладить программу Python со стандартным выводом",
 	"python.snippet.launch.pyspark.label": "Python: PySpark",

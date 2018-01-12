@@ -23,6 +23,8 @@
     "python.command.jupyter.gotToPreviousCell.title": "Go to Previous Cell",
     "python.command.jupyter.gotToNextCell.title": "Go to Next Cell",
     "python.command.python.goToPythonObject.title": "Go to Python Object",
+    "python.command.python.setLinter.title": "Select Linter",
+    "python.command.python.enableLinting.title": "Enable Linting",
 	"python.snippet.launch.standard.label": "Python",
 	"python.snippet.launch.standard.description": "Debug a Python program with standard output",
 	"python.snippet.launch.pyspark.label": "Python: PySpark",

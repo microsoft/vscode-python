@@ -1,13 +1,13 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
-import { ILintingSettings, IPythonSettings, PythonSettings } from '../common/configSettings';
+import { IPythonSettings, PythonSettings } from '../common/configSettings';
 import '../common/extensions';
 import { IPythonToolExecutionService } from '../common/process/types';
-import { ExecutionInfo, IInstaller, ILogger, Product } from '../common/types';
+import { ExecutionInfo, ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/errorHandler';
-import { ILinter, ILinterInfo, ILinterManager, LinterId } from './types';
+import { ILinter, ILinterInfo, ILinterManager } from './types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const namedRegexp = require('named-js-regexp');
@@ -116,7 +116,7 @@ export abstract class BaseLinter implements ILinter {
     }
 
     protected async run(args: string[], document: vscode.TextDocument, cancellation: vscode.CancellationToken, regEx: string = REGEX): Promise<ILintMessage[]> {
-        const executionInfo = this.helper.getExecutionInfo(this.product, args, document.uri);
+        const executionInfo = this.getExecutionInfo(this.info.product, args, document.uri);
         const cwd = this.getWorkspaceRootPath(document);
         const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
         try {
@@ -184,8 +184,6 @@ export abstract class BaseLinter implements ILinter {
     }
 
     private getExecutionInfo(linter: Product, customArgs: string[], resource?: Uri): ExecutionInfo {
-        const settings = PythonSettings.getInstance(resource);
-
         const execPath = this.info.pathName(resource);
         const linterArgs = this.info.linterArgs;
         let args: string[] = Array.isArray(linterArgs) ? linterArgs as string[] : [];

@@ -29,6 +29,7 @@ export namespace Commands {
     export const Build_Workspace_Symbols = 'python.buildWorkspaceSymbols';
     export const Start_REPL = 'python.startREPL';
     export const Set_Linter = 'python.setLinter';
+    export const Enable_Linter = 'python.enableLinter';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';

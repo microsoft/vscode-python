@@ -1,25 +1,70 @@
-import * as path from 'path';
-import { commands, ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri, window, workspace } from 'vscode';
-import { Commands } from '../common/constants';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
-// tslint:disable-next-line:interface-name
-interface ILinterQuickPickItem extends QuickPickItem {
-    path: string;
-}
+import { commands, ConfigurationTarget, Disposable, QuickPickOptions, window, workspace } from 'vscode';
+import { Commands } from '../common/constants';
+import { WorkspacePythonPath } from '../interpreter/contracts';
+import { IServiceContainer } from '../ioc/types';
+import { ILinterManager } from './types';
 
 export class LinterSelector implements Disposable {
     private disposables: Disposable[] = [];
-    private pythonPathUpdaterService: PythonPathUpdaterService;
-    constructor(private interpreterManager: InterpreterManager,
-        interpreterVersionService: IInterpreterVersionService,
-        private processService: IProcessService) {
+    private linterManager: ILinterManager;
+
+    constructor(private serviceContainer: IServiceContainer) {
+        this.linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
         this.disposables.push(commands.registerCommand(Commands.Set_Linter, this.setLinter.bind(this)));
-        this.disposables.push(commands.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this)));
-        this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), interpreterVersionService);
+        this.disposables.push(commands.registerCommand(Commands.Enable_Linter, this.enableLinting.bind(this)));
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
     }
+
+    private async setLinter(): Promise<void> {
+        const wks = await this.getWorkspaceToSetPythonPath();
+        const workspaceUri = wks ? wks.folderUri : undefined;
+
+        const linters = this.linterManager.getAllLinterInfos();
+        const suggestions = linters.map(x => x.id).sort();
+        const currentLinter = linters.find(x => x.isEnabled(workspaceUri));
+        const current = currentLinter ? currentLinter.id : 'none';
+
+        const quickPickOptions: QuickPickOptions = {
+            matchOnDetail: true,
+            matchOnDescription: true,
+            placeHolder: `current: ${current}`
+        };
+
+        const selection = await window.showQuickPick(suggestions, quickPickOptions);
+        if (selection !== undefined) {
+            const newLinter = linters.find(x => x.id === selection);
+            if (currentLinter) {
+                currentLinter.enable(false, workspaceUri);
+            }
+            if (newLinter) {
+                newLinter.enable(true, workspaceUri);
+            }
+        }
+    }
+
+    private async enableLinting(): Promise<void> {
+        const options = ['on', 'off'];
+        const wks = await this.getWorkspaceToSetPythonPath();
+        const workspaceUri = wks ? wks.folderUri : undefined;
+        const current = this.linterManager.isLintingEnabled(workspaceUri) ? options[0] : options[1];
+
+        const quickPickOptions: QuickPickOptions = {
+            matchOnDetail: true,
+            matchOnDescription: true,
+            placeHolder: `current: ${current}`
+        };
+
+        const selection = await window.showQuickPick(options, quickPickOptions);
+        if (selection !== undefined) {
+            this.linterManager.enableLinting(selection === options[0], workspaceUri);
+        }
+    }
+
     private async getWorkspaceToSetPythonPath(): Promise<WorkspacePythonPath | undefined> {
         if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
             return undefined;
@@ -32,78 +77,5 @@ export class LinterSelector implements Disposable {
         // tslint:disable-next-line:no-any prefer-type-cast
         const workspaceFolder = await (window as any).showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
         return workspaceFolder ? { folderUri: workspaceFolder.uri, configTarget: ConfigurationTarget.WorkspaceFolder } : undefined;
-    }
-    private async suggestionToQuickPickItem(suggestion: PythonInterpreter, workspaceUri?: Uri): Promise<IInterpreterQuickPickItem> {
-        let detail = suggestion.path;
-        if (workspaceUri && suggestion.path.startsWith(workspaceUri.fsPath)) {
-            detail = `.${path.sep}${path.relative(workspaceUri.fsPath, suggestion.path)}`;
-        }
-        return {
-            // tslint:disable-next-line:no-non-null-assertion
-            label: suggestion.displayName!,
-            description: suggestion.companyDisplayName || '',
-            detail: detail,
-            path: suggestion.path
-        };
-    }
-
-    private async getSuggestions(resourceUri?: Uri) {
-        const interpreters = await this.interpreterManager.getInterpreters(resourceUri);
-        // tslint:disable-next-line:no-non-null-assertion
-        interpreters.sort((a, b) => a.displayName! > b.displayName! ? 1 : -1);
-        return Promise.all(interpreters.map(item => this.suggestionToQuickPickItem(item, resourceUri)));
-    }
-
-    private async setLinter() {
-        const setInterpreterGlobally = !Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0;
-        let configTarget = ConfigurationTarget.Global;
-        let wkspace: Uri | undefined;
-        if (!setInterpreterGlobally) {
-            const targetConfig = await this.getWorkspaceToSetPythonPath();
-            if (!targetConfig) {
-                return;
-            }
-            configTarget = targetConfig.configTarget;
-            wkspace = targetConfig.folderUri;
-        }
-
-        const suggestions = await this.getSuggestions(wkspace);
-        let currentPythonPath = settings.PythonSettings.getInstance().pythonPath;
-        if (wkspace && currentPythonPath.startsWith(wkspace.fsPath)) {
-            currentPythonPath = `.${path.sep}${path.relative(wkspace.fsPath, currentPythonPath)}`;
-        }
-        const quickPickOptions: QuickPickOptions = {
-            matchOnDetail: true,
-            matchOnDescription: true,
-            placeHolder: `current: ${currentPythonPath}`
-        };
-
-        const selection = await window.showQuickPick(suggestions, quickPickOptions);
-        if (selection !== undefined) {
-            await this.pythonPathUpdaterService.updatePythonPath(selection.path, configTarget, 'ui', wkspace);
-        }
-    }
-
-    private async setShebangInterpreter(): Promise<void> {
-        const shebang = await new ShebangCodeLensProvider(this.processService).detectShebang(window.activeTextEditor!.document);
-        if (!shebang) {
-            return;
-        }
-
-        const isGlobalChange = !Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0;
-        const workspaceFolder = workspace.getWorkspaceFolder(window.activeTextEditor!.document.uri);
-        const isWorkspaceChange = Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length === 1;
-
-        if (isGlobalChange) {
-            await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Global, 'shebang');
-            return;
-        }
-
-        if (isWorkspaceChange || !workspaceFolder) {
-            await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Workspace, 'shebang', workspace.workspaceFolders![0].uri);
-            return;
-        }
-
-        await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.WorkspaceFolder, 'shebang', workspaceFolder.uri);
     }
 }

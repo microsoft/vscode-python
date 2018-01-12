@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { OutputChannel } from 'vscode';
+import { OutputChannel, Uri } from 'vscode';
+import { PythonSettings } from '../common/configSettings';
 import { ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Flake8 } from './flake8';
@@ -17,6 +18,7 @@ import { ILinter, ILinterInfo, ILinterManager } from './types';
 
 @injectable()
 export class LinterManager implements ILinterManager {
+    private lintingEnabledSettingName = 'enabled';
     private linters: ILinterInfo[] = [
         new LinterInfo(Product.pylint, 'pylint'),
         new LinterInfo(Product.mypy, 'mypy'),
@@ -25,16 +27,37 @@ export class LinterManager implements ILinterManager {
         new LinterInfo(Product.pydocstyle, 'pydocstyle'),
         new LinterInfo(Product.pylama, 'pylama')
     ];
-    private factories = new Map<Product, () => ILinter>();
 
-    public getLinterInfos(): ILinterInfo[] {
+    public getAllLinterInfos(): ILinterInfo[] {
         return this.linters;
     }
-    public getLinterInfo(product: Product): ILinterInfo | undefined {
+
+    public getLinterInfo(product: Product): ILinterInfo {
         const x = this.linters.findIndex((value, index, obj) => value.product === product);
-        return x >= 0 ? this.linters[x] : undefined;
+        if (x && x >= 0 && x < this.linters.length) {
+            return this.linters[x];
+        }
+        throw new Error('Invalid linter');
     }
-    public createLinter(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer): ILinter | undefined {
+
+    public getCurrentLinter(resource?: Uri): ILinterInfo | undefined {
+        const linters = this.getAllLinterInfos();
+        const index = linters.findIndex(x => x.isEnabled(resource));
+        return index >= 0 ? linters[index] : undefined;
+    }
+
+    public isLintingEnabled(resource?: Uri): boolean {
+        const settings = PythonSettings.getInstance(resource);
+        return settings.linting[this.lintingEnabledSettingName] as boolean;
+    }
+
+    public enableLinting(enable: boolean, resource?: Uri): void {
+        const settings = PythonSettings.getInstance(resource);
+        settings.linting[this.lintingEnabledSettingName] = enable;
+    }
+
+    public createLinter(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer): ILinter {
+        const error = 'Linter manager: Unknown linter';
         switch (product) {
             case Product.flake8:
                 return new Flake8(outputChannel, serviceContainer);
@@ -48,11 +71,12 @@ export class LinterManager implements ILinterManager {
                 return new PyLama(outputChannel, serviceContainer);
             case Product.pydocstyle:
                 return new PyDocStyle(outputChannel, serviceContainer);
-                case Product.pep8:
+            case Product.pep8:
                 return new Pep8(outputChannel, serviceContainer);
             default:
-                serviceContainer.get<ILogger>(ILogger).logError('Linter manager: Unknown linter');
+                serviceContainer.get<ILogger>(ILogger).logError(error);
                 break;
         }
+        throw new Error(error);
     }
 }

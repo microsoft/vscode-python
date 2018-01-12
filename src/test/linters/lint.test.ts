@@ -4,10 +4,8 @@ import * as path from 'path';
 import { OutputChannel, Uri } from 'vscode';
 import * as vscode from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
-import { Installer, Product, SettingToDisableProduct } from '../../client/common/installer/installer';
-import { IInstaller, ILogger, IOutputChannel } from '../../client/common/types';
-import { IServiceContainer } from '../../client/ioc/types';
-import { BaseLinter } from '../../client/linters/baseLinter';
+import { Product, SettingToDisableProduct } from '../../client/common/installer/installer';
+import { IOutputChannel } from '../../client/common/types';
 import * as baseLinter from '../../client/linters/baseLinter';
 import { LinterManager } from '../../client/linters/linterManager';
 import { deleteFile, PythonSettingKeys, rootWorkspaceUri, updateSetting } from '../common';
@@ -121,8 +119,6 @@ suite('Linting', () => {
 
     function createLinter(product: Product) {
         const mockOutputChannel = ioc.serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
-        const logger = ioc.serviceContainer.get<ILogger>(ILogger);
         const linterManager = new LinterManager();
         return linterManager.createLinter(product, mockOutputChannel, ioc.serviceContainer);
     }
@@ -199,7 +195,7 @@ suite('Linting', () => {
         const linter = createLinter(product)!;
         const outputChannel = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const cancelToken = new vscode.CancellationTokenSource();
-        const settingToEnable = SettingToDisableProduct.get(linter.product);
+        const settingToEnable = SettingToDisableProduct.get(linter.info.product);
         // tslint:disable-next-line:no-any prefer-type-cast
         await updateSetting(settingToEnable as any, true, rootWorkspaceUri, IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace);
         const document = await vscode.workspace.openTextDocument(pythonFile);
