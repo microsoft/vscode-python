@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { expect, use } from 'chai';
+import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { workspace } from 'vscode';
 import { EnumEx } from '../../../client/common/enumUtils';
