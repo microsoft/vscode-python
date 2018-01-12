@@ -15,8 +15,9 @@ import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
 import { CurrentProcess } from './process/currentProcess';
 import { TerminalServiceFactory } from './terminal/factory';
+import { TerminalHelper } from './terminal/helper';
 import { TerminalService } from './terminal/service';
-import { ITerminalService, ITerminalServiceFactory } from './terminal/types';
+import { ITerminalHelper, ITerminalService, ITerminalServiceFactory } from './terminal/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, Is64Bit, IsWindows } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -27,6 +28,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILogger>(ILogger, Logger);
     serviceManager.addSingleton<ITerminalService>(ITerminalService, TerminalService);
     serviceManager.addSingleton<ITerminalServiceFactory>(ITerminalServiceFactory, TerminalServiceFactory);
+    serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
@@ -35,7 +37,4 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
-
-    const x = serviceManager.get<IConfigurationService>(IConfigurationService);
-    const y = x;
 }

@@ -1,6 +1,8 @@
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Terminal } from 'vscode';
 export const ITerminalService = Symbol('ITerminalService');
 
 export enum TerminalShellType {
@@ -14,7 +16,6 @@ export enum TerminalShellType {
 export interface ITerminalService {
     sendCommand(command: string, args: string[]): Promise<void>;
     sendText(text: string): Promise<void>;
-    getShellType(): TerminalShellType;
 }
 
 export const ITerminalServiceFactory = Symbol('ITerminalServiceFactory');
@@ -23,9 +24,18 @@ export interface ITerminalServiceFactory {
     /**
      * Gets a terminal service with a specific title.
      * If one exists, its returned else a new one is created.
-     * @param {string} name
+     * @param {string} title
      * @returns {ITerminalService}
      * @memberof ITerminalServiceFactory
      */
     getTerminalService(title?: string): ITerminalService;
+}
+
+export const ITerminalHelper = Symbol('ITerminalHelper');
+
+export interface ITerminalHelper {
+    createTerminal(title?: string): Terminal;
+    identifyTerminalShell(shellPath: string): TerminalShellType;
+    getTerminalShellPath(): string;
+    buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]): string;
 }

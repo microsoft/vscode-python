@@ -7,6 +7,7 @@ import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
 import { Logger } from '../client/common/logger';
 import { IS_64_BIT, IS_WINDOWS } from '../client/common/platform/constants';
 import { PathUtils } from '../client/common/platform/pathUtils';
+import { registerTypes as platformRegisterTypes } from '../client/common/platform/serviceRegistry';
 import { BufferDecoder } from '../client/common/process/decoder';
 import { ProcessService } from '../client/common/process/proc';
 import { PythonExecutionFactory } from '../client/common/process/pythonExecutionFactory';
@@ -78,6 +79,9 @@ export class IocContainer {
     }
     public registerFormatterTypes() {
         formattersRegisterTypes(this.serviceManager);
+    }
+    public registerPlatformTypes() {
+        platformRegisterTypes(this.serviceManager);
     }
     public registerInterpreterTypes() {
         interpretersRegisterTypes(this.serviceManager);

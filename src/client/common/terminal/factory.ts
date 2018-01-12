@@ -1,16 +1,19 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { inject, injectable } from 'inversify';
-import { IServiceContainer } from '../../ioc/types';
-import { IPlatformService } from '../platform/types';
+import { Disposable } from 'vscode';
+import { IDisposableRegistry } from '../types';
 import { TerminalService } from './service';
-import { ITerminalService, ITerminalServiceFactory } from './types';
+import { ITerminalHelper, ITerminalService, ITerminalServiceFactory } from './types';
 
 @injectable()
 export class TerminalServiceFactory implements ITerminalServiceFactory {
     private terminalServices: Map<string, ITerminalService>;
 
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(ITerminalService) private defaultTerminalService: ITerminalService,
-        @inject(IPlatformService) private platformService: IPlatformService) {
+    constructor( @inject(ITerminalService) private defaultTerminalService: ITerminalService,
+        @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
+        @inject(ITerminalHelper) private terminalHelper: ITerminalHelper) {
 
         this.terminalServices = new Map<string, ITerminalService>();
     }
@@ -19,7 +22,7 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
             return this.defaultTerminalService;
         }
         if (!this.terminalServices.has(title)) {
-            const terminalService = new TerminalService(this.serviceContainer, this.platformService, title);
+            const terminalService = new TerminalService(this.terminalHelper, this.disposableRegistry, title);
             this.terminalServices.set(title, terminalService);
         }
         return this.terminalServices.get(title)!;

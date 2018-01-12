@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { injectable } from 'inversify';
 import { CancellationToken, Event, FileSystemWatcher, GlobPattern, Uri, workspace, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { IWorkspaceService } from './types';
