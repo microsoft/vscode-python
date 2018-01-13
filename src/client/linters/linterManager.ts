@@ -9,7 +9,7 @@ import { IServiceContainer } from '../ioc/types';
 import { Flake8 } from './flake8';
 import { LinterInfo } from './linterInfo';
 import { MyPy } from './mypy';
-import { Pep8 } from './pep8Linter';
+import { Pep8 } from './pep8';
 import { Prospector } from './prospector';
 import { PyDocStyle } from './pydocstyle';
 import { PyLama } from './pylama';
@@ -20,6 +20,7 @@ import { ILinter, ILinterInfo, ILinterManager } from './types';
 export class LinterManager implements ILinterManager {
     private lintingEnabledSettingName = 'enabled';
     private linters: ILinterInfo[] = [
+        new LinterInfo(Product.flake8, 'flake8'),
         new LinterInfo(Product.pylint, 'pylint'),
         new LinterInfo(Product.mypy, 'mypy'),
         new LinterInfo(Product.pep8, 'pep8'),

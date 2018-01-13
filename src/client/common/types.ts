@@ -73,7 +73,6 @@ export interface IInstaller {
     promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse>;
     install(product: Product, resource?: Uri): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined>;
-    disableLinter(product: Product, resource?: Uri): Promise<void>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 

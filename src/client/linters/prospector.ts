@@ -1,8 +1,9 @@
 import { OutputChannel } from 'vscode';
 import { CancellationToken, TextDocument } from 'vscode';
-import { IInstaller, ILogger, Product } from '../common/types';
+import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import * as baseLinter from './baseLinter';
+import { BaseLinter } from './baseLinter';
+import { ILintMessage } from './types';
 
 interface IProspectorResponse {
     messages: IProspectorMessage[];
@@ -21,12 +22,12 @@ interface IProspectorLocation {
     module: 'beforeFormat';
 }
 
-export class Prospector extends baseLinter.BaseLinter {
+export class Prospector extends BaseLinter {
     constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
         super(Product.prospector, outputChannel, serviceContainer);
     }
 
-    protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<baseLinter.ILintMessage[]> {
+    protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
         return await this.run(['--absolute-paths', '--output-format=json', document.uri.fsPath], document, cancellation);
     }
     protected async parseMessages(output: string, document: TextDocument, token: CancellationToken, regEx: string) {

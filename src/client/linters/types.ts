@@ -4,7 +4,6 @@
 import * as vscode from 'vscode';
 import { ExecutionInfo, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { ILintMessage } from './baseLinter';
 
 export interface IErrorHandler {
     handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo): Promise<boolean>;
@@ -38,4 +37,20 @@ export interface ILinterManager {
     isLintingEnabled(resource?: vscode.Uri): boolean;
     enableLinting(enable: boolean, resource?: vscode.Uri): void;
     createLinter(product: Product, outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer): ILinter;
+}
+
+export interface ILintMessage {
+    line: number;
+    column: number;
+    code: string;
+    message: string;
+    type: string;
+    severity?: LintMessageSeverity;
+    provider: string;
+}
+export enum LintMessageSeverity {
+    Hint,
+    Error,
+    Warning,
+    Information
 }

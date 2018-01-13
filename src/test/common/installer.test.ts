@@ -1,6 +1,5 @@
-import * as assert from 'assert';
 import * as path from 'path';
-import { ConfigurationTarget, Uri, workspace } from 'vscode';
+import { ConfigurationTarget, Uri } from 'vscode';
 import { EnumEx } from '../../client/common/enumUtils';
 import { createDeferred } from '../../client/common/helpers';
 import { Installer } from '../../client/common/installer/installer';
@@ -58,7 +57,6 @@ suite('Installer', () => {
         ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
     }
     async function resetSettings() {
-        await updateSetting('linting.enabledWithoutWorkspace', true, undefined, ConfigurationTarget.Global);
         await updateSetting('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
     }
 
@@ -114,31 +112,5 @@ suite('Installer', () => {
             }
             await testInstallingProduct(prod.value);
         });
-    });
-
-    test('Disable linting of files not contained in a workspace', async () => {
-        const installer = ioc.serviceContainer.get<Installer>(IInstaller);
-        await installer.disableLinter(Product.pylint, undefined);
-        // tslint:disable-next-line:no-any
-        const pythonConfig = workspace.getConfiguration('python', null as any as Uri);
-        assert.equal(pythonConfig.get<boolean>('linting.enabledWithoutWorkspace'), false, 'Incorrect setting');
-    });
-
-    test('Disable linting of files contained in a single workspace', async function () {
-        if (IS_MULTI_ROOT_TEST) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-        }
-        const installer = ioc.serviceContainer.get<Installer>(IInstaller);
-        await installer.disableLinter(Product.pylint, workspaceUri);
-        const pythonConfig = workspace.getConfiguration('python', workspaceUri);
-        assert.equal(pythonConfig.get<boolean>('linting.pylintEnabled'), false, 'Incorrect setting');
-    });
-
-    test('Disable linting of files contained in a any kind of workspace', async () => {
-        const installer = ioc.serviceContainer.get<Installer>(IInstaller);
-        await installer.disableLinter(Product.pylint, workspaceUri);
-        const pythonConfig = workspace.getConfiguration('python', workspaceUri);
-        assert.equal(pythonConfig.get<boolean>('linting.pylintEnabled'), false, 'Incorrect setting');
     });
 });

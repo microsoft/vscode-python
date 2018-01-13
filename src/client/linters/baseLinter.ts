@@ -7,7 +7,7 @@ import { IPythonToolExecutionService } from '../common/process/types';
 import { ExecutionInfo, ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/errorHandler';
-import { ILinter, ILinterInfo, ILinterManager } from './types';
+import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LintMessageSeverity } from './types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const namedRegexp = require('named-js-regexp');
@@ -20,22 +20,6 @@ export interface IRegexGroup {
     code: string;
     message: string;
     type: string;
-}
-
-export interface ILintMessage {
-    line: number;
-    column: number;
-    code: string;
-    message: string;
-    type: string;
-    severity?: LintMessageSeverity;
-    provider: string;
-}
-export enum LintMessageSeverity {
-    Hint,
-    Error,
-    Warning,
-    Information
 }
 
 export function matchNamedRegEx(data, regex): IRegexGroup | undefined {

@@ -1,7 +1,7 @@
 import { OutputChannel, Uri } from 'vscode';
 import { isNotInstalledError } from '../../common/helpers';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { ExecutionInfo, IInstaller, ILogger, Product } from '../../common/types';
+import { ExecutionInfo, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager } from '../types';
 import { BaseErrorHandler } from './baseErrorHandler';
@@ -26,7 +26,7 @@ export class NotInstalledErrorHandler extends BaseErrorHandler {
 
         const linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
         const info = linterManager.getLinterInfo(execInfo.product!);
-        const customError = `Linting with ${info.id} failed.\nYou could either install the '${info.id}' linter or turn it off in setings.json via "python.linting.${info.id}Enabled = false".`;
+        const customError = `Linter '${info.id}' is not installed. Please install it or select another linter".`;
         this.outputChannel.appendLine(`\n${customError}\n${error}`);
         this.logger.logWarning(customError, error);
         return true;

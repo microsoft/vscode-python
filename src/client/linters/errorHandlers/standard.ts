@@ -1,5 +1,5 @@
 import { OutputChannel, Uri, window } from 'vscode';
-import { ExecutionInfo, IInstaller, ILogger, Product } from '../../common/types';
+import { ExecutionInfo, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager, LinterId } from '../types';
 import { BaseErrorHandler } from './baseErrorHandler';
@@ -25,20 +25,7 @@ export class StandardErrorHandler extends BaseErrorHandler {
     }
     private async displayLinterError(linterId: LinterId, resource: Uri) {
         const message = `There was an error in running the linter '${linterId}'`;
-        const item = await window.showErrorMessage(message, 'Disable linter', 'View Errors');
-        switch (item) {
-            case 'Disable linter': {
-                this.installer.disableLinter(this.product, resource)
-                    .catch(this.logger.logError.bind(this, 'StandardErrorHandler.displayLinterError'));
-                break;
-            }
-            case 'View Errors': {
-                this.outputChannel.show();
-                break;
-            }
-            default: {
-                // Ignore this selection (e.g. user hit cancel).
-            }
-        }
+        await window.showErrorMessage(message, 'View Errors');
+        this.outputChannel.show();
     }
 }

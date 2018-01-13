@@ -17,7 +17,6 @@ import { IProcessService, IPythonExecutionFactory } from '../../client/common/pr
 import { ITerminalService } from '../../client/common/terminal/types';
 import { ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows } from '../../client/common/types';
 import { ICondaLocatorService, IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../client/interpreter/contracts';
-import { PythonInterpreterLocatorService } from '../../client/interpreter/locators/index';
 import { updateSetting } from '../common';
 import { rootWorkspaceUri } from '../common';
 import { MockProvider } from '../interpreters/mocks';
@@ -71,7 +70,7 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
     }
     async function resetSettings() {
-        await updateSetting('linting.enabledWithoutWorkspace', true, undefined, ConfigurationTarget.Global);
+        await updateSetting('linting.enabled', true, undefined, ConfigurationTarget.Global);
         await updateSetting('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
     }
     async function getCurrentPythonPath(): Promise<string> {

@@ -37,12 +37,13 @@ export class LinterSelector implements Disposable {
 
         const selection = await window.showQuickPick(suggestions, quickPickOptions);
         if (selection !== undefined) {
-            const newLinter = linters.find(x => x.id === selection);
-            if (currentLinter) {
-                currentLinter.enable(false, workspaceUri);
-            }
-            if (newLinter) {
-                newLinter.enable(true, workspaceUri);
+            const index = linters.findIndex(x => x.id === selection);
+            if (index >= 0 && (!currentLinter || linters[index].product !== currentLinter.product)) {
+                if (currentLinter) {
+                    currentLinter.enable(false, workspaceUri);
+                }
+                linters[index].enable(true, workspaceUri);
+                this.enableLinting(); // Changing linter automatically enables linting
             }
         }
     }

@@ -6,9 +6,8 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 import { Container } from 'inversify';
-import * as os from 'os';
-import * as vscode from 'vscode';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
+import * as vscode from 'vscode';
 import { BannerService } from './banner';
 import * as settings from './common/configSettings';
 import { PythonSettings } from './common/configSettings';
@@ -35,6 +34,7 @@ import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer } from './ioc/types';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
+import { LinterSelector } from './linters/linterSelector';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
 import { PythonDefinitionProvider } from './providers/definitionProvider';
@@ -109,6 +109,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const processService = serviceContainer.get<IProcessService>(IProcessService);
 
     context.subscriptions.push(new InterpreterSelector(interpreterManager, interpreterVersionService, processService));
+    context.subscriptions.push(new LinterSelector(serviceContainer));
+
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
