@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import * as assert from 'assert';
 import { ILintingSettings, PythonSettings } from '../../client/common/configSettings';
 import { EnumEx } from '../../client/common/enumUtils';
@@ -10,6 +13,13 @@ import { initialize } from '../initialize';
 suite('Linting - Manager', () => {
     const lm = new LinterManager();
     suiteSetup(initialize);
+    setup(async () => await resetSettings());
+    teardown(async () => await resetSettings());
+
+    async function resetSettings() {
+        lm.setCurrentLinter(Product.pylint);
+        lm.enableLinting(true);
+    }
 
     test('Ensure product is set in Execution Info', async () => {
         [Product.flake8, Product.mypy, Product.pep8,

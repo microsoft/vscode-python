@@ -125,26 +125,9 @@ suite('Linting', () => {
         if (IS_MULTI_ROOT_TEST) {
             await updateSetting('linting.enabled', true, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
         }
-        await updateSetting('linting.lintOnSave', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
-        await updateSetting('linting.pylintEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
-        await updateSetting('linting.flake8Enabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
-        await updateSetting('linting.pep8Enabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
-        await updateSetting('linting.prospectorEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
-        await updateSetting('linting.mypyEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
-        await updateSetting('linting.pydocstyleEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
-        await updateSetting('linting.pylamaEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
-
-        if (IS_MULTI_ROOT_TEST) {
-            await updateSetting('linting.lintOnSave', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
-            await updateSetting('linting.pylintEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
-            await updateSetting('linting.flake8Enabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
-            await updateSetting('linting.pep8Enabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
-            await updateSetting('linting.prospectorEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
-            await updateSetting('linting.mypyEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
-            await updateSetting('linting.pydocstyleEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
-            await updateSetting('linting.pylamaEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
-        }
+        await updateSetting('linting.currentLinter', 'pylint', rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
     }
+
     async function testLinter(product: Product) {
         const output = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const document = await vscode.workspace.openTextDocument(fileToLint);
@@ -157,6 +140,7 @@ suite('Linting', () => {
         const messages = await linter.lint(document, cancelToken.token);
         assert.notEqual(messages.length, 0, `No linter errors when linter is enabled, Output - ${output.output}`);
     }
+
     test('Enable Pylint and test linter', async () => {
         await testLinter(Product.pylint);
     });

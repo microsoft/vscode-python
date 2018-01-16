@@ -71,7 +71,7 @@ suite('Module Installer', () => {
     }
     async function resetSettings() {
         await updateSetting('linting.enabled', true, undefined, ConfigurationTarget.Global);
-        await updateSetting('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
+        await updateSetting('linting.currentLinter', 'pylint', rootWorkspaceUri, ConfigurationTarget.Workspace);
     }
     async function getCurrentPythonPath(): Promise<string> {
         const pythonPath = PythonSettings.getInstance(workspaceUri).pythonPath;
