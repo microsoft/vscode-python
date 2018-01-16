@@ -52,7 +52,8 @@ export class Linter extends baseLinter.BaseLinter {
                     column: msg.location.character,
                     line: lineNumber,
                     type: msg.code,
-                    provider: `${this.Id} - ${msg.source}`
+                    provider: `${this.Id} - ${msg.source}`,
+                    messageContainsCode: false
                 };
             });
     }

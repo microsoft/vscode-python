@@ -1194,7 +1194,7 @@
 				},
 				"python.linting.pylintArgs": {
 					"type": "array",
-					"description": "Arguments passed in. Each argument is a separate item in the array.",
+					"description": "Arguments passed in. Each argument is a separate item in the array. --msg-template is set by VSCode and cannot be overridden here. Use python.linting.pylintMsgTemplate instead.",
 					"default": [],
 					"items": {
 						"type": "string"
@@ -1238,6 +1238,16 @@
 					"items": {
 						"type": "string"
 					},
+					"scope": "resource"
+				},
+				"python.linting.pylintMsgTemplate": {
+					"type": "string",
+					"description": "Controls the message template for linting results. Options are 'standard' and 'legacy'. 'standard' displays error codes as symbolic names like 'missing-docstring'. 'legacy' displays error codes as alphanumeric codes like 'C0111'.",
+					"default": "legacy",
+					"enum": [
+						"standard",
+						"legacy"
+					],
 					"scope": "resource"
 				},
 				"python.formatting.provider": {

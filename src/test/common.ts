@@ -9,7 +9,7 @@ export const rootWorkspaceUri = getWorkspaceRoot();
 
 export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'linting.lintOnSave' |
-    'linting.enabled' | 'linting.pylintEnabled' |
+    'linting.enabled' | 'linting.pylintEnabled' | 'linting.pylintMsgTemplate' |
     'linting.flake8Enabled' | 'linting.pep8Enabled' | 'linting.pylamaEnabled' |
     'linting.prospectorEnabled' | 'linting.pydocstyleEnabled' | 'linting.mypyEnabled' |
     'unitTest.nosetestArgs' | 'unitTest.pyTestArgs' | 'unitTest.unittestArgs' |

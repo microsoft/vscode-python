@@ -34,7 +34,13 @@ function createDiagnostics(message: linter.ILintMessage, document: vscode.TextDo
     const range = new vscode.Range(position, position);
 
     const severity = lintSeverityToVSSeverity.get(message.severity!)!;
-    const diagnostic = new vscode.Diagnostic(range, `${message.code}:${message.message}`, severity);
+    let formattedMessage;
+    if (message.preformattedMessage) {
+        formattedMessage = message.message;
+    } else {
+        formattedMessage = `${message.code}:${message.message}`;
+    }
+    const diagnostic = new vscode.Diagnostic(range, formattedMessage, severity);
     diagnostic.code = message.code;
     diagnostic.source = message.provider;
     return diagnostic;
@@ -218,6 +224,7 @@ export class LintProvider implements vscode.Disposable {
                             // Ignore magic commands from jupyter.
                             if (hasJupyterCodeCells && document.lineAt(d.line - 1).text.trim().startsWith('%') &&
                                 (d.code === LinterErrors.pylint.InvalidSyntax ||
+                                    d.code === LinterErrors.pylint.InvalidSyntaxSymbolic ||
                                     d.code === LinterErrors.prospector.InvalidSyntax ||
                                     d.code === LinterErrors.flake8.InvalidSyntax)) {
                                 return;

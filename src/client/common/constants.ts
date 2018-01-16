@@ -49,6 +49,7 @@ export namespace Delays {
 export namespace LinterErrors {
     export namespace pylint {
         export const InvalidSyntax = 'E0001';
+        export const InvalidSyntaxSymbolic = 'invalid-syntax';
     }
     export namespace prospector {
         export const InvalidSyntax = 'F999';

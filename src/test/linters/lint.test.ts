@@ -21,35 +21,59 @@ import { MockOutputChannel } from '../mockClasses';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
-const pythoFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'linting');
-const flake8ConfigPath = path.join(pythoFilesPath, 'flake8config');
-const pep8ConfigPath = path.join(pythoFilesPath, 'pep8config');
-const pydocstyleConfigPath27 = path.join(pythoFilesPath, 'pydocstyleconfig27');
-const pylintConfigPath = path.join(pythoFilesPath, 'pylintconfig');
-const fileToLint = path.join(pythoFilesPath, 'file.py');
+const pythonFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'linting');
+const flake8ConfigPath = path.join(pythonFilesPath, 'flake8config');
+const pep8ConfigPath = path.join(pythonFilesPath, 'pep8config');
+const pydocstyleConfigPath27 = path.join(pythonFilesPath, 'pydocstyleconfig27');
+const pylintConfigPath = path.join(pythonFilesPath, 'pylintconfig');
+const fileToLint = path.join(pythonFilesPath, 'file.py');
 
-const pylintMessagesToBeReturned: baseLinter.ILintMessage[] = [
-    { line: 24, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
-    { line: 30, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
-    { line: 34, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0012', message: 'Locally enabling no-member (E1101)', provider: '', type: '' },
-    { line: 40, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
-    { line: 44, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0012', message: 'Locally enabling no-member (E1101)', provider: '', type: '' },
-    { line: 55, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
-    { line: 59, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0012', message: 'Locally enabling no-member (E1101)', provider: '', type: '' },
-    { line: 62, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling undefined-variable (E0602)', provider: '', type: '' },
-    { line: 70, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
-    { line: 84, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
-    { line: 87, column: 0, severity: baseLinter.LintMessageSeverity.Hint, code: 'C0304', message: 'Final newline missing', provider: '', type: '' },
-    { line: 11, column: 20, severity: baseLinter.LintMessageSeverity.Warning, code: 'W0613', message: 'Unused argument \'arg\'', provider: '', type: '' },
-    { line: 26, column: 14, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blop\' member', provider: '', type: '' },
-    { line: 36, column: 14, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' },
-    { line: 46, column: 18, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' },
-    { line: 61, column: 18, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' },
-    { line: 72, column: 18, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' },
-    { line: 75, column: 18, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' },
-    { line: 77, column: 14, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' },
-    { line: 83, column: 14, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: '' }
+const pylintLegacyMessagesToBeReturned: baseLinter.ILintMessage[] = [
+    { line: 24, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'I0011:Locally disabling no-member (E1101)', provider: '', type: '', preformattedMessage: true },
+    { line: 30, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'I0011:Locally disabling no-member (E1101)', provider: '', type: '', preformattedMessage: true },
+    { line: 34, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0012', message: 'I0012:Locally enabling no-member (E1101)', provider: '', type: '', preformattedMessage: true },
+    { line: 40, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'I0011:Locally disabling no-member (E1101)', provider: '', type: '', preformattedMessage: true },
+    { line: 44, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0012', message: 'I0012:Locally enabling no-member (E1101)', provider: '', type: '', preformattedMessage: true },
+    { line: 55, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'I0011:Locally disabling no-member (E1101)', provider: '', type: '', preformattedMessage: true },
+    { line: 59, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0012', message: 'I0012:Locally enabling no-member (E1101)', provider: '', type: '', preformattedMessage: true },
+    { line: 62, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'I0011:Locally disabling undefined-variable (E0602)', provider: '', type: '', preformattedMessage: true },
+    { line: 70, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'I0011:Locally disabling no-member (E1101)', provider: '', type: '', preformattedMessage: true },
+    { line: 84, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'I0011', message: 'I0011:Locally disabling no-member (E1101)', provider: '', type: '', preformattedMessage: true },
+    { line: 87, column: 0, severity: baseLinter.LintMessageSeverity.Hint, code: 'C0304', message: 'C0304:Final newline missing', provider: '', type: '', preformattedMessage: true },
+    { line: 11, column: 20, severity: baseLinter.LintMessageSeverity.Warning, code: 'W0613', message: 'W0613:Unused argument \'arg\'', provider: '', type: '', preformattedMessage: true },
+    { line: 26, column: 14, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'E1101:Instance of \'Foo\' has no \'blop\' member', provider: '', type: '', preformattedMessage: true },
+    { line: 36, column: 14, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'E1101:Instance of \'Foo\' has no \'blip\' member', provider: '', type: '', preformattedMessage: true },
+    { line: 46, column: 18, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'E1101:Instance of \'Foo\' has no \'blip\' member', provider: '', type: '', preformattedMessage: true },
+    { line: 61, column: 18, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'E1101:Instance of \'Foo\' has no \'blip\' member', provider: '', type: '', preformattedMessage: true },
+    { line: 72, column: 18, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'E1101:Instance of \'Foo\' has no \'blip\' member', provider: '', type: '', preformattedMessage: true },
+    { line: 75, column: 18, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'E1101:Instance of \'Foo\' has no \'blip\' member', provider: '', type: '', preformattedMessage: true },
+    { line: 77, column: 14, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'E1101:Instance of \'Foo\' has no \'blip\' member', provider: '', type: '', preformattedMessage: true },
+    { line: 83, column: 14, severity: baseLinter.LintMessageSeverity.Error, code: 'E1101', message: 'E1101:Instance of \'Foo\' has no \'blip\' member', provider: '', type: '', preformattedMessage: true }
 ];
+
+const pylintStandardMessagesToBeReturned: baseLinter.ILintMessage[] = [
+    { line: 24, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'disable-no-member', message: 'Locally disabling no-member (E1101) (disable-no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 30, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'disable-no-member', message: 'Locally disabling no-member (E1101) (disable-no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 34, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'enable-no-member', message: 'Locally enabling no-member (E1101) (enable-no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 40, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'disable-no-member', message: 'Locally disabling no-member (E1101) (disable-no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 44, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'enable-no-member', message: 'Locally enabling no-member (E1101) (enable-no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 55, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'disable-no-member', message: 'Locally disabling no-member (E1101) (disable-no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 59, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'enable-no-member', message: 'Locally enabling no-member (E1101) (enable-no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 62, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'disable-no-member', message: 'Locally disabling undefined-variable (E0602) (disable-no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 70, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'disable-no-member', message: 'Locally disabling no-member (E1101) (disable-no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 84, column: 0, severity: baseLinter.LintMessageSeverity.Information, code: 'disable-no-member', message: 'Locally disabling no-member (E1101) (disable-no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 87, column: 0, severity: baseLinter.LintMessageSeverity.Hint, code: 'missing-newline', message: 'Final newline missing (missing-newline)', provider: '', type: '', preformattedMessage: true },
+    { line: 11, column: 20, severity: baseLinter.LintMessageSeverity.Warning, code: 'unused-argument', message: 'Unused argument \'arg\' (unused-argument)', provider: '', type: '', preformattedMessage: true },
+    { line: 26, column: 14, severity: baseLinter.LintMessageSeverity.Error, code: 'no-member', message: 'Instance of \'Foo\' has no \'blop\' member (no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 36, column: 14, severity: baseLinter.LintMessageSeverity.Error, code: 'no-member', message: 'Instance of \'Foo\' has no \'blip\' member (no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 46, column: 18, severity: baseLinter.LintMessageSeverity.Error, code: 'no-member', message: 'Instance of \'Foo\' has no \'blip\' member (no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 61, column: 18, severity: baseLinter.LintMessageSeverity.Error, code: 'no-member', message: 'Instance of \'Foo\' has no \'blip\' member (no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 72, column: 18, severity: baseLinter.LintMessageSeverity.Error, code: 'no-member', message: 'Instance of \'Foo\' has no \'blip\' member (no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 75, column: 18, severity: baseLinter.LintMessageSeverity.Error, code: 'no-member', message: 'Instance of \'Foo\' has no \'blip\' member (no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 77, column: 14, severity: baseLinter.LintMessageSeverity.Error, code: 'no-member', message: 'Instance of \'Foo\' has no \'blip\' member (no-member)', provider: '', type: '', preformattedMessage: true },
+    { line: 83, column: 14, severity: baseLinter.LintMessageSeverity.Error, code: 'no-member', message: 'Instance of \'Foo\' has no \'blip\' member (no-member)', provider: '', type: '', preformattedMessage: true }
+];
+
 const flake8MessagesToBeReturned: baseLinter.ILintMessage[] = [
     { line: 5, column: 1, severity: baseLinter.LintMessageSeverity.Error, code: 'E302', message: 'expected 2 blank lines, found 1', provider: '', type: '' },
     { line: 19, column: 15, severity: baseLinter.LintMessageSeverity.Error, code: 'E127', message: 'continuation line over-indented for visual indent', provider: '', type: '' },
@@ -249,9 +273,18 @@ suite('Linting', () => {
             }
         }
     }
-    test('PyLint', async () => {
-        await testLinterMessages(Product.pylint, fileToLint, pylintMessagesToBeReturned);
+    test('PyLint Default Output is Legacy', async () => {
+        await testLinterMessages(Product.pylint, fileToLint, pylintLegacyMessagesToBeReturned);
     });
+    test('PyLint Legacy Output', async () => {
+        await updateSetting('linting.pylintMsgTemplate', 'legacy', rootWorkspaceUri, IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace);
+        await testLinterMessages(Product.pylint, fileToLint, pylintLegacyMessagesToBeReturned);
+    });
+    test('PyLint Standard Output', async () => {
+        await updateSetting('linting.pylintMsgTemplate', 'standard', rootWorkspaceUri, IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace);
+        await testLinterMessages(Product.pylint, fileToLint, pylintStandardMessagesToBeReturned);
+    });
+
     test('Flake8', async () => {
         await testLinterMessages(Product.flake8, fileToLint, flake8MessagesToBeReturned);
     });
