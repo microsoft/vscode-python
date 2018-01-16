@@ -7,9 +7,9 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { IConfigurationService } from '../../common/configuration/types';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
+import { IConfigurationService } from '../../common/types';
 import { IDisposableRegistry } from '../../common/types';
 import { ICodeExecutionService } from '../../terminals/types';
 

@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import { workspace } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
-import { IConfigurationService } from '../../../client/common/configuration/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { initialize } from '../../initialize';
 import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
 

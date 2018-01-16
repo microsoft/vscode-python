@@ -8,10 +8,9 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
-import { IConfigurationService } from '../../../client/common/configuration/types';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
-import { IPythonSettings, ITerminalSettings } from '../../../client/common/types';
+import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExecution/terminalCodeExecution';
 import { ICodeExecutionService } from '../../../client/terminals/types';
 
