@@ -1,14 +1,14 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { OutputChannel, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import * as vscode from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { Product } from '../../client/common/installer/installer';
 import { IOutputChannel } from '../../client/common/types';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILintMessage, LintMessageSeverity } from '../../client/linters/types';
-import { deleteFile, PythonSettingKeys, rootWorkspaceUri, updateSetting } from '../common';
+import { deleteFile, rootWorkspaceUri, updateSetting } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { MockOutputChannel } from '../mockClasses';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -94,6 +94,8 @@ const filteredPep88MessagesToBeReturned: ILintMessage[] = [
 // tslint:disable-next-line:max-func-body-length
 suite('Linting', () => {
     let ioc: UnitTestIocContainer;
+    const linterManager = new LinterManager();
+
     suiteSetup(initialize);
     setup(async () => {
         initializeDI();
@@ -115,12 +117,6 @@ suite('Linting', () => {
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
-    }
-
-    function createLinter(product: Product) {
-        const mockOutputChannel = ioc.serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const linterManager = new LinterManager();
-        return linterManager.createLinter(product, mockOutputChannel, ioc.serviceContainer);
     }
 
     async function resetSettings() {
@@ -149,53 +145,44 @@ suite('Linting', () => {
             await updateSetting('linting.pylamaEnabled', false, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
         }
     }
-    async function testEnablingDisablingOfLinter(product: Product, setting: PythonSettingKeys, enabled: boolean) {
-        const linter = createLinter(product)!;
+    async function testLinter(product: Product) {
         const output = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        await updateSetting(setting, enabled, rootWorkspaceUri, IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace);
         const document = await vscode.workspace.openTextDocument(fileToLint);
         const cancelToken = new vscode.CancellationTokenSource();
+
+        linterManager.enableLinting(true, document.uri);
+        linterManager.setCurrentLinter(product, document.uri);
+        const linter = linterManager.createLinter(product, output, ioc.serviceContainer);
+
         const messages = await linter.lint(document, cancelToken.token);
-        if (enabled) {
-            assert.notEqual(messages.length, 0, `No linter errors when linter is enabled, Output - ${output.output}`);
-        } else {
-            assert.equal(messages.length, 0, `Errors returned when linter is disabled, Output - ${output.output}`);
-        }
+        assert.notEqual(messages.length, 0, `No linter errors when linter is enabled, Output - ${output.output}`);
     }
-    test('Disable Pylint and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.pylint, 'linting.pylintEnabled', false);
-    });
     test('Enable Pylint and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.pylint, 'linting.pylintEnabled', true);
-    });
-    test('Disable Pep8 and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.pep8, 'linting.pep8Enabled', false);
+        await testLinter(Product.pylint);
     });
     test('Enable Pep8 and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.pep8, 'linting.pep8Enabled', true);
-    });
-    test('Disable Flake8 and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.flake8, 'linting.flake8Enabled', false);
+        await testLinter(Product.pep8);
     });
     test('Enable Flake8 and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.flake8, 'linting.flake8Enabled', true);
+        await testLinter(Product.flake8);
     });
-    test('Disable Prospector and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.prospector, 'linting.prospectorEnabled', false);
-    });
-    test('Disable Pydocstyle and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.pydocstyle, 'linting.pydocstyleEnabled', false);
+    test('Enable Prospector and test linter', async () => {
+        await testLinter(Product.prospector);
     });
     test('Enable Pydocstyle and test linter', async () => {
-        await testEnablingDisablingOfLinter(Product.pydocstyle, 'linting.pydocstyleEnabled', true);
+        await testLinter(Product.pydocstyle);
     });
 
     // tslint:disable-next-line:no-any
     async function testLinterMessages(product: Product, pythonFile: string, messagesToBeReceived: ILintMessage[]): Promise<any> {
-        const linter = createLinter(product)!;
         const outputChannel = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const cancelToken = new vscode.CancellationTokenSource();
         const document = await vscode.workspace.openTextDocument(pythonFile);
+
+        linterManager.enableLinting(true, document.uri);
+        linterManager.setCurrentLinter(product, document.uri);
+        const linter = linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
+
         const messages = await linter.lint(document, cancelToken.token);
         if (messagesToBeReceived.length === 0) {
             assert.equal(messages.length, 0, `No errors in linter, Output - ${outputChannel.output}`);

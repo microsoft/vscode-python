@@ -19,6 +19,7 @@ import { ILinter, ILinterInfo, ILinterManager } from './types';
 @injectable()
 export class LinterManager implements ILinterManager {
     private lintingEnabledSettingName = 'enabled';
+    private currentLinterSettingName = 'currentLinter';
     private linters: ILinterInfo[] = [
         new LinterInfo(Product.flake8, 'flake8'),
         new LinterInfo(Product.pylint, 'pylint'),
@@ -35,26 +36,38 @@ export class LinterManager implements ILinterManager {
 
     public getLinterInfo(product: Product): ILinterInfo {
         const x = this.linters.findIndex((value, index, obj) => value.product === product);
-        if (x && x >= 0 && x < this.linters.length) {
+        if (x >= 0) {
             return this.linters[x];
         }
         throw new Error('Invalid linter');
     }
 
-    public getCurrentLinter(resource?: Uri): ILinterInfo | undefined {
-        const linters = this.getAllLinterInfos();
-        const index = linters.findIndex(x => x.isEnabled(resource));
-        return index >= 0 ? linters[index] : undefined;
-    }
-
     public isLintingEnabled(resource?: Uri): boolean {
         const settings = PythonSettings.getInstance(resource);
-        return settings.linting[this.lintingEnabledSettingName] as boolean;
+        return (settings.linting[this.lintingEnabledSettingName] as boolean) && this.getCurrentLinter(resource) !== undefined;
     }
 
     public enableLinting(enable: boolean, resource?: Uri): void {
         const settings = PythonSettings.getInstance(resource);
         settings.linting[this.lintingEnabledSettingName] = enable;
+        if (this.getCurrentLinterIndex(resource) < 0) {
+            this.setCurrentLinter(Product.pylint, resource);
+        }
+    }
+
+    public getCurrentLinter(resource?: Uri): ILinterInfo | undefined {
+        const index = this.getCurrentLinterIndex(resource);
+        return index >= 0 ? this.linters[index] : undefined;
+    }
+
+    public setCurrentLinter(product: Product, resource?: Uri) {
+        const oldLinterIndex = this.getCurrentLinterIndex(resource);
+        const newLinterIndex = this.linters.findIndex(x => x.product === product);
+        if (newLinterIndex < 0 || newLinterIndex === oldLinterIndex) {
+            return;
+        }
+        const settings = PythonSettings.getInstance(resource);
+        settings.linting[this.currentLinterSettingName] = this.linters[newLinterIndex].id;
     }
 
     public createLinter(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer): ILinter {
@@ -79,5 +92,11 @@ export class LinterManager implements ILinterManager {
                 break;
         }
         throw new Error(error);
+    }
+
+    private getCurrentLinterIndex(resource?: Uri): number {
+        const settings = PythonSettings.getInstance(resource);
+        const id = settings.linting[this.currentLinterSettingName] as string;
+        return this.getAllLinterInfos().findIndex(x => x.id === id);
     }
 }

@@ -58,9 +58,6 @@ export abstract class BaseLinter implements ILinter {
         return path.basename(executablePath).length > 0 && path.basename(executablePath) !== executablePath;
     }
     public async lint(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]> {
-        if (!this.info.isEnabled(document.uri)) {
-            return [];
-        }
         this._pythonSettings = PythonSettings.getInstance(document.uri);
         return this.runLinter(document, cancellation);
     }

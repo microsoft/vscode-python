@@ -32,17 +32,9 @@ export class LinterInfo implements ILinterInfo {
         return `${this.id}Enabled`;
     }
 
-    public enable(enabled: boolean, resource?: Uri): void {
-        const settings = PythonSettings.getInstance(resource);
-        settings.linting[this.enabledSettingName] = enabled;
-    }
     public pathName(resource?: Uri): string {
         const settings = PythonSettings.getInstance(resource);
         return settings.linting[this.pathSettingName] as string;
-    }
-    public isEnabled(resource?: Uri): boolean {
-        const settings = PythonSettings.getInstance(resource);
-        return settings.linting[this.enabledSettingName] as boolean;
     }
     public linterArgs(resource?: Uri): string[] {
         const settings = PythonSettings.getInstance(resource);

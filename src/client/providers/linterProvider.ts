@@ -11,6 +11,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { LINTING } from '../telemetry/constants';
 import { StopWatch } from '../telemetry/stopWatch';
 import { LintingTelemetry } from '../telemetry/types';
+
 // tslint:disable-next-line:no-require-imports no-var-requires
 const Minimatch = require('minimatch').Minimatch;
 
@@ -149,7 +150,7 @@ export class LinterProvider implements vscode.Disposable {
         const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
         const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
         const settings = PythonSettings.getInstance(document.uri);
-        if (document.languageId !== PythonLanguage.language || !settings.linting.enabled) {
+        if (document.languageId !== PythonLanguage.language || !this.linterManager.isLintingEnabled(document.uri)) {
             return;
         }
         const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => {
