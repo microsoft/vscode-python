@@ -5,70 +5,41 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as vscode from 'vscode';
 import { Disposable, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { IConfigurationService } from '../../common/configuration/types';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IDisposableRegistry } from '../../common/types';
-import { ICodeExecutionService } from '../../terminals/types';
 import { DjangoContextInitializer } from './djangoContext';
+import { TerminalCodeExecutionProvider } from './terminalCodeExecution';
 
 @injectable()
-export class DjangoShellCodeExecutionProvider implements ICodeExecutionService {
-    constructor( @inject(ITerminalServiceFactory) private terminalServiceFactory: ITerminalServiceFactory,
-        @inject(IConfigurationService) private configurationService: IConfigurationService,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService,
+export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvider {
+    constructor( @inject(ITerminalServiceFactory) terminalServiceFactory: ITerminalServiceFactory,
+        @inject(IConfigurationService) configurationService: IConfigurationService,
+        @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IPlatformService) private platformService: IPlatformService,
+        @inject(IPlatformService) platformService: IPlatformService,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[]) {
-
+        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, platformService);
         disposableRegistry.push(new DjangoContextInitializer(documentManager, workspace, fileSystem, commandManager));
     }
-    public async executeFile(file: Uri) {
-        const terminalServivce = this.terminalServiceFactory.getTerminalService();
-        const pythonSettings = this.configurationService.getSettings(file);
-
-        if (pythonSettings.terminal && pythonSettings.terminal.executeInFileDir) {
-            const fileDirPath = path.dirname(file.fsPath);
-            const wkspace = this.workspace.getWorkspaceFolder(file);
-            if (wkspace && fileDirPath !== wkspace.uri.fsPath && fileDirPath.length > 0) {
-                terminalServivce.sendText(`cd "${fileDirPath}"`);
-            }
-        }
-
-        const command = this.platformService.isWindows ? pythonSettings.pythonPath.replace(/\\/g, '/') : pythonSettings.pythonPath;
-        const filePath = file.fsPath.indexOf(' ') > 0 ? `"${file.fsPath}"` : file.fsPath;
-
-        const launchArgs = pythonSettings.terminal.launchArgs;
-
-        terminalServivce.sendCommand(command, launchArgs.concat(filePath));
-    }
-
-    public async execute(code: string, resource?: Uri): Promise<void> {
-        if (!code || code.trim().length === 0) {
-            return;
-        }
-
-        const terminalServivce = this.terminalServiceFactory.getTerminalService('Django Shell');
+    public getReplCommandArgs(resource?: Uri): { command: string, args: string[] } {
         const pythonSettings = this.configurationService.getSettings(resource);
-
         const command = this.platformService.isWindows ? pythonSettings.pythonPath.replace(/\\/g, '/') : pythonSettings.pythonPath;
-        const launchArgs = pythonSettings.terminal.launchArgs;
+        const args = pythonSettings.terminal.launchArgs.slice();
 
-        const workspaceUri = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
-        const defaultWorkspace = Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0 ? vscode.workspace.workspaceFolders[0].uri.fsPath : '';
+        const workspaceUri = resource ? this.workspace.getWorkspaceFolder(resource) : undefined;
+        const defaultWorkspace = Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders.length > 0 ? this.workspace.workspaceFolders[0].uri.fsPath : '';
         const workspaceRoot = workspaceUri ? workspaceUri.uri.fsPath : defaultWorkspace;
-        const djangoShellCmd = `"${path.join(workspaceRoot, 'manage.py')}" shell`;
+        const managePyPath = workspaceRoot.length === 0 ? 'manage.py' : path.join(workspaceRoot, 'manage.py');
+        const escapedManagePyPath = managePyPath.indexOf(' ') > 0 ? `"${managePyPath}"` : managePyPath;
 
-        terminalServivce.sendCommand(command, launchArgs.concat([djangoShellCmd]));
-
-        // Give python repl time to start before we start sending text.
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        terminalServivce.sendText(code);
+        args.push(escapedManagePyPath);
+        args.push('shell');
+        return { command, args };
     }
 }

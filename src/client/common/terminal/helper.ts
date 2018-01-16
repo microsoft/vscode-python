@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Terminal, window, workspace } from 'vscode';
+import { Terminal, workspace } from 'vscode';
+import { ITerminalManager } from '../application/types';
 import { IPlatformService } from '../platform/types';
 import { ITerminalHelper, TerminalShellType } from './types';
 
@@ -14,7 +15,8 @@ const IS_FISH = /(fish$)/i;
 @injectable()
 export class TerminalHelper implements ITerminalHelper {
     private readonly detectableShells: Map<TerminalShellType, RegExp>;
-    constructor( @inject(IPlatformService) private platformService: IPlatformService) {
+    constructor( @inject(IPlatformService) private platformService: IPlatformService,
+        @inject(ITerminalManager) private terminalManager: ITerminalManager) {
         this.detectableShells = new Map<TerminalShellType, RegExp>();
         this.detectableShells.set(TerminalShellType.powershell, IS_POWERSHELL);
         this.detectableShells.set(TerminalShellType.bash, IS_BASH);
@@ -22,7 +24,7 @@ export class TerminalHelper implements ITerminalHelper {
         this.detectableShells.set(TerminalShellType.fish, IS_FISH);
     }
     public createTerminal(title?: string): Terminal {
-        return window.createTerminal(title);
+        return this.terminalManager.createTerminal({ name: title });
     }
     public identifyTerminalShell(shellPath: string): TerminalShellType {
         return Array.from(this.detectableShells.keys())
@@ -49,7 +51,7 @@ export class TerminalHelper implements ITerminalHelper {
         return shellConfig.get<string>(osSection)!;
     }
     public buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]) {
-        const executable = command.indexOf(' ') ? `"${command}"` : command;
+        const executable = command.indexOf(' ') > 0 ? `"${command}"` : command;
         const isPowershell = terminalShellType === TerminalShellType.powershell;
         const commandPrefix = isPowershell ? '& ' : '';
         return `${commandPrefix}${executable} ${args.join(' ')}`.trim();

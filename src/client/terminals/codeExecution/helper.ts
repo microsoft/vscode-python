@@ -18,10 +18,6 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     public normalizeLines(code: string): string {
         const codeLines = code.splitLines({ trim: false, removeEmptyEntries: false });
         const codeLinesWithoutEmptyLines = codeLines.filter(line => line.trim().length > 0);
-        const lastLineIsEmpty = codeLines.length > 0 && codeLines[codeLines.length - 1].trim().length === 0;
-        if (lastLineIsEmpty) {
-            codeLinesWithoutEmptyLines.unshift('');
-        }
         return codeLinesWithoutEmptyLines.join(EOL);
     }
 
@@ -55,10 +51,6 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const textRange = new Range(selection.start, selection.end);
             code = textEditor.document.getText(textRange);
         }
-        if (code.length === 0) {
-            return;
-        }
-
-        return this.normalizeLines(code);
+        return code;
     }
 }

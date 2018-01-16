@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Disposable, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
@@ -41,6 +41,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     @captureTelemetry(EXECUTION_CODE, { scope: 'selection' }, false)
     private async executeSelectionInTerminal(): Promise<void> {
         const executionService = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'standard');
+
         await this.executeSelection(executionService);
     }
 
@@ -57,10 +58,11 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         }
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
         const codeToExecute = await codeExecutionHelper.getSelectedTextToExecute(activeEditor!);
-        if (!codeToExecute || codeToExecute.trim().length === 0) {
+        const normalizedCode = codeExecutionHelper.normalizeLines(codeToExecute!);
+        if (!normalizedCode || normalizedCode.trim().length === 0) {
             return;
         }
 
-        await executionService.execute(codeToExecute, activeEditor!.document.uri);
+        await executionService.execute(codeToExecute!, activeEditor!.document.uri);
     }
 }

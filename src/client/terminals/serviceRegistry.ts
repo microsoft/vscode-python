@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { IServiceManager } from '../ioc/types';
-import { CodeExecutionHelper } from './codeExecution/codeExecutionHelper';
-import { CodeExecutionManager } from './codeExecution/codeExecutionService';
+import { CodeExecutionManager } from './codeExecution/codeExecutionManager';
 import { DjangoShellCodeExecutionProvider } from './codeExecution/djangoShellCodeExecution';
+import { CodeExecutionHelper } from './codeExecution/helper';
 import { TerminalCodeExecutionProvider } from './codeExecution/terminalCodeExecution';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from './types';
 

@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Terminal } from 'vscode';
+import { Event, Terminal } from 'vscode';
 export const ITerminalService = Symbol('ITerminalService');
 
 export enum TerminalShellType {
@@ -14,6 +14,7 @@ export enum TerminalShellType {
 }
 
 export interface ITerminalService {
+    readonly onDidCloseTerminal: Event<void>;
     sendCommand(command: string, args: string[]): Promise<void>;
     sendText(text: string): Promise<void>;
 }

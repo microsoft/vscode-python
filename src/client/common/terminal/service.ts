@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Terminal, window } from 'vscode';
+import { Disposable, Event, EventEmitter, Terminal } from 'vscode';
+import { ITerminalManager } from '../application/types';
 import { IDisposableRegistry } from '../types';
 import { ITerminalHelper, ITerminalService, TerminalShellType } from './types';
 
@@ -10,12 +11,17 @@ import { ITerminalHelper, ITerminalService, TerminalShellType } from './types';
 export class TerminalService implements ITerminalService, Disposable {
     private terminal?: Terminal;
     private terminalShellType: TerminalShellType;
+    private terminalClosed = new EventEmitter<void>();
+    public get onDidCloseTerminal(): Event<void> {
+        return this.terminalClosed.event;
+    }
     constructor( @inject(ITerminalHelper) private terminalHelper: ITerminalHelper,
+        @inject(ITerminalManager) terminalManager: ITerminalManager,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         private title: string = 'Python') {
 
         disposableRegistry.push(this);
-        window.onDidCloseTerminal(this.terminalCloseHandler, this, disposableRegistry);
+        terminalManager.onDidCloseTerminal(this.terminalCloseHandler, this, disposableRegistry);
     }
     public dispose() {
         if (this.terminal) {
@@ -23,19 +29,19 @@ export class TerminalService implements ITerminalService, Disposable {
         }
     }
     public async sendCommand(command: string, args: string[]): Promise<void> {
-        const term = await this.getTerminal();
+        await this.ensureTerminal();
         const text = this.terminalHelper.buildCommandForTerminal(this.terminalShellType, command, args);
-        term.show();
-        term.sendText(text, true);
+        this.terminal!.show();
+        this.terminal!.sendText(text, true);
     }
     public async sendText(text: string): Promise<void> {
-        const term = await this.getTerminal();
-        term.show();
-        term.sendText(text);
+        await this.ensureTerminal();
+        this.terminal!.show();
+        this.terminal!.sendText(text);
     }
-    private async getTerminal() {
+    private async ensureTerminal(): Promise<void> {
         if (this.terminal) {
-            return this.terminal!;
+            return;
         }
         const shellPath = this.terminalHelper.getTerminalShellPath();
         this.terminalShellType = !shellPath || shellPath.length === 0 ? TerminalShellType.other : this.terminalHelper.identifyTerminalShell(shellPath);
@@ -43,12 +49,12 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminal!.show();
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        return this.terminal;
+        // tslint:disable-next-line:no-unnecessary-callback-wrapper
+        await new Promise(resolve => setTimeout(() => resolve(), 1000));
     }
     private terminalCloseHandler(terminal: Terminal) {
         if (terminal === this.terminal) {
+            this.terminalClosed.fire();
             this.terminal = undefined;
         }
     }

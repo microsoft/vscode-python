@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 import { CancellationToken, Disposable, Event, FileSystemWatcher, GlobPattern, TextDocument, TextDocumentShowOptions } from 'vscode';
 import { TextEditor, TextEditorEdit, TextEditorOptionsChangeEvent, TextEditorSelectionChangeEvent, TextEditorViewColumnChangeEvent } from 'vscode';
 import { Uri, ViewColumn, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
+import { Terminal, TerminalOptions } from 'vscode';
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
@@ -418,4 +419,21 @@ export interface IWorkspaceService {
      * [workspace folders](#workspace.workspaceFolders) are opened.
      */
     findFiles(include: GlobPattern, exclude?: GlobPattern, maxResults?: number, token?: CancellationToken): Thenable<Uri[]>;
+}
+
+export const ITerminalManager = Symbol('ITerminalManager');
+
+export interface ITerminalManager {
+    /**
+     * An [event](#Event) which fires when a terminal is disposed.
+     */
+    readonly onDidCloseTerminal: Event<Terminal>;
+    /**
+     * Creates a [Terminal](#Terminal). The cwd of the terminal will be the workspace directory
+     * if it exists, regardless of whether an explicit customStartPath setting exists.
+     *
+     * @param options A TerminalOptions object describing the characteristics of the new terminal.
+     * @return A new Terminal.
+     */
+    createTerminal(options: TerminalOptions): Terminal;
 }

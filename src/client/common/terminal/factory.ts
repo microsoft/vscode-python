@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
+import { ITerminalManager } from '../application/types';
 import { IDisposableRegistry } from '../types';
 import { TerminalService } from './service';
 import { ITerminalHelper, ITerminalService, ITerminalServiceFactory } from './types';
@@ -13,6 +14,7 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
 
     constructor( @inject(ITerminalService) private defaultTerminalService: ITerminalService,
         @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
+        @inject(ITerminalManager) private terminalManager: ITerminalManager,
         @inject(ITerminalHelper) private terminalHelper: ITerminalHelper) {
 
         this.terminalServices = new Map<string, ITerminalService>();
@@ -22,7 +24,7 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
             return this.defaultTerminalService;
         }
         if (!this.terminalServices.has(title)) {
-            const terminalService = new TerminalService(this.terminalHelper, this.disposableRegistry, title);
+            const terminalService = new TerminalService(this.terminalHelper, this.terminalManager, this.disposableRegistry, title);
             this.terminalServices.set(title, terminalService);
         }
         return this.terminalServices.get(title)!;

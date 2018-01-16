@@ -5,7 +5,8 @@ import { IServiceManager } from '../ioc/types';
 import { ApplicationShell } from './application/applicationShell';
 import { CommandManager } from './application/commandManager';
 import { DocumentManager } from './application/documentManager';
-import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from './application/types';
+import { TerminalManager } from './application/terminalManager';
+import { IApplicationShell, ICommandManager, IDocumentManager, ITerminalManager, IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { ConfigurationService } from './configuration/service';
 import { Installer } from './installer/installer';
@@ -37,4 +38,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
+    serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
 }
