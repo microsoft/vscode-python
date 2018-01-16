@@ -15,11 +15,12 @@ import { ICodeExecutionService } from '../../terminals/types';
 
 @injectable()
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
+    protected terminalTitle: string;
     private _terminalService: ITerminalService;
     private replActive?: Promise<boolean>;
     private get terminalService(): ITerminalService {
         if (!this._terminalService) {
-            this._terminalService = this.terminalServiceFactory.getTerminalService();
+            this._terminalService = this.terminalServiceFactory.getTerminalService(this.terminalTitle);
             this.disposables.push(this.terminalService.onDidCloseTerminal(() => {
                 this.replActive = undefined;
             }));
@@ -50,7 +51,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             return;
         }
 
-        this.ensureRepl();
+        await this.ensureRepl();
         this.terminalService.sendText(code);
     }
 
@@ -85,5 +86,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             // Give python repl time to start before we start sending text.
             setTimeout(() => resolve(true), 1000);
         });
+
+        await this.replActive;
     }
 }

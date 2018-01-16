@@ -24,7 +24,9 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[]) {
+
         super(terminalServiceFactory, configurationService, workspace, disposableRegistry, platformService);
+        this.terminalTitle = 'Django Shell';
         disposableRegistry.push(new DjangoContextInitializer(documentManager, workspace, fileSystem, commandManager));
     }
     public getReplCommandArgs(resource?: Uri): { command: string, args: string[] } {
