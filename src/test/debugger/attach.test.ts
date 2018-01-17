@@ -31,7 +31,6 @@ suite('Attach Debugger', () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
         debugClient = new DebugClient('node', DEBUG_ADAPTER, 'python');
         await debugClient.start();
-        // await new Promise(resolve => setTimeout(resolve, 1000));
     });
     teardown(async () => {
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
