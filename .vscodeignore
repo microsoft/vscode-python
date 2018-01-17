@@ -9,6 +9,7 @@ test/**
 src/**
 scripts/**
 **/*.map
+.github/**
 .gitignore
 .gitmodules
 .editorconfig
@@ -32,4 +33,3 @@ coverage/**
 CODE_OF_CONDUCT.md
 CODING_STANDARDS.md
 CONTRIBUTING.md
-ISSUE_TEMPLATE.md
