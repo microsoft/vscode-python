@@ -12,21 +12,18 @@ import { ITerminalHelper, ITerminalService, ITerminalServiceFactory } from './ty
 export class TerminalServiceFactory implements ITerminalServiceFactory {
     private terminalServices: Map<string, ITerminalService>;
 
-    constructor( @inject(ITerminalService) private defaultTerminalService: ITerminalService,
-        @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
+    constructor( @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
         @inject(ITerminalManager) private terminalManager: ITerminalManager,
         @inject(ITerminalHelper) private terminalHelper: ITerminalHelper) {
 
         this.terminalServices = new Map<string, ITerminalService>();
     }
     public getTerminalService(title?: string): ITerminalService {
-        if (typeof title !== 'string' || title.trim().length === 0) {
-            return this.defaultTerminalService;
+        const terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
+        if (!this.terminalServices.has(terminalTitle)) {
+            const terminalService = new TerminalService(this.terminalHelper, this.terminalManager, this.disposableRegistry, terminalTitle);
+            this.terminalServices.set(terminalTitle, terminalService);
         }
-        if (!this.terminalServices.has(title)) {
-            const terminalService = new TerminalService(this.terminalHelper, this.terminalManager, this.disposableRegistry, title);
-            this.terminalServices.set(title, terminalService);
-        }
-        return this.terminalServices.get(title)!;
+        return this.terminalServices.get(terminalTitle)!;
     }
 }

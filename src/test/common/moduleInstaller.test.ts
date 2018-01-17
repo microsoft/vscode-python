@@ -15,7 +15,7 @@ import { PlatformService } from '../../client/common/platform/platformService';
 import { Architecture, IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
-import { ITerminalService } from '../../client/common/terminal/types';
+import { ITerminalService, ITerminalServiceFactory } from '../../client/common/terminal/types';
 import { ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows } from '../../client/common/types';
 import { ICondaLocatorService, IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../client/interpreter/contracts';
 import { rootWorkspaceUri, updateSetting } from '../common';
@@ -58,7 +58,9 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
 
         mockTerminalService = TypeMoq.Mock.ofType<ITerminalService>();
-        ioc.serviceManager.addSingletonInstance<ITerminalService>(ITerminalService, mockTerminalService.object);
+        const mockTerminalFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
+        mockTerminalFactory.setup(t => t.getTerminalService(TypeMoq.It.isAny())).returns(() => mockTerminalService.object);
+        ioc.serviceManager.addSingletonInstance<ITerminalServiceFactory>(ITerminalServiceFactory, mockTerminalFactory.object);
 
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);

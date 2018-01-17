@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
+import { ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { initialize } from '../../initialize';
 import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
 
@@ -18,17 +18,24 @@ suite('Terminal Service Factory', () => {
     teardown(() => ioc.dispose());
 
     test('Ensure same instance of terminal service is returned', () => {
-        const defaultInstance = ioc.serviceContainer.get<ITerminalService>(ITerminalService);
         const factory = ioc.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory);
-        const sameInstance = factory.getTerminalService() === defaultInstance;
+        const instance = factory.getTerminalService();
+        const sameInstance = factory.getTerminalService() === instance;
         expect(sameInstance).to.equal(true, 'Instances are not the same');
+
+        const differentInstance = factory.getTerminalService('New Title');
+        const notTheSameInstance = differentInstance === instance;
+        expect(notTheSameInstance).not.to.equal(true, 'Instances are the same');
     });
 
     test('Ensure different instance of terminal service is returned when title is provided', () => {
-        const defaultInstance = ioc.serviceContainer.get<ITerminalService>(ITerminalService);
         const factory = ioc.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory);
         const instance = factory.getTerminalService('New Title');
-        const sameInstance = instance === defaultInstance;
+        const sameInstance = factory.getTerminalService('New Title') === instance;
         expect(sameInstance).to.not.equal(true, 'Instances are the same');
+
+        const differentInstance = factory.getTerminalService('Another New Title');
+        const notTheSameInstance = differentInstance === instance;
+        expect(notTheSameInstance).not.to.equal(true, 'Instances are the same');
     });
 });

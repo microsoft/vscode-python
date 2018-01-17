@@ -3,7 +3,6 @@
 // Licensed under the MIT License.
 
 import { Event, Terminal } from 'vscode';
-export const ITerminalService = Symbol('ITerminalService');
 
 export enum TerminalShellType {
     powershell = 1,
