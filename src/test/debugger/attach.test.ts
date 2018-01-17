@@ -63,10 +63,14 @@ suite('Attach Debugger', () => {
         procToKill = result.proc;
 
         const completed = createDeferred();
-        const expectedOutputs = [{ value: 'Peter Smith', deferred: createDeferred() },
-        { value: 'end', deferred: createDeferred() }];
-        const firstOutputReceived = expectedOutputs[0].deferred.promise;
-        const secondOutputReceived = expectedOutputs[1].deferred.promise;
+        const expectedOutputs = [
+            { value: 'start', deferred: createDeferred() },
+            { value: 'Peter Smith', deferred: createDeferred() },
+            { value: 'end', deferred: createDeferred() }
+        ];
+        const startOutputReceived = expectedOutputs[0].deferred.promise;
+        const firstOutputReceived = expectedOutputs[1].deferred.promise;
+        const secondOutputReceived = expectedOutputs[2].deferred.promise;
 
         result.out.subscribe(output => {
             if (expectedOutputs[0].value === output.out) {
@@ -77,6 +81,8 @@ suite('Attach Debugger', () => {
         }, () => {
             completed.resolve();
         });
+
+        await startOutputReceived;
 
         const threadIdPromise = createDeferred<number>();
         debugClient.on('thread', (data: ThreadEvent) => {
