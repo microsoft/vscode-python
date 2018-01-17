@@ -44,7 +44,7 @@ suite('Attach Debugger', () => {
         }
     });
     test('Confirm we are able to attach to a running program', async () => {
-        const port = await getFreePort({ host: 'localhost' });
+        const port = await getFreePort({ host: 'localhost', port: 3000 });
         const args: AttachRequestArguments = {
             localRoot: path.dirname(fileToDebug),
             remoteRoot: path.dirname(fileToDebug),
