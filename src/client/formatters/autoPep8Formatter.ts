@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { Product } from '../common/installer/installer';
+import { Product } from '../common/installer/productInstaller';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { FORMAT } from '../telemetry/constants';

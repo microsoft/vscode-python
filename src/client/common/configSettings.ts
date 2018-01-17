@@ -2,6 +2,7 @@
 
 import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
+import { injectable } from 'inversify';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
@@ -29,6 +30,12 @@ export interface IPythonSettings {
     disableInstallationChecks: boolean;
     globalModuleInstallation: boolean;
 }
+
+export const IPythonSettingsProvider = Symbol('IPythonSettingsProvider');
+export interface IPythonSettingsProvider {
+    getInstance(resource?: Uri): IPythonSettings;
+}
+
 export interface ISortImportSettings {
     path: string;
     args: string[];
@@ -128,6 +135,13 @@ export interface ITerminalSettings {
 export function isTestExecution(): boolean {
     // tslint:disable-next-line:interface-name no-string-literal
     return process.env['VSC_PYTHON_CI_TEST'] === '1';
+}
+
+@injectable()
+export class PythonSettingsProvider implements IPythonSettingsProvider {
+    public getInstance(resource: Uri) {
+        return PythonSettings.getInstance(resource);
+    }
 }
 
 // tslint:disable-next-line:completed-docs

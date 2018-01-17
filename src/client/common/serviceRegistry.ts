@@ -4,7 +4,8 @@
 import { IServiceManager } from '../ioc/types';
 import { ApplicationShell } from './application/applicationShell';
 import { IApplicationShell } from './application/types';
-import { Installer } from './installer/installer';
+import { IPythonSettingsProvider, PythonSettingsProvider } from './configSettings';
+import { ProductInstaller } from './installer/productInstaller';
 import { Logger } from './logger';
 import { PersistentStateFactory } from './persistentState';
 import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
@@ -27,5 +28,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
-    serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
+    serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
+    serviceManager.addSingleton<IPythonSettingsProvider>(IPythonSettingsProvider, PythonSettingsProvider);
 }

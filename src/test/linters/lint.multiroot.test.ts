@@ -42,7 +42,7 @@ suite('Multiroot Linting', () => {
 
     function createLinter(linter: Product): ILinter {
         const mockOutputChannel = ioc.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
-        return new LinterManager().createLinter(linter, mockOutputChannel, ioc.serviceContainer);
+        return new LinterManager(ioc.serviceContainer).createLinter(linter, mockOutputChannel, ioc.serviceContainer);
     }
     async function testLinterInWorkspaceFolder(linter: ILinter, workspaceFolderRelativePath: string, mustHaveErrors: boolean) {
         const fileToLint = path.join(multirootPath, workspaceFolderRelativePath, 'file.py');

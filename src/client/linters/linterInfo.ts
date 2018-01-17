@@ -3,18 +3,21 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { PythonSettings } from '../common/configSettings';
+import { IPythonSettingsProvider } from '../common/configSettings';
 import { ExecutionInfo, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
 
 export class LinterInfo implements ILinterInfo {
     private _id: LinterId;
     private _product: Product;
+    private settingsProvider: IPythonSettingsProvider;
 
-    constructor(product: Product, id: LinterId) {
+    constructor(product: Product, id: LinterId, settingsProvider: IPythonSettingsProvider) {
         this._product = product;
         this._id = id;
+        this.settingsProvider = settingsProvider;
     }
+
     public get id(): LinterId {
         return this._id;
     }
@@ -32,12 +35,21 @@ export class LinterInfo implements ILinterInfo {
         return `${this.id}Enabled`;
     }
 
+    public enable(enabled: boolean, resource?: Uri): void {
+        const settings = this.settingsProvider.getInstance(resource);
+        settings.linting[this.enabledSettingName] = enabled;
+    }
+    public isEnabled(resource?: Uri): boolean {
+        const settings = this.settingsProvider.getInstance(resource);
+        return settings.linting[this.enabledSettingName] as boolean;
+    }
+
     public pathName(resource?: Uri): string {
-        const settings = PythonSettings.getInstance(resource);
+        const settings = this.settingsProvider.getInstance(resource);
         return settings.linting[this.pathSettingName] as string;
     }
     public linterArgs(resource?: Uri): string[] {
-        const settings = PythonSettings.getInstance(resource);
+        const settings = this.settingsProvider.getInstance(resource);
         const args = settings.linting[this.argsSettingName];
         return Array.isArray(args) ? args as string[] : [];
     }

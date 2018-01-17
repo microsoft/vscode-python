@@ -3,8 +3,8 @@ import * as path from 'path';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
 import { CondaInstaller } from '../../client/common/installer/condaInstaller';
-import { Installer } from '../../client/common/installer/installer';
 import { PipInstaller } from '../../client/common/installer/pipInstaller';
+import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { IModuleInstaller } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
@@ -55,7 +55,7 @@ suite('Module Installer', () => {
 
         ioc.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
         ioc.serviceManager.addSingleton<ILogger>(ILogger, Logger);
-        ioc.serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
+        ioc.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
 
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
@@ -71,7 +71,7 @@ suite('Module Installer', () => {
     }
     async function resetSettings() {
         await updateSetting('linting.enabled', true, undefined, ConfigurationTarget.Global);
-        await updateSetting('linting.currentLinter', 'pylint', rootWorkspaceUri, ConfigurationTarget.Workspace);
+        await updateSetting('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
     }
     async function getCurrentPythonPath(): Promise<string> {
         const pythonPath = PythonSettings.getInstance(workspaceUri).pythonPath;

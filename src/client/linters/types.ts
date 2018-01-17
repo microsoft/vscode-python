@@ -17,6 +17,8 @@ export interface ILinterInfo {
     readonly pathSettingName: string;
     readonly argsSettingName: string;
     readonly enabledSettingName: string;
+    enable(flag: boolean, resource?: vscode.Uri): void;
+    isEnabled(resource?: vscode.Uri): boolean;
     pathName(resource?: vscode.Uri): string;
     linterArgs(resource?: vscode.Uri): string[];
     getExecutionInfo(customArgs: string[], resource?: vscode.Uri): ExecutionInfo;
@@ -31,10 +33,10 @@ export const ILinterManager = Symbol('ILinterManager');
 export interface ILinterManager {
     getAllLinterInfos(): ILinterInfo[];
     getLinterInfo(product: Product): ILinterInfo;
-    getCurrentLinter(resource?: vscode.Uri): ILinterInfo | undefined;
+    getActiveLinters(resource?: vscode.Uri): ILinterInfo[];
     isLintingEnabled(resource?: vscode.Uri): boolean;
     enableLinting(enable: boolean, resource?: vscode.Uri): void;
-    setCurrentLinter(product: Product, resource?: vscode.Uri);
+    setActiveLinters(products: Product[], resource?: vscode.Uri): void;
     createLinter(product: Product, outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer): ILinter;
 }
 

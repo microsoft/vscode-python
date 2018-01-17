@@ -1,14 +1,14 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { ConfigurationTarget, Uri } from 'vscode';
 import * as vscode from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
-import { Product } from '../../client/common/installer/installer';
+import { Product } from '../../client/common/installer/productInstaller';
 import { IOutputChannel } from '../../client/common/types';
 import { LinterManager } from '../../client/linters/linterManager';
-import { ILintMessage, LintMessageSeverity } from '../../client/linters/types';
-import { deleteFile, rootWorkspaceUri, updateSetting } from '../common';
+import { ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
+import { deleteFile, PythonSettingKeys, rootWorkspaceUri, updateSetting } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { MockOutputChannel } from '../mockClasses';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -94,7 +94,7 @@ const filteredPep88MessagesToBeReturned: ILintMessage[] = [
 // tslint:disable-next-line:max-func-body-length
 suite('Linting', () => {
     let ioc: UnitTestIocContainer;
-    const linterManager = new LinterManager();
+    let linterManager: ILinterManager;
 
     suiteSetup(initialize);
     setup(async () => {
@@ -117,44 +117,74 @@ suite('Linting', () => {
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
+        linterManager = new LinterManager(ioc.serviceContainer);
     }
 
     async function resetSettings() {
         // Don't run these updates in parallel, as they are updating the same file.
-        await updateSetting('linting.enabled', true, rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
-        if (IS_MULTI_ROOT_TEST) {
-            await updateSetting('linting.enabled', true, rootWorkspaceUri, vscode.ConfigurationTarget.WorkspaceFolder);
-        }
-        await updateSetting('linting.currentLinter', 'pylint', rootWorkspaceUri, vscode.ConfigurationTarget.Workspace);
+        const target = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
+
+        await updateSetting('linting.enabled', true, rootWorkspaceUri, target);
+        await updateSetting('linting.lintOnSave', false, rootWorkspaceUri, target);
+
+        linterManager.getAllLinterInfos().forEach(async (x) => {
+            await updateSetting(makeSettingKey(x.product), false, rootWorkspaceUri, target);
+        });
     }
 
-    async function testLinter(product: Product) {
+    function makeSettingKey(product: Product): PythonSettingKeys {
+        return `linting.${linterManager.getLinterInfo(product).enabledSettingName}` as PythonSettingKeys;
+    }
+
+    async function testEnablingDisablingOfLinter(product: Product, enabled: boolean) {
+        const setting = makeSettingKey(product);
         const output = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        await updateSetting(setting, enabled, rootWorkspaceUri, IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace);
         const document = await vscode.workspace.openTextDocument(fileToLint);
         const cancelToken = new vscode.CancellationTokenSource();
 
         linterManager.enableLinting(true, document.uri);
-        linterManager.setCurrentLinter(product, document.uri);
+        linterManager.setActiveLinters([product], document.uri);
         const linter = linterManager.createLinter(product, output, ioc.serviceContainer);
 
         const messages = await linter.lint(document, cancelToken.token);
+        if (enabled) {
+            assert.notEqual(messages.length, 0, `No linter errors when linter is enabled, Output - ${output.output}`);
+        } else {
+            assert.equal(messages.length, 0, `Errors returned when linter is disabled, Output - ${output.output}`);
+        }
         assert.notEqual(messages.length, 0, `No linter errors when linter is enabled, Output - ${output.output}`);
     }
 
+    test('Disable Pylint and test linter', async () => {
+        await testEnablingDisablingOfLinter(Product.pylint, false);
+    });
     test('Enable Pylint and test linter', async () => {
-        await testLinter(Product.pylint);
+        await testEnablingDisablingOfLinter(Product.pylint, true);
+    });
+    test('Disable Pep8 and test linter', async () => {
+        await testEnablingDisablingOfLinter(Product.pep8, false);
     });
     test('Enable Pep8 and test linter', async () => {
-        await testLinter(Product.pep8);
+        await testEnablingDisablingOfLinter(Product.pep8, true);
+    });
+    test('Disable Flake8 and test linter', async () => {
+        await testEnablingDisablingOfLinter(Product.flake8, false);
     });
     test('Enable Flake8 and test linter', async () => {
-        await testLinter(Product.flake8);
+        await testEnablingDisablingOfLinter(Product.flake8, true);
+    });
+    test('Disable Prospector and test linter', async () => {
+        await testEnablingDisablingOfLinter(Product.prospector, false);
     });
     test('Enable Prospector and test linter', async () => {
-        await testLinter(Product.prospector);
+        await testEnablingDisablingOfLinter(Product.prospector, true);
+    });
+    test('Disable Pydocstyle and test linter', async () => {
+        await testEnablingDisablingOfLinter(Product.pydocstyle, false);
     });
     test('Enable Pydocstyle and test linter', async () => {
-        await testLinter(Product.pydocstyle);
+        await testEnablingDisablingOfLinter(Product.pydocstyle, true);
     });
 
     // tslint:disable-next-line:no-any
@@ -164,7 +194,7 @@ suite('Linting', () => {
         const document = await vscode.workspace.openTextDocument(pythonFile);
 
         linterManager.enableLinting(true, document.uri);
-        linterManager.setCurrentLinter(product, document.uri);
+        linterManager.setActiveLinters([product], document.uri);
         const linter = linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
 
         const messages = await linter.lint(document, cancelToken.token);

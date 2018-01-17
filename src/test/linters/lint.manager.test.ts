@@ -2,36 +2,55 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import { ILintingSettings, PythonSettings } from '../../client/common/configSettings';
+import { Container } from 'inversify';
+import * as TypeMoq from 'typemoq';
+import { ILintingSettings, IPythonSettings, IPythonSettingsProvider, PythonSettings } from '../../client/common/configSettings';
 import { EnumEx } from '../../client/common/enumUtils';
 import { Product } from '../../client/common/types';
+import { ServiceContainer } from '../../client/ioc/container';
+import { ServiceManager } from '../../client/ioc/serviceManager';
 import { LinterManager } from '../../client/linters/linterManager';
-import { LinterId } from '../../client/linters/types';
+import { ILinterManager, LinterId } from '../../client/linters/types';
 import { initialize } from '../initialize';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Linting - Manager', () => {
-    const lm = new LinterManager();
+    let lm: ILinterManager;
+    let settingsProvider: IPythonSettingsProvider;
+    let settings: IPythonSettings;
+
     suiteSetup(initialize);
-    setup(async () => await resetSettings());
+    setup(async () => {
+        const cont = new Container();
+        const serviceManager = new ServiceManager(cont);
+        const serviceContainer = new ServiceContainer(cont);
+
+        const settingsProviderMock = TypeMoq.Mock.ofType<IPythonSettingsProvider>();
+        settingsProviderMock.setup(provider => provider.getInstance(TypeMoq.It.isAny())).returns(() => PythonSettings.getInstance());
+
+        settingsProvider = settingsProviderMock.object;
+        serviceManager.addSingletonInstance<IPythonSettingsProvider>(IPythonSettingsProvider, settingsProvider);
+
+        settings = settingsProvider.getInstance();
+        lm = new LinterManager(serviceContainer);
+        resetSettings();
+    });
     teardown(async () => await resetSettings());
 
-    async function resetSettings() {
-        lm.setCurrentLinter(Product.pylint);
+    function resetSettings() {
+        lm.setActiveLinters([Product.pylint]);
         lm.enableLinting(true);
     }
 
     test('Ensure product is set in Execution Info', async () => {
         [Product.flake8, Product.mypy, Product.pep8,
-            Product.pydocstyle, Product.pylama, Product.pylint].forEach(product => {
+        Product.pydocstyle, Product.pylama, Product.pylint].forEach(product => {
             const execInfo = lm.getLinterInfo(product).getExecutionInfo([]);
             assert.equal(execInfo.product, product, `Incorrect information for ${product}`);
         });
     });
 
     test('Ensure executable is set in Execution Info', async () => {
-        const settings = PythonSettings.getInstance();
-
         [Product.flake8, Product.mypy, Product.pep8,
         Product.pydocstyle, Product.pylama, Product.pylint].forEach(product => {
             const info = lm.getLinterInfo(product);
@@ -45,15 +64,15 @@ suite('Linting - Manager', () => {
         [Product.flake8, Product.mypy, Product.pep8,
         Product.pydocstyle, Product.pylama, Product.pylint].forEach(product => {
             const linter = lm.getLinterInfo(product);
-            const settings = {
+            const expected = {
                 argsName: `${linter.id}Args` as keyof ILintingSettings,
                 pathName: `${linter.id}Path` as keyof ILintingSettings,
                 enabledName: `${linter.id}Enabled` as keyof ILintingSettings
             };
 
-            assert.equal(linter.argsSettingName, settings.argsName, `Incorrect args settings for product ${linter.id}`);
-            assert.equal(linter.pathSettingName, settings.pathName, `Incorrect path settings for product ${linter.id}`);
-            assert.equal(linter.enabledSettingName, settings.enabledName, `Incorrect enabled settings for product ${linter.id}`);
+            assert.equal(linter.argsSettingName, expected.argsName, `Incorrect args settings for product ${linter.id}`);
+            assert.equal(linter.pathSettingName, expected.pathName, `Incorrect path settings for product ${linter.id}`);
+            assert.equal(linter.enabledSettingName, expected.enabledName, `Incorrect enabled settings for product ${linter.id}`);
         });
     });
 
@@ -73,31 +92,38 @@ suite('Linting - Manager', () => {
         assert.equal(lm.isLintingEnabled(), true, 'Linting not enabled');
     });
 
-    test('Set current linter', async () => {
-        const before = lm.getCurrentLinter();
+    test('Set single linter', async () => {
+        const before = lm.getActiveLinters();
         for (const linter of lm.getAllLinterInfos()) {
-            lm.setCurrentLinter(linter.product);
-            const selected = lm.getCurrentLinter();
-            assert.notEqual(selected, undefined, 'Current linter is undefined');
-            assert.equal(linter!.id, selected!.id, `Selected linter ${selected} does not match requested ${linter.id}`);
+            lm.setActiveLinters([linter.product]);
+            const selected = lm.getActiveLinters();
+            assert.notEqual(selected.length, 0, 'Current linter is undefined');
+            assert.equal(linter!.id, selected![0].id, `Selected linter ${selected} does not match requested ${linter.id}`);
         }
-        lm.setCurrentLinter(before!.product);
+    });
+
+    test('Set multiple linters', async () => {
+        const before = lm.getActiveLinters();
+        lm.setActiveLinters([Product.flake8, Product.pydocstyle]);
+        const selected = lm.getActiveLinters();
+        assert.equal(selected.length, 2, 'Selected linters lengths does not match');
+        assert.equal(Product.flake8, selected[0].id, `Selected linter ${selected[0].id} does not match requested 'flake8'`);
+        assert.equal(Product.pydocstyle, selected[1].id, `Selected linter ${selected[1].id} does not match requested 'pydocstyle'`);
     });
 
     test('Try setting unsupported linter', async () => {
-        const before = lm.getCurrentLinter();
+        const before = lm.getActiveLinters();
         assert.notEqual(before, undefined, 'Current/before linter is undefined');
 
-        lm.setCurrentLinter(Product.nosetest);
-        const after = lm.getCurrentLinter();
+        lm.setActiveLinters([Product.nosetest]);
+        const after = lm.getActiveLinters();
         assert.notEqual(after, undefined, 'Current/after linter is undefined');
 
-        assert.equal(after!.id, before!.id, 'Should not be able to set unsupported linter');
+        assert.equal(after![0].id, before![0].id, 'Should not be able to set unsupported linter');
     });
 
     test('Verify linting disabled with unsupported linter', async () => {
         const settingName = 'currentLinter';
-        const settings = PythonSettings.getInstance();
         const current = settings.linting[settingName] as string;
 
         settings.linting[settingName] = 'wrong';

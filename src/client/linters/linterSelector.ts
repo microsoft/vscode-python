@@ -20,14 +20,26 @@ export class LinterSelector implements Disposable {
         this.disposables.forEach(disposable => disposable.dispose());
     }
 
-    private async setLinter(): Promise<void> {
+    public async setLinter(): Promise<void> {
         const wks = await this.getWorkspaceToSetPythonPath();
         const workspaceUri = wks ? wks.folderUri : undefined;
 
         const linters = this.linterManager.getAllLinterInfos();
         const suggestions = linters.map(x => x.id).sort();
-        const currentLinter = this.linterManager.getCurrentLinter(workspaceUri);
-        const current = currentLinter ? currentLinter.id : 'none';
+        const activeLinters = this.linterManager.getActiveLinters(workspaceUri);
+
+        let current: string;
+        switch (activeLinters.length) {
+            case 0:
+                current = 'none';
+                break;
+            case 1:
+                current = activeLinters[0].id;
+                break;
+            default:
+                current = 'multiple selected';
+                break;
+        }
 
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
@@ -38,12 +50,12 @@ export class LinterSelector implements Disposable {
         const selection = await window.showQuickPick(suggestions, quickPickOptions);
         if (selection !== undefined) {
             const index = linters.findIndex(x => x.id === selection);
-            this.linterManager.setCurrentLinter(linters[index].product, workspaceUri);
+            this.linterManager.setActiveLinters([linters[index].product], workspaceUri);
             this.linterManager.enableLinting(true, workspaceUri); // Changing linter automatically enables linting
         }
     }
 
-    private async enableLinting(): Promise<void> {
+    public async enableLinting(): Promise<void> {
         const options = ['on', 'off'];
         const wks = await this.getWorkspaceToSetPythonPath();
         const workspaceUri = wks ? wks.folderUri : undefined;

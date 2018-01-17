@@ -2,7 +2,7 @@ import * as path from 'path';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { EnumEx } from '../../client/common/enumUtils';
 import { createDeferred } from '../../client/common/helpers';
-import { Installer } from '../../client/common/installer/installer';
+import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { IModuleInstaller } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
@@ -48,7 +48,7 @@ suite('Installer', () => {
 
         ioc.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
         ioc.serviceManager.addSingleton<ILogger>(ILogger, Logger);
-        ioc.serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
+        ioc.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
         ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
 
@@ -61,7 +61,7 @@ suite('Installer', () => {
     }
 
     async function testCheckingIfProductIsInstalled(product: Product) {
-        const installer = ioc.serviceContainer.get<Installer>(IInstaller);
+        const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
         const processService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
         const checkInstalledDef = createDeferred<boolean>();
         processService.onExec((file, args, options, callback) => {
@@ -89,7 +89,7 @@ suite('Installer', () => {
     });
 
     async function testInstallingProduct(product: Product) {
-        const installer = ioc.serviceContainer.get<Installer>(IInstaller);
+        const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
         const checkInstalledDef = createDeferred<boolean>();
         const moduleInstallers = ioc.serviceContainer.getAll<MockModuleInstaller>(IModuleInstaller);
         const moduleInstallerOne = moduleInstallers.find(item => item.displayName === 'two')!;

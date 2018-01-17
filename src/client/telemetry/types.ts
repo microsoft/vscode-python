@@ -11,10 +11,13 @@ export type FormatTelemetry = {
     hasCustomArgs: boolean;
     formatSelection: boolean;
 };
+
+export type LinterTrigger = 'auto' | 'save';
+
 export type LintingTelemetry = {
     tool: LinterId;
     hasCustomArgs: boolean;
-    trigger: 'save' | 'auto';
+    trigger: LinterTrigger;
     executableSpecified: boolean;
 };
 export type PythonInterpreterTelemetry = {
