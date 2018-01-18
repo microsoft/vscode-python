@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ChildProcess, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
-import * as Rx from 'rxjs';
+import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
 import { ExecutionInfo } from '../types';
 import { EnvironmentVariables } from '../variables/types';
@@ -18,7 +18,7 @@ export type Output<T extends string | Buffer> = {
 };
 export type ObservableExecutionResult<T extends string | Buffer> = {
     proc: ChildProcess;
-    out: Rx.Observable<Output<T>>;
+    out: Observable<Output<T>>;
 };
 
 // tslint:disable-next-line:interface-name
