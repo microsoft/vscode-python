@@ -107,12 +107,7 @@ suite('Attach Debugger', () => {
 
         // Continue the program.
         debugClient.continueRequest({ threadId });
-
-        // Value for input prompt.
-        result.proc.stdin.write(`Peter Smith${EOL}`);
         await firstOutputReceived;
-
-        result.proc.stdin.write(`${EOL}`);
         await secondOutputReceived;
         await completed.promise;
 
