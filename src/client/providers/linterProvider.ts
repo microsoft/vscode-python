@@ -150,7 +150,7 @@ export class LinterProvider implements vscode.Disposable {
         const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
         const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
         const settings = PythonSettings.getInstance(document.uri);
-        if (document.languageId !== PythonLanguage.language || !this.linterManager.isLintingEnabled(document.uri)) {
+        if (document.languageId !== PythonLanguage.language || !this.linterManager.isLintingEnabled()) {
             return;
         }
         const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => {

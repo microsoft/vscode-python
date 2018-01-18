@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
+import { CancellationToken, OutputChannel, TextDocument, Uri, window } from 'vscode';
 import { IPythonSettingsProvider } from '../common/configSettings';
 import { ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -31,6 +31,7 @@ export class LinterManager implements ILinterManager {
     private lintingEnabledSettingName = 'enabled';
     private linters: ILinterInfo[];
     private settingsProvider: IPythonSettingsProvider;
+    private disabledForCurrentSession = false;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.settingsProvider = serviceContainer.get<IPythonSettingsProvider>(IPythonSettingsProvider);
@@ -58,39 +59,53 @@ export class LinterManager implements ILinterManager {
     }
 
     public isLintingEnabled(resource?: Uri): boolean {
-        const settings = this.settingsProvider.getInstance(resource);
-        return (settings.linting[this.lintingEnabledSettingName] as boolean) && this.getActiveLinters(resource).length > 0;
+        if (this.disabledForCurrentSession) {
+            return false;
+        }
+        const target = this.getSettingsTargetUri(resource);
+        const settings = this.settingsProvider.getInstance(target);
+        return (settings.linting[this.lintingEnabledSettingName] as boolean) && this.getActiveLinters(target).length > 0;
     }
 
     public enableLinting(enable: boolean, resource?: Uri): void {
-        if (enable === this.isLintingEnabled(resource)) {
+        const target = this.getSettingsTargetUri(resource);
+
+        this.disabledForCurrentSession = !enable;
+        if (enable === this.isLintingEnabled(target)) {
             return;
         }
-        const settings = this.settingsProvider.getInstance(resource);
+        const settings = this.settingsProvider.getInstance(target);
         settings.linting[this.lintingEnabledSettingName] = enable;
 
         // If nothing is enabled, fix it up to PyLint (default).
-        if (enable && this.getActiveLinters(resource).length === 0) {
-            this.setActiveLinters([Product.pylint], resource);
+        if (enable && this.getActiveLinters(target).length === 0) {
+            this.setActiveLinters([Product.pylint], target);
         }
     }
 
+    public disableSessionLinting(): void {
+        this.disabledForCurrentSession = true;
+    }
+
     public getActiveLinters(resource?: Uri): ILinterInfo[] {
-        return this.linters.filter(x => x.isEnabled(resource));
+        const target = this.getSettingsTargetUri(resource);
+        return this.linters.filter(x => x.isEnabled(target));
     }
 
     public setActiveLinters(products: Product[], resource?: Uri): void {
-        this.getActiveLinters(resource).forEach(x => x.enable(false, resource));
+        const target = this.getSettingsTargetUri(resource);
+        this.getActiveLinters(target).forEach(x => x.enable(false, target));
         if (products.length > 0) {
             this.linters
                 .filter(x => products.findIndex(p => x.product === p) >= 0)
-                .forEach(x => x.enable(true, resource));
-            this.enableLinting(true, resource);
+                .forEach(x => x.enable(true, target));
+            this.enableLinting(true, target);
         }
     }
 
     public createLinter(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer, resource?: Uri): ILinter {
-        if (!this.isLintingEnabled(resource)) {
+        const target = this.getSettingsTargetUri(resource);
+        if (!this.isLintingEnabled(target)) {
             return new DisabledLinter(serviceContainer.get<IPythonSettingsProvider>(IPythonSettingsProvider));
         }
         const error = 'Linter manager: Unknown linter';
@@ -114,5 +129,11 @@ export class LinterManager implements ILinterManager {
                 break;
         }
         throw new Error(error);
+    }
+
+    private getSettingsTargetUri(resource?: Uri): Uri | undefined {
+        return resource
+            ? resource
+            : window.activeTextEditor ? window.activeTextEditor.document.uri : undefined;
     }
 }

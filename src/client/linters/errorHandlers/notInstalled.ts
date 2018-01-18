@@ -11,10 +11,6 @@ export class NotInstalledErrorHandler extends BaseErrorHandler {
         super(product, outputChannel, serviceContainer);
     }
     public async handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean> {
-        if (!isNotInstalledError(error) || !execInfo.moduleName) {
-            return this.nextHandler ? await this.nextHandler.handleError(error, resource, execInfo) : false;
-        }
-
         const pythonExecutionService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(resource);
         const isModuleInstalled = await pythonExecutionService.isModuleInstalled(execInfo.moduleName!);
         if (isModuleInstalled) {

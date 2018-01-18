@@ -26,12 +26,9 @@ export class LinterSelector implements Disposable {
     }
 
     public async setLinter(): Promise<void> {
-        const wks = await this.getWorkspaceToSetPythonPath();
-        const workspaceUri = wks ? wks.folderUri : undefined;
-
         const linters = this.linterManager.getAllLinterInfos();
         const suggestions = linters.map(x => x.id).sort();
-        const activeLinters = this.linterManager.getActiveLinters(workspaceUri);
+        const activeLinters = this.linterManager.getActiveLinters();
 
         let current: string;
         switch (activeLinters.length) {
@@ -55,15 +52,13 @@ export class LinterSelector implements Disposable {
         const selection = await this.appShell.showQuickPick(suggestions, quickPickOptions);
         if (selection !== undefined) {
             const index = linters.findIndex(x => x.id === selection);
-            this.linterManager.setActiveLinters([linters[index].product], workspaceUri);
+            this.linterManager.setActiveLinters([linters[index].product]);
         }
     }
 
     public async enableLinting(): Promise<void> {
         const options = ['on', 'off'];
-        const wks = await this.getWorkspaceToSetPythonPath();
-        const workspaceUri = wks ? wks.folderUri : undefined;
-        const current = this.linterManager.isLintingEnabled(workspaceUri) ? options[0] : options[1];
+        const current = this.linterManager.isLintingEnabled() ? options[0] : options[1];
 
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
@@ -73,21 +68,7 @@ export class LinterSelector implements Disposable {
 
         const selection = await this.appShell.showQuickPick(options, quickPickOptions);
         if (selection !== undefined) {
-            this.linterManager.enableLinting(selection === options[0], workspaceUri);
+            this.linterManager.enableLinting(selection === options[0]);
         }
-    }
-
-    private async getWorkspaceToSetPythonPath(): Promise<WorkspacePythonPath | undefined> {
-        if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
-            return undefined;
-        }
-        if (workspace.workspaceFolders.length === 1) {
-            return { folderUri: workspace.workspaceFolders[0].uri, configTarget: ConfigurationTarget.Workspace };
-        }
-
-        // Ok we have multiple interpreters, get the user to pick a folder.
-        // tslint:disable-next-line:no-any prefer-type-cast
-        const workspaceFolder = await (window as any).showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
-        return workspaceFolder ? { folderUri: workspaceFolder.uri, configTarget: ConfigurationTarget.WorkspaceFolder } : undefined;
     }
 }

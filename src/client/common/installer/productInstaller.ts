@@ -261,7 +261,7 @@ class FormatterInstaller extends BaseInstaller {
         const installThis = `Install ${productName}`;
         const alternateFormatter = product === Product.autopep8 ? 'yapf' : 'autopep8';
         const useOtherFormatter = `Use '${alternateFormatter}' formatter`;
-        const item = await this.appShell.showErrorMessage(`Formatter ${productName} is not installed.`, installThis, useOtherFormatter, 'Cancel');
+        const item = await this.appShell.showErrorMessage(`Formatter ${productName} is not installed.`, { modal: true }, installThis, useOtherFormatter);
 
         if (item === installThis) {
             return this.install(product, resource);
@@ -285,12 +285,19 @@ class FormatterInstaller extends BaseInstaller {
 class LinterInstaller extends BaseInstaller {
     public async promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
-        const item = await this.appShell.showErrorMessage(`Linter ${productName} is not installed. Install?`, 'Yes', 'No', 'Cancel');
-        if (item === 'Yes') {
+        const install = 'Install';
+        const disable = 'Disable linting';
+
+        const response = await this.appShell
+            .showErrorMessage(`Linter ${productName} is not installed.`, install, disable);
+        if (response === install) {
             return this.install(product, resource);
         }
-        if (item === 'Cancel') {
-            await this.appShell.showWarningMessage('Linting and syntax check is now disabled');
+        const lm = this.serviceContainer.get<ILinterManager>(ILinterManager);
+        if (response === disable) {
+            lm.enableLinting(false);
+        } else {
+            lm.disableSessionLinting();
         }
         return InstallerResponse.Ignore;
     }
