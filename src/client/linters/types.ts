@@ -37,7 +37,7 @@ export interface ILinterManager {
     isLintingEnabled(resource?: vscode.Uri): boolean;
     enableLinting(enable: boolean, resource?: vscode.Uri): void;
     setActiveLinters(products: Product[], resource?: vscode.Uri): void;
-    createLinter(product: Product, outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer): ILinter;
+    createLinter(product: Product, outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer, resource?: vscode.Uri): ILinter;
 }
 
 export interface ILintMessage {

@@ -109,7 +109,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const processService = serviceContainer.get<IProcessService>(IProcessService);
 
     context.subscriptions.push(new InterpreterSelector(interpreterManager, interpreterVersionService, processService));
-    context.subscriptions.push(new LinterSelector(serviceContainer));
+    context.subscriptions.push(new LinterSelector(serviceContainer, true));
 
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());

@@ -35,7 +35,7 @@ suite('Linting - Manager', () => {
         lm = new LinterManager(serviceContainer);
         resetSettings();
     });
-    teardown(async () => await resetSettings());
+    teardown(resetSettings);
 
     function resetSettings() {
         lm.setActiveLinters([Product.pylint]);
@@ -93,7 +93,6 @@ suite('Linting - Manager', () => {
     });
 
     test('Set single linter', async () => {
-        const before = lm.getActiveLinters();
         for (const linter of lm.getAllLinterInfos()) {
             lm.setActiveLinters([linter.product]);
             const selected = lm.getActiveLinters();
@@ -103,12 +102,11 @@ suite('Linting - Manager', () => {
     });
 
     test('Set multiple linters', async () => {
-        const before = lm.getActiveLinters();
         lm.setActiveLinters([Product.flake8, Product.pydocstyle]);
         const selected = lm.getActiveLinters();
         assert.equal(selected.length, 2, 'Selected linters lengths does not match');
-        assert.equal(Product.flake8, selected[0].id, `Selected linter ${selected[0].id} does not match requested 'flake8'`);
-        assert.equal(Product.pydocstyle, selected[1].id, `Selected linter ${selected[1].id} does not match requested 'pydocstyle'`);
+        assert.equal(Product.flake8, selected[0].product, `Selected linter ${selected[0].id} does not match requested 'flake8'`);
+        assert.equal(Product.pydocstyle, selected[1].product, `Selected linter ${selected[1].id} does not match requested 'pydocstyle'`);
     });
 
     test('Try setting unsupported linter', async () => {
@@ -120,17 +118,6 @@ suite('Linting - Manager', () => {
         assert.notEqual(after, undefined, 'Current/after linter is undefined');
 
         assert.equal(after![0].id, before![0].id, 'Should not be able to set unsupported linter');
-    });
-
-    test('Verify linting disabled with unsupported linter', async () => {
-        const settingName = 'currentLinter';
-        const current = settings.linting[settingName] as string;
-
-        settings.linting[settingName] = 'wrong';
-        const actual = lm.isLintingEnabled();
-
-        settings.linting[settingName] = current;
-        assert.equal(actual, false, 'Linting is incorrectly enabled with unsupported linter');
     });
 
     EnumEx.getValues<Product>(Product).forEach(product => {

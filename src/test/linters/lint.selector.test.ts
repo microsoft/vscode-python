@@ -3,39 +3,31 @@
 
 import * as assert from 'assert';
 import { Container } from 'inversify';
-import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import * as vscode from 'vscode';
+import { QuickPickOptions } from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
-import { ILintingSettings, IPythonSettings, IPythonSettingsProvider } from '../../client/common/configSettings';
-import { Commands } from '../../client/common/constants';
-import { EnumEx } from '../../client/common/enumUtils';
+import { IPythonSettingsProvider, PythonSettings } from '../../client/common/configSettings';
 import { Product } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LinterManager } from '../../client/linters/linterManager';
 import { LinterSelector } from '../../client/linters/linterSelector';
-import { ILinterManager, LinterId } from '../../client/linters/types';
+import { ILinterManager } from '../../client/linters/types';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
-
-const pythoFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'linting');
-const fileToLint = path.join(pythoFilesPath, 'file.py');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Linting - Linter Selector', () => {
     let serviceContainer: IServiceContainer;
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let settingsProvider: TypeMoq.IMock<IPythonSettingsProvider>;
-    let settings: TypeMoq.IMock<IPythonSettings>;
     let selector: LinterSelector;
     let lm: ILinterManager;
 
     suiteSetup(initialize);
     setup(async () => {
-        initializeServices();
         await initializeTest();
+        initializeServices();
     });
     suiteTeardown(closeActiveWindows);
     teardown(async () => {
@@ -48,21 +40,107 @@ suite('Linting - Linter Selector', () => {
         serviceContainer = new ServiceContainer(cont);
 
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settingsProvider = TypeMoq.Mock.ofType<IPythonSettingsProvider>();
-        settingsProvider.setup(p => p.getInstance(TypeMoq.It.isAny())).returns(() => settings.object);
+        settingsProvider.setup(p => p.getInstance(TypeMoq.It.isAny())).returns(() => PythonSettings.getInstance());
 
         serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
         serviceManager.addSingletonInstance<IPythonSettingsProvider>(IPythonSettingsProvider, settingsProvider.object);
-
-        selector = new LinterSelector(serviceContainer);
         lm = new LinterManager(serviceContainer);
+        serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
+        selector = new LinterSelector(serviceContainer, false);
     }
 
-    test('Select linter', async () => {
-        const document = await vscode.workspace.openTextDocument(fileToLint);
-        const cancelToken = new vscode.CancellationTokenSource();
-
-        selector.enableLinting();
+    test('Enable linting', async () => {
+        await enableDisableLinter(true);
     });
+
+    test('Disable linting', async () => {
+        await enableDisableLinter(false);
+    });
+
+    test('Single linter active', async () => {
+        await selectLinter([Product.pylama]);
+    });
+
+    test('Multiple linters active', async () => {
+        await selectLinter([Product.flake8, Product.pydocstyle]);
+    });
+
+    test('No linters active', async () => {
+        await selectLinter([Product.flake8]);
+    });
+
+    async function enableDisableLinter(enable: boolean): Promise<void> {
+        let suggestions: string[] = [];
+        let options: QuickPickOptions;
+
+        lm.enableLinting(!enable);
+        appShell.setup(x => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .callback((s, o) => {
+                suggestions = s as string[];
+                options = o as QuickPickOptions;
+            })
+            .returns((s) => enable
+                ? new Promise<string>((resolve, reject) => { return resolve('on'); })
+                : new Promise<string>((resolve, reject) => { return resolve('off'); })
+        );
+        const current = enable ? 'off' : 'on';
+        await selector.enableLinting();
+        assert.notEqual(suggestions.length, 0, 'showQuickPick was not called');
+        assert.notEqual(options!, undefined, 'showQuickPick was not called');
+
+        assert.equal(suggestions.length, 2, 'Wrong number of suggestions');
+        assert.equal(suggestions[0], 'on', 'Wrong first suggestions');
+        assert.equal(suggestions[1], 'off', 'Wrong second suggestions');
+
+        assert.equal(options!.matchOnDescription, true, 'Quick pick options are incorrect');
+        assert.equal(options!.matchOnDetail, true, 'Quick pick options are incorrect');
+        assert.equal(options!.placeHolder,  `current: ${current}`, 'Quick pick current option is incorrect');
+        assert.equal(lm.isLintingEnabled(), enable, 'Linting selector did not change linting on/off flag');
+    }
+
+    async function selectLinter(products: Product[]): Promise<void> {
+        let suggestions: string[] = [];
+        let options: QuickPickOptions;
+
+        appShell.setup(x => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .callback((s, o) => {
+                suggestions = s as string[];
+                options = o as QuickPickOptions;
+            })
+            .returns((s) => new Promise((resolve, reject) => resolve('pylint')));
+
+        const linters = lm.getAllLinterInfos();
+
+        lm.setActiveLinters(products);
+        let current: string;
+        let activeLinters = lm.getActiveLinters();
+        switch (activeLinters.length) {
+            case 0:
+                current = 'none';
+                break;
+            case 1:
+                current = activeLinters[0].id;
+                break;
+            default:
+                current = 'multiple selected';
+                break;
+        }
+
+        await selector.setLinter();
+
+        assert.notEqual(suggestions.length, 0, 'showQuickPick was not called');
+        assert.notEqual(options!, undefined, 'showQuickPick was not called');
+
+        assert.equal(suggestions.length, linters.length, 'Wrong number of suggestions');
+        assert.deepEqual(suggestions, linters.map(x => x.id).sort(), 'Wrong linters order in suggestions');
+
+        assert.equal(options!.matchOnDescription, true, 'Quick pick options are incorrect');
+        assert.equal(options!.matchOnDetail, true, 'Quick pick options are incorrect');
+        assert.equal(options!.placeHolder,  `current: ${current}`, 'Quick pick current option is incorrect');
+
+        activeLinters = lm.getActiveLinters();
+        assert.equal(activeLinters.length, 1, 'Linting selector did not change active linter');
+        assert.equal(activeLinters[0].product, Product.pylint, 'Linting selector did not change to pylint');
+    }
 });

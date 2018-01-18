@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
-import { IPythonSettings, PythonSettings } from '../common/configSettings';
+import { IPythonSettings, IPythonSettingsProvider } from '../common/configSettings';
 import '../common/extensions';
 import { IPythonToolExecutionService } from '../common/process/types';
 import { ExecutionInfo, ILogger, Product } from '../common/types';
@@ -34,6 +34,7 @@ export function matchNamedRegEx(data, regex): IRegexGroup | undefined {
 
 export abstract class BaseLinter implements ILinter {
     private errorHandler: ErrorHandler;
+    private settingsProvider: IPythonSettingsProvider;
     private _pythonSettings: IPythonSettings;
     private _info: ILinterInfo;
 
@@ -47,6 +48,7 @@ export abstract class BaseLinter implements ILinter {
         protected readonly columnOffset = 0) {
         this._info = serviceContainer.get<ILinterManager>(ILinterManager).getLinterInfo(product);
         this.errorHandler = new ErrorHandler(this.info.product, outputChannel, serviceContainer);
+        this.settingsProvider = serviceContainer.get<IPythonSettingsProvider>(IPythonSettingsProvider);
     }
 
     public get info(): ILinterInfo {
@@ -58,7 +60,7 @@ export abstract class BaseLinter implements ILinter {
         return path.basename(executablePath).length > 0 && path.basename(executablePath) !== executablePath;
     }
     public async lint(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]> {
-        this._pythonSettings = PythonSettings.getInstance(document.uri);
+        this._pythonSettings = this.settingsProvider.getInstance(document.uri);
         return this.runLinter(document, cancellation);
     }
 
@@ -97,6 +99,9 @@ export abstract class BaseLinter implements ILinter {
     }
 
     protected async run(args: string[], document: vscode.TextDocument, cancellation: vscode.CancellationToken, regEx: string = REGEX): Promise<ILintMessage[]> {
+        if (!this.info.isEnabled(document.uri)) {
+            return [];
+        }
         const executionInfo = this.getExecutionInfo(this.info.product, args, document.uri);
         const cwd = this.getWorkspaceRootPath(document);
         const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);

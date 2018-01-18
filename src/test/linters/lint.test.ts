@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { ConfigurationTarget, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import * as vscode from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { Product } from '../../client/common/installer/productInstaller';
@@ -143,8 +143,8 @@ suite('Linting', () => {
         const document = await vscode.workspace.openTextDocument(fileToLint);
         const cancelToken = new vscode.CancellationTokenSource();
 
-        linterManager.enableLinting(true, document.uri);
         linterManager.setActiveLinters([product], document.uri);
+        linterManager.enableLinting(enabled, document.uri);
         const linter = linterManager.createLinter(product, output, ioc.serviceContainer);
 
         const messages = await linter.lint(document, cancelToken.token);
@@ -153,7 +153,6 @@ suite('Linting', () => {
         } else {
             assert.equal(messages.length, 0, `Errors returned when linter is disabled, Output - ${output.output}`);
         }
-        assert.notEqual(messages.length, 0, `No linter errors when linter is enabled, Output - ${output.output}`);
     }
 
     test('Disable Pylint and test linter', async () => {

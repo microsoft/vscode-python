@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { OutputChannel, Uri } from 'vscode';
+import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
 import { IPythonSettingsProvider } from '../common/configSettings';
 import { ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -14,7 +14,17 @@ import { Prospector } from './prospector';
 import { PyDocStyle } from './pydocstyle';
 import { PyLama } from './pylama';
 import { Pylint } from './pylint';
-import { ILinter, ILinterInfo, ILinterManager } from './types';
+import { ILinter, ILinterInfo, ILinterManager, ILintMessage } from './types';
+
+class DisabledLinter implements ILinter {
+    constructor(private settingsProvider: IPythonSettingsProvider) {}
+    public get info() {
+        return new LinterInfo(Product.pylint, 'pylint', this.settingsProvider);
+    }
+    public async lint(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
+        return [];
+    }
+}
 
 @injectable()
 export class LinterManager implements ILinterManager {
@@ -53,10 +63,14 @@ export class LinterManager implements ILinterManager {
     }
 
     public enableLinting(enable: boolean, resource?: Uri): void {
+        if (enable === this.isLintingEnabled(resource)) {
+            return;
+        }
         const settings = this.settingsProvider.getInstance(resource);
         settings.linting[this.lintingEnabledSettingName] = enable;
+
         // If nothing is enabled, fix it up to PyLint (default).
-        if (this.getActiveLinters(resource).length === 0) {
+        if (enable && this.getActiveLinters(resource).length === 0) {
             this.setActiveLinters([Product.pylint], resource);
         }
     }
@@ -75,7 +89,10 @@ export class LinterManager implements ILinterManager {
         }
     }
 
-    public createLinter(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer): ILinter {
+    public createLinter(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer, resource?: Uri): ILinter {
+        if (!this.isLintingEnabled(resource)) {
+            return new DisabledLinter(serviceContainer.get<IPythonSettingsProvider>(IPythonSettingsProvider));
+        }
         const error = 'Linter manager: Unknown linter';
         switch (product) {
             case Product.flake8:

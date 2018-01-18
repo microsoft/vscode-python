@@ -1,11 +1,9 @@
 import * as assert from 'assert';
 import * as path from 'path';
-import { CancellationTokenSource, ConfigurationTarget, OutputChannel, Uri, window, workspace } from 'vscode';
+import { CancellationTokenSource, ConfigurationTarget, OutputChannel, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
-import { IInstaller, ILogger, IOutputChannel, Product } from '../../client/common/types';
-import * as baseLinter from '../../client/linters/baseLinter';
-import { LinterManager } from '../../client/linters/linterManager';
-import { ILinter } from '../../client/linters/types';
+import { IOutputChannel, Product } from '../../client/common/types';
+import { ILinter, ILinterManager } from '../../client/linters/types';
 import { TEST_OUTPUT_CHANNEL } from '../../client/unittests/common/constants';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -40,9 +38,10 @@ suite('Multiroot Linting', () => {
         ioc.registerVariableTypes();
     }
 
-    function createLinter(linter: Product): ILinter {
+    function createLinter(linter: Product, resource?: Uri): ILinter {
         const mockOutputChannel = ioc.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
-        return new LinterManager(ioc.serviceContainer).createLinter(linter, mockOutputChannel, ioc.serviceContainer);
+        const lm = ioc.serviceContainer.get<ILinterManager>(ILinterManager);
+        return lm.createLinter(linter, mockOutputChannel, ioc.serviceContainer);
     }
     async function testLinterInWorkspaceFolder(linter: ILinter, workspaceFolderRelativePath: string, mustHaveErrors: boolean) {
         const fileToLint = path.join(multirootPath, workspaceFolderRelativePath, 'file.py');
