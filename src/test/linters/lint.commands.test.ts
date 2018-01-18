@@ -51,26 +51,26 @@ suite('Linting - Linter Selector', () => {
     }
 
     test('Enable linting', async () => {
-        await enableDisableLinter(true);
+        await enableDisableLinterAsync(true);
     });
 
     test('Disable linting', async () => {
-        await enableDisableLinter(false);
+        await enableDisableLinterAsync(false);
     });
 
     test('Single linter active', async () => {
-        await selectLinter([Product.pylama]);
+        await selectLinterAsync([Product.pylama]);
     });
 
     test('Multiple linters active', async () => {
-        await selectLinter([Product.flake8, Product.pydocstyle]);
+        await selectLinterAsync([Product.flake8, Product.pydocstyle]);
     });
 
     test('No linters active', async () => {
-        await selectLinter([Product.flake8]);
+        await selectLinterAsync([Product.flake8]);
     });
 
-    async function enableDisableLinter(enable: boolean): Promise<void> {
+    async function enableDisableLinterAsync(enable: boolean): Promise<void> {
         let suggestions: string[] = [];
         let options: QuickPickOptions;
 
@@ -99,7 +99,7 @@ suite('Linting - Linter Selector', () => {
         assert.equal(lm.isLintingEnabled(undefined), enable, 'Linting selector did not change linting on/off flag');
     }
 
-    async function selectLinter(products: Product[]): Promise<void> {
+    async function selectLinterAsync(products: Product[]): Promise<void> {
         let suggestions: string[] = [];
         let options: QuickPickOptions;
 

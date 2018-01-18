@@ -20,7 +20,7 @@ suite('Linting - Manager', () => {
     let settings: IPythonSettings;
 
     suiteSetup(initialize);
-    setup(async () => {
+    setup(() => {
         const cont = new Container();
         const serviceManager = new ServiceManager(cont);
         const serviceContainer = new ServiceContainer(cont);
@@ -37,9 +37,9 @@ suite('Linting - Manager', () => {
     });
     teardown(resetSettings);
 
-    function resetSettings() {
-        lm.setActiveLintersAsync([Product.pylint]);
-        lm.enableLintingAsync(true);
+    async function resetSettings() {
+        await lm.setActiveLintersAsync([Product.pylint]);
+        await lm.enableLintingAsync(true);
     }
 
     test('Ensure product is set in Execution Info', async () => {
@@ -86,15 +86,15 @@ suite('Linting - Manager', () => {
     });
 
     test('Enable/disable linting', async () => {
-        lm.enableLintingAsync(false);
+        await lm.enableLintingAsync(false);
         assert.equal(lm.isLintingEnabled(), false, 'Linting not disabled');
-        lm.enableLintingAsync(true);
+        await lm.enableLintingAsync(true);
         assert.equal(lm.isLintingEnabled(), true, 'Linting not enabled');
     });
 
     test('Set single linter', async () => {
         for (const linter of lm.getAllLinterInfos()) {
-            lm.setActiveLintersAsync([linter.product]);
+            await lm.setActiveLintersAsync([linter.product]);
             const selected = lm.getActiveLinters();
             assert.notEqual(selected.length, 0, 'Current linter is undefined');
             assert.equal(linter!.id, selected![0].id, `Selected linter ${selected} does not match requested ${linter.id}`);
@@ -102,7 +102,7 @@ suite('Linting - Manager', () => {
     });
 
     test('Set multiple linters', async () => {
-        lm.setActiveLintersAsync([Product.flake8, Product.pydocstyle]);
+        await lm.setActiveLintersAsync([Product.flake8, Product.pydocstyle]);
         const selected = lm.getActiveLinters();
         assert.equal(selected.length, 2, 'Selected linters lengths does not match');
         assert.equal(Product.flake8, selected[0].product, `Selected linter ${selected[0].id} does not match requested 'flake8'`);
@@ -113,7 +113,7 @@ suite('Linting - Manager', () => {
         const before = lm.getActiveLinters();
         assert.notEqual(before, undefined, 'Current/before linter is undefined');
 
-        lm.setActiveLintersAsync([Product.nosetest]);
+        await lm.setActiveLintersAsync([Product.nosetest]);
         const after = lm.getActiveLinters();
         assert.notEqual(after, undefined, 'Current/after linter is undefined');
 
