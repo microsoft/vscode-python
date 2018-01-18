@@ -19,7 +19,7 @@ const options: MochaSetupOptions & { retries: number } = {
     useColors: true,
     timeout: 25000,
     retries: 3,
-    grep: 'Linting'
+    grep: 'Install'
 };
 testRunner.configure(options, { coverageConfig: '../coverconfig.json' });
 module.exports = testRunner;

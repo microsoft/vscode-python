@@ -1,5 +1,8 @@
 import * as path from 'path';
+import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
+import { IApplicationShell } from '../../client/common/application/types';
+import { IPythonSettingsProvider, PythonSettingsProvider } from '../../client/common/configSettings';
 import { EnumEx } from '../../client/common/enumUtils';
 import { createDeferred } from '../../client/common/helpers';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
@@ -51,6 +54,9 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
         ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
+
+        ioc.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, TypeMoq.Mock.ofType<IApplicationShell>().object);
+        ioc.serviceManager.addSingleton<IPythonSettingsProvider>(IPythonSettingsProvider, PythonSettingsProvider);
 
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingleton<ITerminalService>(ITerminalService, MockTerminalService);
