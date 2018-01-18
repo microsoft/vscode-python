@@ -83,7 +83,7 @@ suite('Linting - Linter Selector', () => {
             .returns((s) => enable
                 ? new Promise<string>((resolve, reject) => { return resolve('on'); })
                 : new Promise<string>((resolve, reject) => { return resolve('off'); })
-        );
+            );
         const current = enable ? 'off' : 'on';
         await commands.enableLintingAsync();
         assert.notEqual(suggestions.length, 0, 'showQuickPick was not called');
@@ -95,24 +95,30 @@ suite('Linting - Linter Selector', () => {
 
         assert.equal(options!.matchOnDescription, true, 'Quick pick options are incorrect');
         assert.equal(options!.matchOnDetail, true, 'Quick pick options are incorrect');
-        assert.equal(options!.placeHolder,  `current: ${current}`, 'Quick pick current option is incorrect');
+        assert.equal(options!.placeHolder, `current: ${current}`, 'Quick pick current option is incorrect');
         assert.equal(lm.isLintingEnabled(undefined), enable, 'Linting selector did not change linting on/off flag');
     }
 
     async function selectLinterAsync(products: Product[]): Promise<void> {
         let suggestions: string[] = [];
         let options: QuickPickOptions;
+        let warning: string;
 
         appShell.setup(x => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .callback((s, o) => {
                 suggestions = s as string[];
                 options = o as QuickPickOptions;
             })
-            .returns((s) => new Promise((resolve, reject) => resolve('pylint')));
+            .returns(s => new Promise((resolve, reject) => resolve('pylint')));
+        appShell.setup(x => x.showWarningMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+            .callback((s, o) => {
+                warning = s;
+            })
+            .returns(s => new Promise((resolve, reject) => resolve('Yes')));
 
         const linters = lm.getAllLinterInfos();
-
         lm.setActiveLintersAsync(products);
+
         let current: string;
         let activeLinters = lm.getActiveLinters();
         switch (activeLinters.length) {
@@ -137,10 +143,14 @@ suite('Linting - Linter Selector', () => {
 
         assert.equal(options!.matchOnDescription, true, 'Quick pick options are incorrect');
         assert.equal(options!.matchOnDetail, true, 'Quick pick options are incorrect');
-        assert.equal(options!.placeHolder,  `current: ${current}`, 'Quick pick current option is incorrect');
+        assert.equal(options!.placeHolder, `current: ${current}`, 'Quick pick current option is incorrect');
 
         activeLinters = lm.getActiveLinters();
         assert.equal(activeLinters.length, 1, 'Linting selector did not change active linter');
         assert.equal(activeLinters[0].product, Product.pylint, 'Linting selector did not change to pylint');
+
+        if (products.length > 1) {
+            assert.notEqual(warning!, undefined, 'Warning was not shown when overwriting multiple linters');
+        }
     }
 });

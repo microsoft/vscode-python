@@ -52,6 +52,11 @@ export class LinterCommands implements Disposable {
         const selection = await this.appShell.showQuickPick(suggestions, quickPickOptions);
         if (selection !== undefined) {
             const index = linters.findIndex(x => x.id === selection);
+            if (activeLinters.length > 1) {
+                if (await this.appShell.showWarningMessage(`Multiple linters are enabled in settings. Replace with '${selection}'?`, 'Yes') !== 'Yes') {
+                    return;
+                }
+            }
             await this.linterManager.setActiveLintersAsync([linters[index].product], this.settingsUri);
         }
     }
