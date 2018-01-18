@@ -68,7 +68,7 @@ export class LinterManager implements ILinterManager {
 
     public async enableLintingAsync(enable: boolean, resource?: Uri): Promise<void> {
         this.disabledForCurrentSession = !enable;
-        await this.setSettingAsync(this.lintingEnabledSettingName, enable, resource);
+        await this.setSettingAsync(`linting.${this.lintingEnabledSettingName}`, enable, resource);
         // If nothing is enabled, fix it up to PyLint (default).
         if (enable && this.getActiveLinters(resource).length === 0) {
             await this.setActiveLintersAsync([Product.pylint], resource);

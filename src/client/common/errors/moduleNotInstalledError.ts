@@ -3,6 +3,6 @@
 
 export class ModuleNotInstalledError extends Error {
     constructor(moduleName: string) {
-        super(`Module '${moduleName} not installed.`);
+        super(`Module '${moduleName}' not installed.`);
     }
 }

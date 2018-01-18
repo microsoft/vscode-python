@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { commands, ConfigurationTarget, Disposable, QuickPickOptions, Uri, window, workspace } from 'vscode';
+import * as vscode from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { WorkspacePythonPath } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { ILinterManager } from './types';
 
-export class LinterCommands implements Disposable {
-    private disposables: Disposable[] = [];
+export class LinterCommands implements vscode.Disposable {
+    private disposables: vscode.Disposable[] = [];
     private linterManager: ILinterManager;
     private appShell: IApplicationShell;
 
@@ -17,8 +17,8 @@ export class LinterCommands implements Disposable {
         this.linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         if (registerCommands) {
-            this.disposables.push(commands.registerCommand(Commands.Set_Linter, this.setLinterAsync.bind(this)));
-            this.disposables.push(commands.registerCommand(Commands.Enable_Linter, this.enableLintingAsync.bind(this)));
+            this.disposables.push(vscode.commands.registerCommand(Commands.Set_Linter, this.setLinterAsync.bind(this)));
+            this.disposables.push(vscode.commands.registerCommand(Commands.Enable_Linter, this.enableLintingAsync.bind(this)));
         }
     }
     public dispose() {
@@ -43,7 +43,7 @@ export class LinterCommands implements Disposable {
                 break;
         }
 
-        const quickPickOptions: QuickPickOptions = {
+        const quickPickOptions: vscode.QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
             placeHolder: `current: ${current}`
@@ -53,7 +53,7 @@ export class LinterCommands implements Disposable {
         if (selection !== undefined) {
             const index = linters.findIndex(x => x.id === selection);
             if (activeLinters.length > 1) {
-                if (await this.appShell.showWarningMessage(`Multiple linters are enabled in settings. Replace with '${selection}'?`, 'Yes') !== 'Yes') {
+                if (await this.appShell.showWarningMessage(`Multiple linters are enabled in settings. Replace with '${selection}'?`, 'Yes', 'No') !== 'Yes') {
                     return;
                 }
             }
@@ -65,7 +65,7 @@ export class LinterCommands implements Disposable {
         const options = ['on', 'off'];
         const current = this.linterManager.isLintingEnabled(this.settingsUri) ? options[0] : options[1];
 
-        const quickPickOptions: QuickPickOptions = {
+        const quickPickOptions: vscode.QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
             placeHolder: `current: ${current}`
@@ -73,11 +73,12 @@ export class LinterCommands implements Disposable {
 
         const selection = await this.appShell.showQuickPick(options, quickPickOptions);
         if (selection !== undefined) {
-            await this.linterManager.enableLintingAsync(selection === options[0], this.settingsUri);
+            const enable = selection === options[0];
+            await this.linterManager.enableLintingAsync(enable, this.settingsUri);
         }
     }
 
-    private get settingsUri(): Uri | undefined {
-        return window.activeTextEditor ? window.activeTextEditor.document.uri : undefined;
+    private get settingsUri(): vscode.Uri | undefined {
+        return vscode.window.activeTextEditor ? vscode.window.activeTextEditor.document.uri : undefined;
     }
 }

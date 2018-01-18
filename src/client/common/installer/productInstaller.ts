@@ -252,7 +252,7 @@ class FormatterInstaller extends BaseInstaller {
         const installThis = `Install ${productName}`;
         const alternateFormatter = product === Product.autopep8 ? 'yapf' : 'autopep8';
         const useOtherFormatter = `Use '${alternateFormatter}' formatter`;
-        const item = await this.appShell.showErrorMessage(`Formatter ${productName} is not installed.`, { modal: true }, installThis, useOtherFormatter);
+        const item = await this.appShell.showErrorMessage(`Formatter ${productName} is not installed.`, installThis, useOtherFormatter);
 
         if (item === installThis) {
             return this.install(product, resource);
