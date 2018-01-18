@@ -73,10 +73,8 @@ suite('Attach Debugger', () => {
         const secondOutputReceived = expectedOutputs[2].deferred.promise;
 
         result.out.subscribe(output => {
-            if (expectedOutputs[0].value === output.out.trim()) {
+            if (expectedOutputs[0].value === output.out) {
                 expectedOutputs.shift()!.deferred.resolve();
-            } else {
-                console.error(output.out);
             }
         }, ex => {
             completed.reject(ex);
@@ -108,8 +106,13 @@ suite('Attach Debugger', () => {
         expect(threadId).to.be.greaterThan(0, 'ThreadId not received');
 
         // Continue the program.
-        debugClient.continueRequest({ threadId });
+        await debugClient.continueRequest({ threadId });
+
+        // Value for input prompt.
+        result.proc.stdin.write(`Peter Smith${EOL}`);
         await firstOutputReceived;
+
+        result.proc.stdin.write(`${EOL}`);
         await secondOutputReceived;
         await completed.promise;
 
