@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
+import * as TypeMoq from 'typemoq';
 import { ITerminalServiceFactory } from '../../../client/common/terminal/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { initialize } from '../../initialize';
 import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
 
@@ -12,6 +14,8 @@ suite('Terminal Service Factory', () => {
     suiteSetup(initialize);
     setup(() => {
         ioc = new UnitTestIocContainer();
+        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
         ioc.registerCommonTypes();
         ioc.registerPlatformTypes();
     });
@@ -23,18 +27,22 @@ suite('Terminal Service Factory', () => {
         const sameInstance = factory.getTerminalService() === instance;
         expect(sameInstance).to.equal(true, 'Instances are not the same');
 
-        const differentInstance = factory.getTerminalService('New Title');
+        const differentInstance = factory.getTerminalService(undefined, 'New Title');
         const notTheSameInstance = differentInstance === instance;
         expect(notTheSameInstance).not.to.equal(true, 'Instances are the same');
     });
 
     test('Ensure different instance of terminal service is returned when title is provided', () => {
         const factory = ioc.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory);
-        const instance = factory.getTerminalService('New Title');
-        const sameInstance = factory.getTerminalService('New Title') === instance;
-        expect(sameInstance).to.not.equal(true, 'Instances are the same');
+        const defaultInstance = factory.getTerminalService();
+        const notSameAsDefaultInstance = factory.getTerminalService(undefined, 'New Title') === defaultInstance;
+        expect(notSameAsDefaultInstance).to.not.equal(true, 'Instances are the same as default instance');
 
-        const differentInstance = factory.getTerminalService('Another New Title');
+        const instance = factory.getTerminalService(undefined, 'New Title');
+        const sameInstance = factory.getTerminalService(undefined, 'New Title') === instance;
+        expect(sameInstance).to.equal(true, 'Instances are not the same');
+
+        const differentInstance = factory.getTerminalService(undefined, 'Another New Title');
         const notTheSameInstance = differentInstance === instance;
         expect(notTheSameInstance).not.to.equal(true, 'Instances are the same');
     });

@@ -55,3 +55,11 @@ export type WorkspacePythonPath = {
     pytonPath?: string;
     configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder;
 };
+
+export const IInterpreterService = Symbol('IInterpreterService');
+
+export interface IInterpreterService {
+    getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
+    autoSetInterpreter(): Promise<void>;
+    getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;
+}

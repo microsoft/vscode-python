@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, Terminal } from 'vscode';
+import { Disposable, Event, EventEmitter, Terminal, Uri } from 'vscode';
 import { ITerminalManager } from '../application/types';
 import { IDisposableRegistry } from '../types';
 import { ITerminalHelper, ITerminalService, TerminalShellType } from './types';
@@ -18,6 +18,7 @@ export class TerminalService implements ITerminalService, Disposable {
     constructor( @inject(ITerminalHelper) private terminalHelper: ITerminalHelper,
         @inject(ITerminalManager) terminalManager: ITerminalManager,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
+        private _resource?: Uri,
         private title: string = 'Python') {
 
         disposableRegistry.push(this);

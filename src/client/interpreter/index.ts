@@ -1,18 +1,19 @@
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, StatusBarAlignment, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { IProcessService } from '../common/process/types';
+import { IProcessService, IPythonExecutionFactory } from '../common/process/types';
+import * as utils from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
 import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './configuration/pythonPathUpdaterServiceFactory';
-import { IInterpreterLocatorService, IInterpreterVersionService, INTERPRETER_LOCATOR_SERVICE } from './contracts';
+import { IInterpreterLocatorService, IInterpreterService, IInterpreterVersionService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PythonInterpreter } from './contracts';
 import { InterpreterDisplay } from './display';
 import { getActiveWorkspaceUri } from './helpers';
 import { PythonInterpreterLocatorService } from './locators';
 import { VirtualEnvService } from './locators/services/virtualEnvService';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
-export class InterpreterManager implements Disposable {
+export class InterpreterManager implements Disposable, IInterpreterService {
     private disposables: Disposable[] = [];
     private display: InterpreterDisplay | null | undefined;
     private interpreterProvider: PythonInterpreterLocatorService;
@@ -22,8 +23,7 @@ export class InterpreterManager implements Disposable {
         const statusBar = window.createStatusBarItem(StatusBarAlignment.Left);
         this.interpreterProvider = serviceContainer.get<PythonInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
         const versionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-        const processService = serviceContainer.get<IProcessService>(IProcessService);
-        this.display = new InterpreterDisplay(statusBar, this.interpreterProvider, virtualEnvMgr, versionService, processService);
+        this.display = new InterpreterDisplay(statusBar, this, virtualEnvMgr, versionService);
         this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), versionService);
         PythonSettings.getInstance().addListener('change', () => this.onConfigChanged());
         this.disposables.push(window.onDidChangeActiveTextEditor(() => this.refresh()));
@@ -59,7 +59,7 @@ export class InterpreterManager implements Disposable {
         // Ensure this new environment is at the same level as the current workspace.
         // In windows the interpreter is under scripts/python.exe on linux it is under bin/python.
         // Meaning the sub directory must be either scripts, bin or other (but only one level deep).
-        const pythonPath = interpretersInWorkspace.sort((a, b) => a.version > b.version ? 1 : -1)[0].path;
+        const pythonPath = interpretersInWorkspace.sort((a, b) => a.version! > b.version! ? 1 : -1)[0].path;
         const relativePath = path.dirname(pythonPath).substring(activeWorkspace.folderUri.fsPath.length);
         if (relativePath.split(path.sep).filter(l => l.length > 0).length === 2) {
             await this.pythonPathUpdaterService.updatePythonPath(pythonPath, activeWorkspace.configTarget, 'load', activeWorkspace.folderUri);
@@ -70,6 +70,26 @@ export class InterpreterManager implements Disposable {
         this.disposables.forEach(disposable => disposable.dispose() as void);
         this.display = null;
         this.interpreterProvider.dispose();
+    }
+
+    public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter> {
+        const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const pythonExecutionService = await pythonExecutionFactory.create(resource);
+        const fullyQualifiedPath = await pythonExecutionService.getExecutablePath();
+        const interpreters = await this.getInterpreters(resource);
+        const interpreter = interpreters.find(i => utils.arePathsSame(i.path, fullyQualifiedPath));
+
+        if (!interpreter) {
+            const pythonExecutableName = path.basename(fullyQualifiedPath);
+            const versionInfo = await this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService).getVersion(fullyQualifiedPath, pythonExecutableName);
+            return {
+                path: fullyQualifiedPath,
+                type: InterpreterType.Unknown,
+                version: versionInfo
+            };
+        }
+
+        return interpreter;
     }
     private shouldAutoSetInterpreter() {
         const activeWorkspace = getActiveWorkspaceUri();

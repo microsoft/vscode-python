@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Terminal, workspace } from 'vscode';
+import { Terminal, Uri, workspace } from 'vscode';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { ITerminalManager } from '../application/types';
 import { IPlatformService } from '../platform/types';
 import { ITerminalHelper, TerminalShellType } from './types';
@@ -16,7 +17,8 @@ const IS_FISH = /(fish$)/i;
 export class TerminalHelper implements ITerminalHelper {
     private readonly detectableShells: Map<TerminalShellType, RegExp>;
     constructor( @inject(IPlatformService) private platformService: IPlatformService,
-        @inject(ITerminalManager) private terminalManager: ITerminalManager) {
+        @inject(ITerminalManager) private terminalManager: ITerminalManager,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService) {
         this.detectableShells = new Map<TerminalShellType, RegExp>();
         this.detectableShells.set(TerminalShellType.powershell, IS_POWERSHELL);
         this.detectableShells.set(TerminalShellType.bash, IS_BASH);
@@ -55,5 +57,10 @@ export class TerminalHelper implements ITerminalHelper {
         const isPowershell = terminalShellType === TerminalShellType.powershell;
         const commandPrefix = isPowershell ? '& ' : '';
         return `${commandPrefix}${executable} ${args.join(' ')}`.trim();
+    }
+    public async getActivationScript(terminalShellType: TerminalShellType, resource?: Uri): Promise<string | undefined> {
+        // const interperterInfo = await this.interpreterService.getActiveInterpreter(resource);
+        // interperterInfo.type
+        return;
     }
 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 import { ITerminalManager } from '../application/types';
 import { IDisposableRegistry } from '../types';
 import { TerminalService } from './service';
@@ -18,10 +18,10 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
 
         this.terminalServices = new Map<string, ITerminalService>();
     }
-    public getTerminalService(title?: string): ITerminalService {
+    public getTerminalService(resource?: Uri, title?: string): ITerminalService {
         const terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
         if (!this.terminalServices.has(terminalTitle)) {
-            const terminalService = new TerminalService(this.terminalHelper, this.terminalManager, this.disposableRegistry, terminalTitle);
+            const terminalService = new TerminalService(this.terminalHelper, this.terminalManager, this.disposableRegistry, resource, terminalTitle);
             this.terminalServices.set(terminalTitle, terminalService);
         }
         return this.terminalServices.get(terminalTitle)!;

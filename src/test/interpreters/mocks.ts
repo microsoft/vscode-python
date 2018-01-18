@@ -1,19 +1,9 @@
 import { injectable } from 'inversify';
 import { Architecture, IRegistry, RegistryHive } from '../../client/common/platform/types';
 import { IProcessService } from '../../client/common/process/types';
-import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType } from '../../client/interpreter/contracts';
 import { CondaLocatorService } from '../../client/interpreter/locators/services/condaLocator';
 import { IVirtualEnvironmentIdentifier } from '../../client/interpreter/virtualEnvs/types';
-
-export class MockProvider implements IInterpreterLocatorService {
-    constructor(private suggestions: PythonInterpreter[]) {
-    }
-    public async getInterpreters(): Promise<PythonInterpreter[]> {
-        return Promise.resolve(this.suggestions);
-    }
-    // tslint:disable-next-line:no-empty
-    public dispose() { }
-}
 
 @injectable()
 export class MockRegistry implements IRegistry {

@@ -9,6 +9,7 @@ import { EnumEx } from '../../../client/common/enumUtils';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { initialize, IS_MULTI_ROOT_TEST } from '../../initialize';
 
 // tslint:disable-next-line:max-func-body-length
@@ -27,7 +28,8 @@ suite('Terminal Helper', () => {
     setup(() => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
-        helper = new TerminalHelper(platformService.object, terminalManager.object);
+        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        helper = new TerminalHelper(platformService.object, terminalManager.object, interpreterService.object);
     });
 
     test('Test identification of Terminal Shells', async () => {

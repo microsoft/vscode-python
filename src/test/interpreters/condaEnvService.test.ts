@@ -1,15 +1,16 @@
 import * as assert from 'assert';
 import * as path from 'path';
+import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IS_WINDOWS, PythonSettings } from '../../client/common/configSettings';
 import { IProcessService } from '../../client/common/process/types';
-import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { AnacondaCompanyName, AnacondaDisplayName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
 import { CondaLocatorService } from '../../client/interpreter/locators/services/condaLocator';
 import { initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
-import { MockCondaLocatorService, MockInterpreterVersionProvider, MockProvider } from './mocks';
+import { MockCondaLocatorService, MockInterpreterVersionProvider } from './mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 const fileInNonRootWorkspace = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
@@ -132,8 +133,9 @@ suite('Interpreters from Conda Environments', () => {
             { displayName: 'xnaconda', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'xContinuum Analytics, Inc.', type: InterpreterType.Unknown },
             { displayName: 'xnaconda', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Continuum Analytics, Inc.', type: InterpreterType.Unknown }
         ];
-        const mockRegistryProvider = new MockProvider(registryInterpreters);
-        const condaProvider = new CondaEnvService(new CondaLocatorService(true, processService, mockRegistryProvider), new MockInterpreterVersionProvider(''), processService);
+        const mockRegistryProvider = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
+        mockRegistryProvider.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve(registryInterpreters));
+        const condaProvider = new CondaEnvService(new CondaLocatorService(true, processService, mockRegistryProvider.object), new MockInterpreterVersionProvider(''), processService);
 
         assert.equal(condaProvider.isCondaEnvironment(registryInterpreters[0]), false, '1. Identified environment incorrectly');
         assert.equal(condaProvider.isCondaEnvironment(registryInterpreters[1]), false, '2. Identified environment incorrectly');
@@ -155,8 +157,9 @@ suite('Interpreters from Conda Environments', () => {
             { displayName: 'Six', path: path.join(environmentsPath, 'conda', 'envs', 'scipy'), companyDisplayName: 'xContinuum Analytics, Inc.', version: '2', type: InterpreterType.Unknown },
             { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.', type: InterpreterType.Unknown }
         ];
-        const mockRegistryProvider = new MockProvider(registryInterpreters);
-        const condaProvider = new CondaEnvService(new CondaLocatorService(true, processService, mockRegistryProvider), new MockInterpreterVersionProvider(''), processService);
+        const mockRegistryProvider = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
+        mockRegistryProvider.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve(registryInterpreters));
+        const condaProvider = new CondaEnvService(new CondaLocatorService(true, processService, mockRegistryProvider.object), new MockInterpreterVersionProvider(''), processService);
 
         // tslint:disable-next-line:no-non-null-assertion
         assert.equal(condaProvider.getLatestVersion(registryInterpreters)!.displayName, 'Two', 'Failed to identify latest version');
@@ -173,8 +176,9 @@ suite('Interpreters from Conda Environments', () => {
             { displayName: 'Six', path: path.join(environmentsPath, 'conda', 'envs', 'scipy'), companyDisplayName: 'xContinuum Analytics, Inc.', version: '2', type: InterpreterType.Unknown },
             { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.', type: InterpreterType.Unknown }
         ];
-        const mockRegistryProvider = new MockProvider(registryInterpreters);
-        const condaProvider = new CondaEnvService(new CondaLocatorService(true, processService, mockRegistryProvider), new MockInterpreterVersionProvider(''), processService);
+        const mockRegistryProvider = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
+        mockRegistryProvider.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve(registryInterpreters));
+        const condaProvider = new CondaEnvService(new CondaLocatorService(true, processService, mockRegistryProvider.object), new MockInterpreterVersionProvider(''), processService);
 
         // tslint:disable-next-line:no-non-null-assertion
         assert.equal(condaProvider.getLatestVersion(registryInterpreters)!.displayName, 'Two', 'Failed to identify latest version');
@@ -187,8 +191,9 @@ suite('Interpreters from Conda Environments', () => {
             { displayName: 'Three', path: path.join(environmentsPath, 'path2', 'one.exe'), companyDisplayName: 'Three 3', version: '2.10.1', type: InterpreterType.Unknown },
             { displayName: 'Seven', path: path.join(environmentsPath, 'conda', 'envs', 'numpy'), companyDisplayName: 'Continuum Analytics, Inc.', type: InterpreterType.Unknown }
         ];
-        const mockRegistryProvider = new MockProvider(registryInterpreters);
-        const condaProvider = new MockCondaLocatorService(true, processService, mockRegistryProvider, false);
+        const mockRegistryProvider = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
+        mockRegistryProvider.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve(registryInterpreters));
+        const condaProvider = new MockCondaLocatorService(true, processService, mockRegistryProvider.object, false);
 
         const condaExe = await condaProvider.getCondaFile();
         assert.equal(condaExe, path.join(path.dirname(condaPythonExePath), 'conda.exe'), 'Failed to identify conda.exe');
