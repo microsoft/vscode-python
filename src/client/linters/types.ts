@@ -17,7 +17,7 @@ export interface ILinterInfo {
     readonly pathSettingName: string;
     readonly argsSettingName: string;
     readonly enabledSettingName: string;
-    enable(flag: boolean, resource?: vscode.Uri): void;
+    enableAsync(flag: boolean, resource?: vscode.Uri): void;
     isEnabled(resource?: vscode.Uri): boolean;
     pathName(resource?: vscode.Uri): string;
     linterArgs(resource?: vscode.Uri): string[];
@@ -35,9 +35,9 @@ export interface ILinterManager {
     getLinterInfo(product: Product): ILinterInfo;
     getActiveLinters(resource?: vscode.Uri): ILinterInfo[];
     isLintingEnabled(resource?: vscode.Uri): boolean;
-    enableLinting(enable: boolean, resource?: vscode.Uri): void;
+    enableLintingAsync(enable: boolean, resource?: vscode.Uri): Promise<void>;
     disableSessionLinting(): void;
-    setActiveLinters(products: Product[]): void;
+    setActiveLintersAsync(products: Product[], resource?: vscode.Uri): Promise<void>;
     createLinter(product: Product, outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer, resource?: vscode.Uri): ILinter;
 }
 

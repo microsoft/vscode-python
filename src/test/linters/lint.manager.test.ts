@@ -38,8 +38,8 @@ suite('Linting - Manager', () => {
     teardown(resetSettings);
 
     function resetSettings() {
-        lm.setActiveLinters([Product.pylint]);
-        lm.enableLinting(true);
+        lm.setActiveLintersAsync([Product.pylint]);
+        lm.enableLintingAsync(true);
     }
 
     test('Ensure product is set in Execution Info', async () => {
@@ -86,15 +86,15 @@ suite('Linting - Manager', () => {
     });
 
     test('Enable/disable linting', async () => {
-        lm.enableLinting(false);
+        lm.enableLintingAsync(false);
         assert.equal(lm.isLintingEnabled(), false, 'Linting not disabled');
-        lm.enableLinting(true);
+        lm.enableLintingAsync(true);
         assert.equal(lm.isLintingEnabled(), true, 'Linting not enabled');
     });
 
     test('Set single linter', async () => {
         for (const linter of lm.getAllLinterInfos()) {
-            lm.setActiveLinters([linter.product]);
+            lm.setActiveLintersAsync([linter.product]);
             const selected = lm.getActiveLinters();
             assert.notEqual(selected.length, 0, 'Current linter is undefined');
             assert.equal(linter!.id, selected![0].id, `Selected linter ${selected} does not match requested ${linter.id}`);
@@ -102,7 +102,7 @@ suite('Linting - Manager', () => {
     });
 
     test('Set multiple linters', async () => {
-        lm.setActiveLinters([Product.flake8, Product.pydocstyle]);
+        lm.setActiveLintersAsync([Product.flake8, Product.pydocstyle]);
         const selected = lm.getActiveLinters();
         assert.equal(selected.length, 2, 'Selected linters lengths does not match');
         assert.equal(Product.flake8, selected[0].product, `Selected linter ${selected[0].id} does not match requested 'flake8'`);
@@ -113,7 +113,7 @@ suite('Linting - Manager', () => {
         const before = lm.getActiveLinters();
         assert.notEqual(before, undefined, 'Current/before linter is undefined');
 
-        lm.setActiveLinters([Product.nosetest]);
+        lm.setActiveLintersAsync([Product.nosetest]);
         const after = lm.getActiveLinters();
         assert.notEqual(after, undefined, 'Current/after linter is undefined');
 

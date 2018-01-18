@@ -8,7 +8,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager } from '../../linters/types';
 import { ITestsHelper } from '../../unittests/common/types';
 import { IApplicationShell } from '../application/types';
-import { PythonSettings } from '../configSettings';
+import { IPythonSettingsProvider, PythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IPlatformService } from '../platform/types';
 import { IProcessService, IPythonExecutionFactory } from '../process/types';
@@ -126,9 +126,11 @@ export class ProductInstaller implements IInstaller {
 // tslint:disable-next-line:max-classes-per-file
 abstract class BaseInstaller {
     protected appShell: IApplicationShell;
+    protected settingsProvider: IPythonSettingsProvider;
 
     constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
-        this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.settingsProvider = serviceContainer.get<IPythonSettingsProvider>(IPythonSettingsProvider);
     }
 
     public abstract promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse>;
@@ -178,17 +180,6 @@ abstract class BaseInstaller {
 
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
         throw new Error('getExecutableNameFromSettings is not supported on this object');
-    }
-
-    // tslint:disable-next-line:no-any
-    protected updateSetting(setting: string, value: any, resource?: Uri) {
-        if (resource && workspace.getWorkspaceFolder(resource)) {
-            const pythonConfig = workspace.getConfiguration('python', resource);
-            return pythonConfig.update(setting, value, ConfigurationTarget.Workspace);
-        } else {
-            const pythonConfig = workspace.getConfiguration('python');
-            return pythonConfig.update(setting, value, true);
-        }
     }
 
     private async getInstallationChannel(product: Product, resource?: Uri): Promise<IModuleInstaller | undefined> {
@@ -267,7 +258,7 @@ class FormatterInstaller extends BaseInstaller {
             return this.install(product, resource);
         }
         if (item === useOtherFormatter) {
-            this.updateSetting('formatting.provider', alternateFormatter, resource);
+            await this.settingsProvider.updateSettingAsync('formatting.provider', alternateFormatter, resource);
             return InstallerResponse.Installed;
         }
         return InstallerResponse.Ignore;
@@ -295,7 +286,7 @@ class LinterInstaller extends BaseInstaller {
         }
         const lm = this.serviceContainer.get<ILinterManager>(ILinterManager);
         if (response === disable) {
-            lm.enableLinting(false);
+            lm.enableLintingAsync(false);
         } else {
             lm.disableSessionLinting();
         }

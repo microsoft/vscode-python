@@ -34,6 +34,8 @@ export interface IPythonSettings {
 export const IPythonSettingsProvider = Symbol('IPythonSettingsProvider');
 export interface IPythonSettingsProvider {
     getInstance(resource?: Uri): IPythonSettings;
+    // tslint:disable-next-line:no-any
+    updateSettingAsync(setting: string, value: any, resource?: Uri): Promise<void>;
 }
 
 export interface ISortImportSettings {
@@ -141,6 +143,16 @@ export function isTestExecution(): boolean {
 export class PythonSettingsProvider implements IPythonSettingsProvider {
     public getInstance(resource: Uri) {
         return PythonSettings.getInstance(resource);
+    }
+    // tslint:disable-next-line:no-any
+    public async updateSettingAsync(setting: string, value: any, resource?: Uri) {
+        if (resource && vscode.workspace.getWorkspaceFolder(resource)) {
+            const pythonConfig = vscode.workspace.getConfiguration('python', resource);
+            return pythonConfig.update(setting, value, vscode.ConfigurationTarget.Workspace);
+        } else {
+            const pythonConfig = vscode.workspace.getConfiguration('python');
+            return pythonConfig.update(setting, value, true);
+        }
     }
 }
 

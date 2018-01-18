@@ -11,8 +11,8 @@ import { Product } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
+import { LinterCommands } from '../../client/linters/linterCommands';
 import { LinterManager } from '../../client/linters/linterManager';
-import { LinterSelector } from '../../client/linters/linterSelector';
 import { ILinterManager } from '../../client/linters/types';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
@@ -21,7 +21,7 @@ suite('Linting - Linter Selector', () => {
     let serviceContainer: IServiceContainer;
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let settingsProvider: TypeMoq.IMock<IPythonSettingsProvider>;
-    let selector: LinterSelector;
+    let commands: LinterCommands;
     let lm: ILinterManager;
 
     suiteSetup(initialize);
@@ -47,7 +47,7 @@ suite('Linting - Linter Selector', () => {
         serviceManager.addSingletonInstance<IPythonSettingsProvider>(IPythonSettingsProvider, settingsProvider.object);
         lm = new LinterManager(serviceContainer);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
-        selector = new LinterSelector(serviceContainer, false);
+        commands = new LinterCommands(serviceContainer, false);
     }
 
     test('Enable linting', async () => {
@@ -74,7 +74,7 @@ suite('Linting - Linter Selector', () => {
         let suggestions: string[] = [];
         let options: QuickPickOptions;
 
-        lm.enableLinting(!enable);
+        await lm.enableLintingAsync(!enable);
         appShell.setup(x => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .callback((s, o) => {
                 suggestions = s as string[];
@@ -85,7 +85,7 @@ suite('Linting - Linter Selector', () => {
                 : new Promise<string>((resolve, reject) => { return resolve('off'); })
         );
         const current = enable ? 'off' : 'on';
-        await selector.enableLinting();
+        await commands.enableLintingAsync();
         assert.notEqual(suggestions.length, 0, 'showQuickPick was not called');
         assert.notEqual(options!, undefined, 'showQuickPick was not called');
 
@@ -96,7 +96,7 @@ suite('Linting - Linter Selector', () => {
         assert.equal(options!.matchOnDescription, true, 'Quick pick options are incorrect');
         assert.equal(options!.matchOnDetail, true, 'Quick pick options are incorrect');
         assert.equal(options!.placeHolder,  `current: ${current}`, 'Quick pick current option is incorrect');
-        assert.equal(lm.isLintingEnabled(), enable, 'Linting selector did not change linting on/off flag');
+        assert.equal(lm.isLintingEnabled(undefined), enable, 'Linting selector did not change linting on/off flag');
     }
 
     async function selectLinter(products: Product[]): Promise<void> {
@@ -112,7 +112,7 @@ suite('Linting - Linter Selector', () => {
 
         const linters = lm.getAllLinterInfos();
 
-        lm.setActiveLinters(products);
+        lm.setActiveLintersAsync(products);
         let current: string;
         let activeLinters = lm.getActiveLinters();
         switch (activeLinters.length) {
@@ -127,7 +127,7 @@ suite('Linting - Linter Selector', () => {
                 break;
         }
 
-        await selector.setLinter();
+        await commands.setLinterAsync();
 
         assert.notEqual(suggestions.length, 0, 'showQuickPick was not called');
         assert.notEqual(options!, undefined, 'showQuickPick was not called');

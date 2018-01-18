@@ -102,7 +102,7 @@ export abstract class BaseLinter implements ILinter {
         if (!this.info.isEnabled(document.uri)) {
             return [];
         }
-        const executionInfo = this.getExecutionInfo(this.info.product, args, document.uri);
+        const executionInfo = this.info.getExecutionInfo(args, document.uri);
         const cwd = this.getWorkspaceRootPath(document);
         const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
         try {
@@ -167,22 +167,5 @@ export abstract class BaseLinter implements ILinter {
     private displayLinterResultHeader(data: string) {
         this.outputChannel.append(`${'#'.repeat(10)}Linting Output - ${this.info.id}${'#'.repeat(10)}\n`);
         this.outputChannel.append(data);
-    }
-
-    private getExecutionInfo(linter: Product, customArgs: string[], resource?: Uri): ExecutionInfo {
-        const execPath = this.info.pathName(resource);
-        const linterArgs = this.info.linterArgs;
-        let args: string[] = Array.isArray(linterArgs) ? linterArgs as string[] : [];
-        args = args.concat(customArgs);
-
-        let moduleName: string | undefined;
-
-        // If path information is not available, then treat it as a module,
-        // Except for prospector as that needs to be run as an executable (its a python package).
-        if (path.basename(execPath) === execPath && linter !== Product.prospector) {
-            moduleName = execPath;
-        }
-
-        return { execPath, moduleName, args, product: linter };
     }
 }

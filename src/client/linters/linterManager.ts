@@ -62,24 +62,21 @@ export class LinterManager implements ILinterManager {
         if (this.disabledForCurrentSession) {
             return false;
         }
-        const target = this.getSettingsTargetUri(resource);
-        const settings = this.settingsProvider.getInstance(target);
-        return (settings.linting[this.lintingEnabledSettingName] as boolean) && this.getActiveLinters(target).length > 0;
+        const settings = this.settingsProvider.getInstance(resource);
+        return (settings.linting[this.lintingEnabledSettingName] as boolean) && this.getActiveLinters(resource).length > 0;
     }
 
-    public enableLinting(enable: boolean, resource?: Uri): void {
-        const target = this.getSettingsTargetUri(resource);
-
+    public async enableLintingAsync(enable: boolean, resource?: Uri): Promise<void> {
         this.disabledForCurrentSession = !enable;
-        if (enable === this.isLintingEnabled(target)) {
+        if (enable === this.isLintingEnabled(resource)) {
             return;
         }
-        const settings = this.settingsProvider.getInstance(target);
-        settings.linting[this.lintingEnabledSettingName] = enable;
+        const settings = this.settingsProvider.getInstance(resource);
+        await this.settingsProvider.updateSettingAsync(this.lintingEnabledSettingName, enable, resource);
 
         // If nothing is enabled, fix it up to PyLint (default).
-        if (enable && this.getActiveLinters(target).length === 0) {
-            this.setActiveLinters([Product.pylint], target);
+        if (enable && this.getActiveLinters(resource).length === 0) {
+            await this.setActiveLintersAsync([Product.pylint], resource);
         }
     }
 
@@ -88,24 +85,21 @@ export class LinterManager implements ILinterManager {
     }
 
     public getActiveLinters(resource?: Uri): ILinterInfo[] {
-        const target = this.getSettingsTargetUri(resource);
-        return this.linters.filter(x => x.isEnabled(target));
+        return this.linters.filter(x => x.isEnabled(resource));
     }
 
-    public setActiveLinters(products: Product[], resource?: Uri): void {
-        const target = this.getSettingsTargetUri(resource);
-        this.getActiveLinters(target).forEach(x => x.enable(false, target));
+    public async setActiveLintersAsync(products: Product[], resource?: Uri): Promise<void> {
+        this.getActiveLinters(resource).forEach(async x => await x.enableAsync(false, resource));
         if (products.length > 0) {
             this.linters
                 .filter(x => products.findIndex(p => x.product === p) >= 0)
-                .forEach(x => x.enable(true, target));
-            this.enableLinting(true, target);
+                .forEach((async x => await x.enableAsync(true, resource)));
+            await this.enableLintingAsync(true, resource);
         }
     }
 
     public createLinter(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer, resource?: Uri): ILinter {
-        const target = this.getSettingsTargetUri(resource);
-        if (!this.isLintingEnabled(target)) {
+        if (!this.isLintingEnabled(resource)) {
             return new DisabledLinter(serviceContainer.get<IPythonSettingsProvider>(IPythonSettingsProvider));
         }
         const error = 'Linter manager: Unknown linter';
@@ -129,11 +123,5 @@ export class LinterManager implements ILinterManager {
                 break;
         }
         throw new Error(error);
-    }
-
-    private getSettingsTargetUri(resource?: Uri): Uri | undefined {
-        return resource
-            ? resource
-            : window.activeTextEditor ? window.activeTextEditor.document.uri : undefined;
     }
 }

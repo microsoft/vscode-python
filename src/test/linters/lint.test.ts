@@ -143,8 +143,8 @@ suite('Linting', () => {
         const document = await vscode.workspace.openTextDocument(fileToLint);
         const cancelToken = new vscode.CancellationTokenSource();
 
-        linterManager.setActiveLinters([product]);
-        linterManager.enableLinting(enabled);
+        linterManager.setActiveLintersAsync([product]);
+        linterManager.enableLintingAsync(enabled);
         const linter = linterManager.createLinter(product, output, ioc.serviceContainer);
 
         const messages = await linter.lint(document, cancelToken.token);
@@ -192,7 +192,7 @@ suite('Linting', () => {
         const cancelToken = new vscode.CancellationTokenSource();
         const document = await vscode.workspace.openTextDocument(pythonFile);
 
-        linterManager.setActiveLinters([product]);
+        linterManager.setActiveLintersAsync([product]);
         const linter = linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
 
         const messages = await linter.lint(document, cancelToken.token);

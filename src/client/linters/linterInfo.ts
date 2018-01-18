@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { ConfigurationTarget, Uri } from 'vscode';
+import { updateSetting } from '../../test/common';
 import { IPythonSettingsProvider } from '../common/configSettings';
 import { ExecutionInfo, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
@@ -35,9 +36,9 @@ export class LinterInfo implements ILinterInfo {
         return `${this.id}Enabled`;
     }
 
-    public enable(enabled: boolean, resource?: Uri): void {
+    public async enableAsync(enabled: boolean, resource?: Uri): Promise<void> {
         const settings = this.settingsProvider.getInstance(resource);
-        settings.linting[this.enabledSettingName] = enabled;
+        return this.settingsProvider.updateSettingAsync(`linting.${this.enabledSettingName}`, enabled, resource);
     }
     public isEnabled(resource?: Uri): boolean {
         const settings = this.settingsProvider.getInstance(resource);
@@ -60,7 +61,7 @@ export class LinterInfo implements ILinterInfo {
 
         // If path information is not available, then treat it as a module,
         // Except for prospector as that needs to be run as an executable (its a python package).
-        if (path.basename(execPath) === execPath && this.product !== Product.prospector) {
+        if (path.basename(execPath) === execPath) {
             moduleName = execPath;
         }
 

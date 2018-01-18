@@ -34,7 +34,7 @@ import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer } from './ioc/types';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
-import { LinterSelector } from './linters/linterSelector';
+import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
 import { PythonDefinitionProvider } from './providers/definitionProvider';
@@ -109,7 +109,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const processService = serviceContainer.get<IProcessService>(IProcessService);
 
     context.subscriptions.push(new InterpreterSelector(interpreterManager, interpreterVersionService, processService));
-    context.subscriptions.push(new LinterSelector(serviceContainer, true));
+    context.subscriptions.push(new LinterCommands(serviceContainer, true));
 
     context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
