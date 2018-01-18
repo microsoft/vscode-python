@@ -15,7 +15,19 @@
 	},
 	"bugs": {
 		"url": "https://github.com/Microsoft/vscode-python/issues"
-	},
+    },
+    "badges": [
+        {
+            "url": "https://travis-ci.org/Microsoft/vscode-python.svg?branch=master",
+            "href": "https://travis-ci.org/Microsoft/vscode-python",
+            "description": "Continuous integration"
+        },
+        {
+            "url": "https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg",
+            "href": "https://codecov.io/gh/Microsoft/vscode-python",
+            "description": "Test coverage"
+        }
+    ],
 	"icon": "icon.png",
 	"galleryBanner": {
 		"color": "#1e415e",

@@ -1,14 +1,5 @@
 # Python extension for Visual Studio Code
 
-<p align="center">
-  <a href="https://travis-ci.org/Microsoft/vscode-python">
-    <img src="https://travis-ci.org/Microsoft/vscode-python.svg?branch=master" />
-  </a>
-  <a href="https://codecov.io/gh/Microsoft/vscode-python">
-    <img src="https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg" />
-  </a>
-</p>
-
 A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (_including Python 3.6_), with features including the following and more:
 * Linting ([Prospector](https://pypi.io/project/prospector/), [Pylint](https://pypi.io/project/pylint/), [pycodestyle](https://pypi.io/project/pycodestyle/), [Flake8](https://pypi.io/project/flake8/), [pylama](https://github.com/klen/pylama), [pydocstyle](https://pypi.io/project/pydocstyle/), [mypy](http://mypy-lang.org/) with config files and plugins)
 * Intellisense (autocompletion with support for PEP 484 and PEP 526)

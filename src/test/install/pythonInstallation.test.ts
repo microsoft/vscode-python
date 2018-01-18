@@ -3,14 +3,10 @@
 'use strict';
 
 import * as assert from 'assert';
-import { ChildProcess, SpawnOptions } from 'child_process';
 import { Container } from 'inversify';
-import * as Rx from 'rxjs';
 import * as TypeMoq from 'typemoq';
-import * as vscode from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
 import { IPythonSettings } from '../../client/common/configSettings';
-import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { PythonInstaller } from '../../client/common/installer/pythonInstallation';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IInterpreterLocatorService } from '../../client/interpreter/contracts';

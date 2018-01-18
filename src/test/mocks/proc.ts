@@ -1,18 +1,16 @@
-import { spawn } from 'child_process';
 import { EventEmitter } from 'events';
-import { decorate, inject, injectable } from 'inversify';
-import * as Rx from 'rxjs';
-import { Disposable } from 'vscode';
-import { ExecutionResult, IBufferDecoder, IProcessService, ObservableExecutionResult, Output, SpawnOptions } from '../../client/common/process/types';
+import { inject, injectable } from 'inversify';
+import 'rxjs/add/observable/of';
+import { Observable } from 'rxjs/Observable';
+import { ExecutionResult, IProcessService, ObservableExecutionResult, Output, SpawnOptions } from '../../client/common/process/types';
 
-type ExecObservableCallback = (result: Rx.Observable<Output<string>> | Output<string>) => void;
+type ExecObservableCallback = (result: Observable<Output<string>> | Output<string>) => void;
 type ExecCallback = (result: ExecutionResult<string>) => void;
 
 export const IOriginalProcessService = Symbol('IProcessService');
 
 @injectable()
 export class MockProcessService extends EventEmitter implements IProcessService {
-    private observableResults: (Rx.Observable<Output<string>> | Output<string>)[] = [];
     constructor( @inject(IOriginalProcessService) private procService: IProcessService) {
         super();
     }
@@ -20,9 +18,9 @@ export class MockProcessService extends EventEmitter implements IProcessService 
         this.on('execObservable', handler);
     }
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
-        let value: Rx.Observable<Output<string>> | Output<string> | undefined;
+        let value: Observable<Output<string>> | Output<string> | undefined;
         let valueReturned = false;
-        this.emit('execObservable', file, args, options, (result: Rx.Observable<Output<string>> | Output<string>) => { value = result; valueReturned = true; });
+        this.emit('execObservable', file, args, options, (result: Observable<Output<string>> | Output<string>) => { value = result; valueReturned = true; });
 
         if (valueReturned) {
             const output = value as Output<string>;
@@ -30,13 +28,13 @@ export class MockProcessService extends EventEmitter implements IProcessService 
                 return {
                     // tslint:disable-next-line:no-any
                     proc: {} as any,
-                    out: Rx.Observable.of(output)
+                    out: Observable.of(output)
                 };
             } else {
                 return {
                     // tslint:disable-next-line:no-any
                     proc: {} as any,
-                    out: value as Rx.Observable<Output<string>>
+                    out: value as Observable<Output<string>>
                 };
             }
         } else {
@@ -51,6 +49,6 @@ export class MockProcessService extends EventEmitter implements IProcessService 
         let valueReturned = false;
         this.emit('exec', file, args, options, (result: ExecutionResult<string>) => { value = result; valueReturned = true; });
 
-        return valueReturned ? value : this.procService.exec(file, args, options);
+        return valueReturned ? value! : this.procService.exec(file, args, options);
     }
 }

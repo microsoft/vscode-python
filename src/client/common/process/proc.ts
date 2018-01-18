@@ -3,7 +3,7 @@
 
 import { spawn } from 'child_process';
 import { inject, injectable } from 'inversify';
-import * as Rx from 'rxjs';
+import { Observable } from 'rxjs/Observable';
 import { Disposable } from 'vscode';
 import { createDeferred } from '../helpers';
 import { DEFAULT_ENCODING } from './constants';
@@ -29,7 +29,7 @@ export class ProcessService implements IProcessService {
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
 
-        const output = new Rx.Observable<Output<string>>(subscriber => {
+        const output = new Observable<Output<string>>(subscriber => {
             const disposables: Disposable[] = [];
 
             const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
