@@ -25,7 +25,11 @@ const DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'Ma
 suite('Attach Debugger', () => {
     let debugClient: DebugClient;
     let procToKill: ChildProcess;
-    suiteSetup(initialize);
+    suiteSetup(function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
+        return initialize();
+    });
 
     setup(async () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
