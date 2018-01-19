@@ -2,10 +2,19 @@
 
 import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
-import { injectable } from 'inversify';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
+import {
+    IAutoCompeteSettings,
+    IFormattingSettings,
+    ILintingSettings,
+    IPythonSettings,
+    ISortImportSettings,
+    ITerminalSettings,
+    IUnitTestSettings,
+    IWorkspaceSymbolSettings
+} from './types';
 import { SystemVariables } from './variables/systemVariables';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -13,147 +22,9 @@ const untildify = require('untildify');
 
 export const IS_WINDOWS = /^win/.test(process.platform);
 
-export interface IPythonSettings {
-    pythonPath: string;
-    venvPath: string;
-    jediPath: string;
-    devOptions: string[];
-    linting: ILintingSettings;
-    formatting: IFormattingSettings;
-    unitTest: IUnitTestSettings;
-    autoComplete: IAutoCompeteSettings;
-    terminal: ITerminalSettings;
-    sortImports: ISortImportSettings;
-    workspaceSymbols: IWorkspaceSymbolSettings;
-    envFile: string;
-    disablePromptForFeatures: string[];
-    disableInstallationChecks: boolean;
-    globalModuleInstallation: boolean;
-}
-
-export const IPythonSettingsProvider = Symbol('IPythonSettingsProvider');
-export interface IPythonSettingsProvider {
-    getInstance(resource?: Uri): IPythonSettings;
-    // tslint:disable-next-line:no-any
-    updateSettingAsync(setting: string, value: any, resource?: Uri): Promise<void>;
-}
-
-export interface ISortImportSettings {
-    path: string;
-    args: string[];
-}
-
-export interface IUnitTestSettings {
-    promptToConfigure: boolean;
-    debugPort: number;
-    debugHost?: string;
-    nosetestsEnabled: boolean;
-    nosetestPath: string;
-    nosetestArgs: string[];
-    pyTestEnabled: boolean;
-    pyTestPath: string;
-    pyTestArgs: string[];
-    unittestEnabled: boolean;
-    unittestArgs: string[];
-    cwd?: string;
-}
-export interface IPylintCategorySeverity {
-    convention: vscode.DiagnosticSeverity;
-    refactor: vscode.DiagnosticSeverity;
-    warning: vscode.DiagnosticSeverity;
-    error: vscode.DiagnosticSeverity;
-    fatal: vscode.DiagnosticSeverity;
-}
-export interface IPep8CategorySeverity {
-    W: vscode.DiagnosticSeverity;
-    E: vscode.DiagnosticSeverity;
-}
-// tslint:disable-next-line:interface-name
-export interface Flake8CategorySeverity {
-    F: vscode.DiagnosticSeverity;
-    E: vscode.DiagnosticSeverity;
-    W: vscode.DiagnosticSeverity;
-}
-export interface IMypyCategorySeverity {
-    error: vscode.DiagnosticSeverity;
-    note: vscode.DiagnosticSeverity;
-}
-export interface ILintingSettings {
-    enabled: boolean;
-    ignorePatterns: string[];
-    prospectorEnabled: boolean;
-    prospectorArgs: string[];
-    pylintEnabled: boolean;
-    pylintArgs: string[];
-    pep8Enabled: boolean;
-    pep8Args: string[];
-    pylamaEnabled: boolean;
-    pylamaArgs: string[];
-    flake8Enabled: boolean;
-    flake8Args: string[];
-    pydocstyleEnabled: boolean;
-    pydocstyleArgs: string[];
-    lintOnSave: boolean;
-    maxNumberOfProblems: number;
-    pylintCategorySeverity: IPylintCategorySeverity;
-    pep8CategorySeverity: IPep8CategorySeverity;
-    flake8CategorySeverity: Flake8CategorySeverity;
-    mypyCategorySeverity: IMypyCategorySeverity;
-    prospectorPath: string;
-    pylintPath: string;
-    pep8Path: string;
-    pylamaPath: string;
-    flake8Path: string;
-    pydocstylePath: string;
-    mypyEnabled: boolean;
-    mypyArgs: string[];
-    mypyPath: string;
-}
-export interface IFormattingSettings {
-    provider: string;
-    autopep8Path: string;
-    autopep8Args: string[];
-    yapfPath: string;
-    yapfArgs: string[];
-}
-export interface IAutoCompeteSettings {
-    addBrackets: boolean;
-    extraPaths: string[];
-    preloadModules: string[];
-}
-export interface IWorkspaceSymbolSettings {
-    enabled: boolean;
-    tagFilePath: string;
-    rebuildOnStart: boolean;
-    rebuildOnFileSave: boolean;
-    ctagsPath: string;
-    exclusionPatterns: string[];
-}
-export interface ITerminalSettings {
-    executeInFileDir: boolean;
-    launchArgs: string[];
-}
-
 export function isTestExecution(): boolean {
     // tslint:disable-next-line:interface-name no-string-literal
     return process.env['VSC_PYTHON_CI_TEST'] === '1';
-}
-
-@injectable()
-export class PythonSettingsProvider implements IPythonSettingsProvider {
-    public getInstance(resource: Uri) {
-        return PythonSettings.getInstance(resource);
-    }
-    // tslint:disable-next-line:no-any
-    public async updateSettingAsync(setting: string, value: any, resource?: Uri): Promise<void> {
-        if (resource && vscode.workspace.getWorkspaceFolder(resource)) {
-            const pythonConfig = vscode.workspace.getConfiguration('python', resource);
-            await pythonConfig.update(setting, value, vscode.ConfigurationTarget.Workspace);
-        } else {
-            const pythonConfig = vscode.workspace.getConfiguration('python');
-            await pythonConfig.update(setting, value, true);
-        }
-    }
 }
 
 // tslint:disable-next-line:completed-docs

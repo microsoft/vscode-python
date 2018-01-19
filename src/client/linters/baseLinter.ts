@@ -1,10 +1,10 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
-import { IPythonSettings, IPythonSettingsProvider } from '../common/configSettings';
 import '../common/extensions';
 import { IPythonToolExecutionService } from '../common/process/types';
 import { ExecutionInfo, ILogger, Product } from '../common/types';
+import { IConfigurationService, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/errorHandler';
 import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LintMessageSeverity } from './types';
@@ -34,7 +34,7 @@ export function matchNamedRegEx(data, regex): IRegexGroup | undefined {
 
 export abstract class BaseLinter implements ILinter {
     private errorHandler: ErrorHandler;
-    private settingsProvider: IPythonSettingsProvider;
+    private configService: IConfigurationService;
     private _pythonSettings: IPythonSettings;
     private _info: ILinterInfo;
 
@@ -48,7 +48,7 @@ export abstract class BaseLinter implements ILinter {
         protected readonly columnOffset = 0) {
         this._info = serviceContainer.get<ILinterManager>(ILinterManager).getLinterInfo(product);
         this.errorHandler = new ErrorHandler(this.info.product, outputChannel, serviceContainer);
-        this.settingsProvider = serviceContainer.get<IPythonSettingsProvider>(IPythonSettingsProvider);
+        this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
     public get info(): ILinterInfo {
@@ -60,7 +60,7 @@ export abstract class BaseLinter implements ILinter {
         return path.basename(executablePath).length > 0 && path.basename(executablePath) !== executablePath;
     }
     public async lint(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]> {
-        this._pythonSettings = this.settingsProvider.getInstance(document.uri);
+        this._pythonSettings = this.configService.getSettings(document.uri);
         return this.runLinter(document, cancellation);
     }
 

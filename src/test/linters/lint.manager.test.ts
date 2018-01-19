@@ -4,9 +4,9 @@
 import * as assert from 'assert';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
-import { ILintingSettings, IPythonSettings, IPythonSettingsProvider, PythonSettings } from '../../client/common/configSettings';
+import { PythonSettings } from '../../client/common/configSettings';
 import { EnumEx } from '../../client/common/enumUtils';
-import { Product } from '../../client/common/types';
+import { IConfigurationService, ILintingSettings, IPythonSettings, Product } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { LinterManager } from '../../client/linters/linterManager';
@@ -16,7 +16,7 @@ import { initialize } from '../initialize';
 // tslint:disable-next-line:max-func-body-length
 suite('Linting - Manager', () => {
     let lm: ILinterManager;
-    let settingsProvider: IPythonSettingsProvider;
+    let configService: IConfigurationService;
     let settings: IPythonSettings;
 
     suiteSetup(initialize);
@@ -25,13 +25,13 @@ suite('Linting - Manager', () => {
         const serviceManager = new ServiceManager(cont);
         const serviceContainer = new ServiceContainer(cont);
 
-        const settingsProviderMock = TypeMoq.Mock.ofType<IPythonSettingsProvider>();
-        settingsProviderMock.setup(provider => provider.getInstance(TypeMoq.It.isAny())).returns(() => PythonSettings.getInstance());
+        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
+        configServiceMock.setup(provider => provider.getSettings(TypeMoq.It.isAny())).returns(() => PythonSettings.getInstance());
 
-        settingsProvider = settingsProviderMock.object;
-        serviceManager.addSingletonInstance<IPythonSettingsProvider>(IPythonSettingsProvider, settingsProvider);
+        configService = configServiceMock.object;
+        serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configServiceMock.object);
 
-        settings = settingsProvider.getInstance();
+        settings = configService.getSettings();
         lm = new LinterManager(serviceContainer);
         resetSettings();
     });

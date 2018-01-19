@@ -17,7 +17,7 @@ export interface ILinterInfo {
     readonly pathSettingName: string;
     readonly argsSettingName: string;
     readonly enabledSettingName: string;
-    enableAsync(flag: boolean, resource?: vscode.Uri): void;
+    enableAsync(flag: boolean, resource?: vscode.Uri): Promise<void>;
     isEnabled(resource?: vscode.Uri): boolean;
     pathName(resource?: vscode.Uri): string;
     linterArgs(resource?: vscode.Uri): string[];

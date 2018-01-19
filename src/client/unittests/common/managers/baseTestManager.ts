@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { Disposable, OutputChannel, Uri, workspace } from 'vscode';
-import { IPythonSettings, PythonSettings } from '../../../common/configSettings';
+import { PythonSettings } from '../../../common/configSettings';
 import { isNotInstalledError } from '../../../common/helpers';
+import { IPythonSettings } from '../../../common/types';
 import { IDisposableRegistry, IInstaller, IOutputChannel, Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../../telemetry/constants';

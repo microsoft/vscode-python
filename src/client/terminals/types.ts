@@ -1,0 +1,25 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { TextEditor, Uri } from 'vscode';
+
+export const ICodeExecutionService = Symbol('ICodeExecutionService');
+
+export interface ICodeExecutionService {
+    execute(code: string, resource?: Uri): Promise<void>;
+    executeFile(file: Uri): Promise<void>;
+}
+
+export const ICodeExecutionHelper = Symbol('ICodeExecutionHelper');
+
+export interface ICodeExecutionHelper {
+    normalizeLines(code: string): string;
+    getFileToExecute(): Promise<Uri | undefined>;
+    getSelectedTextToExecute(textEditor: TextEditor): Promise<string | undefined>;
+}
+
+export const ICodeExecutionManager = Symbol('ICodeExecutionManager');
+
+export interface ICodeExecutionManager {
+    registerCommands(): void;
+}

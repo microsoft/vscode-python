@@ -2,21 +2,17 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { ConfigurationTarget, Uri } from 'vscode';
-import { updateSetting } from '../../test/common';
-import { IPythonSettingsProvider } from '../common/configSettings';
-import { ExecutionInfo, Product } from '../common/types';
+import { Uri } from 'vscode';
+import { ExecutionInfo, IConfigurationService, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
 
 export class LinterInfo implements ILinterInfo {
     private _id: LinterId;
     private _product: Product;
-    private settingsProvider: IPythonSettingsProvider;
 
-    constructor(product: Product, id: LinterId, settingsProvider: IPythonSettingsProvider) {
+    constructor(product: Product, id: LinterId, private configService: IConfigurationService) {
         this._product = product;
         this._id = id;
-        this.settingsProvider = settingsProvider;
     }
 
     public get id(): LinterId {
@@ -37,21 +33,21 @@ export class LinterInfo implements ILinterInfo {
     }
 
     public async enableAsync(enabled: boolean, resource?: Uri): Promise<void> {
-        const settings = this.settingsProvider.getInstance(resource);
+        const settings = this.configService.getSettings(resource);
         settings.linting[this.enabledSettingName] = enabled;
-        return this.settingsProvider.updateSettingAsync(`linting.${this.enabledSettingName}`, enabled, resource);
+        return this.configService.updateSettingAsync(`linting.${this.enabledSettingName}`, enabled, resource);
     }
     public isEnabled(resource?: Uri): boolean {
-        const settings = this.settingsProvider.getInstance(resource);
+        const settings = this.configService.getSettings(resource);
         return settings.linting[this.enabledSettingName] as boolean;
     }
 
     public pathName(resource?: Uri): string {
-        const settings = this.settingsProvider.getInstance(resource);
+        const settings = this.configService.getSettings(resource);
         return settings.linting[this.pathSettingName] as string;
     }
     public linterArgs(resource?: Uri): string[] {
-        const settings = this.settingsProvider.getInstance(resource);
+        const settings = this.configService.getSettings(resource);
         const args = settings.linting[this.argsSettingName];
         return Array.isArray(args) ? args as string[] : [];
     }

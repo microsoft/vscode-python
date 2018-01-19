@@ -38,7 +38,6 @@ import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
 import { PythonDefinitionProvider } from './providers/definitionProvider';
-import { activateExecInTerminalProvider } from './providers/execInTerminalProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { PythonHoverProvider } from './providers/hoverProvider';
 import { LinterProvider } from './providers/linterProvider';
@@ -54,6 +53,8 @@ import * as sortImports from './sortImports';
 import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { StopWatch } from './telemetry/stopWatch';
+import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
+import { ICodeExecutionManager } from './terminals/types';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import * as tests from './unittests/main';
@@ -88,6 +89,9 @@ export async function activate(context: vscode.ExtensionContext) {
     formattersRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
+    commonRegisterTerminalTypes(serviceManager);
+
+    serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     sendStartupTelemetry(activated, serviceContainer);
@@ -110,8 +114,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(new InterpreterSelector(interpreterManager, interpreterVersionService, processService));
     context.subscriptions.push(new LinterCommands(serviceContainer, true));
-
-    context.subscriptions.push(...activateExecInTerminalProvider());
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 

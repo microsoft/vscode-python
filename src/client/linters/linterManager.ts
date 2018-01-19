@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, OutputChannel, TextDocument, Uri, window } from 'vscode';
-import { IPythonSettingsProvider } from '../common/configSettings';
-import { ILogger, Product } from '../common/types';
+import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
+import { IConfigurationService, ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Flake8 } from './flake8';
 import { LinterInfo } from './linterInfo';
@@ -17,9 +16,9 @@ import { Pylint } from './pylint';
 import { ILinter, ILinterInfo, ILinterManager, ILintMessage } from './types';
 
 class DisabledLinter implements ILinter {
-    constructor(private settingsProvider: IPythonSettingsProvider) {}
+    constructor(private configService: IConfigurationService) {}
     public get info() {
-        return new LinterInfo(Product.pylint, 'pylint', this.settingsProvider);
+        return new LinterInfo(Product.pylint, 'pylint', this.configService);
     }
     public async lint(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
         return [];
@@ -30,19 +29,19 @@ class DisabledLinter implements ILinter {
 export class LinterManager implements ILinterManager {
     private lintingEnabledSettingName = 'enabled';
     private linters: ILinterInfo[];
-    private settingsProvider: IPythonSettingsProvider;
+    private configService: IConfigurationService;
     private disabledForCurrentSession = false;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        this.settingsProvider = serviceContainer.get<IPythonSettingsProvider>(IPythonSettingsProvider);
+        this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.linters = [
-            new LinterInfo(Product.flake8, 'flake8', this.settingsProvider),
-            new LinterInfo(Product.pylint, 'pylint', this.settingsProvider),
-            new LinterInfo(Product.mypy, 'mypy', this.settingsProvider),
-            new LinterInfo(Product.pep8, 'pep8', this.settingsProvider),
-            new LinterInfo(Product.prospector, 'prospector', this.settingsProvider),
-            new LinterInfo(Product.pydocstyle, 'pydocstyle', this.settingsProvider),
-            new LinterInfo(Product.pylama, 'pylama', this.settingsProvider)
+            new LinterInfo(Product.flake8, 'flake8', this.configService),
+            new LinterInfo(Product.pylint, 'pylint', this.configService),
+            new LinterInfo(Product.mypy, 'mypy', this.configService),
+            new LinterInfo(Product.pep8, 'pep8', this.configService),
+            new LinterInfo(Product.prospector, 'prospector', this.configService),
+            new LinterInfo(Product.pydocstyle, 'pydocstyle', this.configService),
+            new LinterInfo(Product.pylama, 'pylama', this.configService)
         ];
     }
 
@@ -62,7 +61,7 @@ export class LinterManager implements ILinterManager {
         if (this.disabledForCurrentSession) {
             return false;
         }
-        const settings = this.settingsProvider.getInstance(resource);
+        const settings = this.configService.getSettings(resource);
         return (settings.linting[this.lintingEnabledSettingName] as boolean) && this.getActiveLinters(resource).length > 0;
     }
 
@@ -95,7 +94,7 @@ export class LinterManager implements ILinterManager {
 
     public createLinter(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer, resource?: Uri): ILinter {
         if (!this.isLintingEnabled(resource)) {
-            return new DisabledLinter(serviceContainer.get<IPythonSettingsProvider>(IPythonSettingsProvider));
+            return new DisabledLinter(this.configService);
         }
         const error = 'Linter manager: Unknown linter';
         switch (product) {
@@ -122,8 +121,8 @@ export class LinterManager implements ILinterManager {
 
     // tslint:disable-next-line:no-any
     private setSettingAsync(name: string, value: any, resource?: Uri): Promise<void> {
-        const settings = this.settingsProvider.getInstance(resource);
+        const settings = this.configService.getSettings(resource);
         settings.linting[name] = value;
-        return this.settingsProvider.updateSettingAsync(name, value, resource);
+        return this.configService.updateSettingAsync(name, value, resource);
     }
 }

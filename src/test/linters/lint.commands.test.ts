@@ -6,8 +6,8 @@ import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { QuickPickOptions } from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
-import { IPythonSettingsProvider, PythonSettings } from '../../client/common/configSettings';
-import { Product } from '../../client/common/types';
+import { PythonSettings } from '../../client/common/configSettings';
+import { IConfigurationService, Product } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -20,7 +20,7 @@ import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 suite('Linting - Linter Selector', () => {
     let serviceContainer: IServiceContainer;
     let appShell: TypeMoq.IMock<IApplicationShell>;
-    let settingsProvider: TypeMoq.IMock<IPythonSettingsProvider>;
+    let configService: TypeMoq.IMock<IConfigurationService>;
     let commands: LinterCommands;
     let lm: ILinterManager;
 
@@ -40,11 +40,11 @@ suite('Linting - Linter Selector', () => {
         serviceContainer = new ServiceContainer(cont);
 
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        settingsProvider = TypeMoq.Mock.ofType<IPythonSettingsProvider>();
-        settingsProvider.setup(p => p.getInstance(TypeMoq.It.isAny())).returns(() => PythonSettings.getInstance());
+        configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        configService.setup(p => p.getSettings(TypeMoq.It.isAny())).returns(() => PythonSettings.getInstance());
 
         serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
-        serviceManager.addSingletonInstance<IPythonSettingsProvider>(IPythonSettingsProvider, settingsProvider.object);
+        serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
         lm = new LinterManager(serviceContainer);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
         commands = new LinterCommands(serviceContainer, false);
