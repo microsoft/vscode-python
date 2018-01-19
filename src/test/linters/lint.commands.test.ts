@@ -110,7 +110,7 @@ suite('Linting - Linter Selector', () => {
                 options = o as QuickPickOptions;
             })
             .returns(s => new Promise((resolve, reject) => resolve('pylint')));
-        appShell.setup(x => x.showWarningMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+        appShell.setup(x => x.showWarningMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .callback((s, o) => {
                 warning = s;
             })

@@ -4,7 +4,6 @@
 import * as vscode from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import { Commands } from '../common/constants';
-import { WorkspacePythonPath } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { ILinterManager } from './types';
 
@@ -53,7 +52,8 @@ export class LinterCommands implements vscode.Disposable {
         if (selection !== undefined) {
             const index = linters.findIndex(x => x.id === selection);
             if (activeLinters.length > 1) {
-                if (await this.appShell.showWarningMessage(`Multiple linters are enabled in settings. Replace with '${selection}'?`, 'Yes', 'No') !== 'Yes') {
+                const response = await this.appShell.showWarningMessage(`Multiple linters are enabled in settings. Replace with '${selection}'?`, 'Yes', 'No');
+                if (response !== 'Yes') {
                     return;
                 }
             }
