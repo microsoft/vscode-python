@@ -20,27 +20,24 @@ suite('Linting - Manager', () => {
     let settings: IPythonSettings;
 
     suiteSetup(initialize);
-    setup(() => {
+    setup(async () => {
         const cont = new Container();
         const serviceManager = new ServiceManager(cont);
         const serviceContainer = new ServiceContainer(cont);
 
         const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        configServiceMock.setup(provider => provider.getSettings(TypeMoq.It.isAny())).returns(() => PythonSettings.getInstance());
+        settings = new PythonSettings();
+        configServiceMock.setup(provider => provider.getSettings(TypeMoq.It.isAny())).returns(() => settings);
 
         configService = configServiceMock.object;
-        serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configServiceMock.object);
+        serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService);
 
         settings = configService.getSettings();
         lm = new LinterManager(serviceContainer);
-        resetSettings();
-    });
-    teardown(resetSettings);
 
-    async function resetSettings() {
         await lm.setActiveLintersAsync([Product.pylint]);
         await lm.enableLintingAsync(true);
-    }
+    });
 
     test('Ensure product is set in Execution Info', async () => {
         [Product.flake8, Product.mypy, Product.pep8,

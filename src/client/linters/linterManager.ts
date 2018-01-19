@@ -67,7 +67,12 @@ export class LinterManager implements ILinterManager {
 
     public async enableLintingAsync(enable: boolean, resource?: Uri): Promise<void> {
         this.disabledForCurrentSession = !enable;
-        await this.setSettingAsync(`linting.${this.lintingEnabledSettingName}`, enable, resource);
+
+        const settings = this.configService.getSettings(resource);
+        settings.linting[this.lintingEnabledSettingName] = enable;
+
+        await this.configService.updateSettingAsync(`linting.${this.lintingEnabledSettingName}`, enable, resource);
+
         // If nothing is enabled, fix it up to PyLint (default).
         if (enable && this.getActiveLinters(resource).length === 0) {
             await this.setActiveLintersAsync([Product.pylint], resource);
@@ -117,12 +122,5 @@ export class LinterManager implements ILinterManager {
                 break;
         }
         throw new Error(error);
-    }
-
-    // tslint:disable-next-line:no-any
-    private setSettingAsync(name: string, value: any, resource?: Uri): Promise<void> {
-        const settings = this.configService.getSettings(resource);
-        settings.linting[name] = value;
-        return this.configService.updateSettingAsync(name, value, resource);
     }
 }
