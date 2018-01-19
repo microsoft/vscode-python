@@ -19,6 +19,5 @@
     "python.unitTest.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
     "python.formatting.provider": "none",
-    "files.insertFinalNewline": true,
-    "python.pythonPath": "C:\\Python27\\python.exe"
+    "files.insertFinalNewline": true
 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { IApplicationShell } from '../common/application/types';
+import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { IServiceContainer } from '../ioc/types';
 import { ILinterManager } from './types';
@@ -12,13 +12,13 @@ export class LinterCommands implements vscode.Disposable {
     private linterManager: ILinterManager;
     private appShell: IApplicationShell;
 
-    constructor(private serviceContainer: IServiceContainer, registerCommands: boolean) {
+    constructor(private serviceContainer: IServiceContainer) {
         this.linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        if (registerCommands) {
-            this.disposables.push(vscode.commands.registerCommand(Commands.Set_Linter, this.setLinterAsync.bind(this)));
-            this.disposables.push(vscode.commands.registerCommand(Commands.Enable_Linter, this.enableLintingAsync.bind(this)));
-        }
+
+        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+        commandManager.registerCommand(Commands.Set_Linter, this.setLinterAsync.bind(this));
+        commandManager.registerCommand(Commands.Enable_Linter, this.enableLintingAsync.bind(this));
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());

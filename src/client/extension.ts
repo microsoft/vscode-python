@@ -94,6 +94,7 @@ export async function activate(context: vscode.ExtensionContext) {
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
+    // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated, serviceContainer);
 
     sortImports.activate(context, standardOutputChannel, serviceContainer);
@@ -113,7 +114,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const processService = serviceContainer.get<IProcessService>(IProcessService);
 
     context.subscriptions.push(new InterpreterSelector(interpreterManager, interpreterVersionService, processService));
-    context.subscriptions.push(new LinterCommands(serviceContainer, true));
+    context.subscriptions.push(new LinterCommands(serviceContainer));
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 

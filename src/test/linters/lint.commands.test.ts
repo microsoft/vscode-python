@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { QuickPickOptions } from 'vscode';
-import { IApplicationShell } from '../../client/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { IConfigurationService, Product } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -30,9 +30,7 @@ suite('Linting - Linter Selector', () => {
         initializeServices();
     });
     suiteTeardown(closeActiveWindows);
-    teardown(async () => {
-        await closeActiveWindows();
-    });
+    teardown(async () => await closeActiveWindows());
 
     function initializeServices() {
         const cont = new Container();
@@ -41,13 +39,19 @@ suite('Linting - Linter Selector', () => {
 
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
-        configService.setup(p => p.getSettings(TypeMoq.It.isAny())).returns(() => PythonSettings.getInstance());
+
+        const settings = new PythonSettings();
+        configService.setup(p => p.getSettings(TypeMoq.It.isAny())).returns(() => settings);
+
+        const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+        serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, commandManager.object);
 
         serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
         lm = new LinterManager(serviceContainer);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
-        commands = new LinterCommands(serviceContainer, false);
+
+        commands = new LinterCommands(serviceContainer);
     }
 
     test('Enable linting', async () => {
