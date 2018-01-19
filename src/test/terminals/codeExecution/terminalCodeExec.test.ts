@@ -80,21 +80,23 @@ suite('Terminal - Code Execution', () => {
     test('Ensure we do not set current directory before executing file if in the same directory', async () => {
         const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
         terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
+        terminalSettings.setup(s => s.launchArgs).returns(() => []);
         workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
         workspaceFolder.setup(w => w.uri).returns(() => Uri.file(path.join('c', 'path', 'to', 'file with spaces in path')));
+        settings.setup(s => s.pythonPath).returns(() => 'python');
 
         await executor.executeFile(file);
-
         terminalService.verify(async t => await t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
     });
 
     test('Ensure we do not set current directory before executing file if file is not in a workspace', async () => {
         const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
         terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
+        terminalSettings.setup(s => s.launchArgs).returns(() => []);
         workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
+        settings.setup(s => s.pythonPath).returns(() => 'python');
 
         await executor.executeFile(file);
-
         terminalService.verify(async t => await t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
     });
 
