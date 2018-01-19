@@ -2,28 +2,37 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Uri } from 'vscode';
-import { ITerminalManager } from '../application/types';
-import { IDisposableRegistry } from '../types';
+import { Uri } from 'vscode';
+import { IServiceContainer } from '../../ioc/types';
+import { IWorkspaceService } from '../application/types';
 import { TerminalService } from './service';
-import { ITerminalHelper, ITerminalService, ITerminalServiceFactory } from './types';
+import { ITerminalService, ITerminalServiceFactory } from './types';
 
 @injectable()
 export class TerminalServiceFactory implements ITerminalServiceFactory {
     private terminalServices: Map<string, ITerminalService>;
 
-    constructor( @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
-        @inject(ITerminalManager) private terminalManager: ITerminalManager,
-        @inject(ITerminalHelper) private terminalHelper: ITerminalHelper) {
+    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
 
         this.terminalServices = new Map<string, ITerminalService>();
     }
     public getTerminalService(resource?: Uri, title?: string): ITerminalService {
+
         const terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
-        if (!this.terminalServices.has(terminalTitle)) {
-            const terminalService = new TerminalService(this.terminalHelper, this.terminalManager, this.disposableRegistry, resource, terminalTitle);
-            this.terminalServices.set(terminalTitle, terminalService);
+        const id = this.getTerminalId(resource, title);
+        if (!this.terminalServices.has(id)) {
+            const terminalService = new TerminalService(this.serviceContainer, resource, terminalTitle);
+            this.terminalServices.set(id, terminalService);
         }
-        return this.terminalServices.get(terminalTitle)!;
+
+        return this.terminalServices.get(id)!;
+    }
+    private getTerminalId(resource?: Uri, title?: string): string {
+        const terminalTitle = title ? title! : '';
+        if (!resource) {
+            return terminalTitle;
+        }
+        const workspaceFolder = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getWorkspaceFolder(resource!);
+        return workspaceFolder ? `${terminalTitle}:${workspaceFolder.uri.fsPath}` : terminalTitle;
     }
 }

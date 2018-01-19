@@ -27,7 +27,7 @@ import { SimpleConfigurationProvider } from './debugger';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { InterpreterManager } from './interpreter';
 import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
-import { ICondaLocatorService, IInterpreterVersionService } from './interpreter/contracts';
+import { ICondaService, IInterpreterVersionService } from './interpreter/contracts';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
@@ -95,6 +95,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
+    // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated, serviceContainer);
 
     sortImports.activate(context, standardOutputChannel, serviceContainer);
@@ -205,7 +206,7 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
     try {
         await activatedPromise;
         const duration = stopWatch.elapsedTime;
-        const condaLocator = serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
         const condaVersion = await condaLocator.getCondaVersion().catch(() => undefined);
         const props = condaVersion ? { condaVersion } : undefined;
         sendTelemetryEvent(EDITOR_LOAD, duration, props);

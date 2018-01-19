@@ -5,7 +5,7 @@
 // tslint:disable:no-any unified-signatures
 
 import * as vscode from 'vscode';
-import { CancellationToken, Disposable, Event, FileSystemWatcher, GlobPattern, TextDocument, TextDocumentShowOptions } from 'vscode';
+import { CancellationToken, Disposable, Event, FileSystemWatcher, GlobPattern, TextDocument, TextDocumentShowOptions, WorkspaceConfiguration } from 'vscode';
 import { TextEditor, TextEditorEdit, TextEditorOptionsChangeEvent, TextEditorSelectionChangeEvent, TextEditorViewColumnChangeEvent } from 'vscode';
 import { Uri, ViewColumn, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { Terminal, TerminalOptions } from 'vscode';
@@ -364,6 +364,11 @@ export interface IWorkspaceService {
     readonly onDidChangeWorkspaceFolders: Event<WorkspaceFoldersChangeEvent>;
 
     /**
+     * An event that is emitted when the [configuration](#WorkspaceConfiguration) changed.
+     */
+    readonly onDidChangeConfiguration: Event<void>;
+
+    /**
      * Returns the [workspace folder](#WorkspaceFolder) that contains a given uri.
      * * returns `undefined` when the given uri doesn't match any workspace folder
      * * returns the *input* when the given uri is a workspace folder itself
@@ -419,6 +424,21 @@ export interface IWorkspaceService {
      * [workspace folders](#workspace.workspaceFolders) are opened.
      */
     findFiles(include: GlobPattern, exclude?: GlobPattern, maxResults?: number, token?: CancellationToken): Thenable<Uri[]>;
+
+    /**
+     * Get a workspace configuration object.
+     *
+     * When a section-identifier is provided only that part of the configuration
+     * is returned. Dots in the section-identifier are interpreted as child-access,
+     * like `{ myExt: { setting: { doIt: true }}}` and `getConfiguration('myExt.setting').get('doIt') === true`.
+     *
+     * When a resource is provided, configuration scoped to that resource is returned.
+     *
+     * @param section A dot-separated identifier.
+     * @param resource A resource for which the configuration is asked for
+     * @return The full configuration or a subset.
+     */
+    getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration;
 }
 
 export const ITerminalManager = Symbol('ITerminalManager');

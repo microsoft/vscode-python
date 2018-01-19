@@ -17,9 +17,8 @@ import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../client/common/terminal/types';
 import { ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows } from '../../client/common/types';
-import { ICondaLocatorService, IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../client/interpreter/contracts';
+import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { rootWorkspaceUri, updateSetting } from '../common';
-import { MockCondaLocator } from '../mocks/condaLocator';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -29,6 +28,8 @@ import { closeActiveWindows, initializeTest } from './../initialize';
 suite('Module Installer', () => {
     let ioc: UnitTestIocContainer;
     let mockTerminalService: TypeMoq.IMock<ITerminalService>;
+    let condaService: TypeMoq.IMock<ICondaService>;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
     const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
     suiteSetup(initializeTest);
     setup(async () => {
@@ -42,7 +43,7 @@ suite('Module Installer', () => {
     });
     teardown(async () => {
         ioc.dispose();
-        closeActiveWindows();
+        await closeActiveWindows();
     });
 
     function initializeDI() {
@@ -63,7 +64,10 @@ suite('Module Installer', () => {
 
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
-        ioc.serviceManager.addSingleton<ICondaLocatorService>(ICondaLocatorService, MockCondaLocator);
+        condaService = TypeMoq.Mock.ofType<ICondaService>();
+        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
         ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
         ioc.serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -139,6 +143,15 @@ suite('Module Installer', () => {
         expect(pipInstaller).not.to.be.an('undefined', 'Pip installer not found');
         await expect(pipInstaller.isSupported()).to.eventually.equal(true, 'Pip is not supported');
 
+        condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(true));
+        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => {
+            const pythonInterpreter: PythonInterpreter = {
+                path: 'xyz',
+                version: 'zbc',
+                type: InterpreterType.Conda
+            };
+            return Promise.resolve(pythonInterpreter);
+        });
         const condaInstaller = moduleInstallers.find(item => item.displayName === 'Conda')!;
         expect(condaInstaller).not.to.be.an('undefined', 'Conda installer not found');
         await expect(condaInstaller.isSupported()).to.eventually.equal(true, 'Conda is not supported');
