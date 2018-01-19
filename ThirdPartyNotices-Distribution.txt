@@ -2,48 +2,75 @@
 THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
 Do Not Translate or Localize
 
-Microsoft Python extension for Visual Studio Code incorporates components from the projects listed below. Microsoft licenses these components to you under Microsoft’s licensing terms for the Microsoft Python extension for Visual Studio Code.  The original copyright notices and the licenses under which Microsoft received such components are set forth below for informational purposes. Microsoft reserves all rights not expressly granted herein, whether by implication, estoppel or otherwise.
+Microsoft Python extension for Visual Studio Code incorporates components from the projects listed below. Microsoft licenses these components to you under Microsoft's licensing terms for the Microsoft Python extension for Visual Studio Code.  The original copyright notices and the licenses under which Microsoft received such components are set forth below for informational purposes. Microsoft reserves all rights not expressly granted herein, whether by implication, estoppel or otherwise.
 
-
-
-1.	diff-match-patch (https://github.com/ForbesLindesay-Unmaintained/diff-match-patch)
-2.	Files from the Python Project (https://www.python.org/)
-3.	fuzzy (https://github.com/mattyork/fuzzy)
-4.	Get-port (https://github.com/sindresorhus/get-port)
-5.
-Go for Visual Studio Code (https://github.com/Microsoft/vscode-go)
-6.	Google Diff Match and Patch  (https://github.com/GerHobbelt/google-diff-match-patch)
-7.	Iconv-lite (https://github.com/ashtuchkin/iconv-lite)
-8.	Inversify (https://github.com/inversify/InversifyJS)
-9.	isort (https://github.com/timothycrosley/isort)
-10.	jedi (https://github.com/davidhalter/jedi)
-11.	line-by-line  (https://github.com/Osterjour/line-by-line)
-12.	lodash (https://github.com/lodash/lodash)
+1.	Arch (https://github.com/feross/arch)
+2.	diff-match-patch (https://github.com/ForbesLindesay-Unmaintained/diff-match-patch)
+3.	Files from the Python Project (https://www.python.org/)
+4.	fuzzy (https://github.com/mattyork/fuzzy)
+5.	Get-port (https://github.com/sindresorhus/get-port)
+6.  Go for Visual Studio Code (https://github.com/Microsoft/vscode-go)
+7.	Google Diff Match and Patch  (https://github.com/GerHobbelt/google-diff-match-patch)
+8.	Iconv-lite (https://github.com/ashtuchkin/iconv-lite)
+9.	Inversify (https://github.com/inversify/InversifyJS)
+10.	isort (https://github.com/timothycrosley/isort)
+11.	jedi (https://github.com/davidhalter/jedi)
+12.	line-by-line  (https://github.com/Osterjour/line-by-line)
+13.	lodash (https://github.com/lodash/lodash)
 		Includes:Sizzle CSS Selector Engine
 		Includes:Webpack
-13.	minimatch (https://github.com/isaacs/minimatch)
-14.	named-js-regexp (https://github.com/edvinv/named-js-regexp)
-15.	node-fs-extra (https://github.com/jprichardson/node-fs-extra)
-16.	node-semver (https://github.com/npm/node-semver)
-17.	node-tmp (https://github.com/raszi/node-tmp)
-18.	node-tree-kill (https://github.com/pkrumins/node-tree-kill)
-19.	node-winreg (https://github.com/fresc81/node-winreg)
-20.	node-xml2js  (https://github.com/Leonidas-from-XIV/node-xml2js)
-21.	omnisharp-vscode (https://github.com/OmniSharp/omnisharp-vscode)
-22.	Python documentation (https://docs.python.org/)
-23.	python-functools32 (https://github.com/MiCHiLU/python-functools32/blob/master/functools32/functools32.py)
-24.	pythonVSCode (https://github.com/DonJayamanne/pythonVSCode)
-25.	Reflect-metadata (https://github.com/rbuckton/reflect-metadata)
-26.	RxJS (https://github.com/ReactiveX/RxJS)
-27.	Sphinx (http://sphinx-doc.org/)
-28.	uint64be (https://github.com/mafintosh/uint64be)
-29.	untildify (https://github.com/sindresorhus/untildify)
-30.	vscode-debugadapter (https://github.com/Microsoft/vscode-debugadapter-node/tree/master/adapter)
-31.	vscode-debugprotocol (https://github.com/Microsoft/vscode-debugadapter-node/tree/master/protocol)
-32.	vscode-extension-telemetry (https://github.com/Microsoft/vscode-extension-telemetry)
-33.	vscode-languageclient (https://github.com/Microsoft/vscode-languageserver-node)
-34.	vscode-languageserver (https://github.com/Microsoft/vscode-languageserver-node/)
+14.	minimatch (https://github.com/isaacs/minimatch)
+15.	named-js-regexp (https://github.com/edvinv/named-js-regexp)
+16.	node-fs-extra (https://github.com/jprichardson/node-fs-extra)
+17.	node-semver (https://github.com/npm/node-semver)
+18.	node-tmp (https://github.com/raszi/node-tmp)
+19.	node-tree-kill (https://github.com/pkrumins/node-tree-kill)
+20.	node-winreg (https://github.com/fresc81/node-winreg)
+21.	node-xml2js  (https://github.com/Leonidas-from-XIV/node-xml2js)
+22.	omnisharp-vscode (https://github.com/OmniSharp/omnisharp-vscode)
+23.	opn (https://github.com/sindresorhus/opn)
+24.	Python documentation (https://docs.python.org/)
+25.	python-functools32 (https://github.com/MiCHiLU/python-functools32/blob/master/functools32/functools32.py)
+26.	pythonVSCode (https://github.com/DonJayamanne/pythonVSCode)
+27.	Reflect-metadata (https://github.com/rbuckton/reflect-metadata)
+28.	RxJS (https://github.com/ReactiveX/RxJS)
+		Includes:Contributor Covenant v1.1.0, v1.4
+		Includes:File from Angular.io
+		Includes:File from setImmediate
+29.	Sphinx (http://sphinx-doc.org/)
+30.	uint64be (https://github.com/mafintosh/uint64be)
+31.	untildify (https://github.com/sindresorhus/untildify)
+32.	vscode-debugadapter (https://github.com/Microsoft/vscode-debugadapter-node/tree/master/adapter)
+33.	vscode-debugprotocol (https://github.com/Microsoft/vscode-debugadapter-node/tree/master/protocol)
+34.	vscode-extension-telemetry (https://github.com/Microsoft/vscode-extension-telemetry)
+35.	vscode-languageclient (https://github.com/Microsoft/vscode-languageserver-node)
+36.	vscode-languageserver (https://github.com/Microsoft/vscode-languageserver-node/)
 
+
+%% Arch NOTICES AND INFORMATION BEGIN HERE
+=========================================
+The MIT License (MIT)
+
+Copyright (c) Feross Aboukhadijeh
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+=========================================
+END OF Arch NOTICES AND INFORMATION
 
 %% diff-match-patch NOTICES AND INFORMATION BEGIN HERE
 =========================================
@@ -796,6 +823,20 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 =========================================
 END OF omnisharp-vscode NOTICES AND INFORMATION
 
+%% opn NOTICES AND INFORMATION BEGIN HERE
+=========================================
+MIT License
+
+Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+=========================================
+END OF opn NOTICES AND INFORMATION
+
 %% Python documentation NOTICES AND INFORMATION BEGIN HERE
 =========================================
 Terms and conditions for accessing or otherwise using Python
@@ -1224,6 +1265,62 @@ END OF Reflect-metadata NOTICES AND INFORMATION
  See the License for the specific language governing permissions and
  limitations under the License.
 
+=========================================
+The MIT License (MIT)
+
+Copyright (c) 2014 Coraline Ada Ehmke
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+=========================================
+Includes file from Google's Angular.io
+
+The MIT License
+
+Copyright (c) 2014-2017 Google, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+=========================================
+File from setImmediate
+
+Copyright (c) 2012 Barnesandnoble.com, llc, Donavon West, and Domenic Denicola
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =========================================
 END OF RxJS NOTICES AND INFORMATION
 

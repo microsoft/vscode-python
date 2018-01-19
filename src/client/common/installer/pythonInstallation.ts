@@ -5,8 +5,8 @@
 import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
-import { IPythonSettings } from '../configSettings';
 import { IPlatformService } from '../platform/types';
+import { IPythonSettings } from '../types';
 
 export class PythonInstaller {
     private locator: IInterpreterLocatorService;

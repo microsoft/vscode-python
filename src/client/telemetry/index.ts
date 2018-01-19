@@ -26,12 +26,18 @@ export function sendTelemetryEvent(eventName: string, durationMs?: number, prope
 }
 
 // tslint:disable-next-line:no-any function-name
-export function captureTelemetry(eventName: string, properties?: TelemetryProperties) {
+export function captureTelemetry(eventName: string, properties?: TelemetryProperties, captureDuration: boolean = true) {
     // tslint:disable-next-line:no-function-expression no-any
     return function (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
         descriptor.value = function (...args: any[]) {
+            if (!captureDuration) {
+                sendTelemetryEvent(eventName, undefined, properties);
+                // tslint:disable-next-line:no-invalid-this
+                return originalMethod.apply(this, args);
+            }
+
             const stopWatch = new StopWatch();
             // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
             const result = originalMethod.apply(this, args);
