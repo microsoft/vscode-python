@@ -192,7 +192,7 @@ suite('Linting', () => {
         const cancelToken = new vscode.CancellationTokenSource();
         const document = await vscode.workspace.openTextDocument(pythonFile);
 
-        linterManager.setActiveLintersAsync([product]);
+        await linterManager.setActiveLintersAsync([product]);
         const linter = linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
 
         const messages = await linter.lint(document, cancelToken.token);

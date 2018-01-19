@@ -117,7 +117,7 @@ suite('Linting - Linter Selector', () => {
             .returns(s => new Promise((resolve, reject) => resolve('Yes')));
 
         const linters = lm.getAllLinterInfos();
-        lm.setActiveLintersAsync(products);
+        await lm.setActiveLintersAsync(products);
 
         let current: string;
         let activeLinters = lm.getActiveLinters();
