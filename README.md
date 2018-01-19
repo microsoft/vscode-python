@@ -1,21 +1,23 @@
 # Python extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (_including Python 3.6_), with features such as linting, debugging, IntelliSense, code navigation, code formatting, refactoring, unit tests, snippets, and more!
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (_including Python 3.6_), including features such as linting, debugging, IntelliSense, code navigation, code formatting, refactoring, unit tests, snippets, and more!
 
 ## Quick Start
 
-* **Step 1.** [Install a supported version of Python on your system](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) (note: that the system install of Python on macOS is not supported)
-* **Step 2.** Install the extension
+* **Step 1.** [Install a supported version of Python on your system](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) (note: that the system install of Python on macOS is not supported).
+* **Step 2.** Install the Python extension for Visual Studio Code.
 * **Step 3.** Open or create a Python file and start coding!
 
-### Optional
-* **Step 4.** [Install a linter](https://code.visualstudio.com/docs/python/linting) to get errors and warnings -- you can further customize linting rules to fit your needs
-* **Step 5.** Select your preferred Python interpreter
-  + By default we use the one that's on your path
-  + To select a different Python interpreter/version/environment (use the command `Select Interpreter`, or if you have a workspace open you can click in the status bar)
-* **Step 6.** Install `ctags` for Workspace Symbols, from [here](http://ctags.sourceforge.net/), or using `brew install ctags` on macOS
+### Optional Steps
+* **Step 4.** [Install a linter](https://code.visualstudio.com/docs/python/linting) to get errors and warnings -- you can further customize linting rules to fit your needs.
+* **Step 5.** Select your preferred Python interpreter/version/environment using the `Select Interpreter` command.
+  + By default we use the one that's on your path.
+  + If you have a workspace open you can also click in the status bar to change the interpreter.
+* **Step 6.** Install `ctags` for Workspace Symbols, from [here](http://ctags.sourceforge.net/), or using `brew install ctags` on macOS.
 
-You can [follow our Python tutorial](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) for step-by-step instructions for building a simple app, and check out the [Python documentation on the VS Code site](https://code.visualstudio.com/docs/languages/python) for more information.
+For more information you can:
+* [Follow our Python tutorial](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) with step-by-step instructions for building a simple app.
+* Check out the [Python documentation on the VS Code site](https://code.visualstudio.com/docs/languages/python) for general information about using the extension.
 
 ## Useful Commands
 
