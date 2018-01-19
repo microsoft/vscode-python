@@ -57,9 +57,6 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminal!.show();
         this.terminal!.sendText(text);
     }
-    public createTerminal(title?: string): Terminal {
-        return this.terminalManager.createTerminal({ name: title });
-    }
     public identifyTerminalShell(shellPath: string): TerminalShellType {
         return Array.from(this.detectableShells.keys())
             .reduce((matchedShell, shellToDetect) => {

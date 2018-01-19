@@ -10,7 +10,8 @@ export enum TerminalShellType {
     commandPrompt = 2,
     bash = 3,
     fish = 4,
-    other = 5
+    cshell = 5,
+    other = 6
 }
 
 export interface ITerminalService {

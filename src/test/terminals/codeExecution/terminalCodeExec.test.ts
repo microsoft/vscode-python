@@ -34,7 +34,7 @@ suite('Terminal - Code Execution', () => {
         executor = new TerminalCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, disposables, platform.object);
         workspaceFolder = TypeMoq.Mock.ofType<WorkspaceFolder>();
 
-        terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);
+        terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => terminalService.object);
 
         settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settings.setup(s => s.terminal).returns(() => terminalSettings.object);
@@ -49,47 +49,85 @@ suite('Terminal - Code Execution', () => {
 
         disposables = [];
     });
-    test('Ensure we set current directory before executing file', async () => {
+
+    async function ensureWeSetCurrentDirectoryBeforeExecutingAFile(isWindows: boolean) {
         const file = Uri.file(path.join('c', 'path', 'to', 'file', 'one.py'));
         terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
         workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
         workspaceFolder.setup(w => w.uri).returns(() => Uri.file(path.join('c', 'path', 'to')));
+        platform.setup(p => p.isWindows).returns(() => false);
+        settings.setup(s => s.pythonPath).returns(() => 'python');
+        terminalSettings.setup(t => t.launchArgs).returns(() => []);
 
-        executor.executeFile(file);
+        await executor.executeFile(file);
 
         terminalService.verify(t => t.sendText(TypeMoq.It.isValue(`cd ${path.dirname(file.path)}`)), TypeMoq.Times.once());
+    }
+    test('Ensure we set current directory before executing file (non windows)', async () => {
+        await ensureWeSetCurrentDirectoryBeforeExecutingAFile(false);
+    });
+    test('Ensure we set current directory before executing file (windows)', async () => {
+        await ensureWeSetCurrentDirectoryBeforeExecutingAFile(true);
     });
 
-    test('Ensure we set current directory (and quote it when containing spaces) before executing file', async () => {
+    async function ensureWeWetCurrentDirectoryAndQuoteBeforeExecutingFile(isWindows: boolean) {
         const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
         terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
         workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
         workspaceFolder.setup(w => w.uri).returns(() => Uri.file(path.join('c', 'path', 'to')));
+        platform.setup(p => p.isWindows).returns(() => isWindows);
+        settings.setup(s => s.pythonPath).returns(() => 'python');
+        terminalSettings.setup(t => t.launchArgs).returns(() => []);
 
-        executor.executeFile(file);
-
+        await executor.executeFile(file);
         terminalService.verify(t => t.sendText(TypeMoq.It.isValue(`cd "${path.dirname(file.path)}"`)), TypeMoq.Times.once());
+    }
+
+    test('Ensure we set current directory (and quote it when containing spaces) before executing file (non windows)', async () => {
+        await ensureWeWetCurrentDirectoryAndQuoteBeforeExecutingFile(false);
     });
 
-    test('Ensure we do not set current directory before executing file if in the same directory', async () => {
+    test('Ensure we set current directory (and quote it when containing spaces) before executing file (windows)', async () => {
+        await ensureWeWetCurrentDirectoryAndQuoteBeforeExecutingFile(true);
+    });
+
+    async function ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(isWindows: boolean) {
         const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
         terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
         workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
         workspaceFolder.setup(w => w.uri).returns(() => Uri.file(path.join('c', 'path', 'to', 'file with spaces in path')));
+        platform.setup(p => p.isWindows).returns(() => isWindows);
+        settings.setup(s => s.pythonPath).returns(() => 'python');
+        terminalSettings.setup(t => t.launchArgs).returns(() => []);
 
-        executor.executeFile(file);
+        await executor.executeFile(file);
 
         terminalService.verify(t => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+    }
+    test('Ensure we do not set current directory before executing file if in the same directory (non windows)', async () => {
+        await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(false);
+    });
+    test('Ensure we do not set current directory before executing file if in the same directory (windows)', async () => {
+        await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(true);
     });
 
-    test('Ensure we do not set current directory before executing file if file is not in a workspace', async () => {
+    async function ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(isWindows: boolean) {
         const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
         terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
         workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
+        platform.setup(p => p.isWindows).returns(() => isWindows);
+        settings.setup(s => s.pythonPath).returns(() => 'python');
+        terminalSettings.setup(t => t.launchArgs).returns(() => []);
 
-        executor.executeFile(file);
+        await executor.executeFile(file);
 
         terminalService.verify(t => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+    }
+    test('Ensure we do not set current directory before executing file if file is not in a workspace (non windows)', async () => {
+        await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(false);
+    });
+    test('Ensure we do not set current directory before executing file if file is not in a workspace (windows)', async () => {
+        await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(true);
     });
 
     async function testFileExecution(isWindows: boolean, pythonPath: string, terminalArgs: string[], file: Uri) {
@@ -107,22 +145,22 @@ suite('Terminal - Code Execution', () => {
 
     test('Ensure python file execution script is sent to terminal on windows', async () => {
         const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
-        testFileExecution(true, 'python', [], file);
+        await testFileExecution(true, 'python', [], file);
     });
 
     test('Ensure python file execution script is sent to terminal on windows with fully qualified python path', async () => {
         const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
-        testFileExecution(true, 'c:\\program files\\python', [], file);
+        await testFileExecution(true, 'c:\\program files\\python', [], file);
     });
 
     test('Ensure python file execution script is not quoted when no spaces in file path', async () => {
         const file = Uri.file(path.join('c', 'path', 'to', 'file', 'one.py'));
-        testFileExecution(true, 'python', [], file);
+        await testFileExecution(true, 'python', [], file);
     });
 
     test('Ensure python file execution script supports custom python arguments', async () => {
         const file = Uri.file(path.join('c', 'path', 'to', 'file', 'one.py'));
-        testFileExecution(false, 'python', ['-a', '-b', '-c'], file);
+        await testFileExecution(false, 'python', ['-a', '-b', '-c'], file);
     });
 
     function testReplCommandArguments(isWindows: boolean, pythonPath: string, expectedPythonPath: string, terminalArgs: string[]) {

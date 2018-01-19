@@ -20,6 +20,7 @@ suite('Terminal Service', () => {
     let terminalManager: TypeMoq.IMock<ITerminalManager>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let disposables: Disposable[] = [];
+    let mockServiceContainer: TypeMoq.IMock<IServiceContainer>;
     suiteSetup(initialize);
     setup(() => {
         helper = TypeMoq.Mock.ofType<ITerminalHelper>();
@@ -32,12 +33,11 @@ suite('Terminal Service', () => {
         helper.setup(h => h.getTerminalShellPath()).returns(() => '');
         helper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAnyString())).returns(() => TerminalShellType.other);
 
-        const mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         mockServiceContainer.setup(c => c.get(ITerminalHelper)).returns(() => helper.object);
         mockServiceContainer.setup(c => c.get(ITerminalManager)).returns(() => terminalManager.object);
         mockServiceContainer.setup(c => c.get(IPlatformService)).returns(() => platformService.object);
         mockServiceContainer.setup(c => c.get(IDisposableRegistry)).returns(() => disposables);
-        service = new TerminalService(mockServiceContainer.object);
     });
     teardown(() => {
         if (service) {
@@ -48,6 +48,7 @@ suite('Terminal Service', () => {
     });
 
     test('Ensure terminal is disposed', async () => {
+        service = new TerminalService(mockServiceContainer.object);
         await service.sendCommand('', []);
 
         terminal.verify(t => t.show(), TypeMoq.Times.exactly(2));
@@ -56,6 +57,7 @@ suite('Terminal Service', () => {
     });
 
     test('Ensure command is sent to terminal and it is shown', async () => {
+        service = new TerminalService(mockServiceContainer.object);
         const commandToSend = 'SomeCommand';
         const args = ['1', '2'];
         const commandToExpect = [commandToSend].concat(args).join(' ');
@@ -67,6 +69,7 @@ suite('Terminal Service', () => {
     });
 
     test('Ensure text is sent to terminal and it is shown', async () => {
+        service = new TerminalService(mockServiceContainer.object);
         const textToSend = 'Some Text';
         await service.sendText(textToSend);
 
@@ -82,6 +85,7 @@ suite('Terminal Service', () => {
             // tslint:disable-next-line:no-empty
             return { dispose: () => { } };
         });
+        service = new TerminalService(mockServiceContainer.object);
         service.onDidCloseTerminal(() => eventFired = true);
         // This will create the terminal.
         await service.sendText('blah');
@@ -99,6 +103,7 @@ suite('Terminal Service', () => {
             // tslint:disable-next-line:no-empty
             return { dispose: () => { } };
         });
+        service = new TerminalService(mockServiceContainer.object);
         service.onDidCloseTerminal(() => eventFired = true);
         // This will create the terminal.
         await service.sendText('blah');

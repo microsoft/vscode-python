@@ -41,7 +41,7 @@ suite('Terminal Helper', () => {
         shellPathsAndIdentification.set('c:\\windows\\system32\\gitbash.exe', TerminalShellType.bash);
         shellPathsAndIdentification.set('/usr/bin/bash', TerminalShellType.bash);
         shellPathsAndIdentification.set('/usr/bin/zsh', TerminalShellType.bash);
-        shellPathsAndIdentification.set('/usr/bin/zsh', TerminalShellType.bash);
+        shellPathsAndIdentification.set('/usr/bin/ksh', TerminalShellType.bash);
 
         shellPathsAndIdentification.set('c:\\windows\\system32\\powershell.exe', TerminalShellType.powershell);
         shellPathsAndIdentification.set('/usr/microsoft/xxx/powershell/powershell', TerminalShellType.powershell);

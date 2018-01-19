@@ -8,10 +8,13 @@ import { ITerminalManager } from '../application/types';
 import { IPlatformService } from '../platform/types';
 import { ITerminalHelper, TerminalShellType } from './types';
 
-const IS_BASH = /(bash.exe$|wsl.exe$|bash$|zsh$)/i;
+// Types of shells can be found here:
+// 1. https://wiki.ubuntu.com/ChangingShells
+const IS_BASH = /(bash.exe$|wsl.exe$|bash$|zsh$|ksh$)/i;
 const IS_COMMAND = /cmd.exe$/i;
 const IS_POWERSHELL = /(powershell.exe$|pwsh$|powershell$)/i;
 const IS_FISH = /(fish$)/i;
+const IS_CSHELL = /(tcsh$|csh$)/i;
 
 @injectable()
 export class TerminalHelper implements ITerminalHelper {
@@ -24,6 +27,7 @@ export class TerminalHelper implements ITerminalHelper {
         this.detectableShells.set(TerminalShellType.bash, IS_BASH);
         this.detectableShells.set(TerminalShellType.commandPrompt, IS_COMMAND);
         this.detectableShells.set(TerminalShellType.fish, IS_FISH);
+        this.detectableShells.set(TerminalShellType.cshell, IS_CSHELL);
     }
     public createTerminal(title?: string): Terminal {
         return this.terminalManager.createTerminal({ name: title });
