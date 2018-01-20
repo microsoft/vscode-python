@@ -13,26 +13,30 @@ export class ConfigurationService implements IConfigurationService {
     }
     public async updateSettingAsync(setting: string, value: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void> {
         const pythonConfig = workspace.getConfiguration('python', resource);
-        const target = configTarget ? configTarget : ConfigurationTarget.Workspace;
+        const target = configTarget
+            ? configTarget
+            : resource ? ConfigurationTarget.Workspace : ConfigurationTarget.Global;
 
         if (resource) {
             await pythonConfig.update(setting, value, target);
         } else {
             await pythonConfig.update(setting, value, true);
         }
-        await this.verifySetting(pythonConfig, resource !== undefined, setting, value);
+        await this.verifySetting(pythonConfig, target, setting, value);
     }
 
-    private async verifySetting(pythonConfig: WorkspaceConfiguration, global: boolean, setting: string, value: {}): Promise<void> {
+    private async verifySetting(pythonConfig: WorkspaceConfiguration, target: ConfigurationTarget, setting: string, value: {}): Promise<void> {
         if (isTestExecution()) {
             let retries = 0;
             do {
                 const obj = pythonConfig.inspect(setting);
-                if (!obj && !value) {
+                if (!obj && value === undefined) {
                     break;
                 }
-                if (obj && value) {
-                    const actual = global ? obj.globalValue : obj.workspaceValue;
+                if (obj && value !== undefined) {
+                    const actual = target === ConfigurationTarget.Global
+                        ? obj.globalValue
+                        : target === ConfigurationTarget.Workspace ? obj.workspaceValue : obj.workspaceFolderValue;
                     if (actual === value) {
                         break;
                     }
