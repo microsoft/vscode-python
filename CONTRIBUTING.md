@@ -20,6 +20,8 @@ cd vscode-python
 yarn install
 ```
 
+You may see warnings that ```The engine "vscode" appears to be invalid.```, you can ignore these.
+
 ### Incremental Build
 
 Run the `Compile` and `Hygiene` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
