@@ -11,18 +11,16 @@ export class ConfigurationService implements IConfigurationService {
     public getSettings(resource?: Uri): IPythonSettings {
         return PythonSettings.getInstance(resource);
     }
-    public async updateSettingAsync(setting: string, value: {}, resource?: Uri): Promise<void> {
-        const isWorkspace = resource && workspace.getWorkspaceFolder(resource);
-        let pythonConfig: WorkspaceConfiguration;
+    public async updateSettingAsync(setting: string, value: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void> {
+        const pythonConfig = workspace.getConfiguration('python', resource);
+        const target = configTarget ? configTarget : ConfigurationTarget.Workspace;
 
-        if (isWorkspace) {
-            pythonConfig = workspace.getConfiguration('python', resource);
-            await pythonConfig.update(setting, value, ConfigurationTarget.Workspace);
+        if (resource) {
+            await pythonConfig.update(setting, value, target);
         } else {
-            pythonConfig = workspace.getConfiguration('python');
             await pythonConfig.update(setting, value, true);
         }
-        await this.verifySetting(pythonConfig, !isWorkspace, setting, value);
+        await this.verifySetting(pythonConfig, resource !== undefined, setting, value);
     }
 
     private async verifySetting(pythonConfig: WorkspaceConfiguration, global: boolean, setting: string, value: {}): Promise<void> {

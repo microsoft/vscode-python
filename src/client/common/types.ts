@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { DiagnosticSeverity, Uri } from 'vscode';
+import { ConfigurationTarget, DiagnosticSeverity, Uri } from 'vscode';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
@@ -204,5 +204,5 @@ export const IConfigurationService = Symbol('IConfigurationService');
 
 export interface IConfigurationService {
     getSettings(resource?: Uri): IPythonSettings;
-    updateSettingAsync(setting: string, value: {}, resource?: Uri): Promise<void>;
+    updateSettingAsync(setting: string, value: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
 }
