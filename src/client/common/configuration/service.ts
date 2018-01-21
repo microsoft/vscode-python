@@ -11,7 +11,7 @@ export class ConfigurationService implements IConfigurationService {
     public getSettings(resource?: Uri): IPythonSettings {
         return PythonSettings.getInstance(resource);
     }
-    public async updateSettingAsync(setting: string, value: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void> {
+    public async updateSettingAsync(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void> {
         const settingsInfo = PythonSettings.getSettingsUriAndTarget(resource);
 
         const pythonConfig = workspace.getConfiguration('python', settingsInfo.uri);
@@ -30,7 +30,7 @@ export class ConfigurationService implements IConfigurationService {
         PythonSettings.dispose();
     }
 
-    private async verifySetting(pythonConfig: WorkspaceConfiguration, target: ConfigurationTarget, settingName: string, value: {}): Promise<void> {
+    private async verifySetting(pythonConfig: WorkspaceConfiguration, target: ConfigurationTarget, settingName: string, value?: {}): Promise<void> {
         if (isTestExecution()) {
             let retries = 0;
             do {

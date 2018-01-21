@@ -204,5 +204,5 @@ export const IConfigurationService = Symbol('IConfigurationService');
 
 export interface IConfigurationService {
     getSettings(resource?: Uri): IPythonSettings;
-    updateSettingAsync(setting: string, value: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
+    updateSettingAsync(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
 }
