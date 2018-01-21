@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
+import { ConfigurationService } from '../../client/common/configuration/service';
 import { CondaInstaller } from '../../client/common/installer/condaInstaller';
 import { PipInstaller } from '../../client/common/installer/pipInstaller';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
@@ -16,7 +17,7 @@ import { Architecture, IFileSystem, IPlatformService } from '../../client/common
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
 import { ITerminalService } from '../../client/common/terminal/types';
-import { ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows } from '../../client/common/types';
+import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows } from '../../client/common/types';
 import { ICondaLocatorService, IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../client/interpreter/contracts';
 import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockProvider } from '../interpreters/mocks';
@@ -43,7 +44,7 @@ suite('Module Installer', () => {
     });
     teardown(async () => {
         ioc.dispose();
-        closeActiveWindows();
+        await closeActiveWindows();
     });
 
     function initializeDI() {
@@ -67,6 +68,7 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
         ioc.serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
         ioc.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
+        ioc.serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
 
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
