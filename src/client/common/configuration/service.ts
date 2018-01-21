@@ -12,31 +12,37 @@ export class ConfigurationService implements IConfigurationService {
         return PythonSettings.getInstance(resource);
     }
     public async updateSettingAsync(setting: string, value: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void> {
-        const pythonConfig = workspace.getConfiguration('python', resource);
-        const target = configTarget
-            ? configTarget
-            : resource ? ConfigurationTarget.Workspace : ConfigurationTarget.Global;
+        const settingsInfo = PythonSettings.getSettingsUriAndTarget(resource);
 
-        if (resource) {
-            await pythonConfig.update(setting, value, target);
-        } else {
-            await pythonConfig.update(setting, value, true);
+        const pythonConfig = workspace.getConfiguration('python', settingsInfo.uri);
+        const currentValue = pythonConfig.inspect(setting);
+
+        if (currentValue !== undefined &&
+            ((settingsInfo.target === ConfigurationTarget.Global && currentValue.globalValue === value) ||
+                (settingsInfo.target === ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
+                (settingsInfo.target === ConfigurationTarget.WorkspaceFolder && currentValue.workspaceFolderValue === value))) {
+            PythonSettings.dispose();
+            return;
         }
-        await this.verifySetting(pythonConfig, target, setting, value);
+
+        await pythonConfig.update(setting, value, settingsInfo.target);
+        await this.verifySetting(pythonConfig, settingsInfo.target, setting, value);
+        PythonSettings.dispose();
     }
 
-    private async verifySetting(pythonConfig: WorkspaceConfiguration, target: ConfigurationTarget, setting: string, value: {}): Promise<void> {
+    private async verifySetting(pythonConfig: WorkspaceConfiguration, target: ConfigurationTarget, settingName: string, value: {}): Promise<void> {
         if (isTestExecution()) {
             let retries = 0;
             do {
-                const obj = pythonConfig.inspect(setting);
-                if (!obj && value === undefined) {
-                    break;
+                const setting = pythonConfig.inspect(settingName);
+                if (!setting && value === undefined) {
+                    break; // Both are unset
                 }
-                if (obj && value !== undefined) {
+                if (setting && value !== undefined) {
+                    // Both specified
                     const actual = target === ConfigurationTarget.Global
-                        ? obj.globalValue
-                        : target === ConfigurationTarget.Workspace ? obj.workspaceValue : obj.workspaceFolderValue;
+                        ? setting.globalValue
+                        : target === ConfigurationTarget.Workspace ? setting.workspaceValue : setting.workspaceFolderValue;
                     if (actual === value) {
                         break;
                     }

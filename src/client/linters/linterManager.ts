@@ -16,7 +16,7 @@ import { Pylint } from './pylint';
 import { ILinter, ILinterInfo, ILinterManager, ILintMessage } from './types';
 
 class DisabledLinter implements ILinter {
-    constructor(private configService: IConfigurationService) {}
+    constructor(private configService: IConfigurationService) { }
     public get info() {
         return new LinterInfo(Product.pylint, 'pylint', this.configService);
     }
@@ -32,7 +32,7 @@ export class LinterManager implements ILinterManager {
     private configService: IConfigurationService;
     private disabledForCurrentSession = false;
 
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor( @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.linters = [
             new LinterInfo(Product.flake8, 'flake8', this.configService),
@@ -66,10 +66,9 @@ export class LinterManager implements ILinterManager {
     }
 
     public async enableLintingAsync(enable: boolean, resource?: Uri): Promise<void> {
-        this.disabledForCurrentSession = !enable;
-
-        const settings = this.configService.getSettings(resource);
-        settings.linting[this.lintingEnabledSettingName] = enable;
+        if (enable) {
+            this.disabledForCurrentSession = false;
+        }
 
         await this.configService.updateSettingAsync(`linting.${this.lintingEnabledSettingName}`, enable, resource);
 
@@ -88,11 +87,15 @@ export class LinterManager implements ILinterManager {
     }
 
     public async setActiveLintersAsync(products: Product[], resource?: Uri): Promise<void> {
-        this.getActiveLinters(resource).forEach(async x => await x.enableAsync(false, resource));
+        const active = this.getActiveLinters(resource);
+        for (const x of active) {
+            await x.enableAsync(false, resource);
+        }
         if (products.length > 0) {
-            this.linters
-                .filter(x => products.findIndex(p => x.product === p) >= 0)
-                .forEach((async x => await x.enableAsync(true, resource)));
+            const toActivate = this.linters.filter(x => products.findIndex(p => x.product === p) >= 0);
+            for (const x of toActivate) {
+                await x.enableAsync(true, resource);
+            }
             await this.enableLintingAsync(true, resource);
         }
     }

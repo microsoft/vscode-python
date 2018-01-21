@@ -3,8 +3,7 @@
 
 import * as assert from 'assert';
 import { Container } from 'inversify';
-import * as TypeMoq from 'typemoq';
-import { PythonSettings } from '../../client/common/configSettings';
+import { ConfigurationService } from '../../client/common/configuration/service';
 import { EnumEx } from '../../client/common/enumUtils';
 import { IConfigurationService, ILintingSettings, IPythonSettings, Product } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -25,12 +24,8 @@ suite('Linting - Manager', () => {
         const serviceManager = new ServiceManager(cont);
         const serviceContainer = new ServiceContainer(cont);
 
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        settings = new PythonSettings();
-        configServiceMock.setup(provider => provider.getSettings(TypeMoq.It.isAny())).returns(() => settings);
-
-        configService = configServiceMock.object;
-        serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService);
+        serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
+        configService = serviceManager.get<IConfigurationService>(IConfigurationService);
 
         settings = configService.getSettings();
         lm = new LinterManager(serviceContainer);

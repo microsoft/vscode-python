@@ -11,7 +11,6 @@ import { IModuleInstaller } from './types';
 
 @injectable()
 export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
-    private isCondaAvailable: boolean | undefined;
     public get displayName() {
         return 'Pip';
     }
@@ -19,10 +18,7 @@ export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
         super(serviceContainer);
     }
     public isSupported(resource?: Uri): Promise<boolean> {
-        const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        return pythonExecutionFactory.create(resource)
-            .then(proc => proc.isModuleInstalled('pip'))
-            .catch(() => false);
+        return this.isPipAvailable(resource);
     }
     protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
         const proxyArgs = [];
@@ -37,7 +33,7 @@ export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
             moduleName: 'pip'
         };
     }
-    private isPipAvailable(resource?: Uri) {
+    private isPipAvailable(resource?: Uri): Promise<boolean> {
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         return pythonExecutionFactory.create(resource)
             .then(proc => proc.isModuleInstalled('pip'))

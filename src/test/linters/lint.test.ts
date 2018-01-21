@@ -5,10 +5,10 @@ import { Uri } from 'vscode';
 import * as vscode from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { Product } from '../../client/common/installer/productInstaller';
-import { IOutputChannel } from '../../client/common/types';
+import { IConfigurationService, IOutputChannel } from '../../client/common/types';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
-import { deleteFile, PythonSettingKeys, rootWorkspaceUri, updateSetting } from '../common';
+import { deleteFile, PythonSettingKeys, rootWorkspaceUri } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { MockOutputChannel } from '../mockClasses';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -95,6 +95,7 @@ const filteredPep88MessagesToBeReturned: ILintMessage[] = [
 suite('Linting', () => {
     let ioc: UnitTestIocContainer;
     let linterManager: ILinterManager;
+    let configService: IConfigurationService;
 
     suiteSetup(initialize);
     setup(async () => {
@@ -117,18 +118,20 @@ suite('Linting', () => {
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
+
         linterManager = new LinterManager(ioc.serviceContainer);
+        configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
     async function resetSettings() {
         // Don't run these updates in parallel, as they are updating the same file.
         const target = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
 
-        await updateSetting('linting.enabled', true, rootWorkspaceUri, target);
-        await updateSetting('linting.lintOnSave', false, rootWorkspaceUri, target);
+        await configService.updateSettingAsync('linting.enabled', true, rootWorkspaceUri, target);
+        await configService.updateSettingAsync('linting.lintOnSave', false, rootWorkspaceUri, target);
 
         linterManager.getAllLinterInfos().forEach(async (x) => {
-            await updateSetting(makeSettingKey(x.product), false, rootWorkspaceUri, target);
+            await configService.updateSettingAsync(makeSettingKey(x.product), false, rootWorkspaceUri, target);
         });
     }
 
@@ -139,12 +142,14 @@ suite('Linting', () => {
     async function testEnablingDisablingOfLinter(product: Product, enabled: boolean) {
         const setting = makeSettingKey(product);
         const output = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        await updateSetting(setting, enabled, rootWorkspaceUri, IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace);
+
+        await configService.updateSettingAsync(setting, enabled, rootWorkspaceUri,
+            IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace);
         const document = await vscode.workspace.openTextDocument(fileToLint);
         const cancelToken = new vscode.CancellationTokenSource();
 
-        linterManager.setActiveLintersAsync([product]);
-        linterManager.enableLintingAsync(enabled);
+        await linterManager.setActiveLintersAsync([product]);
+        await linterManager.enableLintingAsync(enabled);
         const linter = linterManager.createLinter(product, output, ioc.serviceContainer);
 
         const messages = await linter.lint(document, cancelToken.token);
@@ -192,7 +197,7 @@ suite('Linting', () => {
         const cancelToken = new vscode.CancellationTokenSource();
         const document = await vscode.workspace.openTextDocument(pythonFile);
 
-        await linterManager.setActiveLintersAsync([product]);
+        await linterManager.setActiveLintersAsync([product], document.uri);
         const linter = linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
 
         const messages = await linter.lint(document, cancelToken.token);

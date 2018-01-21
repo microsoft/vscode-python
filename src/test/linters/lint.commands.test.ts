@@ -6,7 +6,7 @@ import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { QuickPickOptions } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
-import { PythonSettings } from '../../client/common/configSettings';
+import { ConfigurationService } from '../../client/common/configuration/service';
 import { IConfigurationService, Product } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -20,7 +20,6 @@ import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 suite('Linting - Linter Selector', () => {
     let serviceContainer: IServiceContainer;
     let appShell: TypeMoq.IMock<IApplicationShell>;
-    let configService: TypeMoq.IMock<IConfigurationService>;
     let commands: LinterCommands;
     let lm: ILinterManager;
 
@@ -38,16 +37,12 @@ suite('Linting - Linter Selector', () => {
         serviceContainer = new ServiceContainer(cont);
 
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        configService = TypeMoq.Mock.ofType<IConfigurationService>();
-
-        const settings = new PythonSettings();
-        configService.setup(p => p.getSettings(TypeMoq.It.isAny())).returns(() => settings);
+        serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
 
         const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, commandManager.object);
-
         serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
-        serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
+
         lm = new LinterManager(serviceContainer);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
 

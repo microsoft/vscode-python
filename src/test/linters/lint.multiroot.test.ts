@@ -10,6 +10,7 @@ import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const multirootPath = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc');
 
+// tslint:disable-next-line:max-func-body-length
 suite('Multiroot Linting', () => {
     const pylintSetting = 'linting.pylintEnabled';
     const flake8Setting = 'linting.flake8Enabled';
@@ -64,38 +65,29 @@ suite('Multiroot Linting', () => {
     }
 
     test('Enabling Pylint in root and also in Workspace, should return errors', async () => {
-        await enableDisableSetting(multirootPath, ConfigurationTarget.Workspace, pylintSetting, true);
-        await enableDisableSetting(path.join(multirootPath, 'workspace1'), ConfigurationTarget.WorkspaceFolder, pylintSetting, true);
-        await testLinterInWorkspaceFolder(Product.pylint, 'workspace1', true);
+        await runTest(Product.pylint, true, true, pylintSetting);
     });
-
     test('Enabling Pylint in root and disabling in Workspace, should not return errors', async () => {
-        await enableDisableSetting(multirootPath, ConfigurationTarget.Workspace, pylintSetting, true);
-        await enableDisableSetting(path.join(multirootPath, 'workspace1'), ConfigurationTarget.WorkspaceFolder, pylintSetting, false);
-        await testLinterInWorkspaceFolder(Product.pylint, 'workspace1', false);
+        await runTest(Product.pylint, true, false, pylintSetting);
     });
-
     test('Disabling Pylint in root and enabling in Workspace, should return errors', async () => {
-        await enableDisableSetting(multirootPath, ConfigurationTarget.Workspace, pylintSetting, false);
-        await enableDisableSetting(path.join(multirootPath, 'workspace1'), ConfigurationTarget.WorkspaceFolder, pylintSetting, true);
-        await testLinterInWorkspaceFolder(Product.pylint, 'workspace1', true);
+        await runTest(Product.pylint, false, true, pylintSetting);
     });
 
     test('Enabling Flake8 in root and also in Workspace, should return errors', async () => {
-        await enableDisableSetting(multirootPath, ConfigurationTarget.Workspace, flake8Setting, true);
-        await enableDisableSetting(path.join(multirootPath, 'workspace1'), ConfigurationTarget.WorkspaceFolder, flake8Setting, true);
-        await testLinterInWorkspaceFolder(Product.flake8, 'workspace1', true);
+        await runTest(Product.flake8, true, true, flake8Setting);
     });
-
     test('Enabling Flake8 in root and disabling in Workspace, should not return errors', async () => {
-        await enableDisableSetting(multirootPath, ConfigurationTarget.Workspace, flake8Setting, true);
-        await enableDisableSetting(path.join(multirootPath, 'workspace1'), ConfigurationTarget.WorkspaceFolder, flake8Setting, false);
-        await testLinterInWorkspaceFolder(Product.flake8, 'workspace1', false);
+        await runTest(Product.flake8, true, false, flake8Setting);
+    });
+    test('Disabling Flake8 in root and enabling in Workspace, should return errors', async () => {
+        await runTest(Product.flake8, false, true, flake8Setting);
     });
 
-    test('Disabling Flake8 in root and enabling in Workspace, should return errors', async () => {
-        await enableDisableSetting(multirootPath, ConfigurationTarget.Workspace, flake8Setting, false);
-        await enableDisableSetting(path.join(multirootPath, 'workspace1'), ConfigurationTarget.WorkspaceFolder, flake8Setting, true);
-        await testLinterInWorkspaceFolder(Product.flake8, 'workspace1', true);
-    });
+    async function runTest(product: Product, global: boolean, wks: boolean, setting: string): Promise<void> {
+        const expected = wks ? wks : global;
+        await enableDisableSetting(multirootPath, ConfigurationTarget.Global, setting, global);
+        await enableDisableSetting(multirootPath, ConfigurationTarget.Workspace, setting, wks);
+        await testLinterInWorkspaceFolder(product, 'workspace1', expected);
+    }
 });
