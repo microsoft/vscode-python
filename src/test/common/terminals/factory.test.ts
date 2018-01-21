@@ -3,26 +3,42 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { ITerminalServiceFactory } from '../../../client/common/terminal/types';
+import { Disposable } from 'vscode';
+import { ITerminalManager } from '../../../client/common/application/types';
+import { TerminalServiceFactory } from '../../../client/common/terminal/factory';
+import { ITerminalHelper, ITerminalServiceFactory } from '../../../client/common/terminal/types';
+import { IDisposableRegistry } from '../../../client/common/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { IServiceContainer } from '../../../client/ioc/types';
 import { initialize } from '../../initialize';
 import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Service Factory', () => {
-    let ioc: UnitTestIocContainer;
+    let factory: ITerminalServiceFactory;
+    let disposables: Disposable[] = [];
     suiteSetup(initialize);
     setup(() => {
-        ioc = new UnitTestIocContainer();
+        const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
-        ioc.registerCommonTypes();
-        ioc.registerPlatformTypes();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
+        disposables = [];
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny())).returns(() => disposables);
+        const terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalHelper), TypeMoq.It.isAny())).returns(() => terminalHelper.object);
+        const terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalManager), TypeMoq.It.isAny())).returns(() => terminalManager.object);
+        factory = new TerminalServiceFactory(serviceContainer.object);
     });
-    teardown(() => ioc.dispose());
+    teardown(() => {
+        disposables.forEach(disposable => {
+            if (disposable) {
+                disposable.dispose();
+            }
+        });
+    });
 
     test('Ensure same instance of terminal service is returned', () => {
-        const factory = ioc.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory);
         const instance = factory.getTerminalService();
         const sameInstance = factory.getTerminalService() === instance;
         expect(sameInstance).to.equal(true, 'Instances are not the same');
@@ -33,7 +49,6 @@ suite('Terminal Service Factory', () => {
     });
 
     test('Ensure different instance of terminal service is returned when title is provided', () => {
-        const factory = ioc.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory);
         const defaultInstance = factory.getTerminalService();
         const notSameAsDefaultInstance = factory.getTerminalService(undefined, 'New Title') === defaultInstance;
         expect(notSameAsDefaultInstance).to.not.equal(true, 'Instances are the same as default instance');

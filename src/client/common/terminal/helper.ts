@@ -2,10 +2,13 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Terminal, Uri, workspace } from 'vscode';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { ITerminalManager } from '../application/types';
+import { Terminal, Uri } from 'vscode';
+import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
+import { IServiceContainer } from '../../ioc/types';
+import { ITerminalManager, IWorkspaceService } from '../application/types';
 import { IPlatformService } from '../platform/types';
+import { Conda } from './activationProviders/conda';
+import { ITerminalActivationCommandProvider } from './activationProviders/index';
 import { ITerminalHelper, TerminalShellType } from './types';
 
 // Types of shells can be found here:
@@ -14,14 +17,13 @@ const IS_BASH = /(bash.exe$|wsl.exe$|bash$|zsh$|ksh$)/i;
 const IS_COMMAND = /cmd.exe$/i;
 const IS_POWERSHELL = /(powershell.exe$|pwsh$|powershell$)/i;
 const IS_FISH = /(fish$)/i;
-const IS_CSHELL = /(tcsh$|csh$)/i;
+const IS_CSHELL = /(csh$)/i;
 
 @injectable()
 export class TerminalHelper implements ITerminalHelper {
     private readonly detectableShells: Map<TerminalShellType, RegExp>;
-    constructor( @inject(IPlatformService) private platformService: IPlatformService,
-        @inject(ITerminalManager) private terminalManager: ITerminalManager,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService) {
+    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+
         this.detectableShells = new Map<TerminalShellType, RegExp>();
         this.detectableShells.set(TerminalShellType.powershell, IS_POWERSHELL);
         this.detectableShells.set(TerminalShellType.bash, IS_BASH);
@@ -30,7 +32,8 @@ export class TerminalHelper implements ITerminalHelper {
         this.detectableShells.set(TerminalShellType.cshell, IS_CSHELL);
     }
     public createTerminal(title?: string): Terminal {
-        return this.terminalManager.createTerminal({ name: title });
+        const terminalManager = this.serviceContainer.get<ITerminalManager>(ITerminalManager);
+        return terminalManager.createTerminal({ name: title });
     }
     public identifyTerminalShell(shellPath: string): TerminalShellType {
         return Array.from(this.detectableShells.keys())
@@ -42,13 +45,16 @@ export class TerminalHelper implements ITerminalHelper {
             }, TerminalShellType.other);
     }
     public getTerminalShellPath(): string {
+        const workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const shellConfig = workspace.getConfiguration('terminal.integrated.shell');
+
+        const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
         let osSection = '';
-        if (this.platformService.isWindows) {
+        if (platformService.isWindows) {
             osSection = 'windows';
-        } else if (this.platformService.isMac) {
+        } else if (platformService.isMac) {
             osSection = 'osx';
-        } else if (this.platformService.isLinux) {
+        } else if (platformService.isLinux) {
             osSection = 'linux';
         }
         if (osSection.length === 0) {
@@ -63,8 +69,25 @@ export class TerminalHelper implements ITerminalHelper {
         return `${commandPrefix}${executable} ${args.join(' ')}`.trim();
     }
     public async getActivationScript(terminalShellType: TerminalShellType, resource?: Uri): Promise<string | undefined> {
-        // const interperterInfo = await this.interpreterService.getActiveInterpreter(resource);
-        // interperterInfo.type
-        return;
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const interperterInfo = await interpreterService.getActiveInterpreter(resource);
+        if (!interperterInfo) {
+            return;
+        }
+        // Conda activation scripts are easy and special.
+        if (interperterInfo.type === InterpreterType.Conda) {
+            return await new Conda(this.serviceContainer).getActivationCommand(interperterInfo, terminalShellType);
+        }
+
+        // Search from the list of providers.
+        const providers = this.serviceContainer.getAll<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider);
+        const supportedProviders = providers.filter(provider => provider.isShellSupported(terminalShellType));
+
+        for (const provider of supportedProviders) {
+            const activationCommand = await provider.getActivationCommand(interperterInfo, terminalShellType);
+            if (typeof activationCommand === 'string' && activationCommand.length > 0) {
+                return activationCommand;
+            }
+        }
     }
 }

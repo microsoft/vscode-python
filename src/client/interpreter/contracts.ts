@@ -73,6 +73,6 @@ export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
     autoSetInterpreter(): Promise<void>;
-    getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;
+    getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter>;
     refresh(): Promise<void>;
 }

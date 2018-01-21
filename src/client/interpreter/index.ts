@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, StatusBarAlignment, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { IProcessService, IPythonExecutionFactory } from '../common/process/types';
+import { IPythonExecutionFactory } from '../common/process/types';
 import * as utils from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
 import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterService';
@@ -79,17 +79,16 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         const interpreters = await this.getInterpreters(resource);
         const interpreter = interpreters.find(i => utils.arePathsSame(i.path, fullyQualifiedPath));
 
-        if (!interpreter) {
-            const pythonExecutableName = path.basename(fullyQualifiedPath);
-            const versionInfo = await this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService).getVersion(fullyQualifiedPath, pythonExecutableName);
-            return {
-                path: fullyQualifiedPath,
-                type: InterpreterType.Unknown,
-                version: versionInfo
-            };
+        if (interpreter) {
+            return interpreter;
         }
-
-        return interpreter;
+        const pythonExecutableName = path.basename(fullyQualifiedPath);
+        const versionInfo = await this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService).getVersion(fullyQualifiedPath, pythonExecutableName);
+        return {
+            path: fullyQualifiedPath,
+            type: InterpreterType.Unknown,
+            version: versionInfo
+        };
     }
     private shouldAutoSetInterpreter() {
         const activeWorkspace = getActiveWorkspaceUri();
