@@ -86,9 +86,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
 
     // tslint:disable-next-line:function-name
     public static dispose() {
-        if (!isTestExecution()) {
-            throw new Error('Dispose can only be called from unit tests');
-        }
         // tslint:disable-next-line:no-void-expression
         PythonSettings.pythonSettings.forEach(item => item.dispose());
         PythonSettings.pythonSettings.clear();
