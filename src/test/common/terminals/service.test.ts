@@ -3,41 +3,40 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Terminal as VSCodeTerminal } from 'vscode';
-import { ITerminalManager } from '../../../client/common/application/types';
+import { Disposable, Terminal as VSCodeTerminal, WorkspaceConfiguration } from 'vscode';
+import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalService } from '../../../client/common/terminal/service';
-import { ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { initialize } from '../../initialize';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Service', () => {
     let service: TerminalService;
-    let helper: TypeMoq.IMock<ITerminalHelper>;
     let terminal: TypeMoq.IMock<VSCodeTerminal>;
     let terminalManager: TypeMoq.IMock<ITerminalManager>;
     let platformService: TypeMoq.IMock<IPlatformService>;
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let disposables: Disposable[] = [];
     let mockServiceContainer: TypeMoq.IMock<IServiceContainer>;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
     suiteSetup(initialize);
     setup(() => {
-        helper = TypeMoq.Mock.ofType<ITerminalHelper>();
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         disposables = [];
-        helper.setup(h => h.createTerminal()).returns(() => terminal.object);
-        helper.setup(h => h.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
-        helper.setup(h => h.getTerminalShellPath()).returns(() => '');
-        helper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAnyString())).returns(() => TerminalShellType.other);
 
         mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        mockServiceContainer.setup(c => c.get(ITerminalHelper)).returns(() => helper.object);
         mockServiceContainer.setup(c => c.get(ITerminalManager)).returns(() => terminalManager.object);
         mockServiceContainer.setup(c => c.get(IPlatformService)).returns(() => platformService.object);
         mockServiceContainer.setup(c => c.get(IDisposableRegistry)).returns(() => disposables);
+        mockServiceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspaceService.object);
+        mockServiceContainer.setup(c => c.get(IInterpreterService)).returns(() => interpreterService.object);
     });
     teardown(() => {
         if (service) {
@@ -48,8 +47,24 @@ suite('Terminal Service', () => {
     });
 
     test('Ensure terminal is disposed', async () => {
+        const os: string = 'windows';
         service = new TerminalService(mockServiceContainer.object);
-        await service.sendCommand('', []);
+        const shellPath = 'powershell.exe';
+        workspaceService.setup(w => w.getConfiguration(TypeMoq.It.isValue('terminal.integrated.shell'))).returns(() => {
+            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+            workspaceConfig.setup(c => c.get(os)).returns(() => shellPath);
+            return workspaceConfig.object;
+        });
+
+        platformService.setup(p => p.isWindows).returns(() => os === 'windows');
+        platformService.setup(p => p.isLinux).returns(() => os === 'linux');
+        platformService.setup(p => p.isMac).returns(() => os === 'osx');
+        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
+        const mockService = TypeMoq.Mock.ofInstance(service, undefined, false);
+
+        // Sending a command will cause the terminal to be created
+        await service.sendCommand.call(mockService.object, '', []);
 
         terminal.verify(t => t.show(), TypeMoq.Times.exactly(2));
         service.dispose();
@@ -61,7 +76,7 @@ suite('Terminal Service', () => {
         const commandToSend = 'SomeCommand';
         const args = ['1', '2'];
         const commandToExpect = [commandToSend].concat(args).join(' ');
-        helper.setup(h => h.buildCommandForTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => commandToExpect);
+        // helper.setup(h => h.buildCommandForTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => commandToExpect);
         await service.sendCommand(commandToSend, args);
 
         terminal.verify(t => t.show(), TypeMoq.Times.exactly(2));
