@@ -21,13 +21,11 @@ export class ConfigurationService implements IConfigurationService {
             ((settingsInfo.target === ConfigurationTarget.Global && currentValue.globalValue === value) ||
                 (settingsInfo.target === ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
                 (settingsInfo.target === ConfigurationTarget.WorkspaceFolder && currentValue.workspaceFolderValue === value))) {
-            PythonSettings.dispose();
             return;
         }
 
         await pythonConfig.update(setting, value, settingsInfo.target);
         await this.verifySetting(pythonConfig, settingsInfo.target, setting, value);
-        PythonSettings.dispose();
     }
 
     private async verifySetting(pythonConfig: WorkspaceConfiguration, target: ConfigurationTarget, settingName: string, value?: {}): Promise<void> {

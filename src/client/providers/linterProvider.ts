@@ -7,7 +7,7 @@ import { PythonSettings } from '../common/configSettings';
 import { LinterErrors, PythonLanguage } from '../common/constants';
 import { IServiceContainer } from '../ioc/types';
 import { ILinterInfo, ILinterManager, ILintMessage, LintMessageSeverity } from '../linters/types';
-import { sendTelemetryEvent, sendTelemetryWhenDone } from '../telemetry';
+import { sendTelemetryWhenDone } from '../telemetry';
 import { LINTING } from '../telemetry/constants';
 import { StopWatch } from '../telemetry/stopWatch';
 import { LinterTrigger, LintingTelemetry } from '../telemetry/types';
@@ -110,9 +110,9 @@ export class LinterProvider implements vscode.Disposable {
     }
 
     private lintOpenPythonFiles() {
-        workspace.textDocuments.forEach(document => {
+        workspace.textDocuments.forEach(async document => {
             if (document.languageId === PythonLanguage.language) {
-                this.onLintDocument(document, 'auto');
+                await this.onLintDocument(document, 'auto');
             }
         });
     }
@@ -122,10 +122,10 @@ export class LinterProvider implements vscode.Disposable {
             return;
         }
         // Look for python files that belong to the specified workspace folder.
-        workspace.textDocuments.forEach(document => {
+        workspace.textDocuments.forEach(async document => {
             const wkspaceFolder = workspace.getWorkspaceFolder(document.uri);
             if (wkspaceFolder && wkspaceFolder.uri.fsPath === wkspaceOrFolder.fsPath) {
-                this.onLintDocument(document, 'auto');
+                await this.onLintDocument(document, 'auto');
             }
         });
     }
@@ -140,8 +140,8 @@ export class LinterProvider implements vscode.Disposable {
             this.lastTimeout = 0;
         }
 
-        this.lastTimeout = setTimeout(() => {
-            this.onLintDocument(document, trigger);
+        this.lastTimeout = setTimeout(async () => {
+            await this.onLintDocument(document, trigger);
         }, delay);
     }
     private async onLintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void> {
@@ -150,8 +150,11 @@ export class LinterProvider implements vscode.Disposable {
         const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
         const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
         const settings = PythonSettings.getInstance(document.uri);
-        if (document.languageId !== PythonLanguage.language || !this.linterManager.isLintingEnabled()) {
+        if (document.languageId !== PythonLanguage.language) {
             return;
+        }
+        if (!this.linterManager.isLintingEnabled()) {
+            this.diagnosticCollection.set(document.uri, []);
         }
         const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => {
             return new Minimatch(pattern);
@@ -223,7 +226,6 @@ export class LinterProvider implements vscode.Disposable {
     }
 
     private sendLinterRunTelemetry(info: ILinterInfo, resource: Uri, promise: Promise<ILintMessage[]>, stopWatch: StopWatch, trigger: LinterTrigger): void {
-        const hasCustomArgs = info.linterArgs(resource).length > 0;
         const linterExecutablePathName = info.pathName(resource);
         const properties: LintingTelemetry = {
             tool: info.id,
