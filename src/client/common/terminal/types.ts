@@ -18,6 +18,7 @@ export interface ITerminalService {
     readonly onDidCloseTerminal: Event<void>;
     sendCommand(command: string, args: string[]): Promise<void>;
     sendText(text: string): Promise<void>;
+    show(): void;
 }
 
 export const ITerminalServiceFactory = Symbol('ITerminalServiceFactory');

@@ -28,13 +28,13 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     public async executeFile(file: Uri) {
         const pythonSettings = this.configurationService.getSettings(file);
 
-        this.setCwdForFileExecution(file);
+        await this.setCwdForFileExecution(file);
 
         const command = this.platformService.isWindows ? pythonSettings.pythonPath.replace(/\\/g, '/') : pythonSettings.pythonPath;
         const filePath = file.fsPath.indexOf(' ') > 0 ? `"${file.fsPath}"` : file.fsPath;
         const launchArgs = pythonSettings.terminal.launchArgs;
 
-        this.getTerminalService(file).sendCommand(command, launchArgs.concat(filePath));
+        await this.getTerminalService(file).sendCommand(command, launchArgs.concat(filePath));
     }
 
     public async execute(code: string, resource?: Uri): Promise<void> {
@@ -42,10 +42,24 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             return;
         }
 
-        await this.ensureRepl();
-        this.getTerminalService(resource).sendText(code);
+        await this.initializeRepl();
+        await this.getTerminalService(resource).sendText(code);
     }
+    public async initializeRepl(resource?: Uri) {
+        if (this.replActive && await this.replActive!) {
+            this._terminalService!.show();
+            return;
+        }
+        this.replActive = new Promise<boolean>(async resolve => {
+            const replCommandArgs = this.getReplCommandArgs(resource);
+            await this.getTerminalService(resource).sendCommand(replCommandArgs.command, replCommandArgs.args);
 
+            // Give python repl time to start before we start sending text.
+            setTimeout(() => resolve(true), 1000);
+        });
+
+        await this.replActive;
+    }
     public getReplCommandArgs(resource?: Uri): { command: string, args: string[] } {
         const pythonSettings = this.configurationService.getSettings(resource);
         const command = this.platformService.isWindows ? pythonSettings.pythonPath.replace(/\\/g, '/') : pythonSettings.pythonPath;
@@ -61,7 +75,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         }
         return this._terminalService;
     }
-    private setCwdForFileExecution(file: Uri) {
+    private async setCwdForFileExecution(file: Uri) {
         const pythonSettings = this.configurationService.getSettings(file);
         if (!pythonSettings.terminal.executeInFileDir) {
             return;
@@ -70,22 +84,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         const wkspace = this.workspace.getWorkspaceFolder(file);
         if (wkspace && fileDirPath !== wkspace.uri.fsPath && fileDirPath.length > 0) {
             const escapedPath = fileDirPath.indexOf(' ') > 0 ? `"${fileDirPath}"` : fileDirPath;
-            this.getTerminalService(file).sendText(`cd ${escapedPath}`);
+            await this.getTerminalService(file).sendText(`cd ${escapedPath}`);
         }
-    }
-
-    private async ensureRepl(resource?: Uri) {
-        if (this.replActive && await this.replActive!) {
-            return;
-        }
-        this.replActive = new Promise<boolean>(resolve => {
-            const replCommandArgs = this.getReplCommandArgs(resource);
-            this.getTerminalService(resource).sendCommand(replCommandArgs.command, replCommandArgs.args);
-
-            // Give python repl time to start before we start sending text.
-            setTimeout(() => resolve(true), 1000);
-        });
-
-        await this.replActive;
     }
 }

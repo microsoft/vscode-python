@@ -21,7 +21,8 @@ import { Conda } from './terminal/environmentActivationProviders/conda';
 import { Fish } from './terminal/environmentActivationProviders/fish';
 import { Powershell } from './terminal/environmentActivationProviders/powershell';
 import { TerminalServiceFactory } from './terminal/factory';
-import { ITerminalActivationCommandProvider, ITerminalServiceFactory } from './terminal/types';
+import { TerminalHelper } from './terminal/helper';
+import { ITerminalActivationCommandProvider, ITerminalHelper, ITerminalServiceFactory } from './terminal/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, Is64Bit, IsWindows } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -41,6 +42,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
 
+    serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Bash, 'bash');
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Fish, 'fish');
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Conda, 'conda');

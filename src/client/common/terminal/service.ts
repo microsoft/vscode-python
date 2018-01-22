@@ -19,7 +19,7 @@ export class TerminalService implements ITerminalService, Disposable {
         return this.terminalClosed.event;
     }
     constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        private _resource?: Uri,
+        private resource?: Uri,
         private title: string = 'Python') {
 
         const disposableRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
@@ -44,6 +44,10 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminal!.show();
         this.terminal!.sendText(text);
     }
+    public async show(): Promise<void> {
+        await this.ensureTerminal();
+        this.terminal!.show();
+    }
     private async ensureTerminal(): Promise<void> {
         if (this.terminal) {
             return;
@@ -55,7 +59,16 @@ export class TerminalService implements ITerminalService, Disposable {
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
         // tslint:disable-next-line:no-unnecessary-callback-wrapper
-        await new Promise(resolve => setTimeout(() => resolve(), 1000));
+        await new Promise(resolve => setTimeout(() => resolve(), 100));
+
+        const activationCommamnd = await this.terminalHelper.getEnvironmentActivationCommand(this.terminalShellType, this.resource);
+        if (activationCommamnd) {
+            this.terminal!.sendText(activationCommamnd!, true);
+
+            // Give the command some time to complete
+            // tslint:disable-next-line:no-unnecessary-callback-wrapper
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
     }
     private terminalCloseHandler(terminal: Terminal) {
         if (terminal === this.terminal) {

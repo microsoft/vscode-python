@@ -1,7 +1,9 @@
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, StatusBarAlignment, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { IPythonExecutionFactory } from '../common/process/types';
+import { IDisposableRegistry } from '../common/types';
 import * as utils from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
 import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterService';
@@ -13,12 +15,12 @@ import { PythonInterpreterLocatorService } from './locators';
 import { VirtualEnvService } from './locators/services/virtualEnvService';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
+@injectable()
 export class InterpreterManager implements Disposable, IInterpreterService {
-    private disposables: Disposable[] = [];
     private display: InterpreterDisplay | null | undefined;
     private interpreterProvider: PythonInterpreterLocatorService;
     private pythonPathUpdaterService: PythonPathUpdaterService;
-    constructor(private serviceContainer: IServiceContainer) {
+    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         const virtualEnvMgr = serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
         const statusBar = window.createStatusBarItem(StatusBarAlignment.Left);
         this.interpreterProvider = serviceContainer.get<PythonInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
@@ -26,9 +28,11 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         this.display = new InterpreterDisplay(statusBar, this, virtualEnvMgr, versionService);
         this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), versionService);
         PythonSettings.getInstance().addListener('change', () => this.onConfigChanged());
-        this.disposables.push(window.onDidChangeActiveTextEditor(() => this.refresh()));
-        this.disposables.push(statusBar);
-        this.disposables.push(this.display!);
+
+        const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
+        disposables.push(window.onDidChangeActiveTextEditor(() => this.refresh()));
+        disposables.push(statusBar);
+        disposables.push(this.display!);
     }
     public async refresh() {
         return this.display!.refresh();
@@ -66,8 +70,6 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         }
     }
     public dispose(): void {
-        // tslint:disable-next-line:prefer-type-cast
-        this.disposables.forEach(disposable => disposable.dispose() as void);
         this.display = null;
         this.interpreterProvider.dispose();
     }
