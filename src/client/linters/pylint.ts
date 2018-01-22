@@ -11,7 +11,20 @@ export class Pylint extends BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        const messages = await this.run(['--msg-template=\'{line},{column},{category},{msg_id}:{msg}\'', '--reports=n', '--output-format=text', document.uri.fsPath], document, cancellation);
+        let minArgs: string[] = [];
+        if (this.configService.getSettings(document.uri).linting.useMinimalCheckers) {
+            minArgs = [
+                '--disable=all',
+                '--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,unused-wildcard-import,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode'
+            ];
+        }
+        const args = [
+            '--msg-template=\'{line},{column},{category},{msg_id}:{msg}\'',
+            '--reports=n',
+            '--output-format=text',
+            document.uri.fsPath
+        ];
+        const messages = await this.run(minArgs.concat(args), document, cancellation);
         messages.forEach(msg => {
             msg.severity = this.parseMessagesSeverity(msg.type, this.pythonSettings.linting.pylintCategorySeverity);
         });

@@ -33,8 +33,9 @@ export function matchNamedRegEx(data, regex): IRegexGroup | undefined {
 }
 
 export abstract class BaseLinter implements ILinter {
+    protected readonly configService: IConfigurationService;
+
     private errorHandler: ErrorHandler;
-    private configService: IConfigurationService;
     private _pythonSettings: IPythonSettings;
     private _info: ILinterInfo;
 

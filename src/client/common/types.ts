@@ -146,6 +146,7 @@ export interface IMypyCategorySeverity {
 }
 export interface ILintingSettings {
     enabled: boolean;
+    useMinimalCheckers: boolean;
     ignorePatterns: string[];
     prospectorEnabled: boolean;
     prospectorArgs: string[];
