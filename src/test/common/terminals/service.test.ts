@@ -7,6 +7,7 @@ import { Disposable, Terminal as VSCodeTerminal, WorkspaceConfiguration } from '
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalService } from '../../../client/common/terminal/service';
+import { ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -17,6 +18,7 @@ suite('Terminal Service', () => {
     let service: TerminalService;
     let terminal: TypeMoq.IMock<VSCodeTerminal>;
     let terminalManager: TypeMoq.IMock<ITerminalManager>;
+    let terminalHelper: TypeMoq.IMock<ITerminalHelper>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let disposables: Disposable[] = [];
@@ -29,10 +31,12 @@ suite('Terminal Service', () => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
         disposables = [];
 
         mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         mockServiceContainer.setup(c => c.get(ITerminalManager)).returns(() => terminalManager.object);
+        mockServiceContainer.setup(c => c.get(ITerminalHelper)).returns(() => terminalHelper.object);
         mockServiceContainer.setup(c => c.get(IPlatformService)).returns(() => platformService.object);
         mockServiceContainer.setup(c => c.get(IDisposableRegistry)).returns(() => disposables);
         mockServiceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspaceService.object);
@@ -60,11 +64,10 @@ suite('Terminal Service', () => {
         platformService.setup(p => p.isLinux).returns(() => os === 'linux');
         platformService.setup(p => p.isMac).returns(() => os === 'osx');
         terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
-
-        const mockService = TypeMoq.Mock.ofInstance(service, undefined, false);
+        terminalHelper.setup(h => h.buildCommandForTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => 'dummy text');
 
         // Sending a command will cause the terminal to be created
-        await service.sendCommand.call(mockService.object, '', []);
+        await service.sendCommand('', []);
 
         terminal.verify(t => t.show(), TypeMoq.Times.exactly(2));
         service.dispose();
@@ -76,7 +79,11 @@ suite('Terminal Service', () => {
         const commandToSend = 'SomeCommand';
         const args = ['1', '2'];
         const commandToExpect = [commandToSend].concat(args).join(' ');
-        // helper.setup(h => h.buildCommandForTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => commandToExpect);
+        terminalHelper.setup(h => h.buildCommandForTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => commandToExpect);
+        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
+        terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
         await service.sendCommand(commandToSend, args);
 
         terminal.verify(t => t.show(), TypeMoq.Times.exactly(2));
@@ -86,6 +93,10 @@ suite('Terminal Service', () => {
     test('Ensure text is sent to terminal and it is shown', async () => {
         service = new TerminalService(mockServiceContainer.object);
         const textToSend = 'Some Text';
+        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
+        terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
         await service.sendText(textToSend);
 
         terminal.verify(t => t.show(), TypeMoq.Times.exactly(2));
@@ -102,6 +113,10 @@ suite('Terminal Service', () => {
         });
         service = new TerminalService(mockServiceContainer.object);
         service.onDidCloseTerminal(() => eventFired = true);
+        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
+        terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
         // This will create the terminal.
         await service.sendText('blah');
 
@@ -120,6 +135,11 @@ suite('Terminal Service', () => {
         });
         service = new TerminalService(mockServiceContainer.object);
         service.onDidCloseTerminal(() => eventFired = true);
+
+        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
+        terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
         // This will create the terminal.
         await service.sendText('blah');
 
