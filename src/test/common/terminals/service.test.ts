@@ -9,7 +9,6 @@ import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalService } from '../../../client/common/terminal/service';
 import { ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { initialize } from '../../initialize';
 
@@ -23,14 +22,12 @@ suite('Terminal Service', () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let disposables: Disposable[] = [];
     let mockServiceContainer: TypeMoq.IMock<IServiceContainer>;
-    let interpreterService: TypeMoq.IMock<IInterpreterService>;
     suiteSetup(initialize);
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
         disposables = [];
 
@@ -40,7 +37,6 @@ suite('Terminal Service', () => {
         mockServiceContainer.setup(c => c.get(IPlatformService)).returns(() => platformService.object);
         mockServiceContainer.setup(c => c.get(IDisposableRegistry)).returns(() => disposables);
         mockServiceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspaceService.object);
-        mockServiceContainer.setup(c => c.get(IInterpreterService)).returns(() => interpreterService.object);
     });
     teardown(() => {
         if (service) {
