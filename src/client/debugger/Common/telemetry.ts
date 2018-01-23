@@ -42,7 +42,7 @@ export function sendPerformanceTelemetry(condition: PerformanceTelemetryConditio
             try {
                 const data = getPerformanceTelemetryData(condition, args);
                 if (data) {
-                    target.sendEvent(new TelemetryEvent(DEBUGGER_PERFORMANCE, data));
+                    this.sendEvent(new TelemetryEvent(DEBUGGER_PERFORMANCE, data));
                 }
             } catch {
                 // We don't want errors here interfering the user's work, hence swallow exceptions.
