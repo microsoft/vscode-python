@@ -24,14 +24,14 @@ suite('Terminal Environment Activation (bash)', () => {
     });
 
     [undefined, 'dummyEnvName'].forEach(environmentName => {
-        const environmentSuiteTitle = environmentName ? 'Without an environment Name' : 'With an environment name';
+        const environmentSuiteTitle = environmentName ? 'When there is no environment Name' : 'When there is an environment name';
         suite(environmentSuiteTitle, () => {
             ['usr/bin/python', 'usr/bin/env with spaces/env more/python'].forEach(pythonPath => {
                 const hasSpaces = pythonPath.indexOf(' ') > 0;
-                const suiteTitle = hasSpaces ? 'Quoted script files (spaces in script file)' : 'No spaces in script file';
+                const suiteTitle = hasSpaces ? 'When there are spaces in the script file (pythonpath)' : 'When there are no spaces in the script file (pythonpath)';
                 suite(suiteTitle, () => {
                     ['activate', 'activate.sh', 'activate.csh', 'activate.fish', 'activate.bat', 'activate.ps1'].forEach(scriptFileName => {
-                        suite(`Script file ${scriptFileName}`, () => {
+                        suite(`When script file is ${scriptFileName}`, () => {
                             EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
                                 const isScriptFileSupported = ['activate', 'activate.sh', 'activate.csh', 'activate.fish'].indexOf(scriptFileName) >= 0;
                                 const titleTitle = isScriptFileSupported ? `Ensure bash Activation command returns activation command (Shell: ${shellType.name})` :
