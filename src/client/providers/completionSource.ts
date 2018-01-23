@@ -117,6 +117,10 @@ export class CompletionSource {
         const t = new Tokenizer();
         const tokens = t.Tokenize(text);
         const index = tokens.getItemContaining(document.offsetAt(position));
-        return index >= 0 && (tokens[index].TokenType === TokenType.String || tokens[index].TokenType === TokenType.Comment);
+        if (index >= 0) {
+            const token = tokens.getItemAt(index);
+            return token.type === TokenType.String || token.type === TokenType.Comment;
+        }
+        return false;
     }
 }

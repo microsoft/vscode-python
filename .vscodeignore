@@ -1,9 +1,13 @@
 .vscode/**
+.vscode-test/**
+.github/**
+.nvm/**
 typings/**
 out/test/**
 out/src/**
 out/pythonFiles/**
 out/testMultiRootWkspc/**
+out/coverconfig.json
 test/**
 src/**
 scripts/**
@@ -31,4 +35,3 @@ coverage/**
 CODE_OF_CONDUCT.md
 CODING_STANDARDS.md
 CONTRIBUTING.md
-ISSUE_TEMPLATE.md

@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import * as path from 'path';
+import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
 import { CondaInstaller } from '../../client/common/installer/condaInstaller';
@@ -17,20 +18,18 @@ import { IProcessService, IPythonExecutionFactory } from '../../client/common/pr
 import { ITerminalService } from '../../client/common/terminal/types';
 import { ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows } from '../../client/common/types';
 import { ICondaLocatorService, IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../client/interpreter/contracts';
-import { PythonInterpreterLocatorService } from '../../client/interpreter/locators/index';
-import { updateSetting } from '../common';
-import { rootWorkspaceUri } from '../common';
+import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockProvider } from '../interpreters/mocks';
 import { MockCondaLocator } from '../mocks/condaLocator';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
-import { MockTerminalService } from '../mocks/terminalService';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { closeActiveWindows, initializeTest } from './../initialize';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Module Installer', () => {
     let ioc: UnitTestIocContainer;
+    let mockTerminalService: TypeMoq.IMock<ITerminalService>;
     const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
     suiteSetup(initializeTest);
     setup(async () => {
@@ -58,6 +57,9 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingleton<ILogger>(ILogger, Logger);
         ioc.serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
 
+        mockTerminalService = TypeMoq.Mock.ofType<ITerminalService>();
+        ioc.serviceManager.addSingletonInstance<ITerminalService>(ITerminalService, mockTerminalService.object);
+
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
         ioc.serviceManager.addSingleton<ICondaLocatorService>(ICondaLocatorService, MockCondaLocator);
@@ -67,7 +69,6 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
 
         ioc.registerMockProcessTypes();
-        ioc.serviceManager.addSingleton<ITerminalService>(ITerminalService, MockTerminalService);
         ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
     }
     async function resetSettings() {
@@ -145,18 +146,19 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator, INTERPRETER_LOCATOR_SERVICE);
 
         const moduleName = 'xyz';
-        const terminalService = ioc.serviceContainer.get<MockTerminalService>(ITerminalService);
 
         const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
         const pipInstaller = moduleInstallers.find(item => item.displayName === 'Pip')!;
 
         expect(pipInstaller).not.to.be.an('undefined', 'Pip installer not found');
 
+        let argsSent: string[] = [];
+        mockTerminalService
+            .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+            .returns((cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
         await pipInstaller.installModule(moduleName);
-        const commandSent = await terminalService.commandSent;
-        const commandParts = commandSent.split(' ');
-        commandParts.shift();
-        expect(commandParts.join(' ')).equal(`-m pip install -U ${moduleName} --user`, 'Invalid command sent to terminal for installation.');
+
+        expect(argsSent.join(' ')).equal(`-m pip install -U ${moduleName} --user`, 'Invalid command sent to terminal for installation.');
     });
 
     test('Validate Conda install arguments', async () => {
@@ -164,17 +166,19 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator, INTERPRETER_LOCATOR_SERVICE);
 
         const moduleName = 'xyz';
-        const terminalService = ioc.serviceContainer.get<MockTerminalService>(ITerminalService);
 
         const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
         const pipInstaller = moduleInstallers.find(item => item.displayName === 'Pip')!;
 
         expect(pipInstaller).not.to.be.an('undefined', 'Pip installer not found');
 
+        let argsSent: string[] = [];
+        mockTerminalService
+            .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+            .returns((cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
+
         await pipInstaller.installModule(moduleName);
-        const commandSent = await terminalService.commandSent;
-        const commandParts = commandSent.split(' ');
-        commandParts.shift();
-        expect(commandParts.join(' ')).equal(`-m pip install -U ${moduleName}`, 'Invalid command sent to terminal for installation.');
+
+        expect(argsSent.join(' ')).equal(`-m pip install -U ${moduleName}`, 'Invalid command sent to terminal for installation.');
     });
 });

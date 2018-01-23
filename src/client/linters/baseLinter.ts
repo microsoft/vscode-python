@@ -1,9 +1,10 @@
 import * as path from 'path';
-import * as vscode from 'vscode';
 import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
-import { IPythonSettings, PythonSettings } from '../common/configSettings';
+import * as vscode from 'vscode';
+import { PythonSettings } from '../common/configSettings';
 import '../common/extensions';
 import { IPythonToolExecutionService } from '../common/process/types';
+import { IPythonSettings } from '../common/types';
 import { ExecutionInfo, IInstaller, ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/main';

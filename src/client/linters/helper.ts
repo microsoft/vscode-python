@@ -1,7 +1,8 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { ILintingSettings, PythonSettings } from '../common/configSettings';
+import { PythonSettings } from '../common/configSettings';
+import { ILintingSettings } from '../common/types';
 import { ExecutionInfo, Product } from '../common/types';
 import { ILinterHelper, LinterId, LinterSettingsPropertyNames } from './types';
 
@@ -35,7 +36,7 @@ export class LinterHelper implements ILinterHelper {
             moduleName = execPath;
         }
 
-        return { execPath, moduleName, args };
+        return { execPath, moduleName, args, product: linter };
     }
     public translateToId(linter: Product): LinterId {
         if (this.linterIdMapping.has(linter)) {

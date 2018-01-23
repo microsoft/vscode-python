@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
-import { IPythonSettings, PythonSettings } from '../../common/configSettings';
+import { PythonSettings } from '../../common/configSettings';
 import { ErrorUtils } from '../../common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../common/errors/moduleNotInstalledError';
 import { IPythonToolExecutionService } from '../../common/process/types';
@@ -10,6 +10,7 @@ import {
     ObservableExecutionResult,
     SpawnOptions
 } from '../../common/process/types';
+import { IPythonSettings } from '../../common/types';
 import { ExecutionInfo } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';

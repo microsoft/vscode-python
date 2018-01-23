@@ -1,8 +1,9 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IWorkspaceSymbolSettings, PythonSettings } from '../../client/common/configSettings';
+import { PythonSettings } from '../../client/common/configSettings';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
+import { IWorkspaceSymbolSettings } from '../../client/common/types';
 import { SystemVariables } from '../../client/common/variables/systemVariables';
 import { initialize } from './../initialize';
 

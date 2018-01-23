@@ -188,8 +188,11 @@ suite('Resolving Environment Variables when Debugging', () => {
 
     test('Confirm paths get appended correctly when using json variables and launched in debug console', async () => {
         // Add 3 for the 3 new json env variables
-        let expectedNumberOfVariables = Object.keys(mockProcess.env).length + 4;
+        let expectedNumberOfVariables = Object.keys(mockProcess.env).length + 3;
         if (mockProcess.env['PYTHONUNBUFFERED'] === undefined) {
+            expectedNumberOfVariables += 1;
+        }
+        if (mockProcess.env['PYTHONPATH'] === undefined) {
             expectedNumberOfVariables += 1;
         }
         if (mockProcess.env['PYTHONIOENCODING'] === undefined) {
