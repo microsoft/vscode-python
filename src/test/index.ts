@@ -18,8 +18,7 @@ const options: MochaSetupOptions & { retries: number } = {
     ui: 'tdd',
     useColors: true,
     timeout: 25000,
-    retries: 0,
-    grep: 'Terminal Environment Activation'
+    retries: 3
 };
 testRunner.configure(options, { coverageConfig: '../coverconfig.json' });
 module.exports = testRunner;
