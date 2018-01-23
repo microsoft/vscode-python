@@ -44,7 +44,7 @@ export class CondaService implements ICondaService {
             return this.isAvailable;
         }
         return this.getCondaVersion()
-            .then(() => this.isAvailable = true)
+            .then(version => this.isAvailable = typeof version === 'string')
             .catch(() => this.isAvailable = false);
     }
     public async getCondaVersion(): Promise<string | undefined> {
@@ -52,18 +52,6 @@ export class CondaService implements ICondaService {
             .then(condaFile => this.processService.exec(condaFile, ['--version'], {}))
             .then(result => result.stdout.trim())
             .catch(() => undefined);
-    }
-    public isCondaEnvironment(interpreter: PythonInterpreter) {
-        return (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
-            (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('CONTINUUM') >= 0;
-    }
-    public getLatestVersion(interpreters: PythonInterpreter[]) {
-        const sortedInterpreters = interpreters.filter(interpreter => interpreter.version && interpreter.version.length > 0);
-        // tslint:disable-next-line:no-non-null-assertion
-        sortedInterpreters.sort((a, b) => VersionUtils.compareVersion(a.version!, b.version!));
-        if (sortedInterpreters.length > 0) {
-            return sortedInterpreters[sortedInterpreters.length - 1];
-        }
     }
     public async isCondaInCurrentPath() {
         return this.processService.exec('conda', ['--version'])
@@ -99,6 +87,18 @@ export class CondaService implements ICondaService {
         // where to find the Python binary within a conda env.
         const relativePath = this.platform.isWindows ? 'python.exe' : path.join('bin', 'python');
         return path.join(condaEnvironmentPath, relativePath);
+    }
+    private isCondaEnvironment(interpreter: PythonInterpreter) {
+        return (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
+            (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('CONTINUUM') >= 0;
+    }
+    private getLatestVersion(interpreters: PythonInterpreter[]) {
+        const sortedInterpreters = interpreters.filter(interpreter => interpreter.version && interpreter.version.length > 0);
+        // tslint:disable-next-line:no-non-null-assertion
+        sortedInterpreters.sort((a, b) => VersionUtils.compareVersion(a.version!, b.version!));
+        if (sortedInterpreters.length > 0) {
+            return sortedInterpreters[sortedInterpreters.length - 1];
+        }
     }
     private async getCondaFileImpl() {
         const isAvailable = await this.isCondaInCurrentPath();

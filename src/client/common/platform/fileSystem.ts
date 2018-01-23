@@ -5,12 +5,11 @@
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { IServiceContainer } from '../../ioc/types';
 import { IFileSystem, IPlatformService } from './types';
 
 @injectable()
 export class FileSystem implements IFileSystem {
-    constructor( @inject(IServiceContainer) private platformService: IPlatformService) { }
+    constructor( @inject(IPlatformService) private platformService: IPlatformService) { }
 
     public get directorySeparatorChar(): string {
         return path.sep;

@@ -17,8 +17,8 @@ export class ReplProvider extends TerminalCodeExecutionProvider {
     constructor( @inject(ITerminalServiceFactory) terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
-        @inject(IPlatformService) platformService: IPlatformService,
-        @inject(IDisposableRegistry) disposableRegistry: Disposable[]) {
+        @inject(IDisposableRegistry) disposableRegistry: Disposable[],
+        @inject(IPlatformService) platformService: IPlatformService) {
 
         super(terminalServiceFactory, configurationService, workspace, disposableRegistry, platformService);
         this.terminalTitle = 'REPL';
