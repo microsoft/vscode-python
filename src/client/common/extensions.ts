@@ -47,5 +47,5 @@ String.prototype.toCommandArgument = function (this: string): string {
     if (!this) {
         return this;
     }
-    return (this.indexOf(' ') > 0 && !this.startsWith('"') && !this.endsWith('"')) ? `"${this}"` : this;
+    return (this.indexOf(' ') > 0 && !this.startsWith('"') && !this.endsWith('"')) ? `"${this}"` : this.toString();
 };

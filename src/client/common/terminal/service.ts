@@ -55,7 +55,6 @@ export class TerminalService implements ITerminalService, Disposable {
         const shellPath = this.terminalHelper.getTerminalShellPath();
         this.terminalShellType = !shellPath || shellPath.length === 0 ? TerminalShellType.other : this.terminalHelper.identifyTerminalShell(shellPath);
         this.terminal = this.terminalManager.createTerminal({ name: this.title });
-        this.terminal!.show();
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -65,10 +64,13 @@ export class TerminalService implements ITerminalService, Disposable {
             for (const command of activationCommamnds!) {
                 this.terminal!.sendText(command);
 
-                // Give the command some time to complete
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // Give the command some time to complete.
+                // Its been observed that sending commands too early will strip some text off.
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
         }
+
+        this.terminal!.show();
     }
     private terminalCloseHandler(terminal: Terminal) {
         if (terminal === this.terminal) {
