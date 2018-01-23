@@ -3,8 +3,8 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Disposable } from 'vscode';
-import { ITerminalManager } from '../../../client/common/application/types';
+import { Disposable, Uri, WorkspaceFolder } from 'vscode';
+import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
 import { TerminalServiceFactory } from '../../../client/common/terminal/factory';
 import { ITerminalHelper, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
@@ -16,6 +16,7 @@ import { initialize } from '../../initialize';
 suite('Terminal Service Factory', () => {
     let factory: ITerminalServiceFactory;
     let disposables: Disposable[] = [];
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     suiteSetup(initialize);
     setup(() => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -28,6 +29,10 @@ suite('Terminal Service Factory', () => {
         const terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalManager), TypeMoq.It.isAny())).returns(() => terminalManager.object);
         factory = new TerminalServiceFactory(serviceContainer.object);
+
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny())).returns(() => workspaceService.object);
+
     });
     teardown(() => {
         disposables.forEach(disposable => {
@@ -59,5 +64,31 @@ suite('Terminal Service Factory', () => {
         const differentInstance = factory.getTerminalService(undefined, 'Another New Title');
         const notTheSameInstance = differentInstance === instance;
         expect(notTheSameInstance).not.to.equal(true, 'Instances are the same');
+    });
+
+    test('Ensure same terminal is returned when using resources from the same workspace', () => {
+        const file1A = Uri.file('1a');
+        const file2A = Uri.file('2a');
+        const fileB = Uri.file('b');
+        const workspaceUriA = Uri.file('A');
+        const workspaceUriB = Uri.file('B');
+        const workspaceFolderA = TypeMoq.Mock.ofType<WorkspaceFolder>();
+        workspaceFolderA.setup(w => w.uri).returns(() => workspaceUriA);
+        const workspaceFolderB = TypeMoq.Mock.ofType<WorkspaceFolder>();
+        workspaceFolderB.setup(w => w.uri).returns(() => workspaceUriB);
+
+        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(file1A))).returns(() => workspaceFolderA.object);
+        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(file2A))).returns(() => workspaceFolderA.object);
+        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(fileB))).returns(() => workspaceFolderB.object);
+
+        const terminalForFile1A = factory.getTerminalService(file1A);
+        const terminalForFile2A = factory.getTerminalService(file2A);
+        const terminalForFileB = factory.getTerminalService(fileB);
+
+        const terminalsAreSameForWorkspaceA = terminalForFile1A === terminalForFile2A;
+        expect(terminalsAreSameForWorkspaceA).to.equal(true, 'Instances are not the same for Workspace A');
+
+        const terminalsForWorkspaceABAreDifferent = terminalForFile1A === terminalForFileB;
+        expect(terminalsForWorkspaceABAreDifferent).to.equal(false, 'Instances should be different for different workspaces');
     });
 });

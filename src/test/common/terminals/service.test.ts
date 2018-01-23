@@ -31,7 +31,6 @@ suite('Terminal Service', () => {
         terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
         disposables = [];
 
-        terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         mockServiceContainer.setup(c => c.get(ITerminalManager)).returns(() => terminalManager.object);
         mockServiceContainer.setup(c => c.get(ITerminalHelper)).returns(() => terminalHelper.object);
@@ -48,6 +47,7 @@ suite('Terminal Service', () => {
     });
 
     test('Ensure terminal is disposed', async () => {
+        terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         const os: string = 'windows';
         service = new TerminalService(mockServiceContainer.object);
         const shellPath = 'powershell.exe';
@@ -72,6 +72,7 @@ suite('Terminal Service', () => {
     });
 
     test('Ensure command is sent to terminal and it is shown', async () => {
+        terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         service = new TerminalService(mockServiceContainer.object);
         const commandToSend = 'SomeCommand';
         const args = ['1', '2'];
@@ -88,6 +89,7 @@ suite('Terminal Service', () => {
     });
 
     test('Ensure text is sent to terminal and it is shown', async () => {
+        terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         service = new TerminalService(mockServiceContainer.object);
         const textToSend = 'Some Text';
         terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
@@ -100,7 +102,54 @@ suite('Terminal Service', () => {
         terminal.verify(t => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
+    test('Ensure terminal shown', async () => {
+        terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+        service = new TerminalService(mockServiceContainer.object);
+        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
+        terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
+        await service.show();
+
+        terminal.verify(t => t.show(), TypeMoq.Times.exactly(2));
+    });
+
+    test('Ensure terminal is activated once after creation', async () => {
+        service = new TerminalService(mockServiceContainer.object);
+        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
+        terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalHelper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(['activation Command']));
+        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
+        await service.show();
+        await service.show();
+        await service.show();
+        await service.show();
+
+        terminal.verify(t => t.show(), TypeMoq.Times.exactly(5));
+        terminal.verify(t => t.sendText(TypeMoq.It.isValue('activation Command')), TypeMoq.Times.exactly(1));
+    });
+
+    test('Ensure terminal is activated once before sending text', async () => {
+        service = new TerminalService(mockServiceContainer.object);
+        const textToSend = 'Some Text';
+        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
+        terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalHelper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(['activation Command']));
+        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
+        await service.sendText(textToSend);
+        await service.sendText(textToSend);
+        await service.sendText(textToSend);
+        await service.sendText(textToSend);
+
+        terminal.verify(t => t.show(), TypeMoq.Times.exactly(5));
+        terminal.verify(t => t.sendText(TypeMoq.It.isValue('activation Command')), TypeMoq.Times.exactly(1));
+        terminal.verify(t => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(4));
+    });
+
     test('Ensure close event is not fired when another terminal is closed', async () => {
+        terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         let eventFired = false;
         let eventHandler: undefined | (() => void);
         terminalManager.setup(m => m.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(handler => {
@@ -123,6 +172,7 @@ suite('Terminal Service', () => {
     });
 
     test('Ensure close event is not fired when terminal is closed', async () => {
+        terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         let eventFired = false;
         let eventHandler: undefined | ((t: VSCodeTerminal) => void);
         terminalManager.setup(m => m.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(handler => {

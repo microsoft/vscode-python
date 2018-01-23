@@ -14,13 +14,13 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Terminal Service - helpers', () => {
+suite('Terminal Service helpers', () => {
     let helper: ITerminalHelper;
     let terminalManager: TypeMoq.IMock<ITerminalManager>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let disposables: Disposable[] = [];
-    let mockServiceContainer: TypeMoq.IMock<IServiceContainer>;
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
 
     setup(() => {
@@ -30,13 +30,14 @@ suite('Terminal Service - helpers', () => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         disposables = [];
 
-        mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        mockServiceContainer.setup(c => c.get(ITerminalManager)).returns(() => terminalManager.object);
-        mockServiceContainer.setup(c => c.get(IPlatformService)).returns(() => platformService.object);
-        mockServiceContainer.setup(c => c.get(IDisposableRegistry)).returns(() => disposables);
-        mockServiceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspaceService.object);
-        mockServiceContainer.setup(c => c.get(IInterpreterService)).returns(() => interpreterService.object);
-        helper = new TerminalHelper(mockServiceContainer.object);
+        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        serviceContainer.setup(c => c.get(ITerminalManager)).returns(() => terminalManager.object);
+        serviceContainer.setup(c => c.get(IPlatformService)).returns(() => platformService.object);
+        serviceContainer.setup(c => c.get(IDisposableRegistry)).returns(() => disposables);
+        serviceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspaceService.object);
+        serviceContainer.setup(c => c.get(IInterpreterService)).returns(() => interpreterService.object);
+
+        helper = new TerminalHelper(serviceContainer.object);
     });
     teardown(() => {
         disposables.filter(item => !!item).forEach(item => item.dispose());
@@ -69,7 +70,7 @@ suite('Terminal Service - helpers', () => {
         });
     });
 
-    async function ensurePathForShellIsCorrectlyRetrievedFromSettings(os: 'windows' | 'osx' | 'linux') {
+    async function ensurePathForShellIsCorrectlyRetrievedFromSettings(os: 'windows' | 'osx' | 'linux', expectedShellPat: string) {
         const shellPath = 'abcd';
         workspaceService.setup(w => w.getConfiguration(TypeMoq.It.isValue('terminal.integrated.shell'))).returns(() => {
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -83,13 +84,16 @@ suite('Terminal Service - helpers', () => {
         expect(helper.getTerminalShellPath()).to.equal(shellPath, 'Incorrect path for Osx');
     }
     test('Ensure path for shell is correctly retrieved from settings (osx)', async () => {
-        await ensurePathForShellIsCorrectlyRetrievedFromSettings('osx');
+        await ensurePathForShellIsCorrectlyRetrievedFromSettings('osx', 'abcd');
     });
     test('Ensure path for shell is correctly retrieved from settings (linux)', async () => {
-        await ensurePathForShellIsCorrectlyRetrievedFromSettings('linux');
+        await ensurePathForShellIsCorrectlyRetrievedFromSettings('linux', 'abcd');
     });
     test('Ensure path for shell is correctly retrieved from settings (windows)', async () => {
-        await ensurePathForShellIsCorrectlyRetrievedFromSettings('windows');
+        await ensurePathForShellIsCorrectlyRetrievedFromSettings('windows', 'abcd');
+    });
+    test('Ensure path for shell is correctly retrieved from settings (unknown os)', async () => {
+        await ensurePathForShellIsCorrectlyRetrievedFromSettings('windows', '');
     });
 
     test('Ensure spaces in command is quoted', async () => {
