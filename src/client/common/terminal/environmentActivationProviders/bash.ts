@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import '../../extensions';
 import { TerminalShellType } from '../types';
 import { BaseActivationCommandProvider } from './baseActivationProvider';
 
@@ -22,10 +23,9 @@ export class Bash extends BaseActivationCommandProvider {
         if (!scriptFile) {
             return;
         }
-        const quotedScriptFile = scriptFile.indexOf(' ') > 0 ? `"${scriptFile}"` : scriptFile;
         const envName = interpreter.envName ? interpreter.envName! : '';
         // In the case of conda environments, the name of the environment must be provided.
         // E.g. `source acrtivate <envname>`.
-        return [`source ${quotedScriptFile} ${envName}`.trim()];
+        return [`source ${scriptFile.toCommandArgument()} ${envName}`.trim()];
     }
 }

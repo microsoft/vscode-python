@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import '../../extensions';
 import { IPlatformService } from '../../platform/types';
 import { TerminalShellType } from '../types';
 import { BaseActivationCommandProvider } from './baseActivationProvider';
@@ -25,22 +26,21 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
             return;
         }
 
-        const quotedScriptFile = scriptFile.indexOf(' ') > 0 ? `"${scriptFile}"` : scriptFile;
         const envName = interpreter.envName ? interpreter.envName! : '';
 
         if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.bat')) {
-            return [`${quotedScriptFile} ${envName}`.trim()];
+            return [`${scriptFile.toCommandArgument()} ${envName}`.trim()];
         } else if (targetShell === TerminalShellType.powershell && scriptFile.endsWith('activate.ps1')) {
-            return [`${quotedScriptFile} ${envName}`.trim()];
+            return [`${scriptFile.toCommandArgument()} ${envName}`.trim()];
         } else if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.ps1')) {
-            return [`powershell ${quotedScriptFile} ${envName}`.trim()];
+            return [`powershell ${scriptFile.toCommandArgument()} ${envName}`.trim()];
         } else {
             // This means we're in powershell and we have a .bat file.
             if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
                 // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
                 return [
                     'cmd',
-                    `${quotedScriptFile} ${envName}`.trim(),
+                    `${scriptFile.toCommandArgument()} ${envName}`.trim(),
                     'powershell'
                 ];
             } else {

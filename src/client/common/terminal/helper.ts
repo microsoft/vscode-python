@@ -6,6 +6,7 @@ import { Terminal, Uri } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ITerminalManager, IWorkspaceService } from '../application/types';
+import '../extensions';
 import { IPlatformService } from '../platform/types';
 import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from './types';
 
@@ -61,10 +62,9 @@ export class TerminalHelper implements ITerminalHelper {
         return shellConfig.get<string>(osSection)!;
     }
     public buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]) {
-        const executable = command.indexOf(' ') > 0 ? `"${command}"` : command;
         const isPowershell = terminalShellType === TerminalShellType.powershell;
         const commandPrefix = isPowershell ? '& ' : '';
-        return `${commandPrefix}${executable} ${args.join(' ')}`.trim();
+        return `${commandPrefix}${command.toCommandArgument()} ${args.join(' ')}`.trim();
     }
     public async getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined> {
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);

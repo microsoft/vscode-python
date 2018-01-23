@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
+import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService } from '../../common/types';
@@ -31,10 +32,9 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         await this.setCwdForFileExecution(file);
 
         const command = this.platformService.isWindows ? pythonSettings.pythonPath.replace(/\\/g, '/') : pythonSettings.pythonPath;
-        const filePath = file.fsPath.indexOf(' ') > 0 ? `"${file.fsPath}"` : file.fsPath;
         const launchArgs = pythonSettings.terminal.launchArgs;
 
-        await this.getTerminalService(file).sendCommand(command, launchArgs.concat(filePath));
+        await this.getTerminalService(file).sendCommand(command, launchArgs.concat(file.fsPath.toCommandArgument()));
     }
 
     public async execute(code: string, resource?: Uri): Promise<void> {
@@ -83,8 +83,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         const fileDirPath = path.dirname(file.fsPath);
         const wkspace = this.workspace.getWorkspaceFolder(file);
         if (wkspace && fileDirPath !== wkspace.uri.fsPath && fileDirPath.length > 0) {
-            const escapedPath = fileDirPath.indexOf(' ') > 0 ? `"${fileDirPath}"` : fileDirPath;
-            await this.getTerminalService(file).sendText(`cd ${escapedPath}`);
+            await this.getTerminalService(file).sendText(`cd ${fileDirPath.toCommandArgument()}`);
         }
     }
 }
