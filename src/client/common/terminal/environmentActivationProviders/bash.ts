@@ -18,7 +18,7 @@ export class Bash extends BaseActivationCommandProvider {
             targetShell === TerminalShellType.fish;
     }
     public async getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string | string[] | undefined> {
-        const scriptFile = await this.findScriptFile(interpreter, ['activate', 'activte.sh', 'activte.csh', 'activte.fish']);
+        const scriptFile = await this.findScriptFile(interpreter, ['activate', 'activate.sh', 'activate.csh', 'activate.fish']);
         if (!scriptFile) {
             return;
         }
