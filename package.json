@@ -15,19 +15,19 @@
 	},
 	"bugs": {
 		"url": "https://github.com/Microsoft/vscode-python/issues"
-    },
-    "badges": [
-        {
-            "url": "https://travis-ci.org/Microsoft/vscode-python.svg?branch=master",
-            "href": "https://travis-ci.org/Microsoft/vscode-python",
-            "description": "Continuous integration"
-        },
-        {
-            "url": "https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg",
-            "href": "https://codecov.io/gh/Microsoft/vscode-python",
-            "description": "Test coverage"
-        }
-    ],
+	},
+	"badges": [
+		{
+			"url": "https://travis-ci.org/Microsoft/vscode-python.svg?branch=master",
+			"href": "https://travis-ci.org/Microsoft/vscode-python",
+			"description": "Continuous integration"
+		},
+		{
+			"url": "https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg",
+			"href": "https://codecov.io/gh/Microsoft/vscode-python",
+			"description": "Test coverage"
+		}
+	],
 	"icon": "icon.png",
 	"galleryBanner": {
 		"color": "#1e415e",
@@ -1562,7 +1562,7 @@
 		"minimatch": "^3.0.3",
 		"named-js-regexp": "^1.3.1",
 		"opn": "^5.1.0",
-		"reflect-metadata": "^0.1.10",
+		"reflect-metadata": "^0.1.12",
 		"rxjs": "^5.5.2",
 		"semver": "^5.4.1",
 		"sudo-prompt": "^8.0.0",
