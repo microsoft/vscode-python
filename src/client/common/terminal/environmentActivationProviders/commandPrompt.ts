@@ -8,30 +8,39 @@ import { TerminalShellType } from '../types';
 import { BaseActivationCommandProvider } from './baseActivationProvider';
 
 @injectable()
-export class CommandPrompt extends BaseActivationCommandProvider {
+export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
     constructor( @inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer, ['activate.bat']);
+        super(serviceContainer);
     }
     public isShellSupported(targetShell: TerminalShellType): boolean {
         return targetShell === TerminalShellType.commandPrompt ||
             targetShell === TerminalShellType.powershell;
     }
-    public async getActivationCommand(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string | undefined> {
-        const scriptFile = await this.findScriptFile(interpreter);
+    public async getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string | string[] | undefined> {
+        // Dependending on the target shell, look for the preferred script file.
+        const scriptsInOrderOfPreference = targetShell === TerminalShellType.commandPrompt ? ['activate.bat', 'activate.ps1'] : ['activate.ps1', 'activate.bat'];
+        const scriptFile = await this.findScriptFile(interpreter, scriptsInOrderOfPreference);
         if (!scriptFile) {
             return;
         }
-        // Batch files can only be run from command prompt or powershell, all others are not supported.
-        switch (targetShell) {
-            case TerminalShellType.commandPrompt: {
-                return scriptFile;
-            }
-            case TerminalShellType.powershell: {
-                return scriptFile.indexOf(' ') > 0 ? `& "${scriptFile}"` : scriptFile;
-            }
-            default: {
-                return;
-            }
+
+        const quotedScriptFile = scriptFile.indexOf(' ') > 0 ? `"${scriptFile}` : scriptFile;
+        const arg = interpreter.envName ? interpreter.envName! : '';
+
+        if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.bat')) {
+            return `${quotedScriptFile} ${arg}`.trim();
+        } else if (targetShell === TerminalShellType.powershell && scriptFile.endsWith('activate.ps1')) {
+            return `${quotedScriptFile} ${arg}`.trim();
+        } else if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.ps1')) {
+            return `powershell ${quotedScriptFile} ${arg}`.trim();
+        } else {
+            // This means we're in powershell and we have a .bat file.
+            // Solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
+            return [
+                'cmd',
+                `${quotedScriptFile} ${arg}`.trim(),
+                'powershell'
+            ];
         }
     }
 }

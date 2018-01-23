@@ -16,10 +16,7 @@ import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
 import { CurrentProcess } from './process/currentProcess';
 import { Bash } from './terminal/environmentActivationProviders/bash';
-import { CommandPrompt } from './terminal/environmentActivationProviders/commandPrompt';
-import { Conda } from './terminal/environmentActivationProviders/conda';
-import { Fish } from './terminal/environmentActivationProviders/fish';
-import { Powershell } from './terminal/environmentActivationProviders/powershell';
+import { CommandPromptAndPowerShell } from './terminal/environmentActivationProviders/commandPrompt';
 import { TerminalServiceFactory } from './terminal/factory';
 import { TerminalHelper } from './terminal/helper';
 import { ITerminalActivationCommandProvider, ITerminalHelper, ITerminalServiceFactory } from './terminal/types';
@@ -43,9 +40,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Bash, 'bash');
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Fish, 'fish');
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Conda, 'conda');
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, CommandPrompt, 'commandPrompt');
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Powershell, 'powershell');
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Bash, 'bashCShellFish');
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, CommandPromptAndPowerShell, 'commandPromptAndPowerShell');
 }

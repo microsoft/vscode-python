@@ -10,19 +10,20 @@ import { BaseActivationCommandProvider } from './baseActivationProvider';
 @injectable()
 export class Bash extends BaseActivationCommandProvider {
     constructor( @inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer, ['activate', 'activte.sh']);
+        super(serviceContainer);
     }
     public isShellSupported(targetShell: TerminalShellType): boolean {
-        return targetShell === TerminalShellType.bash;
+        return targetShell === TerminalShellType.bash ||
+            targetShell === TerminalShellType.cshell ||
+            targetShell === TerminalShellType.fish;
     }
-    public async getActivationCommand(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string | undefined> {
-        const scriptFile = await this.findScriptFile(interpreter);
+    public async getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string | string[] | undefined> {
+        const scriptFile = await this.findScriptFile(interpreter, ['activate', 'activte.sh', 'activte.csh', 'activte.fish']);
         if (!scriptFile) {
             return;
         }
-        // Batch files can only be run from bash or sh.
-        if (targetShell === TerminalShellType.bash) {
-            return scriptFile.indexOf(' ') > 0 ? `source "${scriptFile}"` : `source "${scriptFile}"`;
-        }
+        const quotedScriptFile = scriptFile.indexOf(' ') > 0 ? `"${scriptFile}"` : scriptFile;
+        const arg = interpreter.envName ? interpreter.envName! : '';
+        return `source ${quotedScriptFile} ${arg}`.trim();
     }
 }

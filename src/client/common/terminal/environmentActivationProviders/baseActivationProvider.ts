@@ -11,17 +11,17 @@ import { ITerminalActivationCommandProvider } from '../types';
 
 @injectable()
 export abstract class BaseActivationCommandProvider implements ITerminalActivationCommandProvider {
-    constructor(private serviceContainer: IServiceContainer, private scriptFileNames: string[]) { }
+    constructor(private serviceContainer: IServiceContainer) { }
 
     public abstract isShellSupported(targetShell: TerminalShellType): boolean;
-    public abstract getActivationCommand(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string | undefined>;
+    public abstract getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string | string[] | undefined>;
 
-    protected async findScriptFile(interpreter: PythonInterpreter): Promise<string | undefined> {
+    protected async findScriptFile(interpreter: PythonInterpreter, scriptFileNames: string[]): Promise<string | undefined> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
 
-        for (const scriptFileName of this.scriptFileNames) {
+        for (const scriptFileName of scriptFileNames) {
             // Generate scripts are found in the same directory as the interpreter.
-            const scriptFile = path.join(interpreter.path, scriptFileName);
+            const scriptFile = path.join(path.dirname(interpreter.path), scriptFileName);
             const found = await fs.fileExistsAsync(scriptFile);
             if (found) {
                 return scriptFile;

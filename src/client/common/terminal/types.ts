@@ -42,12 +42,12 @@ export interface ITerminalHelper {
     identifyTerminalShell(shellPath: string): TerminalShellType;
     getTerminalShellPath(): string;
     buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]): string;
-    getEnvironmentActivationCommand(terminalShellType: TerminalShellType, resource?: Uri): Promise<string | undefined>;
+    getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined>;
 }
 
 export const ITerminalActivationCommandProvider = Symbol('ITerminalActivationCommandProvider');
 
 export interface ITerminalActivationCommandProvider {
     isShellSupported(targetShell: TerminalShellType): boolean;
-    getActivationCommand(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string | undefined>;
+    getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string | string[] | undefined>;
 }

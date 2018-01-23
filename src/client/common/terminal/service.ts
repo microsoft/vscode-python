@@ -58,16 +58,16 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminal!.show();
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
-        // tslint:disable-next-line:no-unnecessary-callback-wrapper
-        await new Promise(resolve => setTimeout(() => resolve(), 100));
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-        const activationCommamnd = await this.terminalHelper.getEnvironmentActivationCommand(this.terminalShellType, this.resource);
-        if (activationCommamnd) {
-            this.terminal!.sendText(activationCommamnd!, true);
+        const activationCommamnds = await this.terminalHelper.getEnvironmentActivationCommands(this.terminalShellType, this.resource);
+        if (activationCommamnds) {
+            for (const command of activationCommamnds!) {
+                this.terminal!.sendText(command);
 
-            // Give the command some time to complete
-            // tslint:disable-next-line:no-unnecessary-callback-wrapper
-            await new Promise(resolve => setTimeout(resolve, 500));
+                // Give the command some time to complete
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
         }
     }
     private terminalCloseHandler(terminal: Terminal) {

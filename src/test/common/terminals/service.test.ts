@@ -31,7 +31,7 @@ suite('Terminal Service', () => {
         terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
         disposables = [];
 
-        terminalHelper.setup(helper => helper.getEnvironmentActivationCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+        terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         mockServiceContainer.setup(c => c.get(ITerminalManager)).returns(() => terminalManager.object);
         mockServiceContainer.setup(c => c.get(ITerminalHelper)).returns(() => terminalHelper.object);

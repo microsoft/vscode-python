@@ -3,11 +3,10 @@
 
 import { inject, injectable } from 'inversify';
 import { Terminal, Uri } from 'vscode';
-import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ITerminalManager, IWorkspaceService } from '../application/types';
 import { IPlatformService } from '../platform/types';
-import { Conda } from './environmentActivationProviders/conda';
 import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from './types';
 
 // Types of shells can be found here:
@@ -67,15 +66,11 @@ export class TerminalHelper implements ITerminalHelper {
         const commandPrefix = isPowershell ? '& ' : '';
         return `${commandPrefix}${executable} ${args.join(' ')}`.trim();
     }
-    public async getEnvironmentActivationCommand(terminalShellType: TerminalShellType, resource?: Uri): Promise<string | undefined> {
+    public async getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined> {
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const interperterInfo = await interpreterService.getActiveInterpreter(resource);
         if (!interperterInfo) {
             return;
-        }
-        // Conda activation scripts are easy and special.
-        if (interperterInfo.type === InterpreterType.Conda) {
-            return await new Conda(this.serviceContainer).getActivationCommand(interperterInfo, terminalShellType);
         }
 
         // Search from the list of providers.
@@ -83,9 +78,11 @@ export class TerminalHelper implements ITerminalHelper {
         const supportedProviders = providers.filter(provider => provider.isShellSupported(terminalShellType));
 
         for (const provider of supportedProviders) {
-            const activationCommand = await provider.getActivationCommand(interperterInfo, terminalShellType);
-            if (typeof activationCommand === 'string' && activationCommand.length > 0) {
-                return activationCommand;
+            const activationCommands = await provider.getActivationCommands(interperterInfo, terminalShellType);
+            if (typeof activationCommands === 'string') {
+                return [activationCommands];
+            } else if (Array.isArray(activationCommands)) {
+                return activationCommands;
             }
         }
     }
