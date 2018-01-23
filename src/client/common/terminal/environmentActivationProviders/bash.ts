@@ -19,7 +19,7 @@ export class Bash extends BaseActivationCommandProvider {
             targetShell === TerminalShellType.fish;
     }
     public async getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string[] | undefined> {
-        const scriptFile = await this.findScriptFile(interpreter, ['activate', 'activate.sh', 'activate.csh', 'activate.fish']);
+        const scriptFile = await this.findScriptFile(interpreter, this.getScriptsInOrderOfPreference(targetShell));
         if (!scriptFile) {
             return;
         }
@@ -27,5 +27,22 @@ export class Bash extends BaseActivationCommandProvider {
         // In the case of conda environments, the name of the environment must be provided.
         // E.g. `source acrtivate <envname>`.
         return [`source ${scriptFile.toCommandArgument()} ${envName}`.trim()];
+    }
+
+    private getScriptsInOrderOfPreference(targetShell: TerminalShellType): string[] {
+        switch (targetShell) {
+            case TerminalShellType.bash: {
+                return ['activate.sh', 'activate', 'activate.csh', 'activate.fish'];
+            }
+            case TerminalShellType.cshell: {
+                return ['activate.csh', 'activate.sh', 'activate', 'activate.fish'];
+            }
+            case TerminalShellType.fish: {
+                return ['activate.fish', 'activate.sh', 'activate.csh', 'activate'];
+            }
+            default: {
+                return [];
+            }
+        }
     }
 }
