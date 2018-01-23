@@ -23,7 +23,9 @@ export class Bash extends BaseActivationCommandProvider {
             return;
         }
         const quotedScriptFile = scriptFile.indexOf(' ') > 0 ? `"${scriptFile}"` : scriptFile;
-        const arg = interpreter.envName ? interpreter.envName! : '';
-        return `source ${quotedScriptFile} ${arg}`.trim();
+        const envName = interpreter.envName ? interpreter.envName! : '';
+        // In the case of conda environments, the name of the environment must be provided.
+        // E.g. `source acrtivate <envname>`.
+        return `source ${quotedScriptFile} ${envName}`.trim();
     }
 }

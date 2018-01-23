@@ -7,38 +7,36 @@ import * as TypeMoq from 'typemoq';
 import { EnumEx } from '../../../client/common/enumUtils';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
-import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../client/common/terminal/types';
+import { TerminalShellType } from '../../../client/common/terminal/types';
 import { InterpreterType } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Environment Activation (bash)', () => {
-    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
-    let bash: ITerminalActivationCommandProvider;
-    setup(() => {
-        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        serviceContainer.setup(c => c.get(IFileSystem)).returns(() => fileSystem.object);
-        bash = new Bash(serviceContainer.object);
-    });
-
     [undefined, 'dummyEnvName'].forEach(environmentName => {
-        const environmentSuiteTitle = environmentName ? 'When there is no environment Name' : 'When there is an environment name';
+        const environmentSuiteTitle = environmentName ? 'When there is no environment Name,' : 'When there is an environment name,';
         suite(environmentSuiteTitle, () => {
             ['usr/bin/python', 'usr/bin/env with spaces/env more/python'].forEach(pythonPath => {
                 const hasSpaces = pythonPath.indexOf(' ') > 0;
-                const suiteTitle = hasSpaces ? 'When there are spaces in the script file (pythonpath)' : 'When there are no spaces in the script file (pythonpath)';
+                const suiteTitle = hasSpaces ? 'and there are spaces in the script file (pythonpath),' : 'and there are no spaces in the script file (pythonpath),';
                 suite(suiteTitle, () => {
                     ['activate', 'activate.sh', 'activate.csh', 'activate.fish', 'activate.bat', 'activate.ps1'].forEach(scriptFileName => {
-                        suite(`When script file is ${scriptFileName}`, () => {
+                        suite(`and script file is ${scriptFileName}`, () => {
+                            let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+                            let fileSystem: TypeMoq.IMock<IFileSystem>;
+                            setup(() => {
+                                serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+                                fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+                                serviceContainer.setup(c => c.get(IFileSystem)).returns(() => fileSystem.object);
+                            });
+
                             EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
                                 const isScriptFileSupported = ['activate', 'activate.sh', 'activate.csh', 'activate.fish'].indexOf(scriptFileName) >= 0;
                                 const titleTitle = isScriptFileSupported ? `Ensure bash Activation command returns activation command (Shell: ${shellType.name})` :
                                     `Ensure bash Activation command returns undefined (Shell: ${shellType.name})`;
 
                                 test(titleTitle, async () => {
-                                    bash = new Bash(serviceContainer.object);
+                                    const bash = new Bash(serviceContainer.object);
 
                                     const supported = bash.isShellSupported(shellType.value);
                                     switch (shellType.value) {

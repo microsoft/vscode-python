@@ -11,7 +11,7 @@ import { ITerminalActivationCommandProvider } from '../types';
 
 @injectable()
 export abstract class BaseActivationCommandProvider implements ITerminalActivationCommandProvider {
-    constructor(private serviceContainer: IServiceContainer) { }
+    constructor(protected readonly serviceContainer: IServiceContainer) { }
 
     public abstract isShellSupported(targetShell: TerminalShellType): boolean;
     public abstract getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string | string[] | undefined>;

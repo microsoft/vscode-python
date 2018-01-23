@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import { IPlatformService } from '../../platform/types';
 import { TerminalShellType } from '../types';
 import { BaseActivationCommandProvider } from './baseActivationProvider';
 
@@ -24,23 +25,28 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
             return;
         }
 
-        const quotedScriptFile = scriptFile.indexOf(' ') > 0 ? `"${scriptFile}` : scriptFile;
-        const arg = interpreter.envName ? interpreter.envName! : '';
+        const quotedScriptFile = scriptFile.indexOf(' ') > 0 ? `"${scriptFile}"` : scriptFile;
+        const envName = interpreter.envName ? interpreter.envName! : '';
 
         if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.bat')) {
-            return `${quotedScriptFile} ${arg}`.trim();
+            return `${quotedScriptFile} ${envName}`.trim();
         } else if (targetShell === TerminalShellType.powershell && scriptFile.endsWith('activate.ps1')) {
-            return `${quotedScriptFile} ${arg}`.trim();
+            return `${quotedScriptFile} ${envName}`.trim();
         } else if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.ps1')) {
-            return `powershell ${quotedScriptFile} ${arg}`.trim();
+            return `powershell ${quotedScriptFile} ${envName}`.trim();
         } else {
             // This means we're in powershell and we have a .bat file.
-            // Solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
-            return [
-                'cmd',
-                `${quotedScriptFile} ${arg}`.trim(),
-                'powershell'
-            ];
+            if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
+                // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
+                return [
+                    'cmd',
+                    `${quotedScriptFile} ${envName}`.trim(),
+                    'powershell'
+                ];
+            } else {
+                // Powershell on non-windows os, we cannot execute the batch file.
+                return;
+            }
         }
     }
 }
