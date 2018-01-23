@@ -153,7 +153,7 @@ function configureEditor(context: vscode.ExtensionContext, serviceContainer: Ser
     context.subscriptions.push(vscode.languages.registerDefinitionProvider(PYTHON, definitionProvider));
     context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
     context.subscriptions.push(vscode.languages.registerReferenceProvider(PYTHON, new PythonReferenceProvider(jediFactory)));
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(PYTHON, new PythonCompletionItemProvider(jediFactory), '.'));
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(PYTHON, new PythonCompletionItemProvider(jediFactory, serviceContainer), '.'));
     context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, new ShebangCodeLensProvider(processService)));
 
     const symbolProvider = new PythonSymbolProvider(jediFactory);

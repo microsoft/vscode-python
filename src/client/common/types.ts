@@ -146,7 +146,6 @@ export interface IMypyCategorySeverity {
 }
 export interface ILintingSettings {
     enabled: boolean;
-    useMinimalCheckers: boolean;
     ignorePatterns: string[];
     prospectorEnabled: boolean;
     prospectorArgs: string[];
@@ -175,6 +174,7 @@ export interface ILintingSettings {
     mypyEnabled: boolean;
     mypyArgs: string[];
     mypyPath: string;
+    pylintUseMinimalCheckers: boolean;
 }
 export interface IFormattingSettings {
     provider: string;
@@ -205,5 +205,6 @@ export const IConfigurationService = Symbol('IConfigurationService');
 
 export interface IConfigurationService {
     getSettings(resource?: Uri): IPythonSettings;
+    isTestExecution(): boolean;
     updateSettingAsync(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
 }

@@ -118,6 +118,7 @@ suite('Linting', () => {
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
+        ioc.registerPlatformTypes();
 
         linterManager = new LinterManager(ioc.serviceContainer);
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -129,6 +130,7 @@ suite('Linting', () => {
 
         await configService.updateSettingAsync('linting.enabled', true, rootWorkspaceUri, target);
         await configService.updateSettingAsync('linting.lintOnSave', false, rootWorkspaceUri, target);
+        await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', false, workspaceUri);
 
         linterManager.getAllLinterInfos().forEach(async (x) => {
             await configService.updateSettingAsync(makeSettingKey(x.product), false, rootWorkspaceUri, target);
@@ -139,13 +141,15 @@ suite('Linting', () => {
         return `linting.${linterManager.getLinterInfo(product).enabledSettingName}` as PythonSettingKeys;
     }
 
-    async function testEnablingDisablingOfLinter(product: Product, enabled: boolean) {
+    async function testEnablingDisablingOfLinter(product: Product, enabled: boolean, file?: string) {
         const setting = makeSettingKey(product);
         const output = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
 
         await configService.updateSettingAsync(setting, enabled, rootWorkspaceUri,
             IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace);
-        const document = await vscode.workspace.openTextDocument(fileToLint);
+
+        file = file ? file : fileToLint;
+        const document = await vscode.workspace.openTextDocument(file);
         const cancelToken = new vscode.CancellationTokenSource();
 
         await linterManager.setActiveLintersAsync([product]);
@@ -235,7 +239,15 @@ suite('Linting', () => {
         await testLinterMessages(Product.pep8, path.join(pep8ConfigPath, 'file.py'), filteredPep88MessagesToBeReturned);
     });
     test('Pydocstyle with config in root', async () => {
+        await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await fs.copy(path.join(pydocstyleConfigPath27, '.pydocstyle'), path.join(workspaceUri.fsPath, '.pydocstyle'));
         await testLinterMessages(Product.pydocstyle, path.join(pydocstyleConfigPath27, 'file.py'), []);
+    });
+    test('PyLint minimal checkers', async () => {
+        const file = path.join(pythoFilesPath, 'minCheck.py');
+        await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', true, workspaceUri);
+        await testEnablingDisablingOfLinter(Product.pylint, false, file);
+        await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', false, workspaceUri);
+        await testEnablingDisablingOfLinter(Product.pylint, true, file);
     });
 });

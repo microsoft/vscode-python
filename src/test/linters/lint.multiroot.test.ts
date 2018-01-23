@@ -40,6 +40,7 @@ suite('Multiroot Linting', () => {
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
+        ioc.registerPlatformTypes();
     }
 
     async function createLinter(product: Product, resource?: Uri): Promise<ILinter> {

@@ -3,7 +3,7 @@
 
 import { injectable } from 'inversify';
 import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from 'vscode';
-import { isTestExecution, PythonSettings } from '../configSettings';
+import { PythonSettings } from '../configSettings';
 import { IConfigurationService, IPythonSettings } from '../types';
 
 @injectable()
@@ -28,8 +28,12 @@ export class ConfigurationService implements IConfigurationService {
         await this.verifySetting(pythonConfig, settingsInfo.target, setting, value);
     }
 
+    public isTestExecution(): boolean {
+        return process.env.VSC_PYTHON_CI_TEST === '1';
+    }
+
     private async verifySetting(pythonConfig: WorkspaceConfiguration, target: ConfigurationTarget, settingName: string, value?: {}): Promise<void> {
-        if (isTestExecution()) {
+        if (this.isTestExecution()) {
             let retries = 0;
             do {
                 const setting = pythonConfig.inspect(settingName);
