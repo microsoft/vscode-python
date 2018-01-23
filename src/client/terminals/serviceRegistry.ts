@@ -5,6 +5,7 @@ import { IServiceManager } from '../ioc/types';
 import { CodeExecutionManager } from './codeExecution/codeExecutionManager';
 import { DjangoShellCodeExecutionProvider } from './codeExecution/djangoShellCodeExecution';
 import { CodeExecutionHelper } from './codeExecution/helper';
+import { ReplProvider } from './codeExecution/repl';
 import { TerminalCodeExecutionProvider } from './codeExecution/terminalCodeExecution';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from './types';
 
@@ -13,4 +14,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICodeExecutionManager>(ICodeExecutionManager, CodeExecutionManager);
     serviceManager.addSingleton<ICodeExecutionService>(ICodeExecutionService, DjangoShellCodeExecutionProvider, 'djangoShell');
     serviceManager.addSingleton<ICodeExecutionService>(ICodeExecutionService, TerminalCodeExecutionProvider, 'standard');
+    serviceManager.addSingleton<ICodeExecutionService>(ICodeExecutionService, ReplProvider, 'repl');
 }

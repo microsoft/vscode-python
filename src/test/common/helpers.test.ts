@@ -1,11 +1,3 @@
-//
-// Note: This example test is leveraging the Mocha test framework.
-// Please refer to their documentation on https://mochajs.org/ for help.
-//
-
-// Place this right on top
-import { initialize } from './../initialize';
-// The module 'assert' provides assertion methods from node
 import * as assert from 'assert';
 
 // You can import and use all API from the 'vscode' module
@@ -57,9 +49,11 @@ suite('Deferred', () => {
         const error = new Error('something is not installed');
         assert.equal(isNotInstalledError(error), false, 'Standard error');
 
+        // tslint:disable-next-line:no-any
         (error as any).code = 'ENOENT';
         assert.equal(isNotInstalledError(error), true, 'ENOENT error code not detected');
 
+        // tslint:disable-next-line:no-any
         (error as any).code = 127;
         assert.equal(isNotInstalledError(error), true, '127 error code not detected');
 

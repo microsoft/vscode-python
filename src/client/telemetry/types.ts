@@ -31,6 +31,10 @@ export type DebuggerTelemetry = {
     pyspark?: boolean;
     hasEnvVars?: boolean;
 };
+export type DebuggerPerformanceTelemetry = {
+    duration: number;
+    action: 'stepIn' | 'stepOut' | 'continue' | 'next' | 'launch';
+};
 export type TestRunTelemetry = {
     tool: 'nosetest' | 'pytest' | 'unittest'
     scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';

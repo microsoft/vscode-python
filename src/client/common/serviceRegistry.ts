@@ -15,10 +15,11 @@ import { PersistentStateFactory } from './persistentState';
 import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
 import { CurrentProcess } from './process/currentProcess';
+import { Bash } from './terminal/environmentActivationProviders/bash';
+import { CommandPromptAndPowerShell } from './terminal/environmentActivationProviders/commandPrompt';
 import { TerminalServiceFactory } from './terminal/factory';
 import { TerminalHelper } from './terminal/helper';
-import { TerminalService } from './terminal/service';
-import { ITerminalHelper, ITerminalService, ITerminalServiceFactory } from './terminal/types';
+import { ITerminalActivationCommandProvider, ITerminalHelper, ITerminalServiceFactory } from './terminal/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, Is64Bit, IsWindows } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -27,9 +28,7 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
     serviceManager.addSingleton<ILogger>(ILogger, Logger);
-    serviceManager.addSingleton<ITerminalService>(ITerminalService, TerminalService);
     serviceManager.addSingleton<ITerminalServiceFactory>(ITerminalServiceFactory, TerminalServiceFactory);
-    serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
@@ -39,4 +38,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
+
+    serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Bash, 'bashCShellFish');
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, CommandPromptAndPowerShell, 'commandPromptAndPowerShell');
 }

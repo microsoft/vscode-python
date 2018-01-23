@@ -11,8 +11,8 @@ import { PythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IPlatformService } from '../platform/types';
 import { IProcessService, IPythonExecutionFactory } from '../process/types';
-import { ITerminalService } from '../terminal/types';
-import { IInstaller, ILogger, InstallerResponse, IOutputChannel, IsWindows, ModuleNamePurpose, Product } from '../types';
+import { ITerminalServiceFactory } from '../terminal/types';
+import { IInstaller, ILogger, InstallerResponse, IOutputChannel, ModuleNamePurpose, Product } from '../types';
 import { IModuleInstaller } from './types';
 
 export { Product } from '../types';
@@ -237,7 +237,8 @@ export class Installer implements IInstaller {
             this.outputChannel.appendLine('Option 3: Extract to any folder and define that path in the python.workspaceSymbols.ctagsPath setting of your user settings file (settings.json).');
             this.outputChannel.show();
         } else {
-            const terminalService = this.serviceContainer.get<ITerminalService>(ITerminalService);
+            const terminalServiceFactory = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory);
+            const terminalService = terminalServiceFactory.getTerminalService();
             const logger = this.serviceContainer.get<ILogger>(ILogger);
             terminalService.sendCommand(CTagsInsllationScript, [])
                 .catch(logger.logError.bind(logger, `Failed to install ctags. Script sent '${CTagsInsllationScript}'.`));

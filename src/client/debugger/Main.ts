@@ -1,3 +1,4 @@
+// tslint:disable:quotemark ordered-imports promise-must-complete member-ordering no-any prefer-template cyclomatic-complexity no-empty no-multiline-string one-line no-invalid-template-strings no-suspicious-comment no-var-self
 "use strict";
 
 // This line should always be right on top.
@@ -8,7 +9,7 @@ if ((Reflect as any).metadata === undefined) {
 }
 import * as fs from "fs";
 import * as path from "path";
-import { DebugSession, Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread } from "vscode-debugadapter";
+import { DebugSession, Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable } from "vscode-debugadapter";
 import { ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DEBUGGER } from '../../client/telemetry/constants';
@@ -23,6 +24,7 @@ import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients
 import { BaseDebugServer } from "./DebugServers/BaseDebugServer";
 import { PythonProcess } from "./PythonProcess";
 import { IS_WINDOWS } from './Common/Utils';
+import { sendPerformanceTelemetry, capturePerformanceTelemetry, PerformanceTelemetryCondition } from "./Common/telemetry";
 
 const CHILD_ENUMEARATION_TIMEOUT = 5000;
 
@@ -39,10 +41,10 @@ export class PythonDebugger extends DebugSession {
     private registeredBreakpointsByFileName: Map<string, IPythonBreakpoint[]>;
     private debuggerLoaded: Promise<any>;
     private debuggerLoadedPromiseResolve: () => void;
-    private debugClient: DebugClient;
+    private debugClient?: DebugClient;
     private configurationDone: Promise<any>;
-    private configurationDonePromiseResolve: () => void;
-    private lastException: IPythonException;
+    private configurationDonePromiseResolve?: () => void;
+    private lastException?: IPythonException;
     private _supportsRunInTerminalRequest: boolean;
     private terminateEventSent: boolean;
     public constructor(debuggerLinesStartAt1: boolean, isServer: boolean) {
@@ -55,14 +57,19 @@ export class PythonDebugger extends DebugSession {
             this.debuggerLoadedPromiseResolve = resolve;
         });
     }
+    // tslint:disable-next-line:no-unnecessary-override
+    @sendPerformanceTelemetry(PerformanceTelemetryCondition.stoppedEvent)
+    public sendEvent(event: DebugProtocol.Event): void {
+        super.sendEvent(event);
+    }
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
-        response.body.supportsEvaluateForHovers = true;
-        response.body.supportsConditionalBreakpoints = true;
-        response.body.supportsConfigurationDoneRequest = true;
-        response.body.supportsEvaluateForHovers = false;
-        response.body.supportsFunctionBreakpoints = false;
-        response.body.supportsSetVariable = true;
-        response.body.exceptionBreakpointFilters = [
+        response.body!.supportsEvaluateForHovers = true;
+        response.body!.supportsConditionalBreakpoints = true;
+        response.body!.supportsConfigurationDoneRequest = true;
+        response.body!.supportsEvaluateForHovers = false;
+        response.body!.supportsFunctionBreakpoints = false;
+        response.body!.supportsSetVariable = true;
+        response.body!.exceptionBreakpointFilters = [
             {
                 label: "All Exceptions",
                 filter: "all"
@@ -80,7 +87,7 @@ export class PythonDebugger extends DebugSession {
         this.sendEvent(new InitializedEvent());
     }
 
-    private pythonProcess: PythonProcess;
+    private pythonProcess?: PythonProcess;
     private debugServer: BaseDebugServer;
 
     private startDebugServer(): Promise<IDebugServer> {
@@ -92,35 +99,36 @@ export class PythonDebugger extends DebugSession {
             programDirectory = this.launchArgs.cwd;
         }
         this.pythonProcess = new PythonProcess(0, "", programDirectory);
-        this.debugServer = this.debugClient.CreateDebugServer(this.pythonProcess);
+        this.debugServer = this.debugClient!.CreateDebugServer(this.pythonProcess!);
         this.InitializeEventHandlers();
         return this.debugServer.Start();
     }
     private stopDebugServer() {
         if (this.debugClient) {
-            this.debugClient.Stop();
-            this.debugClient = null;
+            this.debugClient!.Stop();
+            this.debugClient = undefined;
         }
         if (this.pythonProcess) {
-            this.pythonProcess.Kill();
-            this.pythonProcess = null;
+            this.pythonProcess!.Kill();
+            this.pythonProcess = undefined;
         }
         this.terminateEventSent = true;
         this.sendEvent(new TerminatedEvent());
     }
     private InitializeEventHandlers() {
-        this.pythonProcess.on("last", arg => this.onLastCommand());
-        this.pythonProcess.on("threadExited", arg => this.onPythonThreadExited(arg));
-        this.pythonProcess.on("moduleLoaded", arg => this.onPythonModuleLoaded(arg));
-        this.pythonProcess.on("threadCreated", arg => this.onPythonThreadCreated(arg));
-        this.pythonProcess.on("processLoaded", arg => this.onPythonProcessLoaded(arg));
-        this.pythonProcess.on("output", (pyThread, output) => this.onDebuggerOutput(pyThread, output, 'stdout'));
-        this.pythonProcess.on("exceptionRaised", (pyThread, ex) => this.onPythonException(pyThread, ex));
-        this.pythonProcess.on("breakpointHit", (pyThread, breakpointId) => this.onBreakpointHit(pyThread, breakpointId));
-        this.pythonProcess.on("stepCompleted", (pyThread) => this.onStepCompleted(pyThread));
-        this.pythonProcess.on("detach", () => this.onDetachDebugger());
-        this.pythonProcess.on("error", ex => this.onDebuggerOutput(undefined, ex, 'stderr'));
-        this.pythonProcess.on("asyncBreakCompleted", arg => this.onPythonProcessPaused(arg));
+        const pythonProcess = this.pythonProcess!;
+        pythonProcess.on("last", arg => this.onLastCommand());
+        pythonProcess.on("threadExited", arg => this.onPythonThreadExited(arg));
+        pythonProcess.on("moduleLoaded", arg => this.onPythonModuleLoaded(arg));
+        pythonProcess.on("threadCreated", arg => this.onPythonThreadCreated(arg));
+        pythonProcess.on("processLoaded", arg => this.onPythonProcessLoaded(arg));
+        pythonProcess.on("output", (pyThread, output) => this.onDebuggerOutput(pyThread, output, 'stdout'));
+        pythonProcess.on("exceptionRaised", (pyThread, ex) => this.onPythonException(pyThread, ex));
+        pythonProcess.on("breakpointHit", (pyThread, breakpointId) => this.onBreakpointHit(pyThread, breakpointId));
+        pythonProcess.on("stepCompleted", (pyThread) => this.onStepCompleted(pyThread));
+        pythonProcess.on("detach", () => this.onDetachDebugger());
+        pythonProcess.on("error", ex => this.onDebuggerOutput(undefined, ex, 'stderr'));
+        pythonProcess.on("asyncBreakCompleted", arg => this.onPythonProcessPaused(arg));
 
         this.debugServer.on("detach", () => this.onDetachDebugger());
     }
@@ -154,9 +162,8 @@ export class PythonDebugger extends DebugSession {
     }
     private onPythonModuleLoaded(module: IPythonModule) {
     }
-    private debuggerHasLoaded: boolean;
+    @sendPerformanceTelemetry(PerformanceTelemetryCondition.always)
     private onPythonProcessLoaded(pyThread?: IPythonThread) {
-        this.debuggerHasLoaded = true;
         if (this.entryResponse) {
             this.sendResponse(this.entryResponse);
         }
@@ -176,10 +183,10 @@ export class PythonDebugger extends DebugSession {
                 this.sendEvent(new StoppedEvent("entry", thread.Id));
             } else if (this.launchArgs && this.launchArgs.stopOnEntry === false) {
                 this.configurationDone.then(() => {
-                    this.pythonProcess.SendResumeThread(thread.Id);
+                    this.pythonProcess!.SendResumeThread(thread.Id);
                 });
             } else {
-                this.pythonProcess.SendResumeThread(thread.Id);
+                this.pythonProcess!.SendResumeThread(thread.Id);
             }
         }
     }
@@ -201,6 +208,7 @@ export class PythonDebugger extends DebugSession {
     private canStartDebugger(): Promise<boolean> {
         return Promise.resolve(true);
     }
+    @capturePerformanceTelemetry('launch')
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
         // Some versions may still exist with incorrect launch.json values
         const setting = '${config.python.pythonPath}';
@@ -258,20 +266,19 @@ export class PythonDebugger extends DebugSession {
 
         this.launchArgs = args;
         this.debugClient = CreateLaunchDebugClient(args, this, this._supportsRunInTerminalRequest);
-        //this.debugClient.on('exit', () => this.sendEvent(new TerminatedEvent()));
         this.configurationDone = new Promise(resolve => {
             this.configurationDonePromiseResolve = resolve;
         });
 
         this.entryResponse = response;
-        let that = this;
+        const that = this;
 
         this.startDebugServer().then(dbgServer => {
-            return that.debugClient.LaunchApplicationToDebug(dbgServer, that.unhandledProcessError.bind(that));
+            return that.debugClient!.LaunchApplicationToDebug(dbgServer, that.unhandledProcessError.bind(that));
         }).catch(error => {
-            this.sendEvent(new OutputEvent(error + "\n", "stderr"));
+            this.sendEvent(new OutputEvent(`${error}${'\n'}`, "stderr"));
             response.success = false;
-            let errorMsg = typeof error === "string" ? error : ((error.message && error.message.length > 0) ? error.message : error + '');
+            let errorMsg = typeof error === "string" ? error : ((error.message && error.message.length > 0) ? error.message : error);
             if (isNotInstalledError(error)) {
                 errorMsg = `Failed to launch the Python Process, please validate the path '${this.launchArgs.pythonPath}'`;
             }
@@ -285,7 +292,7 @@ export class PythonDebugger extends DebugSession {
             errorMsg = `Failed to launch the Python Process, please validate the path '${this.launchArgs.pythonPath}'`;
         }
         if (errorMsg.length > 0) {
-            this.sendEvent(new OutputEvent(errorMsg + "\n", "stderr"));
+            this.sendEvent(new OutputEvent(`${errorMsg}${'\n'}`, "stderr"));
         }
         this.terminateEventSent = true;
         this.sendEvent(new TerminatedEvent());
@@ -296,47 +303,41 @@ export class PythonDebugger extends DebugSession {
         this.attachArgs = args;
         this.debugClient = CreateAttachDebugClient(args, this);
         this.entryResponse = response;
-        let that = this;
+        const that = this;
 
         this.canStartDebugger().then(() => {
             return this.startDebugServer();
         }).then(dbgServer => {
-            return that.debugClient.LaunchApplicationToDebug(dbgServer, () => { });
+            return that.debugClient!.LaunchApplicationToDebug(dbgServer, () => { });
         }).catch(error => {
-            this.sendEvent(new OutputEvent(error + "\n", "stderr"));
-            this.sendErrorResponse(that.entryResponse, 2000, error);
+            this.sendEvent(new OutputEvent(`${error}${'\n'}`, "stderr"));
+            this.sendErrorResponse(that.entryResponse!, 2000, error);
         });
     }
     protected configurationDoneRequest(response: DebugProtocol.ConfigurationDoneResponse, args: DebugProtocol.ConfigurationDoneArguments): void {
         // Tell debugger we have loaded the breakpoints
         if (this.configurationDonePromiseResolve) {
-            this.configurationDonePromiseResolve();
-            this.configurationDonePromiseResolve = null;
+            this.configurationDonePromiseResolve!();
+            this.configurationDonePromiseResolve = undefined;
         }
         this.sendResponse(response);
     }
     private onBreakpointHit(pyThread: IPythonThread, breakpointId: number) {
         // Break only if the breakpoint exists and it is enabled
-        if (this.registeredBreakpoints.has(breakpointId) && this.registeredBreakpoints.get(breakpointId).Enabled === true) {
+        if (this.registeredBreakpoints.has(breakpointId) && this.registeredBreakpoints.get(breakpointId)!.Enabled === true) {
             this.sendEvent(new StoppedEvent("breakpoint", pyThread.Id));
         }
         else {
-            this.pythonProcess.SendResumeThread(pyThread.Id);
+            this.pythonProcess!.SendResumeThread(pyThread.Id);
         }
     }
     private buildBreakpointDetails(filePath: string, line: number, condition: string): IPythonBreakpoint {
         let isDjangoFile = false;
-        if (this.launchArgs != null &&
+        if (this.launchArgs &&
             Array.isArray(this.launchArgs.debugOptions) &&
             this.launchArgs.debugOptions.indexOf(DebugOptions.DjangoDebugging) >= 0) {
             isDjangoFile = filePath.toUpperCase().endsWith(".HTML");
         }
-        // Todo: Remote DJango debugging
-        // if (this.attachArgs != null &&
-        //     Array.isArray(this.attachArgs.debugOptions) &&
-        //     this.attachArgs.debugOptions.indexOf(DebugOptions.DjangoDebugging) >= 0) {
-        //     isDjangoFile = filePath.toUpperCase().endsWith(".HTML");
-        // }
 
         condition = typeof condition === "string" ? condition : "";
 
@@ -344,7 +345,7 @@ export class PythonDebugger extends DebugSession {
             Condition: condition,
             ConditionKind: condition.length === 0 ? PythonBreakpointConditionKind.Always : PythonBreakpointConditionKind.WhenTrue,
             Filename: filePath,
-            Id: this.breakPointCounter++,
+            Id: this.breakPointCounter += 1,
             LineNo: line,
             PassCount: 0,
             PassCountKind: PythonBreakpointPassCountKind.Always,
@@ -360,24 +361,23 @@ export class PythonDebugger extends DebugSession {
                 };
                 return this.sendResponse(response);
             }
-            if (!this.registeredBreakpointsByFileName.has(args.source.path)) {
-                this.registeredBreakpointsByFileName.set(args.source.path, []);
+            if (!this.registeredBreakpointsByFileName.has(args.source.path!)) {
+                this.registeredBreakpointsByFileName.set(args.source.path!, []);
             }
 
-            let breakpoints: { verified: boolean, line: number }[] = [];
-            let linesToAdd = args.breakpoints.map(b => b.line);
-            let registeredBks = this.registeredBreakpointsByFileName.get(args.source.path);
-            let linesToRemove = registeredBks.map(b => b.LineNo).filter(oldLine => linesToAdd.indexOf(oldLine) === -1);
-            // let linesToUpdate = registeredBks.map(b => b.LineNo).filter(oldLine => linesToAdd.indexOf(oldLine) >= 0);
+            const breakpoints: { verified: boolean, line: number }[] = [];
+            const linesToAdd = args.breakpoints!.map(b => b.line);
+            const registeredBks = this.registeredBreakpointsByFileName.get(args.source.path!)!;
+            const linesToRemove = registeredBks.map(b => b.LineNo).filter(oldLine => linesToAdd.indexOf(oldLine) === -1);
 
-            // Always add new breakpoints, don't re-enable previous breakpoints
+            // Always add new breakpoints, don't re-enable previous breakpoints,
             // Cuz sometimes some breakpoints get added too early (e.g. in django) and don't get registeredBks
-            // and the response comes back indicating it wasn't set properly
+            // and the response comes back indicating it wasn't set properly.
             // However, at a later point in time, the program breaks at that point!!!
-            let linesToAddPromises = args.breakpoints.map(bk => {
+            const linesToAddPromises = args.breakpoints!.map(bk => {
                 return new Promise(resolve => {
                     let breakpoint: IPythonBreakpoint;
-                    let existingBreakpointsForThisLine = registeredBks.filter(registeredBk => registeredBk.LineNo === bk.line);
+                    const existingBreakpointsForThisLine = registeredBks.filter(registeredBk => registeredBk.LineNo === bk.line);
                     if (existingBreakpointsForThisLine.length > 0) {
                         // We have an existing breakpoint for this line
                         // just enable that
@@ -385,10 +385,10 @@ export class PythonDebugger extends DebugSession {
                         breakpoint.Enabled = true;
                     }
                     else {
-                        breakpoint = this.buildBreakpointDetails(this.convertClientPathToDebugger(args.source.path), bk.line, bk.condition);
+                        breakpoint = this.buildBreakpointDetails(this.convertClientPathToDebugger(args.source.path!), bk.line, bk.condition!);
                     }
 
-                    this.pythonProcess.BindBreakpoint(breakpoint).then(() => {
+                    this.pythonProcess!.BindBreakpoint(breakpoint).then(() => {
                         this.registeredBreakpoints.set(breakpoint.Id, breakpoint);
                         breakpoints.push({ verified: true, line: bk.line });
                         registeredBks.push(breakpoint);
@@ -402,18 +402,18 @@ export class PythonDebugger extends DebugSession {
                 });
             });
 
-            let linesToRemovePromises = linesToRemove.map(line => {
+            const linesToRemovePromises = linesToRemove.map(line => {
                 return new Promise(resolve => {
-                    let registeredBks = this.registeredBreakpointsByFileName.get(args.source.path);
-                    let bk = registeredBks.filter(b => b.LineNo === line)[0];
+                    const bookmarks = this.registeredBreakpointsByFileName.get(args.source.path!)!;
+                    const bk = bookmarks.filter(b => b.LineNo === line)[0];
                     // Ok, we won't get a response back, so update the breakpoints list  indicating this has been disabled
                     bk.Enabled = false;
-                    this.pythonProcess.DisableBreakPoint(bk);
+                    this.pythonProcess!.DisableBreakPoint(bk);
                     resolve();
                 });
             });
 
-            let promises = linesToAddPromises.concat(linesToRemovePromises);
+            const promises = linesToAddPromises.concat(linesToRemovePromises);
             Promise.all(promises).then(() => {
                 response.body = {
                     breakpoints: breakpoints
@@ -423,17 +423,17 @@ export class PythonDebugger extends DebugSession {
 
                 // Tell debugger we have loaded the breakpoints
                 if (this.configurationDonePromiseResolve) {
-                    this.configurationDonePromiseResolve();
-                    this.configurationDonePromiseResolve = null;
+                    this.configurationDonePromiseResolve!();
+                    this.configurationDonePromiseResolve = undefined;
                 }
             }).catch(error => this.sendErrorResponse(response, 2000, error));
         });
     }
 
     protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
-        let threads = [];
+        const threads: Thread[] = [];
         if (this.pythonProcess) {
-            this.pythonProcess.Threads.forEach(t => {
+            this.pythonProcess!.Threads.forEach(t => {
                 threads.push(new Thread(t.Id, t.Name));
             });
         }
@@ -443,22 +443,18 @@ export class PythonDebugger extends DebugSession {
         };
         this.sendResponse(response);
     }
-    /** converts the remote path to local path */
     protected convertDebuggerPathToClient(remotePath: string): string {
         if (this.attachArgs && this.attachArgs.localRoot && this.attachArgs.remoteRoot) {
             let path2 = path.win32;
             if (this.attachArgs.remoteRoot.indexOf('/') !== -1) {
                 path2 = path.posix;
             }
-            let pathRelativeToSourceRoot = path2.relative(this.attachArgs.remoteRoot, remotePath);
-            // resolve from the local source root
-            let clientPath = path.resolve(this.attachArgs.localRoot, pathRelativeToSourceRoot);
-            return clientPath;
+            const pathRelativeToSourceRoot = path2.relative(this.attachArgs.remoteRoot, remotePath);
+            return path.resolve(this.attachArgs.localRoot, pathRelativeToSourceRoot);
         } else {
             return remotePath;
         }
     }
-    /** converts the local path to remote path */
     protected convertClientPathToDebugger(clientPath: string): string {
         if (this.attachArgs && this.attachArgs.localRoot && this.attachArgs.remoteRoot) {
             // get the part of the path that is relative to the client root
@@ -475,20 +471,20 @@ export class PythonDebugger extends DebugSession {
     }
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
         this.debuggerLoaded.then(() => {
-            if (this.terminateEventSent || !this.pythonProcess || !this.pythonProcess.Threads.has(args.threadId)) {
+            if (this.terminateEventSent || !this.pythonProcess || !this.pythonProcess!.Threads.has(args.threadId)) {
                 response.body = {
                     stackFrames: []
                 };
                 return this.sendResponse(response);
             }
 
-            let pyThread = this.pythonProcess.Threads.get(args.threadId);
+            const pyThread = this.pythonProcess!.Threads.get(args.threadId)!;
             let maxFrames = typeof args.levels === "number" && args.levels > 0 ? args.levels : pyThread.Frames.length - 1;
             maxFrames = maxFrames < pyThread.Frames.length ? maxFrames : pyThread.Frames.length;
 
-            let frames = pyThread.Frames.map(frame => {
+            const frames = pyThread.Frames.map(frame => {
                 return validatePath(this.convertDebuggerPathToClient(frame.FileName)).then(fileName => {
-                    let frameId = this._pythonStackFrames.create(frame);
+                    const frameId = this._pythonStackFrames.create(frame);
                     if (fileName.length === 0) {
                         return new StackFrame(frameId, frame.FunctionName);
                     }
@@ -509,35 +505,39 @@ export class PythonDebugger extends DebugSession {
             });
         });
     }
+    @capturePerformanceTelemetry('stepIn')
     protected stepInRequest(response: DebugProtocol.StepInResponse): void {
         this.sendResponse(response);
-        this.pythonProcess.SendStepInto(this.pythonProcess.LastExecutedThread.Id);
+        this.pythonProcess!.SendStepInto(this.pythonProcess!.LastExecutedThread.Id);
     }
+    @capturePerformanceTelemetry('stepOut')
     protected stepOutRequest(response: DebugProtocol.StepInResponse): void {
         this.sendResponse(response);
-        this.pythonProcess.SendStepOut(this.pythonProcess.LastExecutedThread.Id);
+        this.pythonProcess!.SendStepOut(this.pythonProcess!.LastExecutedThread.Id);
     }
+    @capturePerformanceTelemetry('continue')
     protected continueRequest(response: DebugProtocol.ContinueResponse, args: DebugProtocol.ContinueArguments): void {
-        this.pythonProcess.SendContinue().then(() => {
+        this.pythonProcess!.SendContinue().then(() => {
             this.sendResponse(response);
         }).catch(error => this.sendErrorResponse(response, 2000, error));
     }
+    @capturePerformanceTelemetry('next')
     protected nextRequest(response: DebugProtocol.NextResponse, args: DebugProtocol.NextArguments): void {
         this.sendResponse(response);
-        this.pythonProcess.SendStepOver(this.pythonProcess.LastExecutedThread.Id);
+        this.pythonProcess!.SendStepOver(this.pythonProcess!.LastExecutedThread.Id);
     }
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
         this.debuggerLoaded.then(() => {
-            let frame = this._pythonStackFrames.get(args.frameId);
+            const frame = this._pythonStackFrames.get(args.frameId!)!;
             if (this.terminateEventSent || !frame || !this.pythonProcess) {
                 response.body = {
-                    result: null,
+                    result: '',
                     variablesReference: 0
                 };
                 return this.sendResponse(response);
             }
 
-            this.pythonProcess.ExecuteText(args.expression, PythonEvaluationResultReprKind.Normal, frame).then(result => {
+            this.pythonProcess!.ExecuteText(args.expression, PythonEvaluationResultReprKind.Normal, frame).then(result => {
                 let variablesReference = 0;
                 // If this value can be expanded, then create a vars ref for user to expand it
                 if (result.IsExpandable) {
@@ -558,7 +558,7 @@ export class PythonDebugger extends DebugSession {
     }
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
         this.debuggerLoaded.then(() => {
-            let frame = this._pythonStackFrames.get(args.frameId);
+            const frame = this._pythonStackFrames.get(args.frameId)!;
             if (this.terminateEventSent || !frame || !this.pythonProcess) {
                 response.body = {
                     scopes: []
@@ -566,34 +566,34 @@ export class PythonDebugger extends DebugSession {
                 return this.sendResponse(response);
             }
 
-            let scopes = [];
-            if (typeof this.lastException === 'object' && this.lastException !== null && this.lastException.Description.length > 0) {
-                let values: IDebugVariable = {
+            const scopes: Scope[] = [];
+            if (this.lastException && this.lastException!.Description.length > 0) {
+                const values: IDebugVariable = {
                     variables: [{
                         Frame: frame, Expression: 'Type',
                         Flags: PythonEvaluationResultFlags.Raw,
-                        StringRepr: this.lastException.TypeName,
+                        StringRepr: this.lastException!.TypeName,
                         TypeName: 'string', IsExpandable: false, HexRepr: '',
-                        ChildName: '', ExceptionText: '', Length: 0, Process: null
+                        ChildName: '', ExceptionText: '', Length: 0, Process: undefined
                     },
                     {
                         Frame: frame, Expression: 'Description',
                         Flags: PythonEvaluationResultFlags.Raw,
-                        StringRepr: this.lastException.Description,
+                        StringRepr: this.lastException!.Description,
                         TypeName: 'string', IsExpandable: false, HexRepr: '',
-                        ChildName: '', ExceptionText: '', Length: 0, Process: null
+                        ChildName: '', ExceptionText: '', Length: 0, Process: undefined
                     }],
                     evaluateChildren: false
                 };
                 scopes.push(new Scope("Exception", this._variableHandles.create(values), false));
-                this.lastException = null;
+                this.lastException = undefined;
             }
             if (Array.isArray(frame.Locals) && frame.Locals.length > 0) {
-                let values: IDebugVariable = { variables: frame.Locals };
+                const values: IDebugVariable = { variables: frame.Locals };
                 scopes.push(new Scope("Local", this._variableHandles.create(values), false));
             }
             if (Array.isArray(frame.Parameters) && frame.Parameters.length > 0) {
-                let values: IDebugVariable = { variables: frame.Parameters };
+                const values: IDebugVariable = { variables: frame.Parameters };
                 scopes.push(new Scope("Arguments", this._variableHandles.create(values), false));
             }
             response.body = { scopes };
@@ -601,10 +601,10 @@ export class PythonDebugger extends DebugSession {
         });
     }
     protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
-        let varRef = this._variableHandles.get(args.variablesReference);
+        const varRef = this._variableHandles.get(args.variablesReference)!;
 
         if (varRef.evaluateChildren !== true) {
-            let variables = [];
+            const variables: Variable[] = [];
             varRef.variables.forEach(variable => {
                 let variablesReference = 0;
                 // If this value can be expanded, then create a vars ref for user to expand it
@@ -629,41 +629,42 @@ export class PythonDebugger extends DebugSession {
 
             return this.sendResponse(response);
         }
+        else {
+            // Ok, we need to evaluate the children of the current variable.
+            const variables: Variable[] = [];
+            const promises = varRef.variables.map(variable => {
+                return variable.Process!.EnumChildren(variable.Expression, variable.Frame, CHILD_ENUMEARATION_TIMEOUT).then(children => {
+                    children.forEach(child => {
+                        let variablesReference = 0;
+                        // If this value can be expanded, then create a vars ref for user to expand it
+                        if (child.IsExpandable) {
+                            const childVariable: IDebugVariable = {
+                                variables: [child],
+                                evaluateChildren: true
+                            };
+                            variablesReference = this._variableHandles.create(childVariable);
+                        }
 
-        // Ok, we need to evaluate the children of the current variable
-        let variables = [];
-        let promises = varRef.variables.map(variable => {
-            return variable.Process.EnumChildren(variable.Expression, variable.Frame, CHILD_ENUMEARATION_TIMEOUT).then(children => {
-                children.forEach(child => {
-                    let variablesReference = 0;
-                    // If this value can be expanded, then create a vars ref for user to expand it
-                    if (child.IsExpandable) {
-                        const childVariable: IDebugVariable = {
-                            variables: [child],
-                            evaluateChildren: true
-                        };
-                        variablesReference = this._variableHandles.create(childVariable);
-                    }
-
-                    variables.push({
-                        name: child.ChildName,
-                        value: child.StringRepr,
-                        variablesReference: variablesReference
+                        variables.push({
+                            name: child.ChildName,
+                            value: child.StringRepr,
+                            variablesReference: variablesReference
+                        });
                     });
                 });
             });
-        });
 
-        Promise.all(promises).then(() => {
-            response.body = {
-                variables: variables
-            };
+            Promise.all(promises).then(() => {
+                response.body = {
+                    variables: variables
+                };
 
-            return this.sendResponse(response);
-        }).catch(error => this.sendErrorResponse(response, 2001, error));
+                return this.sendResponse(response);
+            }).catch(error => this.sendErrorResponse(response, 2001, error));
+        }
     }
     protected pauseRequest(response: DebugProtocol.PauseResponse): void {
-        this.pythonProcess.Break();
+        this.pythonProcess!.Break();
         this.sendResponse(response);
     }
     protected setExceptionBreakPointsRequest(response: DebugProtocol.SetExceptionBreakpointsResponse, args: DebugProtocol.SetExceptionBreakpointsArguments): void {
@@ -678,10 +679,8 @@ export class PythonDebugger extends DebugSession {
             if (args.filters.indexOf("all") >= 0) {
                 mode = enum_EXCEPTION_STATE.BREAK_MODE_ALWAYS;
             }
-            let exToIgnore = new Map<string, enum_EXCEPTION_STATE>();
-            let exceptionHandling = this.launchArgs ? this.launchArgs.exceptionHandling : null;
-            // Todo: exception handling for remote debugging
-            // let exceptionHandling = this.launchArgs ? this.launchArgs.exceptionHandling : this.attachArgs.exceptionHandling;
+            const exToIgnore = new Map<string, enum_EXCEPTION_STATE>();
+            const exceptionHandling = this.launchArgs ? this.launchArgs.exceptionHandling : null;
             if (exceptionHandling) {
                 if (Array.isArray(exceptionHandling.ignore)) {
                     exceptionHandling.ignore.forEach(exType => {
@@ -709,7 +708,7 @@ export class PythonDebugger extends DebugSession {
                 exToIgnore.set('GeneratorExit', enum_EXCEPTION_STATE.BREAK_MODE_NEVER);
             }
             if (this.pythonProcess) {
-                this.pythonProcess.SendExceptionInfo(mode, exToIgnore);
+                this.pythonProcess!.SendExceptionInfo(mode, exToIgnore);
             }
             this.sendResponse(response);
         });
@@ -719,20 +718,19 @@ export class PythonDebugger extends DebugSession {
         this.sendResponse(response);
     }
     protected setVariableRequest(response: DebugProtocol.SetVariableResponse, args: DebugProtocol.SetVariableArguments) {
-        let variable = this._variableHandles.get(args.variablesReference).variables.find(v => v.ChildName === args.name);
+        const variable = this._variableHandles.get(args.variablesReference)!.variables.find(v => v.ChildName === args.name);
         if (!variable) {
             return this.sendErrorResponse(response, 2000, 'Variable reference not found');
         }
-        this.pythonProcess.ExecuteText(`${args.name} = ${args.value}`, PythonEvaluationResultReprKind.Normal, variable.Frame).then(result => {
-            return this.pythonProcess.ExecuteText(args.name, PythonEvaluationResultReprKind.Normal, variable.Frame).then(result => {
-                let variablesReference = 0;
+        this.pythonProcess!.ExecuteText(`${args.name} = ${args.value}`, PythonEvaluationResultReprKind.Normal, variable.Frame).then(() => {
+            return this.pythonProcess!.ExecuteText(args.name, PythonEvaluationResultReprKind.Normal, variable.Frame).then(result => {
                 // If this value can be expanded, then create a vars ref for user to expand it
                 if (result.IsExpandable) {
                     const parentVariable: IDebugVariable = {
                         variables: [result],
                         evaluateChildren: true
                     };
-                    variablesReference = this._variableHandles.create(parentVariable);
+                    this._variableHandles.create(parentVariable);
                 }
                 response.body = {
                     value: result.StringRepr

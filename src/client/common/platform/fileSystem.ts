@@ -2,16 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 
-import * as fs from 'fs';
-import * as fse from 'fs-extra';
+import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { IServiceContainer } from '../../ioc/types';
 import { IFileSystem, IPlatformService } from './types';
 
 @injectable()
 export class FileSystem implements IFileSystem {
-    constructor( @inject(IServiceContainer) private platformService: IPlatformService) { }
+    constructor( @inject(IPlatformService) private platformService: IPlatformService) { }
 
     public get directorySeparatorChar(): string {
         return path.sep;
@@ -19,7 +17,7 @@ export class FileSystem implements IFileSystem {
 
     public objectExistsAsync(filePath: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean> {
         return new Promise<boolean>(resolve => {
-            fse.stat(filePath, (error, stats) => {
+            fs.stat(filePath, (error, stats) => {
                 if (error) {
                     return resolve(false);
                 }
@@ -31,13 +29,22 @@ export class FileSystem implements IFileSystem {
     public fileExistsAsync(filePath: string): Promise<boolean> {
         return this.objectExistsAsync(filePath, (stats) => stats.isFile());
     }
+    /**
+     * Reads the contents of the file using utf8 and returns the string contents.
+     * @param {string} filePath
+     * @returns {Promise<string>}
+     * @memberof FileSystem
+     */
+    public readFile(filePath: string): Promise<string> {
+        return fs.readFile(filePath).then(buffer => buffer.toString());
+    }
 
     public directoryExistsAsync(filePath: string): Promise<boolean> {
         return this.objectExistsAsync(filePath, (stats) => stats.isDirectory());
     }
 
     public createDirectoryAsync(directoryPath: string): Promise<void> {
-        return fse.mkdirp(directoryPath);
+        return fs.mkdirp(directoryPath);
     }
 
     public getSubDirectoriesAsync(rootDir: string): Promise<string[]> {
@@ -46,7 +53,7 @@ export class FileSystem implements IFileSystem {
                 if (error) {
                     return resolve([]);
                 }
-                const subDirs = [];
+                const subDirs: string[] = [];
                 files.forEach(name => {
                     const fullPath = path.join(rootDir, name);
                     try {

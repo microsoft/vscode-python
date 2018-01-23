@@ -1,8 +1,9 @@
 import * as assert from 'assert';
 import * as path from 'path';
+import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
-import { IProcessService } from '../../client/common/process/types';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { clearPythonPathInWorkspaceFolder } from '../common';
@@ -10,7 +11,6 @@ import { closeActiveWindows, initialize, initializePython, initializeTest, IS_MU
 import { MockStatusBarItem } from '../mockClasses';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockInterpreterVersionProvider } from './mocks';
-import { MockProvider } from './mocks';
 
 const multirootPath = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc');
 const workspace3Uri = Uri.file(path.join(multirootPath, 'workspace3'));
@@ -54,11 +54,12 @@ suite('Multiroot Interpreters Display', () => {
         await window.showTextDocument(document);
 
         const statusBar = new MockStatusBarItem();
-        const provider = new MockProvider([]);
+        const provider = TypeMoq.Mock.ofType<IInterpreterService>();
+        provider.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
+        provider.setup(p => p.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         const displayName = `${path.basename(pythonPath)} [Environment]`;
         const displayNameProvider = new MockInterpreterVersionProvider(displayName);
-        const processService = ioc.serviceContainer.get<IProcessService>(IProcessService);
-        const display = new InterpreterDisplay(statusBar, provider, new VirtualEnvironmentManager([]), displayNameProvider, processService);
+        const display = new InterpreterDisplay(statusBar, provider.object, new VirtualEnvironmentManager([]), displayNameProvider);
         await display.refresh();
 
         assert.equal(statusBar.text, displayName, 'Incorrect display name');

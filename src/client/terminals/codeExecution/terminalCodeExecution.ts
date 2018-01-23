@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
+import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService } from '../../common/types';
@@ -18,15 +19,6 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     protected terminalTitle: string;
     private _terminalService: ITerminalService;
     private replActive?: Promise<boolean>;
-    private get terminalService(): ITerminalService {
-        if (!this._terminalService) {
-            this._terminalService = this.terminalServiceFactory.getTerminalService(this.terminalTitle);
-            this.disposables.push(this.terminalService.onDidCloseTerminal(() => {
-                this.replActive = undefined;
-            }));
-        }
-        return this._terminalService;
-    }
     constructor( @inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
@@ -37,13 +29,12 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     public async executeFile(file: Uri) {
         const pythonSettings = this.configurationService.getSettings(file);
 
-        this.setCwdForFileExecution(file);
+        await this.setCwdForFileExecution(file);
 
         const command = this.platformService.isWindows ? pythonSettings.pythonPath.replace(/\\/g, '/') : pythonSettings.pythonPath;
-        const filePath = file.fsPath.indexOf(' ') > 0 ? `"${file.fsPath}"` : file.fsPath;
         const launchArgs = pythonSettings.terminal.launchArgs;
 
-        this.terminalService.sendCommand(command, launchArgs.concat(filePath));
+        await this.getTerminalService(file).sendCommand(command, launchArgs.concat(file.fsPath.toCommandArgument()));
     }
 
     public async execute(code: string, resource?: Uri): Promise<void> {
@@ -51,18 +42,40 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             return;
         }
 
-        await this.ensureRepl();
-        this.terminalService.sendText(code);
+        await this.initializeRepl();
+        await this.getTerminalService(resource).sendText(code);
     }
+    public async initializeRepl(resource?: Uri) {
+        if (this.replActive && await this.replActive!) {
+            this._terminalService!.show();
+            return;
+        }
+        this.replActive = new Promise<boolean>(async resolve => {
+            const replCommandArgs = this.getReplCommandArgs(resource);
+            await this.getTerminalService(resource).sendCommand(replCommandArgs.command, replCommandArgs.args);
 
+            // Give python repl time to start before we start sending text.
+            setTimeout(() => resolve(true), 1000);
+        });
+
+        await this.replActive;
+    }
     public getReplCommandArgs(resource?: Uri): { command: string, args: string[] } {
         const pythonSettings = this.configurationService.getSettings(resource);
         const command = this.platformService.isWindows ? pythonSettings.pythonPath.replace(/\\/g, '/') : pythonSettings.pythonPath;
         const args = pythonSettings.terminal.launchArgs.slice();
         return { command, args };
     }
-
-    private setCwdForFileExecution(file: Uri) {
+    private getTerminalService(resource?: Uri): ITerminalService {
+        if (!this._terminalService) {
+            this._terminalService = this.terminalServiceFactory.getTerminalService(resource, this.terminalTitle);
+            this.disposables.push(this._terminalService.onDidCloseTerminal(() => {
+                this.replActive = undefined;
+            }));
+        }
+        return this._terminalService;
+    }
+    private async setCwdForFileExecution(file: Uri) {
         const pythonSettings = this.configurationService.getSettings(file);
         if (!pythonSettings.terminal.executeInFileDir) {
             return;
@@ -70,23 +83,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         const fileDirPath = path.dirname(file.fsPath);
         const wkspace = this.workspace.getWorkspaceFolder(file);
         if (wkspace && fileDirPath !== wkspace.uri.fsPath && fileDirPath.length > 0) {
-            const escapedPath = fileDirPath.indexOf(' ') > 0 ? `"${fileDirPath}"` : fileDirPath;
-            this.terminalService.sendText(`cd ${escapedPath}`);
+            await this.getTerminalService(file).sendText(`cd ${fileDirPath.toCommandArgument()}`);
         }
-    }
-
-    private async ensureRepl(resource?: Uri) {
-        if (this.replActive && await this.replActive!) {
-            return;
-        }
-        this.replActive = new Promise<boolean>(resolve => {
-            const replCommandArgs = this.getReplCommandArgs(resource);
-            this.terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
-
-            // Give python repl time to start before we start sending text.
-            setTimeout(() => resolve(true), 1000);
-        });
-
-        await this.replActive;
     }
 }

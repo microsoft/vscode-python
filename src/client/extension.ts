@@ -7,8 +7,8 @@ if ((Reflect as any).metadata === undefined) {
 }
 import { Container } from 'inversify';
 import * as os from 'os';
-import * as vscode from 'vscode';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
+import * as vscode from 'vscode';
 import { BannerService } from './banner';
 import { PythonSettings } from './common/configSettings';
 import * as settings from './common/configSettings';
@@ -19,15 +19,14 @@ import { PythonInstaller } from './common/installer/pythonInstallation';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
-import { IProcessService, IPythonExecutionFactory } from './common/process/types';
+import { IProcessService } from './common/process/types';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { SimpleConfigurationProvider } from './debugger';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import { InterpreterManager } from './interpreter';
 import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
-import { ICondaLocatorService, IInterpreterVersionService } from './interpreter/contracts';
+import { ICondaService, IInterpreterService, IInterpreterVersionService } from './interpreter/contracts';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
@@ -95,10 +94,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
+    // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated, serviceContainer);
 
     sortImports.activate(context, standardOutputChannel, serviceContainer);
-    const interpreterManager = new InterpreterManager(serviceContainer);
+    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
 
     const pythonInstaller = new PythonInstaller(serviceContainer);
     await pythonInstaller.checkPythonInstallation(PythonSettings.getInstance());
@@ -108,7 +108,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
-    context.subscriptions.push(interpreterManager);
+
     const processService = serviceContainer.get<IProcessService>(IProcessService);
     const interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
     context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService, processService));
@@ -117,7 +117,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const jediFactory = new JediFactory(context.asAbsolutePath('.'), serviceContainer);
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
-    context.subscriptions.push(new ReplProvider(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)));
+    context.subscriptions.push(new ReplProvider(serviceContainer));
 
     // Enable indentAction
     // tslint:disable-next-line:no-non-null-assertion
@@ -205,7 +205,7 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
     try {
         await activatedPromise;
         const duration = stopWatch.elapsedTime;
-        const condaLocator = serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
         const condaVersion = await condaLocator.getCondaVersion().catch(() => undefined);
         const props = condaVersion ? { condaVersion } : undefined;
         sendTelemetryEvent(EDITOR_LOAD, duration, props);

@@ -1,9 +1,8 @@
 import * as path from 'path';
 import { commands, ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri, window, workspace } from 'vscode';
-import { InterpreterManager } from '../';
 import * as settings from '../../common/configSettings';
 import { IProcessService } from '../../common/process/types';
-import { IInterpreterVersionService, PythonInterpreter, WorkspacePythonPath } from '../contracts';
+import { IInterpreterService, IInterpreterVersionService, PythonInterpreter, WorkspacePythonPath } from '../contracts';
 import { ShebangCodeLensProvider } from '../display/shebangCodeLensProvider';
 import { PythonPathUpdaterService } from './pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './pythonPathUpdaterServiceFactory';
@@ -16,7 +15,7 @@ interface PythonPathQuickPickItem extends QuickPickItem {
 export class SetInterpreterProvider implements Disposable {
     private disposables: Disposable[] = [];
     private pythonPathUpdaterService: PythonPathUpdaterService;
-    constructor(private interpreterManager: InterpreterManager,
+    constructor(private interpreterManager: IInterpreterService,
         interpreterVersionService: IInterpreterVersionService,
         private processService: IProcessService) {
         this.disposables.push(commands.registerCommand('python.setInterpreter', this.setInterpreter.bind(this)));
