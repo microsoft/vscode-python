@@ -47,12 +47,13 @@ suite('Linting - Pylintrc search', () => {
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the module tree.`);
     });
     test('.pylintrc up the module tree', async () => {
+        // Don't use path.join since it will use / on Travis and Mac
         const windowsPath = 'c:\\user\\a\\b\\c\\d';
-        const windowsFile = path.join(windowsPath, 'file.py');
-        const module1 = path.join(windowsPath, '__init__.py');
-        const module2 = path.join('c:\\user\\a\\b\\c', '__init__.py');
-        const module3 = path.join('c:\\user\\a\\b', '__init__.py');
-        const rc = path.join('c:\\user\\a\\b', dotPylintrc);
+        const windowsFile = `${windowsPath}\\file.py`;
+        const module1 = `${windowsPath}\\__init__.py`;
+        const module2 = 'c:\\user\\a\\b\\c\\__init__.py';
+        const module3 = 'c:\\user\\a\\b\\__init__.py';
+        const rc = `c:\\user\\a\\b\\${dotPylintrc}`;
 
         fileSystem.setup(x => x.fileExistsAsync(module1)).returns(() => Promise.resolve(true));
         fileSystem.setup(x => x.fileExistsAsync(module2)).returns(() => Promise.resolve(true));
