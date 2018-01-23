@@ -14,7 +14,7 @@ export abstract class BaseActivationCommandProvider implements ITerminalActivati
     constructor(protected readonly serviceContainer: IServiceContainer) { }
 
     public abstract isShellSupported(targetShell: TerminalShellType): boolean;
-    public abstract getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string | string[] | undefined>;
+    public abstract getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string[] | undefined>;
 
     protected async findScriptFile(interpreter: PythonInterpreter, scriptFileNames: string[]): Promise<string | undefined> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);

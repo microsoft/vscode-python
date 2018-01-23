@@ -72,7 +72,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                             const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.bat');
                             fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
-                            const command = await bash.getActivationCommands({ path: pythonPath, version: '', type: InterpreterType.Unknown, envName: environmentName }, TerminalShellType.commandPrompt);
+                            const commands = await bash.getActivationCommands({ path: pythonPath, version: '', type: InterpreterType.Unknown, envName: environmentName }, TerminalShellType.commandPrompt);
 
                             // Ensure the script file is of the following form:
                             // source "<path to script file>" <environment name>
@@ -81,7 +81,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                             const envName = environmentName ? environmentName! : '';
                             const quotedScriptFile = pathToScriptFile.indexOf(' ') > 0 ? `"${pathToScriptFile}"` : pathToScriptFile;
-                            expect(command).to.be.equal(`${quotedScriptFile} ${envName}`.trim(), 'Invalid command');
+                            expect(commands).to.be.deep.equal([`${quotedScriptFile} ${envName}`.trim()], 'Invalid command');
                         });
 
                         test('Ensure batch files are supported by powershell (on windows)', async () => {
@@ -134,7 +134,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                             const envName = environmentName ? environmentName! : '';
                             const quotedScriptFile = pathToScriptFile.indexOf(' ') > 0 ? `"${pathToScriptFile}"` : pathToScriptFile;
-                            expect(command).to.be.equal(`powershell ${quotedScriptFile} ${envName}`.trim(), 'Invalid command');
+                            expect(command).to.be.deep.equal([`powershell ${quotedScriptFile} ${envName}`.trim()], 'Invalid command');
                         });
 
                         test('Ensure powershell files are supported by powershell', async () => {
@@ -147,7 +147,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                             const envName = environmentName ? environmentName! : '';
                             const quotedScriptFile = pathToScriptFile.indexOf(' ') > 0 ? `"${pathToScriptFile}"` : pathToScriptFile;
-                            expect(command).to.be.equal(`${quotedScriptFile} ${envName}`.trim(), 'Invalid command');
+                            expect(command).to.be.deep.equal([`${quotedScriptFile} ${envName}`.trim()], 'Invalid command');
                         });
                     });
                 });

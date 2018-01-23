@@ -19,7 +19,7 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
     public getTerminalService(resource?: Uri, title?: string): ITerminalService {
 
         const terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
-        const id = this.getTerminalId(resource, title);
+        const id = this.getTerminalId(terminalTitle, resource);
         if (!this.terminalServices.has(id)) {
             const terminalService = new TerminalService(this.serviceContainer, resource, terminalTitle);
             this.terminalServices.set(id, terminalService);
@@ -27,12 +27,11 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
 
         return this.terminalServices.get(id)!;
     }
-    private getTerminalId(resource?: Uri, title?: string): string {
-        const terminalTitle = title ? title! : '';
+    private getTerminalId(title: string, resource?: Uri): string {
         if (!resource) {
-            return terminalTitle;
+            return title;
         }
         const workspaceFolder = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getWorkspaceFolder(resource!);
-        return workspaceFolder ? `${terminalTitle}:${workspaceFolder.uri.fsPath}` : terminalTitle;
+        return workspaceFolder ? `${title}:${workspaceFolder.uri.fsPath}` : title;
     }
 }

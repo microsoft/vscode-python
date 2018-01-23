@@ -65,7 +65,7 @@ suite('Terminal Environment Activation (bash)', () => {
 
                                         const envName = environmentName ? environmentName! : '';
                                         const quotedScriptFile = pathToScriptFile.indexOf(' ') > 0 ? `"${pathToScriptFile}"` : pathToScriptFile;
-                                        expect(command).to.be.equal(`source ${quotedScriptFile} ${envName}`.trim(), 'Invalid command');
+                                        expect(command).to.be.deep.equal([`source ${quotedScriptFile} ${envName}`.trim()], 'Invalid command');
                                     } else {
                                         expect(command).to.be.equal(undefined, 'Command should be undefined');
                                     }

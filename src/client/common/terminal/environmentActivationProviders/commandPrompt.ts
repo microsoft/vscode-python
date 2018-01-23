@@ -17,7 +17,7 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
         return targetShell === TerminalShellType.commandPrompt ||
             targetShell === TerminalShellType.powershell;
     }
-    public async getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string | string[] | undefined> {
+    public async getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string[] | undefined> {
         // Dependending on the target shell, look for the preferred script file.
         const scriptsInOrderOfPreference = targetShell === TerminalShellType.commandPrompt ? ['activate.bat', 'activate.ps1'] : ['activate.ps1', 'activate.bat'];
         const scriptFile = await this.findScriptFile(interpreter, scriptsInOrderOfPreference);
@@ -29,11 +29,11 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
         const envName = interpreter.envName ? interpreter.envName! : '';
 
         if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.bat')) {
-            return `${quotedScriptFile} ${envName}`.trim();
+            return [`${quotedScriptFile} ${envName}`.trim()];
         } else if (targetShell === TerminalShellType.powershell && scriptFile.endsWith('activate.ps1')) {
-            return `${quotedScriptFile} ${envName}`.trim();
+            return [`${quotedScriptFile} ${envName}`.trim()];
         } else if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.ps1')) {
-            return `powershell ${quotedScriptFile} ${envName}`.trim();
+            return [`powershell ${quotedScriptFile} ${envName}`.trim()];
         } else {
             // This means we're in powershell and we have a .bat file.
             if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {

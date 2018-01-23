@@ -79,9 +79,7 @@ export class TerminalHelper implements ITerminalHelper {
 
         for (const provider of supportedProviders) {
             const activationCommands = await provider.getActivationCommands(interperterInfo, terminalShellType);
-            if (typeof activationCommands === 'string') {
-                return [activationCommands];
-            } else if (Array.isArray(activationCommands)) {
+            if (Array.isArray(activationCommands)) {
                 return activationCommands;
             }
         }
