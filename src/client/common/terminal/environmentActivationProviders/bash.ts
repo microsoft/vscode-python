@@ -32,13 +32,13 @@ export class Bash extends BaseActivationCommandProvider {
     private getScriptsInOrderOfPreference(targetShell: TerminalShellType): string[] {
         switch (targetShell) {
             case TerminalShellType.bash: {
-                return ['activate.sh', 'activate', 'activate.csh', 'activate.fish'];
+                return ['activate.sh', 'activate'];
             }
             case TerminalShellType.cshell: {
-                return ['activate.csh', 'activate.sh', 'activate', 'activate.fish'];
+                return ['activate.csh'];
             }
             case TerminalShellType.fish: {
-                return ['activate.fish', 'activate.sh', 'activate.csh', 'activate'];
+                return ['activate.fish'];
             }
             default: {
                 return [];

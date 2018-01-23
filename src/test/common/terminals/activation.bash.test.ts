@@ -31,7 +31,24 @@ suite('Terminal Environment Activation (bash)', () => {
                             });
 
                             EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
-                                const isScriptFileSupported = ['activate', 'activate.sh', 'activate.csh', 'activate.fish'].indexOf(scriptFileName) >= 0;
+                                let isScriptFileSupported = false;
+                                switch (shellType.value) {
+                                    case TerminalShellType.bash: {
+                                        isScriptFileSupported = ['activate', 'activate.sh'].indexOf(scriptFileName) >= 0;
+                                        break;
+                                    }
+                                    case TerminalShellType.fish: {
+                                        isScriptFileSupported = ['activate.fish'].indexOf(scriptFileName) >= 0;
+                                        break;
+                                    }
+                                    case TerminalShellType.cshell: {
+                                        isScriptFileSupported = ['activate.csh'].indexOf(scriptFileName) >= 0;
+                                        break;
+                                    }
+                                    default: {
+                                        isScriptFileSupported = false;
+                                    }
+                                }
                                 const titleTitle = isScriptFileSupported ? `Ensure bash Activation command returns activation command (Shell: ${shellType.name})` :
                                     `Ensure bash Activation command returns undefined (Shell: ${shellType.name})`;
 
