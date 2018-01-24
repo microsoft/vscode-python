@@ -6,6 +6,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
 import { TerminalServiceFactory } from '../../../client/common/terminal/factory';
+import { TerminalService } from '../../../client/common/terminal/service';
 import { ITerminalHelper, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -54,6 +55,8 @@ suite('Terminal Service Factory', () => {
 
     test('Ensure different instance of terminal service is returned when title is provided', () => {
         const defaultInstance = factory.getTerminalService();
+        expect(defaultInstance instanceof TerminalService).to.equal(true, 'Not an instance of Terminal service');
+
         const notSameAsDefaultInstance = factory.getTerminalService(undefined, 'New Title') === defaultInstance;
         expect(notSameAsDefaultInstance).to.not.equal(true, 'Instances are the same as default instance');
 
@@ -64,6 +67,22 @@ suite('Terminal Service Factory', () => {
         const differentInstance = factory.getTerminalService(undefined, 'Another New Title');
         const notTheSameInstance = differentInstance === instance;
         expect(notTheSameInstance).not.to.equal(true, 'Instances are the same');
+    });
+
+    test('Ensure different instance of terminal services are created', () => {
+        const instance1 = factory.createTerminalService();
+        expect(instance1 instanceof TerminalService).to.equal(true, 'Not an instance of Terminal service');
+
+        const notSameAsFirstInstance = factory.createTerminalService() === instance1;
+        expect(notSameAsFirstInstance).to.not.equal(true, 'Instances are the same');
+
+        const instance2 = factory.createTerminalService(Uri.file('a'), 'Title');
+        const notSameAsSecondInstance = instance1 === instance2;
+        expect(notSameAsSecondInstance).to.not.equal(true, 'Instances are the same');
+
+        const instance3 = factory.createTerminalService(Uri.file('a'), 'Title');
+        const notSameAsThirdInstance = instance2 === instance3;
+        expect(notSameAsThirdInstance).to.not.equal(true, 'Instances are the same');
     });
 
     test('Ensure same terminal is returned when using resources from the same workspace', () => {

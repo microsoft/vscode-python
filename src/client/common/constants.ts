@@ -28,6 +28,7 @@ export namespace Commands {
     export const Update_SparkLibrary = 'python.updateSparkLibrary';
     export const Build_Workspace_Symbols = 'python.buildWorkspaceSymbols';
     export const Start_REPL = 'python.startREPL';
+    export const Create_Terminal = 'python.createTerminal';
     export const Set_Linter = 'python.setLinter';
     export const Enable_Linter = 'python.enableLinting';
 }

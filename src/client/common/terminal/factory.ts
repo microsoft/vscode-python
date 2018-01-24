@@ -27,6 +27,10 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
 
         return this.terminalServices.get(id)!;
     }
+    public createTerminalService(resource?: Uri, title?: string): ITerminalService {
+        const terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
+        return new TerminalService(this.serviceContainer, resource, terminalTitle);
+    }
     private getTerminalId(title: string, resource?: Uri): string {
         if (!resource) {
             return title;

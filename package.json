@@ -107,6 +107,11 @@
 				"category": "Python"
 			},
 			{
+				"command": "python.createTerminal",
+				"title": "%python.command.python.createTerminal.title%",
+				"category": "Python"
+			},
+			{
 				"command": "python.buildWorkspaceSymbols",
 				"title": "%python.command.python.buildWorkspaceSymbols.title%",
 				"category": "Python"
