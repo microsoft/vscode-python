@@ -1,5 +1,6 @@
 import * as assert from 'assert';
-import { AnacondaDisplayName, CondaInfo } from '../../client/interpreter/locators/services/conda';
+import { CondaInfo } from '../../client/interpreter/contracts';
+import { AnacondaDisplayName } from '../../client/interpreter/locators/services/conda';
 import { CondaHelper } from '../../client/interpreter/locators/services/condaHelper';
 import { initialize, initializeTest } from '../initialize';
 

@@ -2,19 +2,17 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { Disposable, StatusBarItem, Uri } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
-import { IProcessService } from '../../common/process/types';
 import * as utils from '../../common/utils';
-import { IInterpreterLocatorService, IInterpreterVersionService } from '../contracts';
+import { IInterpreterService, IInterpreterVersionService } from '../contracts';
 import { getActiveWorkspaceUri } from '../helpers';
 import { IVirtualEnvironmentManager } from '../virtualEnvs/types';
 
 // tslint:disable-next-line:completed-docs
 export class InterpreterDisplay implements Disposable {
     constructor(private statusBar: StatusBarItem,
-        private interpreterLocator: IInterpreterLocatorService,
+        private interpreterService: IInterpreterService,
         private virtualEnvMgr: IVirtualEnvironmentManager,
-        private versionProvider: IInterpreterVersionService,
-        private processService: IProcessService) {
+        private versionProvider: IInterpreterVersionService) {
 
         this.statusBar.command = 'python.setInterpreter';
     }
@@ -26,15 +24,12 @@ export class InterpreterDisplay implements Disposable {
         if (!wkspc) {
             return;
         }
-        const pythonPath = await this.getFullyQualifiedPathToInterpreter(PythonSettings.getInstance(wkspc.folderUri).pythonPath);
-        await this.updateDisplay(pythonPath, wkspc.folderUri);
+        await this.updateDisplay(wkspc.folderUri);
     }
-    private async getInterpreters(resource?: Uri) {
-        return this.interpreterLocator.getInterpreters(resource);
-    }
-    private async updateDisplay(pythonPath: string, resource?: Uri) {
-        const interpreters = await this.getInterpreters(resource);
-        const interpreter = interpreters.find(i => utils.arePathsSame(i.path, pythonPath));
+    private async updateDisplay(resource?: Uri) {
+        const interpreters = await this.interpreterService.getInterpreters(resource);
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const pythonPath = interpreter ? interpreter.path : PythonSettings.getInstance(resource).pythonPath;
 
         this.statusBar.color = '';
         this.statusBar.tooltip = pythonPath;
@@ -68,11 +63,5 @@ export class InterpreterDisplay implements Disposable {
         return this.virtualEnvMgr
             .detect(pythonPath)
             .then(env => env ? env.name : '');
-    }
-    private async getFullyQualifiedPathToInterpreter(pythonPath: string) {
-        return this.processService.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'])
-            .then(output => output.stdout.trim())
-            .then(value => value.length === 0 ? pythonPath : value)
-            .catch(() => pythonPath);
     }
 }

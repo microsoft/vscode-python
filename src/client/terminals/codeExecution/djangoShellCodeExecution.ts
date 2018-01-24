@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
+import '../../common/extensions';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService } from '../../common/types';
@@ -38,9 +39,8 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         const defaultWorkspace = Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders.length > 0 ? this.workspace.workspaceFolders[0].uri.fsPath : '';
         const workspaceRoot = workspaceUri ? workspaceUri.uri.fsPath : defaultWorkspace;
         const managePyPath = workspaceRoot.length === 0 ? 'manage.py' : path.join(workspaceRoot, 'manage.py');
-        const escapedManagePyPath = managePyPath.indexOf(' ') > 0 ? `"${managePyPath}"` : managePyPath;
 
-        args.push(escapedManagePyPath);
+        args.push(managePyPath.toCommandArgument());
         args.push('shell');
         return { command, args };
     }

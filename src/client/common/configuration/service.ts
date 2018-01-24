@@ -50,9 +50,9 @@ export class ConfigurationService implements IConfigurationService {
                     }
                 }
                 // Wait for settings to get refreshed.
-                await new Promise((resolve, reject) => setTimeout(resolve, 1000));
+                await new Promise((resolve, reject) => setTimeout(resolve, 250));
                 retries += 1;
-            } while (retries < 5);
+            } while (retries < 20);
         }
     }
 }

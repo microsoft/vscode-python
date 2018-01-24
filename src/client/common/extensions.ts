@@ -15,6 +15,11 @@ interface String {
      * @param {SplitLinesOptions=} splitOptions - Options used for splitting the string.
      */
     splitLines(splitOptions?: { trim: boolean, removeEmptyEntries: boolean }): string[];
+    /**
+     * Appropriately formats a string so it can be used as an argument for a command in a shell.
+     * E.g. if an argument contains a space, then it will be enclosed within double quotes.
+     */
+    toCommandArgument(): string;
 }
 
 /**
@@ -31,4 +36,16 @@ String.prototype.splitLines = function (this: string, splitOptions: { trim: bool
         lines = lines.filter(line => line.length > 0);
     }
     return lines;
+};
+
+/**
+ * Appropriately formats a string so it can be used as an argument for a command in a shell.
+ * E.g. if an argument contains a space, then it will be enclosed within double quotes.
+ * @param {String} value.
+ */
+String.prototype.toCommandArgument = function (this: string): string {
+    if (!this) {
+        return this;
+    }
+    return (this.indexOf(' ') > 0 && !this.startsWith('"') && !this.endsWith('"')) ? `"${this}"` : this.toString();
 };

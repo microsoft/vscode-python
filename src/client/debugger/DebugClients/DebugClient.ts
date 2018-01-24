@@ -1,11 +1,9 @@
-import {BaseDebugServer} from "../DebugServers/BaseDebugServer";
-import {LocalDebugServer} from "../DebugServers/LocalDebugServer";
-import {IPythonProcess, IPythonThread, IDebugServer} from "../Common/Contracts";
-import {DebugSession, OutputEvent} from "vscode-debugadapter";
-import * as path from "path";
-import * as child_process from "child_process";
-import {DjangoApp, LaunchRequestArguments, AttachRequestArguments} from "../Common/Contracts";
-import {EventEmitter} from 'events';
+// tslint:disable:quotemark ordered-imports no-any no-empty
+
+import { BaseDebugServer } from "../DebugServers/BaseDebugServer";
+import { IPythonProcess, IDebugServer } from "../Common/Contracts";
+import { DebugSession } from "vscode-debugadapter";
+import { EventEmitter } from 'events';
 
 export enum DebugType {
     Local,

@@ -6,8 +6,9 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 import { Container } from 'inversify';
-import { Disposable, Memento, OutputChannel, window } from 'vscode';
+import * as os from 'os';
 import * as vscode from 'vscode';
+import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import { BannerService } from './banner';
 import { PythonSettings } from './common/configSettings';
 import * as settings from './common/configSettings';
@@ -18,15 +19,14 @@ import { PythonInstaller } from './common/installer/pythonInstallation';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
-import { IProcessService, IPythonExecutionFactory } from './common/process/types';
+import { IProcessService } from './common/process/types';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { SimpleConfigurationProvider } from './debugger';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import { InterpreterManager } from './interpreter';
 import { InterpreterSelector } from './interpreter/configuration/interpreterSelector';
-import { ICondaLocatorService, IInterpreterVersionService } from './interpreter/contracts';
+import { ICondaService, IInterpreterService, IInterpreterVersionService } from './interpreter/contracts';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
@@ -34,7 +34,6 @@ import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer } from './ioc/types';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
-import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
 import { PythonDefinitionProvider } from './providers/definitionProvider';
@@ -94,11 +93,12 @@ export async function activate(context: vscode.ExtensionContext) {
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
+    const pythonSettings = settings.PythonSettings.getInstance();
     // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated, serviceContainer);
 
     sortImports.activate(context, standardOutputChannel, serviceContainer);
-    const interpreterManager = new InterpreterManager(serviceContainer);
+    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
 
     const pythonInstaller = new PythonInstaller(serviceContainer);
     await pythonInstaller.checkPythonInstallation(PythonSettings.getInstance());
@@ -108,93 +108,19 @@ export async function activate(context: vscode.ExtensionContext) {
 
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
-    context.subscriptions.push(interpreterManager);
 
-    const interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
     const processService = serviceContainer.get<IProcessService>(IProcessService);
-
+    const interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
     context.subscriptions.push(new InterpreterSelector(interpreterManager, interpreterVersionService, processService));
-    context.subscriptions.push(new LinterCommands(serviceContainer));
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
-
-    context.subscriptions.push(new ReplProvider(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)));
-
-    configureEditor(context, serviceContainer, unitTestOutChannel);
-
-    // tslint:disable-next-line:promise-function-async
-    const linterProvider = new LinterProvider(context, standardOutputChannel, (a, b) => Promise.resolve(false), serviceContainer);
-    context.subscriptions.push(linterProvider);
-
-    const jupyterExtInstalled = configureJupyter(linterProvider);
-    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
-    activationDeferred.resolve();
-
-    // tslint:disable-next-line:no-unused-expression
-    new BannerService(persistentStateFactory);
-
-    const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled);
-    deprecationMgr.initialize();
-    context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled));
-}
-
-function configureEditor(context: vscode.ExtensionContext, serviceContainer: ServiceContainer, unitTestOutChannel: OutputChannel) {
-    configureIndentActions();
-
-    const processService = serviceContainer.get<IProcessService>(IProcessService);
-    const pythonSettings = settings.PythonSettings.getInstance();
-
     const jediFactory = new JediFactory(context.asAbsolutePath('.'), serviceContainer);
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
-    context.subscriptions.push(jediFactory);
 
-    context.subscriptions.push(vscode.languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer)));
-    const definitionProvider = new PythonDefinitionProvider(jediFactory);
-    context.subscriptions.push(vscode.languages.registerDefinitionProvider(PYTHON, definitionProvider));
-    context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
-    context.subscriptions.push(vscode.languages.registerReferenceProvider(PYTHON, new PythonReferenceProvider(jediFactory)));
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(PYTHON, new PythonCompletionItemProvider(jediFactory, serviceContainer), '.'));
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, new ShebangCodeLensProvider(processService)));
+    context.subscriptions.push(new ReplProvider(serviceContainer));
 
-    const symbolProvider = new PythonSymbolProvider(jediFactory);
-    context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider(PYTHON, symbolProvider));
-    if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
-        context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(PYTHON, new PythonSignatureProvider(jediFactory), '(', ','));
-    }
-    if (pythonSettings.formatting.provider !== 'none') {
-        const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
-        context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
-        context.subscriptions.push(vscode.languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
-    }
-    tests.activate(context, unitTestOutChannel, symbolProvider, serviceContainer);
-
-    context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
-    context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
-}
-
-// tslint:disable-next-line:no-any
-function configureJupyter(linterProvider: LinterProvider): boolean {
-    const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
-    if (jupyterExtInstalled) {
-        if (jupyterExtInstalled.isActive) {
-            // tslint:disable-next-line:no-unsafe-any
-            jupyterExtInstalled.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
-            // tslint:disable-next-line:no-unsafe-any
-            linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
-        }
-
-        jupyterExtInstalled.activate().then(() => {
-            // tslint:disable-next-line:no-unsafe-any
-            jupyterExtInstalled.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
-            // tslint:disable-next-line:no-unsafe-any
-            linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
-        });
-        return true;
-    }
-    return false;
-}
-
-function configureIndentActions(): void {
+    // Enable indentAction
+    // tslint:disable-next-line:no-non-null-assertion
     vscode.languages.setLanguageConfiguration(PYTHON.language!, {
         onEnterRules: [
             {
@@ -213,6 +139,64 @@ function configureIndentActions(): void {
             }
         ]
     });
+
+    context.subscriptions.push(jediFactory);
+    context.subscriptions.push(vscode.languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer)));
+    const definitionProvider = new PythonDefinitionProvider(jediFactory);
+    context.subscriptions.push(vscode.languages.registerDefinitionProvider(PYTHON, definitionProvider));
+    context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
+    context.subscriptions.push(vscode.languages.registerReferenceProvider(PYTHON, new PythonReferenceProvider(jediFactory)));
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(PYTHON, new PythonCompletionItemProvider(jediFactory, serviceContainer), '.'));
+    context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, new ShebangCodeLensProvider(processService)));
+
+    const symbolProvider = new PythonSymbolProvider(jediFactory);
+    context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider(PYTHON, symbolProvider));
+    if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
+        context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(PYTHON, new PythonSignatureProvider(jediFactory), '(', ','));
+    }
+    if (pythonSettings.formatting.provider !== 'none') {
+        const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
+        context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
+        context.subscriptions.push(vscode.languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
+    }
+
+    // tslint:disable-next-line:promise-function-async
+    const linterProvider = new LinterProvider(context, standardOutputChannel, (a, b) => Promise.resolve(false), serviceContainer);
+    context.subscriptions.push(linterProvider);
+    const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
+    if (jupyterExtInstalled) {
+        if (jupyterExtInstalled.isActive) {
+            // tslint:disable-next-line:no-unsafe-any
+            jupyterExtInstalled.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
+            // tslint:disable-next-line:no-unsafe-any
+            linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
+        }
+
+        jupyterExtInstalled.activate().then(() => {
+            // tslint:disable-next-line:no-unsafe-any
+            jupyterExtInstalled.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
+            // tslint:disable-next-line:no-unsafe-any
+            linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
+        });
+    }
+    tests.activate(context, unitTestOutChannel, symbolProvider, serviceContainer);
+
+    context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
+
+    context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
+    // In case we have CR LF
+    const triggerCharacters: string[] = os.EOL.split('');
+    triggerCharacters.shift();
+
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
+    activationDeferred.resolve();
+
+    // tslint:disable-next-line:no-unused-expression
+    new BannerService(persistentStateFactory);
+
+    const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled);
+    deprecationMgr.initialize();
+    context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtInstalled));
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {
@@ -221,7 +205,7 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
     try {
         await activatedPromise;
         const duration = stopWatch.elapsedTime;
-        const condaLocator = serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
         const condaVersion = await condaLocator.getCondaVersion().catch(() => undefined);
         const props = condaVersion ? { condaVersion } : undefined;
         sendTelemetryEvent(EDITOR_LOAD, duration, props);

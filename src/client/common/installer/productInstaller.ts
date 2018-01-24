@@ -11,7 +11,7 @@ import { IApplicationShell } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IPlatformService } from '../platform/types';
 import { IProcessService, IPythonExecutionFactory } from '../process/types';
-import { ITerminalService } from '../terminal/types';
+import { ITerminalServiceFactory } from '../terminal/types';
 import { IConfigurationService, IInstaller, ILogger, InstallerResponse, IOutputChannel, ModuleNamePurpose, Product } from '../types';
 import { IModuleInstaller } from './types';
 
@@ -149,7 +149,7 @@ class CTagsInstaller extends BaseInstaller {
             this.outputChannel.appendLine('Option 3: Extract to any folder and define that path in the python.workspaceSymbols.ctagsPath setting of your user settings file (settings.json).');
             this.outputChannel.show();
         } else {
-            const terminalService = this.serviceContainer.get<ITerminalService>(ITerminalService);
+            const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService();
             const logger = this.serviceContainer.get<ILogger>(ILogger);
             terminalService.sendCommand(CTagsInsllationScript, [])
                 .catch(logger.logError.bind(logger, `Failed to install ctags. Script sent '${CTagsInsllationScript}'.`));
@@ -204,7 +204,7 @@ class LinterInstaller extends BaseInstaller {
         }
         const lm = this.serviceContainer.get<ILinterManager>(ILinterManager);
         if (response === disable) {
-            lm.enableLintingAsync(false);
+            await lm.enableLintingAsync(false);
         } else {
             lm.disableSessionLinting();
         }

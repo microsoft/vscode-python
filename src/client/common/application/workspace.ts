@@ -2,11 +2,14 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { CancellationToken, Event, FileSystemWatcher, GlobPattern, Uri, workspace, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
+import { CancellationToken, Event, FileSystemWatcher, GlobPattern, Uri, workspace, WorkspaceConfiguration, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { IWorkspaceService } from './types';
 
 @injectable()
 export class WorkspaceService implements IWorkspaceService {
+    public get onDidChangeConfiguration(): Event<void> {
+        return workspace.onDidChangeConfiguration;
+    }
     public get rootPath(): string | undefined {
         return workspace.rootPath;
     }
@@ -15,6 +18,9 @@ export class WorkspaceService implements IWorkspaceService {
     }
     public get onDidChangeWorkspaceFolders(): Event<WorkspaceFoldersChangeEvent> {
         return workspace.onDidChangeWorkspaceFolders;
+    }
+    public getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration {
+        return workspace.getConfiguration(section, resource);
     }
     public getWorkspaceFolder(uri: Uri): WorkspaceFolder | undefined {
         return workspace.getWorkspaceFolder(uri);

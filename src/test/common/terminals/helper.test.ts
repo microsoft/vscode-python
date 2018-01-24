@@ -3,31 +3,44 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Terminal as VSCodeTerminal, workspace } from 'vscode';
-import { ITerminalManager } from '../../../client/common/application/types';
+import { Disposable, WorkspaceConfiguration } from 'vscode';
+import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
 import { EnumEx } from '../../../client/common/enumUtils';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
-import { initialize, IS_MULTI_ROOT_TEST } from '../../initialize';
+import { IDisposableRegistry } from '../../../client/common/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Terminal Helper', () => {
-    let platformService: TypeMoq.IMock<IPlatformService>;
-    let terminalManager: TypeMoq.IMock<ITerminalManager>;
+suite('Terminal Service helpers', () => {
     let helper: ITerminalHelper;
-    suiteSetup(function () {
-        if (!IS_MULTI_ROOT_TEST) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-            return;
-        }
-        return initialize();
-    });
+    let terminalManager: TypeMoq.IMock<ITerminalManager>;
+    let platformService: TypeMoq.IMock<IPlatformService>;
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let disposables: Disposable[] = [];
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
+
     setup(() => {
-        platformService = TypeMoq.Mock.ofType<IPlatformService>();
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
-        helper = new TerminalHelper(platformService.object, terminalManager.object);
+        platformService = TypeMoq.Mock.ofType<IPlatformService>();
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        disposables = [];
+
+        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        serviceContainer.setup(c => c.get(ITerminalManager)).returns(() => terminalManager.object);
+        serviceContainer.setup(c => c.get(IPlatformService)).returns(() => platformService.object);
+        serviceContainer.setup(c => c.get(IDisposableRegistry)).returns(() => disposables);
+        serviceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspaceService.object);
+        serviceContainer.setup(c => c.get(IInterpreterService)).returns(() => interpreterService.object);
+
+        helper = new TerminalHelper(serviceContainer.object);
+    });
+    teardown(() => {
+        disposables.filter(item => !!item).forEach(item => item.dispose());
     });
 
     test('Test identification of Terminal Shells', async () => {
@@ -39,7 +52,7 @@ suite('Terminal Helper', () => {
         shellPathsAndIdentification.set('c:\\windows\\system32\\gitbash.exe', TerminalShellType.bash);
         shellPathsAndIdentification.set('/usr/bin/bash', TerminalShellType.bash);
         shellPathsAndIdentification.set('/usr/bin/zsh', TerminalShellType.bash);
-        shellPathsAndIdentification.set('/usr/bin/zsh', TerminalShellType.bash);
+        shellPathsAndIdentification.set('/usr/bin/ksh', TerminalShellType.bash);
 
         shellPathsAndIdentification.set('c:\\windows\\system32\\powershell.exe', TerminalShellType.powershell);
         shellPathsAndIdentification.set('/usr/microsoft/xxx/powershell/powershell', TerminalShellType.powershell);
@@ -50,34 +63,37 @@ suite('Terminal Helper', () => {
         shellPathsAndIdentification.set('c:\\windows\\system32\\shell.exe', TerminalShellType.other);
         shellPathsAndIdentification.set('/usr/bin/shell', TerminalShellType.other);
 
+        shellPathsAndIdentification.set('/usr/bin/csh', TerminalShellType.cshell);
+
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             expect(helper.identifyTerminalShell(shellPath)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
         });
     });
 
-    test('Ensure path for shell is correctly retrieved from settings (osx)', async () => {
-        const shellConfig = workspace.getConfiguration('terminal.integrated.shell');
+    async function ensurePathForShellIsCorrectlyRetrievedFromSettings(os: 'windows' | 'osx' | 'linux', expectedShellPat: string) {
+        const shellPath = 'abcd';
+        workspaceService.setup(w => w.getConfiguration(TypeMoq.It.isValue('terminal.integrated.shell'))).returns(() => {
+            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+            workspaceConfig.setup(c => c.get(os)).returns(() => shellPath);
+            return workspaceConfig.object;
+        });
 
-        platformService.setup(p => p.isWindows).returns(() => false);
-        platformService.setup(p => p.isLinux).returns(() => false);
-        platformService.setup(p => p.isMac).returns(() => true);
-        expect(helper.getTerminalShellPath()).to.equal(shellConfig.get<string>('osx'), 'Incorrect path for Osx');
+        platformService.setup(p => p.isWindows).returns(() => os === 'windows');
+        platformService.setup(p => p.isLinux).returns(() => os === 'linux');
+        platformService.setup(p => p.isMac).returns(() => os === 'osx');
+        expect(helper.getTerminalShellPath()).to.equal(shellPath, 'Incorrect path for Osx');
+    }
+    test('Ensure path for shell is correctly retrieved from settings (osx)', async () => {
+        await ensurePathForShellIsCorrectlyRetrievedFromSettings('osx', 'abcd');
     });
     test('Ensure path for shell is correctly retrieved from settings (linux)', async () => {
-        const shellConfig = workspace.getConfiguration('terminal.integrated.shell');
-
-        platformService.setup(p => p.isWindows).returns(() => false);
-        platformService.setup(p => p.isLinux).returns(() => true);
-        platformService.setup(p => p.isMac).returns(() => false);
-        expect(helper.getTerminalShellPath()).to.equal(shellConfig.get<string>('linux'), 'Incorrect path for Linux');
+        await ensurePathForShellIsCorrectlyRetrievedFromSettings('linux', 'abcd');
     });
     test('Ensure path for shell is correctly retrieved from settings (windows)', async () => {
-        const shellConfig = workspace.getConfiguration('terminal.integrated.shell');
-
-        platformService.setup(p => p.isWindows).returns(() => true);
-        platformService.setup(p => p.isLinux).returns(() => false);
-        platformService.setup(p => p.isMac).returns(() => false);
-        expect(helper.getTerminalShellPath()).to.equal(shellConfig.get<string>('windows'), 'Incorrect path for Windows');
+        await ensurePathForShellIsCorrectlyRetrievedFromSettings('windows', 'abcd');
+    });
+    test('Ensure path for shell is correctly retrieved from settings (unknown os)', async () => {
+        await ensurePathForShellIsCorrectlyRetrievedFromSettings('windows', '');
     });
 
     test('Ensure spaces in command is quoted', async () => {
@@ -117,19 +133,12 @@ suite('Terminal Helper', () => {
     });
 
     test('Ensure a terminal is created (without a title)', () => {
-        const expectedTerminal = { x: 'Dummy' };
-        // tslint:disable-next-line:no-any
-        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => expectedTerminal as any as VSCodeTerminal);
         helper.createTerminal();
         terminalManager.verify(t => t.createTerminal(TypeMoq.It.isValue({ name: undefined })), TypeMoq.Times.once());
     });
 
-    test('Ensure a terminal is created with the title provided', () => {
-        const expectedTerminal = { x: 'Dummy' };
-        // tslint:disable-next-line:no-any
-        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => expectedTerminal as any as VSCodeTerminal);
+    test('Ensure a terminal is created with the provided title', () => {
         helper.createTerminal('1234');
         terminalManager.verify(t => t.createTerminal(TypeMoq.It.isValue({ name: '1234' })), TypeMoq.Times.once());
     });
-
 });
