@@ -6,7 +6,6 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { Pylint } from '../../client/linters/pylint';
-import { initialize } from '../initialize';
 
 suite('Linting - Pylintrc search', () => {
     const basePath = '/user/a/b/c/d';
@@ -17,7 +16,6 @@ suite('Linting - Pylintrc search', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let platformService: TypeMoq.IMock<IPlatformService>;
 
-    suiteSetup(initialize);
     setup(() => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -48,19 +46,17 @@ suite('Linting - Pylintrc search', () => {
     });
     test('.pylintrc up the module tree', async () => {
         // Don't use path.join since it will use / on Travis and Mac
-        const windowsPath = 'c:\\user\\a\\b\\c\\d';
-        const windowsFile = `${windowsPath}\\file.py`;
-        const module1 = `${windowsPath}\\__init__.py`;
-        const module2 = 'c:\\user\\a\\b\\c\\__init__.py';
-        const module3 = 'c:\\user\\a\\b\\__init__.py';
-        const rc = `c:\\user\\a\\b\\${dotPylintrc}`;
+        const module1 = path.join('/user/a/b/c/d', '__init__.py');
+        const module2 = path.join('/user/a/b/c', '__init__.py');
+        const module3 = path.join('/user/a/b', '__init__.py');
+        const rc = path.join('/user/a/b/c', pylintrc);
 
         fileSystem.setup(x => x.fileExistsAsync(module1)).returns(() => Promise.resolve(true));
         fileSystem.setup(x => x.fileExistsAsync(module2)).returns(() => Promise.resolve(true));
         fileSystem.setup(x => x.fileExistsAsync(module3)).returns(() => Promise.resolve(true));
         fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
 
-        const result = await Pylint.hasConfigurationFile(fileSystem.object, windowsFile, platformService.object);
+        const result = await Pylint.hasConfigurationFile(fileSystem.object, file, platformService.object);
         expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the module tree.`);
     });
     test('.pylintrc up the ~ folder', async () => {
