@@ -69,7 +69,7 @@ suite('Terminal - Code Execution Manager', () => {
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
 
         await commandHandler!();
-        helper.verify(h => h.getFileToExecute(), TypeMoq.Times.once());
+        helper.verify(async h => await h.getFileToExecute(), TypeMoq.Times.once());
     });
 
     test('Ensure executeFileInterTerminal will use provided file', async () => {
@@ -96,8 +96,8 @@ suite('Terminal - Code Execution Manager', () => {
 
         const fileToExecute = Uri.file('x');
         await commandHandler!(fileToExecute);
-        helper.verify(h => h.getFileToExecute(), TypeMoq.Times.never());
-        executionService.verify(e => e.executeFile(TypeMoq.It.isValue(fileToExecute)), TypeMoq.Times.once());
+        helper.verify(async h => await h.getFileToExecute(), TypeMoq.Times.never());
+        executionService.verify(async e => await e.executeFile(TypeMoq.It.isValue(fileToExecute)), TypeMoq.Times.once());
     });
 
     test('Ensure executeFileInterTerminal will use active file', async () => {
@@ -119,12 +119,12 @@ suite('Terminal - Code Execution Manager', () => {
         const fileToExecute = Uri.file('x');
         const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
-        helper.setup(h => h.getFileToExecute).returns(() => () => Promise.resolve(fileToExecute));
+        helper.setup(async h => await h.getFileToExecute()).returns(() => Promise.resolve(fileToExecute));
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard'))).returns(() => executionService.object);
 
         await commandHandler!(fileToExecute);
-        executionService.verify(e => e.executeFile(TypeMoq.It.isValue(fileToExecute)), TypeMoq.Times.once());
+        executionService.verify(async e => await e.executeFile(TypeMoq.It.isValue(fileToExecute)), TypeMoq.Times.once());
     });
 
     async function testExecutionOfSelectionWithoutAnyActiveDocument(commandId: string, executionSericeId: string) {
@@ -150,7 +150,7 @@ suite('Terminal - Code Execution Manager', () => {
         documentManager.setup(d => d.activeTextEditor).returns(() => undefined);
 
         await commandHandler!();
-        executionService.verify(e => e.execute(TypeMoq.It.isAny()), TypeMoq.Times.never());
+        executionService.verify(async e => await e.execute(TypeMoq.It.isAny()), TypeMoq.Times.never());
     }
 
     test('Ensure executeSelectionInTerminal will do nothing if theres no active document', async () => {
@@ -186,7 +186,7 @@ suite('Terminal - Code Execution Manager', () => {
         documentManager.setup(d => d.activeTextEditor).returns(() => { return {} as any; });
 
         await commandHandler!();
-        executionService.verify(e => e.execute(TypeMoq.It.isAny()), TypeMoq.Times.never());
+        executionService.verify(async e => await e.execute(TypeMoq.It.isAny()), TypeMoq.Times.never());
     }
 
     test('Ensure executeSelectionInTerminal will do nothing if no text is selected', async () => {
@@ -228,7 +228,7 @@ suite('Terminal - Code Execution Manager', () => {
         documentManager.setup(d => d.activeTextEditor).returns(() => activeEditor.object);
 
         await commandHandler!();
-        executionService.verify(e => e.execute(TypeMoq.It.isValue(textSelected), TypeMoq.It.isValue(activeDocumentUri)), TypeMoq.Times.once());
+        executionService.verify(async e => await e.execute(TypeMoq.It.isValue(textSelected), TypeMoq.It.isValue(activeDocumentUri)), TypeMoq.Times.once());
     }
     test('Ensure executeSelectionInTerminal will normalize selected text and send it to the terminal', async () => {
         await testExecutionOfSelectionIsSentToTerminal(Commands.Exec_Selection_In_Terminal, 'standard');

@@ -5,7 +5,7 @@ import { ConfigurationTarget, QuickPickItem, Uri, window, workspace } from 'vsco
 import * as vscode from 'vscode';
 import { IFormatterHelper } from '../../formatters/types';
 import { IServiceContainer } from '../../ioc/types';
-import { ILinterHelper } from '../../linters/types';
+import { ILinterManager } from '../../linters/types';
 import { ITestsHelper } from '../../unittests/common/types';
 import { PythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
@@ -33,17 +33,6 @@ ProductNames.set(Product.pylint, 'pylint');
 ProductNames.set(Product.pytest, 'pytest');
 ProductNames.set(Product.yapf, 'yapf');
 ProductNames.set(Product.rope, 'rope');
-
-export const SettingToDisableProduct = new Map<Product, string>();
-SettingToDisableProduct.set(Product.flake8, 'linting.flake8Enabled');
-SettingToDisableProduct.set(Product.mypy, 'linting.mypyEnabled');
-SettingToDisableProduct.set(Product.nosetest, 'unitTest.nosetestsEnabled');
-SettingToDisableProduct.set(Product.pep8, 'linting.pep8Enabled');
-SettingToDisableProduct.set(Product.pylama, 'linting.pylamaEnabled');
-SettingToDisableProduct.set(Product.prospector, 'linting.prospectorEnabled');
-SettingToDisableProduct.set(Product.pydocstyle, 'linting.pydocstyleEnabled');
-SettingToDisableProduct.set(Product.pylint, 'linting.pylintEnabled');
-SettingToDisableProduct.set(Product.pytest, 'unitTest.pyTestEnabled');
 
 // tslint:disable-next-line:variable-name
 const ProductInstallationPrompt = new Map<Product, string>();
@@ -92,24 +81,13 @@ export class Installer implements IInstaller {
         const productTypeName = ProductTypeNames.get(productType)!;
         const productName = ProductNames.get(product)!;
 
-        if (!this.shouldDisplayPrompt(product)) {
-            const message = `${productTypeName} '${productName}' not installed.`;
-            this.outputChannel.appendLine(message);
-            return InstallerResponse.Ignore;
-        }
-
         const installOption = ProductInstallationPrompt.has(product) ? ProductInstallationPrompt.get(product)! : `Install ${productName}`;
-        const disableOption = `Disable ${productTypeName}`;
-        const dontShowAgain = 'Don\'t show this prompt again';
         const alternateFormatter = product === Product.autopep8 ? 'yapf' : 'autopep8';
         const useOtherFormatter = `Use '${alternateFormatter}' formatter`;
         const options: string[] = [];
         options.push(installOption);
         if (productType === ProductType.Formatter) {
             options.push(...[useOtherFormatter]);
-        }
-        if (SettingToDisableProduct.has(product)) {
-            options.push(...[disableOption, dontShowAgain]);
         }
         const item = await window.showErrorMessage(`${productTypeName} ${productName} is not installed`, ...options);
         if (!item) {
@@ -119,23 +97,9 @@ export class Installer implements IInstaller {
             case installOption: {
                 return this.install(product, resource);
             }
-            case disableOption: {
-                if (ProductTypes.has(product) && ProductTypes.get(product)! === ProductType.Linter) {
-                    return this.disableLinter(product, resource).then(() => InstallerResponse.Disabled);
-                } else {
-                    const settingToDisable = SettingToDisableProduct.get(product)!;
-                    return this.updateSetting(settingToDisable, false, resource).then(() => InstallerResponse.Disabled);
-                }
-            }
             case useOtherFormatter: {
                 return this.updateSetting('formatting.provider', alternateFormatter, resource)
                     .then(() => InstallerResponse.Installed);
-            }
-            case dontShowAgain: {
-                const pythonConfig = workspace.getConfiguration('python');
-                const features = pythonConfig.get('disablePromptForFeatures', [] as string[]);
-                features.push(productName);
-                return pythonConfig.update('disablePromptForFeatures', features, true).then(() => InstallerResponse.Ignore);
             }
             default: {
                 throw new Error('Invalid selection');
@@ -209,24 +173,6 @@ export class Installer implements IInstaller {
                 .then(() => true)
                 .catch(() => false);
         }
-    }
-    public async disableLinter(product: Product, resource?: Uri) {
-        if (resource && workspace.getWorkspaceFolder(resource)) {
-            const settingToDisable = SettingToDisableProduct.get(product)!;
-            const pythonConfig = workspace.getConfiguration('python', resource);
-            const isMultiroot = Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;
-            const configTarget = isMultiroot ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
-            return pythonConfig.update(settingToDisable, false, configTarget);
-        } else {
-            const pythonConfig = workspace.getConfiguration('python');
-            return pythonConfig.update('linting.enabledWithoutWorkspace', false, true);
-        }
-    }
-    private shouldDisplayPrompt(product: Product) {
-        const productName = ProductNames.get(product)!;
-        const pythonConfig = workspace.getConfiguration('python');
-        const disablePromptForFeatures = pythonConfig.get('disablePromptForFeatures', [] as string[]);
-        return disablePromptForFeatures.indexOf(productName) === -1;
     }
     private installCTags() {
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
@@ -302,9 +248,8 @@ export class Installer implements IInstaller {
             }
             case ProductType.RefactoringLibrary: return this.translateProductToModuleName(product, ModuleNamePurpose.run);
             case ProductType.Linter: {
-                const linterHelper = this.serviceContainer.get<ILinterHelper>(ILinterHelper);
-                const settingsPropNames = linterHelper.getSettingsPropertyNames(product);
-                return settings.linting[settingsPropNames.pathName] as string;
+                const linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
+                return linterManager.getLinterInfo(product).pathName(resource);
             }
             default: {
                 throw new Error(`Unrecognized Product '${product}'`);

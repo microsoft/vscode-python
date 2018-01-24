@@ -9,15 +9,18 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
+import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
 import { IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
-import { ICurrentProcess, IDisposableRegistry, IPathUtils, IsWindows } from '../../../client/common/types';
+import { IConfigurationService, ICurrentProcess, IDisposableRegistry, IPathUtils, IsWindows } from '../../../client/common/types';
 import { IS_WINDOWS } from '../../../client/common/utils';
 import { registerTypes as variablesRegisterTypes } from '../../../client/common/variables/serviceRegistry';
+import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
-import { clearPythonPathInWorkspaceFolder, updateSetting } from '../../common';
+import { IServiceContainer } from '../../../client/ioc/types';
+import { clearPythonPathInWorkspaceFolder } from '../../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
 use(chaiAsPromised);
@@ -29,25 +32,38 @@ const workspace4PyFile = Uri.file(path.join(workspace4Path.fsPath, 'one.py'));
 // tslint:disable-next-line:max-func-body-length
 suite('PythonExecutableService', () => {
     let cont: Container;
-    let serviceManager: ServiceManager;
+    let serviceContainer: IServiceContainer;
+    let configService: IConfigurationService;
+    let pythonExecFactory: IPythonExecutionFactory;
+
     suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
         await clearPythonPathInWorkspaceFolder(workspace4Path);
-        await updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
+
+        await (new ConfigurationService()).updateSettingAsync('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         await initialize();
     });
     setup(() => {
         cont = new Container();
-        serviceManager = new ServiceManager(cont);
+        serviceContainer = new ServiceContainer(cont);
+        const serviceManager = new ServiceManager(cont);
+
+        serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
         serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, []);
         serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
         serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
+        serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
+
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);
+
+        configService = serviceManager.get<IConfigurationService>(IConfigurationService);
+        pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+
         return initializeTest();
     });
     suiteTeardown(closeActiveWindows);
@@ -56,13 +72,13 @@ suite('PythonExecutableService', () => {
         cont.unload();
         await closeActiveWindows();
         await clearPythonPathInWorkspaceFolder(workspace4Path);
-        await updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
+        await configService.updateSettingAsync('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         await initializeTest();
     });
 
     test('Importing without a valid PYTHONPATH should fail', async () => {
-        await updateSetting('envFile', 'someInvalidFile.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
-        const pythonExecFactory = serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        await configService.updateSettingAsync('envFile', 'someInvalidFile.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
+        pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], { cwd: path.dirname(workspace4PyFile.fsPath), throwOnStdErr: true });
 
@@ -70,8 +86,7 @@ suite('PythonExecutableService', () => {
     });
 
     test('Importing with a valid PYTHONPATH from .env file should succeed', async () => {
-        await updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
-        const pythonExecFactory = serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        await configService.updateSettingAsync('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], { cwd: path.dirname(workspace4PyFile.fsPath), throwOnStdErr: true });
 
@@ -79,7 +94,6 @@ suite('PythonExecutableService', () => {
     });
 
     test('Known modules such as \'os\' and \'sys\' should be deemed \'installed\'', async () => {
-        const pythonExecFactory = serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
         const osModuleIsInstalled = pythonExecService.isModuleInstalled('os');
         const sysModuleIsInstalled = pythonExecService.isModuleInstalled('sys');
@@ -88,7 +102,6 @@ suite('PythonExecutableService', () => {
     });
 
     test('Unknown modules such as \'xyzabc123\' be deemed \'not installed\'', async () => {
-        const pythonExecFactory = serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
         const randomModuleName = `xyz123${new Date().getSeconds()}`;
         const randomModuleIsInstalled = pythonExecService.isModuleInstalled(randomModuleName);
@@ -103,7 +116,6 @@ suite('PythonExecutableService', () => {
                 resolve(out.trim());
             });
         });
-        const pythonExecFactory = serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
         const version = await pythonExecService.getVersion();
         expect(version).to.equal(expectedVersion, 'Versions are not the same');
@@ -116,7 +128,6 @@ suite('PythonExecutableService', () => {
                 resolve(stdout.trim());
             });
         });
-        const pythonExecFactory = serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
         const executablePath = await pythonExecService.getExecutablePath();
         expect(executablePath).to.equal(expectedExecutablePath, 'Executable paths are not the same');

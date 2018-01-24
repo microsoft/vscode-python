@@ -76,7 +76,9 @@
 		"onCommand:python.buildWorkspaceSymbols",
 		"onCommand:python.updateSparkLibrary",
 		"onCommand:python.startREPL",
-		"onCommand:python.goToPythonObject"
+		"onCommand:python.goToPythonObject",
+		"onCommand:python.setLinter",
+		"onCommand:python.enableLinting"
 	],
 	"main": "./out/client/extension",
 	"contributes": {
@@ -212,6 +214,16 @@
 			{
 				"command": "python.goToPythonObject",
 				"title": "%python.command.python.goToPythonObject.title%",
+				"category": "Python"
+			},
+			{
+				"command": "python.setLinter",
+				"title": "%python.command.python.setLinter.title%",
+				"category": "Python"
+			},
+			{
+				"command": "python.enableLinting",
+				"title": "%python.command.python.enableLinting.title%",
 				"category": "Python"
 			}
 		],
@@ -949,12 +961,6 @@
 					"description": "Whether to lint Python files.",
 					"scope": "resource"
 				},
-				"python.linting.enabledWithoutWorkspace": {
-					"type": "boolean",
-					"default": true,
-					"description": "Whether to lint Python files when no workspace is opened.",
-					"scope": "resource"
-				},
 				"python.linting.prospectorEnabled": {
 					"type": "boolean",
 					"default": false,
@@ -1001,6 +1007,12 @@
 					"type": "number",
 					"default": 100,
 					"description": "Controls the maximum number of problems produced by the server.",
+					"scope": "resource"
+				},
+				"python.linting.pylintUseMinimalCheckers": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to run Pylint with minimal set of rules.",
 					"scope": "resource"
 				},
 				"python.linting.pylintCategorySeverity.convention": {

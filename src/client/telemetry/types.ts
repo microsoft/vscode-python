@@ -1,3 +1,5 @@
+import { LinterId } from '../linters/types';
+
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -9,10 +11,13 @@ export type FormatTelemetry = {
     hasCustomArgs: boolean;
     formatSelection: boolean;
 };
+
+export type LinterTrigger = 'auto' | 'save';
+
 export type LintingTelemetry = {
-    tool: 'flake8' | 'mypy' | 'pep8' | 'prospector' | 'pydocstyle' | 'pylama' | 'pylint';
+    tool: LinterId;
     hasCustomArgs: boolean;
-    trigger: 'save' | 'auto';
+    trigger: LinterTrigger;
     executableSpecified: boolean;
 };
 export type PythonInterpreterTelemetry = {

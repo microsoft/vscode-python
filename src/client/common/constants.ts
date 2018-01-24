@@ -3,6 +3,7 @@ export const PythonLanguage = { language: 'python' };
 
 export namespace Commands {
     export const Set_Interpreter = 'python.setInterpreter';
+    export const Set_ShebangInterpreter = 'python.setShebangInterpreter';
     export const Exec_In_Terminal = 'python.execInTerminal';
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
@@ -27,6 +28,8 @@ export namespace Commands {
     export const Update_SparkLibrary = 'python.updateSparkLibrary';
     export const Build_Workspace_Symbols = 'python.buildWorkspaceSymbols';
     export const Start_REPL = 'python.startREPL';
+    export const Set_Linter = 'python.setLinter';
+    export const Enable_Linter = 'python.enableLinting';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';

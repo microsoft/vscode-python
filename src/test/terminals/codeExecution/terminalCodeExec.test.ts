@@ -95,7 +95,7 @@ suite('Terminal Code Execution', () => {
                 terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isValue(expectedTerminalTitle))).returns(() => terminalService.object);
             });
 
-            async function ensureTerminalIsCreatedUponInvokingInitializeRepl(isWindows: boolean, isOsx: boolean, isLinux: boolean) {
+            async function ensureTerminalIsCreatedUponInvokingInitializeRepl(isWindows: boolean, isOsx: boolean, isLinux: boolean): Promise<void> {
                 platform.setup(p => p.isWindows).returns(() => isWindows);
                 platform.setup(p => p.isMac).returns(() => isOsx);
                 platform.setup(p => p.isLinux).returns(() => isLinux);
@@ -124,7 +124,7 @@ suite('Terminal Code Execution', () => {
                 terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => terminalService.object);
             });
 
-            async function ensureWeSetCurrentDirectoryBeforeExecutingAFile(isWindows: boolean) {
+            async function ensureWeSetCurrentDirectoryBeforeExecutingAFile(isWindows: boolean): Promise<void> {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file', 'one.py'));
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
@@ -135,7 +135,7 @@ suite('Terminal Code Execution', () => {
 
                 await executor.executeFile(file);
 
-                terminalService.verify(t => t.sendText(TypeMoq.It.isValue(`cd ${path.dirname(file.path)}`)), TypeMoq.Times.once());
+                terminalService.verify(async t => await t.sendText(TypeMoq.It.isValue(`cd ${path.dirname(file.fsPath)}`)), TypeMoq.Times.once());
             }
             test('Ensure we set current directory before executing file (non windows)', async () => {
                 await ensureWeSetCurrentDirectoryBeforeExecutingAFile(false);
@@ -144,7 +144,7 @@ suite('Terminal Code Execution', () => {
                 await ensureWeSetCurrentDirectoryBeforeExecutingAFile(true);
             });
 
-            async function ensureWeWetCurrentDirectoryAndQuoteBeforeExecutingFile(isWindows: boolean) {
+            async function ensureWeWetCurrentDirectoryAndQuoteBeforeExecutingFile(isWindows: boolean): Promise<void> {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
@@ -154,7 +154,7 @@ suite('Terminal Code Execution', () => {
                 terminalSettings.setup(t => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
-                terminalService.verify(t => t.sendText(TypeMoq.It.isValue(`cd "${path.dirname(file.path)}"`)), TypeMoq.Times.once());
+                terminalService.verify(async t => await t.sendText(TypeMoq.It.isValue(`cd "${path.dirname(file.fsPath)}"`)), TypeMoq.Times.once());
             }
 
             test('Ensure we set current directory (and quote it when containing spaces) before executing file (non windows)', async () => {
@@ -165,7 +165,7 @@ suite('Terminal Code Execution', () => {
                 await ensureWeWetCurrentDirectoryAndQuoteBeforeExecutingFile(true);
             });
 
-            async function ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(isWindows: boolean) {
+            async function ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(isWindows: boolean): Promise<void> {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
@@ -176,7 +176,7 @@ suite('Terminal Code Execution', () => {
 
                 await executor.executeFile(file);
 
-                terminalService.verify(t => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+                terminalService.verify(async t => await t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
             }
             test('Ensure we do not set current directory before executing file if in the same directory (non windows)', async () => {
                 await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(false);
@@ -185,7 +185,7 @@ suite('Terminal Code Execution', () => {
                 await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(true);
             });
 
-            async function ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(isWindows: boolean) {
+            async function ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(isWindows: boolean): Promise<void> {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
@@ -195,7 +195,7 @@ suite('Terminal Code Execution', () => {
 
                 await executor.executeFile(file);
 
-                terminalService.verify(t => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+                terminalService.verify(async t => await t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
             }
             test('Ensure we do not set current directory before executing file if file is not in a workspace (non windows)', async () => {
                 await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(false);
@@ -204,7 +204,7 @@ suite('Terminal Code Execution', () => {
                 await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(true);
             });
 
-            async function testFileExecution(isWindows: boolean, pythonPath: string, terminalArgs: string[], file: Uri) {
+            async function testFileExecution(isWindows: boolean, pythonPath: string, terminalArgs: string[], file: Uri): Promise<void> {
                 platform.setup(p => p.isWindows).returns(() => isWindows);
                 settings.setup(s => s.pythonPath).returns(() => pythonPath);
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
@@ -214,7 +214,7 @@ suite('Terminal Code Execution', () => {
                 await executor.executeFile(file);
                 const expectedPythonPath = isWindows ? pythonPath.replace(/\\/g, '/') : pythonPath;
                 const expectedArgs = terminalArgs.concat(file.fsPath.indexOf(' ') > 0 ? `"${file.fsPath}"` : file.fsPath);
-                terminalService.verify(t => t.sendCommand(TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
+                terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
             }
 
             test('Ensure python file execution script is sent to terminal on windows', async () => {
@@ -249,35 +249,35 @@ suite('Terminal Code Execution', () => {
                 expect(replCommandArgs.args).to.be.deep.equal(expectedTerminalArgs, 'Incorrect arguments');
             }
 
-            test('Ensure fully qualified python path is escaped when building repl args on Windows', async () => {
+            test('Ensure fully qualified python path is escaped when building repl args on Windows', () => {
                 const pythonPath = 'c:\\program files\\python\\python.exe';
                 const terminalArgs = ['-a', 'b', 'c'];
 
                 testReplCommandArguments(true, pythonPath, 'c:/program files/python/python.exe', terminalArgs);
             });
 
-            test('Ensure fully qualified python path is returned as is, when building repl args on Windows', async () => {
+            test('Ensure fully qualified python path is returned as is, when building repl args on Windows', () => {
                 const pythonPath = 'c:/program files/python/python.exe';
                 const terminalArgs = ['-a', 'b', 'c'];
 
                 testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs);
             });
 
-            test('Ensure python path is returned as is, when building repl args on Windows', async () => {
+            test('Ensure python path is returned as is, when building repl args on Windows', () => {
                 const pythonPath = 'python';
                 const terminalArgs = ['-a', 'b', 'c'];
 
                 testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs);
             });
 
-            test('Ensure fully qualified python path is returned as is, on non Windows', async () => {
+            test('Ensure fully qualified python path is returned as is, on non Windows', () => {
                 const pythonPath = 'usr/bin/python';
                 const terminalArgs = ['-a', 'b', 'c'];
 
                 testReplCommandArguments(false, pythonPath, pythonPath, terminalArgs);
             });
 
-            test('Ensure python path is returned as is, on non Windows', async () => {
+            test('Ensure python path is returned as is, on non Windows', () => {
                 const pythonPath = 'python';
                 const terminalArgs = ['-a', 'b', 'c'];
 
@@ -290,8 +290,8 @@ suite('Terminal Code Execution', () => {
                 // tslint:disable-next-line:no-any
                 await executor.execute(undefined as any as string);
 
-                terminalService.verify(t => t.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
-                terminalService.verify(t => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+                terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+                terminalService.verify(async t => await t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
             });
 
             test('Ensure repl is initialized once before sending text to the repl', async () => {
@@ -307,7 +307,7 @@ suite('Terminal Code Execution', () => {
                 await executor.execute('cmd3');
 
                 const expectedTerminalArgs = isDjangoRepl ? terminalArgs.concat(['manage.py', 'shell']) : terminalArgs;
-                terminalService.verify(t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.once());
+                terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.once());
             });
 
             test('Ensure repl is re-initialized when temrinal is closed', async () => {
@@ -333,15 +333,15 @@ suite('Terminal Code Execution', () => {
                 const expectedTerminalArgs = isDjangoRepl ? terminalArgs.concat(['manage.py', 'shell']) : terminalArgs;
 
                 expect(closeTerminalCallback).not.to.be.an('undefined', 'Callback not initialized');
-                terminalService.verify(t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.once());
+                terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.once());
 
                 closeTerminalCallback!.call(terminalService.object);
                 await executor.execute('cmd4');
-                terminalService.verify(t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.exactly(2));
+                terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.exactly(2));
 
                 closeTerminalCallback!.call(terminalService.object);
                 await executor.execute('cmd5');
-                terminalService.verify(t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.exactly(3));
+                terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.exactly(3));
             });
 
             test('Ensure code is sent to terminal', async () => {
@@ -352,10 +352,10 @@ suite('Terminal Code Execution', () => {
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
 
                 await executor.execute('cmd1');
-                terminalService.verify(t => t.sendText('cmd1'), TypeMoq.Times.once());
+                terminalService.verify(async t => await t.sendText('cmd1'), TypeMoq.Times.once());
 
                 await executor.execute('cmd2');
-                terminalService.verify(t => t.sendText('cmd2'), TypeMoq.Times.once());
+                terminalService.verify(async t => await t.sendText('cmd2'), TypeMoq.Times.once());
             });
         });
     });

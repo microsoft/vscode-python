@@ -4,7 +4,7 @@ import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Uri } from 'vscode';
+import { ConfigurationTarget, Uri } from 'vscode';
 import {
     IAutoCompeteSettings,
     IFormattingSettings,
@@ -61,12 +61,9 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     }
     // tslint:disable-next-line:function-name
     public static getInstance(resource?: Uri): PythonSettings {
-        const workspaceFolder = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
-        let workspaceFolderUri: Uri | undefined = workspaceFolder ? workspaceFolder.uri : undefined;
-        if (!workspaceFolderUri && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
-            workspaceFolderUri = vscode.workspace.workspaceFolders[0].uri;
-        }
+        const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource).uri;
         const workspaceFolderKey = workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+
         if (!PythonSettings.pythonSettings.has(workspaceFolderKey)) {
             const settings = new PythonSettings(workspaceFolderUri);
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
@@ -74,6 +71,19 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         // tslint:disable-next-line:no-non-null-assertion
         return PythonSettings.pythonSettings.get(workspaceFolderKey)!;
     }
+
+    public static getSettingsUriAndTarget(resource?: Uri): { uri: Uri | undefined, target: ConfigurationTarget } {
+        const workspaceFolder = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
+        let workspaceFolderUri: Uri | undefined = workspaceFolder ? workspaceFolder.uri : undefined;
+
+        if (!workspaceFolderUri && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
+            workspaceFolderUri = vscode.workspace.workspaceFolders[0].uri;
+        }
+
+        const target = workspaceFolderUri ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Global;
+        return { uri: workspaceFolderUri, target };
+    }
+
     // tslint:disable-next-line:function-name
     public static dispose() {
         if (!isTestExecution()) {
@@ -138,7 +148,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         // Support for travis.
         this.linting = this.linting ? this.linting : {
             enabled: false,
-            enabledWithoutWorkspace: false,
             ignorePatterns: [],
             flake8Args: [], flake8Enabled: false, flake8Path: 'flake',
             lintOnSave: false, maxNumberOfProblems: 100,
@@ -167,7 +176,8 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             mypyCategorySeverity: {
                 error: vscode.DiagnosticSeverity.Error,
                 note: vscode.DiagnosticSeverity.Hint
-            }
+            },
+            pylintUseMinimalCheckers: false
         };
         this.linting.pylintPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylintPath), workspaceRoot);
         this.linting.flake8Path = getAbsolutePath(systemVariables.resolveAny(this.linting.flake8Path), workspaceRoot);

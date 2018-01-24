@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { DiagnosticSeverity, Uri } from 'vscode';
+import { ConfigurationTarget, DiagnosticSeverity, Uri } from 'vscode';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
@@ -73,7 +73,6 @@ export interface IInstaller {
     promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse>;
     install(product: Product, resource?: Uri): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined>;
-    disableLinter(product: Product, resource?: Uri): Promise<void>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
@@ -147,7 +146,6 @@ export interface IMypyCategorySeverity {
 }
 export interface ILintingSettings {
     enabled: boolean;
-    enabledWithoutWorkspace: boolean;
     ignorePatterns: string[];
     prospectorEnabled: boolean;
     prospectorArgs: string[];
@@ -176,6 +174,7 @@ export interface ILintingSettings {
     mypyEnabled: boolean;
     mypyArgs: string[];
     mypyPath: string;
+    pylintUseMinimalCheckers: boolean;
 }
 export interface IFormattingSettings {
     provider: string;
@@ -206,4 +205,6 @@ export const IConfigurationService = Symbol('IConfigurationService');
 
 export interface IConfigurationService {
     getSettings(resource?: Uri): IPythonSettings;
+    isTestExecution(): boolean;
+    updateSettingAsync(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
 }

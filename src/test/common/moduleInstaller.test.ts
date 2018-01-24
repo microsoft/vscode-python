@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
+import { ConfigurationService } from '../../client/common/configuration/service';
 import { CondaInstaller } from '../../client/common/installer/condaInstaller';
 import { Installer } from '../../client/common/installer/installer';
 import { PipInstaller } from '../../client/common/installer/pipInstaller';
@@ -16,9 +17,9 @@ import { Architecture, IFileSystem, IPlatformService } from '../../client/common
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../client/common/terminal/types';
-import { ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows } from '../../client/common/types';
+import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows } from '../../client/common/types';
 import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
-import { rootWorkspaceUri, updateSetting } from '../common';
+import { rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -30,12 +31,13 @@ suite('Module Installer', () => {
     let mockTerminalService: TypeMoq.IMock<ITerminalService>;
     let condaService: TypeMoq.IMock<ICondaService>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
+
     const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
     suiteSetup(initializeTest);
     setup(async () => {
+        initializeDI();
         await initializeTest();
         await resetSettings();
-        initializeDI();
     });
     suiteTeardown(async () => {
         await closeActiveWindows();
@@ -72,13 +74,14 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
         ioc.serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
         ioc.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
+        ioc.serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
 
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
     }
-    async function resetSettings() {
-        await updateSetting('linting.enabledWithoutWorkspace', true, undefined, ConfigurationTarget.Global);
-        await updateSetting('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
+    async function resetSettings(): Promise<void> {
+        const configService = ioc.serviceManager.get<IConfigurationService>(IConfigurationService);
+        await configService.updateSettingAsync('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
     }
     async function getCurrentPythonPath(): Promise<string> {
         const pythonPath = PythonSettings.getInstance(workspaceUri).pythonPath;
@@ -172,7 +175,7 @@ suite('Module Installer', () => {
 
         let argsSent: string[] = [];
         mockTerminalService
-            .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+            .setup(async t => await t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
             .returns((cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
         await pipInstaller.installModule(moduleName);
 

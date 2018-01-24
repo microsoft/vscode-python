@@ -9,7 +9,7 @@ import { TerminalManager } from './application/terminalManager';
 import { IApplicationShell, ICommandManager, IDocumentManager, ITerminalManager, IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { ConfigurationService } from './configuration/service';
-import { Installer } from './installer/installer';
+import { ProductInstaller } from './installer/productInstaller';
 import { Logger } from './logger';
 import { PersistentStateFactory } from './persistentState';
 import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
@@ -32,7 +32,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
-    serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
+    serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);

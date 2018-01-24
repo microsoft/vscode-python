@@ -1,25 +1,25 @@
 import * as path from 'path';
 import { commands, ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri, window, workspace } from 'vscode';
 import * as settings from '../../common/configSettings';
+import { Commands } from '../../common/constants';
 import { IProcessService } from '../../common/process/types';
 import { IInterpreterService, IInterpreterVersionService, PythonInterpreter, WorkspacePythonPath } from '../contracts';
 import { ShebangCodeLensProvider } from '../display/shebangCodeLensProvider';
 import { PythonPathUpdaterService } from './pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './pythonPathUpdaterServiceFactory';
 
-// tslint:disable-next-line:interface-name
-interface PythonPathQuickPickItem extends QuickPickItem {
+interface IInterpreterQuickPickItem extends QuickPickItem {
     path: string;
 }
 
-export class SetInterpreterProvider implements Disposable {
+export class InterpreterSelector implements Disposable {
     private disposables: Disposable[] = [];
     private pythonPathUpdaterService: PythonPathUpdaterService;
     constructor(private interpreterManager: IInterpreterService,
         interpreterVersionService: IInterpreterVersionService,
         private processService: IProcessService) {
-        this.disposables.push(commands.registerCommand('python.setInterpreter', this.setInterpreter.bind(this)));
-        this.disposables.push(commands.registerCommand('python.setShebangInterpreter', this.setShebangInterpreter.bind(this)));
+        this.disposables.push(commands.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this)));
+        this.disposables.push(commands.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this)));
         this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), interpreterVersionService);
     }
     public dispose() {
@@ -38,7 +38,7 @@ export class SetInterpreterProvider implements Disposable {
         const workspaceFolder = await (window as any).showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
         return workspaceFolder ? { folderUri: workspaceFolder.uri, configTarget: ConfigurationTarget.WorkspaceFolder } : undefined;
     }
-    private async suggestionToQuickPickItem(suggestion: PythonInterpreter, workspaceUri?: Uri): Promise<PythonPathQuickPickItem> {
+    private async suggestionToQuickPickItem(suggestion: PythonInterpreter, workspaceUri?: Uri): Promise<IInterpreterQuickPickItem> {
         let detail = suggestion.path;
         if (workspaceUri && suggestion.path.startsWith(workspaceUri.fsPath)) {
             detail = `.${path.sep}${path.relative(workspaceUri.fsPath, suggestion.path)}`;
