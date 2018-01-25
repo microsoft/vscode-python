@@ -6,7 +6,6 @@ import * as vscode from 'vscode';
 import { ICommandManager, IWorkspaceService } from '../common/application/types';
 import { IConfigurationService } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { PythonSettings } from './../common/configSettings';
 import { AutoPep8Formatter } from './../formatters/autoPep8Formatter';
 import { BaseFormatter } from './../formatters/baseFormatter';
 import { DummyFormatter } from './../formatters/dummyFormatter';

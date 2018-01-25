@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { PythonSettings } from '../common/configSettings';
 import { IConfigurationService, IFormattingSettings } from '../common/types';
 import { ExecutionInfo, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';

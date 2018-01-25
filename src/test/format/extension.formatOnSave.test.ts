@@ -1,22 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { expect, use } from 'chai';
+import { expect } from 'chai';
 import * as fs from 'fs-extra';
-import { Container } from 'inversify';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
-import { IProcessService, IPythonExecutionFactory, IPythonToolExecutionService } from '../../client/common/process/types';
 import { IConfigurationService } from '../../client/common/types';
 import { PythonFormattingEditProvider } from '../../client/providers/formatProvider';
-import { closeActiveWindows, initialize } from '../initialize';
+import { closeActiveWindows } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const formatFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'formatting');
-const workspaceRootPath = path.join(__dirname, '..', '..', '..', 'src', 'test');
 const unformattedFile = path.join(formatFilesPath, 'fileToFormat.py');
 
 suite('Formating On Save', () => {

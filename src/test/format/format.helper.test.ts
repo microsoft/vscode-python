@@ -1,14 +1,10 @@
 import * as assert from 'assert';
-import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { PythonSettings } from '../../client/common/configSettings';
 import { EnumEx } from '../../client/common/enumUtils';
 import { IConfigurationService, IFormattingSettings, Product } from '../../client/common/types';
 import { FormatterHelper } from '../../client/formatters/helper';
 import { FormatterId } from '../../client/formatters/types';
-import { ServiceContainer } from '../../client/ioc/container';
-import { ServiceManager } from '../../client/ioc/serviceManager';
-import { IServiceContainer } from '../../client/ioc/types';
 import { initialize } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
