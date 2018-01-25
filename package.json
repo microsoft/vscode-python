@@ -2,7 +2,7 @@
 	"name": "python",
 	"displayName": "Python",
 	"description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-	"version": "2018.1.0-alpha",
+	"version": "2018.1.0-beta",
 	"publisher": "ms-python",
 	"author": {
 		"name": "Microsoft Corporation"
@@ -78,7 +78,8 @@
 		"onCommand:python.startREPL",
 		"onCommand:python.goToPythonObject",
 		"onCommand:python.setLinter",
-		"onCommand:python.enableLinting"
+		"onCommand:python.enableLinting",
+		"onCommand:python.createTerminal"
 	],
 	"main": "./out/client/extension",
 	"contributes": {
@@ -104,6 +105,11 @@
 			{
 				"command": "python.startREPL",
 				"title": "%python.command.python.startREPL.title%",
+				"category": "Python"
+			},
+			{
+				"command": "python.createTerminal",
+				"title": "%python.command.python.createTerminal.title%",
 				"category": "Python"
 			},
 			{
