@@ -18,7 +18,7 @@ export interface ITerminalService {
     readonly onDidCloseTerminal: Event<void>;
     sendCommand(command: string, args: string[]): Promise<void>;
     sendText(text: string): Promise<void>;
-    show(): void;
+    show(): Promise<void>;
 }
 
 export const ITerminalServiceFactory = Symbol('ITerminalServiceFactory');
@@ -33,6 +33,7 @@ export interface ITerminalServiceFactory {
      * @memberof ITerminalServiceFactory
      */
     getTerminalService(resource?: Uri, title?: string): ITerminalService;
+    createTerminalService(resource?: Uri, title?: string): ITerminalService;
 }
 
 export const ITerminalHelper = Symbol('ITerminalHelper');

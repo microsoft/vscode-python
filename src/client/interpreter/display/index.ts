@@ -21,10 +21,7 @@ export class InterpreterDisplay implements Disposable {
     }
     public async refresh() {
         const wkspc = getActiveWorkspaceUri();
-        if (!wkspc) {
-            return;
-        }
-        await this.updateDisplay(wkspc.folderUri);
+        await this.updateDisplay(wkspc ? wkspc.folderUri : undefined);
     }
     private async updateDisplay(resource?: Uri) {
         const interpreters = await this.interpreterService.getInterpreters(resource);

@@ -7,8 +7,8 @@ if ((Reflect as any).metadata === undefined) {
 }
 import { Container } from 'inversify';
 import * as os from 'os';
-import * as vscode from 'vscode';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
+import * as vscode from 'vscode';
 import { BannerService } from './banner';
 import { PythonSettings } from './common/configSettings';
 import * as settings from './common/configSettings';
@@ -47,6 +47,7 @@ import { ReplProvider } from './providers/replProvider';
 import { PythonSignatureProvider } from './providers/signatureProvider';
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { PythonSymbolProvider } from './providers/symbolProvider';
+import { TerminalProvider } from './providers/terminalProvider';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
 import * as sortImports from './sortImports';
 import { sendTelemetryEvent } from './telemetry';
@@ -118,6 +119,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
+    context.subscriptions.push(new TerminalProvider(serviceContainer));
 
     // Enable indentAction
     // tslint:disable-next-line:no-non-null-assertion

@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import { Disposable, Uri, workspace } from 'vscode';
 import { IPlatformService } from '../../common/platform/types';
-import { IDisposableRegistry, IsWindows } from '../../common/types';
+import { IDisposableRegistry } from '../../common/types';
 import { arePathsSame } from '../../common/utils';
 import { IServiceContainer } from '../../ioc/types';
 import {
@@ -27,7 +27,6 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
 
     constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.interpretersPerResource = new Map<string, Promise<PythonInterpreter[]>>();
-        this.disposables.push(workspace.onDidChangeConfiguration(this.onConfigChanged, this));
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
     }
@@ -41,9 +40,6 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
-    }
-    private onConfigChanged() {
-        this.interpretersPerResource.clear();
     }
     private getResourceKey(resource?: Uri) {
         if (!resource) {
