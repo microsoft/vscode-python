@@ -1,15 +1,32 @@
 import * as assert from 'assert';
+import { Container } from 'inversify';
+import * as TypeMoq from 'typemoq';
 import { PythonSettings } from '../../client/common/configSettings';
 import { EnumEx } from '../../client/common/enumUtils';
-import { IFormattingSettings, Product } from '../../client/common/types';
+import { IConfigurationService, IFormattingSettings, Product } from '../../client/common/types';
 import { FormatterHelper } from '../../client/formatters/helper';
 import { FormatterId } from '../../client/formatters/types';
+import { ServiceContainer } from '../../client/ioc/container';
+import { ServiceManager } from '../../client/ioc/serviceManager';
+import { IServiceContainer } from '../../client/ioc/types';
 import { initialize } from '../initialize';
+import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Formatting - Helper', () => {
-    const formatHelper = new FormatterHelper();
+    let ioc: UnitTestIocContainer;
+    let formatHelper: FormatterHelper;
+
     suiteSetup(initialize);
+    setup(() => {
+        ioc = new UnitTestIocContainer();
+
+        const config = TypeMoq.Mock.ofType<IConfigurationService>();
+        config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => PythonSettings.getInstance());
+
+        ioc.serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, config.object);
+        formatHelper = new FormatterHelper(ioc.serviceManager);
+    });
 
     test('Ensure product is set in Execution Info', async () => {
         [Product.autopep8, Product.yapf].forEach(formatter => {

@@ -84,87 +84,87 @@ export interface IPathUtils {
 
 export const ICurrentProcess = Symbol('ICurrentProcess');
 export interface ICurrentProcess {
-    env: EnvironmentVariables;
+    readonly env: EnvironmentVariables;
 }
 
 export interface IPythonSettings {
-    pythonPath: string;
-    venvPath: string;
-    jediPath: string;
-    devOptions: string[];
-    linting: ILintingSettings;
-    formatting: IFormattingSettings;
-    unitTest: IUnitTestSettings;
-    autoComplete: IAutoCompeteSettings;
-    terminal: ITerminalSettings;
-    sortImports: ISortImportSettings;
-    workspaceSymbols: IWorkspaceSymbolSettings;
-    envFile: string;
-    disablePromptForFeatures: string[];
-    disableInstallationChecks: boolean;
-    globalModuleInstallation: boolean;
+    readonly pythonPath: string;
+    readonly venvPath: string;
+    readonly jediPath: string;
+    readonly devOptions: string[];
+    readonly linting: ILintingSettings;
+    readonly formatting: IFormattingSettings;
+    readonly unitTest: IUnitTestSettings;
+    readonly autoComplete: IAutoCompeteSettings;
+    readonly terminal: ITerminalSettings;
+    readonly sortImports: ISortImportSettings;
+    readonly workspaceSymbols: IWorkspaceSymbolSettings;
+    readonly envFile: string;
+    readonly disablePromptForFeatures: string[];
+    readonly disableInstallationChecks: boolean;
+    readonly globalModuleInstallation: boolean;
 }
 export interface ISortImportSettings {
-    path: string;
-    args: string[];
+    readonly path: string;
+    readonly args: string[];
 }
 
 export interface IUnitTestSettings {
-    promptToConfigure: boolean;
-    debugPort: number;
-    debugHost?: string;
-    nosetestsEnabled: boolean;
+    readonly promptToConfigure: boolean;
+    readonly debugPort: number;
+    readonly debugHost?: string;
+    readonly nosetestsEnabled: boolean;
     nosetestPath: string;
     nosetestArgs: string[];
-    pyTestEnabled: boolean;
+    readonly pyTestEnabled: boolean;
     pyTestPath: string;
     pyTestArgs: string[];
-    unittestEnabled: boolean;
+    readonly unittestEnabled: boolean;
     unittestArgs: string[];
     cwd?: string;
 }
 export interface IPylintCategorySeverity {
-    convention: DiagnosticSeverity;
-    refactor: DiagnosticSeverity;
-    warning: DiagnosticSeverity;
-    error: DiagnosticSeverity;
-    fatal: DiagnosticSeverity;
+    readonly convention: DiagnosticSeverity;
+    readonly refactor: DiagnosticSeverity;
+    readonly warning: DiagnosticSeverity;
+    readonly error: DiagnosticSeverity;
+    readonly fatal: DiagnosticSeverity;
 }
 export interface IPep8CategorySeverity {
-    W: DiagnosticSeverity;
-    E: DiagnosticSeverity;
+    readonly W: DiagnosticSeverity;
+    readonly E: DiagnosticSeverity;
 }
 // tslint:disable-next-line:interface-name
 export interface Flake8CategorySeverity {
-    F: DiagnosticSeverity;
-    E: DiagnosticSeverity;
-    W: DiagnosticSeverity;
+    readonly F: DiagnosticSeverity;
+    readonly E: DiagnosticSeverity;
+    readonly W: DiagnosticSeverity;
 }
 export interface IMypyCategorySeverity {
-    error: DiagnosticSeverity;
-    note: DiagnosticSeverity;
+    readonly error: DiagnosticSeverity;
+    readonly note: DiagnosticSeverity;
 }
 export interface ILintingSettings {
-    enabled: boolean;
-    ignorePatterns: string[];
-    prospectorEnabled: boolean;
-    prospectorArgs: string[];
-    pylintEnabled: boolean;
-    pylintArgs: string[];
-    pep8Enabled: boolean;
-    pep8Args: string[];
-    pylamaEnabled: boolean;
-    pylamaArgs: string[];
-    flake8Enabled: boolean;
-    flake8Args: string[];
-    pydocstyleEnabled: boolean;
-    pydocstyleArgs: string[];
-    lintOnSave: boolean;
-    maxNumberOfProblems: number;
-    pylintCategorySeverity: IPylintCategorySeverity;
-    pep8CategorySeverity: IPep8CategorySeverity;
-    flake8CategorySeverity: Flake8CategorySeverity;
-    mypyCategorySeverity: IMypyCategorySeverity;
+    readonly enabled: boolean;
+    readonly ignorePatterns: string[];
+    readonly prospectorEnabled: boolean;
+    readonly prospectorArgs: string[];
+    readonly pylintEnabled: boolean;
+    readonly pylintArgs: string[];
+    readonly pep8Enabled: boolean;
+    readonly pep8Args: string[];
+    readonly pylamaEnabled: boolean;
+    readonly pylamaArgs: string[];
+    readonly flake8Enabled: boolean;
+    readonly flake8Args: string[];
+    readonly pydocstyleEnabled: boolean;
+    readonly pydocstyleArgs: string[];
+    readonly lintOnSave: boolean;
+    readonly maxNumberOfProblems: number;
+    readonly pylintCategorySeverity: IPylintCategorySeverity;
+    readonly pep8CategorySeverity: IPep8CategorySeverity;
+    readonly flake8CategorySeverity: Flake8CategorySeverity;
+    readonly mypyCategorySeverity: IMypyCategorySeverity;
     prospectorPath: string;
     pylintPath: string;
     pep8Path: string;
@@ -174,31 +174,31 @@ export interface ILintingSettings {
     mypyEnabled: boolean;
     mypyArgs: string[];
     mypyPath: string;
-    pylintUseMinimalCheckers: boolean;
+    readonly pylintUseMinimalCheckers: boolean;
 }
 export interface IFormattingSettings {
-    provider: string;
+    readonly provider: string;
     autopep8Path: string;
-    autopep8Args: string[];
+    readonly autopep8Args: string[];
     yapfPath: string;
-    yapfArgs: string[];
+    readonly yapfArgs: string[];
 }
 export interface IAutoCompeteSettings {
-    addBrackets: boolean;
-    extraPaths: string[];
-    preloadModules: string[];
+    readonly addBrackets: boolean;
+    readonly extraPaths: string[];
+    readonly preloadModules: string[];
 }
 export interface IWorkspaceSymbolSettings {
-    enabled: boolean;
+    readonly enabled: boolean;
     tagFilePath: string;
-    rebuildOnStart: boolean;
-    rebuildOnFileSave: boolean;
-    ctagsPath: string;
-    exclusionPatterns: string[];
+    readonly rebuildOnStart: boolean;
+    readonly rebuildOnFileSave: boolean;
+    readonly ctagsPath: string;
+    readonly exclusionPatterns: string[];
 }
 export interface ITerminalSettings {
-    executeInFileDir: boolean;
-    launchArgs: string[];
+    readonly executeInFileDir: boolean;
+    readonly launchArgs: string[];
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

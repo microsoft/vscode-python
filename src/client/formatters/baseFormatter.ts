@@ -2,6 +2,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { OutputChannel, TextEdit, Uri } from 'vscode';
+import { IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
 import { IPythonToolExecutionService } from '../common/process/types';
@@ -12,10 +13,13 @@ import { IFormatterHelper } from './types';
 
 export abstract class BaseFormatter {
     protected readonly outputChannel: OutputChannel;
+    protected readonly workspace: IWorkspaceService;
     private readonly helper: IFormatterHelper;
-    constructor(public Id: string, private product: Product, private serviceContainer: IServiceContainer) {
-        this.outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        this.helper = this.serviceContainer.get<IFormatterHelper>(IFormatterHelper);
+
+    constructor(public Id: string, private product: Product, protected serviceContainer: IServiceContainer) {
+        this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.helper = serviceContainer.get<IFormatterHelper>(IFormatterHelper);
+        this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
 
     public abstract formatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, range?: vscode.Range): Thenable<vscode.TextEdit[]>;
@@ -26,12 +30,13 @@ export abstract class BaseFormatter {
         return path.dirname(document.fileName);
     }
     protected getWorkspaceUri(document: vscode.TextDocument) {
-        const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+        const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
         if (workspaceFolder) {
             return workspaceFolder.uri;
         }
-        if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
-            return vscode.workspace.workspaceFolders[0].uri;
+        const folders = this.workspace.workspaceFolders;
+        if (Array.isArray(folders) && folders.length > 0) {
+            return folders[0].uri;
         }
         return vscode.Uri.file(__dirname);
     }

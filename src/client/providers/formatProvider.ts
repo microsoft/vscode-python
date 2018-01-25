@@ -1,6 +1,10 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { setTimeout } from 'timers';
 import * as vscode from 'vscode';
-import { Disposable } from 'vscode';
+import { ICommandManager, IWorkspaceService } from '../common/application/types';
+import { IConfigurationService } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PythonSettings } from './../common/configSettings';
 import { AutoPep8Formatter } from './../formatters/autoPep8Formatter';
@@ -8,13 +12,16 @@ import { BaseFormatter } from './../formatters/baseFormatter';
 import { DummyFormatter } from './../formatters/dummyFormatter';
 import { YapfFormatter } from './../formatters/yapfFormatter';
 
-export class PythonFormattingEditProvider implements vscode.DocumentFormattingEditProvider, vscode.DocumentRangeFormattingEditProvider, Disposable {
+export class PythonFormattingEditProvider implements vscode.DocumentFormattingEditProvider, vscode.DocumentRangeFormattingEditProvider, vscode.Disposable {
+    private readonly config: IConfigurationService;
+    private readonly workspace: IWorkspaceService;
+    private readonly commands: ICommandManager;
     private formatters = new Map<string, BaseFormatter>();
-    private disposables: Disposable[] = [];
+    private disposables: vscode.Disposable[] = [];
 
     // Workaround for https://github.com/Microsoft/vscode/issues/41194
     private contentBeforeFormatting: string | undefined;
-    private wasFormatted = false;
+    private formatterMadeChanges = false;
     private saving = false;
 
     public constructor(context: vscode.ExtensionContext, serviceContainer: IServiceContainer) {
@@ -24,7 +31,11 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
         this.formatters.set(yapfFormatter.Id, yapfFormatter);
         this.formatters.set(autoPep8.Id, autoPep8);
         this.formatters.set(dummy.Id, dummy);
-        this.disposables.push(vscode.workspace.onDidSaveTextDocument(document => this.onSaveDocument(document)));
+
+        this.commands = serviceContainer.get<ICommandManager>(ICommandManager);
+        this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.config = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.disposables.push(this.workspace.onDidSaveTextDocument(async document => await this.onSaveDocument(document)));
     }
 
     public dispose() {
@@ -49,16 +60,16 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
 
         // Remember content before formatting so we can detect if
         // formatting edits have been really applied
-        const editorConfig = vscode.workspace.getConfiguration('editor', document.uri);
+        const editorConfig = this.workspace.getConfiguration('editor', document.uri);
         if (editorConfig.get('formatOnSave') === true) {
             this.contentBeforeFormatting = document.getText();
         }
 
-        const settings = PythonSettings.getInstance(document.uri);
+        const settings = this.config.getSettings(document.uri);
         const formatter = this.formatters.get(settings.formatting.provider)!;
-
         const edits = await formatter.formatDocument(document, options, token, range);
-        this.wasFormatted = edits.length > 0;
+
+        this.formatterMadeChanges = edits.length > 0;
         return edits;
     }
 
@@ -66,15 +77,24 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
         // Promise was rejected = formatting took too long.
         // Don't format inside the event handler, do it on timeout
         setTimeout(() => {
-            if (this.wasFormatted && this.contentBeforeFormatting && this.contentBeforeFormatting === document.getText()) {
-                // Document was not actually formatted
-                vscode.commands.executeCommand('editor.action.formatDocument').then(async () => {
-                    this.saving = true;
-                    await document.save();
-                    this.saving = false;
-                });
+            try {
+                if (this.formatterMadeChanges
+                    && this.contentBeforeFormatting
+                    && !document.isDirty
+                    && this.contentBeforeFormatting === document.getText()) {
+                    // Formatter changes were not actually applied due to the timeout on save.
+                    // Force formatting now and then save the document.
+                    this.commands.executeCommand('editor.action.formatDocument').then(async () => {
+                        this.saving = true;
+                        await document.save();
+                        this.saving = false;
+                    });
+                }
+            } finally {
+                this.contentBeforeFormatting = undefined;
+                this.saving = false;
+                this.formatterMadeChanges = false;
             }
-            this.contentBeforeFormatting = undefined;
         }, 50);
     }
 }
