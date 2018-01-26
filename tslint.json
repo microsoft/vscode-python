@@ -25,6 +25,7 @@
             "check-else"
         ],
         "no-parameter-properties": false,
+        "no-parameter-reassignment": false,
         "no-reserved-keywords": false,
         "newline-before-return": false,
         "export-name": false,
@@ -51,6 +52,7 @@
         "no-floating-promises": true,
         "no-empty-interface": false,
         "no-bitwise": false,
-        "eofline": true
+        "eofline": true,
+        "switch-final-break": false
     }
 }

@@ -104,6 +104,12 @@ export class Tokenizer implements ITokenizer {
             case Char.CloseBracket:
                 this.tokens.push(new Token(TokenType.CloseBracket, this.cs.position, 1));
                 break;
+            case Char.OpenBrace:
+                this.tokens.push(new Token(TokenType.OpenCurly, this.cs.position, 1));
+                break;
+            case Char.CloseBrace:
+                this.tokens.push(new Token(TokenType.CloseCurly, this.cs.position, 1));
+                break;
             case Char.Comma:
                 this.tokens.push(new Token(TokenType.Comma, this.cs.position, 1));
                 break;
@@ -244,7 +250,6 @@ export class Tokenizer implements ITokenizer {
             case Char.Caret:
             case Char.Equal:
             case Char.ExclamationMark:
-            case Char.Equal:
                 length = nextChar === Char.Equal ? 2 : 1;
                 break;
 

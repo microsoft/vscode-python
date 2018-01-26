@@ -85,7 +85,9 @@ export enum TokenType {
     OpenBrace,
     CloseBrace,
     OpenBracket,
-    CloseBracket
+    CloseBracket,
+    OpenCurly,
+    CloseCurly
 }
 
 export interface IToken extends ITextRange {
