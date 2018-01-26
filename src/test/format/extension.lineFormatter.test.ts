@@ -26,6 +26,10 @@ suite('Formatting on Enter', () => {
         assert.equal(actual, 'if x == 4: print x, y; x, y = y, x');
     });
     test('Colon slices', () => {
+        const actual = formatter.formatLine('x[1: 30]');
+        assert.equal(actual, 'x[1:30]');
+    });
+    test('Colon slices in arguments', () => {
         const actual = formatter.formatLine('spam ( ham[ 1 :3], {eggs : 2})');
         assert.equal(actual, 'spam(ham[1:3], {eggs: 2})');
     });

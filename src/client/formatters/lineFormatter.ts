@@ -56,7 +56,7 @@ export class LineFormatter {
                 case TokenType.Colon:
                     // x: 1 if not in slice, x[1:y] if inside the slice
                     this.builder.append(':');
-                    if (!this.braceCounter.isOpened(TokenType.OpenBracket) || (next && next.type !== TokenType.Colon)) {
+                    if (!this.braceCounter.isOpened(TokenType.OpenBracket) && (next && next.type !== TokenType.Colon)) {
                         // Not inside opened [[ ... ] sequence
                         this.builder.softAppendSpace();
                     }
