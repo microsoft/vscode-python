@@ -78,9 +78,9 @@
 		"onCommand:python.startREPL",
 		"onCommand:python.goToPythonObject",
 		"onCommand:python.setLinter",
-        "onCommand:python.enableLinting",
-        "onCommand:python.createTerminal",
-        "onCommand:importMagic.resolveImport",
+		"onCommand:python.enableLinting",
+		"onCommand:python.createTerminal",
+		"onCommand:importMagic.resolveImport",
 		"onCommand:importMagic.insertImport",
 		"onCommand:importMagic.findSymbols"
 	],
