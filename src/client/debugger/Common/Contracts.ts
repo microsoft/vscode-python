@@ -5,6 +5,7 @@ import { ChildProcess } from 'child_process';
 import * as net from 'net';
 import { OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { DebuggerPerformanceTelemetry, DebuggerTelemetry } from '../../telemetry/types';
 
 export class TelemetryEvent extends OutputEvent {
     body: {
@@ -15,7 +16,7 @@ export class TelemetryEvent extends OutputEvent {
         /** Optional data to report. For the 'telemetry' category the data will be sent to telemetry, for the other categories the data is shown in JSON format. */
         data?: any;
     };
-    constructor(output: string, data?: any) {
+    constructor(output: string, data?: DebuggerTelemetry | DebuggerPerformanceTelemetry) {
         super(output, 'telemetry');
         if (data) {
             this.body.data = data;
@@ -139,7 +140,7 @@ export interface IPythonEvaluationResult {
     ExceptionText?: string;
     Expression: string;
     ChildName: string;
-    Process: IPythonProcess;
+    Process?: IPythonProcess;
     Frame: IPythonStackFrame;
 }
 

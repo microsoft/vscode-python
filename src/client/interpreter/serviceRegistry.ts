@@ -7,9 +7,9 @@ import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
-    ICondaEnvironmentFile,
-    ICondaLocatorService,
+    ICondaService,
     IInterpreterLocatorService,
+    IInterpreterService,
     IInterpreterVersionService,
     IKnownSearchPathsForInterpreters,
     IKnownSearchPathsForVirtualEnvironments,
@@ -18,11 +18,12 @@ import {
     VIRTUAL_ENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE
 } from './contracts';
+import { InterpreterManager } from './index';
 import { InterpreterVersionService } from './interpreterVersion';
 import { PythonInterpreterLocatorService } from './locators/index';
-import { CondaEnvFileService, getEnvironmentsFile } from './locators/services/condaEnvFileService';
+import { CondaEnvFileService } from './locators/services/condaEnvFileService';
 import { CondaEnvService } from './locators/services/condaEnvService';
-import { CondaLocatorService } from './locators/services/condaLocator';
+import { CondaService } from './locators/services/condaService';
 import { CurrentPathService } from './locators/services/currentPathService';
 import { getKnownSearchPathsForInterpreters, KnownPathsService } from './locators/services/KnownPathsService';
 import { getKnownSearchPathsForVirtualEnvs, VirtualEnvService } from './locators/services/virtualEnvService';
@@ -33,11 +34,10 @@ import { VEnv } from './virtualEnvs/venv';
 import { VirtualEnv } from './virtualEnvs/virtualEnv';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingletonInstance<string>(ICondaEnvironmentFile, getEnvironmentsFile());
     serviceManager.addSingletonInstance<string[]>(IKnownSearchPathsForInterpreters, getKnownSearchPathsForInterpreters());
     serviceManager.addSingletonInstance<string[]>(IKnownSearchPathsForVirtualEnvironments, getKnownSearchPathsForVirtualEnvs());
 
-    serviceManager.addSingleton<ICondaLocatorService>(ICondaLocatorService, CondaLocatorService);
+    serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingleton<IVirtualEnvironmentIdentifier>(IVirtualEnvironmentIdentifier, VirtualEnv);
     serviceManager.addSingleton<IVirtualEnvironmentIdentifier>(IVirtualEnvironmentIdentifier, VEnv);
 
@@ -56,4 +56,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     } else {
         serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, KnownPathsService, KNOWN_PATH_SERVICE);
     }
+    serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterManager);
 }

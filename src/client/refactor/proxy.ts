@@ -4,10 +4,10 @@ import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { IPythonSettings } from '../common/configSettings';
 import '../common/extensions';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IPythonExecutionFactory } from '../common/process/types';
+import { IPythonSettings } from '../common/types';
 import { getWindowsLineEndingCount, IS_WINDOWS } from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
 

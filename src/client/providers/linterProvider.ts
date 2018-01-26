@@ -5,31 +5,24 @@ import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { ConfigSettingMonitor } from '../common/configSettingMonitor';
 import { PythonSettings } from '../common/configSettings';
 import { LinterErrors, PythonLanguage } from '../common/constants';
-import { IInstaller, ILogger } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import * as linter from '../linters/baseLinter';
-import { ILinterHelper } from '../linters/types';
+import { ILinterInfo, ILinterManager, ILintMessage, LintMessageSeverity } from '../linters/types';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { LINTING } from '../telemetry/constants';
 import { StopWatch } from '../telemetry/stopWatch';
-import * as flake8 from './../linters/flake8';
-import * as mypy from './../linters/mypy';
-import * as pep8 from './../linters/pep8Linter';
-import * as prospector from './../linters/prospector';
-import * as pydocstyle from './../linters/pydocstyle';
-import * as pylama from './../linters/pylama';
-import * as pylint from './../linters/pylint';
+import { LinterTrigger, LintingTelemetry } from '../telemetry/types';
+
 // tslint:disable-next-line:no-require-imports no-var-requires
 const Minimatch = require('minimatch').Minimatch;
 
 const uriSchemesToIgnore = ['git', 'showModifications', 'svn'];
-const lintSeverityToVSSeverity = new Map<linter.LintMessageSeverity, vscode.DiagnosticSeverity>();
-lintSeverityToVSSeverity.set(linter.LintMessageSeverity.Error, vscode.DiagnosticSeverity.Error);
-lintSeverityToVSSeverity.set(linter.LintMessageSeverity.Hint, vscode.DiagnosticSeverity.Hint);
-lintSeverityToVSSeverity.set(linter.LintMessageSeverity.Information, vscode.DiagnosticSeverity.Information);
-lintSeverityToVSSeverity.set(linter.LintMessageSeverity.Warning, vscode.DiagnosticSeverity.Warning);
+const lintSeverityToVSSeverity = new Map<LintMessageSeverity, vscode.DiagnosticSeverity>();
+lintSeverityToVSSeverity.set(LintMessageSeverity.Error, vscode.DiagnosticSeverity.Error);
+lintSeverityToVSSeverity.set(LintMessageSeverity.Hint, vscode.DiagnosticSeverity.Hint);
+lintSeverityToVSSeverity.set(LintMessageSeverity.Information, vscode.DiagnosticSeverity.Information);
+lintSeverityToVSSeverity.set(LintMessageSeverity.Warning, vscode.DiagnosticSeverity.Warning);
 
-function createDiagnostics(message: linter.ILintMessage, document: vscode.TextDocument): vscode.Diagnostic {
+function createDiagnostics(message: ILintMessage, document: vscode.TextDocument): vscode.Diagnostic {
     const position = new vscode.Position(message.line - 1, message.column);
     const range = new vscode.Range(position, position);
 
@@ -45,16 +38,21 @@ interface DocumentHasJupyterCodeCells {
     // tslint:disable-next-line:callable-types
     (doc: vscode.TextDocument, token: vscode.CancellationToken): Promise<Boolean>;
 }
-export class LintProvider implements vscode.Disposable {
+export class LinterProvider implements vscode.Disposable {
+    private linterManager: ILinterManager;
     private diagnosticCollection: vscode.DiagnosticCollection;
-    private linters: linter.BaseLinter[] = [];
     private pendingLintings = new Map<string, vscode.CancellationTokenSource>();
     private outputChannel: vscode.OutputChannel;
     private context: vscode.ExtensionContext;
     private disposables: vscode.Disposable[];
     private configMonitor: ConfigSettingMonitor;
-    public constructor(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel,
-        public documentHasJupyterCodeCells: DocumentHasJupyterCodeCells, private serviceContainer: IServiceContainer) {
+    public constructor(
+        context: vscode.ExtensionContext,
+        outputChannel: vscode.OutputChannel,
+        public documentHasJupyterCodeCells: DocumentHasJupyterCodeCells,
+        private serviceContainer: IServiceContainer) {
+
+        this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
         this.outputChannel = outputChannel;
         this.context = context;
         this.disposables = [];
@@ -72,18 +70,6 @@ export class LintProvider implements vscode.Disposable {
 
     private initialize() {
         this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
-
-        const helper = this.serviceContainer.get<ILinterHelper>(ILinterHelper);
-        const installer = this.serviceContainer.get<IInstaller>(IInstaller);
-        const logger = this.serviceContainer.get<ILogger>(ILogger);
-
-        this.linters.push(new prospector.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
-        this.linters.push(new pylint.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
-        this.linters.push(new pep8.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
-        this.linters.push(new pylama.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
-        this.linters.push(new flake8.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
-        this.linters.push(new pydocstyle.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
-        this.linters.push(new mypy.Linter(this.outputChannel, installer, helper, logger, this.serviceContainer));
 
         let disposable = vscode.workspace.onDidSaveTextDocument((e) => {
             const settings = PythonSettings.getInstance(e.uri);
@@ -124,9 +110,9 @@ export class LintProvider implements vscode.Disposable {
     }
 
     private lintOpenPythonFiles() {
-        workspace.textDocuments.forEach(document => {
+        workspace.textDocuments.forEach(async document => {
             if (document.languageId === PythonLanguage.language) {
-                this.onLintDocument(document, 'auto');
+                await this.onLintDocument(document, 'auto');
             }
         });
     }
@@ -136,17 +122,17 @@ export class LintProvider implements vscode.Disposable {
             return;
         }
         // Look for python files that belong to the specified workspace folder.
-        workspace.textDocuments.forEach(document => {
+        workspace.textDocuments.forEach(async document => {
             const wkspaceFolder = workspace.getWorkspaceFolder(document.uri);
             if (wkspaceFolder && wkspaceFolder.uri.fsPath === wkspaceOrFolder.fsPath) {
-                this.onLintDocument(document, 'auto');
+                await this.onLintDocument(document, 'auto');
             }
         });
     }
 
     // tslint:disable-next-line:member-ordering no-any
     private lastTimeout: any;
-    private lintDocument(document: vscode.TextDocument, delay: number, trigger: 'auto' | 'save'): void {
+    private lintDocument(document: vscode.TextDocument, delay: number, trigger: LinterTrigger): void {
         // Since this is a hack, lets wait for 2 seconds before linting.
         // Give user to continue typing before we waste CPU time.
         if (this.lastTimeout) {
@@ -154,18 +140,21 @@ export class LintProvider implements vscode.Disposable {
             this.lastTimeout = 0;
         }
 
-        this.lastTimeout = setTimeout(() => {
-            this.onLintDocument(document, trigger);
+        this.lastTimeout = setTimeout(async () => {
+            await this.onLintDocument(document, trigger);
         }, delay);
     }
-    private onLintDocument(document: vscode.TextDocument, trigger: 'auto' | 'save'): void {
+    private async onLintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void> {
         // Check if we need to lint this document
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
         const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
         const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
         const settings = PythonSettings.getInstance(document.uri);
-        if (document.languageId !== PythonLanguage.language || !settings.linting.enabled) {
+        if (document.languageId !== PythonLanguage.language) {
             return;
+        }
+        if (!this.linterManager.isLintingEnabled()) {
+            this.diagnosticCollection.set(document.uri, []);
         }
         const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => {
             return new Minimatch(pattern);
@@ -188,17 +177,13 @@ export class LintProvider implements vscode.Disposable {
 
         this.pendingLintings.set(document.uri.fsPath, cancelToken);
         this.outputChannel.clear();
-        const promises: Promise<linter.ILintMessage[]>[] = this.linters
-            .filter(item => item.isEnabled(document.uri))
-            .map(item => {
-                if (typeof workspaceRootPath !== 'string' && !settings.linting.enabledWithoutWorkspace) {
-                    return Promise.resolve([]);
-                }
+
+        const promises: Promise<ILintMessage[]>[] = this.linterManager.getActiveLinters(document.uri)
+            .map(info => {
                 const stopWatch = new StopWatch();
-                const promise = item.lint(document, cancelToken.token);
-                const hasCustomArgs = item.linterArgs(document.uri).length > 0;
-                const executableSpecified = item.isLinterExecutableSpecified(document.uri);
-                sendTelemetryWhenDone(LINTING, promise, stopWatch, { tool: item.Id, hasCustomArgs, trigger, executableSpecified });
+                const linter = this.linterManager.createLinter(info.product, this.outputChannel, this.serviceContainer);
+                const promise = linter.lint(document, cancelToken.token);
+                this.sendLinterRunTelemetry(info, document.uri, promise, stopWatch, trigger);
                 return promise;
             });
         this.documentHasJupyterCodeCells(document, cancelToken.token)
@@ -238,5 +223,16 @@ export class LintProvider implements vscode.Disposable {
                 });
             })
             .catch(ex => console.error('Python Extension: documentHasJupyterCodeCells', ex));
+    }
+
+    private sendLinterRunTelemetry(info: ILinterInfo, resource: Uri, promise: Promise<ILintMessage[]>, stopWatch: StopWatch, trigger: LinterTrigger): void {
+        const linterExecutablePathName = info.pathName(resource);
+        const properties: LintingTelemetry = {
+            tool: info.id,
+            hasCustomArgs: info.linterArgs(resource).length > 0,
+            trigger,
+            executableSpecified: linterExecutablePathName.length > 0
+        };
+        sendTelemetryWhenDone(LINTING, promise, stopWatch, properties);
     }
 }

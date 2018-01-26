@@ -2,14 +2,23 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
+import { IServiceContainer } from '../../ioc/types';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
+import { IConfigurationService } from '../types';
 import { EnvironmentVariables } from '../variables/types';
 import { ExecutionResult, IProcessService, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from './types';
 
 @injectable()
 export class PythonExecutionService implements IPythonExecutionService {
-    constructor(private procService: IProcessService, private pythonPath: string, private envVars: EnvironmentVariables | undefined) { }
+    private procService: IProcessService;
+    private configService: IConfigurationService;
+
+    constructor(serviceContainer: IServiceContainer, private envVars: EnvironmentVariables | undefined) {
+        this.procService = serviceContainer.get<IProcessService>(IProcessService);
+        this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+    }
+
     public async getVersion(): Promise<string> {
         return this.procService.exec(this.pythonPath, ['--version'], { env: this.envVars, mergeStdOutErr: true })
             .then(output => output.stdout.trim());
@@ -60,5 +69,8 @@ export class PythonExecutionService implements IPythonExecutionService {
         }
 
         return result;
+    }
+    private get pythonPath(): string {
+        return this.configService.getSettings().pythonPath;
     }
 }

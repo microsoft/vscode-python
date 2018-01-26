@@ -15,7 +15,7 @@ export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'unitTest.nosetestArgs' | 'unitTest.pyTestArgs' | 'unitTest.unittestArgs' |
     'formatting.provider' | 'sortImports.args' |
     'unitTest.nosetestsEnabled' | 'unitTest.pyTestEnabled' | 'unitTest.unittestEnabled' |
-    'linting.enabledWithoutWorkspace' | 'envFile';
+    'envFile';
 
 export async function updateSetting(setting: PythonSettingKeys, value: {} | undefined, resource: Uri | undefined, configTarget: ConfigurationTarget) {
     const settings = workspace.getConfiguration('python', resource);
@@ -107,6 +107,10 @@ export async function deleteFile(file: string) {
     if (exists) {
         await fs.remove(file);
     }
+}
+
+export async function sleep(milliseconds: number) {
+    return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 }
 
 // tslint:disable-next-line:no-non-null-assertion

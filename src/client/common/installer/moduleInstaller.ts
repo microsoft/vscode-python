@@ -13,7 +13,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { PythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
-import { ITerminalService } from '../terminal/types';
+import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IOutputChannel } from '../types';
 
 @injectable()
@@ -21,7 +21,7 @@ export abstract class ModuleInstaller {
     constructor(protected serviceContainer: IServiceContainer) { }
     public async installModule(name: string, resource?: vscode.Uri): Promise<void> {
         const executionInfo = await this.getExecutionInfo(name, resource);
-        const terminalService = this.serviceContainer.get<ITerminalService>(ITerminalService);
+        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService();
 
         if (executionInfo.moduleName) {
             const settings = PythonSettings.getInstance(resource);

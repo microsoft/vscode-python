@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { IServiceManager } from '../ioc/types';
-import { LinterHelper } from './helper';
-import { ILinterHelper } from './types';
+import { LinterManager } from './linterManager';
+import { ILinterManager } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<ILinterHelper>(ILinterHelper, LinterHelper);
+    serviceManager.addSingleton<ILinterManager>(ILinterManager, LinterManager);
 }

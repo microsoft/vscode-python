@@ -48,7 +48,7 @@
         "variable-name": false,
         "no-import-side-effect": false,
         "no-string-based-set-timeout": false,
-        "no-floating-promises": false,
+        "no-floating-promises": true,
         "no-empty-interface": false,
         "no-bitwise": false,
         "eofline": true

@@ -1,5 +1,5 @@
 import { CancellationToken, Disposable, OutputChannel, Uri } from 'vscode';
-import { IUnitTestSettings } from '../../common/configSettings';
+import { IUnitTestSettings } from '../../common/types';
 import { Product } from '../../common/types';
 import { CommandSource } from './constants';
 

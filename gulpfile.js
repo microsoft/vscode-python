@@ -61,6 +61,8 @@ gulp.task('watch', ['hygiene-modified', 'hygiene-watch']);
 
 gulp.task('hygiene-watch', () => gulp.watch(all, debounce(() => run({ mode: 'changes' }), 1000)));
 
+gulp.task('hygiene-all', () => run({ mode: 'all' }));
+
 gulp.task('hygiene-modified', ['compile'], () => run({ mode: 'changes' }));
 
 gulp.task('clean', ['output:clean', 'cover:clean'], () => { });
@@ -157,7 +159,7 @@ const hygiene = (options) => {
      * @param {any[]} failures
      */
     function reportLinterFailures(failures) {
-        failures
+        return failures
             .map(failure => {
                 const name = failure.name || failure.fileName;
                 const position = failure.startPosition;
@@ -235,7 +237,7 @@ const hygiene = (options) => {
     const files = options.mode === 'compile' ? tsProject.src() : getFilesToProcess(options);
     const dest = options.mode === 'compile' ? './out' : '.';
     let result = files
-        .pipe(filter(f => !f.stat.isDirectory()));
+        .pipe(filter(f => f && f.stat && !f.stat.isDirectory()));
 
     if (!options.skipIndentationCheck) {
         result = result.pipe(filter(indentationFilter))
@@ -261,7 +263,7 @@ const hygiene = (options) => {
         .js.pipe(gulp.dest(dest))
         .pipe(es.through(null, function () {
             if (errorCount > 0) {
-                const errorMessage = `Hygiene failed with ${colors.yellow(errorCount)} errors 👎 . Check 'gulpfile.js'.`;
+                const errorMessage = `Hygiene failed with errors 👎 . Check 'gulpfile.js'.`;
                 console.error(colors.red(errorMessage));
                 exitHandler(options);
             } else {
