@@ -79,7 +79,10 @@
 		"onCommand:python.goToPythonObject",
 		"onCommand:python.setLinter",
         "onCommand:python.enableLinting",
-        "onCommand:python.createTerminal"
+        "onCommand:python.createTerminal",
+        "onCommand:importMagic.resolveImport",
+		"onCommand:importMagic.insertImport",
+		"onCommand:importMagic.findSymbols"
 	],
 	"main": "./out/client/extension",
 	"contributes": {
@@ -94,12 +97,32 @@
 				"command": "jupyter.runSelectionLine",
 				"key": "ctrl+alt+enter",
 				"when": "editorFocus && !replaceActive && !searchViewletVisible && !findWidgetVisible"
+			},
+			{
+				"command": "importMagic.findSymbols",
+				"key": "ctrl+shift+space",
+				"when": "editorLangId == python"
 			}
 		],
 		"commands": [
 			{
 				"command": "python.sortImports",
 				"title": "%python.command.python.sortImports.title%",
+				"category": "Python Refactor"
+			},
+			{
+				"command": "importMagic.resolveImport",
+				"title": "%python.command.importMagic.resolveImport.title%",
+				"category": "Python Refactor"
+			},
+			{
+				"command": "importMagic.insertImport",
+				"title": "%python.command.importMagic.insertImport.title%",
+				"category": "Python Refactor"
+			},
+			{
+				"command": "importMagic.findSymbols",
+				"title": "%python.command.importMagic.findSymbols.title%",
 				"category": "Python Refactor"
 			},
 			{
@@ -250,6 +273,11 @@
 				{
 					"command": "python.sortImports",
 					"title": "Refactor: Sort Imports",
+					"group": "Refactor",
+					"when": "editorLangId == python"
+				},
+				{
+					"command": "importMagic.resolveImport",
 					"group": "Refactor",
 					"when": "editorLangId == python"
 				},
