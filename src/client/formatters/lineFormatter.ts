@@ -14,6 +14,7 @@ export class LineFormatter {
     private braceCounter: BraceCounter;
     private text: string;
 
+    // tslint:disable-next-line:cyclomatic-complexity
     public formatLine(text: string): string {
         this.tokens = new Tokenizer().tokenize(text);
         this.text = text;
@@ -60,6 +61,14 @@ export class LineFormatter {
                         // Not inside opened [[ ... ] sequence
                         this.builder.softAppendSpace();
                     }
+                    break;
+
+                case TokenType.Comment:
+                    // add space before in-line comment
+                    if (prev) {
+                        this.builder.softAppendSpace();
+                    }
+                    this.builder.append(this.text.substring(t.start, t.end));
                     break;
 
                 default:

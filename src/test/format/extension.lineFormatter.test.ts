@@ -6,7 +6,7 @@ import * as assert from 'assert';
 import { LineFormatter } from '../../client/formatters/lineFormatter';
 
 // https://www.python.org/dev/peps/pep-0008/#code-lay-out
-suite('Formatting on Enter', () => {
+suite('Formatting - line formatter', () => {
     const formatter = new LineFormatter();
 
     test('Operator spacing', () => {
@@ -52,5 +52,17 @@ suite('Formatting on Enter', () => {
     test('Nested braces', () => {
         const actual = formatter.formatLine('[ 1 :[2: (x,),y]]{1}');
         assert.equal(actual, '[1:[2:(x,), y]]{1}');
+    });
+    test('Trailing comment', () => {
+        const actual = formatter.formatLine('x=1  # comment');
+        assert.equal(actual, 'x = 1 # comment');
+    });
+    test('Single comment', () => {
+        const actual = formatter.formatLine('# comment');
+        assert.equal(actual, '# comment');
+    });
+    test('Comment with leading whitespace', () => {
+        const actual = formatter.formatLine('   # comment');
+        assert.equal(actual, '   # comment');
     });
 });

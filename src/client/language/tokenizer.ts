@@ -55,7 +55,7 @@ export class Tokenizer implements ITokenizer {
 
         if (length === undefined) {
             length = text.length;
-        } else if (length < 0 || start + length >= text.length) {
+        } else if (length < 0 || start + length > text.length) {
             throw new Error('Invalid range length');
         }
 
