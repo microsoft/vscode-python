@@ -15,7 +15,7 @@ export class LineFormatter {
     private text: string;
 
     public formatLine(text: string): string {
-        this.tokens = new Tokenizer().Tokenize(text);
+        this.tokens = new Tokenizer().tokenize(text);
         this.text = text;
         this.builder = new TextBuilder();
         this.braceCounter = new BraceCounter();

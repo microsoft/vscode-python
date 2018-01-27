@@ -45,6 +45,10 @@ suite('Formatting on Enter', () => {
         const actual = formatter.formatLine('ham[ : upper_fn ( x) : step_fn(x )], ham[ :: step_fn(x)]');
         assert.equal(actual, 'ham[:upper_fn(x):step_fn(x)], ham[::step_fn(x)]');
     });
+    test('Colon in for loop', () => {
+        const actual = formatter.formatLine('for index in  range( len(fruits) ): ');
+        assert.equal(actual, 'for index in range(len(fruits)):');
+    });
     test('Nested braces', () => {
         const actual = formatter.formatLine('[ 1 :[2: (x,),y]]{1}');
         assert.equal(actual, '[1:[2:(x,), y]]{1}');

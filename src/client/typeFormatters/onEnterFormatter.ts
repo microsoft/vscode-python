@@ -3,6 +3,7 @@
 
 import * as vscode from 'vscode';
 import { LineFormatter } from '../formatters/lineFormatter';
+import { isPositionInsideStringOrComment } from '../providers/providerUtilities';
 
 export class OnEnterFormatter implements vscode.OnTypeFormattingEditProvider {
     private readonly formatter = new LineFormatter();
@@ -13,7 +14,7 @@ export class OnEnterFormatter implements vscode.OnTypeFormattingEditProvider {
         ch: string,
         options: vscode.FormattingOptions,
         token: vscode.CancellationToken): vscode.TextEdit[] {
-        if (position.line === 0) {
+        if (position.line === 0 || isPositionInsideStringOrComment(document, position)) {
             return [];
         }
         const line = document.lineAt(position.line - 1);

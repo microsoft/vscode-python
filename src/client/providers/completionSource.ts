@@ -4,11 +4,10 @@
 
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { Tokenizer } from '../language/tokenizer';
-import { TokenType } from '../language/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { ItemInfoSource, LanguageItemInfo } from './itemInfoSource';
 import * as proxy from './jediProxy';
+import { isPositionInsideStringOrComment } from './providerUtilities';
 
 class DocumentPosition {
     constructor(public document: vscode.TextDocument, public position: vscode.Position) { }
@@ -76,7 +75,7 @@ export class CompletionSource {
             return undefined;
         }
         // Suppress completion inside string and comments.
-        if (this.isPositionInsideStringOrComment(document, position)) {
+        if (isPositionInsideStringOrComment(document, position)) {
             return undefined;
         }
         const type = proxy.CommandType.Completions;
@@ -109,18 +108,5 @@ export class CompletionSource {
         completionItem.sortText = (completionItem.label.startsWith('__') ? 'z' : (completionItem.label.startsWith('_') ? 'y' : '__')) + completionItem.label;
         documentPosition.attachTo(completionItem);
         return completionItem;
-    }
-
-    private isPositionInsideStringOrComment(document: vscode.TextDocument, position: vscode.Position): boolean {
-        const tokenizeTo = position.translate(1, 0);
-        const text = document.getText(new vscode.Range(new vscode.Position(0, 0), tokenizeTo));
-        const t = new Tokenizer();
-        const tokens = t.Tokenize(text);
-        const index = tokens.getItemContaining(document.offsetAt(position));
-        if (index >= 0) {
-            const token = tokens.getItemAt(index);
-            return token.type === TokenType.String || token.type === TokenType.Comment;
-        }
-        return false;
     }
 }

@@ -7,7 +7,7 @@ import Char from 'typescript-char';
 import { isBinary, isDecimal, isHex, isIdentifierChar, isIdentifierStartChar, isOctal } from './characters';
 import { CharacterStream } from './characterStream';
 import { TextRangeCollection } from './textRangeCollection';
-import { ICharacterStream, ITextRangeCollection, IToken, ITokenizer, TextRange, TokenType } from './types';
+import { ICharacterStream, ITextRangeCollection, IToken, ITokenizer, TextRange, TokenizerMode, TokenType } from './types';
 
 enum QuoteType {
     None,
@@ -37,15 +37,16 @@ export class Tokenizer implements ITokenizer {
     private cs: ICharacterStream;
     private tokens: IToken[] = [];
     private floatRegex = /[-+]?(?:(?:\d*\.\d+)|(?:\d+\.?))(?:[Ee][+-]?\d+)?/;
+    private mode: TokenizerMode;
 
     constructor() {
         //this.floatRegex.compile();
     }
 
-    public Tokenize(text: string): ITextRangeCollection<IToken>;
-    public Tokenize(text: string, start: number, length: number): ITextRangeCollection<IToken>;
+    public tokenize(text: string): ITextRangeCollection<IToken>;
+    public tokenize(text: string, start: number, length: number, mode: TokenizerMode): ITextRangeCollection<IToken>;
 
-    public Tokenize(text: string, start?: number, length?: number): ITextRangeCollection<IToken> {
+    public tokenize(text: string, start?: number, length?: number, mode?: TokenizerMode): ITextRangeCollection<IToken> {
         if (start === undefined) {
             start = 0;
         } else if (start < 0 || start >= text.length) {
@@ -57,6 +58,8 @@ export class Tokenizer implements ITokenizer {
         } else if (length < 0 || start + length >= text.length) {
             throw new Error('Invalid range length');
         }
+
+        this.mode = mode ? mode : TokenizerMode.Full;
 
         this.cs = new CharacterStream(text);
         this.cs.position = start;
@@ -88,6 +91,14 @@ export class Tokenizer implements ITokenizer {
             this.handleString(quoteType);
             return true;
         }
+        if (this.cs.currentChar === Char.Hash) {
+            this.handleComment();
+            return true;
+        }
+        if (this.mode === TokenizerMode.CommentsAndStrings) {
+            return false;
+        }
+
         switch (this.cs.currentChar) {
             case Char.Hash:
                 this.handleComment();
