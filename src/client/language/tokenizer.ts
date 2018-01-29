@@ -100,9 +100,6 @@ export class Tokenizer implements ITokenizer {
         }
 
         switch (this.cs.currentChar) {
-            case Char.Hash:
-                this.handleComment();
-                break;
             case Char.OpenParenthesis:
                 this.tokens.push(new Token(TokenType.OpenBrace, this.cs.position, 1));
                 break;
