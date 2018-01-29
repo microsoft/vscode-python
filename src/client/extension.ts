@@ -60,6 +60,9 @@ import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import * as tests from './unittests/main';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
 import { WorkspaceSymbols } from './workspaceSymbols/main';
+import { ImportMagicCompletionItemProvider } from './providers/importMagicCompletionProvider';
+import { ImportMagicProxyFactory } from './languageServices/importMagicProxyFactory';
+import { ImportMagicProvider } from './providers/importMagicProvider';
 
 const PYTHON: vscode.DocumentFilter = { language: 'python' };
 const activationDeferred = createDeferred<void>();
@@ -120,6 +123,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
     context.subscriptions.push(new TerminalProvider(serviceContainer));
+
+    // Initialize importMagic
+    const importMagicFactory = new ImportMagicProxyFactory(context.asAbsolutePath('.'), serviceContainer);
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(PYTHON, new ImportMagicCompletionItemProvider(importMagicFactory), '.'));
+    context.subscriptions.push(new ImportMagicProvider(importMagicFactory));
 
     // Enable indentAction
     // tslint:disable-next-line:no-non-null-assertion
