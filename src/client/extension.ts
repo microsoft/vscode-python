@@ -7,8 +7,8 @@ if ((Reflect as any).metadata === undefined) {
 }
 import { Container } from 'inversify';
 import * as os from 'os';
-import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import * as vscode from 'vscode';
+import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import { BannerService } from './banner';
 import { PythonSettings } from './common/configSettings';
 import * as settings from './common/configSettings';

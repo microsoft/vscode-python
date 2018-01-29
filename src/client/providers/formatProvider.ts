@@ -3,7 +3,7 @@
 
 import { setTimeout } from 'timers';
 import * as vscode from 'vscode';
-import { ICommandManager, IWorkspaceService } from '../common/application/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { IConfigurationService } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { AutoPep8Formatter } from './../formatters/autoPep8Formatter';
@@ -14,12 +14,13 @@ import { YapfFormatter } from './../formatters/yapfFormatter';
 export class PythonFormattingEditProvider implements vscode.DocumentFormattingEditProvider, vscode.DocumentRangeFormattingEditProvider, vscode.Disposable {
     private readonly config: IConfigurationService;
     private readonly workspace: IWorkspaceService;
+    private readonly documentManager: IDocumentManager;
     private readonly commands: ICommandManager;
     private formatters = new Map<string, BaseFormatter>();
     private disposables: vscode.Disposable[] = [];
 
     // Workaround for https://github.com/Microsoft/vscode/issues/41194
-    private contentBeforeFormatting: string | undefined;
+    private documentVersionBeforeFormatting = -1;
     private formatterMadeChanges = false;
     private saving = false;
 
@@ -33,8 +34,9 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
 
         this.commands = serviceContainer.get<ICommandManager>(ICommandManager);
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.config = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.disposables.push(this.workspace.onDidSaveTextDocument(async document => await this.onSaveDocument(document)));
+        this.disposables.push(this.documentManager.onDidSaveTextDocument(async document => await this.onSaveDocument(document)));
     }
 
     public dispose() {
@@ -61,7 +63,7 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
         // formatting edits have been really applied
         const editorConfig = this.workspace.getConfiguration('editor', document.uri);
         if (editorConfig.get('formatOnSave') === true) {
-            this.contentBeforeFormatting = document.getText();
+            this.documentVersionBeforeFormatting = document.version;
         }
 
         const settings = this.config.getSettings(document.uri);
@@ -78,9 +80,8 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
         setTimeout(() => {
             try {
                 if (this.formatterMadeChanges
-                    && this.contentBeforeFormatting
                     && !document.isDirty
-                    && this.contentBeforeFormatting === document.getText()) {
+                    && document.version === this.documentVersionBeforeFormatting) {
                     // Formatter changes were not actually applied due to the timeout on save.
                     // Force formatting now and then save the document.
                     this.commands.executeCommand('editor.action.formatDocument').then(async () => {
@@ -90,7 +91,7 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
                     });
                 }
             } finally {
-                this.contentBeforeFormatting = undefined;
+                this.documentVersionBeforeFormatting = -1;
                 this.saving = false;
                 this.formatterMadeChanges = false;
             }

@@ -6,7 +6,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
-import { ICommandManager, IWorkspaceService } from '../../client/common/application/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { IConfigurationService } from '../../client/common/types';
 import { PythonFormattingEditProvider } from '../../client/providers/formatProvider';
@@ -21,6 +21,7 @@ suite('Formating On Save', () => {
     let config: TypeMoq.IMock<IConfigurationService>;
     let editorConfig: TypeMoq.IMock<vscode.WorkspaceConfiguration>;
     let workspace: TypeMoq.IMock<IWorkspaceService>;
+    let documentManager: TypeMoq.IMock<IDocumentManager>;
     let commands: TypeMoq.IMock<ICommandManager>;
     let options: TypeMoq.IMock<vscode.FormattingOptions>;
     let listener: (d: vscode.TextDocument) => Promise<void>;
@@ -54,7 +55,9 @@ suite('Formating On Save', () => {
             listener = s as ((d: vscode.TextDocument) => Promise<void>);
             // tslint:disable-next-line:no-empty
         }).returns(() => new vscode.Disposable(() => { }));
-        workspace.setup(x => x.onDidSaveTextDocument).returns(() => event.object);
+
+        documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
+        documentManager.setup(x => x.onDidSaveTextDocument).returns(() => event.object);
 
         options = TypeMoq.Mock.ofType<vscode.FormattingOptions>();
         options.setup(x => x.insertSpaces).returns(() => true);
@@ -67,18 +70,22 @@ suite('Formating On Save', () => {
         ioc.serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, config.object);
         ioc.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, commands.object);
         ioc.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
+        ioc.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, documentManager.object);
     }
 
     test('Workaround VS Code 41194', async () => {
         editorConfig.setup(x => x.get('formatOnSave')).returns(() => true);
 
         const content = await fs.readFile(unformattedFile, 'utf8');
+        let version = 1;
 
         const document = TypeMoq.Mock.ofType<vscode.TextDocument>();
         document.setup(x => x.getText()).returns(() => content);
         document.setup(x => x.uri).returns(() => vscode.Uri.file(unformattedFile));
         document.setup(x => x.isDirty).returns(() => false);
         document.setup(x => x.fileName).returns(() => unformattedFile);
+        document.setup(x => x.save()).callback(() => version += 1);
+        document.setup(x => x.version).returns(() => version);
 
         const context = TypeMoq.Mock.ofType<vscode.ExtensionContext>();
         const provider = new PythonFormattingEditProvider(context.object, ioc.serviceContainer);
