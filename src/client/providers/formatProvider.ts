@@ -19,7 +19,7 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
     private disposables: vscode.Disposable[] = [];
 
     // Workaround for https://github.com/Microsoft/vscode/issues/41194
-    private contentBeforeFormatting: string | undefined;
+    private documentVersionBeforeFormatting = -1;
     private formatterMadeChanges = false;
     private saving = false;
 
@@ -61,7 +61,7 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
         // formatting edits have been really applied
         const editorConfig = this.workspace.getConfiguration('editor', document.uri);
         if (editorConfig.get('formatOnSave') === true) {
-            this.contentBeforeFormatting = document.getText();
+            this.documentVersionBeforeFormatting = document.version;
         }
 
         const settings = this.config.getSettings(document.uri);
@@ -78,9 +78,8 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
         setTimeout(() => {
             try {
                 if (this.formatterMadeChanges
-                    && this.contentBeforeFormatting
                     && !document.isDirty
-                    && this.contentBeforeFormatting === document.getText()) {
+                    && document.version === this.documentVersionBeforeFormatting) {
                     // Formatter changes were not actually applied due to the timeout on save.
                     // Force formatting now and then save the document.
                     this.commands.executeCommand('editor.action.formatDocument').then(async () => {
@@ -90,7 +89,7 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
                     });
                 }
             } finally {
-                this.contentBeforeFormatting = undefined;
+                this.documentVersionBeforeFormatting = -1;
                 this.saving = false;
                 this.formatterMadeChanges = false;
             }
