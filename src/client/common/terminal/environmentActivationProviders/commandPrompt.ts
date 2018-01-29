@@ -31,7 +31,7 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
         if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.bat')) {
             return [`${scriptFile.toCommandArgument()} ${envName}`.trim()];
         } else if (targetShell === TerminalShellType.powershell && scriptFile.endsWith('activate.ps1')) {
-            return [`${scriptFile.toCommandArgument()} ${envName}`.trim()];
+            return [`& ${scriptFile.toCommandArgument()} ${envName}`.trim()];
         } else if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.ps1')) {
             return [`powershell ${scriptFile.toCommandArgument()} ${envName}`.trim()];
         } else {

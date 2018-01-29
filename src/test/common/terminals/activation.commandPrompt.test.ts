@@ -147,7 +147,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                             const envName = environmentName ? environmentName! : '';
                             const quotedScriptFile = pathToScriptFile.indexOf(' ') > 0 ? `"${pathToScriptFile}"` : pathToScriptFile;
-                            expect(command).to.be.deep.equal([`${quotedScriptFile} ${envName}`.trim()], 'Invalid command');
+                            expect(command).to.be.deep.equal([`& ${quotedScriptFile} ${envName}`.trim()], 'Invalid command');
                         });
                     });
                 });
