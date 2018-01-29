@@ -303,6 +303,11 @@ export interface IDocumentManager {
     readonly onDidChangeTextEditorViewColumn: Event<TextEditorViewColumnChangeEvent>;
 
     /**
+     * An event that is emitted when a [text document](#TextDocument) is saved to disk.
+     */
+    readonly onDidSaveTextDocument: Event<TextDocument>;
+
+    /**
      * Show the given document in a text editor. A [column](#ViewColumn) can be provided
      * to control where the editor is being shown. Might change the [active editor](#window.activeTextEditor).
      *
@@ -367,11 +372,6 @@ export interface IWorkspaceService {
      * An event that is emitted when the [configuration](#WorkspaceConfiguration) changed.
      */
     readonly onDidChangeConfiguration: Event<void>;
-
-    /**
-     * An event that is emitted when a [text document](#TextDocument) is saved to disk.
-     */
-    readonly onDidSaveTextDocument: Event<TextDocument>;
 
     /**
      * Returns the [workspace folder](#WorkspaceFolder) that contains a given uri.

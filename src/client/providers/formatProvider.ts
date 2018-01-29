@@ -3,7 +3,7 @@
 
 import { setTimeout } from 'timers';
 import * as vscode from 'vscode';
-import { ICommandManager, IWorkspaceService } from '../common/application/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { IConfigurationService } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { AutoPep8Formatter } from './../formatters/autoPep8Formatter';
@@ -14,6 +14,7 @@ import { YapfFormatter } from './../formatters/yapfFormatter';
 export class PythonFormattingEditProvider implements vscode.DocumentFormattingEditProvider, vscode.DocumentRangeFormattingEditProvider, vscode.Disposable {
     private readonly config: IConfigurationService;
     private readonly workspace: IWorkspaceService;
+    private readonly documentManager: IDocumentManager;
     private readonly commands: ICommandManager;
     private formatters = new Map<string, BaseFormatter>();
     private disposables: vscode.Disposable[] = [];
@@ -33,8 +34,9 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
 
         this.commands = serviceContainer.get<ICommandManager>(ICommandManager);
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.config = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.disposables.push(this.workspace.onDidSaveTextDocument(async document => await this.onSaveDocument(document)));
+        this.disposables.push(this.documentManager.onDidSaveTextDocument(async document => await this.onSaveDocument(document)));
     }
 
     public dispose() {
