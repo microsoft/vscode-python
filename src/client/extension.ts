@@ -103,7 +103,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
 
     const pythonInstaller = new PythonInstaller(serviceContainer);
-    await pythonInstaller.checkPythonInstallation(PythonSettings.getInstance());
+    pythonInstaller.checkPythonInstallation(PythonSettings.getInstance())
+        .catch(ex => console.error('Python Extension: pythonInstaller.checkPythonInstallation', ex));
 
     // This must be completed before we can continue.
     await interpreterManager.autoSetInterpreter();
