@@ -1,71 +1,109 @@
 import * as assert from 'assert';
-import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
-import { IS_WINDOWS } from '../../client/common/utils';
-import {
-    AnacondaCompanyName,
-    AnacondaCompanyNames,
-    AnacondaDisplayName,
-    CONDA_RELATIVE_PY_PATH
-} from '../../client/interpreter/locators/services/conda';
+import * as TypeMoq from 'typemoq';
+import { IFileSystem } from '../../client/common/platform/types';
+import { ILogger } from '../../client/common/types';
+import { ICondaService, IInterpreterLocatorService, IInterpreterVersionService, InterpreterType } from '../../client/interpreter/contracts';
+import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import { initialize, initializeTest } from '../initialize';
-import { MockInterpreterVersionProvider } from './mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 const environmentsFilePath = path.join(environmentsPath, 'environments.txt');
 
+// tslint:disable-next-line:max-func-body-length
 suite('Interpreters from Conda Environments Text File', () => {
+    let logger: TypeMoq.IMock<ILogger>;
+    let condaService: TypeMoq.IMock<ICondaService>;
+    let interpreterVersion: TypeMoq.IMock<IInterpreterVersionService>;
+    let condaFileProvider: IInterpreterLocatorService;
+    let fileSystem: TypeMoq.IMock<IFileSystem>;
     suiteSetup(initialize);
-    setup(initializeTest);
-    suiteTeardown(async () => {
-        // Clear the file so we don't get unwanted changes prompting for a checkin of this file
-        await updateEnvWithInterpreters([]);
+    setup(async () => {
+        await initializeTest();
+        condaService = TypeMoq.Mock.ofType<ICondaService>();
+        interpreterVersion = TypeMoq.Mock.ofType<IInterpreterVersionService>();
+        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        logger = TypeMoq.Mock.ofType<ILogger>();
+        condaFileProvider = new CondaEnvFileService(interpreterVersion.object, condaService.object, fileSystem.object, logger.object);
     });
-
-    async function updateEnvWithInterpreters(envs: string[]) {
-        await fs.writeFile(environmentsFilePath, envs.join(EOL), { flag: 'w' });
-    }
-    test('Must return an empty list for an empty file', async () => {
-        await updateEnvWithInterpreters([]);
-        const displayNameProvider = new MockInterpreterVersionProvider('Mock Name');
-        const condaFileProvider = new CondaEnvFileService(environmentsFilePath, displayNameProvider);
+    test('Must return an empty list if environment file cannot be found', async () => {
+        condaService.setup(c => c.condaEnvironmentsFile).returns(() => undefined);
+        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('Mock Name'));
         const interpreters = await condaFileProvider.getInterpreters();
         assert.equal(interpreters.length, 0, 'Incorrect number of entries');
     });
-    test('Must return filter files in the list and return valid items', async () => {
-        const interpreterPaths = [
-            path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-            path.join(environmentsPath, 'path1'),
-            path.join('Invalid and non existent'),
-            path.join(environmentsPath, 'path2'),
-            path.join('Another Invalid and non existent')
-        ];
-        await updateEnvWithInterpreters(interpreterPaths);
-        const displayNameProvider = new MockInterpreterVersionProvider('Mock Name');
-        const condaFileProvider = new CondaEnvFileService(environmentsFilePath, displayNameProvider);
+    test('Must return an empty list for an empty file', async () => {
+        condaService.setup(c => c.condaEnvironmentsFile).returns(() => environmentsFilePath);
+        fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(true));
+        fileSystem.setup(fs => fs.readFile(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(''));
+        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('Mock Name'));
         const interpreters = await condaFileProvider.getInterpreters();
-        // This is because conda environments will be under 'bin/python' however the folders path1 and path2 do not have such files
-        const numberOfEnvs = IS_WINDOWS ? 3 : 1;
-        assert.equal(interpreters.length, numberOfEnvs, 'Incorrect number of entries');
+        assert.equal(interpreters.length, 0, 'Incorrect number of entries');
+    });
+
+    async function filterFilesInEnvironmentsFileAndReturnValidItems(isWindows: boolean) {
+        const validPaths = [
+            path.join(environmentsPath, 'conda', 'envs', 'numpy'),
+            path.join(environmentsPath, 'conda', 'envs', 'scipy')];
+        const interpreterPaths = [
+            path.join(environmentsPath, 'xyz', 'one'),
+            path.join(environmentsPath, 'xyz', 'two'),
+            path.join(environmentsPath, 'xyz', 'python.exe')
+        ].concat(validPaths);
+        condaService.setup(c => c.condaEnvironmentsFile).returns(() => environmentsFilePath);
+        condaService.setup(c => c.getInterpreterPath(TypeMoq.It.isAny())).returns(environmentPath => {
+            return isWindows ? path.join(environmentPath, 'python.exe') : path.join(environmentPath, 'bin', 'python');
+        });
+        condaService.setup(c => c.getCondaEnvironments()).returns(() => {
+            const condaEnvironments = validPaths.map(item => {
+                return {
+                    path: item,
+                    name: path.basename(item)
+                };
+            });
+            return Promise.resolve(condaEnvironments);
+        });
+        fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(true));
+        fileSystem.setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p1: string, p2: string) => isWindows ? p1 === p2 : p1.toUpperCase() === p2.toUpperCase());
+        validPaths.forEach(validPath => {
+            const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
+            fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
+        });
+
+        fileSystem.setup(fs => fs.readFile(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(interpreterPaths.join(EOL)));
+        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('Mock Name'));
+
+        const interpreters = await condaFileProvider.getInterpreters();
+
+        const expectedPythonPath = isWindows ? path.join(validPaths[0], 'python.exe') : path.join(validPaths[0], 'bin', 'python');
+        assert.equal(interpreters.length, 2, 'Incorrect number of entries');
         assert.equal(interpreters[0].displayName, `${AnacondaDisplayName} Mock Name (numpy)`, 'Incorrect display name');
         assert.equal(interpreters[0].companyDisplayName, AnacondaCompanyName, 'Incorrect display name');
-        assert.equal(interpreters[0].path, path.join(interpreterPaths[0], ...CONDA_RELATIVE_PY_PATH), 'Incorrect company display name');
+        assert.equal(interpreters[0].path, expectedPythonPath, 'Incorrect path');
+        assert.equal(interpreters[0].envPath, validPaths[0], 'Incorrect envpath');
+        assert.equal(interpreters[0].type, InterpreterType.Conda, 'Incorrect type');
+    }
+    test('Must filter files in the list and return valid items (non windows)', async () => {
+        await filterFilesInEnvironmentsFileAndReturnValidItems(false);
     });
+    test('Must filter files in the list and return valid items (windows)', async () => {
+        await filterFilesInEnvironmentsFileAndReturnValidItems(true);
+    });
+
     test('Must strip company name from version info', async () => {
         const interpreterPaths = [
             path.join(environmentsPath, 'conda', 'envs', 'numpy')
         ];
-        await updateEnvWithInterpreters(interpreterPaths);
+        condaService.setup(c => c.condaEnvironmentsFile).returns(() => environmentsFilePath);
+        fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(true));
+        fileSystem.setup(fs => fs.readFile(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(interpreterPaths.join(EOL)));
 
         AnacondaCompanyNames.forEach(async companyDisplayName => {
-            const displayNameProvider = new MockInterpreterVersionProvider(`Mock Version  :: ${companyDisplayName}`);
-            const condaFileProvider = new CondaEnvFileService(environmentsFilePath, displayNameProvider);
             const interpreters = await condaFileProvider.getInterpreters();
-            // This is because conda environments will be under 'bin/python' however the folders path1 and path2 do not have such files
-            const numberOfEnvs = IS_WINDOWS ? 3 : 1;
-            assert.equal(interpreters.length, numberOfEnvs, 'Incorrect number of entries');
+
+            assert.equal(interpreters.length, 1, 'Incorrect number of entries');
             assert.equal(interpreters[0].displayName, `${AnacondaDisplayName} Mock Version (numpy)`, 'Incorrect display name');
         });
     });

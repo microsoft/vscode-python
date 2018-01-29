@@ -1,6 +1,7 @@
+// tslint:disable:quotemark no-var-requires no-require-imports max-func-body-length prefer-const no-function-expression cyclomatic-complexity no-increment-decrement one-line
+
 "use strict";
 
-import * as path from "path";
 const LineByLineReader = require("line-by-line");
 
 export interface ITryStatement {
@@ -42,7 +43,7 @@ export function ExtractTryStatements(pythonFile: string): Promise<ITryStatement[
                 // If the new try starts at the same column
                 // Then the previous try block has ended
                 if (tryColumnBlocks.has(column)) {
-                    let tryBlockClosed = tryColumnBlocks.get(column);
+                    let tryBlockClosed = tryColumnBlocks.get(column)!;
                     tryColumnBlocks.delete(column);
                     tryStatements.push(tryBlockClosed);
                 }
@@ -70,12 +71,12 @@ export function ExtractTryStatements(pythonFile: string): Promise<ITryStatement[
                 }
                 let column = line.indexOf("except");
 
-                // Do we have a try block for this same column                
+                // Do we have a try block for this same column
                 if (!tryColumnBlocks.has(column)) {
                     return;
                 }
 
-                let currentTryBlock = tryColumnBlocks.get(column);
+                let currentTryBlock = tryColumnBlocks.get(column)!;
                 let exceptions = extractExceptions(line);
                 currentTryBlock.Exceptions = currentTryBlock.Exceptions.concat(exceptions);
                 if (currentTryBlock.EndLineNumber === 0) {
@@ -89,7 +90,7 @@ export function ExtractTryStatements(pythonFile: string): Promise<ITryStatement[
             if (matches !== null && matches.length > 0 &&
                 (trimmedLine.startsWith("else ") || trimmedLine.startsWith("else:"))) {
 
-                // This is possibly an if else... 
+                // This is possibly an if else...
                 if (tryColumnBlocks.size === 0) {
                     return;
                 }
@@ -102,7 +103,7 @@ export function ExtractTryStatements(pythonFile: string): Promise<ITryStatement[
                 }
 
                 // Else marks the end of the try block (of course there could be a finally too)
-                let currentTryBlock = tryColumnBlocks.get(column);
+                let currentTryBlock = tryColumnBlocks.get(column)!;
                 if (currentTryBlock.EndLineNumber === 0) {
                     currentTryBlock.EndLineNumber = lineNumber;
                 }
@@ -131,7 +132,7 @@ export function ExtractTryStatements(pythonFile: string): Promise<ITryStatement[
                 }
 
                 // Finally marks the end of the try block
-                let currentTryBlock = tryColumnBlocks.get(column);
+                let currentTryBlock = tryColumnBlocks.get(column)!;
                 if (currentTryBlock.EndLineNumber === 0) {
                     currentTryBlock.EndLineNumber = lineNumber;
                 }
@@ -165,7 +166,7 @@ function extractExceptions(line: string): string[] {
     line = line.trim().substring(EXCEPT_LENGTH);
     line = line.substring(0, line.indexOf(":"));
     line = line.replace(/[\(\)]/g, "");
-    let exceptions = [];
+    let exceptions: string[] = [];
     line.split(",").forEach(ex => {
         ex = ex.trim();
         if (ex.length === 0) {

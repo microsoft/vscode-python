@@ -36,4 +36,5 @@ export interface IFileSystem {
     createDirectoryAsync(path: string): Promise<void>;
     getSubDirectoriesAsync(rootDir: string): Promise<string[]>;
     arePathsSame(path1: string, path2: string): boolean;
+    readFile(filePath: string): Promise<string>;
 }

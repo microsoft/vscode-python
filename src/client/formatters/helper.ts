@@ -4,7 +4,8 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IFormattingSettings, PythonSettings } from '../common/configSettings';
+import { PythonSettings } from '../common/configSettings';
+import { IFormattingSettings } from '../common/types';
 import { ExecutionInfo, Product } from '../common/types';
 import { FormatterId, FormatterSettingsPropertyNames, IFormatterHelper } from './types';
 
@@ -38,10 +39,10 @@ export class FormatterHelper implements IFormatterHelper {
 
         // If path information is not available, then treat it as a module,
         // except for prospector as that needs to be run as an executable (it's a Python package).
-        if (path.basename(execPath) === execPath && formatter !== Product.prospector) {
+        if (path.basename(execPath) === execPath) {
             moduleName = execPath;
         }
 
-        return { execPath, moduleName, args };
+        return { execPath, moduleName, args, product: formatter };
     }
 }

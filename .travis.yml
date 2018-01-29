@@ -3,21 +3,10 @@ cache: pip
 
 matrix:
     include:
-        # # Use the built in venv for linux builds
         - os: linux
           python: 2.7
         - os: linux
           python: 3.6
-        # # # Use generic language for osx
-        # - os: osx
-        #   language: generic
-        #   env: PYTHON=2.7.10
-        # # Use generic language for osx
-        # - os: osx
-        #   language: generic
-        #   env: PYTHON=3.6.1
-# Perform the manual steps on osx to install python 2.7.1 and 3.6.1 and set it as the global interpreter.
-# This way when the node unit tests will pick the right version of python (from global)
 before_install: |
   if [ $TRAVIS_OS_NAME == "linux" ]; then
     export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
@@ -29,10 +18,8 @@ before_install: |
   source ./.nvm/nvm.sh
   nvm install 8.9.1
   nvm use 8.9.1
-  if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    pyenv install $PYTHON
-    pyenv global $PYTHON
-  fi
+  yarn global add vsce
+  yarn global add azure-cli
   export TRAVIS_PYTHON_PATH=`which python`
 install:
   - pip install --upgrade -r requirements.txt
@@ -52,4 +39,10 @@ script:
   - yarn run testMultiWorkspace --silent
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
+    fi
+after_success:
+  - if [ $AZURE_STORAGE_ACCOUNT ]; then
+        yarn run clean;
+        vsce package;
+        azure storage blob upload --container $AZURE_STORAGE_CONTAINER --blob ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --file python*.vsix --quiet;
     fi

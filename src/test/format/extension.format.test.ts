@@ -95,7 +95,7 @@ suite('Formatting', () => {
         });
         assert.equal(textEditor.document.getText(), formattedContents, 'Formatted text is not the same');
     }
-    test('AutoPep8', () => testFormatting(new AutoPep8Formatter(ioc.serviceContainer), formattedAutoPep8, autoPep8FileToFormat, 'autopep8.output'));
+    test('AutoPep8', async () => await testFormatting(new AutoPep8Formatter(ioc.serviceContainer), formattedAutoPep8, autoPep8FileToFormat, 'autopep8.output'));
 
-    test('Yapf', () => testFormatting(new YapfFormatter(ioc.serviceContainer), formattedYapf, yapfFileToFormat, 'yapf.output'));
+    test('Yapf', async () => await testFormatting(new YapfFormatter(ioc.serviceContainer), formattedYapf, yapfFileToFormat, 'yapf.output'));
 });
