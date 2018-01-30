@@ -130,17 +130,10 @@ EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(terminalS
         });
 
         async function activationCommandShouldReturnCorrectly(shellType: TerminalShellType, expectedActivationCommand?: string[]) {
-            const interpreterInfo: PythonInterpreter = {
-                path: 'python',
-                version: '',
-                type: InterpreterType.Unknown
-            };
-            interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(interpreterInfo));
-
             // This will only work for the current shell type.
             const validProvider = TypeMoq.Mock.ofType<ITerminalActivationCommandProvider>();
             validProvider.setup(p => p.isShellSupported(TypeMoq.It.isValue(shellType))).returns(() => true);
-            validProvider.setup(p => p.getActivationCommands(TypeMoq.It.isValue(interpreterInfo), TypeMoq.It.isValue(shellType))).returns(() => Promise.resolve(expectedActivationCommand));
+            validProvider.setup(p => p.getActivationCommands(TypeMoq.It.isValue(undefined), TypeMoq.It.isValue(shellType))).returns(() => Promise.resolve(expectedActivationCommand));
 
             // This will support other providers.
             const invalidProvider = TypeMoq.Mock.ofType<ITerminalActivationCommandProvider>();
@@ -149,7 +142,7 @@ EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(terminalS
             serviceContainer.setup(c => c.getAll(ITerminalActivationCommandProvider)).returns(() => [validProvider.object, invalidProvider.object]);
             const commands = await helper.getEnvironmentActivationCommands(shellType);
 
-            validProvider.verify(p => p.getActivationCommands(TypeMoq.It.isValue(interpreterInfo), TypeMoq.It.isValue(shellType)), TypeMoq.Times.once());
+            validProvider.verify(p => p.getActivationCommands(TypeMoq.It.isValue(undefined), TypeMoq.It.isValue(shellType)), TypeMoq.Times.once());
             validProvider.verify(p => p.isShellSupported(TypeMoq.It.isValue(shellType)), TypeMoq.Times.once());
             invalidProvider.verify(p => p.getActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
             invalidProvider.verify(p => p.isShellSupported(TypeMoq.It.isValue(shellType)), TypeMoq.Times.once());

@@ -3,13 +3,14 @@
 
 import { inject, injectable } from 'inversify';
 import { Terminal, Uri } from 'vscode';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ITerminalManager, IWorkspaceService } from '../application/types';
 import '../extensions';
 import { IPlatformService } from '../platform/types';
-import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from './types';
 import { IConfigurationService } from '../types';
+import { CondaActivationCommandProvider } from './environmentActivationProviders/condaActivationProvider';
+import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from './types';
 
 // Types of shells can be found here:
 // 1. https://wiki.ubuntu.com/ChangingShells
@@ -70,14 +71,17 @@ export class TerminalHelper implements ITerminalHelper {
         return `${commandPrefix}${command.toCommandArgument()} ${args.join(' ')}`.trim();
     }
     public async getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined> {
-        const activateEnvironment = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).terminal.activateEnvironment;
+        const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource);
+        const activateEnvironment = settings.terminal.activateEnvironment;
         if (!activateEnvironment) {
             return;
         }
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interperterInfo = await interpreterService.getActiveInterpreter(resource);
-        if (!interperterInfo) {
-            return;
+
+        // If we have a conda environment, then use that.
+        const isCondaEnvironment = await this.serviceContainer.get<ICondaService>(ICondaService).isCondaEnvironment(settings.pythonPath);
+        if (isCondaEnvironment) {
+            const condaActivationProvider = new CondaActivationCommandProvider(this.serviceContainer);
+            return condaActivationProvider.getActivationCommands(resource, terminalShellType);
         }
 
         // Search from the list of providers.
@@ -85,7 +89,7 @@ export class TerminalHelper implements ITerminalHelper {
         const supportedProviders = providers.filter(provider => provider.isShellSupported(terminalShellType));
 
         for (const provider of supportedProviders) {
-            const activationCommands = await provider.getActivationCommands(interperterInfo, terminalShellType);
+            const activationCommands = await provider.getActivationCommands(resource, terminalShellType);
             if (Array.isArray(activationCommands)) {
                 return activationCommands;
             }

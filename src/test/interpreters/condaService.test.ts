@@ -6,6 +6,7 @@ import { IProcessService } from '../../client/common/process/types';
 import { ILogger } from '../../client/common/types';
 import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CondaService, KNOWN_CONDA_LOCATIONS } from '../../client/interpreter/locators/services/condaService';
+import { IServiceContainer } from '../../client/ioc/types';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
@@ -26,7 +27,12 @@ suite('Interpreters Conda Service', () => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         registryInterpreterLocatorService = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        condaService = new CondaService(processService.object, platformService.object, logger.object, fileSystem.object, registryInterpreterLocatorService.object);
+        const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessService), TypeMoq.It.isAny())).returns(() => processService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny())).returns(() => platformService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem.object);
+        condaService = new CondaService(serviceContainer.object, registryInterpreterLocatorService.object);
     });
 
     test('Must use Conda env from Registry to locate conda.exe', async () => {
@@ -177,7 +183,7 @@ suite('Interpreters Conda Service', () => {
     test('Returns conda environments when conda exists', async () => {
         processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'xyz' }));
         processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['env', 'list']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: '' }));
-        const environments = await condaService.getCondaEnvironments();
+        const environments = await condaService.getCondaEnvironments(true);
         assert.equal(environments, undefined, 'Conda environments do not match');
     });
 

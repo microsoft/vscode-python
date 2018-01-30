@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
+import { Uri } from 'vscode';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
@@ -19,19 +21,17 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
             targetShell === TerminalShellType.powershell ||
             targetShell === TerminalShellType.powershellCore;
     }
-    public async getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string[] | undefined> {
+    public async getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
         // Dependending on the target shell, look for the preferred script file.
-        const scriptFile = await this.findScriptFile(interpreter, this.getScriptsInOrderOfPreference(targetShell));
+        const scriptFile = await this.findScriptFile(resource, this.getScriptsInOrderOfPreference(targetShell));
         if (!scriptFile) {
             return;
         }
 
-        const envName = interpreter.envName ? interpreter.envName! : '';
-
         if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.bat')) {
-            return [`${scriptFile.toCommandArgument()} ${envName}`.trim()];
+            return [`${scriptFile.toCommandArgument()}`];
         } else if ((targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore) && scriptFile.endsWith('activate.ps1')) {
-            return [`& ${scriptFile.toCommandArgument()} ${envName}`.trim()];
+            return [`& ${scriptFile.toCommandArgument()}`];
         } else if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.ps1')) {
             // lets not try to run the powershell file from command prompt (user may not have powershell)
             return [];
@@ -40,7 +40,7 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
             if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
                 // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
                 const powershellExe = targetShell === TerminalShellType.powershell ? 'powershell' : 'pwsh';
-                const activationCmd = `${scriptFile.toCommandArgument()} ${envName}`.trim();
+                const activationCmd = `${scriptFile.toCommandArgument()}`;
                 return [
                     `& cmd /k "${activationCmd} & ${powershellExe}"`
                 ];
@@ -52,8 +52,8 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
     }
 
     private getScriptsInOrderOfPreference(targetShell: TerminalShellType): string[] {
-        const batchFiles = ['activate.bat', 'Scripts/activate.bat', 'scripts/activate.bat'];
-        const powerShellFiles = ['activate.ps1', 'Scripts/activate.ps1', 'scripts/activate.ps1'];
+        const batchFiles = ['activate.bat', path.join('Scripts', 'activate.bat'), path.join('scripts', 'activate.bat')];
+        const powerShellFiles = ['activate.ps1', path.join('Scripts', 'activate.ps1'), path.join('scripts', 'activate.ps1')];
         if (targetShell === TerminalShellType.commandPrompt) {
             return batchFiles.concat(powerShellFiles);
         } else {
