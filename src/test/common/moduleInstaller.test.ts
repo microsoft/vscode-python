@@ -160,6 +160,41 @@ suite('Module Installer', () => {
         await expect(condaInstaller.isSupported()).to.eventually.equal(true, 'Conda is not supported');
     });
 
+    suite('Global Installation', () => {
+
+        setup(async () => {
+            const configService = ioc.serviceManager.get<IConfigurationService>(IConfigurationService);
+            await configService.updateSettingAsync('globalModuleInstallation', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
+        });
+
+        teardown(async () => {
+            const configService = ioc.serviceManager.get<IConfigurationService>(IConfigurationService);
+            await configService.updateSettingAsync('globalModuleInstallation', false, rootWorkspaceUri, ConfigurationTarget.Workspace);
+        });
+
+        test('Validate global pip install arguments', async () => {
+            const interpreterPath = await getCurrentPythonPath();
+            const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
+            mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ path: interpreterPath, type: InterpreterType.Unknown }]));
+            ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
+
+            const moduleName = 'xyz';
+
+            const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
+            const pipInstaller = moduleInstallers.find(item => item.displayName === 'Pip')!;
+
+            expect(pipInstaller).not.to.be.an('undefined', 'Pip installer not found');
+
+            let argsSent: string[] = [];
+            mockTerminalService
+                .setup(async t => await t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+                .returns((cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
+            await pipInstaller.installModule(moduleName);
+
+            expect(argsSent.join(' ')).equal(`-m pip install -U ${moduleName}`, 'Invalid command sent to terminal for installation.');
+        });
+    });
+
     test('Validate pip install arguments', async () => {
         const interpreterPath = await getCurrentPythonPath();
         const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
