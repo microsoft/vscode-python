@@ -1,22 +1,25 @@
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { OutputChannel, TextEdit, Uri } from 'vscode';
+import { IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
-import { IProcessService, IPythonExecutionFactory } from '../common/process/types';
+import { IPythonToolExecutionService } from '../common/process/types';
 import { IInstaller, IOutputChannel, Product } from '../common/types';
-import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import { getTempFileWithDocumentContents, getTextEditsFromPatch } from './../common/editor';
 import { IFormatterHelper } from './types';
 
 export abstract class BaseFormatter {
     protected readonly outputChannel: OutputChannel;
+    protected readonly workspace: IWorkspaceService;
     private readonly helper: IFormatterHelper;
-    constructor(public Id: string, private product: Product, private serviceContainer: IServiceContainer) {
-        this.outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        this.helper = this.serviceContainer.get<IFormatterHelper>(IFormatterHelper);
+
+    constructor(public Id: string, private product: Product, protected serviceContainer: IServiceContainer) {
+        this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.helper = serviceContainer.get<IFormatterHelper>(IFormatterHelper);
+        this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
 
     public abstract formatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, range?: vscode.Range): Thenable<vscode.TextEdit[]>;
@@ -27,12 +30,13 @@ export abstract class BaseFormatter {
         return path.dirname(document.fileName);
     }
     protected getWorkspaceUri(document: vscode.TextDocument) {
-        const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+        const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
         if (workspaceFolder) {
             return workspaceFolder.uri;
         }
-        if (Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
-            return vscode.workspace.workspaceFolders[0].uri;
+        const folders = this.workspace.workspaceFolders;
+        if (Array.isArray(folders) && folders.length > 0) {
+            return folders[0].uri;
         }
         return vscode.Uri.file(__dirname);
     }
@@ -53,21 +57,11 @@ export abstract class BaseFormatter {
             return [];
         }
 
-        let executionPromise: Promise<string>;
         const executionInfo = this.helper.getExecutionInfo(this.product, args, document.uri);
-        // Check if required to run as a module or executable.
-        if (executionInfo.moduleName) {
-            executionPromise = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(document.uri)
-                .then(pythonExecutionService => pythonExecutionService.execModule(executionInfo.moduleName!, executionInfo.args.concat([filePath]), { cwd, throwOnStdErr: true, token }))
-                .then(output => output.stdout);
-        } else {
-            const executionService = this.serviceContainer.get<IProcessService>(IProcessService);
-            executionPromise = this.serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider).getEnvironmentVariables(true, document.uri)
-                .then(env => executionService.exec(executionInfo.execPath!, executionInfo.args.concat([filePath]), { cwd, env, throwOnStdErr: true, token }))
-                .then(output => output.stdout);
-        }
-
-        const promise = executionPromise
+        executionInfo.args.push(filePath);
+        const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
+        const promise = pythonToolsExecutionService.exec(executionInfo, { cwd, throwOnStdErr: true, token }, document.uri)
+            .then(output => output.stdout)
             .then(data => {
                 if (token && token.isCancellationRequested) {
                     return [] as TextEdit[];
@@ -85,7 +79,7 @@ export abstract class BaseFormatter {
             .then(edits => {
                 // Delete the temporary file created
                 if (tmpFileCreated) {
-                    fs.unlink(filePath);
+                    fs.unlinkSync(filePath);
                 }
                 return edits;
             });
@@ -99,7 +93,7 @@ export abstract class BaseFormatter {
         if (isNotInstalledError(error)) {
             const installer = this.serviceContainer.get<IInstaller>(IInstaller);
             const isInstalled = await installer.isInstalled(this.product, resource);
-            if (isInstalled) {
+            if (!isInstalled) {
                 customError += `\nYou could either install the '${this.Id}' formatter, turn it off or use another formatter.`;
                 installer.promptToInstall(this.product, resource).catch(ex => console.error('Python Extension: promptToInstall', ex));
             }

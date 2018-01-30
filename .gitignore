@@ -9,3 +9,6 @@ node_modules
 __pycache__
 npm-debug.log
 **/.mypy_cache/**
+!yarn.lock
+coverage/
+.vscode-test/**

@@ -1,16 +1,14 @@
-'use strict';
-import * as child_process from 'child_process';
 import * as vscode from 'vscode';
 import { CancellationToken, CodeLens, TextDocument } from 'vscode';
 import * as settings from '../../common/configSettings';
+import { IProcessService } from '../../common/process/types';
 import { IS_WINDOWS } from '../../common/utils';
-import { getFirstNonEmptyLineFromMultilineString } from '../../interpreter/helpers';
 
 export class ShebangCodeLensProvider implements vscode.CodeLensProvider {
-    // tslint:disable-next-line:prefer-type-cast no-any
+    // tslint:disable-next-line:no-any
     public onDidChangeCodeLenses: vscode.Event<void> = vscode.workspace.onDidChangeConfiguration as any as vscode.Event<void>;
-    // tslint:disable-next-line:function-name
-    public static async detectShebang(document: TextDocument): Promise<string | undefined> {
+    constructor(private processService: IProcessService) { }
+    public async detectShebang(document: TextDocument): Promise<string | undefined> {
         const firstLine = document.lineAt(0);
         if (firstLine.isEmptyOrWhitespace) {
             return;
@@ -21,40 +19,30 @@ export class ShebangCodeLensProvider implements vscode.CodeLensProvider {
         }
 
         const shebang = firstLine.text.substr(2).trim();
-        const pythonPath = await ShebangCodeLensProvider.getFullyQualifiedPathToInterpreter(shebang);
+        const pythonPath = await this.getFullyQualifiedPathToInterpreter(shebang);
         return typeof pythonPath === 'string' && pythonPath.length > 0 ? pythonPath : undefined;
     }
-    private static async getFullyQualifiedPathToInterpreter(pythonPath: string) {
-        if (pythonPath.indexOf('bin/env ') >= 0 && !IS_WINDOWS) {
-            // In case we have pythonPath as '/usr/bin/env python'
-            return new Promise<string>(resolve => {
-                const command = child_process.exec(`${pythonPath} -c 'import sys;print(sys.executable)'`);
-                let result = '';
-                command.stdout.on('data', (data) => {
-                    result += data.toString();
-                });
-                command.on('close', () => {
-                    resolve(getFirstNonEmptyLineFromMultilineString(result));
-                });
-            });
-        } else {
-            return new Promise<string>(resolve => {
-                child_process.execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_, stdout) => {
-                    resolve(getFirstNonEmptyLineFromMultilineString(stdout));
-                });
-            });
-        }
-    }
-
     public async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[]> {
         const codeLenses = await this.createShebangCodeLens(document);
         return Promise.resolve(codeLenses);
     }
-
+    private async getFullyQualifiedPathToInterpreter(pythonPath: string) {
+        let cmdFile = pythonPath;
+        let args = ['-c', 'import sys;print(sys.executable)'];
+        if (pythonPath.indexOf('bin/env ') >= 0 && !IS_WINDOWS) {
+            // In case we have pythonPath as '/usr/bin/env python'.
+            const parts = pythonPath.split(' ').map(part => part.trim()).filter(part => part.length > 0);
+            cmdFile = parts.shift()!;
+            args = parts.concat(args);
+        }
+        return this.processService.exec(cmdFile, args)
+            .then(output => output.stdout.trim())
+            .catch(() => '');
+    }
     private async createShebangCodeLens(document: TextDocument) {
-        const shebang = await ShebangCodeLensProvider.detectShebang(document);
+        const shebang = await this.detectShebang(document);
         const pythonPath = settings.PythonSettings.getInstance(document.uri).pythonPath;
-        const resolvedPythonPath = await ShebangCodeLensProvider.getFullyQualifiedPathToInterpreter(pythonPath);
+        const resolvedPythonPath = await this.getFullyQualifiedPathToInterpreter(pythonPath);
         if (!shebang || shebang === resolvedPythonPath) {
             return [];
         }

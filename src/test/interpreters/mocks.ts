@@ -1,19 +1,9 @@
+import { injectable } from 'inversify';
 import { Architecture, IRegistry, RegistryHive } from '../../client/common/platform/types';
-import { IProcessService } from '../../client/common/process/types';
-import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
-import { CondaLocatorService } from '../../client/interpreter/locators/services/condaLocator';
+import { IInterpreterVersionService, InterpreterType } from '../../client/interpreter/contracts';
 import { IVirtualEnvironmentIdentifier } from '../../client/interpreter/virtualEnvs/types';
 
-export class MockProvider implements IInterpreterLocatorService {
-    constructor(private suggestions: PythonInterpreter[]) {
-    }
-    public async getInterpreters(): Promise<PythonInterpreter[]> {
-        return Promise.resolve(this.suggestions);
-    }
-    // tslint:disable-next-line:no-empty
-    public dispose() { }
-}
-
+@injectable()
 export class MockRegistry implements IRegistry {
     constructor(private keys: { key: string, hive: RegistryHive, arch?: Architecture, values: string[] }[],
         private values: { key: string, hive: RegistryHive, arch?: Architecture, value: string, name?: string }[]) {
@@ -46,6 +36,7 @@ export class MockRegistry implements IRegistry {
     }
 }
 
+@injectable()
 export class MockVirtualEnv implements IVirtualEnvironmentIdentifier {
     constructor(private isDetected: boolean, public name: string, public type: InterpreterType.VirtualEnv | InterpreterType.VEnv = InterpreterType.VirtualEnv) {
     }
@@ -55,6 +46,7 @@ export class MockVirtualEnv implements IVirtualEnvironmentIdentifier {
 }
 
 // tslint:disable-next-line:max-classes-per-file
+@injectable()
 export class MockInterpreterVersionProvider implements IInterpreterVersionService {
     constructor(private displayName: string, private useDefaultDisplayName: boolean = false,
         private pipVersionPromise?: Promise<string>) { }
@@ -67,17 +59,4 @@ export class MockInterpreterVersionProvider implements IInterpreterVersionServic
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
-}
-
-// tslint:disable-next-line:max-classes-per-file
-export class MockCondaLocatorService extends CondaLocatorService {
-    constructor(isWindows: boolean, procService: IProcessService, registryLookupForConda?: IInterpreterLocatorService, private isCondaInEnv?: boolean) {
-        super(isWindows, procService, registryLookupForConda);
-    }
-    public async isCondaInCurrentPath() {
-        if (typeof this.isCondaInEnv === 'boolean') {
-            return this.isCondaInEnv;
-        }
-        return super.isCondaInCurrentPath();
-    }
 }

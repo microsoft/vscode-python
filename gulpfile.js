@@ -17,6 +17,8 @@ const colors = require('colors/safe');
 const gitmodified = require('gulp-gitmodified');
 const path = require('path');
 const debounce = require('debounce');
+const jeditor = require("gulp-json-editor");
+const del = require('del');
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -59,8 +61,33 @@ gulp.task('watch', ['hygiene-modified', 'hygiene-watch']);
 
 gulp.task('hygiene-watch', () => gulp.watch(all, debounce(() => run({ mode: 'changes' }), 1000)));
 
+gulp.task('hygiene-all', () => run({ mode: 'all' }));
+
 gulp.task('hygiene-modified', ['compile'], () => run({ mode: 'changes' }));
 
+gulp.task('clean', ['output:clean', 'cover:clean'], () => { });
+
+gulp.task('output:clean', () => del('coverage'));
+
+gulp.task('cover:clean', () => del('coverage'));
+
+gulp.task('cover:enable', () => {
+    return gulp.src("./coverconfig.json")
+        .pipe(jeditor((json) => {
+            json.enabled = true;
+            return json;
+        }))
+        .pipe(gulp.dest("./out", { 'overwrite': true }));
+});
+
+gulp.task('cover:disable', () => {
+    return gulp.src("./coverconfig.json")
+        .pipe(jeditor((json) => {
+            json.enabled = true;
+            return json;
+        }))
+        .pipe(gulp.dest("./out", { 'overwrite': true }));
+});
 
 /**
 * @typedef {Object} hygieneOptions - creates a new type named 'SpecialType'
@@ -132,7 +159,7 @@ const hygiene = (options) => {
      * @param {any[]} failures
      */
     function reportLinterFailures(failures) {
-        failures
+        return failures
             .map(failure => {
                 const name = failure.name || failure.fileName;
                 const position = failure.startPosition;
@@ -210,7 +237,7 @@ const hygiene = (options) => {
     const files = options.mode === 'compile' ? tsProject.src() : getFilesToProcess(options);
     const dest = options.mode === 'compile' ? './out' : '.';
     let result = files
-        .pipe(filter(f => !f.stat.isDirectory()));
+        .pipe(filter(f => f && f.stat && !f.stat.isDirectory()));
 
     if (!options.skipIndentationCheck) {
         result = result.pipe(filter(indentationFilter))
@@ -236,7 +263,7 @@ const hygiene = (options) => {
         .js.pipe(gulp.dest(dest))
         .pipe(es.through(null, function () {
             if (errorCount > 0) {
-                const errorMessage = `Hygiene failed with ${colors.yellow(errorCount)} errors 👎 . Check 'gulpfile.js'.`;
+                const errorMessage = `Hygiene failed with errors 👎 . Check 'gulpfile.js'.`;
                 console.error(colors.red(errorMessage));
                 exitHandler(options);
             } else {
@@ -309,7 +336,7 @@ function getFilesToProcess(options) {
     // If we need only modified files, then filter the glob.
     if (options && options.mode === 'changes') {
         return gulp.src(all, gulpSrcOptions)
-            .pipe(gitmodified('M', 'A', 'D', 'R', 'C', 'U', '??'));
+            .pipe(gitmodified(['M', 'A', 'D', 'R', 'C', 'U', '??']));
     }
 
     if (options && options.mode === 'staged') {

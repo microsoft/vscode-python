@@ -1,9 +1,14 @@
-import 'reflect-metadata';
-import * as testRunner from 'vscode/lib/testrunner';
+// tslint:disable-next-line:no-any
+if ((Reflect as any).metadata === undefined) {
+    // tslint:disable-next-line:no-require-imports no-var-requires
+    require('reflect-metadata');
+}
+import { workspace } from 'vscode';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
-import { IS_MULTI_ROOT_TEST } from './initialize';
+import * as testRunner from './testRunner';
+
 process.env.VSC_PYTHON_CI_TEST = '1';
-process.env.IS_MULTI_ROOT_TEST = IS_MULTI_ROOT_TEST;
+process.env.IS_MULTI_ROOT_TEST = (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1);
 
 // You can directly control Mocha options by uncommenting the following lines.
 // See https://github.com/mochajs/mocha/wiki/Using-mocha-programmatically#set-options for more info.
@@ -15,5 +20,5 @@ const options: MochaSetupOptions & { retries: number } = {
     timeout: 25000,
     retries: 3
 };
-testRunner.configure(options);
+testRunner.configure(options, { coverageConfig: '../coverconfig.json' });
 module.exports = testRunner;

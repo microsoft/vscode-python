@@ -1,49 +1,38 @@
-import { commands, Disposable, window, workspace } from 'vscode';
-import { PythonSettings } from '../common/configSettings';
+import { Disposable, Uri } from 'vscode';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { Commands } from '../common/constants';
-import { getPathFromPythonCommand } from '../common/utils';
+import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
 import { REPL } from '../telemetry/constants';
+import { ICodeExecutionService } from '../terminals/types';
 
 export class ReplProvider implements Disposable {
     private readonly disposables: Disposable[] = [];
-    constructor() {
+    constructor(private serviceContainer: IServiceContainer) {
         this.registerCommand();
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
     }
     private registerCommand() {
-        const disposable = commands.registerCommand(Commands.Start_REPL, this.commandHandler, this);
+        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+        const disposable = commandManager.registerCommand(Commands.Start_REPL, this.commandHandler, this);
         this.disposables.push(disposable);
     }
     @captureTelemetry(REPL)
     private async commandHandler() {
-        const pythonPath = await this.getPythonPath();
-        if (!pythonPath) {
-            return;
-        }
-        let pythonInterpreterPath: string;
-        try {
-            pythonInterpreterPath = await getPathFromPythonCommand(pythonPath).catch(() => pythonPath);
-            // tslint:disable-next-line:variable-name
-        } catch (_ex) {
-            pythonInterpreterPath = pythonPath;
-        }
-        const term = window.createTerminal('Python', pythonInterpreterPath);
-        term.show();
-        this.disposables.push(term);
+        const resource = this.getActiveResourceUri();
+        const replProvider = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'repl');
+        await replProvider.initializeRepl(resource);
     }
-    private async getPythonPath(): Promise<string | undefined> {
-        if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
-            return PythonSettings.getInstance().pythonPath;
+    private getActiveResourceUri(): Uri | undefined {
+        const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
+        if (documentManager.activeTextEditor && !documentManager.activeTextEditor!.document.isUntitled) {
+            return documentManager.activeTextEditor!.document.uri;
         }
-        if (workspace.workspaceFolders.length === 1) {
-            return PythonSettings.getInstance(workspace.workspaceFolders[0].uri).pythonPath;
+        const workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
+            return workspace.workspaceFolders[0].uri;
         }
-
-        // tslint:disable-next-line:no-any prefer-type-cast
-        const workspaceFolder = await (window as any).showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
-        return workspace ? PythonSettings.getInstance(workspaceFolder.uri).pythonPath : undefined;
     }
 }

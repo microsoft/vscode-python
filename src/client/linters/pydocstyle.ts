@@ -1,23 +1,22 @@
 import * as path from 'path';
 import { OutputChannel } from 'vscode';
 import { CancellationToken, TextDocument } from 'vscode';
-import { IInstaller, ILogger, Product } from '../common/types';
+import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { IS_WINDOWS } from './../common/utils';
-import * as baseLinter from './baseLinter';
-import { ILintMessage } from './baseLinter';
-import { ILinterHelper } from './types';
+import { BaseLinter } from './baseLinter';
+import { ILintMessage, LintMessageSeverity } from './types';
 
-export class Linter extends baseLinter.BaseLinter {
-    constructor(outputChannel: OutputChannel, installer: IInstaller, helper: ILinterHelper, logger: ILogger, serviceContainer: IServiceContainer) {
-        super(Product.pydocstyle, outputChannel, installer, helper, logger, serviceContainer);
+export class PyDocStyle extends BaseLinter {
+    constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
+        super(Product.pydocstyle, outputChannel, serviceContainer);
     }
 
-    protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<baseLinter.ILintMessage[]> {
+    protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
         const messages = await this.run([document.uri.fsPath], document, cancellation);
         // All messages in pep8 are treated as warnings for now.
         messages.forEach(msg => {
-            msg.severity = baseLinter.LintMessageSeverity.Warning;
+            msg.severity = LintMessageSeverity.Warning;
         });
 
         return messages;
@@ -68,7 +67,7 @@ export class Linter extends baseLinter.BaseLinter {
                         column: sourceStart,
                         line: lineNumber,
                         type: '',
-                        provider: this.Id
+                        provider: this.info.id
                     } as ILintMessage;
                 } catch (ex) {
                     this.logger.logError(`Failed to parse pydocstyle line '${line}'`, ex);

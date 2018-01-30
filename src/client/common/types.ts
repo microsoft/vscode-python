@@ -2,7 +2,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Uri } from 'vscode';
+import { ConfigurationTarget, DiagnosticSeverity, Uri } from 'vscode';
+import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export const IsWindows = Symbol('IS_WINDOWS');
@@ -57,7 +58,8 @@ export enum Product {
     mypy = 11,
     unittest = 12,
     ctags = 13,
-    rope = 14
+    rope = 14,
+    isort = 15
 }
 
 export enum ModuleNamePurpose {
@@ -71,7 +73,6 @@ export interface IInstaller {
     promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse>;
     install(product: Product, resource?: Uri): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined>;
-    disableLinter(product: Product, resource?: Uri): Promise<void>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
@@ -79,4 +80,131 @@ export const IPathUtils = Symbol('IPathUtils');
 
 export interface IPathUtils {
     getPathVariableName(): 'Path' | 'PATH';
+}
+
+export const ICurrentProcess = Symbol('ICurrentProcess');
+export interface ICurrentProcess {
+    readonly env: EnvironmentVariables;
+}
+
+export interface IPythonSettings {
+    readonly pythonPath: string;
+    readonly venvPath: string;
+    readonly jediPath: string;
+    readonly devOptions: string[];
+    readonly linting: ILintingSettings;
+    readonly formatting: IFormattingSettings;
+    readonly unitTest: IUnitTestSettings;
+    readonly autoComplete: IAutoCompeteSettings;
+    readonly terminal: ITerminalSettings;
+    readonly sortImports: ISortImportSettings;
+    readonly workspaceSymbols: IWorkspaceSymbolSettings;
+    readonly envFile: string;
+    readonly disablePromptForFeatures: string[];
+    readonly disableInstallationChecks: boolean;
+    readonly globalModuleInstallation: boolean;
+}
+export interface ISortImportSettings {
+    readonly path: string;
+    readonly args: string[];
+}
+
+export interface IUnitTestSettings {
+    readonly promptToConfigure: boolean;
+    readonly debugPort: number;
+    readonly debugHost?: string;
+    readonly nosetestsEnabled: boolean;
+    nosetestPath: string;
+    nosetestArgs: string[];
+    readonly pyTestEnabled: boolean;
+    pyTestPath: string;
+    pyTestArgs: string[];
+    readonly unittestEnabled: boolean;
+    unittestArgs: string[];
+    cwd?: string;
+}
+export interface IPylintCategorySeverity {
+    readonly convention: DiagnosticSeverity;
+    readonly refactor: DiagnosticSeverity;
+    readonly warning: DiagnosticSeverity;
+    readonly error: DiagnosticSeverity;
+    readonly fatal: DiagnosticSeverity;
+}
+export interface IPep8CategorySeverity {
+    readonly W: DiagnosticSeverity;
+    readonly E: DiagnosticSeverity;
+}
+// tslint:disable-next-line:interface-name
+export interface Flake8CategorySeverity {
+    readonly F: DiagnosticSeverity;
+    readonly E: DiagnosticSeverity;
+    readonly W: DiagnosticSeverity;
+}
+export interface IMypyCategorySeverity {
+    readonly error: DiagnosticSeverity;
+    readonly note: DiagnosticSeverity;
+}
+export interface ILintingSettings {
+    readonly enabled: boolean;
+    readonly ignorePatterns: string[];
+    readonly prospectorEnabled: boolean;
+    readonly prospectorArgs: string[];
+    readonly pylintEnabled: boolean;
+    readonly pylintArgs: string[];
+    readonly pep8Enabled: boolean;
+    readonly pep8Args: string[];
+    readonly pylamaEnabled: boolean;
+    readonly pylamaArgs: string[];
+    readonly flake8Enabled: boolean;
+    readonly flake8Args: string[];
+    readonly pydocstyleEnabled: boolean;
+    readonly pydocstyleArgs: string[];
+    readonly lintOnSave: boolean;
+    readonly maxNumberOfProblems: number;
+    readonly pylintCategorySeverity: IPylintCategorySeverity;
+    readonly pep8CategorySeverity: IPep8CategorySeverity;
+    readonly flake8CategorySeverity: Flake8CategorySeverity;
+    readonly mypyCategorySeverity: IMypyCategorySeverity;
+    prospectorPath: string;
+    pylintPath: string;
+    pep8Path: string;
+    pylamaPath: string;
+    flake8Path: string;
+    pydocstylePath: string;
+    mypyEnabled: boolean;
+    mypyArgs: string[];
+    mypyPath: string;
+    readonly pylintUseMinimalCheckers: boolean;
+}
+export interface IFormattingSettings {
+    readonly provider: string;
+    autopep8Path: string;
+    readonly autopep8Args: string[];
+    yapfPath: string;
+    readonly yapfArgs: string[];
+}
+export interface IAutoCompeteSettings {
+    readonly addBrackets: boolean;
+    readonly extraPaths: string[];
+    readonly preloadModules: string[];
+}
+export interface IWorkspaceSymbolSettings {
+    readonly enabled: boolean;
+    tagFilePath: string;
+    readonly rebuildOnStart: boolean;
+    readonly rebuildOnFileSave: boolean;
+    readonly ctagsPath: string;
+    readonly exclusionPatterns: string[];
+}
+export interface ITerminalSettings {
+    readonly executeInFileDir: boolean;
+    readonly launchArgs: string[];
+}
+
+export const IConfigurationService = Symbol('IConfigurationService');
+
+export interface IConfigurationService {
+    getSettings(resource?: Uri): IPythonSettings;
+    isTestExecution(): boolean;
+    updateSettingAsync(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
 }

@@ -1,6 +1,7 @@
 'use strict';
 // This line should always be right on top.
-if (Reflect.metadata === undefined) {
+// tslint:disable-next-line:no-any
+if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
@@ -9,34 +10,37 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import { BannerService } from './banner';
+import { PythonSettings } from './common/configSettings';
 import * as settings from './common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
+import { PythonInstaller } from './common/installer/pythonInstallation';
+import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
+import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
+import { IProcessService } from './common/process/types';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { SimpleConfigurationProvider } from './debugger';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import { InterpreterManager } from './interpreter';
-import { SetInterpreterProvider } from './interpreter/configuration/setInterpreterProvider';
-import { ICondaLocatorService } from './interpreter/contracts';
+import { InterpreterSelector } from './interpreter/configuration/interpreterSelector';
+import { ICondaService, IInterpreterService, IInterpreterVersionService } from './interpreter/contracts';
 import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
-import { InterpreterVersionService } from './interpreter/interpreterVersion';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer } from './ioc/types';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
+import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
 import { PythonDefinitionProvider } from './providers/definitionProvider';
-import { activateExecInTerminalProvider } from './providers/execInTerminalProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { PythonHoverProvider } from './providers/hoverProvider';
-import { LintProvider } from './providers/lintProvider';
+import { LinterProvider } from './providers/linterProvider';
 import { activateGoToObjectDefinitionProvider } from './providers/objectDefinitionProvider';
 import { PythonReferenceProvider } from './providers/referenceProvider';
 import { PythonRenameProvider } from './providers/renameProvider';
@@ -44,11 +48,14 @@ import { ReplProvider } from './providers/replProvider';
 import { PythonSignatureProvider } from './providers/signatureProvider';
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { PythonSymbolProvider } from './providers/symbolProvider';
+import { TerminalProvider } from './providers/terminalProvider';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
 import * as sortImports from './sortImports';
 import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { StopWatch } from './telemetry/stopWatch';
+import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
+import { ICodeExecutionManager } from './terminals/types';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import * as tests from './unittests/main';
@@ -81,44 +88,58 @@ export async function activate(context: vscode.ExtensionContext) {
     lintersRegisterTypes(serviceManager);
     interpretersRegisterTypes(serviceManager);
     formattersRegisterTypes(serviceManager);
+    platformRegisterTypes(serviceManager);
+    installerRegisterTypes(serviceManager);
+    commonRegisterTerminalTypes(serviceManager);
+
+    serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const pythonSettings = settings.PythonSettings.getInstance();
+    // tslint:disable-next-line:no-floating-promises
     sendStartupTelemetry(activated, serviceContainer);
 
-    sortImports.activate(context, standardOutputChannel);
-    const interpreterManager = new InterpreterManager(serviceContainer);
+    sortImports.activate(context, standardOutputChannel, serviceContainer);
+    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
+
+    const pythonInstaller = new PythonInstaller(serviceContainer);
+    pythonInstaller.checkPythonInstallation(PythonSettings.getInstance())
+        .catch(ex => console.error('Python Extension: pythonInstaller.checkPythonInstallation', ex));
+
     // This must be completed before we can continue.
     await interpreterManager.autoSetInterpreter();
 
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
-    context.subscriptions.push(interpreterManager);
-    const interpreterVersionService = new InterpreterVersionService();
-    context.subscriptions.push(new SetInterpreterProvider(interpreterManager, interpreterVersionService));
-    context.subscriptions.push(...activateExecInTerminalProvider());
+
+    const processService = serviceContainer.get<IProcessService>(IProcessService);
+    const interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
+    context.subscriptions.push(new InterpreterSelector(interpreterManager, interpreterVersionService, processService));
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
-    const jediFactory = new JediFactory(context.asAbsolutePath('.'));
+    const jediFactory = new JediFactory(context.asAbsolutePath('.'), serviceContainer);
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
-    context.subscriptions.push(new ReplProvider());
+    context.subscriptions.push(new ReplProvider(serviceContainer));
+    context.subscriptions.push(new TerminalProvider(serviceContainer));
+    context.subscriptions.push(new LinterCommands(serviceContainer));
 
     // Enable indentAction
     // tslint:disable-next-line:no-non-null-assertion
     vscode.languages.setLanguageConfiguration(PYTHON.language!, {
         onEnterRules: [
             {
-                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async).*?:\s*$/,
+                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*/,
                 action: { indentAction: vscode.IndentAction.Indent }
             },
             {
-                beforeText: /^ *#.*$/,
+                beforeText: /^\s*#.*/,
                 afterText: /.+$/,
                 action: { indentAction: vscode.IndentAction.None, appendText: '# ' }
             },
             {
-                beforeText: /^\s+(continue|break|return)\b.*$/,
+                beforeText: /^\s+(continue|break|return)\b.*/,
+                afterText: /\s+$/,
                 action: { indentAction: vscode.IndentAction.Outdent }
             }
         ]
@@ -130,8 +151,8 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerDefinitionProvider(PYTHON, definitionProvider));
     context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
     context.subscriptions.push(vscode.languages.registerReferenceProvider(PYTHON, new PythonReferenceProvider(jediFactory)));
-    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(PYTHON, new PythonCompletionItemProvider(jediFactory), '.'));
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, new ShebangCodeLensProvider()));
+    context.subscriptions.push(vscode.languages.registerCompletionItemProvider(PYTHON, new PythonCompletionItemProvider(jediFactory, serviceContainer), '.'));
+    context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, new ShebangCodeLensProvider(processService)));
 
     const symbolProvider = new PythonSymbolProvider(jediFactory);
     context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider(PYTHON, symbolProvider));
@@ -145,7 +166,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     // tslint:disable-next-line:promise-function-async
-    const linterProvider = new LintProvider(context, standardOutputChannel, (a, b) => Promise.resolve(false), serviceContainer);
+    const linterProvider = new LinterProvider(context, standardOutputChannel, (a, b) => Promise.resolve(false), serviceContainer);
     context.subscriptions.push(linterProvider);
     const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
     if (jupyterExtInstalled) {
@@ -189,7 +210,7 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
     try {
         await activatedPromise;
         const duration = stopWatch.elapsedTime;
-        const condaLocator = serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
         const condaVersion = await condaLocator.getCondaVersion().catch(() => undefined);
         const props = condaVersion ? { condaVersion } : undefined;
         sendTelemetryEvent(EDITOR_LOAD, duration, props);

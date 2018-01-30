@@ -15,7 +15,7 @@ export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'unitTest.nosetestArgs' | 'unitTest.pyTestArgs' | 'unitTest.unittestArgs' |
     'formatting.provider' | 'sortImports.args' |
     'unitTest.nosetestsEnabled' | 'unitTest.pyTestEnabled' | 'unitTest.unittestEnabled' |
-    'linting.enabledWithoutWorkspace' | 'envFile';
+    'envFile';
 
 export async function updateSetting(setting: PythonSettingKeys, value: {} | undefined, resource: Uri | undefined, configTarget: ConfigurationTarget) {
     const settings = workspace.getConfiguration('python', resource);
@@ -85,7 +85,8 @@ async function setPythonPathInWorkspace(resource: string | Uri | undefined, conf
     }
 }
 async function restoreGlobalPythonPathSetting(): Promise<void> {
-    const pythonConfig = workspace.getConfiguration('python');
+    // tslint:disable-next-line:no-any
+    const pythonConfig = workspace.getConfiguration('python', null as any as Uri);
     // tslint:disable-next-line:no-non-null-assertion
     const currentGlobalPythonPathSetting = pythonConfig.inspect('pythonPath')!.globalValue;
     // tslint:disable-next-line:no-use-before-declare
@@ -106,6 +107,10 @@ export async function deleteFile(file: string) {
     if (exists) {
         await fs.remove(file);
     }
+}
+
+export async function sleep(milliseconds: number) {
+    return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 }
 
 // tslint:disable-next-line:no-non-null-assertion

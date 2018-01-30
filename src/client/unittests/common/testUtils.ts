@@ -3,8 +3,8 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
 import { window } from 'vscode';
-import { IUnitTestSettings } from '../../common/configSettings';
 import * as constants from '../../common/constants';
+import { IUnitTestSettings } from '../../common/types';
 import { Product } from '../../common/types';
 import { CommandSource } from './constants';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
@@ -52,6 +52,16 @@ export class TestsHelper implements ITestsHelper {
             case Product.unittest: return 'unittest';
             default: {
                 throw new Error(`Unknown Test Product ${product}`);
+            }
+        }
+    }
+    public parseProduct(provider: TestProvider): UnitTestProduct {
+        switch (provider) {
+            case 'nosetest': return Product.nosetest;
+            case 'pytest': return Product.pytest;
+            case 'unittest': return Product.unittest;
+            default: {
+                throw new Error(`Unknown Test Provider ${provider}`);
             }
         }
     }

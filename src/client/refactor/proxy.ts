@@ -1,18 +1,18 @@
 // tslint:disable:no-any no-empty member-ordering prefer-const prefer-template no-var-self
 
-import * as child_process from 'child_process';
+import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { IPythonSettings } from '../common/configSettings';
 import '../common/extensions';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IPythonExecutionFactory } from '../common/process/types';
+import { IPythonSettings } from '../common/types';
 import { getWindowsLineEndingCount, IS_WINDOWS } from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
 
 export class RefactorProxy extends vscode.Disposable {
-    private _process?: child_process.ChildProcess;
+    private _process?: ChildProcess;
     private _extensionDir: string;
     private _previousOutData: string = '';
     private _previousStdErrData: string = '';

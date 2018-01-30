@@ -16,12 +16,48 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.count, 0);
         assert.equal(tokens.length, 0);
     });
-    test('Strings', async () => {
+    test('Strings: unclosed', async () => {
         const t = new Tokenizer();
         const tokens = t.Tokenize(' "string" """line1\n#line2"""\t\'un#closed');
         assert.equal(tokens.count, 3);
 
         const ranges = [1, 8, 10, 18, 29, 10];
+        for (let i = 0; i < tokens.count; i += 1) {
+            assert.equal(tokens.getItemAt(i).start, ranges[2 * i]);
+            assert.equal(tokens.getItemAt(i).length, ranges[2 * i + 1]);
+            assert.equal(tokens.getItemAt(i).type, TokenType.String);
+        }
+    });
+    test('Strings: block next to regular, double-quoted', async () => {
+        const t = new Tokenizer();
+        const tokens = t.Tokenize('"string""""s2"""');
+        assert.equal(tokens.count, 2);
+
+        const ranges = [0, 8, 8, 8];
+        for (let i = 0; i < tokens.count; i += 1) {
+            assert.equal(tokens.getItemAt(i).start, ranges[2 * i]);
+            assert.equal(tokens.getItemAt(i).length, ranges[2 * i + 1]);
+            assert.equal(tokens.getItemAt(i).type, TokenType.String);
+        }
+    });
+    test('Strings: block next to block, double-quoted', async () => {
+        const t = new Tokenizer();
+        const tokens = t.Tokenize('""""""""');
+        assert.equal(tokens.count, 2);
+
+        const ranges = [0, 6, 6, 2];
+        for (let i = 0; i < tokens.count; i += 1) {
+            assert.equal(tokens.getItemAt(i).start, ranges[2 * i]);
+            assert.equal(tokens.getItemAt(i).length, ranges[2 * i + 1]);
+            assert.equal(tokens.getItemAt(i).type, TokenType.String);
+        }
+    });
+    test('Strings: unclosed sequence of quotes', async () => {
+        const t = new Tokenizer();
+        const tokens = t.Tokenize('"""""');
+        assert.equal(tokens.count, 1);
+
+        const ranges = [0, 5];
         for (let i = 0; i < tokens.count; i += 1) {
             assert.equal(tokens.getItemAt(i).start, ranges[2 * i]);
             assert.equal(tokens.getItemAt(i).length, ranges[2 * i + 1]);

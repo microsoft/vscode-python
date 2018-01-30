@@ -1,6 +1,7 @@
+// tslint:disable:quotemark ordered-imports promise-must-complete member-ordering no-any prefer-template cyclomatic-complexity no-empty no-multiline-string one-line no-invalid-template-strings no-suspicious-comment no-var-self prefer-const no-single-line-block-comment no-unnecessary-local-variable
 "use strict";
 
-import { FrameKind, IPythonProcess, IPythonThread, IPythonModule, IPythonEvaluationResult, IPythonStackFrame } from "./Common/Contracts";
+import { FrameKind, IPythonProcess, IPythonThread, IPythonEvaluationResult, IPythonStackFrame } from "./Common/Contracts";
 import { IDjangoStackFrame, PythonEvaluationResultFlags, PythonLanguageVersion, IChildEnumCommand, IPythonException, IExecutionCommand } from "./Common/Contracts";
 import * as utils from "./Common/Utils";
 import { EventEmitter } from "events";
@@ -8,13 +9,12 @@ import { Commands } from "./ProxyCommands";
 import { SocketStream } from "../common/net/socket/SocketStream";
 import { ExtractTryStatements } from "./Common/TryParser";
 import * as path from "path";
-import {IdDispenser} from '../common/idDispenser';
+import { IdDispenser } from '../common/idDispenser';
 
 export class PythonProcessCallbackHandler extends EventEmitter {
     private process: IPythonProcess;
     private idDispenser: IdDispenser;
     private stream: SocketStream;
-    private _stoppedForException: boolean;
     constructor(process: IPythonProcess, stream: SocketStream, idDispenser: IdDispenser) {
         super();
         this.process = process;
@@ -88,7 +88,7 @@ export class PythonProcessCallbackHandler extends EventEmitter {
         if (this.stream.HasInsufficientDataForReading) {
             return;
         }
-        if (filename != null) {
+        if (filename) {
             this.emit("moduleLoaded", utils.CreatePythonModule(moduleId, filename));
         }
     }
@@ -99,9 +99,9 @@ export class PythonProcessCallbackHandler extends EventEmitter {
             return;
         }
 
-        let pyThread: IPythonThread;
+        let pyThread: IPythonThread | undefined;
         if (this.process.Threads.has(threadId)) {
-            pyThread = this.process.Threads.get(threadId);
+            pyThread = this.process.Threads.get(threadId)!;
         }
         this.emit("output", pyThread, output);
     }
@@ -125,9 +125,9 @@ export class PythonProcessCallbackHandler extends EventEmitter {
             return;
         }
 
-        let thread: IPythonThread;
+        let thread: IPythonThread | undefined;
         if (this.process.Threads.has(threadId)) {
-            thread = this.process.Threads.get(threadId);
+            thread = this.process.Threads.get(threadId)!;
             this.emit("threadExited", thread);
             // this.process.Threads.delete(threadId);
         }
@@ -138,9 +138,9 @@ export class PythonProcessCallbackHandler extends EventEmitter {
         if (this.stream.HasInsufficientDataForReading) {
             return;
         }
-        let pyThread: IPythonThread;
+        let pyThread: IPythonThread | undefined;
         if (this.process.Threads.has(threadId)) {
-            pyThread = this.process.Threads.get(threadId);
+            pyThread = this.process.Threads.get(threadId)!;
         }
         this.emit("processLoaded", pyThread);
     }
@@ -150,9 +150,9 @@ export class PythonProcessCallbackHandler extends EventEmitter {
         if (this.stream.HasInsufficientDataForReading) {
             return;
         }
-        let pyThread: IPythonThread;
+        let pyThread: IPythonThread | undefined;
         if (this.process.Threads.has(threadId)) {
-            pyThread = this.process.Threads.get(threadId);
+            pyThread = this.process.Threads.get(threadId)!;
         }
         this.emit("stepCompleted", pyThread);
     }
@@ -161,9 +161,9 @@ export class PythonProcessCallbackHandler extends EventEmitter {
         if (this.stream.HasInsufficientDataForReading) {
             return;
         }
-        let pyThread: IPythonThread;
+        let pyThread: IPythonThread | undefined;
         if (this.process.Threads.has(threadId)) {
-            pyThread = this.process.Threads.get(threadId);
+            pyThread = this.process.Threads.get(threadId)!;
         }
         this.emit("asyncBreakCompleted", pyThread);
     }
@@ -188,9 +188,9 @@ export class PythonProcessCallbackHandler extends EventEmitter {
             return;
         }
 
-        let pyThread: IPythonThread;
+        let pyThread: IPythonThread | undefined;
         if (this.process.Threads.has(threadId)) {
-            pyThread = this.process.Threads.get(threadId);
+            pyThread = this.process.Threads.get(threadId)!;
         }
         this.emit("breakpointHit", pyThread, breakId);
     }
@@ -226,7 +226,7 @@ export class PythonProcessCallbackHandler extends EventEmitter {
         return ExtractTryStatements(fileName).then(statements => {
             let exceptionRanges: { startLine: number, endLine: number, expressions: string[] }[] = [];
             statements.forEach(statement => {
-                let expressions = [];
+                let expressions: string[] = [];
                 if (statement.Exceptions.length === 0 || statement.Exceptions.indexOf("*") >= 0) {
                     expressions = ["*"];
                 }
@@ -258,40 +258,19 @@ export class PythonProcessCallbackHandler extends EventEmitter {
             return;
         }
 
-        if (typeName != null && desc != null) {
+        if (typeName && desc) {
             let ex: IPythonException = {
                 TypeName: typeName,
                 Description: desc
             };
-            let pyThread: IPythonThread;
+            let pyThread: IPythonThread | undefined;
             if (this.process.Threads.has(threadId)) {
                 pyThread = this.process.Threads.get(threadId);
             }
-            this.emit("exceptionRaised", pyThread, ex, breakType === 1 /* BREAK_TYPE_UNHANLDED */);
+            this.emit("exceptionRaised", pyThread!, ex, breakType === 1 /* BREAK_TYPE_UNHANLDED */);
         }
-        this._stoppedForException = true;
     }
     private HandleRichException() {
-        // let typeName = this.stream.ReadString();
-        // let threadId = this.stream.ReadInt64();
-        // let breakType = this.stream.ReadInt32();
-        // let desc = this.stream.ReadString();
-        // if (this.stream.HasInsufficientDataForReading) {
-        //     return;
-        // }
-
-        // if (typeName != null && desc != null) {
-        //     let ex: IPythonException = {
-        //         TypeName: typeName,
-        //         Description: desc
-        //     };
-        //     let pyThread: IPythonThread;
-        //     if (this.process.Threads.has(threadId)) {
-        //         pyThread = this.process.Threads.get(threadId);
-        //     }
-        //     this.emit("exceptionRaised", pyThread, ex, breakType === 1 /* BREAK_TYPE_UNHANLDED */);
-        // }
-        // this._stoppedForException = true;
     }
     private HandleExecutionException() {
         let execId = this.stream.ReadInt32();
@@ -300,13 +279,13 @@ export class PythonProcessCallbackHandler extends EventEmitter {
             return;
         }
 
-        let cmd: IExecutionCommand = null;
+        let cmd: IExecutionCommand | undefined;
         if (this.process.PendingExecuteCommands.has(execId)) {
-            cmd = this.process.PendingExecuteCommands.get(execId);
+            cmd = this.process.PendingExecuteCommands.get(execId)!;
             if (this.process.PendingExecuteCommands.has(execId)) {
                 this.process.PendingExecuteCommands.delete(execId);
             }
-            cmd.PromiseReject(exceptionText);
+            cmd!.PromiseReject(exceptionText);
         }
         this.process.ProcessPendingExecuteCommands();
         this.idDispenser.Free(execId);
@@ -317,29 +296,29 @@ export class PythonProcessCallbackHandler extends EventEmitter {
             return;
         }
 
-        let cmd: IExecutionCommand = null;
+        let cmd: IExecutionCommand | undefined;
         if (this.process.PendingExecuteCommands.has(execId)) {
-            cmd = this.process.PendingExecuteCommands.get(execId);
+            cmd = this.process.PendingExecuteCommands.get(execId)!;
         }
 
-        if (cmd === null) {
+        if (!cmd) {
             // Passing null for parameters other than stream is okay as long
             // as we drop the result.
-            this.ReadPythonObject(null, null, null);
+            this.ReadPythonObject(null as any, null as any, null as any);
             if (this.stream.HasInsufficientDataForReading) {
                 return;
             }
         }
         else {
-            let evalResult = this.ReadPythonObject(cmd.Text, null, cmd.Frame);
+            let evalResult = this.ReadPythonObject(cmd!.Text, null as any, cmd!.Frame);
             if (this.stream.HasInsufficientDataForReading) {
                 return;
             }
 
-            cmd.PromiseResolve(evalResult);
+            cmd!.PromiseResolve(evalResult!);
         }
 
-        if (cmd != null) {
+        if (cmd) {
             if (this.process.PendingExecuteCommands.has(execId)) {
                 this.process.PendingExecuteCommands.delete(execId);
             }
@@ -354,9 +333,9 @@ export class PythonProcessCallbackHandler extends EventEmitter {
             return;
         }
 
-        let cmd: IChildEnumCommand = null;
+        let cmd: IChildEnumCommand | undefined;
         if (this.process.PendingChildEnumCommands.has(execId)) {
-            cmd = this.process.PendingChildEnumCommands.get(execId);
+            cmd = this.process.PendingChildEnumCommands.get(execId)!;
         }
 
         let childrenCount = this.stream.ReadInt32();
@@ -365,22 +344,22 @@ export class PythonProcessCallbackHandler extends EventEmitter {
         }
 
         const children: IPythonEvaluationResult[] = [];
-        for (let childCount = 0; childCount < childrenCount; childCount++) {
+        for (let childCount = 0; childCount < childrenCount; childCount += 1) {
             const childName = this.stream.ReadString();
             const childExpr = this.stream.ReadString();
             if (this.stream.HasInsufficientDataForReading) {
                 return;
             }
 
-            let obj = this.ReadPythonObject(childExpr, childName, cmd === null ? null : cmd.Frame);
+            let obj = this.ReadPythonObject(childExpr, childName, cmd ? cmd!.Frame : null as any);
             if (this.stream.HasInsufficientDataForReading) {
                 return;
             }
-            children.push(obj);
+            children.push(obj!);
         }
 
-        if (cmd != null) {
-            cmd.PromiseResolve(children);
+        if (cmd) {
+            cmd!.PromiseResolve(children);
             if (this.process.PendingChildEnumCommands.has(execId)) {
                 this.process.PendingChildEnumCommands.delete(execId);
             }
@@ -394,9 +373,9 @@ export class PythonProcessCallbackHandler extends EventEmitter {
             return;
         }
 
-        let pyThread: IPythonThread;
+        let pyThread: IPythonThread | undefined;
         if (this.process.Threads.has(threadId)) {
-            pyThread = this.process.Threads.get(threadId);
+            pyThread = this.process.Threads.get(threadId)!;
         }
 
         let threadName = this.stream.ReadString();
@@ -405,7 +384,7 @@ export class PythonProcessCallbackHandler extends EventEmitter {
             return;
         }
 
-        for (let i = 0; i < frameCount; i++) {
+        for (let i = 0; i < frameCount; i += 1) {
             let startLine = this.stream.ReadInt32();
             let endLine = this.stream.ReadInt32();
             let lineNo = this.stream.ReadInt32();
@@ -417,8 +396,8 @@ export class PythonProcessCallbackHandler extends EventEmitter {
                 return;
             }
 
-            let frame: IPythonStackFrame = null;
-            if (pyThread != null) {
+            let frame: IPythonStackFrame | undefined;
+            if (pyThread) {
                 switch (frameKind) {
                     case FrameKind.Django: {
                         let sourceFile = this.stream.ReadString();
@@ -432,7 +411,7 @@ export class PythonProcessCallbackHandler extends EventEmitter {
                             FrameId: i, FunctionName: frameName,
                             Kind: frameKind, LineNo: lineNo,
                             Locals: [], Parameters: [],
-                            Thread: pyThread, SourceFile: sourceFile,
+                            Thread: pyThread!, SourceFile: sourceFile,
                             SourceLine: sourceLine, StartLine: startLine
                         };
 
@@ -445,7 +424,7 @@ export class PythonProcessCallbackHandler extends EventEmitter {
                             FrameId: i, FunctionName: frameName,
                             Kind: frameKind, LineNo: lineNo,
                             Locals: [], Parameters: [],
-                            Thread: pyThread, StartLine: startLine
+                            Thread: pyThread!, StartLine: startLine
                         };
                         break;
                     }
@@ -459,37 +438,37 @@ export class PythonProcessCallbackHandler extends EventEmitter {
             }
 
             let variables: IPythonEvaluationResult[] = [];
-            for (let j = 0; j < varCount; j++) {
+            for (let j = 0; j < varCount; j += 1) {
                 let name = this.stream.ReadString();
                 if (this.stream.HasInsufficientDataForReading) {
                     return;
                 }
 
-                if (frame != null) {
-                    let variableObj = this.ReadPythonObject(name, name, frame);
+                if (frame) {
+                    let variableObj = this.ReadPythonObject(name, name, frame!);
                     if (this.stream.HasInsufficientDataForReading) {
                         return;
                     }
 
-                    variables.push(variableObj);
+                    variables.push(variableObj!);
                 }
             }
-            if (frame != null) {
-                frame.Parameters = variables.splice(0, argCount);
-                frame.Locals = variables;
-                frames.push(frame);
+            if (frame) {
+                frame!.Parameters = variables.splice(0, argCount);
+                frame!.Locals = variables;
+                frames.push(frame!);
             }
         }
 
-        if (pyThread != null) {
-            pyThread.Frames = frames;
+        if (pyThread) {
+            pyThread!.Frames = frames;
             if (typeof threadName === "string" && threadName.length > 0) {
-                pyThread.Name = threadName;
+                pyThread!.Name = threadName;
             }
         }
     }
 
-    private ReadPythonObject(expr: string, childName: string, frame: IPythonStackFrame): IPythonEvaluationResult {
+    private ReadPythonObject(expr: string, childName: string, frame: IPythonStackFrame): IPythonEvaluationResult | undefined {
         let objRepr = this.stream.ReadString();
         let hexRepr = this.stream.ReadString();
         let typeName = this.stream.ReadString();
@@ -506,7 +485,7 @@ export class PythonProcessCallbackHandler extends EventEmitter {
         }
 
         if (typeName === "bool") {
-            hexRepr = null;
+            hexRepr = null as any;
         }
 
         let pythonEvaluationResult: IPythonEvaluationResult = {

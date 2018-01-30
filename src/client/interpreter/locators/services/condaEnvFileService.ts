@@ -1,21 +1,23 @@
-import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IS_WINDOWS } from '../../../common/configSettings';
+import { IFileSystem } from '../../../common/platform/types';
+import { ILogger } from '../../../common/types';
 import {
-    ICondaEnvironmentFile,
+    ICondaService,
     IInterpreterLocatorService,
     IInterpreterVersionService,
     InterpreterType,
     PythonInterpreter
 } from '../../contracts';
-import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName, CONDA_RELATIVE_PY_PATH } from './conda';
+import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName } from './conda';
 
 @injectable()
 export class CondaEnvFileService implements IInterpreterLocatorService {
-    constructor( @inject(ICondaEnvironmentFile) private condaEnvironmentFile: string,
-        @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService) {
+    constructor( @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService,
+        @inject(ICondaService) private condaService: ICondaService,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(ILogger) private logger: ILogger) {
     }
     public async getInterpreters(_?: Uri) {
         return this.getSuggestionsFromConda();
@@ -23,40 +25,58 @@ export class CondaEnvFileService implements IInterpreterLocatorService {
     // tslint:disable-next-line:no-empty
     public dispose() { }
     private async getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
-        return fs.pathExists(this.condaEnvironmentFile)
-            .then(exists => exists ? this.getEnvironmentsFromFile(this.condaEnvironmentFile) : Promise.resolve([]));
+        if (!this.condaService.condaEnvironmentsFile) {
+            return [];
+        }
+        return this.fileSystem.fileExistsAsync(this.condaService.condaEnvironmentsFile!)
+            .then(exists => exists ? this.getEnvironmentsFromFile(this.condaService.condaEnvironmentsFile!) : Promise.resolve([]));
     }
     private async getEnvironmentsFromFile(envFile: string) {
-        return fs.readFile(envFile)
-            .then(buffer => buffer.toString().split(/\r?\n/g))
-            .then(lines => lines.map(line => line.trim()))
-            .then(lines => lines.map(line => path.join(line, ...CONDA_RELATIVE_PY_PATH)))
-            .then(interpreterPaths => interpreterPaths.map(item => fs.pathExists(item).then(exists => exists ? item : '')))
-            .then(promises => Promise.all(promises))
-            .then(interpreterPaths => interpreterPaths.filter(item => item.length > 0))
-            .then(interpreterPaths => interpreterPaths.map(item => this.getInterpreterDetails(item)))
-            .then(promises => Promise.all(promises))
-            .catch((err) => {
-                console.error('Python Extension (getEnvironmentsFromFile.readFile):', err);
-                // Ignore errors in reading the file.
-                return [] as PythonInterpreter[];
-            });
+        try {
+            const fileContents = await this.fileSystem.readFile(envFile);
+            const environmentPaths = fileContents.split(/\r?\n/g)
+                .map(environmentPath => environmentPath.trim())
+                .filter(environmentPath => environmentPath.length > 0);
+
+            const interpreters = (await Promise.all(environmentPaths
+                .map(environmentPath => this.getInterpreterDetails(environmentPath))))
+                .filter(item => !!item)
+                .map(item => item!);
+
+            const environments = await this.condaService.getCondaEnvironments();
+            if (Array.isArray(environments) && environments.length > 0) {
+                interpreters
+                    .forEach(interpreter => {
+                        const environment = environments.find(item => this.fileSystem.arePathsSame(item.path, interpreter!.envPath!));
+                        if (environment) {
+                            interpreter.envName = environment!.name;
+                            interpreter.displayName = `${interpreter.displayName} (${environment!.name})`;
+                        }
+                    });
+            }
+            return interpreters;
+        } catch (err) {
+            this.logger.logError('Python Extension (getEnvironmentsFromFile.readFile):', err);
+            // Ignore errors in reading the file.
+            return [] as PythonInterpreter[];
+        }
     }
-    private async getInterpreterDetails(interpreter: string) {
-        return this.versionService.getVersion(interpreter, path.basename(interpreter))
-            .then(version => {
-                version = this.stripCompanyName(version);
-                const envName = this.getEnvironmentRootDirectory(interpreter);
-                // tslint:disable-next-line:no-unnecessary-local-variable
-                const info: PythonInterpreter = {
-                    displayName: `${AnacondaDisplayName} ${version} (${envName})`,
-                    path: interpreter,
-                    companyDisplayName: AnacondaCompanyName,
-                    version: version,
-                    type: InterpreterType.Conda
-                };
-                return info;
-            });
+    private async getInterpreterDetails(environmentPath: string): Promise<PythonInterpreter | undefined> {
+        const interpreter = this.condaService.getInterpreterPath(environmentPath);
+        if (!interpreter || !await this.fileSystem.fileExistsAsync(interpreter)) {
+            return;
+        }
+
+        const version = await this.versionService.getVersion(interpreter, path.basename(interpreter));
+        const versionWithoutCompanyName = this.stripCompanyName(version);
+        return {
+            displayName: `${AnacondaDisplayName} ${versionWithoutCompanyName}`,
+            path: interpreter,
+            companyDisplayName: AnacondaCompanyName,
+            version: version,
+            type: InterpreterType.Conda,
+            envPath: environmentPath
+        };
     }
     private stripCompanyName(content: string) {
         // Strip company name from version.
@@ -69,13 +89,4 @@ export class CondaEnvFileService implements IInterpreterLocatorService {
 
         return startOfCompanyName > 0 ? content.substring(0, startOfCompanyName).trim() : content;
     }
-    private getEnvironmentRootDirectory(interpreter: string) {
-        const envDir = interpreter.substring(0, interpreter.length - path.join(...CONDA_RELATIVE_PY_PATH).length);
-        return path.basename(envDir);
-    }
-}
-
-export function getEnvironmentsFile() {
-    const homeDir = IS_WINDOWS ? process.env.USERPROFILE : (process.env.HOME || process.env.HOMEPATH);
-    return homeDir ? path.join(homeDir, '.conda', 'environments.txt') : '';
 }

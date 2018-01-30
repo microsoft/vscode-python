@@ -1,5 +1,5 @@
 import { CancellationToken, Disposable, OutputChannel, Uri } from 'vscode';
-import { IUnitTestSettings } from '../../common/configSettings';
+import { IUnitTestSettings } from '../../common/types';
 import { Product } from '../../common/types';
 import { CommandSource } from './constants';
 
@@ -156,6 +156,7 @@ export const ITestsHelper = Symbol('ITestsHelper');
 
 export interface ITestsHelper {
     parseProviderName(product: UnitTestProduct): TestProvider;
+    parseProduct(provider: TestProvider): UnitTestProduct;
     getSettingsPropertyNames(product: Product): TestSettingsPropertyNames;
     flattenTestFiles(testFiles: TestFile[]): Tests;
     placeTestFilesIntoFolders(tests: Tests): void;
