@@ -109,6 +109,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // This must be completed before we can continue.
     await interpreterManager.autoSetInterpreter();
 
+    interpreterManager.initialize();
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
 

@@ -1,9 +1,11 @@
 import * as assert from 'assert';
+import { expect } from 'chai';
+import { EOL } from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService } from '../../client/common/process/types';
-import { ILogger } from '../../client/common/types';
+import { ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CondaService, KNOWN_CONDA_LOCATIONS } from '../../client/interpreter/locators/services/condaService';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -20,14 +22,14 @@ suite('Interpreters Conda Service', () => {
     let condaService: CondaService;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let registryInterpreterLocatorService: TypeMoq.IMock<IInterpreterLocatorService>;
-
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     setup(async () => {
         logger = TypeMoq.Mock.ofType<ILogger>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         registryInterpreterLocatorService = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessService), TypeMoq.It.isAny())).returns(() => processService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny())).returns(() => platformService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
@@ -180,11 +182,70 @@ suite('Interpreters Conda Service', () => {
         logger.verify(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.once());
     });
 
+    // tslint:disable-next-line:no-any
+    class DummyState implements IPersistentState<any> {
+        // tslint:disable-next-line:no-any
+        constructor(public data: any) { }
+        // tslint:disable-next-line:no-any
+        get value(): any {
+            return this.data;
+        }
+        set value(data) {
+            this.data = data;
+        }
+    }
+
     test('Returns conda environments when conda exists', async () => {
+        const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+        // tslint:disable-next-line:no-any
+        const state = new DummyState(undefined);
+        stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
+
         processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'xyz' }));
         processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['env', 'list']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: '' }));
         const environments = await condaService.getCondaEnvironments(true);
         assert.equal(environments, undefined, 'Conda environments do not match');
+    });
+
+    test('Returns cached conda environments', async () => {
+        const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+        // tslint:disable-next-line:no-any
+        const state = new DummyState({ data: 'CachedInfo' });
+        stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
+
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'xyz' }));
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['env', 'list']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: '' }));
+        const environments = await condaService.getCondaEnvironments(false);
+        assert.equal(environments, 'CachedInfo', 'Conda environments do not match');
+    });
+
+    test('Subsequent list of environments will be retrieved from cache', async () => {
+        const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+        // tslint:disable-next-line:no-any
+        const state = new DummyState(undefined);
+        stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
+
+        const envList = ['# conda environments:',
+            '#',
+            'base                  *  /Users/donjayamanne/anaconda3',
+            'one                      /Users/donjayamanne/anaconda3/envs/one',
+            'one two                  /Users/donjayamanne/anaconda3/envs/one two',
+            'py27                     /Users/donjayamanne/anaconda3/envs/py27',
+            'py36                     /Users/donjayamanne/anaconda3/envs/py36',
+            'three                    /Users/donjayamanne/anaconda3/envs/three'];
+
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'xyz' }));
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['env', 'list']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: envList.join(EOL) }));
+        const environments = await condaService.getCondaEnvironments(false);
+        expect(environments).lengthOf(6, 'Incorrect number of environments');
+        expect(state.data.data).lengthOf(6, 'Incorrect number of environments in cache');
+
+        state.data.data = [];
+        const environmentsFetchedAgain = await condaService.getCondaEnvironments(false);
+        expect(environmentsFetchedAgain).lengthOf(0, 'Incorrect number of environments fetched from cache');
     });
 
     test('Returns undefined if there\'s and error in getting the info', async () => {

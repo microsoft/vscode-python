@@ -77,4 +77,5 @@ export interface IInterpreterService {
     autoSetInterpreter(): Promise<void>;
     getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter>;
     refresh(): Promise<void>;
+    initialize(): void;
 }

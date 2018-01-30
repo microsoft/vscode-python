@@ -12,7 +12,7 @@ import { CommandPromptAndPowerShell } from '../../../client/common/terminal/envi
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
@@ -47,6 +47,10 @@ suite('Terminal Service helpers', () => {
         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
         settings.setup(s => s.terminal).returns(() => terminalSettings.object);
 
+        const condaService = TypeMoq.Mock.ofType<ICondaService>();
+        condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICondaService))).returns(() => condaService.object);
+
         helper = new TerminalHelper(serviceContainer.object);
     });
     teardown(() => {
@@ -55,17 +59,6 @@ suite('Terminal Service helpers', () => {
 
     test('Activation command is undefined when terminal activation is disabled', async () => {
         terminalSettings.setup(t => t.activateEnvironment).returns(() => false);
-        // tslint:disable-next-line:no-any
-        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined as any));
-        const commands = await helper.getEnvironmentActivationCommands(TerminalShellType.other);
-
-        expect(commands).to.equal(undefined, 'Activation command should be undefined if terminal type cannot be determined');
-    });
-
-    test('Activation command is undefined for unknown active interpreter', async () => {
-        terminalSettings.setup(t => t.activateEnvironment).returns(() => true);
-        // tslint:disable-next-line:no-any
-        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined as any));
         const commands = await helper.getEnvironmentActivationCommands(TerminalShellType.other);
 
         expect(commands).to.equal(undefined, 'Activation command should be undefined if terminal type cannot be determined');
@@ -73,14 +66,6 @@ suite('Terminal Service helpers', () => {
 
     test('Activation command is undefined for unknown terminal', async () => {
         terminalSettings.setup(t => t.activateEnvironment).returns(() => true);
-        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => {
-            const interpreterInfo: PythonInterpreter = {
-                path: 'python',
-                version: '',
-                type: InterpreterType.Unknown
-            };
-            return Promise.resolve(interpreterInfo);
-        });
 
         const bashActivation = new Bash(serviceContainer.object);
         const commandPromptActivation = new CommandPromptAndPowerShell(serviceContainer.object);
@@ -123,6 +108,10 @@ EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(terminalS
             settings.setup(s => s.terminal).returns(() => terminalSettings.object);
             terminalSettings.setup(t => t.activateEnvironment).returns(() => true);
 
+            const condaService = TypeMoq.Mock.ofType<ICondaService>();
+            condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
+            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICondaService))).returns(() => condaService.object);
+
             helper = new TerminalHelper(serviceContainer.object);
         });
         teardown(() => {
@@ -161,13 +150,6 @@ EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(terminalS
         });
 
         async function activationCommandShouldReturnUndefined(shellType: TerminalShellType) {
-            const interpreterInfo: PythonInterpreter = {
-                path: 'python',
-                version: '',
-                type: InterpreterType.Unknown
-            };
-            interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(interpreterInfo));
-
             // This will support other providers.
             const invalidProvider = TypeMoq.Mock.ofType<ITerminalActivationCommandProvider>();
             invalidProvider.setup(p => p.isShellSupported(TypeMoq.It.isAny())).returns(item => shellType !== shellType);

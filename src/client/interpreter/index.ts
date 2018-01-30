@@ -27,15 +27,18 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         const versionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
         this.display = new InterpreterDisplay(statusBar, this, virtualEnvMgr, versionService);
         this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), versionService);
-        PythonSettings.getInstance().addListener('change', () => this.onConfigChanged());
 
         const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        disposables.push(window.onDidChangeActiveTextEditor(() => this.refresh()));
         disposables.push(statusBar);
         disposables.push(this.display!);
     }
     public async refresh() {
         return this.display!.refresh();
+    }
+    public initialize() {
+        const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
+        disposables.push(window.onDidChangeActiveTextEditor(() => this.refresh()));
+        PythonSettings.getInstance().addListener('change', () => this.onConfigChanged());
     }
     public getInterpreters(resource?: Uri) {
         return this.interpreterProvider.getInterpreters(resource);
