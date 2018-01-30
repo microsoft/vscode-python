@@ -40,12 +40,9 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
             if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
                 // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
                 const powershellExe = targetShell === TerminalShellType.powershell ? 'powershell' : 'pwsh';
+                const activationCmd = `${scriptFile.toCommandArgument()} ${envName}`.trim();
                 return [
-                    'cmd',
-                    '&',
-                    `${scriptFile.toCommandArgument()} ${envName}`.trim(),
-                    '&',
-                    powershellExe
+                    `& cmd /k "${activationCmd} & ${powershellExe}"`
                 ];
             } else {
                 // Powershell on non-windows os, we cannot execute the batch file.

@@ -19,5 +19,6 @@
     "python.unitTest.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
     "python.formatting.provider": "none",
-    "files.insertFinalNewline": true
+    "files.insertFinalNewline": true,
+    "terminal.integrated.shell.windows": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
 }

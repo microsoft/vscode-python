@@ -18,7 +18,8 @@ const options: MochaSetupOptions & { retries: number } = {
     ui: 'tdd',
     useColors: true,
     timeout: 25000,
-    retries: 3
+    retries: 3,
+    grep: 'Terminal'
 };
 testRunner.configure(options, { coverageConfig: '../coverconfig.json' });
 module.exports = testRunner;

@@ -21,6 +21,5 @@
     "python.linting.pydocstyleEnabled": false,
     "python.linting.pylamaEnabled": false,
     "python.linting.mypyEnabled": false,
-    "python.formatting.provider": "yapf",
-    "python.pythonPath": "python"
+    "python.formatting.provider": "yapf"
 }
