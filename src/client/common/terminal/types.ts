@@ -7,11 +7,12 @@ import { PythonInterpreter } from '../../interpreter/contracts';
 
 export enum TerminalShellType {
     powershell = 1,
-    commandPrompt = 2,
-    bash = 3,
-    fish = 4,
-    cshell = 5,
-    other = 6
+    powershellCore = 2,
+    commandPrompt = 3,
+    bash = 4,
+    fish = 5,
+    cshell = 6,
+    other = 7
 }
 
 export interface ITerminalService {

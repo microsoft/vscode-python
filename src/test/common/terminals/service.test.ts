@@ -126,7 +126,7 @@ suite('Terminal Service', () => {
         await service.show();
         await service.show();
 
-        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(5));
+        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(6));
         terminal.verify(t => t.sendText(TypeMoq.It.isValue('activation Command')), TypeMoq.Times.exactly(1));
     });
 
@@ -143,7 +143,7 @@ suite('Terminal Service', () => {
         await service.sendText(textToSend);
         await service.sendText(textToSend);
 
-        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(5));
+        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(6));
         terminal.verify(t => t.sendText(TypeMoq.It.isValue('activation Command')), TypeMoq.Times.exactly(1));
         terminal.verify(t => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(4));
     });

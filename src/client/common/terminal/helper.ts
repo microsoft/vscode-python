@@ -14,7 +14,8 @@ import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType 
 // 1. https://wiki.ubuntu.com/ChangingShells
 const IS_BASH = /(bash.exe$|wsl.exe$|bash$|zsh$|ksh$)/i;
 const IS_COMMAND = /cmd.exe$/i;
-const IS_POWERSHELL = /(powershell.exe$|pwsh$|powershell$)/i;
+const IS_POWERSHELL = /(powershell.exe$|powershell$)/i;
+const IS_POWERSHELL_CORE = /(pwsh.exe$|pwsh$)/i;
 const IS_FISH = /(fish$)/i;
 const IS_CSHELL = /(csh$)/i;
 
@@ -29,6 +30,7 @@ export class TerminalHelper implements ITerminalHelper {
         this.detectableShells.set(TerminalShellType.commandPrompt, IS_COMMAND);
         this.detectableShells.set(TerminalShellType.fish, IS_FISH);
         this.detectableShells.set(TerminalShellType.cshell, IS_CSHELL);
+        this.detectableShells.set(TerminalShellType.powershellCore, IS_POWERSHELL_CORE);
     }
     public createTerminal(title?: string): Terminal {
         const terminalManager = this.serviceContainer.get<ITerminalManager>(ITerminalManager);
@@ -62,7 +64,7 @@ export class TerminalHelper implements ITerminalHelper {
         return shellConfig.get<string>(osSection)!;
     }
     public buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]) {
-        const isPowershell = terminalShellType === TerminalShellType.powershell;
+        const isPowershell = terminalShellType === TerminalShellType.powershell || terminalShellType === TerminalShellType.powershellCore;
         const commandPrefix = isPowershell ? '& ' : '';
         return `${commandPrefix}${command.toCommandArgument()} ${args.join(' ')}`.trim();
     }

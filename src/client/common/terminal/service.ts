@@ -62,6 +62,7 @@ export class TerminalService implements ITerminalService, Disposable {
         const activationCommamnds = await this.terminalHelper.getEnvironmentActivationCommands(this.terminalShellType, this.resource);
         if (activationCommamnds) {
             for (const command of activationCommamnds!) {
+                this.terminal!.show(true);
                 this.terminal!.sendText(command);
 
                 // Give the command some time to complete.
