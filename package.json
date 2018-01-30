@@ -1487,6 +1487,12 @@
 					"description": "When executing a file in the terminal, whether to use execute in the file's directory, instead of the current open folder.",
 					"scope": "resource"
 				},
+				"python.terminal.activateEnvironment": {
+					"type": "boolean",
+					"default": true,
+					"description": "Activate Python Environment in Terminal created using the Extension.",
+					"scope": "resource"
+				},
 				"python.terminal.launchArgs": {
 					"type": "array",
 					"default": [],

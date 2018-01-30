@@ -11,7 +11,7 @@ import { Bash } from '../../../client/common/terminal/environmentActivationProvi
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
-import { IDisposableRegistry } from '../../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -24,12 +24,14 @@ suite('Terminal Service helpers', () => {
     let disposables: Disposable[] = [];
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
+    let terminalSettings: TypeMoq.IMock<ITerminalSettings>;
 
     setup(() => {
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
         disposables = [];
 
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -39,13 +41,29 @@ suite('Terminal Service helpers', () => {
         serviceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspaceService.object);
         serviceContainer.setup(c => c.get(IInterpreterService)).returns(() => interpreterService.object);
 
+        const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        serviceContainer.setup(c => c.get(IConfigurationService)).returns(() => configService.object);
+        const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+        settings.setup(s => s.terminal).returns(() => terminalSettings.object);
+
         helper = new TerminalHelper(serviceContainer.object);
     });
     teardown(() => {
         disposables.filter(item => !!item).forEach(item => item.dispose());
     });
 
+    test('Activation command is undefined when terminal activation is disabled', async () => {
+        terminalSettings.setup(t => t.activateEnvironment).returns(() => false);
+        // tslint:disable-next-line:no-any
+        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined as any));
+        const commands = await helper.getEnvironmentActivationCommands(TerminalShellType.other);
+
+        expect(commands).to.equal(undefined, 'Activation command should be undefined if terminal type cannot be determined');
+    });
+
     test('Activation command is undefined for unknown active interpreter', async () => {
+        terminalSettings.setup(t => t.activateEnvironment).returns(() => true);
         // tslint:disable-next-line:no-any
         interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined as any));
         const commands = await helper.getEnvironmentActivationCommands(TerminalShellType.other);
@@ -54,6 +72,7 @@ suite('Terminal Service helpers', () => {
     });
 
     test('Activation command is undefined for unknown terminal', async () => {
+        terminalSettings.setup(t => t.activateEnvironment).returns(() => true);
         interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => {
             const interpreterInfo: PythonInterpreter = {
                 path: 'python',
@@ -95,6 +114,14 @@ EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(terminalS
             serviceContainer.setup(c => c.get(IDisposableRegistry)).returns(() => disposables);
             serviceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspaceService.object);
             serviceContainer.setup(c => c.get(IInterpreterService)).returns(() => interpreterService.object);
+
+            const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+            serviceContainer.setup(c => c.get(IConfigurationService)).returns(() => configService.object);
+            const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+            configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+            const terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
+            settings.setup(s => s.terminal).returns(() => terminalSettings.object);
+            terminalSettings.setup(t => t.activateEnvironment).returns(() => true);
 
             helper = new TerminalHelper(serviceContainer.object);
         });

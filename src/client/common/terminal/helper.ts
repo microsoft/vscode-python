@@ -9,6 +9,7 @@ import { ITerminalManager, IWorkspaceService } from '../application/types';
 import '../extensions';
 import { IPlatformService } from '../platform/types';
 import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from './types';
+import { IConfigurationService } from '../types';
 
 // Types of shells can be found here:
 // 1. https://wiki.ubuntu.com/ChangingShells
@@ -69,6 +70,10 @@ export class TerminalHelper implements ITerminalHelper {
         return `${commandPrefix}${command.toCommandArgument()} ${args.join(' ')}`.trim();
     }
     public async getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined> {
+        const activateEnvironment = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).terminal.activateEnvironment;
+        if (!activateEnvironment) {
+            return;
+        }
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const interperterInfo = await interpreterService.getActiveInterpreter(resource);
         if (!interperterInfo) {
