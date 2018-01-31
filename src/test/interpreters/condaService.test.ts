@@ -37,6 +37,54 @@ suite('Interpreters Conda Service', () => {
         condaService = new CondaService(serviceContainer.object, registryInterpreterLocatorService.object);
     });
 
+    async function identifyPythonPathAsCondaEnvironment(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string) {
+        platformService.setup(p => p.isLinux).returns(() => isLinux);
+        platformService.setup(p => p.isWindows).returns(() => isWindows);
+        platformService.setup(p => p.isMac).returns(() => isOsx);
+
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+
+        const isCondaEnv = await condaService.isCondaEnvironment(pythonPath);
+        expect(isCondaEnv).to.be.equal(true, 'Path not identified as a conda path');
+    }
+
+    test('Correctly identifies a python path as a conda environment (windows)', async () => {
+        await identifyPythonPathAsCondaEnvironment(true, false, false, 'pythonPath1234');
+    });
+
+    test('Correctly identifies a python path as a conda environment (linux)', async () => {
+        await identifyPythonPathAsCondaEnvironment(false, false, true, 'pythonPath1234');
+    });
+
+    test('Correctly identifies a python path as a conda environment (osx)', async () => {
+        await identifyPythonPathAsCondaEnvironment(false, true, false, 'pythonPath1234');
+    });
+
+    async function identifyPythonPathAsNonCondaEnvironment(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string) {
+        platformService.setup(p => p.isLinux).returns(() => isLinux);
+        platformService.setup(p => p.isWindows).returns(() => isWindows);
+        platformService.setup(p => p.isMac).returns(() => isOsx);
+
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(false));
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(false));
+
+        const isCondaEnv = await condaService.isCondaEnvironment(pythonPath);
+        expect(isCondaEnv).to.be.equal(false, 'Path incorrectly identified as a conda path');
+    }
+
+    test('Correctly identifies a python path as a non-conda environment (windows)', async () => {
+        await identifyPythonPathAsNonCondaEnvironment(true, false, false, 'pythonPath1234');
+    });
+
+    test('Correctly identifies a python path as a non-conda environment (linux)', async () => {
+        await identifyPythonPathAsNonCondaEnvironment(false, false, true, 'pythonPath1234');
+    });
+
+    test('Correctly identifies a python path as a non-conda environment (osx)', async () => {
+        await identifyPythonPathAsNonCondaEnvironment(false, true, false, 'pythonPath1234');
+    });
+
     test('Must use Conda env from Registry to locate conda.exe', async () => {
         const condaPythonExePath = path.join('dumyPath', 'environments', 'conda', 'Scripts', 'python.exe');
         const registryInterpreters: PythonInterpreter[] = [

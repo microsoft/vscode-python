@@ -106,15 +106,18 @@ export class CondaService implements ICondaService {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
 
         // From the list of conda environments find this dir.
-        let matchingEnvs = environments.filter(item => fs.arePathsSame(item.path, interpreterPathToMatch));
+        let matchingEnvs = environments!.filter(item => fs.arePathsSame(item.path, interpreterPathToMatch));
         if (matchingEnvs.length === 0) {
             environments = await this.getCondaEnvironments(true);
-            matchingEnvs = environments.filter(item => fs.arePathsSame(item.path, interpreterPathToMatch));
+            matchingEnvs = environments!.filter(item => fs.arePathsSame(item.path, interpreterPathToMatch));
         }
 
         if (matchingEnvs.length > 0) {
             return { name: matchingEnvs[0].name, path: interpreterPathToMatch };
         }
+
+        // If still not available, then the user created the env after starting vs code.
+        // The only solution is to get the user to re-start vscode.
     }
     public async getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string, path: string }[]) | undefined> {
         // Global cache.
