@@ -88,7 +88,7 @@ export class CondaService implements ICondaService {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         const dir = path.dirname(interpreterPath);
         const isWindows = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
-        const condaMetaDirectory = isWindows ? path.join(dir, '..', 'conda-meta') : path.join(dir, 'conda-meta');
+        const condaMetaDirectory = isWindows ? path.join(dir, 'conda-meta') : path.join(dir, '..', 'conda-meta');
         return fs.directoryExistsAsync(condaMetaDirectory);
     }
     public async getCondaEnvironment(interpreterPath: string): Promise<{ name: string, path: string } | undefined> {
