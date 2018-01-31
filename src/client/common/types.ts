@@ -199,6 +199,7 @@ export interface IWorkspaceSymbolSettings {
 export interface ITerminalSettings {
     readonly executeInFileDir: boolean;
     readonly launchArgs: string[];
+    readonly activateEnvironment: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

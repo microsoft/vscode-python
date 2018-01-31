@@ -1,16 +1,33 @@
 import * as assert from 'assert';
+import { expect } from 'chai';
+import { EOL } from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
+import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService } from '../../client/common/process/types';
-import { ILogger } from '../../client/common/types';
+import { ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CondaService, KNOWN_CONDA_LOCATIONS } from '../../client/interpreter/locators/services/condaService';
+import { IServiceContainer } from '../../client/ioc/types';
+
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 
+// tslint:disable-next-line:no-any
+class MockState implements IPersistentState<any> {
+    // tslint:disable-next-line:no-any
+    constructor(public data: any) { }
+    // tslint:disable-next-line:no-any
+    get value(): any {
+        return this.data;
+    }
+    set value(data) {
+        this.data = data;
+    }
+}
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters Conda Service', () => {
     let logger: TypeMoq.IMock<ILogger>;
@@ -19,14 +36,228 @@ suite('Interpreters Conda Service', () => {
     let condaService: CondaService;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let registryInterpreterLocatorService: TypeMoq.IMock<IInterpreterLocatorService>;
-
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     setup(async () => {
         logger = TypeMoq.Mock.ofType<ILogger>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         registryInterpreterLocatorService = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        condaService = new CondaService(processService.object, platformService.object, logger.object, fileSystem.object, registryInterpreterLocatorService.object);
+        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessService), TypeMoq.It.isAny())).returns(() => processService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny())).returns(() => platformService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem.object);
+        condaService = new CondaService(serviceContainer.object, registryInterpreterLocatorService.object);
+
+        fileSystem.setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p1, p2) => {
+            return new FileSystem(platformService.object).arePathsSame(p1, p2);
+        });
+    });
+
+    async function identifyPythonPathAsCondaEnvironment(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string) {
+        platformService.setup(p => p.isLinux).returns(() => isLinux);
+        platformService.setup(p => p.isWindows).returns(() => isWindows);
+        platformService.setup(p => p.isMac).returns(() => isOsx);
+
+        const isCondaEnv = await condaService.isCondaEnvironment(pythonPath);
+        expect(isCondaEnv).to.be.equal(true, 'Path not identified as a conda path');
+    }
+
+    test('Correctly identifies a python path as a conda environment (windows)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
+        await identifyPythonPathAsCondaEnvironment(true, false, false, pythonPath);
+    });
+
+    test('Correctly identifies a python path as a conda environment (linux)', async () => {
+        const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        await identifyPythonPathAsCondaEnvironment(false, false, true, pythonPath);
+    });
+
+    test('Correctly identifies a python path as a conda environment (osx)', async () => {
+        const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        await identifyPythonPathAsCondaEnvironment(false, true, false, pythonPath);
+    });
+
+    async function identifyPythonPathAsNonCondaEnvironment(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string) {
+        platformService.setup(p => p.isLinux).returns(() => isLinux);
+        platformService.setup(p => p.isWindows).returns(() => isWindows);
+        platformService.setup(p => p.isMac).returns(() => isOsx);
+
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(false));
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(false));
+
+        const isCondaEnv = await condaService.isCondaEnvironment(pythonPath);
+        expect(isCondaEnv).to.be.equal(false, 'Path incorrectly identified as a conda path');
+    }
+
+    test('Correctly identifies a python path as a non-conda environment (windows)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
+        await identifyPythonPathAsNonCondaEnvironment(true, false, false, pythonPath);
+    });
+
+    test('Correctly identifies a python path as a non-conda environment (linux)', async () => {
+        const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
+        await identifyPythonPathAsNonCondaEnvironment(false, false, true, pythonPath);
+    });
+
+    test('Correctly identifies a python path as a non-conda environment (osx)', async () => {
+        const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
+        await identifyPythonPathAsNonCondaEnvironment(false, true, false, pythonPath);
+    });
+
+    async function checkCondaNameAndPathForCondaEnvironments(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string, condaEnvsPath: string, expectedCondaEnv?: { name: string; path: string }) {
+        const condaEnvironments = [
+            { name: 'One', path: path.join(condaEnvsPath, 'one') },
+            { name: 'Three', path: path.join(condaEnvsPath, 'three') },
+            { name: 'Seven', path: path.join(condaEnvsPath, 'seven') },
+            { name: 'Eight', path: path.join(condaEnvsPath, 'Eight 8') },
+            { name: 'nine 9', path: path.join(condaEnvsPath, 'nine 9') }
+        ];
+
+        platformService.setup(p => p.isLinux).returns(() => isLinux);
+        platformService.setup(p => p.isWindows).returns(() => isWindows);
+        platformService.setup(p => p.isMac).returns(() => isOsx);
+
+        const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+        const state = new MockState({ data: condaEnvironments });
+        stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
+
+        const condaEnv = await condaService.getCondaEnvironment(pythonPath);
+        expect(condaEnv).deep.equal(expectedCondaEnv, 'Conda environment not identified');
+    }
+
+    test('Correctly retrieves conda environment (windows)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'one', 'python.exe');
+        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
+
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
+        await checkCondaNameAndPathForCondaEnvironments(true, false, false, pythonPath, condaEnvDir, { name: 'One', path: path.dirname(pythonPath) });
+    });
+
+    test('Correctly retrieves conda environment with spaces in env name (windows)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'eight 8', 'python.exe');
+        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
+
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
+        await checkCondaNameAndPathForCondaEnvironments(true, false, false, pythonPath, condaEnvDir, { name: 'Eight', path: path.dirname(pythonPath) });
+    });
+
+    test('Correctly retrieves conda environment (osx)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'one', 'bin', 'python');
+        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
+
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        await checkCondaNameAndPathForCondaEnvironments(false, true, false, pythonPath, condaEnvDir, { name: 'One', path: path.join(path.dirname(pythonPath), '..') });
+    });
+
+    test('Correctly retrieves conda environment with spaces in env name (osx)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'Eight 8', 'bin', 'python');
+        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
+
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        await checkCondaNameAndPathForCondaEnvironments(false, true, false, pythonPath, condaEnvDir, { name: 'Eight', path: path.join(path.dirname(pythonPath), '..') });
+    });
+
+    test('Correctly retrieves conda environment (linux)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'one', 'bin', 'python');
+        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
+
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        await checkCondaNameAndPathForCondaEnvironments(false, false, true, pythonPath, condaEnvDir, { name: 'One', path: path.join(path.dirname(pythonPath), '..') });
+    });
+
+    test('Correctly retrieves conda environment with spaces in env name (linux)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'Eight 8', 'bin', 'python');
+        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
+
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        await checkCondaNameAndPathForCondaEnvironments(false, false, true, pythonPath, condaEnvDir, { name: 'Eight', path: path.join(path.dirname(pythonPath), '..') });
+    });
+
+    test('Ignore cache if environment is not found in the cache (conda env is detected second time round)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'newEnvironment', 'python.exe');
+        const condaEnvsPath = path.join('c', 'users', 'xyz', '.conda', 'envs');
+
+        const condaEnvironments = [
+            { name: 'One', path: path.join(condaEnvsPath, 'one') },
+            { name: 'Three', path: path.join(condaEnvsPath, 'three') },
+            { name: 'Seven', path: path.join(condaEnvsPath, 'seven') },
+            { name: 'Eight', path: path.join(condaEnvsPath, 'Eight 8') },
+            { name: 'nine 9', path: path.join(condaEnvsPath, 'nine 9') }
+        ];
+
+        platformService.setup(p => p.isLinux).returns(() => false);
+        platformService.setup(p => p.isWindows).returns(() => true);
+        platformService.setup(p => p.isMac).returns(() => false);
+
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
+        const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+        const state = new MockState({ data: condaEnvironments });
+        stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
+
+        const envList = ['# conda environments:',
+            '#',
+            'base                  *  /Users/donjayamanne/anaconda3',
+            'one                      /Users/donjayamanne/anaconda3/envs/one',
+            'one two                  /Users/donjayamanne/anaconda3/envs/one two',
+            'py27                     /Users/donjayamanne/anaconda3/envs/py27',
+            'py36                     /Users/donjayamanne/anaconda3/envs/py36',
+            'three                    /Users/donjayamanne/anaconda3/envs/three',
+            `newEnvironment           ${path.join(condaEnvsPath, 'newEnvironment')}`
+        ];
+
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'xyz' }));
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['env', 'list']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: envList.join(EOL) }));
+
+        const condaEnv = await condaService.getCondaEnvironment(pythonPath);
+        expect(condaEnv).deep.equal({ name: 'newEnvironment', path: path.dirname(pythonPath) }, 'Conda environment not identified after ignoring cache');
+        expect(state.data.data).lengthOf(7, 'Incorrect number of items in the cache');
+    });
+
+    test('Ignore cache if environment is not found in the cache (cond env is not detected in conda env list)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'newEnvironment', 'python.exe');
+        const condaEnvsPath = path.join('c', 'users', 'xyz', '.conda', 'envs');
+
+        const condaEnvironments = [
+            { name: 'One', path: path.join(condaEnvsPath, 'one') },
+            { name: 'Three', path: path.join(condaEnvsPath, 'three') },
+            { name: 'Seven', path: path.join(condaEnvsPath, 'seven') },
+            { name: 'Eight', path: path.join(condaEnvsPath, 'Eight 8') },
+            { name: 'nine 9', path: path.join(condaEnvsPath, 'nine 9') }
+        ];
+
+        platformService.setup(p => p.isLinux).returns(() => false);
+        platformService.setup(p => p.isWindows).returns(() => true);
+        platformService.setup(p => p.isMac).returns(() => false);
+
+        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
+        const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+        const state = new MockState({ data: condaEnvironments });
+        stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
+
+        const envList = ['# conda environments:',
+            '#',
+            'base                  *  /Users/donjayamanne/anaconda3',
+            'one                      /Users/donjayamanne/anaconda3/envs/one',
+            'one two                  /Users/donjayamanne/anaconda3/envs/one two',
+            'py27                     /Users/donjayamanne/anaconda3/envs/py27',
+            'py36                     /Users/donjayamanne/anaconda3/envs/py36',
+            'three                    /Users/donjayamanne/anaconda3/envs/three'
+        ];
+
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'xyz' }));
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['env', 'list']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: envList.join(EOL) }));
+
+        const condaEnv = await condaService.getCondaEnvironment(pythonPath);
+        expect(condaEnv).deep.equal(undefined, 'Conda environment incorrectly identified after ignoring cache');
+        expect(state.data.data).lengthOf(6, 'Incorrect number of items in the cache');
     });
 
     test('Must use Conda env from Registry to locate conda.exe', async () => {
@@ -175,10 +406,56 @@ suite('Interpreters Conda Service', () => {
     });
 
     test('Returns conda environments when conda exists', async () => {
+        const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+        // tslint:disable-next-line:no-any
+        const state = new MockState(undefined);
+        stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
+
         processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'xyz' }));
         processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['env', 'list']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: '' }));
-        const environments = await condaService.getCondaEnvironments();
+        const environments = await condaService.getCondaEnvironments(true);
         assert.equal(environments, undefined, 'Conda environments do not match');
+    });
+
+    test('Returns cached conda environments', async () => {
+        const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+        // tslint:disable-next-line:no-any
+        const state = new MockState({ data: 'CachedInfo' });
+        stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
+
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'xyz' }));
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['env', 'list']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: '' }));
+        const environments = await condaService.getCondaEnvironments(false);
+        assert.equal(environments, 'CachedInfo', 'Conda environments do not match');
+    });
+
+    test('Subsequent list of environments will be retrieved from cache', async () => {
+        const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+        // tslint:disable-next-line:no-any
+        const state = new MockState(undefined);
+        stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
+
+        const envList = ['# conda environments:',
+            '#',
+            'base                  *  /Users/donjayamanne/anaconda3',
+            'one                      /Users/donjayamanne/anaconda3/envs/one',
+            'one two                  /Users/donjayamanne/anaconda3/envs/one two',
+            'py27                     /Users/donjayamanne/anaconda3/envs/py27',
+            'py36                     /Users/donjayamanne/anaconda3/envs/py36',
+            'three                    /Users/donjayamanne/anaconda3/envs/three'];
+
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'xyz' }));
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['env', 'list']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: envList.join(EOL) }));
+        const environments = await condaService.getCondaEnvironments(false);
+        expect(environments).lengthOf(6, 'Incorrect number of environments');
+        expect(state.data.data).lengthOf(6, 'Incorrect number of environments in cache');
+
+        state.data.data = [];
+        const environmentsFetchedAgain = await condaService.getCondaEnvironments(false);
+        expect(environmentsFetchedAgain).lengthOf(0, 'Incorrect number of environments fetched from cache');
     });
 
     test('Returns undefined if there\'s and error in getting the info', async () => {

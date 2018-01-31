@@ -40,8 +40,10 @@ export interface ICondaService {
     isCondaAvailable(): Promise<boolean>;
     getCondaVersion(): Promise<string | undefined>;
     getCondaInfo(): Promise<CondaInfo | undefined>;
-    getCondaEnvironments(): Promise<({ name: string, path: string }[]) | undefined>;
+    getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string, path: string }[]) | undefined>;
     getInterpreterPath(condaEnvironmentPath: string): string;
+    isCondaEnvironment(interpreterPath: string): Promise<boolean>;
+    getCondaEnvironment(interpreterPath: string): Promise<{ name: string, path: string } | undefined>;
 }
 
 export enum InterpreterType {
@@ -73,6 +75,7 @@ export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
     autoSetInterpreter(): Promise<void>;
-    getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter>;
+    getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;
     refresh(): Promise<void>;
+    initialize(): void;
 }
