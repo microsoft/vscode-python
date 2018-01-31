@@ -46,7 +46,12 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     private getCachedInterpreters() {
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(this.name, []);
-        return globalPersistence.value;
+        return globalPersistence.value.map(item => {
+            return {
+                ...item,
+                cachedEntry: true
+            };
+        });
     }
     private cacheInterpreters(interpreters: PythonInterpreter[]) {
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);

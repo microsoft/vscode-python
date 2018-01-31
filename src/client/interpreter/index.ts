@@ -53,7 +53,7 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         }
         const virtualEnvMgr = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
         const versionService = this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-        const virtualEnvInterpreterProvider = new VirtualEnvService([activeWorkspace.folderUri.fsPath], virtualEnvMgr, versionService);
+        const virtualEnvInterpreterProvider = new VirtualEnvService([activeWorkspace.folderUri.fsPath], virtualEnvMgr, versionService, this.serviceContainer);
         const interpreters = await virtualEnvInterpreterProvider.getInterpreters(activeWorkspace.folderUri);
         const workspacePathUpper = activeWorkspace.folderUri.fsPath.toUpperCase();
 
