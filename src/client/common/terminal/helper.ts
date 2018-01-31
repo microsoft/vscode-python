@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Terminal, Uri } from 'vscode';
-import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
+import { ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ITerminalManager, IWorkspaceService } from '../application/types';
 import '../extensions';
@@ -81,7 +81,10 @@ export class TerminalHelper implements ITerminalHelper {
         const isCondaEnvironment = await this.serviceContainer.get<ICondaService>(ICondaService).isCondaEnvironment(settings.pythonPath);
         if (isCondaEnvironment) {
             const condaActivationProvider = new CondaActivationCommandProvider(this.serviceContainer);
-            return condaActivationProvider.getActivationCommands(resource, terminalShellType);
+            const activationCommands = await condaActivationProvider.getActivationCommands(resource, terminalShellType);
+            if (Array.isArray(activationCommands)) {
+                return activationCommands;
+            }
         }
 
         // Search from the list of providers.

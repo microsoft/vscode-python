@@ -77,10 +77,14 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         this.interpreterProvider.dispose();
     }
 
-    public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter> {
+    public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecutionService = await pythonExecutionFactory.create(resource);
-        const fullyQualifiedPath = await pythonExecutionService.getExecutablePath();
+        const fullyQualifiedPath = await pythonExecutionService.getExecutablePath().catch(() => undefined);
+        // Python path is invalid or python isn't installed.
+        if (!fullyQualifiedPath) {
+            return;
+        }
         const interpreters = await this.getInterpreters(resource);
         const interpreter = interpreters.find(i => utils.arePathsSame(i.path, fullyQualifiedPath));
 

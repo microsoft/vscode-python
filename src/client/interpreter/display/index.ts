@@ -25,8 +25,7 @@ export class InterpreterDisplay implements Disposable {
     }
     private async updateDisplay(resource?: Uri) {
         const interpreters = await this.interpreterService.getInterpreters(resource);
-        const interpreterPromise = this.interpreterService.getActiveInterpreter(resource);
-        const interpreter = interpreterPromise ? await interpreterPromise.catch(() => undefined) : undefined;
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         const pythonPath = interpreter ? interpreter.path : PythonSettings.getInstance(resource).pythonPath;
 
         this.statusBar.color = '';
