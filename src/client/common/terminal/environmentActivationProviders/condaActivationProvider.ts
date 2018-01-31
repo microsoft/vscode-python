@@ -28,7 +28,10 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         }
 
         const isWindows = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
-        if (targetShell === TerminalShellType.fish) {
+        if (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore) {
+            // https://github.com/conda/conda/issues/626
+            return;
+        } else if (targetShell === TerminalShellType.fish) {
             // https://github.com/conda/conda/blob/be8c08c083f4d5e05b06bd2689d2cd0d410c2ffe/shell/etc/fish/conf.d/conda.fish#L18-L28
             return [`conda activate ${envInfo.name.toCommandArgument()}`];
         } else if (isWindows) {
