@@ -31,12 +31,13 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
     }
     public async getInterpreters(resource?: Uri) {
-        const resourceKey = this.getResourceKey(resource);
-        if (!this.interpretersPerResource.has(resourceKey)) {
-            this.interpretersPerResource.set(resourceKey, this.getInterpretersPerResource(resource));
-        }
+        return this.getInterpretersPerResource(resource);
+        // const resourceKey = this.getResourceKey(resource);
+        // if (!this.interpretersPerResource.has(resourceKey)) {
+        //     this.interpretersPerResource.set(resourceKey, this.getInterpretersPerResource(resource));
+        // }
 
-        return await this.interpretersPerResource.get(resourceKey)!;
+        // return await this.interpretersPerResource.get(resourceKey)!;
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
