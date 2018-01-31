@@ -1,24 +1,14 @@
-import { inject, injectable } from 'inversify';
-import * as path from 'path';
+import { injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../../common/helpers';
-import { IFileSystem } from '../../../common/platform/types';
-import { ILogger, IPersistentStateFactory } from '../../../common/types';
+import { IPersistentStateFactory } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import {
-    ICondaService,
-    IInterpreterLocatorService,
-    IInterpreterVersionService,
-    InterpreterType,
-    PythonInterpreter
-} from '../../contracts';
-import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName } from './conda';
+import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
 
 @injectable()
 export abstract class CacheableLocatorService implements IInterpreterLocatorService {
     private getInterpretersPromise: Deferred<PythonInterpreter[]>;
     constructor(private readonly name: string,
-        private readonly cacheEnabled: boolean,
         protected readonly serviceContainer: IServiceContainer) {
     }
     public abstract dispose();
@@ -27,25 +17,28 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             this.getInterpretersPromise = createDeferred<PythonInterpreter[]>();
             this.getInterpretersImplementation(resource)
                 .then(items => {
-                    if (this.cacheEnabled) {
-                        this.cacheInterpreters(items);
-                    }
+                    this.cacheInterpreters(items);
                     this.getInterpretersPromise.resolve(items);
                 })
                 .catch(ex => this.getInterpretersPromise.reject(ex));
         }
         if (this.getInterpretersPromise.completed) {
             return this.getInterpretersPromise.promise;
-        } else {
-            return this.getCachedInterpreters();
         }
+
+        const cachedInterpreters = this.getCachedInterpreters();
+        return Array.isArray(cachedInterpreters) ? cachedInterpreters : this.getInterpretersPromise.promise;
     }
 
     protected abstract getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]>;
 
     private getCachedInterpreters() {
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(this.name, []);
+        // tslint:disable-next-line:no-any
+        const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(`INTERPRETERS_CACHE_${this.name}`, undefined as any);
+        if (!Array.isArray(globalPersistence.value)) {
+            return;
+        }
         return globalPersistence.value.map(item => {
             return {
                 ...item,

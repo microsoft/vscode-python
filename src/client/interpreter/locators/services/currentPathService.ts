@@ -5,7 +5,7 @@ import { Uri } from 'vscode';
 import { PythonSettings } from '../../../common/configSettings';
 import { IProcessService } from '../../../common/process/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
@@ -15,7 +15,7 @@ export class CurrentPathService extends CacheableLocatorService {
         @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService,
         @inject(IProcessService) private processService: IProcessService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
-            super('CurrentPathService', true, serviceContainer);
+        super('CurrentPathService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }

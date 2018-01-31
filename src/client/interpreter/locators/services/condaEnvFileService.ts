@@ -6,7 +6,6 @@ import { ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import {
     ICondaService,
-    IInterpreterLocatorService,
     IInterpreterVersionService,
     InterpreterType,
     PythonInterpreter
@@ -21,7 +20,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(ILogger) private logger: ILogger) {
-        super('CondaEnvFileService', true, serviceContainer);
+        super('CondaEnvFileService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }

@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 import { Architecture, IRegistry, RegistryHive } from '../../../common/platform/types';
 import { Is64Bit } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { InterpreterType, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
 
@@ -30,7 +30,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
     constructor( @inject(IRegistry) private registry: IRegistry,
         @inject(Is64Bit) private is64Bit: boolean,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super('WindowsRegistryService', true, serviceContainer);
+        super('WindowsRegistryService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }

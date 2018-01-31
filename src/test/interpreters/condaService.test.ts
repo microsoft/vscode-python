@@ -6,28 +6,17 @@ import * as TypeMoq from 'typemoq';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService } from '../../client/common/process/types';
-import { ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import { ILogger, IPersistentStateFactory } from '../../client/common/types';
 import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CondaService, KNOWN_CONDA_LOCATIONS } from '../../client/interpreter/locators/services/condaService';
 import { IServiceContainer } from '../../client/ioc/types';
+import { MockState } from './mocks';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify: (value: string) => string = require('untildify');
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 
-// tslint:disable-next-line:no-any
-class MockState implements IPersistentState<any> {
-    // tslint:disable-next-line:no-any
-    constructor(public data: any) { }
-    // tslint:disable-next-line:no-any
-    get value(): any {
-        return this.data;
-    }
-    set value(data) {
-        this.data = data;
-    }
-}
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters Conda Service', () => {
     let logger: TypeMoq.IMock<ILogger>;

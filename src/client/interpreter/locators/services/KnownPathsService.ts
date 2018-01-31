@@ -4,7 +4,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { fsExistsAsync, IS_WINDOWS } from '../../../common/utils';
 import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterLocatorService, IInterpreterVersionService, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../contracts';
+import { IInterpreterVersionService, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
@@ -16,7 +16,7 @@ export class KnownPathsService extends CacheableLocatorService {
     public constructor( @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: string[],
         @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super('KnownPathsService', true, serviceContainer);
+        super('KnownPathsService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }

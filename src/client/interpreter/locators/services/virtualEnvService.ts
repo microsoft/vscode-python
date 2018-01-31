@@ -4,7 +4,7 @@ import * as path from 'path';
 import { Uri, workspace } from 'vscode';
 import { fsReaddirAsync, IS_WINDOWS } from '../../../common/utils';
 import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterLocatorService, IInterpreterVersionService, IKnownSearchPathsForVirtualEnvironments, InterpreterType, PythonInterpreter } from '../../contracts';
+import { IInterpreterVersionService, IKnownSearchPathsForVirtualEnvironments, InterpreterType, PythonInterpreter } from '../../contracts';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { lookForInterpretersInDirectory } from '../helpers';
 import * as settings from './../../../common/configSettings';
@@ -19,7 +19,7 @@ export class VirtualEnvService extends CacheableLocatorService {
         @inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
         @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super('KnownPathsService', true, serviceContainer);
+        super('KnownPathsService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }

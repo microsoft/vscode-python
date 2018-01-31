@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
 import { ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { CondaInfo, ICondaService, IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { CondaInfo, ICondaService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
 import { CondaHelper } from './condaHelper';
@@ -19,7 +19,7 @@ export class CondaEnvService extends CacheableLocatorService {
         @inject(ILogger) private logger: ILogger,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IFileSystem) private fileSystem: IFileSystem) {
-        super('CondaEnvService', true, serviceContainer);
+        super('CondaEnvService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
