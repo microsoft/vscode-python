@@ -128,16 +128,14 @@ export async function runTest(serviceContainer: IServiceContainer, testManager: 
         }
         if (Array.isArray(options.testsToRun!.testSuite)) {
             options.testsToRun!.testSuite!.forEach(testSuite => {
-                const testFileName = options.tests.testSuites.find(t => t.testSuite === testSuite)!.parentTestFile.fullPath;
                 // tslint:disable-next-line:prefer-type-cast no-any
-                promise = promise.then(() => runTestInternal(testFileName, testSuite.nameToRun) as Promise<any>);
+                promise = promise.then(() => runTestInternal('', testSuite.nameToRun) as Promise<any>);
             });
         }
         if (Array.isArray(options.testsToRun!.testFunction)) {
             options.testsToRun!.testFunction!.forEach(testFn => {
-                const testFileName = options.tests.testFunctions.find(t => t.testFunction === testFn)!.parentTestFile.fullPath;
                 // tslint:disable-next-line:prefer-type-cast no-any
-                promise = promise.then(() => runTestInternal(testFileName, testFn.nameToRun) as Promise<any>);
+                promise = promise.then(() => runTestInternal('', testFn.nameToRun) as Promise<any>);
             });
         }
         // tslint:disable-next-line:prefer-type-cast no-any
