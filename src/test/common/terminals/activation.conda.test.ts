@@ -5,8 +5,10 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
+import { EnumEx } from '../../../client/common/enumUtils';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IProcessService } from '../../../client/common/process/types';
+import { CondaActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../client/common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings, ITerminalSettings } from '../../../\client/common/types';
@@ -65,7 +67,51 @@ suite('Terminal Environment Activation conda', () => {
         expect(activationCommands).to.equal(undefined, 'Activation commands should be undefined');
     });
 
-    async function expectCondaActivationCommand(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string, condaEnvsPath: string) {
+    async function expectNoCondaActivationCommandForPowershell(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string, shellType: TerminalShellType) {
+        terminalSettings.setup(t => t.activateEnvironment).returns(() => true);
+        platformService.setup(p => p.isLinux).returns(() => isLinux);
+        platformService.setup(p => p.isWindows).returns(() => isWindows);
+        platformService.setup(p => p.isMac).returns(() => isOsx);
+        condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
+        pythonSettings.setup(s => s.pythonPath).returns(() => pythonPath);
+        condaService.setup(c => c.getCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve({ name: 'EnvA', path: path.dirname(pythonPath) }));
+
+        const activationCommands = await new CondaActivationCommandProvider(serviceContainer.object).getActivationCommands(undefined, shellType);
+        let expectedActivationCommamnd: string[] | undefined;
+        switch (shellType) {
+            case TerminalShellType.powershell:
+            case TerminalShellType.powershellCore: {
+                expectedActivationCommamnd = undefined;
+                break;
+            }
+            case TerminalShellType.fish: {
+                expectedActivationCommamnd = ['conda activate EnvA'];
+                break;
+            }
+            default: {
+                expectedActivationCommamnd = isWindows ? ['activate EnvA'] : ['source activate EnvA'];
+                break;
+            }
+        }
+        expect(activationCommands).to.deep.equal(expectedActivationCommamnd, 'Incorrect Activation command');
+    }
+    EnumEx.getNamesAndValues(TerminalShellType).forEach(shellType => {
+        test(`Conda activation command for shell ${shellType.name} on (windows)`, async () => {
+            const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
+            await expectNoCondaActivationCommandForPowershell(true, false, false, pythonPath, shellType.value);
+        });
+
+        test(`Conda activation command for shell ${shellType.name} on (windows)`, async () => {
+            const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
+            await expectNoCondaActivationCommandForPowershell(false, false, true, pythonPath, shellType.value);
+        });
+
+        test(`Conda activation command for shell ${shellType.name} on (linux)`, async () => {
+            const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
+            await expectNoCondaActivationCommandForPowershell(false, true, false, pythonPath, shellType.value);
+        });
+    });
+    async function expectCondaActivationCommand(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string) {
         terminalSettings.setup(t => t.activateEnvironment).returns(() => true);
         platformService.setup(p => p.isLinux).returns(() => isLinux);
         platformService.setup(p => p.isWindows).returns(() => isWindows);
@@ -81,23 +127,20 @@ suite('Terminal Environment Activation conda', () => {
 
     test('If environment is a conda environment, ensure conda activation command is sent (windows)', async () => {
         const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
-        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
         fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
-        await expectCondaActivationCommand(true, false, false, pythonPath, condaEnvDir);
+        await expectCondaActivationCommand(true, false, false, pythonPath);
     });
 
     test('If environment is a conda environment, ensure conda activation command is sent (linux)', async () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-        const condaEnvDir = path.join('users', 'xyz', '.conda', 'envs');
         fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
-        await expectCondaActivationCommand(false, false, true, pythonPath, condaEnvDir);
+        await expectCondaActivationCommand(false, false, true, pythonPath);
     });
 
     test('If environment is a conda environment, ensure conda activation command is sent (osx)', async () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-        const condaEnvDir = path.join('users', 'xyz', '.conda', 'envs');
         fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
-        await expectCondaActivationCommand(false, true, false, pythonPath, condaEnvDir);
+        await expectCondaActivationCommand(false, true, false, pythonPath);
     });
 
     test('Get activation script command if environment is not a conda environment', async () => {
