@@ -23,7 +23,7 @@ import { rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
-import { closeActiveWindows, initializeTest } from './../initialize';
+import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Module Installer', () => {
@@ -32,7 +32,7 @@ suite('Module Installer', () => {
     let condaService: TypeMoq.IMock<ICondaService>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
 
-    const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
+    const workspaceUri =  Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
     suiteSetup(initializeTest);
     setup(async () => {
         initializeDI();
@@ -160,16 +160,22 @@ suite('Module Installer', () => {
         await expect(condaInstaller.isSupported()).to.eventually.equal(true, 'Conda is not supported');
     });
 
-    suite('Global Installation', () => {
+    suite('Global Module Installation', () => {
 
         setup(async () => {
             const configService = ioc.serviceManager.get<IConfigurationService>(IConfigurationService);
-            await configService.updateSettingAsync('globalModuleInstallation', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
+            const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
+            const multirootPath = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc');
+            const settingsUri = IS_MULTI_ROOT_TEST  ? Uri.file(multirootPath) : rootWorkspaceUri ;
+            await configService.updateSettingAsync('globalModuleInstallation', true, settingsUri, configTarget);
         });
 
         teardown(async () => {
             const configService = ioc.serviceManager.get<IConfigurationService>(IConfigurationService);
-            await configService.updateSettingAsync('globalModuleInstallation', false, rootWorkspaceUri, ConfigurationTarget.Workspace);
+            const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
+            const multirootPath = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc');
+            const settingsUri = IS_MULTI_ROOT_TEST  ? Uri.file(multirootPath) : rootWorkspaceUri ;
+            await configService.updateSettingAsync('globalModuleInstallation', false, settingsUri, configTarget);
         });
 
         test('Validate global pip install arguments', async () => {
