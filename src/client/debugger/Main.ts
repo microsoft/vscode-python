@@ -9,7 +9,7 @@ if ((Reflect as any).metadata === undefined) {
 }
 import * as fs from "fs";
 import * as path from "path";
-import { DebugSession, Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable } from "vscode-debugadapter";
+import { DebugSession, Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable, LoggingDebugSession } from "vscode-debugadapter";
 import { ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DEBUGGER } from '../../client/telemetry/constants';
@@ -33,7 +33,7 @@ interface IDebugVariable {
     evaluateChildren?: Boolean;
 }
 
-export class PythonDebugger extends DebugSession {
+export class PythonDebugger extends LoggingDebugSession {
     private _variableHandles: Handles<IDebugVariable>;
     private _pythonStackFrames: Handles<IPythonStackFrame>;
     private breakPointCounter: number = 0;
@@ -48,7 +48,7 @@ export class PythonDebugger extends DebugSession {
     private _supportsRunInTerminalRequest: boolean;
     private terminateEventSent: boolean;
     public constructor(debuggerLinesStartAt1: boolean, isServer: boolean) {
-        super(debuggerLinesStartAt1, isServer === true);
+        super('/Users/donjayamanne/.vscode/extensions/pythonVSCode/debug.log', debuggerLinesStartAt1, isServer === true);
         this._variableHandles = new Handles<IDebugVariable>();
         this._pythonStackFrames = new Handles<IPythonStackFrame>();
         this.registeredBreakpoints = new Map<number, IPythonBreakpoint>();
@@ -741,4 +741,4 @@ export class PythonDebugger extends DebugSession {
     }
 }
 
-DebugSession.run(PythonDebugger);
+LoggingDebugSession.run(PythonDebugger);
