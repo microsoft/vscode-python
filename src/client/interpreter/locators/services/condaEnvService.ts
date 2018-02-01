@@ -92,7 +92,7 @@ export class CondaEnvService implements IInterpreterLocatorService {
                 return [];
             }
             const interpreters = await this.parseCondaInfo(info);
-            const environments = await this.condaService.getCondaEnvironments();
+            const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
                 interpreters
                     .forEach(interpreter => {

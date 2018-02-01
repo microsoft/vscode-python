@@ -17,8 +17,9 @@ import { Architecture, IFileSystem, IPlatformService } from '../../client/common
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../client/common/terminal/types';
-import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows } from '../../client/common/types';
-import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IPythonSettings, IsWindows } from '../../client/common/types';
+import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../client/interpreter/contracts';
+import { IServiceContainer } from '../../client/ioc/types';
 import { rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
@@ -123,7 +124,7 @@ suite('Module Installer', () => {
         await expect(mockInstaller.isSupported()).to.eventually.equal(true, 'mock is not supported');
     });
 
-    test('Ensure pip and conda are supported', async () => {
+    test('Ensure pip is supported', async () => {
         ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('mock', true));
         const pythonPath = await getCurrentPythonPath();
         const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
@@ -145,18 +146,21 @@ suite('Module Installer', () => {
         const pipInstaller = moduleInstallers.find(item => item.displayName === 'Pip')!;
         expect(pipInstaller).not.to.be.an('undefined', 'Pip installer not found');
         await expect(pipInstaller.isSupported()).to.eventually.equal(true, 'Pip is not supported');
+    });
+    test('Ensure conda is supported', async () => {
+        const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
 
+        const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
+        const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+        const pythonPath = 'pythonABC';
+        settings.setup(s => s.pythonPath).returns(() => pythonPath);
+        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICondaService))).returns(() => condaService.object);
         condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(true));
-        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => {
-            const pythonInterpreter: PythonInterpreter = {
-                path: 'xyz',
-                version: 'zbc',
-                type: InterpreterType.Conda
-            };
-            return Promise.resolve(pythonInterpreter);
-        });
-        const condaInstaller = moduleInstallers.find(item => item.displayName === 'Conda')!;
-        expect(condaInstaller).not.to.be.an('undefined', 'Conda installer not found');
+        condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
+
+        const condaInstaller = new CondaInstaller(serviceContainer.object);
         await expect(condaInstaller.isSupported()).to.eventually.equal(true, 'Conda is not supported');
     });
 

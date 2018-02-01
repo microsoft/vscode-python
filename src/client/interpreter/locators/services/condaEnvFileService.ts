@@ -43,7 +43,7 @@ export class CondaEnvFileService implements IInterpreterLocatorService {
                 .filter(item => !!item)
                 .map(item => item!);
 
-            const environments = await this.condaService.getCondaEnvironments();
+            const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
                 interpreters
                     .forEach(interpreter => {

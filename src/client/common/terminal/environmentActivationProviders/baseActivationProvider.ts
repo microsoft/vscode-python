@@ -3,9 +3,11 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { IFileSystem } from '../../platform/types';
+import { IConfigurationService } from '../../types';
 import { TerminalShellType } from '../types';
 import { ITerminalActivationCommandProvider } from '../types';
 
@@ -14,14 +16,15 @@ export abstract class BaseActivationCommandProvider implements ITerminalActivati
     constructor(protected readonly serviceContainer: IServiceContainer) { }
 
     public abstract isShellSupported(targetShell: TerminalShellType): boolean;
-    public abstract getActivationCommands(interpreter: PythonInterpreter, targetShell: TerminalShellType): Promise<string[] | undefined>;
+    public abstract getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined>;
 
-    protected async findScriptFile(interpreter: PythonInterpreter, scriptFileNames: string[]): Promise<string | undefined> {
+    protected async findScriptFile(resource: Uri | undefined, scriptFileNames: string[]): Promise<string | undefined> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;
 
         for (const scriptFileName of scriptFileNames) {
             // Generate scripts are found in the same directory as the interpreter.
-            const scriptFile = path.join(path.dirname(interpreter.path), scriptFileName);
+            const scriptFile = path.join(path.dirname(pythonPath), scriptFileName);
             const found = await fs.fileExistsAsync(scriptFile);
             if (found) {
                 return scriptFile;

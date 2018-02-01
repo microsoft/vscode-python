@@ -282,10 +282,11 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                 this.terminal = {} as ITerminalSettings;
             }
         }
-        // Support for travis
+        // Support for travis.
         this.terminal = this.terminal ? this.terminal : {
             executeInFileDir: true,
-            launchArgs: []
+            launchArgs: [],
+            activateEnvironment: true
         };
 
         // If workspace config changes, then we could have a cascading effect of on change events.

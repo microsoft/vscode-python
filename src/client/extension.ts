@@ -34,6 +34,7 @@ import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer } from './ioc/types';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
+import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
 import { PythonDefinitionProvider } from './providers/definitionProvider';
@@ -103,11 +104,13 @@ export async function activate(context: vscode.ExtensionContext) {
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
 
     const pythonInstaller = new PythonInstaller(serviceContainer);
-    await pythonInstaller.checkPythonInstallation(PythonSettings.getInstance());
+    pythonInstaller.checkPythonInstallation(PythonSettings.getInstance())
+        .catch(ex => console.error('Python Extension: pythonInstaller.checkPythonInstallation', ex));
 
     // This must be completed before we can continue.
     await interpreterManager.autoSetInterpreter();
 
+    interpreterManager.initialize();
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
 
@@ -121,6 +124,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
     context.subscriptions.push(new TerminalProvider(serviceContainer));
+    context.subscriptions.push(new LinterCommands(serviceContainer));
 
     // Enable indentAction
     // tslint:disable-next-line:no-non-null-assertion

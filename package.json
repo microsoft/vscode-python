@@ -2,7 +2,7 @@
 	"name": "python",
 	"displayName": "Python",
 	"description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-	"version": "2018.1.0-beta",
+	"version": "2018.1.0-rc",
 	"publisher": "ms-python",
 	"author": {
 		"name": "Microsoft Corporation"
@@ -1485,6 +1485,12 @@
 					"type": "boolean",
 					"default": false,
 					"description": "When executing a file in the terminal, whether to use execute in the file's directory, instead of the current open folder.",
+					"scope": "resource"
+				},
+				"python.terminal.activateEnvironment": {
+					"type": "boolean",
+					"default": true,
+					"description": "Activate Python Environment in Terminal created using the Extension.",
 					"scope": "resource"
 				},
 				"python.terminal.launchArgs": {

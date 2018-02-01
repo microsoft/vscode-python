@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { ICondaService, IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { ExecutionInfo } from '../types';
+import { ExecutionInfo, IConfigurationService } from '../types';
 import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller } from './types';
 
@@ -41,21 +41,21 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
         return this.isCurrentEnvironmentACondaEnvironment(resource);
     }
     protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
-        const condaLocator = this.serviceContainer.get<ICondaService>(ICondaService);
-        const condaFile = await condaLocator.getCondaFile();
+        const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
+        const condaFile = await condaService.getCondaFile();
 
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const info = await interpreterService.getActiveInterpreter(resource);
+        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;
+        const info = await condaService.getCondaEnvironment(pythonPath);
         const args = ['install'];
 
-        if (info!.envName) {
+        if (info.name) {
             // If we have the name of the conda environment, then use that.
             args.push('--name');
-            args.push(info!.envName!);
-        } else {
+            args.push(info.name!);
+        } else if (info.path) {
             // Else provide the full path to the environment path.
             args.push('--prefix');
-            args.push(info!.envPath!);
+            args.push(info.path);
         }
         args.push(moduleName);
         return {
@@ -64,9 +64,9 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
             moduleName: ''
         };
     }
-    private isCurrentEnvironmentACondaEnvironment(resource?: Uri) {
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        return interpreterService.getActiveInterpreter(resource)
-            .then(info => info ? info.type === InterpreterType.Conda : false).catch(() => false);
+    private async isCurrentEnvironmentACondaEnvironment(resource?: Uri): Promise<boolean> {
+        const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
+        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;
+        return condaService.isCondaEnvironment(pythonPath);
     }
 }
