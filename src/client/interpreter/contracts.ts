@@ -15,7 +15,6 @@ export interface IInterpreterVersionService {
     getPipVersion(pythonPath: string): Promise<string>;
 }
 
-export const ICondaEnvironmentFile = Symbol('ICondaEnvironmentFile');
 export const IKnownSearchPathsForInterpreters = Symbol('IKnownSearchPathsForInterpreters');
 export const IKnownSearchPathsForVirtualEnvironments = Symbol('IKnownSearchPathsForVirtualEnvironments');
 
@@ -25,12 +24,26 @@ export interface IInterpreterLocatorService extends Disposable {
     getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
 }
 
-export const ICondaLocatorService = Symbol('ICondaLocatorService');
+export type CondaInfo = {
+    envs?: string[];
+    'sys.version'?: string;
+    'sys.prefix'?: string;
+    'python_version'?: string;
+    default_prefix?: string;
+};
 
-export interface ICondaLocatorService {
+export const ICondaService = Symbol('ICondaService');
+
+export interface ICondaService {
+    readonly condaEnvironmentsFile: string | undefined;
     getCondaFile(): Promise<string>;
     isCondaAvailable(): Promise<boolean>;
     getCondaVersion(): Promise<string | undefined>;
+    getCondaInfo(): Promise<CondaInfo | undefined>;
+    getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string, path: string }[]) | undefined>;
+    getInterpreterPath(condaEnvironmentPath: string): string;
+    isCondaEnvironment(interpreterPath: string): Promise<boolean>;
+    getCondaEnvironment(interpreterPath: string): Promise<{ name: string, path: string } | undefined>;
 }
 
 export enum InterpreterType {
@@ -48,6 +61,8 @@ export type PythonInterpreter = {
     architecture?: Architecture;
     type: InterpreterType;
     envName?: string;
+    envPath?: string;
+    cachedEntry?: boolean;
 };
 
 export type WorkspacePythonPath = {
@@ -55,3 +70,13 @@ export type WorkspacePythonPath = {
     pytonPath?: string;
     configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder;
 };
+
+export const IInterpreterService = Symbol('IInterpreterService');
+
+export interface IInterpreterService {
+    getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
+    autoSetInterpreter(): Promise<void>;
+    getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;
+    refresh(): Promise<void>;
+    initialize(): void;
+}

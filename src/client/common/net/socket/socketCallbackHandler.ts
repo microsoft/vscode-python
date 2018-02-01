@@ -1,3 +1,5 @@
+// tslint:disable:quotemark ordered-imports member-ordering one-line prefer-const
+
 "use strict";
 
 import * as net from "net";
@@ -6,7 +8,7 @@ import { SocketStream } from "./SocketStream";
 import { SocketServer } from './socketServer';
 
 export abstract class SocketCallbackHandler extends EventEmitter {
-    private _stream: SocketStream = null;
+    private _stream: SocketStream;
     private commandHandlers: Map<string, Function>;
     private handeshakeDone: boolean;
 
@@ -41,8 +43,8 @@ export abstract class SocketCallbackHandler extends EventEmitter {
 
     protected abstract handleHandshake(): boolean;
 
-    private HandleIncomingData(buffer: Buffer, socket: net.Socket): boolean {
-        if (this._stream === null) {
+    private HandleIncomingData(buffer: Buffer, socket: net.Socket): boolean | undefined {
+        if (!this._stream) {
             this._stream = new SocketStream(socket, buffer);
         }
         else {
@@ -72,7 +74,7 @@ export abstract class SocketCallbackHandler extends EventEmitter {
         }
 
         if (this.commandHandlers.has(cmd)) {
-            const handler = this.commandHandlers.get(cmd);
+            const handler = this.commandHandlers.get(cmd)!;
             handler();
         }
         else {

@@ -2,15 +2,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { Uri } from 'vscode';
-import { ICondaLocatorService, IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../interpreter/contracts';
-import { CONDA_RELATIVE_PY_PATH } from '../../interpreter/locators/services/conda';
+import { ICondaService, IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { PythonSettings } from '../configSettings';
-import { IPythonExecutionFactory } from '../process/types';
-import { ExecutionInfo } from '../types';
-import { arePathsSame } from '../utils';
+import { ExecutionInfo, IConfigurationService } from '../types';
 import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller } from './types';
 
@@ -35,7 +30,7 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
         if (typeof this.isCondaAvailable === 'boolean') {
             return this.isCondaAvailable!;
         }
-        const condaLocator = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaLocator = this.serviceContainer.get<ICondaService>(ICondaService);
         const available = await condaLocator.isCondaAvailable();
 
         if (!available) {
@@ -46,20 +41,21 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
         return this.isCurrentEnvironmentACondaEnvironment(resource);
     }
     protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
-        const condaLocator = this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
-        const condaFile = await condaLocator.getCondaFile();
+        const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
+        const condaFile = await condaService.getCondaFile();
 
-        const info = await this.getCurrentInterpreterInfo(resource);
+        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;
+        const info = await condaService.getCondaEnvironment(pythonPath);
         const args = ['install'];
 
-        if (info.envName) {
+        if (info.name) {
             // If we have the name of the conda environment, then use that.
             args.push('--name');
-            args.push(info.envName!);
-        } else {
+            args.push(info.name!);
+        } else if (info.path) {
             // Else provide the full path to the environment path.
             args.push('--prefix');
-            args.push(info.envPath);
+            args.push(info.path);
         }
         args.push(moduleName);
         return {
@@ -68,37 +64,9 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
             moduleName: ''
         };
     }
-    private async getCurrentPythonPath(resource?: Uri): Promise<string> {
-        const pythonPath = PythonSettings.getInstance(resource).pythonPath;
-        if (path.basename(pythonPath) === pythonPath) {
-            const pythonProc = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(resource);
-            return pythonProc.getExecutablePath().catch(() => pythonPath);
-        } else {
-            return pythonPath;
-        }
-    }
-    private isCurrentEnvironmentACondaEnvironment(resource?: Uri) {
-        return this.getCurrentInterpreterInfo(resource)
-            .then(info => info && info.isConda === true).catch(() => false);
-    }
-    private async getCurrentInterpreterInfo(resource?: Uri) {
-        // Use this service, though it returns everything it is cached.
-        const interpreterLocator = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
-        const interpretersPromise = interpreterLocator.getInterpreters(resource);
-        const pythonPathPromise = this.getCurrentPythonPath(resource);
-        const [interpreters, currentPythonPath] = await Promise.all([interpretersPromise, pythonPathPromise]);
-
-        // Check if we have the info about the current python path.
-        const pathToCompareWith = path.dirname(currentPythonPath);
-        const info = interpreters.find(item => arePathsSame(path.dirname(item.path), pathToCompareWith));
-        // tslint:disable-next-line:prefer-array-literal
-        const pathsToRemove = new Array(CONDA_RELATIVE_PY_PATH.length).fill('..') as string[];
-        const envPath = path.join(path.dirname(currentPythonPath), ...pathsToRemove);
-        return {
-            isConda: info && info!.type === InterpreterType.Conda,
-            pythonPath: currentPythonPath,
-            envPath,
-            envName: info ? info!.envName : undefined
-        };
+    private async isCurrentEnvironmentACondaEnvironment(resource?: Uri): Promise<boolean> {
+        const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
+        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;
+        return condaService.isCondaEnvironment(pythonPath);
     }
 }

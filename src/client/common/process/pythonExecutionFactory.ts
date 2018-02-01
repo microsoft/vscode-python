@@ -3,20 +3,21 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { PythonSettings } from '../configSettings';
+import { IServiceContainer } from '../../ioc/types';
 import { IEnvironmentVariablesProvider } from '../variables/types';
 import { PythonExecutionService } from './pythonProcess';
-import { IProcessService, IPythonExecutionFactory, IPythonExecutionService } from './types';
+import { IPythonExecutionFactory, IPythonExecutionService } from './types';
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
-    constructor( @inject(IProcessService) private procService: IProcessService,
-        @inject(IEnvironmentVariablesProvider) private envVarsService: IEnvironmentVariablesProvider) { }
+    private envVarsService: IEnvironmentVariablesProvider;
+    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+            this.envVarsService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+        }
     public async create(resource?: Uri): Promise<IPythonExecutionService> {
-        const settings = PythonSettings.getInstance(resource);
         return this.envVarsService.getEnvironmentVariables(resource)
             .then(customEnvVars => {
-                return new PythonExecutionService(this.procService, settings.pythonPath, customEnvVars);
+                return new PythonExecutionService(this.serviceContainer, customEnvVars);
             });
     }
 }

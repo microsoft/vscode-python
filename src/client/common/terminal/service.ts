@@ -2,66 +2,81 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Terminal, Uri, window, workspace } from 'vscode';
+import { Disposable, Event, EventEmitter, Terminal, Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
-import { IPlatformService } from '../platform/types';
+import { ITerminalManager } from '../application/types';
 import { IDisposableRegistry } from '../types';
-import { ITerminalService } from './types';
-
-const IS_POWERSHELL = /powershell.exe$/i;
+import { ITerminalHelper, ITerminalService, TerminalShellType } from './types';
 
 @injectable()
-export class TerminalService implements ITerminalService {
+export class TerminalService implements ITerminalService, Disposable {
     private terminal?: Terminal;
-    private textPreviouslySentToTerminal: boolean = false;
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
-    public async sendCommand(command: string, args: string[]): Promise<void> {
-        const text = this.buildTerminalText(command, args);
-        const term = await this.getTerminal();
-        term.show(false);
-        term.sendText(text, true);
-        this.textPreviouslySentToTerminal = true;
+    private terminalShellType: TerminalShellType;
+    private terminalClosed = new EventEmitter<void>();
+    private terminalManager: ITerminalManager;
+    private terminalHelper: ITerminalHelper;
+    public get onDidCloseTerminal(): Event<void> {
+        return this.terminalClosed.event;
     }
+    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        private resource?: Uri,
+        private title: string = 'Python') {
 
-    private async getTerminal() {
+        const disposableRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
+        disposableRegistry.push(this);
+        this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
+        this.terminalManager = this.serviceContainer.get<ITerminalManager>(ITerminalManager);
+        this.terminalManager.onDidCloseTerminal(this.terminalCloseHandler, this, disposableRegistry);
+    }
+    public dispose() {
         if (this.terminal) {
-            return this.terminal!;
+            this.terminal.dispose();
         }
-        this.terminal = window.createTerminal('Python');
-        this.terminal.show(false);
+    }
+    public async sendCommand(command: string, args: string[]): Promise<void> {
+        await this.ensureTerminal();
+        const text = this.terminalHelper.buildCommandForTerminal(this.terminalShellType, command, args);
+        this.terminal!.show(true);
+        this.terminal!.sendText(text, true);
+    }
+    public async sendText(text: string): Promise<void> {
+        await this.ensureTerminal();
+        this.terminal!.show(true);
+        this.terminal!.sendText(text);
+    }
+    public async show(): Promise<void> {
+        await this.ensureTerminal();
+        this.terminal!.show(true);
+    }
+    private async ensureTerminal(): Promise<void> {
+        if (this.terminal) {
+            return;
+        }
+        const shellPath = this.terminalHelper.getTerminalShellPath();
+        this.terminalShellType = !shellPath || shellPath.length === 0 ? TerminalShellType.other : this.terminalHelper.identifyTerminalShell(shellPath);
+        this.terminal = this.terminalManager.createTerminal({ name: this.title });
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
-        // However if we have already sent text to the terminal, then no need to wait.
-        if (!this.textPreviouslySentToTerminal) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-        const handler = window.onDidCloseTerminal((term) => {
-            if (term === this.terminal) {
-                this.terminal = undefined;
+        const activationCommamnds = await this.terminalHelper.getEnvironmentActivationCommands(this.terminalShellType, this.resource);
+        if (activationCommamnds) {
+            for (const command of activationCommamnds!) {
+                this.terminal!.show(true);
+                this.terminal!.sendText(command);
+
+                // Give the command some time to complete.
+                // Its been observed that sending commands too early will strip some text off.
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
-        });
-
-        const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        disposables.push(this.terminal);
-        disposables.push(handler);
-
-        return this.terminal;
-    }
-
-    private buildTerminalText(command: string, args: string[]) {
-        const executable = command.indexOf(' ') ? `"${command}"` : command;
-        const commandPrefix = this.terminalIsPowershell() ? '& ' : '';
-        return `${commandPrefix}${executable} ${args.join(' ')}`.trim();
-    }
-
-    private terminalIsPowershell(resource?: Uri) {
-        const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
-        if (!platform.isWindows) {
-            return false;
         }
-        // tslint:disable-next-line:no-backbone-get-set-outside-model
-        const terminalName = workspace.getConfiguration('terminal.integrated.shell', resource).get<string>('windows');
-        return typeof terminalName === 'string' && IS_POWERSHELL.test(terminalName);
+
+        this.terminal!.show(true);
+    }
+    private terminalCloseHandler(terminal: Terminal) {
+        if (terminal === this.terminal) {
+            this.terminalClosed.fire();
+            this.terminal = undefined;
+        }
     }
 }

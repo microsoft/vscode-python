@@ -1,9 +1,9 @@
 import { OutputChannel } from 'vscode';
 import { CancellationToken, TextDocument } from 'vscode';
-import { IInstaller, ILogger, Product } from '../common/types';
+import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import * as baseLinter from './baseLinter';
-import { ILinterHelper } from './types';
+import { BaseLinter } from './baseLinter';
+import { ILintMessage } from './types';
 
 interface IProspectorResponse {
     messages: IProspectorMessage[];
@@ -22,12 +22,12 @@ interface IProspectorLocation {
     module: 'beforeFormat';
 }
 
-export class Linter extends baseLinter.BaseLinter {
-    constructor(outputChannel: OutputChannel, installer: IInstaller, helper: ILinterHelper, logger: ILogger, serviceContainer: IServiceContainer) {
-        super(Product.prospector, outputChannel, installer, helper, logger, serviceContainer);
+export class Prospector extends BaseLinter {
+    constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
+        super(Product.prospector, outputChannel, serviceContainer);
     }
 
-    protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<baseLinter.ILintMessage[]> {
+    protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
         return await this.run(['--absolute-paths', '--output-format=json', document.uri.fsPath], document, cancellation);
     }
     protected async parseMessages(output: string, document: TextDocument, token: CancellationToken, regEx: string) {
@@ -35,7 +35,7 @@ export class Linter extends baseLinter.BaseLinter {
         try {
             parsedData = JSON.parse(output);
         } catch (ex) {
-            this.outputChannel.appendLine(`${'#'.repeat(10)}Linting Output - ${this.Id}${'#'.repeat(10)}`);
+            this.outputChannel.appendLine(`${'#'.repeat(10)}Linting Output - ${this.info.id}${'#'.repeat(10)}`);
             this.outputChannel.append(output);
             this.logger.logError('Failed to parse Prospector output', ex);
             return [];
@@ -52,7 +52,7 @@ export class Linter extends baseLinter.BaseLinter {
                     column: msg.location.character,
                     line: lineNumber,
                     type: msg.code,
-                    provider: `${this.Id} - ${msg.source}`
+                    provider: `${this.info.id} - ${msg.source}`
                 };
             });
     }

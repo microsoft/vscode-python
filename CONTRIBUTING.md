@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-1. Node.js (>= 8.9.1, < 9.0.0)
+1. Node.js (>= 8.9.1, < 9.0.0), and [Yarn](https://yarnpkg.com/lang/en/docs/install/)
 2. Python 2.7 or later (required only for testing the extension and running unit tests)
 3. Windows, OS X or Linux
 4. Visual Studio Code
@@ -19,6 +19,8 @@ git clone https://github.com/microsoft/vscode-python
 cd vscode-python
 yarn install
 ```
+
+You may see warnings that ```The engine "vscode" appears to be invalid.```, you can ignore these.
 
 ### Incremental Build
 

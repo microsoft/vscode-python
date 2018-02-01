@@ -2,7 +2,7 @@
 	"name": "python",
 	"displayName": "Python",
 	"description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-	"version": "2018.1.0-alpha",
+	"version": "2018.2.0-alpha",
 	"publisher": "ms-python",
 	"author": {
 		"name": "Microsoft Corporation"
@@ -16,6 +16,18 @@
 	"bugs": {
 		"url": "https://github.com/Microsoft/vscode-python/issues"
 	},
+	"badges": [
+		{
+			"url": "https://travis-ci.org/Microsoft/vscode-python.svg?branch=master",
+			"href": "https://travis-ci.org/Microsoft/vscode-python",
+			"description": "Continuous integration"
+		},
+		{
+			"url": "https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg",
+			"href": "https://codecov.io/gh/Microsoft/vscode-python",
+			"description": "Test coverage"
+		}
+	],
 	"icon": "icon.png",
 	"galleryBanner": {
 		"color": "#1e415e",
@@ -64,7 +76,10 @@
 		"onCommand:python.buildWorkspaceSymbols",
 		"onCommand:python.updateSparkLibrary",
 		"onCommand:python.startREPL",
-		"onCommand:python.goToPythonObject"
+		"onCommand:python.goToPythonObject",
+		"onCommand:python.setLinter",
+		"onCommand:python.enableLinting",
+		"onCommand:python.createTerminal"
 	],
 	"main": "./out/client/extension",
 	"contributes": {
@@ -90,6 +105,11 @@
 			{
 				"command": "python.startREPL",
 				"title": "%python.command.python.startREPL.title%",
+				"category": "Python"
+			},
+			{
+				"command": "python.createTerminal",
+				"title": "%python.command.python.createTerminal.title%",
 				"category": "Python"
 			},
 			{
@@ -200,6 +220,16 @@
 			{
 				"command": "python.goToPythonObject",
 				"title": "%python.command.python.goToPythonObject.title%",
+				"category": "Python"
+			},
+			{
+				"command": "python.setLinter",
+				"title": "%python.command.python.setLinter.title%",
+				"category": "Python"
+			},
+			{
+				"command": "python.enableLinting",
+				"title": "%python.command.python.enableLinting.title%",
 				"category": "Python"
 			}
 		],
@@ -937,12 +967,6 @@
 					"description": "Whether to lint Python files.",
 					"scope": "resource"
 				},
-				"python.linting.enabledWithoutWorkspace": {
-					"type": "boolean",
-					"default": true,
-					"description": "Whether to lint Python files when no workspace is opened.",
-					"scope": "resource"
-				},
 				"python.linting.prospectorEnabled": {
 					"type": "boolean",
 					"default": false,
@@ -989,6 +1013,12 @@
 					"type": "number",
 					"default": 100,
 					"description": "Controls the maximum number of problems produced by the server.",
+					"scope": "resource"
+				},
+				"python.linting.pylintUseMinimalCheckers": {
+					"type": "boolean",
+					"default": true,
+					"description": "Whether to run Pylint with minimal set of rules.",
 					"scope": "resource"
 				},
 				"python.linting.pylintCategorySeverity.convention": {
@@ -1457,6 +1487,12 @@
 					"description": "When executing a file in the terminal, whether to use execute in the file's directory, instead of the current open folder.",
 					"scope": "resource"
 				},
+				"python.terminal.activateEnvironment": {
+					"type": "boolean",
+					"default": true,
+					"description": "Activate Python Environment in Terminal created using the Extension.",
+					"scope": "resource"
+				},
 				"python.terminal.launchArgs": {
 					"type": "array",
 					"default": [],
@@ -1550,7 +1586,7 @@
 		"minimatch": "^3.0.3",
 		"named-js-regexp": "^1.3.1",
 		"opn": "^5.1.0",
-		"reflect-metadata": "^0.1.10",
+		"reflect-metadata": "^0.1.12",
 		"rxjs": "^5.5.2",
 		"semver": "^5.4.1",
 		"sudo-prompt": "^8.0.0",
@@ -1558,6 +1594,7 @@
 		"tree-kill": "^1.1.0",
 		"typescript-char": "^0.0.0",
 		"uint64be": "^1.0.1",
+		"unicode": "^10.0.0",
 		"untildify": "^3.0.2",
 		"vscode-debugadapter": "^1.0.1",
 		"vscode-debugprotocol": "^1.0.1",

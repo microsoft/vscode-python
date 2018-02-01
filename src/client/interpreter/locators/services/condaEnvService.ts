@@ -1,37 +1,28 @@
-import * as fs from 'fs-extra';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { Uri } from 'vscode';
-import { IProcessService } from '../../../common/process/types';
-import { VersionUtils } from '../../../common/versionUtils';
-import { ICondaLocatorService, IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
-import { AnacondaCompanyName, AnacondaCompanyNames, CONDA_RELATIVE_PY_PATH, CondaInfo } from './conda';
+import { IFileSystem } from '../../../common/platform/types';
+import { ILogger } from '../../../common/types';
+import { IServiceContainer } from '../../../ioc/types';
+import { CondaInfo, ICondaService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { CacheableLocatorService } from './cacheableLocatorService';
+import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
 import { CondaHelper } from './condaHelper';
 
 @injectable()
-export class CondaEnvService implements IInterpreterLocatorService {
+export class CondaEnvService extends CacheableLocatorService {
     private readonly condaHelper = new CondaHelper();
-    constructor( @inject(ICondaLocatorService) private condaLocator: ICondaLocatorService,
+    constructor( @inject(ICondaService) private condaService: ICondaService,
         @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService,
-        @inject(IProcessService) private processService: IProcessService) {
-    }
-    public async getInterpreters(resource?: Uri) {
-        return this.getSuggestionsFromConda();
+        @inject(ILogger) private logger: ILogger,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IFileSystem) private fileSystem: IFileSystem) {
+        super('CondaEnvService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
-    public isCondaEnvironment(interpreter: PythonInterpreter) {
-        return (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
-            (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('CONTINUUM') >= 0;
-    }
-    public getLatestVersion(interpreters: PythonInterpreter[]) {
-        const sortedInterpreters = interpreters.filter(interpreter => interpreter.version && interpreter.version.length > 0);
-        // tslint:disable-next-line:no-non-null-assertion
-        sortedInterpreters.sort((a, b) => VersionUtils.compareVersion(a.version!, b.version!));
-        if (sortedInterpreters.length > 0) {
-            return sortedInterpreters[sortedInterpreters.length - 1];
-        }
-    }
     public async parseCondaInfo(info: CondaInfo) {
         const condaDisplayName = this.condaHelper.getDisplayName(info);
 
@@ -43,12 +34,11 @@ export class CondaEnvService implements IInterpreterLocatorService {
         }
 
         const promises = envs
-            .map(async env => {
-                const envName = path.basename(env);
-                const pythonPath = path.join(env, ...CONDA_RELATIVE_PY_PATH);
+            .map(async envPath => {
+                const pythonPath = this.condaService.getInterpreterPath(envPath);
 
-                const existsPromise = fs.pathExists(pythonPath);
-                const versionPromise = this.versionService.getVersion(pythonPath, envName);
+                const existsPromise = pythonPath ? this.fileSystem.fileExistsAsync(pythonPath) : Promise.resolve(false);
+                const versionPromise = this.versionService.getVersion(pythonPath, '');
 
                 const [exists, version] = await Promise.all([existsPromise, versionPromise]);
                 if (!exists) {
@@ -57,15 +47,13 @@ export class CondaEnvService implements IInterpreterLocatorService {
 
                 const versionWithoutCompanyName = this.stripCondaDisplayName(this.stripCompanyName(version), condaDisplayName);
                 const displayName = `${condaDisplayName} ${versionWithoutCompanyName}`.trim();
-                // If it is an environment, hence suffix with env name.
-                const interpreterDisplayName = env === info.default_prefix ? displayName : `${displayName} (${envName})`;
                 // tslint:disable-next-line:no-unnecessary-local-variable
                 const interpreter: PythonInterpreter = {
                     path: pythonPath,
-                    displayName: interpreterDisplayName,
+                    displayName,
                     companyDisplayName: AnacondaCompanyName,
                     type: InterpreterType.Conda,
-                    envName
+                    envPath
                 };
                 return interpreter;
             });
@@ -74,6 +62,9 @@ export class CondaEnvService implements IInterpreterLocatorService {
             .then(interpreters => interpreters.filter(interpreter => interpreter !== null && interpreter !== undefined))
             // tslint:disable-next-line:no-non-null-assertion
             .then(interpreters => interpreters.map(interpreter => interpreter!));
+    }
+    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+        return this.getSuggestionsFromConda();
     }
     private stripCompanyName(content: string) {
         // Strip company name from version.
@@ -99,25 +90,33 @@ export class CondaEnvService implements IInterpreterLocatorService {
         }
     }
     private async getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
-        return this.condaLocator.getCondaFile()
-            .then(condaFile => this.processService.exec(condaFile, ['info', '--json']))
-            .then(output => output.stdout)
-            .then(stdout => {
-                if (stdout.length === 0) {
-                    return [];
-                }
+        try {
+            const info = await this.condaService.getCondaInfo();
+            if (!info) {
+                return [];
+            }
+            const interpreters = await this.parseCondaInfo(info);
+            const environments = await this.condaService.getCondaEnvironments(true);
+            if (Array.isArray(environments) && environments.length > 0) {
+                interpreters
+                    .forEach(interpreter => {
+                        const environment = environments.find(item => this.fileSystem.arePathsSame(item.path, interpreter!.envPath!));
+                        if (environment) {
+                            interpreter.envName = environment!.name;
+                            interpreter.displayName = `${interpreter.displayName} (${environment!.name})`;
+                        }
+                    });
+            }
 
-                try {
-                    const info = JSON.parse(stdout) as CondaInfo;
-                    return this.parseCondaInfo(info);
-                } catch {
-                    // Failed because either:
-                    //   1. conda is not installed.
-                    //   2. `conda info --json` has changed signature.
-                    //   3. output of `conda info --json` has changed in structure.
-                    // In all cases, we can't offer conda pythonPath suggestions.
-                    return [];
-                }
-            }).catch(() => []);
+            return interpreters;
+        } catch (ex) {
+            // Failed because either:
+            //   1. conda is not installed.
+            //   2. `conda info --json` has changed signature.
+            //   3. output of `conda info --json` has changed in structure.
+            // In all cases, we can't offer conda pythonPath suggestions.
+            this.logger.logError('Failed to get Suggestions from conda', ex);
+            return [];
+        }
     }
 }

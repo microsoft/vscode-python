@@ -4,127 +4,23 @@ import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Uri } from 'vscode';
+import { ConfigurationTarget, Uri } from 'vscode';
+import {
+    IAutoCompeteSettings,
+    IFormattingSettings,
+    ILintingSettings,
+    IPythonSettings,
+    ISortImportSettings,
+    ITerminalSettings,
+    IUnitTestSettings,
+    IWorkspaceSymbolSettings
+} from './types';
 import { SystemVariables } from './variables/systemVariables';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');
 
 export const IS_WINDOWS = /^win/.test(process.platform);
-
-export interface IPythonSettings {
-    pythonPath: string;
-    venvPath: string;
-    jediPath: string;
-    devOptions: string[];
-    linting: ILintingSettings;
-    formatting: IFormattingSettings;
-    unitTest: IUnitTestSettings;
-    autoComplete: IAutoCompeteSettings;
-    terminal: ITerminalSettings;
-    sortImports: ISortImportSettings;
-    workspaceSymbols: IWorkspaceSymbolSettings;
-    envFile: string;
-    disablePromptForFeatures: string[];
-    disableInstallationChecks: boolean;
-    globalModuleInstallation: boolean;
-}
-export interface ISortImportSettings {
-    path: string;
-    args: string[];
-}
-
-export interface IUnitTestSettings {
-    promptToConfigure: boolean;
-    debugPort: number;
-    debugHost?: string;
-    nosetestsEnabled: boolean;
-    nosetestPath: string;
-    nosetestArgs: string[];
-    pyTestEnabled: boolean;
-    pyTestPath: string;
-    pyTestArgs: string[];
-    unittestEnabled: boolean;
-    unittestArgs: string[];
-    cwd?: string;
-}
-export interface IPylintCategorySeverity {
-    convention: vscode.DiagnosticSeverity;
-    refactor: vscode.DiagnosticSeverity;
-    warning: vscode.DiagnosticSeverity;
-    error: vscode.DiagnosticSeverity;
-    fatal: vscode.DiagnosticSeverity;
-}
-export interface IPep8CategorySeverity {
-    W: vscode.DiagnosticSeverity;
-    E: vscode.DiagnosticSeverity;
-}
-// tslint:disable-next-line:interface-name
-export interface Flake8CategorySeverity {
-    F: vscode.DiagnosticSeverity;
-    E: vscode.DiagnosticSeverity;
-    W: vscode.DiagnosticSeverity;
-}
-export interface IMypyCategorySeverity {
-    error: vscode.DiagnosticSeverity;
-    note: vscode.DiagnosticSeverity;
-}
-export interface ILintingSettings {
-    enabled: boolean;
-    enabledWithoutWorkspace: boolean;
-    ignorePatterns: string[];
-    prospectorEnabled: boolean;
-    prospectorArgs: string[];
-    pylintEnabled: boolean;
-    pylintArgs: string[];
-    pep8Enabled: boolean;
-    pep8Args: string[];
-    pylamaEnabled: boolean;
-    pylamaArgs: string[];
-    flake8Enabled: boolean;
-    flake8Args: string[];
-    pydocstyleEnabled: boolean;
-    pydocstyleArgs: string[];
-    lintOnSave: boolean;
-    maxNumberOfProblems: number;
-    pylintCategorySeverity: IPylintCategorySeverity;
-    pep8CategorySeverity: IPep8CategorySeverity;
-    flake8CategorySeverity: Flake8CategorySeverity;
-    mypyCategorySeverity: IMypyCategorySeverity;
-    prospectorPath: string;
-    pylintPath: string;
-    pep8Path: string;
-    pylamaPath: string;
-    flake8Path: string;
-    pydocstylePath: string;
-    mypyEnabled: boolean;
-    mypyArgs: string[];
-    mypyPath: string;
-}
-export interface IFormattingSettings {
-    provider: string;
-    autopep8Path: string;
-    autopep8Args: string[];
-    yapfPath: string;
-    yapfArgs: string[];
-}
-export interface IAutoCompeteSettings {
-    addBrackets: boolean;
-    extraPaths: string[];
-    preloadModules: string[];
-}
-export interface IWorkspaceSymbolSettings {
-    enabled: boolean;
-    tagFilePath: string;
-    rebuildOnStart: boolean;
-    rebuildOnFileSave: boolean;
-    ctagsPath: string;
-    exclusionPatterns: string[];
-}
-export interface ITerminalSettings {
-    executeInFileDir: boolean;
-    launchArgs: string[];
-}
 
 export function isTestExecution(): boolean {
     // tslint:disable-next-line:interface-name no-string-literal
@@ -165,12 +61,9 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     }
     // tslint:disable-next-line:function-name
     public static getInstance(resource?: Uri): PythonSettings {
-        const workspaceFolder = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
-        let workspaceFolderUri: Uri | undefined = workspaceFolder ? workspaceFolder.uri : undefined;
-        if (!workspaceFolderUri && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
-            workspaceFolderUri = vscode.workspace.workspaceFolders[0].uri;
-        }
+        const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource).uri;
         const workspaceFolderKey = workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+
         if (!PythonSettings.pythonSettings.has(workspaceFolderKey)) {
             const settings = new PythonSettings(workspaceFolderUri);
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
@@ -178,6 +71,19 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         // tslint:disable-next-line:no-non-null-assertion
         return PythonSettings.pythonSettings.get(workspaceFolderKey)!;
     }
+
+    public static getSettingsUriAndTarget(resource?: Uri): { uri: Uri | undefined, target: ConfigurationTarget } {
+        const workspaceFolder = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
+        let workspaceFolderUri: Uri | undefined = workspaceFolder ? workspaceFolder.uri : undefined;
+
+        if (!workspaceFolderUri && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
+            workspaceFolderUri = vscode.workspace.workspaceFolders[0].uri;
+        }
+
+        const target = workspaceFolderUri ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Global;
+        return { uri: workspaceFolderUri, target };
+    }
+
     // tslint:disable-next-line:function-name
     public static dispose() {
         if (!isTestExecution()) {
@@ -242,7 +148,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         // Support for travis.
         this.linting = this.linting ? this.linting : {
             enabled: false,
-            enabledWithoutWorkspace: false,
             ignorePatterns: [],
             flake8Args: [], flake8Enabled: false, flake8Path: 'flake',
             lintOnSave: false, maxNumberOfProblems: 100,
@@ -271,7 +176,8 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             mypyCategorySeverity: {
                 error: vscode.DiagnosticSeverity.Error,
                 note: vscode.DiagnosticSeverity.Hint
-            }
+            },
+            pylintUseMinimalCheckers: false
         };
         this.linting.pylintPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylintPath), workspaceRoot);
         this.linting.flake8Path = getAbsolutePath(systemVariables.resolveAny(this.linting.flake8Path), workspaceRoot);
@@ -376,10 +282,11 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                 this.terminal = {} as ITerminalSettings;
             }
         }
-        // Support for travis
+        // Support for travis.
         this.terminal = this.terminal ? this.terminal : {
             executeInFileDir: true,
-            launchArgs: []
+            launchArgs: [],
+            activateEnvironment: true
         };
 
         // If workspace config changes, then we could have a cascading effect of on change events.

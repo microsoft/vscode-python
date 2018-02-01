@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IPythonSettings, PythonSettings } from '../common/configSettings';
+import { PythonSettings } from '../common/configSettings';
 import { IProcessService } from '../common/process/types';
+import { IPythonSettings } from '../common/types';
 import { captureTelemetry } from '../telemetry';
 import { WORKSPACE_SYMBOLS_BUILD } from '../telemetry/constants';
 

@@ -1,6 +1,6 @@
 import * as path from 'path';
-import { PythonSettings } from '../../common/configSettings';
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, window, workspace, WorkspaceFolder } from 'vscode';
+import { PythonSettings } from '../../common/configSettings';
 
 type PythonDebugConfiguration = DebugConfiguration & {
     stopOnEntry?: boolean,
@@ -37,7 +37,8 @@ export class SimpleConfigurationProvider implements DebugConfigurationProvider {
 
         return undefined;
     }
-    resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
+    // tslint:disable-next-line:member-ordering
+    public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
         const keys = Object.keys(debugConfiguration);
         const provideConfig = (debugConfiguration.noDebug === true && keys.length === 1) || keys.length === 0;
         if (!provideConfig) {

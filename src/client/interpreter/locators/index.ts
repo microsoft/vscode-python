@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as path from 'path';
-import { Disposable, Uri, workspace } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 import { IPlatformService } from '../../common/platform/types';
-import { IDisposableRegistry, IsWindows } from '../../common/types';
+import { IDisposableRegistry } from '../../common/types';
 import { arePathsSame } from '../../common/utils';
 import { IServiceContainer } from '../../ioc/types';
 import {
@@ -21,39 +21,21 @@ import { fixInterpreterDisplayName } from './helpers';
 
 @injectable()
 export class PythonInterpreterLocatorService implements IInterpreterLocatorService {
-    private interpretersPerResource: Map<string, Promise<PythonInterpreter[]>>;
     private disposables: Disposable[] = [];
     private platform: IPlatformService;
 
     constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-        this.interpretersPerResource = new Map<string, Promise<PythonInterpreter[]>>();
-        this.disposables.push(workspace.onDidChangeConfiguration(this.onConfigChanged, this));
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
     }
     public async getInterpreters(resource?: Uri) {
-        const resourceKey = this.getResourceKey(resource);
-        if (!this.interpretersPerResource.has(resourceKey)) {
-            this.interpretersPerResource.set(resourceKey, this.getInterpretersPerResource(resource));
-        }
-
-        return await this.interpretersPerResource.get(resourceKey)!;
+        return this.getInterpretersPerResource(resource);
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
     }
-    private onConfigChanged() {
-        this.interpretersPerResource.clear();
-    }
-    private getResourceKey(resource?: Uri) {
-        if (!resource) {
-            return '';
-        }
-        const workspaceFolder = workspace.getWorkspaceFolder(resource);
-        return workspaceFolder ? workspaceFolder.uri.fsPath : '';
-    }
     private async getInterpretersPerResource(resource?: Uri) {
-        const locators = this.getLocators(resource);
+        const locators = this.getLocators();
         const promises = locators.map(async provider => provider.getInterpreters(resource));
         const listOfInterpreters = await Promise.all(promises);
 
@@ -77,7 +59,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
                 return accumulator;
             }, []);
     }
-    private getLocators(resource?: Uri) {
+    private getLocators() {
         const locators: IInterpreterLocatorService[] = [];
         // The order of the services is important.
         if (this.platform.isWindows) {

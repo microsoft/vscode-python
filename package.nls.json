@@ -1,6 +1,7 @@
 {
     "python.command.python.sortImports.title": "Sort Imports",
     "python.command.python.startREPL.title": "Start REPL",
+    "python.command.python.createTerminal.title": "Create Terminal",
     "python.command.python.buildWorkspaceSymbols.title": "Build Workspace Symbols",
     "python.command.python.runtests.title": "Run All Unit Tests",
     "python.command.python.debugtests.title": "Debug All Unit Tests",
@@ -23,6 +24,8 @@
     "python.command.jupyter.gotToPreviousCell.title": "Go to Previous Cell",
     "python.command.jupyter.gotToNextCell.title": "Go to Next Cell",
     "python.command.python.goToPythonObject.title": "Go to Python Object",
+    "python.command.python.setLinter.title": "Select Linter",
+    "python.command.python.enableLinting.title": "Enable Linting",
 	"python.snippet.launch.standard.label": "Python",
 	"python.snippet.launch.standard.description": "Debug a Python program with standard output",
 	"python.snippet.launch.pyspark.label": "Python: PySpark",

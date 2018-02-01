@@ -4,14 +4,17 @@
 import { OutputChannel, Uri } from 'vscode';
 import { ExecutionInfo, IInstaller, ILogger, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { IErrorHandler, ILinterHelper } from '../types';
+import { IErrorHandler } from '../types';
 
 export abstract class BaseErrorHandler implements IErrorHandler {
-    private handler: IErrorHandler;
-    constructor(protected product: Product, protected installer: IInstaller,
-        protected helper: ILinterHelper, protected logger: ILogger,
-        protected outputChannel: OutputChannel, protected serviceContainer: IServiceContainer) {
+    protected logger: ILogger;
+    protected installer: IInstaller;
 
+    private handler: IErrorHandler;
+
+    constructor(protected product: Product, protected outputChannel: OutputChannel, protected serviceContainer: IServiceContainer) {
+        this.logger = this.serviceContainer.get<ILogger>(ILogger);
+        this.installer = this.serviceContainer.get<IInstaller>(IInstaller);
     }
     protected get nextHandler() {
         return this.handler;

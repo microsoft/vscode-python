@@ -1,3 +1,4 @@
+// tslint:disable:quotemark no-stateless-class
 "use strict";
 
 export class Commands {
