@@ -11,8 +11,10 @@ import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
 @injectable()
 export abstract class CacheableLocatorService implements IInterpreterLocatorService {
     private getInterpretersPromise: Deferred<PythonInterpreter[]>;
-    constructor(private readonly name: string,
+    private readonly cacheKey: string;
+    constructor(name: string,
         protected readonly serviceContainer: IServiceContainer) {
+        this.cacheKey = `INTERPRETERS_CACHE_${name}`;
     }
     public abstract dispose();
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
@@ -38,7 +40,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     private getCachedInterpreters() {
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         // tslint:disable-next-line:no-any
-        const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(`INTERPRETERS_CACHE_${this.name}`, undefined as any);
+        const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(`${this.cacheKey}`, undefined as any);
         if (!Array.isArray(globalPersistence.value)) {
             return;
         }
@@ -51,7 +53,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     }
     private cacheInterpreters(interpreters: PythonInterpreter[]) {
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(this.name, []);
+        const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(`${this.cacheKey}`, []);
         globalPersistence.value = interpreters;
     }
 }
