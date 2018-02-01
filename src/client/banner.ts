@@ -17,7 +17,8 @@ export class BannerService {
         if (!this.shouldShowBanner.value) {
             return;
         }
-        this.shouldShowBanner.value = false;
+        this.shouldShowBanner.updateValue(false)
+            .catch(ex => console.error('Python Extension: Failed to update banner value', ex));
 
         const message = 'The Python extension is now published by Microsoft!';
         const yesButton = 'Read more';

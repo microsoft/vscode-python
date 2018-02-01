@@ -70,7 +70,7 @@ export class MockState implements IPersistentState<any> {
     get value(): any {
         return this.data;
     }
-    set value(data) {
+    public async updateValue(data): Promise<void> {
         this.data = data;
     }
 }

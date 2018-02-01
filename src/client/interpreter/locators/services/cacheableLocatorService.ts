@@ -21,8 +21,8 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         if (!this.getInterpretersPromise) {
             this.getInterpretersPromise = createDeferred<PythonInterpreter[]>();
             this.getInterpretersImplementation(resource)
-                .then(items => {
-                    this.cacheInterpreters(items);
+                .then(async items => {
+                    await this.cacheInterpreters(items);
                     this.getInterpretersPromise.resolve(items);
                 })
                 .catch(ex => this.getInterpretersPromise.reject(ex));
@@ -51,9 +51,9 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             };
         });
     }
-    private cacheInterpreters(interpreters: PythonInterpreter[]) {
+    private async cacheInterpreters(interpreters: PythonInterpreter[]) {
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(`${this.cacheKey}`, []);
-        globalPersistence.value = interpreters;
+        await globalPersistence.updateValue(interpreters);
     }
 }
