@@ -40,7 +40,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     private getCachedInterpreters() {
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         // tslint:disable-next-line:no-any
-        const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(`${this.cacheKey}`, undefined as any);
+        const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(this.cacheKey, undefined as any);
         if (!Array.isArray(globalPersistence.value)) {
             return;
         }
@@ -53,7 +53,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     }
     private async cacheInterpreters(interpreters: PythonInterpreter[]) {
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(`${this.cacheKey}`, []);
+        const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(this.cacheKey, []);
         await globalPersistence.updateValue(interpreters);
     }
 }
