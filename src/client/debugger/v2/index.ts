@@ -1,13 +1,11 @@
 'use strict';
 
-// // This line should always be right on top.
-// // tslint:disable-next-line:no-any
-// if ((Reflect as any).metadata === undefined) {
-//     // tslint:disable-next-line:no-require-imports no-var-requires
-//     require('reflect-metadata');
-// }
-
-// tslint:disable:no-any
+// This line should always be right on top.
+// tslint:disable-next-line:no-any
+if ((Reflect as any).metadata === undefined) {
+    // tslint:disable-next-line:no-require-imports no-var-requires
+    require('reflect-metadata');
+}
 
 import * as fs from 'fs';
 import { ReadableStream } from 'memory-streams';

@@ -13,7 +13,6 @@ class Debugger {
     private ptvsdProc: ChildProcess;
     private pppProc: ChildProcess;
     public async start() {
-        this.log('Started');
         // parse arguments
         let port = 0;
         const args = process.argv.slice(2);
@@ -25,7 +24,7 @@ class Debugger {
         });
         try {
             const connected = createDeferred<boolean>();
-            const socket = net.connect({ port: 8788, host: 'localhost' }, () => {
+            const socket = net.connect({ port: 8786, host: 'localhost' }, () => {
                 connected.resolve();
             });
             socket.on('error', ex => {
@@ -51,7 +50,7 @@ class Debugger {
         }
     }
     private log(message) {
-        const logFile = '/Users/donjayamanne/.vscode/extensions/pythonVSCodeDebugger/log2.log';
+        const logFile = '/Users/donjayamanne/.vscode/extensions/pythonVSCode/log2.log';
         fs.appendFileSync(logFile, `\n${message}\n`);
     }
     // private startPTVSD() {
