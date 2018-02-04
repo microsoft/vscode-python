@@ -108,11 +108,11 @@ suite('Interpreters from Conda Environments Text File', () => {
         fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(true));
         fileSystem.setup(fs => fs.readFile(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(interpreterPaths.join(EOL)));
 
-        AnacondaCompanyNames.forEach(async companyDisplayName => {
+        for (const _ of AnacondaCompanyNames){
             const interpreters = await condaFileProvider.getInterpreters();
 
             assert.equal(interpreters.length, 1, 'Incorrect number of entries');
             assert.equal(interpreters[0].displayName, `${AnacondaDisplayName} Mock Version (numpy)`, 'Incorrect display name');
-        });
+        }
     });
 });
