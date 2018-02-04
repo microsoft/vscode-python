@@ -71,10 +71,31 @@ suite('Unit Tests - debugging', () => {
         assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
 
+        const deferred = createDeferred<string>();
         const testFunction = [tests.testFunctions[0].testFunction];
-        testManager.runTest(CommandSource.commandPalette, { testFunction }, false, true);
-        const launched = await mockDebugLauncher.launched;
-        assert.isTrue(launched, 'Debugger not launched');
+        const runningPromise = testManager.runTest(CommandSource.commandPalette, { testFunction }, false, true);
+
+        // This promise should never resolve nor reject.
+        runningPromise
+           .then(() => 'Debugger stopped when it shouldn\'t have')
+           .catch(() => 'Debugger crashed when it shouldn\'t have')
+           // tslint:disable-next-line:no-floating-promises
+          .then(error => {
+                deferred.reject(error);
+          });
+
+        mockDebugLauncher.launched
+                    // tslint:disable-next-line:no-unsafe-any
+                    .then((launched) => {
+                        if (launched) {
+                            deferred.resolve('');
+                        } else {
+                            deferred.reject('Debugger not launched');
+                        }
+                    })
+                    // tslint:disable-next-line:no-unsafe-any
+                    .catch(ex => deferred.reject(ex));
+        return await deferred.promise;
     }
 
     test('Debugger should start (unittest)', async () => {
@@ -105,8 +126,7 @@ suite('Unit Tests - debugging', () => {
         const launched = await mockDebugLauncher.launched;
         assert.isTrue(launched, 'Debugger not launched');
 
-        testManager.discoverTests(CommandSource.commandPalette, true, true, true);
-
+        await testManager.discoverTests(CommandSource.commandPalette, true, true, true);
         await expect(runningPromise).to.be.rejectedWith(CANCELLATION_REASON, 'Incorrect reason for ending the debugger');
     }
 
@@ -151,6 +171,7 @@ suite('Unit Tests - debugging', () => {
         runningPromise
             .then(() => 'Debugger stopped when it shouldn\'t have')
             .catch(() => 'Debugger crashed when it shouldn\'t have')
+            // tslint:disable-next-line: no-floating-promises
             .then(error => {
                 deferred.reject(error);
             });
