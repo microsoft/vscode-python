@@ -112,7 +112,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
                 break;
             }
             case doNotShowAgain: {
-                notificationPromptEnabled.value = false;
+                await notificationPromptEnabled.updateValue(false);
                 break;
             }
             default: {

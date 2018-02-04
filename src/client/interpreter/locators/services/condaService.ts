@@ -132,10 +132,10 @@ export class CondaService implements ICondaService {
             const condaFile = await this.getCondaFile();
             const envInfo = await this.processService.exec(condaFile, ['env', 'list']).then(output => output.stdout);
             const environments = this.condaHelper.parseCondaEnvironmentNames(envInfo);
-            globalPersistence.value = { data: environments };
+            await globalPersistence.updateValue({ data: environments });
             return environments;
         } catch (ex) {
-            globalPersistence.value = { data: undefined };
+            await globalPersistence.updateValue({ data: undefined });
             // Failed because either:
             //   1. conda is not installed.
             //   2. `conda env list has changed signature.

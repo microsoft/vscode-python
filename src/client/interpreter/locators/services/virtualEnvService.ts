@@ -3,24 +3,29 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri, workspace } from 'vscode';
 import { fsReaddirAsync, IS_WINDOWS } from '../../../common/utils';
-import { IInterpreterLocatorService, IInterpreterVersionService, IKnownSearchPathsForVirtualEnvironments, InterpreterType, PythonInterpreter } from '../../contracts';
+import { IServiceContainer } from '../../../ioc/types';
+import { IInterpreterVersionService, IKnownSearchPathsForVirtualEnvironments, InterpreterType, PythonInterpreter } from '../../contracts';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { lookForInterpretersInDirectory } from '../helpers';
 import * as settings from './../../../common/configSettings';
+import { CacheableLocatorService } from './cacheableLocatorService';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');
 
 @injectable()
-export class VirtualEnvService implements IInterpreterLocatorService {
+export class VirtualEnvService extends CacheableLocatorService {
     public constructor( @inject(IKnownSearchPathsForVirtualEnvironments) private knownSearchPaths: string[],
         @inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
-        @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService) { }
-    public async getInterpreters(resource?: Uri) {
-        return this.suggestionsFromKnownVenvs();
+        @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        super('KnownPathsService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
+    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+        return this.suggestionsFromKnownVenvs();
+    }
     private async suggestionsFromKnownVenvs() {
         return Promise.all(this.knownSearchPaths.map(dir => this.lookForInterpretersInVenvs(dir)))
             // tslint:disable-next-line:underscore-consistent-invocation

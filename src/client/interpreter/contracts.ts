@@ -62,6 +62,7 @@ export type PythonInterpreter = {
     type: InterpreterType;
     envName?: string;
     envPath?: string;
+    cachedEntry?: boolean;
 };
 
 export type WorkspacePythonPath = {

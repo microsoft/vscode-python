@@ -4,6 +4,7 @@
 
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
+import { isLineBreak, isWhiteSpace } from './characters';
 import { TextIterator } from './textIterator';
 import { ICharacterStream, ITextIterator } from './types';
 
@@ -70,11 +71,11 @@ export class CharacterStream implements ICharacterStream {
     }
 
     public isAtWhiteSpace(): boolean {
-        return this.currentChar <= Char.Space || this.currentChar === 0x200B; // Unicode whitespace
+        return isWhiteSpace(this.currentChar);
     }
 
     public isAtLineBreak(): boolean {
-        return this.currentChar === Char.CarriageReturn || this.currentChar === Char.LineFeed;
+        return isLineBreak(this.currentChar);
     }
 
     public skipLineBreak(): void {

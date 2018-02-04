@@ -3,22 +3,26 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { fsExistsAsync, IS_WINDOWS } from '../../../common/utils';
-import { IInterpreterLocatorService, IInterpreterVersionService, IKnownSearchPathsForInterpreters, InterpreterType } from '../../contracts';
+import { IServiceContainer } from '../../../ioc/types';
+import { IInterpreterVersionService, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
+import { CacheableLocatorService } from './cacheableLocatorService';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');
 
 @injectable()
-export class KnownPathsService implements IInterpreterLocatorService {
+export class KnownPathsService extends CacheableLocatorService {
     public constructor( @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: string[],
-        @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService) { }
-    // tslint:disable-next-line:no-shadowed-variable
-    public getInterpreters(_?: Uri) {
-        return this.suggestionsFromKnownPaths();
+        @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        super('KnownPathsService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
+    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+        return this.suggestionsFromKnownPaths();
+    }
     private suggestionsFromKnownPaths() {
         const promises = this.knownSearchPaths.map(dir => this.getInterpretersInDirectory(dir));
         return Promise.all<string[]>(promises)

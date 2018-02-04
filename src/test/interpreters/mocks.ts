@@ -1,5 +1,6 @@
 import { injectable } from 'inversify';
 import { Architecture, IRegistry, RegistryHive } from '../../client/common/platform/types';
+import { IPersistentState } from '../../client/common/types';
 import { IInterpreterVersionService, InterpreterType } from '../../client/interpreter/contracts';
 import { IVirtualEnvironmentIdentifier } from '../../client/interpreter/virtualEnvs/types';
 
@@ -59,4 +60,17 @@ export class MockInterpreterVersionProvider implements IInterpreterVersionServic
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
+}
+
+// tslint:disable-next-line:no-any max-classes-per-file
+export class MockState implements IPersistentState<any> {
+    // tslint:disable-next-line:no-any
+    constructor(public data: any) { }
+    // tslint:disable-next-line:no-any
+    get value(): any {
+        return this.data;
+    }
+    public async updateValue(data): Promise<void> {
+        this.data = data;
+    }
 }

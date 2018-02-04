@@ -14,7 +14,8 @@ export const GLOBAL_MEMENTO = Symbol('IGlobalMemento');
 export const WORKSPACE_MEMENTO = Symbol('IWorkspaceMemento');
 
 export interface IPersistentState<T> {
-    value: T;
+    readonly value: T;
+    updateValue(value: T): Promise<void>;
 }
 
 export const IPersistentStateFactory = Symbol('IPersistentStateFactory');

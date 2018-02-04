@@ -1,6 +1,10 @@
 # Changelog
 
-## 2018.1
+## 2018.2.0
+
+XXX
+
+## 2018.1.0 (01 Feb 2018)
 
 ### Thanks
 
@@ -15,6 +19,7 @@ the following people who contributed code:
 
 ### Fixed issues
 
+* Support cached interpreter locations for faster interpreter selection ([#666](https://github.com/Microsoft/vscode-python/issues/259))
 * Sending a block of code with multiple global-level scopes now works ([#259](https://github.com/Microsoft/vscode-python/issues/259))
 * Automatic activation of virtual or conda environment in terminal when executing Python code/file ([#383](https://github.com/Microsoft/vscode-python/issues/383))
 * Introduce a `Python: Create Terminal` to create a terminal that activates the selected virtual/conda environment ([#622](https://github.com/Microsoft/vscode-python/issues/622))

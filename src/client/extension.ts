@@ -57,6 +57,7 @@ import { StopWatch } from './telemetry/stopWatch';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager } from './terminals/types';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
+import { OnEnterFormatter } from './typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import * as tests from './unittests/main';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
@@ -190,6 +191,8 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
 
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
+    context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
+
     // In case we have CR LF
     const triggerCharacters: string[] = os.EOL.split('');
     triggerCharacters.shift();
