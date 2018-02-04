@@ -94,7 +94,7 @@ suite('Unit Tests - debugging', () => {
 
     test('Debugger should start (unittest)', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
-        await testStartingDebugger('unittest');
+        await  testStartingDebugger('unittest');
     });
 
     test('Debugger should start (pytest)', async () => {
@@ -120,8 +120,10 @@ suite('Unit Tests - debugging', () => {
         const launched = await mockDebugLauncher.launched;
         assert.isTrue(launched, 'Debugger not launched');
 
-        await testManager.discoverTests(CommandSource.commandPalette, true, true, true);
+        const discoveryPromise = testManager.discoverTests(CommandSource.commandPalette, true, true, true);
         await expect(runningPromise).to.be.rejectedWith(CANCELLATION_REASON, 'Incorrect reason for ending the debugger');
+        ioc.dispose(); // will cancel test discovery
+        await expect(discoveryPromise).to.be.rejectedWith(CANCELLATION_REASON, 'Incorrect reason for ending the debugger');
     }
 
     test('Debugger should stop when user invokes a test discovery (unittest)', async () => {
