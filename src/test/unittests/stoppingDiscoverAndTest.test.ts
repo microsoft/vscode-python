@@ -66,12 +66,8 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
 
         // This promise should never resolve nor reject.
         runningPromise
-            .then(() => 'Debugger stopped when it shouldn\'t have')
-            .catch(() => 'Debugger crashed when it shouldn\'t have')
-            // tslint:disable-next-line:no-floating-promises
-            .then(error => {
-                deferred.reject(error);
-            });
+            .then(() => Promise.reject('Debugger stopped when it shouldn\'t have'))
+            .catch(error =>  deferred.reject(error));
 
        discoveryPromise.then(result => {
             if (result === EmptyTests) {
@@ -79,9 +75,8 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
             } else {
                 deferred.reject('tests not empty');
             }
-        }).catch(error => {
-            deferred.reject(error);
-        });
+        }).catch(error => deferred.reject(error));
+
         await deferred.promise;
     });
 

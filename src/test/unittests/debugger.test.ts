@@ -77,25 +77,19 @@ suite('Unit Tests - debugging', () => {
 
         // This promise should never resolve nor reject.
         runningPromise
-           .then(() => 'Debugger stopped when it shouldn\'t have')
-           .catch(() => 'Debugger crashed when it shouldn\'t have')
-           // tslint:disable-next-line:no-floating-promises
-          .then(error => {
-                deferred.reject(error);
-          });
+           .then(() => deferred.reject('Debugger stopped when it shouldn\'t have'))
+           .catch(error => deferred.reject(error));
 
         mockDebugLauncher.launched
-                    // tslint:disable-next-line:no-unsafe-any
-                    .then((launched) => {
-                        if (launched) {
-                            deferred.resolve('');
-                        } else {
-                            deferred.reject('Debugger not launched');
-                        }
-                    })
-                    // tslint:disable-next-line:no-unsafe-any
-                    .catch(ex => deferred.reject(ex));
-        return await deferred.promise;
+            .then((launched) => {
+                if (launched) {
+                    deferred.resolve('');
+                } else {
+                    deferred.reject('Debugger not launched');
+                }
+            }) .catch(error => deferred.reject(error));
+
+        await deferred.promise;
     }
 
     test('Debugger should start (unittest)', async () => {
