@@ -118,7 +118,8 @@ export class ItemInfoSource {
 
                 const descriptionWithHighlightedCode = this.highlightCode(lines.join(EOL));
                 const tooltip = new vscode.MarkdownString(['```python', signature, '```', descriptionWithHighlightedCode].join(EOL));
-                infos.push(new LanguageItemInfo(tooltip, dnd[0], new vscode.MarkdownString(dnd[1])));
+                const documentation = this.escapeMarkdown(dnd[1]);
+                infos.push(new LanguageItemInfo(tooltip, dnd[0], new vscode.MarkdownString(documentation)));
 
                 const key = signature + lines.join('');
                 // Sometimes we have duplicate documentation, one with a period at the end.
@@ -137,7 +138,8 @@ export class ItemInfoSource {
 
                 const lines = item.description.split(EOL);
                 const dd = this.getDetailAndDescription(item, lines);
-                infos.push(new LanguageItemInfo(tooltip, dd[0], new vscode.MarkdownString(dd[1])));
+                const documentation = this.escapeMarkdown(dd[1]);
+                infos.push(new LanguageItemInfo(tooltip, dd[0], new vscode.MarkdownString(documentation)));
 
                 const key = signature + lines.join('');
                 // Sometimes we have duplicate documentation, one with a period at the end.
@@ -225,5 +227,23 @@ export class ItemInfoSource {
         docstring = docstring.replace(/\r?\n[\+-]+\r?\n/g, EOL);
         docstring = docstring.replace(/\r?\n[\+=]+\r?\n/g, s => s.replace(/\+/g, '|').replace(/=/g, '-'));
         return docstring.trim();
+    }
+
+    private escapeMarkdown(text: string): string {
+        return text
+            .replace(/\\/g, '\\\\')
+            .replace(/\*/g, '\\*')
+            .replace(/\_/g, '\\_')
+            .replace(/\{/g, '\\{')
+            .replace(/\}/g, '\\}')
+            .replace(/\[/g, '\\[')
+            .replace(/\]/g, '\\]')
+            .replace(/\(/g, '\\(')
+            .replace(/\)/g, '\\)')
+            .replace(/\#/g, '\\#')
+            .replace(/\+/g, '\\+')
+            .replace(/\-/g, '\\-')
+            .replace(/\./g, '\\.')
+            .replace(/\!/g, '\\!');
     }
 }
