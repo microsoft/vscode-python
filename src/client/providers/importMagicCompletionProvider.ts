@@ -19,14 +19,14 @@ export class ImportMagicCompletionItemProvider implements vscode.CompletionItemP
     public async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position,
         token: vscode.CancellationToken, context: CompletionContext): Promise<vscode.CompletionItem[]> {
         if (!this.enable) {
-            return Promise.resolve([]);
+            return [];
         }
 
         const result = await this.getCompletionResult(document, position, token);
         this.enable = false;
 
         if (result === undefined) {
-            return Promise.resolve([]);
+            return [];
         }
 
         return result;

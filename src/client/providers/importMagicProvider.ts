@@ -27,7 +27,7 @@ export class ImportMagicProvider implements Disposable {
     public async getImportSuggestions(sourceFile: string, unresolvedName: string): Promise<ImportPathQuickPickItem[]> {
         const activeEditor = window.activeTextEditor;
         if (!activeEditor) {
-            return Promise.resolve([]);
+            return [];
         }
 
         const cmd: ICommandSuggestions<IResultSuggestions> = {
@@ -43,11 +43,10 @@ export class ImportMagicProvider implements Disposable {
             const candidates = result.candidates;
 
             candidates.sort((a, b) => a.score > b.score ? -1 : 1);
-            const suggestions: ImportPathQuickPickItem[] = candidates.map(item => this.suggestionToQuickPickItem(item));
-            return Promise.resolve(suggestions);
+            return candidates.map(item => this.suggestionToQuickPickItem(item));
         } catch (e) {
             window.showErrorMessage(e.message);
-            return Promise.resolve([]);
+            return [];
         }
     }
 
@@ -61,14 +60,14 @@ export class ImportMagicProvider implements Disposable {
     private async resolveImport() {
         const activeEditor = window.activeTextEditor;
         if (!activeEditor) {
-            return Promise.resolve();
+            return undefined;
         }
 
         const document = activeEditor.document;
 
         if (!activeEditor || document.languageId !== 'python') {
             window.showErrorMessage('Please open a Python source file to show import suggestions.');
-            return Promise.resolve();
+            return undefined;
         }
 
         // Get current selected name
@@ -76,13 +75,13 @@ export class ImportMagicProvider implements Disposable {
         const range = document.getWordRangeAtPosition(position);
         if (!range || range.isEmpty) {
             window.showErrorMessage('Empty resolve expression');
-            return Promise.resolve();
+            return undefined;
         }
         const unresolvedName : string = document.getText(range);
 
         if (!unresolvedName) {
             window.showErrorMessage('Empty resolve expression');
-            return Promise.resolve();
+            return undefined;
         }
 
         const tmpFileCreated = document.isDirty;
@@ -124,14 +123,14 @@ export class ImportMagicProvider implements Disposable {
     private async insertImport(module: string, variable?: string) {
         const activeEditor = window.activeTextEditor;
         if (!activeEditor) {
-            return Promise.resolve();
+            return undefined;
         }
 
         const document = activeEditor.document;
 
         if (!activeEditor || document.languageId !== 'python') {
             window.showErrorMessage('Please open a Python source file to show import suggestions.');
-            return Promise.resolve();
+            return undefined;
         }
 
         const tmpFileCreated = document.isDirty;
