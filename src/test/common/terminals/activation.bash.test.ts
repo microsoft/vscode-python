@@ -5,6 +5,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { EnumEx } from '../../../client/common/enumUtils';
+import '../../../client/common/extensions';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { TerminalShellType } from '../../../client/common/terminal/types';
@@ -13,7 +14,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Environment Activation (bash)', () => {
-    ['usr/bin/python', 'usr/bin/env with spaces/env more/python'].forEach(pythonPath => {
+    ['usr/bin/python', 'usr/bin/env with spaces/env more/python', 'c:\\users\\windows paths\\conda\\python.exe'].forEach(pythonPath => {
         const hasSpaces = pythonPath.indexOf(' ') > 0;
         const suiteTitle = hasSpaces ? 'and there are spaces in the script file (pythonpath),' : 'and there are no spaces in the script file (pythonpath),';
         suite(suiteTitle, () => {
@@ -83,8 +84,7 @@ suite('Terminal Environment Activation (bash)', () => {
                                 // Ensure the path is quoted if it contains any spaces.
                                 // Ensure it contains the name of the environment as an argument to the script file.
 
-                                const quotedScriptFile = pathToScriptFile.indexOf(' ') > 0 ? `"${pathToScriptFile}"` : pathToScriptFile;
-                                expect(command).to.be.deep.equal([`source ${quotedScriptFile}`.trim()], 'Invalid command');
+                                expect(command).to.be.deep.equal([`source ${pathToScriptFile.fileToCommandArgument()}`.trim()], 'Invalid command');
                             } else {
                                 expect(command).to.be.equal(undefined, 'Command should be undefined');
                             }

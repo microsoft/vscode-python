@@ -150,7 +150,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         const workspaceFolder: WorkspaceFolder = { index: 0, name: 'blah', uri: workspaceUri };
         workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
         workspace.setup(w => w.workspaceFolders).returns(() => [workspaceFolder]);
-        const expectedTerminalArgs = terminalArgs.concat(path.join(workspaceUri.fsPath, 'manage.py'), 'shell');
+        const expectedTerminalArgs = terminalArgs.concat(path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(), 'shell');
 
         testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
     });
