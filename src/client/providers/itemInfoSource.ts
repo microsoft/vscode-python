@@ -105,7 +105,9 @@ export class ItemInfoSource {
                 }
 
                 // Tooltip is only used in hover
-                tooltip = tooltip.appendMarkdown(['```python', signature, '```', EOL].join(EOL));
+                if (signature.length > 0) {
+                    tooltip = tooltip.appendMarkdown(['```python', signature, '```', EOL].join(EOL));
+                }
                 const description = this.textConverter.toMarkdown(lines.join(EOL));
                 tooltip = tooltip.appendMarkdown(description);
 
@@ -123,7 +125,9 @@ export class ItemInfoSource {
             }
 
             if (item.description) {
-                tooltip.appendMarkdown(['```python', signature, '```', EOL].join(EOL));
+                if (signature.length > 0) {
+                    tooltip.appendMarkdown(['```python', signature, '```', EOL].join(EOL));
+                }
                 const description = this.textConverter.toMarkdown(item.description);
                 tooltip.appendMarkdown(description);
 
@@ -174,7 +178,9 @@ export class ItemInfoSource {
                 break;
             }
             case vscode.SymbolKind.Module: {
-                signature = `module ${signature}`;
+                if (signature.length > 0) {
+                    signature = `module ${signature}`;
+                }
                 break;
             }
             default: {

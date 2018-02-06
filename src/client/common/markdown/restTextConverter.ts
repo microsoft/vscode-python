@@ -8,7 +8,9 @@ export class RestTextConverter {
   // tslint:disable-next-line:cyclomatic-complexity
   public toMarkdown(docstring: string): string {
     // This method uses several regexs to 'translate' reStructruredText
-    // (Python doc syntax) to Markdown syntax.
+    // https://en.wikipedia.org/wiki/ReStructuredText
+    // (Python doc syntax) to Markdown syntax. It only translates
+    // as much as needed to display tooltips in intellisense.
 
     // Determine if this is actually a reStructruredText
     if (docstring.indexOf('::') < 0 && docstring.indexOf('..')) {
@@ -24,6 +26,9 @@ export class RestTextConverter {
       let line = lines[i];
 
       if (inCodeBlock) {
+        // Pseudo-code block terminates by a line without leading
+        // whitespace. Pseudo-code blocks are used to preserve
+        // pre-formatted text.
         if (line.length > 0 && !isWhiteSpace(line.charCodeAt(0))) {
           md.push('```');
           inCodeBlock = false;
@@ -32,35 +37,37 @@ export class RestTextConverter {
 
       if (line.startsWith('```')) {
         md.push(line);
-        inCodeBlock = true;
+        inCodeBlock = !inCodeBlock;
         continue;
       }
 
       if (i < lines.length - 1 && (lines[i + 1].startsWith('==='))) {
         // Section title -> heading level 3
         md.push(`### ${line}`);
-        i += 1;
+        i += 1; // Eat line with ===
         continue;
       }
 
       if (i < lines.length - 1 && (lines[i + 1].startsWith('---'))) {
+        // Subsection title -> heading level 4
         md.push(`#### ${line}`);
-        i += 1;
+        i += 1; // Eat line with ---
         continue;
       }
 
       if (line.startsWith('..') && line.indexOf('::') >= 0) {
-        continue;
+        continue; // Ignore assorted tags likes .. seealso::
       }
       if (line.indexOf('generated/') >= 0) {
-        continue;
+        continue; // ignore generated content
       }
       if (line.startsWith('===') || line.startsWith('---')) {
         continue;
       }
 
       if (line.endsWith('::')) {
-        // Literal blocks: begin with `::`
+        // Literal blocks begin with `::`. Such as sequence like
+        // '... as shown below::' that is followed by a preformatted text.
         if (line.length > 2) {
           md.push(line.substring(0, line.length - 1));
         }
@@ -69,13 +76,14 @@ export class RestTextConverter {
         continue;
       }
 
-      line = line.replace(/``/g, '`');
+      line = line.replace(/``/g, '`'); // Convert double backticks to single
       if (line.length > 0 && isWhiteSpace(line.charCodeAt(0))) {
-        line = `  ${line}  `; // Keep hard line breaks for the indented content
+        // Keep hard line breaks for the pre-indented content
+        line = `  ${line}  `;
       }
 
       if (md.length > 0 && (md[md.length - 1].length === 0 || md[md.length - 1] === '```') && line.length === 0) {
-        continue; // Avoid consequent empty lines
+        continue; // Avoid more than one empty line in a row
       }
 
       md.push(line);
