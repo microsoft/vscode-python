@@ -11,22 +11,30 @@ import * as fs from 'fs';
 import { ReadableStream } from 'memory-streams';
 import * as net from 'net';
 import * as path from 'path';
-import { Readable, ReadableOptions, Transform, Writable } from 'stream';
+import { PassThrough, Readable, ReadableOptions, Transform, Writable } from 'stream';
 import * as url from 'url';
-import { DebugSession, Handles, InitializedEvent, logger, LoggingDebugSession, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable, Response, ErrorDestination } from 'vscode-debugadapter';
+import { DebugSession, ErrorDestination, Handles, InitializedEvent, logger, LoggingDebugSession, OutputEvent, Response, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable } from 'vscode-debugadapter';
 import { ThreadEvent } from 'vscode-debugadapter';
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
+import { Message } from 'vscode-debugadapter/lib/messages';
 import { ProtocolServer } from 'vscode-debugadapter/lib/protocol';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { createDeferred } from '../../common/helpers';
 import { LaunchRequestArguments } from '../Common/Contracts';
-import { DebugProtocolServer } from './protocol';
+// import { DebugProtocolServer } from './protocol';
+
+class InitializeRequest extends Message implements DebugProtocol.InitializeRequest {
+    // tslint:disable-next-line:no-banned-terms
+    public arguments: DebugProtocol.InitializeRequestArguments;
+    public command: string;
+    constructor(args: DebugProtocol.InitializeRequestArguments) {
+        super('request');
+        this.arguments = args;
+        this.command = 'initialize';
+    }
+}
 
 export class PythonDebugger extends LoggingDebugSession {
-    public connected: Promise<void>;
-    public isConnected: boolean;
-    // protected _isServer: boolean;
-    private connectedDeferred = createDeferred<void>();
     constructor(private readonly inStream: Transform,
         private readonly outStream: Transform,
         private readonly inSocketStream: net.Socket,
@@ -34,26 +42,27 @@ export class PythonDebugger extends LoggingDebugSession {
         debuggerLinesAndColumnsStartAt1?: boolean, isServer?: boolean) {
         // super();
         super(path.join(__dirname, '..', '..', '..', '..', 'expDebug.log'), debuggerLinesAndColumnsStartAt1, isServer);
-        this.connected = this.connectedDeferred.promise;
-        // this._isServer = isServer;
     }
+    // tslint:disable-next-line:max-func-body-length
     public static async run() {
         try {
-            const outStream = new Transform({
-                transform(chunk, encoding, callback) {
-                    callback(null, chunk);
-                }
-            });
-            const inStream = new Transform({
-                transform(chunk, encoding, callback) {
-                    callback(null, chunk);
-                }
-            });
+            const debugOutStream = new PassThrough();
+            const debugInStream = new PassThrough();
+
             const throughOutStream = new Transform({
                 transform(chunk, encoding, callback) {
                     PythonDebugger.logProtocolMessages('Output\n');
                     PythonDebugger.logProtocolMessages(`${chunk.toString()}\n`);
                     callback(null, chunk);
+
+                    if (chunk.toString().indexOf('"event": "terminated", "body": {}}') > 0) {
+                        throughOutStream.unpipe(process.stdout);
+                        debuggerSocket.unpipe(throughOutStream);
+                        // wait a bit before shutting down
+                        setTimeout(() => {
+                            process.exit(0);
+                        }, 100);
+                    }
                 }
             });
             const throughInStream = new Transform({
@@ -66,17 +75,17 @@ export class PythonDebugger extends LoggingDebugSession {
 
             throughOutStream.pipe(process.stdout);
             // process.stdin.pipe(inStream);
-            outStream.pipe(throughOutStream);
+            debugOutStream.pipe(throughOutStream);
             // throughOutStream.pipe(process.stdout);
             // session.start(inStream, outStream);
 
             // Connect to the ptvsd debugger.
             const connected = createDeferred<boolean>();
-            const socket = net.connect({ port: 8788, host: 'localhost' }, () => {
+            const debuggerSocket = net.connect({ port: 8788, host: 'localhost' }, () => {
                 connected.resolve();
             });
 
-            socket.on('error', ex => {
+            debuggerSocket.on('error', ex => {
                 PythonDebugger.log('Socket Error\n:');
                 PythonDebugger.log(ex.name);
                 PythonDebugger.log(ex.message);
@@ -85,36 +94,69 @@ export class PythonDebugger extends LoggingDebugSession {
                 const x = '';
             });
 
+            // Lets start our debugger
+            const session = new PythonDebugger(debugInStream, debugOutStream, debuggerSocket, debuggerSocket, false, true);
+
+            session.on('_py_pause_input', () => {
+                throughInStream.pause();
+                process.stdin.pause();
+                throughInStream.unpipe(debugInStream);
+            });
+
+            let initializedResopnse: string = '';
+            session.on('_py_debug_initialize', (request: InitializeRequest) => {
+                // PythonDebugger.logProtocolMessages('_py_pause_input\n');
+                const json = JSON.stringify(request);
+                // PythonDebugger.logProtocolMessages(`${json}\n`);
+                const message = `Content-Length: ${Buffer.byteLength(json, 'utf8')}\r\n\r\n${json}`;
+                // PythonDebugger.logProtocolMessages('Request for Socket\n');
+                // PythonDebugger.logProtocolMessages(`${message}\n`);
+                debuggerSocket.write(message, 'utf8');
+                let collectedData = new Buffer(0);
+                function onData(data: Buffer) {
+                    collectedData = Buffer.concat([collectedData, data]);
+                    const collectedDataStr = collectedData.toString('utf8');
+                    const startIndex = collectedDataStr.indexOf('}Content-Length');
+                    if (startIndex > 0) {
+                        try {
+                            initializedResopnse = collectedDataStr.substring(startIndex + 1);
+                            PythonDebugger.logProtocolMessages('We\re done with socket initialization\n');
+                            PythonDebugger.logProtocolMessages(`${initializedResopnse}\n`);
+                            debuggerSocket.removeListener('data', onData);
+                            session.emit('_py_debug_connect');
+                        } catch (ex) {
+                            PythonDebugger.logProtocolMessages('Ooops\n');
+                            PythonDebugger.logProtocolMessages(ex.name);
+                            PythonDebugger.logProtocolMessages(ex.message);
+                            PythonDebugger.logProtocolMessages(ex.stack);
+                            PythonDebugger.logProtocolMessages(ex.toString());
+                        }
+                    }
+                }
+                debuggerSocket.addListener('data', onData);
+            });
+
+            session.on('_py_debug_connect', () => {
+                PythonDebugger.log('changed piping\n');
+                // Send the initialized response
+                throughOutStream.write(initializedResopnse);
+
+                throughInStream.pipe(debuggerSocket);
+
+                throughInStream.resume();
+                process.stdin.resume();
+
+                debugOutStream.unpipe(throughOutStream);
+                debuggerSocket.pipe(throughOutStream);
+            });
+
             await connected.promise;
 
-            // Lets start our debugger
-            const session = new PythonDebugger(inStream, outStream, socket, socket, false, true);
-
-            socket.on('data', (data) => {
-                PythonDebugger.log('Output from socket\n');
-                PythonDebugger.log(`${data.toString()}\n`);
-                // process.stdout.write(data);
-                throughOutStream.write(data);
-            });
-
-            // process.stdin.pipe(throughInStream);
-            process.stdin.on('data', (data) => {
-                throughInStream.write(data);
-
-                PythonDebugger.log(`From stdin ${session.isConnected}\n`);
-                PythonDebugger.log(`${data.toString()}\n`);
-                if (session.isConnected) {
-                    PythonDebugger.log('Writing to socket\n');
-                    socket.write(data);
-                } else {
-                    PythonDebugger.log('Writing to proxy debugger\n');
-                    inStream.write(data);
-                }
-                PythonDebugger.log(`\n${'-'.repeat(100)}\n`);
-            });
+            process.stdin.pipe(throughInStream);
+            throughInStream.pipe(debugInStream);
 
             session.setRunAsServer(true);
-            session.start(inStream, outStream);
+            session.start(debugInStream, debugOutStream);
 
             process.stdin.resume();
             PythonDebugger.log('Started\n');
@@ -131,28 +173,24 @@ export class PythonDebugger extends LoggingDebugSession {
         const logFile = '/Users/donjayamanne/.vscode/extensions/pythonVSCodeDebugger/protocolMessages.log';
         fs.appendFileSync(logFile, message);
     }
-    // tslint:disable-next-line:no-unnecessary-override
-    public start(inStream: NodeJS.ReadableStream, outStream: NodeJS.WritableStream): void {
-        super.start(inStream, outStream);
-        // logger.setup(LogLevel.Verbose, true);
-    }
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
+        this.emit('_py_pause_input');
+
         this.sendResponse(response);
-        this.sendEvent(new InitializedEvent());
 
-        this.isConnected = true;
-        this.connectedDeferred.resolve();
-
-        // process.stdin.unpipe(this.inStream);
-        // process.stdin.pipe(this.inSocketStream);
-
-        // this.outStream.unpipe(process.stdout);
-        // this.outSocketStream.pipe(process.stdout);
-
-        PythonDebugger.log('changed piping\n');
+        const request = new InitializeRequest(this.initializeRequestArgs);
+        request.seq = 1;
+        this.emit('_py_debug_initialize', request);
+        // this.sendEvent(new InitializedEvent());
+        // setTimeout(() => {
+        //     PythonDebugger.log('changed piping\n');
+        //     this.emit('_py_debug_connect');
+        // }, 5000);
     }
-
+    // tslint:disable-next-line:member-ordering
+    private initializeRequestArgs: DebugProtocol.InitializeRequestArguments;
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
+        this.initializeRequestArgs = args;
         response.body!.supportsEvaluateForHovers = true;
         response.body!.supportsConditionalBreakpoints = true;
         response.body!.supportsConfigurationDoneRequest = true;
