@@ -48,10 +48,16 @@ export class RestTextConverter {
       .replace(/\!/g, '\\!');
   }
 
+  // tslint:disable-next-line:cyclomatic-complexity
   private transformLines(docstring: string): string {
     const lines = docstring.split(/\r?\n/);
     for (let i = 0; i < lines.length; i += 1) {
       let line = lines[i];
+
+      // Avoid leading empty lines
+      if (this.md.length === 0 && line.length === 0) {
+        continue;
+      }
 
       if (this.handleCodeBlock(line)) {
         continue;
