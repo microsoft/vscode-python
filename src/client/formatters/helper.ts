@@ -1,16 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { PythonSettings } from '../common/configSettings';
-import { IFormattingSettings } from '../common/types';
+import { IConfigurationService, IFormattingSettings } from '../common/types';
 import { ExecutionInfo, Product } from '../common/types';
+import { IServiceContainer } from '../ioc/types';
 import { FormatterId, FormatterSettingsPropertyNames, IFormatterHelper } from './types';
 
 @injectable()
 export class FormatterHelper implements IFormatterHelper {
+    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
     public translateToId(formatter: Product): FormatterId {
         switch (formatter) {
             case Product.autopep8: return 'autopep8';
@@ -28,7 +29,7 @@ export class FormatterHelper implements IFormatterHelper {
         };
     }
     public getExecutionInfo(formatter: Product, customArgs: string[], resource?: Uri): ExecutionInfo {
-        const settings = PythonSettings.getInstance(resource);
+        const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource);
         const names = this.getSettingsPropertyNames(formatter);
 
         const execPath = settings.formatting[names.pathName] as string;

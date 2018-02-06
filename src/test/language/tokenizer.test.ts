@@ -5,20 +5,20 @@
 import * as assert from 'assert';
 import { TextRangeCollection } from '../../client/language/textRangeCollection';
 import { Tokenizer } from '../../client/language/tokenizer';
-import { TextRange, TokenType } from '../../client/language/types';
+import { TokenType } from '../../client/language/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Language.Tokenizer', () => {
     test('Empty', async () => {
         const t = new Tokenizer();
-        const tokens = t.Tokenize('');
+        const tokens = t.tokenize('');
         assert.equal(tokens instanceof TextRangeCollection, true);
         assert.equal(tokens.count, 0);
         assert.equal(tokens.length, 0);
     });
     test('Strings: unclosed', async () => {
         const t = new Tokenizer();
-        const tokens = t.Tokenize(' "string" """line1\n#line2"""\t\'un#closed');
+        const tokens = t.tokenize(' "string" """line1\n#line2"""\t\'un#closed');
         assert.equal(tokens.count, 3);
 
         const ranges = [1, 8, 10, 18, 29, 10];
@@ -30,7 +30,7 @@ suite('Language.Tokenizer', () => {
     });
     test('Strings: block next to regular, double-quoted', async () => {
         const t = new Tokenizer();
-        const tokens = t.Tokenize('"string""""s2"""');
+        const tokens = t.tokenize('"string""""s2"""');
         assert.equal(tokens.count, 2);
 
         const ranges = [0, 8, 8, 8];
@@ -42,7 +42,7 @@ suite('Language.Tokenizer', () => {
     });
     test('Strings: block next to block, double-quoted', async () => {
         const t = new Tokenizer();
-        const tokens = t.Tokenize('""""""""');
+        const tokens = t.tokenize('""""""""');
         assert.equal(tokens.count, 2);
 
         const ranges = [0, 6, 6, 2];
@@ -54,7 +54,7 @@ suite('Language.Tokenizer', () => {
     });
     test('Strings: unclosed sequence of quotes', async () => {
         const t = new Tokenizer();
-        const tokens = t.Tokenize('"""""');
+        const tokens = t.tokenize('"""""');
         assert.equal(tokens.count, 1);
 
         const ranges = [0, 5];
@@ -66,7 +66,7 @@ suite('Language.Tokenizer', () => {
     });
     test('Comments', async () => {
         const t = new Tokenizer();
-        const tokens = t.Tokenize(' #co"""mment1\n\t\n#comm\'ent2 ');
+        const tokens = t.tokenize(' #co"""mment1\n\t\n#comm\'ent2 ');
         assert.equal(tokens.count, 2);
 
         const ranges = [1, 12, 15, 11];

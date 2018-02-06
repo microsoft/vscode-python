@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { PythonSettings } from '../common/configSettings';
 import { Product } from '../common/installer/productInstaller';
+import { IConfigurationService } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { FORMAT } from '../telemetry/constants';
@@ -14,7 +14,7 @@ export class AutoPep8Formatter extends BaseFormatter {
 
     public formatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, range?: vscode.Range): Thenable<vscode.TextEdit[]> {
         const stopWatch = new StopWatch();
-        const settings = PythonSettings.getInstance(document.uri);
+        const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(document.uri);
         const hasCustomArgs = Array.isArray(settings.formatting.autopep8Args) && settings.formatting.autopep8Args.length > 0;
         const formatSelection = range ? !range.isEmpty : false;
 

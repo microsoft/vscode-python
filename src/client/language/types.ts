@@ -72,15 +72,34 @@ export interface ICharacterStream extends ITextIterator {
 }
 
 export enum TokenType {
+    Unknown,
     String,
-    Comment
+    Comment,
+    Keyword,
+    Number,
+    Identifier,
+    Operator,
+    Colon,
+    Semicolon,
+    Comma,
+    OpenBrace,
+    CloseBrace,
+    OpenBracket,
+    CloseBracket,
+    OpenCurly,
+    CloseCurly
 }
 
 export interface IToken extends ITextRange {
     readonly type: TokenType;
 }
 
+export enum TokenizerMode {
+    CommentsAndStrings,
+    Full
+}
+
 export interface ITokenizer {
-    Tokenize(text: string): ITextRangeCollection<IToken>;
-    Tokenize(text: string, start: number, length: number): ITextRangeCollection<IToken>;
+    tokenize(text: string): ITextRangeCollection<IToken>;
+    tokenize(text: string, start: number, length: number, mode: TokenizerMode): ITextRangeCollection<IToken>;
 }

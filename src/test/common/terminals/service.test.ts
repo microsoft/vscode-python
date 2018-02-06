@@ -66,7 +66,7 @@ suite('Terminal Service', () => {
         // Sending a command will cause the terminal to be created
         await service.sendCommand('', []);
 
-        terminal.verify(t => t.show(), TypeMoq.Times.exactly(2));
+        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(2));
         service.dispose();
         terminal.verify(t => t.dispose(), TypeMoq.Times.exactly(1));
     });
@@ -84,7 +84,7 @@ suite('Terminal Service', () => {
 
         await service.sendCommand(commandToSend, args);
 
-        terminal.verify(t => t.show(), TypeMoq.Times.exactly(2));
+        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(2));
         terminal.verify(t => t.sendText(TypeMoq.It.isValue(commandToExpect), TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
     });
 
@@ -98,7 +98,7 @@ suite('Terminal Service', () => {
 
         await service.sendText(textToSend);
 
-        terminal.verify(t => t.show(), TypeMoq.Times.exactly(2));
+        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(2));
         terminal.verify(t => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
@@ -111,7 +111,7 @@ suite('Terminal Service', () => {
 
         await service.show();
 
-        terminal.verify(t => t.show(), TypeMoq.Times.exactly(2));
+        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(2));
     });
 
     test('Ensure terminal is activated once after creation', async () => {
@@ -126,7 +126,7 @@ suite('Terminal Service', () => {
         await service.show();
         await service.show();
 
-        terminal.verify(t => t.show(), TypeMoq.Times.exactly(5));
+        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(6));
         terminal.verify(t => t.sendText(TypeMoq.It.isValue('activation Command')), TypeMoq.Times.exactly(1));
     });
 
@@ -143,7 +143,7 @@ suite('Terminal Service', () => {
         await service.sendText(textToSend);
         await service.sendText(textToSend);
 
-        terminal.verify(t => t.show(), TypeMoq.Times.exactly(5));
+        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(6));
         terminal.verify(t => t.sendText(TypeMoq.It.isValue('activation Command')), TypeMoq.Times.exactly(1));
         terminal.verify(t => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(4));
     });

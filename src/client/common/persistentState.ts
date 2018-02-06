@@ -14,8 +14,8 @@ class PersistentState<T> implements IPersistentState<T>{
         return this.storage.get<T>(this.key, this.defaultValue);
     }
 
-    public set value(newValue: T) {
-        this.storage.update(this.key, newValue);
+    public async updateValue(newValue: T): Promise<void> {
+        await this.storage.update(this.key, newValue);
     }
 }
 

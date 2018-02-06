@@ -4,19 +4,24 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../../common/configSettings';
 import { IProcessService } from '../../../common/process/types';
-import { IInterpreterLocatorService, IInterpreterVersionService, InterpreterType } from '../../contracts';
+import { IServiceContainer } from '../../../ioc/types';
+import { IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
+import { CacheableLocatorService } from './cacheableLocatorService';
 
 @injectable()
-export class CurrentPathService implements IInterpreterLocatorService {
+export class CurrentPathService extends CacheableLocatorService {
     public constructor( @inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
         @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService,
-        @inject(IProcessService) private processService: IProcessService) { }
-    public async getInterpreters(resource?: Uri) {
-        return this.suggestionsFromKnownPaths();
+        @inject(IProcessService) private processService: IProcessService,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        super('CurrentPathService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
+    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+        return this.suggestionsFromKnownPaths();
+    }
     private async suggestionsFromKnownPaths(resource?: Uri) {
         const currentPythonInterpreter = this.getInterpreter(PythonSettings.getInstance(resource).pythonPath, '').then(interpreter => [interpreter]);
         const python = this.getInterpreter('python', '').then(interpreter => [interpreter]);

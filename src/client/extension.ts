@@ -7,8 +7,8 @@ if ((Reflect as any).metadata === undefined) {
 }
 import { Container } from 'inversify';
 import * as os from 'os';
-import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import * as vscode from 'vscode';
+import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import { BannerService } from './banner';
 import { PythonSettings } from './common/configSettings';
 import * as settings from './common/configSettings';
@@ -34,6 +34,7 @@ import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer } from './ioc/types';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
+import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
 import { PythonDefinitionProvider } from './providers/definitionProvider';
@@ -56,6 +57,7 @@ import { StopWatch } from './telemetry/stopWatch';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager } from './terminals/types';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
+import { OnEnterFormatter } from './typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import * as tests from './unittests/main';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
@@ -102,11 +104,13 @@ export async function activate(context: vscode.ExtensionContext) {
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
 
     const pythonInstaller = new PythonInstaller(serviceContainer);
-    await pythonInstaller.checkPythonInstallation(PythonSettings.getInstance());
+    pythonInstaller.checkPythonInstallation(PythonSettings.getInstance())
+        .catch(ex => console.error('Python Extension: pythonInstaller.checkPythonInstallation', ex));
 
     // This must be completed before we can continue.
     await interpreterManager.autoSetInterpreter();
 
+    interpreterManager.initialize();
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
 
@@ -120,6 +124,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
     context.subscriptions.push(new TerminalProvider(serviceContainer));
+    context.subscriptions.push(new LinterCommands(serviceContainer));
 
     // Enable indentAction
     // tslint:disable-next-line:no-non-null-assertion
@@ -186,6 +191,8 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
 
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
+    context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
+
     // In case we have CR LF
     const triggerCharacters: string[] = os.EOL.split('');
     triggerCharacters.shift();

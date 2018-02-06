@@ -43,11 +43,12 @@ export class InterpreterSelector implements Disposable {
         if (workspaceUri && suggestion.path.startsWith(workspaceUri.fsPath)) {
             detail = `.${path.sep}${path.relative(workspaceUri.fsPath, suggestion.path)}`;
         }
+        const cachedPrefix = suggestion.cachedEntry ? '(cached) ' : '';
         return {
             // tslint:disable-next-line:no-non-null-assertion
             label: suggestion.displayName!,
             description: suggestion.companyDisplayName || '',
-            detail: detail,
+            detail: `${cachedPrefix}${detail}`,
             path: suggestion.path
         };
     }
