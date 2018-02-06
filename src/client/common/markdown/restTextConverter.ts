@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 import { EOL } from 'os';
+// tslint:disable-next-line:import-name
+import Char from 'typescript-char';
 import { isWhiteSpace } from '../../language/characters';
 
 export class RestTextConverter {
@@ -45,11 +47,19 @@ export class RestTextConverter {
   }
 
   private shouldConvert(docstring: string): boolean {
-    // heuristics
-    if (docstring.indexOf('::') >= 0 || docstring.indexOf('..') >= 0) {
-      return true;
+    // Heuristics that determe if string should be converted
+    // to markdown or just escaped.
+
+    // :: at the end of a string
+    const doubleColon = docstring.indexOf('::');
+    if (doubleColon >= 0 && doubleColon < docstring.length - 2) {
+      const ch = docstring.charCodeAt(doubleColon + 2);
+      if (ch === Char.LineFeed || ch === Char.CarriageReturn) {
+        return true;
+      }
     }
-    if (docstring.indexOf('===') >= 0 || docstring.indexOf('---') >= 0) {
+    // Section headers or lists
+    if (docstring.indexOf('===') >= 0 || docstring.indexOf('---') >= 0 || docstring.indexOf('.. ') >= 0) {
       return true;
     }
     return false;
@@ -118,11 +128,21 @@ export class RestTextConverter {
         continue; // Avoid more than one empty line in a row.
       }
 
-      this.md.push(line);
+      this.addLine(line);
     }
 
     this.tryEndCodePreBlocks();
     return this.md.join(EOL).trim();
+  }
+
+  private addLine(line: string): void {
+    // Since we use HTML blocks as preformatted text
+    // make sure we drop angle brackets since otherwise
+    // they will render as tags and attributes
+    if (this.inPreBlock) {
+      line = line.replace(/</g, '').replace(/>/g, '');
+    }
+    this.md.push(line);
   }
 
   private handleCodeBlock(line: string): boolean {

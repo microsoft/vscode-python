@@ -40,4 +40,5 @@ suite('Hover - RestTextConverter', () => {
   test('scipy.spatial', async () => await testConversion('scipy.spatial'));
   test('scipy.spatial.distance', async () => await testConversion('scipy.spatial.distance'));
   test('anydbm', async () => await testConversion('anydbm'));
+  test('aifc', async () => await testConversion('aifc'));
 });
