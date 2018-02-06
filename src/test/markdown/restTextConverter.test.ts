@@ -36,5 +36,7 @@ async function testConversion(fileName: string): Promise<void> {
 
 // tslint:disable-next-line:max-func-body-length
 suite('Hover - RestTextConverter', () => {
+  test('scipy', async () => await testConversion('scipy'));
+  test('scipy.spatial', async () => await testConversion('scipy.spatial'));
   test('scipy.spatial.distance', async () => await testConversion('scipy.spatial.distance'));
 });
