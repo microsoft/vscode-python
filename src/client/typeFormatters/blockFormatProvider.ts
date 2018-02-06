@@ -1,9 +1,9 @@
-import { OnTypeFormattingEditProvider, FormattingOptions, TextEdit, CancellationToken, TextDocument } from 'vscode';
+import { CancellationToken, FormattingOptions, OnTypeFormattingEditProvider, TextDocument, TextEdit } from 'vscode';
 import { Position } from 'vscode';
 import { CodeBlockFormatProvider } from './codeBlockFormatProvider';
-import { IF_REGEX, ELIF_REGEX, ELSE_REGEX, FOR_IN_REGEX, ASYNC_FOR_IN_REGEX, WHILE_REGEX } from './contracts';
-import { TRY_REGEX, FINALLY_REGEX, EXCEPT_REGEX } from './contracts';
-import { DEF_REGEX, ASYNC_DEF_REGEX, CLASS_REGEX } from './contracts';
+import { ASYNC_FOR_IN_REGEX, ELIF_REGEX, ELSE_REGEX, FOR_IN_REGEX, IF_REGEX, WHILE_REGEX } from './contracts';
+import { EXCEPT_REGEX, FINALLY_REGEX, TRY_REGEX } from './contracts';
+import { ASYNC_DEF_REGEX, CLASS_REGEX, DEF_REGEX } from './contracts';
 
 export class BlockFormatProviders implements OnTypeFormattingEditProvider {
     private providers: CodeBlockFormatProvider[];
@@ -44,7 +44,8 @@ export class BlockFormatProviders implements OnTypeFormattingEditProvider {
         ];
         this.providers.push(new CodeBlockFormatProvider(FINALLY_REGEX, finallyParentBlocks, boundaryBlocks));
     }
-    provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken): TextEdit[] {
+
+    public provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken): TextEdit[] {
         if (position.line === 0) {
             return [];
         }
@@ -59,7 +60,7 @@ export class BlockFormatProviders implements OnTypeFormattingEditProvider {
         }
 
         const currentLineText = currentLine.text;
-        const provider = this.providers.find(provider => provider.canProvideEdits(currentLineText));
+        const provider = this.providers.find(p => p.canProvideEdits(currentLineText));
         if (provider) {
             return provider.provideEdits(document, position, ch, options, currentLine);
         }

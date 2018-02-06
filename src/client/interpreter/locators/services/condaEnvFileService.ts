@@ -3,27 +3,30 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
 import { ILogger } from '../../../common/types';
+import { IServiceContainer } from '../../../ioc/types';
 import {
     ICondaService,
-    IInterpreterLocatorService,
     IInterpreterVersionService,
     InterpreterType,
     PythonInterpreter
 } from '../../contracts';
+import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName } from './conda';
 
 @injectable()
-export class CondaEnvFileService implements IInterpreterLocatorService {
+export class CondaEnvFileService extends CacheableLocatorService {
     constructor( @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService,
         @inject(ICondaService) private condaService: ICondaService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(ILogger) private logger: ILogger) {
-    }
-    public async getInterpreters(_?: Uri) {
-        return this.getSuggestionsFromConda();
+        super('CondaEnvFileService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
+    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+        return this.getSuggestionsFromConda();
+    }
     private async getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
         if (!this.condaService.condaEnvironmentsFile) {
             return [];
@@ -43,7 +46,7 @@ export class CondaEnvFileService implements IInterpreterLocatorService {
                 .filter(item => !!item)
                 .map(item => item!);
 
-            const environments = await this.condaService.getCondaEnvironments();
+            const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
                 interpreters
                     .forEach(interpreter => {

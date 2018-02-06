@@ -36,17 +36,17 @@ export class TerminalService implements ITerminalService, Disposable {
     public async sendCommand(command: string, args: string[]): Promise<void> {
         await this.ensureTerminal();
         const text = this.terminalHelper.buildCommandForTerminal(this.terminalShellType, command, args);
-        this.terminal!.show();
+        this.terminal!.show(true);
         this.terminal!.sendText(text, true);
     }
     public async sendText(text: string): Promise<void> {
         await this.ensureTerminal();
-        this.terminal!.show();
+        this.terminal!.show(true);
         this.terminal!.sendText(text);
     }
     public async show(): Promise<void> {
         await this.ensureTerminal();
-        this.terminal!.show();
+        this.terminal!.show(true);
     }
     private async ensureTerminal(): Promise<void> {
         if (this.terminal) {
@@ -62,6 +62,7 @@ export class TerminalService implements ITerminalService, Disposable {
         const activationCommamnds = await this.terminalHelper.getEnvironmentActivationCommands(this.terminalShellType, this.resource);
         if (activationCommamnds) {
             for (const command of activationCommamnds!) {
+                this.terminal!.show(true);
                 this.terminal!.sendText(command);
 
                 // Give the command some time to complete.
@@ -70,7 +71,7 @@ export class TerminalService implements ITerminalService, Disposable {
             }
         }
 
-        this.terminal!.show();
+        this.terminal!.show(true);
     }
     private terminalCloseHandler(terminal: Terminal) {
         if (terminal === this.terminal) {

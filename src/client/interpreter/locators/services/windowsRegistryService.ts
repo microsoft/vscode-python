@@ -5,7 +5,9 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { Architecture, IRegistry, RegistryHive } from '../../../common/platform/types';
 import { Is64Bit } from '../../../common/types';
-import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { IServiceContainer } from '../../../ioc/types';
+import { InterpreterType, PythonInterpreter } from '../../contracts';
+import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
 
 // tslint:disable-next-line:variable-name
@@ -24,16 +26,17 @@ type CompanyInterpreter = {
 };
 
 @injectable()
-export class WindowsRegistryService implements IInterpreterLocatorService {
-    constructor( @inject(IRegistry) private registry: IRegistry, @inject(Is64Bit) private is64Bit: boolean) {
-
-    }
-    // tslint:disable-next-line:variable-name
-    public getInterpreters(_resource?: Uri) {
-        return this.getInterpretersFromRegistry();
+export class WindowsRegistryService extends CacheableLocatorService {
+    constructor( @inject(IRegistry) private registry: IRegistry,
+        @inject(Is64Bit) private is64Bit: boolean,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        super('WindowsRegistryService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
+    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+        return this.getInterpretersFromRegistry();
+    }
     private async getInterpretersFromRegistry() {
         // https://github.com/python/peps/blob/master/pep-0514.txt#L357
         const hkcuArch = this.is64Bit ? undefined : Architecture.x86;

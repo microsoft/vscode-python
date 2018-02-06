@@ -55,8 +55,9 @@ suite('Terminal Service helpers', () => {
         shellPathsAndIdentification.set('/usr/bin/ksh', TerminalShellType.bash);
 
         shellPathsAndIdentification.set('c:\\windows\\system32\\powershell.exe', TerminalShellType.powershell);
+        shellPathsAndIdentification.set('c:\\windows\\system32\\pwsh.exe', TerminalShellType.powershellCore);
         shellPathsAndIdentification.set('/usr/microsoft/xxx/powershell/powershell', TerminalShellType.powershell);
-        shellPathsAndIdentification.set('/usr/microsoft/xxx/powershell/pwsh', TerminalShellType.powershell);
+        shellPathsAndIdentification.set('/usr/microsoft/xxx/powershell/pwsh', TerminalShellType.powershellCore);
 
         shellPathsAndIdentification.set('/usr/bin/fish', TerminalShellType.fish);
 
@@ -100,8 +101,8 @@ suite('Terminal Service helpers', () => {
         EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
             const command = 'c:\\python 3.7.exe';
             const args = ['1', '2'];
-            const commandPrefix = (item.value === TerminalShellType.powershell) ? '& ' : '';
-            const expectedTerminalCommand = `${commandPrefix}"${command}" 1 2`;
+            const commandPrefix = (item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore) ? '& ' : '';
+            const expectedTerminalCommand = `${commandPrefix}${command.fileToCommandArgument()} 1 2`;
 
             const terminalCommand = helper.buildCommandForTerminal(item.value, command, args);
             expect(terminalCommand).to.equal(expectedTerminalCommand, `Incorrect command for Shell ${item.name}`);
@@ -112,7 +113,7 @@ suite('Terminal Service helpers', () => {
         EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
             const command = 'python3.7.exe';
             const args = [];
-            const commandPrefix = (item.value === TerminalShellType.powershell) ? '& ' : '';
+            const commandPrefix = (item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore) ? '& ' : '';
             const expectedTerminalCommand = `${commandPrefix}${command}`;
 
             const terminalCommand = helper.buildCommandForTerminal(item.value, command, args);
@@ -124,8 +125,8 @@ suite('Terminal Service helpers', () => {
         EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
             const command = 'c:\\python 3.7.exe';
             const args = [];
-            const commandPrefix = (item.value === TerminalShellType.powershell) ? '& ' : '';
-            const expectedTerminalCommand = `${commandPrefix}"${command}"`;
+            const commandPrefix = (item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore) ? '& ' : '';
+            const expectedTerminalCommand = `${commandPrefix}${command.fileToCommandArgument()}`;
 
             const terminalCommand = helper.buildCommandForTerminal(item.value, command, args);
             expect(terminalCommand).to.equal(expectedTerminalCommand, `Incorrect command for Shell ${item.name}`);

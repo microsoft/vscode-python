@@ -2,17 +2,12 @@
 // Note: This example test is leveraging the Mocha test framework.
 // Please refer to their documentation on https://mochajs.org/ for help.
 
-
-// The module 'assert' provides assertion methods from node
 import * as assert from 'assert';
-
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
-import * as vscode from 'vscode';
-import * as path from 'path';
 import * as fs from 'fs-extra';
-import { initialize, closeActiveWindows, initializeTest } from '../initialize';
+import * as path from 'path';
+import * as vscode from 'vscode';
 import { BlockFormatProviders } from '../../client/typeFormatters/blockFormatProvider';
+import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 const srcPythoFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'typeFormatFiles');
 const outPythoFilesPath = path.join(__dirname, 'pythonFiles', 'typeFormatFiles');
@@ -37,7 +32,8 @@ function testFormatting(fileToFormat: string, position: vscode.Position, expecte
         textDocument = document;
         return vscode.window.showTextDocument(textDocument);
     }).then(editor => {
-        return provider.provideOnTypeFormattingEdits(textDocument, position, ':', formatOptions, null);
+        return provider.provideOnTypeFormattingEdits(
+            textDocument, position, ':', formatOptions, new vscode.CancellationTokenSource().token);
     }).then(edits => {
         assert.equal(edits.length, expectedEdits.length, 'Number of edits not the same');
         edits.forEach((edit, index) => {
@@ -52,7 +48,6 @@ function testFormatting(fileToFormat: string, position: vscode.Position, expecte
     });
 }
 
-
 suite('Else block with if in first line of file', () => {
     suiteSetup(async () => {
         await initialize();
@@ -64,10 +59,10 @@ suite('Else block with if in first line of file', () => {
             fs.copySync(path.join(srcPythoFilesPath, file), targetFile);
         });
     });
-    suiteTeardown(() => closeActiveWindows());
-    teardown(() => closeActiveWindows());
+    suiteTeardown(closeActiveWindows);
+    teardown(closeActiveWindows);
 
-    interface TestCase {
+    interface ITestCase {
         title: string;
         line: number;
         column: number;
@@ -75,8 +70,7 @@ suite('Else block with if in first line of file', () => {
         formatOptions: vscode.FormattingOptions;
         filePath: string;
     }
-    const TAB = '	';
-    const testCases: TestCase[] = [
+    const testCases: ITestCase[] = [
         {
             title: 'else block with 2 spaces',
             line: 3, column: 7,
@@ -126,16 +120,16 @@ suite('Try blocks with indentation of 2 spaces', () => {
             fs.copySync(path.join(srcPythoFilesPath, file), targetFile);
         });
     });
-    suiteTeardown(() => closeActiveWindows());
-    teardown(() => closeActiveWindows());
+    suiteTeardown(closeActiveWindows);
+    teardown(closeActiveWindows);
 
-    interface TestCase {
+    interface ITestCase {
         title: string;
         line: number;
         column: number;
         expectedEdits: vscode.TextEdit[];
     }
-    const testCases: TestCase[] = [
+    const testCases: ITestCase[] = [
         {
             title: 'except off by tab',
             line: 6, column: 22,
@@ -227,16 +221,16 @@ suite('Try blocks with indentation of 4 spaces', () => {
             fs.copySync(path.join(srcPythoFilesPath, file), targetFile);
         });
     });
-    suiteTeardown(() => closeActiveWindows());
-    teardown(() => closeActiveWindows());
+    suiteTeardown(closeActiveWindows);
+    teardown(closeActiveWindows);
 
-    interface TestCase {
+    interface ITestCase {
         title: string;
         line: number;
         column: number;
         expectedEdits: vscode.TextEdit[];
     }
-    const testCases: TestCase[] = [
+    const testCases: ITestCase[] = [
         {
             title: 'except off by tab',
             line: 6, column: 22,
@@ -328,17 +322,17 @@ suite('Try blocks with indentation of Tab', () => {
             fs.copySync(path.join(srcPythoFilesPath, file), targetFile);
         });
     });
-    suiteTeardown(() => closeActiveWindows());
-    teardown(() => closeActiveWindows());
+    suiteTeardown(closeActiveWindows);
+    teardown(closeActiveWindows);
 
-    interface TestCase {
+    interface ITestCase {
         title: string;
         line: number;
         column: number;
         expectedEdits: vscode.TextEdit[];
     }
     const TAB = '	';
-    const testCases: TestCase[] = [
+    const testCases: ITestCase[] = [
         {
             title: 'except off by tab',
             line: 6, column: 22,
@@ -409,6 +403,7 @@ suite('Try blocks with indentation of Tab', () => {
     });
 });
 
+// tslint:disable-next-line:max-func-body-length
 suite('Else blocks with indentation of 2 spaces', () => {
     suiteSetup(async () => {
         await initialize();
@@ -420,9 +415,10 @@ suite('Else blocks with indentation of 2 spaces', () => {
             fs.copySync(path.join(srcPythoFilesPath, file), targetFile);
         });
     });
-    suiteTeardown(() => closeActiveWindows());
-    teardown(() => closeActiveWindows());
+    suiteTeardown(closeActiveWindows);
+    teardown(closeActiveWindows);
 
+    // tslint:disable-next-line:interface-name
     interface TestCase {
         title: string;
         line: number;
@@ -540,6 +536,7 @@ suite('Else blocks with indentation of 2 spaces', () => {
     });
 });
 
+// tslint:disable-next-line:max-func-body-length
 suite('Else blocks with indentation of 4 spaces', () => {
     suiteSetup(async () => {
         await initialize();
@@ -551,16 +548,16 @@ suite('Else blocks with indentation of 4 spaces', () => {
             fs.copySync(path.join(srcPythoFilesPath, file), targetFile);
         });
     });
-    suiteTeardown(() => closeActiveWindows());
-    teardown(() => closeActiveWindows());
+    suiteTeardown(closeActiveWindows);
+    teardown(closeActiveWindows);
 
-    interface TestCase {
+    interface ITestCase {
         title: string;
         line: number;
         column: number;
         expectedEdits: vscode.TextEdit[];
     }
-    const testCases: TestCase[] = [
+    const testCases: ITestCase[] = [
         {
             title: 'elif off by tab',
             line: 4, column: 18,
@@ -665,6 +662,7 @@ suite('Else blocks with indentation of 4 spaces', () => {
     });
 });
 
+// tslint:disable-next-line:max-func-body-length
 suite('Else blocks with indentation of Tab', () => {
     suiteSetup(async () => {
         await initialize();
@@ -676,17 +674,17 @@ suite('Else blocks with indentation of Tab', () => {
             fs.copySync(path.join(srcPythoFilesPath, file), targetFile);
         });
     });
-    setup(() => initializeTest());
-    suiteTeardown(() => closeActiveWindows());
-    teardown(() => closeActiveWindows());
+    setup(initializeTest);
+    suiteTeardown(closeActiveWindows);
+    teardown(closeActiveWindows);
 
-    interface TestCase {
+    interface ITestCase {
         title: string;
         line: number;
         column: number;
         expectedEdits: vscode.TextEdit[];
     }
-    const testCases: TestCase[] = [
+    const testCases: ITestCase[] = [
         {
             title: 'elif off by tab',
             line: 4, column: 18,

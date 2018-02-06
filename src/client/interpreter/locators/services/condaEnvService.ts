@@ -5,20 +5,21 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
 import { ILogger } from '../../../common/types';
-import { CondaInfo, ICondaService, IInterpreterLocatorService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { IServiceContainer } from '../../../ioc/types';
+import { CondaInfo, ICondaService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
 import { CondaHelper } from './condaHelper';
 
 @injectable()
-export class CondaEnvService implements IInterpreterLocatorService {
+export class CondaEnvService extends CacheableLocatorService {
     private readonly condaHelper = new CondaHelper();
     constructor( @inject(ICondaService) private condaService: ICondaService,
         @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService,
         @inject(ILogger) private logger: ILogger,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IFileSystem) private fileSystem: IFileSystem) {
-    }
-    public async getInterpreters(resource?: Uri) {
-        return this.getSuggestionsFromConda();
+        super('CondaEnvService', serviceContainer);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
@@ -62,6 +63,9 @@ export class CondaEnvService implements IInterpreterLocatorService {
             // tslint:disable-next-line:no-non-null-assertion
             .then(interpreters => interpreters.map(interpreter => interpreter!));
     }
+    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+        return this.getSuggestionsFromConda();
+    }
     private stripCompanyName(content: string) {
         // Strip company name from version.
         const startOfCompanyName = AnacondaCompanyNames.reduce((index, companyName) => {
@@ -92,7 +96,7 @@ export class CondaEnvService implements IInterpreterLocatorService {
                 return [];
             }
             const interpreters = await this.parseCondaInfo(info);
-            const environments = await this.condaService.getCondaEnvironments();
+            const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
                 interpreters
                     .forEach(interpreter => {

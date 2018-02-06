@@ -2,12 +2,14 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../client/common/platform/types';
-import { ILogger } from '../../client/common/types';
+import { ILogger, IPersistentStateFactory } from '../../client/common/types';
 import { ICondaService, IInterpreterVersionService, InterpreterType } from '../../client/interpreter/contracts';
 import { AnacondaCompanyName, AnacondaDisplayName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
+import { IServiceContainer } from '../../client/ioc/types';
 import { initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { MockState } from './mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 
@@ -23,10 +25,16 @@ suite('Interpreters from Conda Environments', () => {
     setup(async () => {
         await initializeTest();
         initializeDI();
+        const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+        const state = new MockState(undefined);
+        stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => state);
+
         condaService = TypeMoq.Mock.ofType<ICondaService>();
         interpreterVersion = TypeMoq.Mock.ofType<IInterpreterVersionService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        condaProvider = new CondaEnvService(condaService.object, interpreterVersion.object, logger.object, fileSystem.object);
+        condaProvider = new CondaEnvService(condaService.object, interpreterVersion.object, logger.object, serviceContainer.object, fileSystem.object);
     });
     teardown(() => ioc.dispose());
     function initializeDI() {
@@ -97,7 +105,7 @@ suite('Interpreters from Conda Environments', () => {
         interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_p, defaultValue) => Promise.resolve(defaultValue));
         condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
         condaService.setup(c => c.getCondaInfo()).returns(() => Promise.resolve(info));
-        condaService.setup(c => c.getCondaEnvironments()).returns(() => Promise.resolve([
+        condaService.setup(c => c.getCondaEnvironments(TypeMoq.It.isAny())).returns(() => Promise.resolve([
             { name: 'base', path: environmentsPath },
             { name: 'numpy', path: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
             { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') }
@@ -165,7 +173,7 @@ suite('Interpreters from Conda Environments', () => {
         };
         interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_p, defaultValue) => Promise.resolve(defaultValue));
         condaService.setup(c => c.getCondaInfo()).returns(() => Promise.resolve(info));
-        condaService.setup(c => c.getCondaEnvironments()).returns(() => Promise.resolve([
+        condaService.setup(c => c.getCondaEnvironments(TypeMoq.It.isAny())).returns(() => Promise.resolve([
             { name: 'base', path: environmentsPath },
             { name: 'numpy', path: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
             { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') }
@@ -240,7 +248,7 @@ suite('Interpreters from Conda Environments', () => {
         interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_p, defaultValue) => Promise.resolve(defaultValue));
         condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
         condaService.setup(c => c.getCondaInfo()).returns(() => Promise.resolve(info));
-        condaService.setup(c => c.getCondaEnvironments()).returns(() => Promise.resolve([
+        condaService.setup(c => c.getCondaEnvironments(TypeMoq.It.isAny())).returns(() => Promise.resolve([
             { name: 'base', path: environmentsPath },
             { name: 'numpy', path: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
             { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') }

@@ -2,36 +2,36 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { CancellationToken, Event, FileSystemWatcher, GlobPattern, Uri, workspace, WorkspaceConfiguration, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
+import * as vscode from 'vscode';
 import { IWorkspaceService } from './types';
 
 @injectable()
 export class WorkspaceService implements IWorkspaceService {
-    public get onDidChangeConfiguration(): Event<void> {
-        return workspace.onDidChangeConfiguration;
+    public get onDidChangeConfiguration(): vscode.Event<void> {
+        return vscode.workspace.onDidChangeConfiguration;
     }
     public get rootPath(): string | undefined {
-        return workspace.rootPath;
+        return vscode.workspace.rootPath;
     }
-    public get workspaceFolders(): WorkspaceFolder[] | undefined {
-        return workspace.workspaceFolders;
+    public get workspaceFolders(): vscode.WorkspaceFolder[] | undefined {
+        return vscode.workspace.workspaceFolders;
     }
-    public get onDidChangeWorkspaceFolders(): Event<WorkspaceFoldersChangeEvent> {
-        return workspace.onDidChangeWorkspaceFolders;
+    public get onDidChangeWorkspaceFolders(): vscode.Event<vscode.WorkspaceFoldersChangeEvent> {
+        return vscode.workspace.onDidChangeWorkspaceFolders;
     }
-    public getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration {
-        return workspace.getConfiguration(section, resource);
+    public getConfiguration(section?: string, resource?: vscode.Uri): vscode.WorkspaceConfiguration {
+        return vscode.workspace.getConfiguration(section, resource);
     }
-    public getWorkspaceFolder(uri: Uri): WorkspaceFolder | undefined {
-        return workspace.getWorkspaceFolder(uri);
+    public getWorkspaceFolder(uri: vscode.Uri): vscode.WorkspaceFolder | undefined {
+        return vscode.workspace.getWorkspaceFolder(uri);
     }
-    public asRelativePath(pathOrUri: string | Uri, includeWorkspaceFolder?: boolean): string {
-        return workspace.asRelativePath(pathOrUri, includeWorkspaceFolder);
+    public asRelativePath(pathOrUri: string | vscode.Uri, includeWorkspaceFolder?: boolean): string {
+        return vscode.workspace.asRelativePath(pathOrUri, includeWorkspaceFolder);
     }
-    public createFileSystemWatcher(globPattern: GlobPattern, ignoreCreateEvents?: boolean, ignoreChangeEvents?: boolean, ignoreDeleteEvents?: boolean): FileSystemWatcher {
-        return workspace.createFileSystemWatcher(globPattern, ignoreChangeEvents, ignoreChangeEvents, ignoreDeleteEvents);
+    public createFileSystemWatcher(globPattern: vscode.GlobPattern, ignoreCreateEvents?: boolean, ignoreChangeEvents?: boolean, ignoreDeleteEvents?: boolean): vscode.FileSystemWatcher {
+        return vscode.workspace.createFileSystemWatcher(globPattern, ignoreChangeEvents, ignoreChangeEvents, ignoreDeleteEvents);
     }
-    public findFiles(include: GlobPattern, exclude?: GlobPattern, maxResults?: number, token?: CancellationToken): Thenable<Uri[]> {
-        return workspace.findFiles(include, exclude, maxResults, token);
+    public findFiles(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, token?: vscode.CancellationToken): Thenable<vscode.Uri[]> {
+        return vscode.workspace.findFiles(include, exclude, maxResults, token);
     }
 }
