@@ -45,6 +45,7 @@ export interface ExceptionHandling {
 }
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
+    type?: string;
     /** An absolute path to the program to debug. */
     module?: string;
     program: string;

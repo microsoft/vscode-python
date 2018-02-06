@@ -11,6 +11,7 @@ import { IDebugServer, IPythonProcess } from '../Common/Contracts';
 import { IS_WINDOWS } from '../Common/Utils';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { LocalDebugServer } from '../DebugServers/LocalDebugServer';
+import { IDebugLauncherScriptProvider } from '../types';
 import { DebugClient, DebugType } from './DebugClient';
 import { DebugClientHelper } from './helper';
 
@@ -40,7 +41,7 @@ export class LocalDebugClient extends DebugClient {
         return DebugServerStatus.Unknown;
     }
     // tslint:disable-next-line:no-any
-    constructor(args: any, debugSession: DebugSession, private canLaunchTerminal: boolean) {
+    constructor(args: any, debugSession: DebugSession, private canLaunchTerminal: boolean, private launcherScriptProvider: IDebugLauncherScriptProvider) {
         super(args, debugSession);
     }
 
@@ -76,11 +77,6 @@ export class LocalDebugClient extends DebugClient {
             this.pyProc = undefined;
         }
     }
-    protected getLauncherFilePath(): string {
-        const currentFileName = module.filename;
-        const ptVSToolsPath = path.join(path.dirname(currentFileName), '..', '..', '..', '..', 'pythonFiles', 'PythonTools');
-        return path.join(ptVSToolsPath, 'visualstudio_py_launcher.py');
-    }
     // tslint:disable-next-line:no-any
     private displayError(error: any) {
         const errorMsg = typeof error === 'string' ? error : ((error.message && error.message.length > 0) ? error.message : '');
@@ -105,7 +101,7 @@ export class LocalDebugClient extends DebugClient {
             if (typeof this.args.pythonPath === 'string' && this.args.pythonPath.trim().length > 0) {
                 pythonPath = this.args.pythonPath;
             }
-            const ptVSToolsFilePath = this.getLauncherFilePath();
+            const ptVSToolsFilePath = this.launcherScriptProvider.getLauncherFilePath();
             const launcherArgs = this.buildLauncherArguments();
 
             const args = [ptVSToolsFilePath, processCwd, dbgServer.port.toString(), '34806ad9-833a-4524-8cd6-18ca4aa74f14'].concat(launcherArgs);

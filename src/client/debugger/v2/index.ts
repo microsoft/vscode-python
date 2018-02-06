@@ -8,7 +8,6 @@ if ((Reflect as any).metadata === undefined) {
 }
 
 import * as fs from 'fs';
-import { ReadableStream } from 'memory-streams';
 import * as net from 'net';
 import * as path from 'path';
 import { PassThrough, Readable, ReadableOptions, Transform, Writable } from 'stream';
@@ -19,7 +18,7 @@ import { LogLevel } from 'vscode-debugadapter/lib/logger';
 import { Message } from 'vscode-debugadapter/lib/messages';
 import { ProtocolServer } from 'vscode-debugadapter/lib/protocol';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { createDeferred } from '../../common/helpers';
+import { createDeferred, Deferred } from '../../common/helpers';
 import { LaunchRequestArguments } from '../Common/Contracts';
 // import { DebugProtocolServer } from './protocol';
 
@@ -56,6 +55,7 @@ export class PythonDebugger extends LoggingDebugSession {
                     callback(null, chunk);
 
                     if (chunk.toString().indexOf('"event": "terminated", "body": {}}') > 0) {
+                        PythonDebugger.server.close();
                         throughOutStream.unpipe(process.stdout);
                         debuggerSocket.unpipe(throughOutStream);
                         // wait a bit before shutting down
@@ -80,16 +80,14 @@ export class PythonDebugger extends LoggingDebugSession {
             // session.start(inStream, outStream);
 
             // Connect to the ptvsd debugger.
-            const connected = createDeferred<boolean>();
-            const debuggerSocket = net.connect({ port: 8788, host: 'localhost' }, () => {
-                connected.resolve();
-            });
+            const port = await PythonDebugger.startSocketServer({ port: 8788 });
+            const debuggerSocket = await PythonDebugger.clientSocket.promise;
 
             debuggerSocket.on('error', ex => {
                 PythonDebugger.log('Socket Error\n:');
                 PythonDebugger.log(ex.name);
                 PythonDebugger.log(ex.message);
-                PythonDebugger.log(ex.stack);
+                PythonDebugger.log(ex.stack || '');
                 PythonDebugger.log(ex.toString());
                 const x = '';
             });
@@ -150,7 +148,7 @@ export class PythonDebugger extends LoggingDebugSession {
                 debuggerSocket.pipe(throughOutStream);
             });
 
-            await connected.promise;
+            // await connected.promise;
 
             process.stdin.pipe(throughInStream);
             throughInStream.pipe(debugInStream);
@@ -202,6 +200,26 @@ export class PythonDebugger extends LoggingDebugSession {
     }
     protected attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments): void {
         this.sendResponse(response);
+    }
+    // tslint:disable-next-line:member-ordering
+    public static server: net.Server;
+    // tslint:disable-next-line:member-ordering
+    public static clientSocket: Deferred<net.Socket> = createDeferred<net.Socket>();
+    // tslint:disable-next-line:member-ordering
+    public static startSocketServer(options: { port?: number, host?: string } = { port: 0, host: 'localhost' }): Promise<number> {
+        const startedDef = createDeferred<number>();
+        const server = PythonDebugger.server = net.createServer(PythonDebugger.clientSocket.resolve.bind(PythonDebugger.clientSocket));
+        server.on('error', (err) => {
+            if (startedDef.completed) {
+                startedDef.reject(err);
+            }
+        });
+        options.port = typeof options.port === 'number' ? options.port! : 0;
+        options.host = typeof options.host === 'string' && options.host!.trim().length > 0 ? options.host!.trim() : 'localhost';
+        server.listen(options, (socket: net.Socket) => {
+            startedDef.resolve(server.address().port);
+        });
+        return startedDef.promise;
     }
 }
 
