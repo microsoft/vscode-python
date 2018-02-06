@@ -10,19 +10,17 @@ export class RestTextConverter {
   private md: string[] = [];
 
   // tslint:disable-next-line:cyclomatic-complexity
-  public toMarkdown(docstring: string): string {
+  public toMarkdown(docstring: string, force?: boolean): string {
     // Translates reStructruredText (Python doc syntax) to markdown.
     // It only translates as much as needed to display tooltips
     // and documentation in the completion list.
     // See https://en.wikipedia.org/wiki/ReStructuredText
 
-    // Determine if this is actually a reStructruredText.
-    if (docstring.indexOf('::') < 0 && docstring.indexOf('..')) {
-      // If documentation contains markdown symbols such as ** (power of) in code, escape them.
+    if (!force && !this.shouldConvert(docstring)) {
       return this.escapeMarkdown(docstring);
     }
-    const result = this.transformLines(docstring);
 
+    const result = this.transformLines(docstring);
     this.inPreBlock = this.inPreBlock = false;
     this.md = [];
 
@@ -33,7 +31,7 @@ export class RestTextConverter {
     // Not complete escape list so it does not interfere
     // with subsequent code highlighting (see above).
     return text
-      .replace(/\\/g, '\\\\')
+      .replace(/\#/g, '\\#')
       .replace(/\*/g, '\\*')
       .replace(/\_/g, '\\_')
       .replace(/\{/g, '\\{')
@@ -42,10 +40,19 @@ export class RestTextConverter {
       .replace(/\]/g, '\\]')
       .replace(/\(/g, '\\(')
       .replace(/\)/g, '\\)')
-      .replace(/\#/g, '\\#')
       .replace(/\+/g, '\\+')
-      .replace(/\-/g, '\\-')
-      .replace(/\!/g, '\\!');
+      .replace(/\-/g, '\\+');
+  }
+
+  private shouldConvert(docstring: string): boolean {
+    // heuristics
+    if (docstring.indexOf('::') >= 0 || docstring.indexOf('..') >= 0) {
+      return true;
+    }
+    if (docstring.indexOf('===') >= 0 || docstring.indexOf('---') >= 0) {
+      return true;
+    }
+    return false;
   }
 
   // tslint:disable-next-line:cyclomatic-complexity
@@ -57,6 +64,13 @@ export class RestTextConverter {
       // Avoid leading empty lines
       if (this.md.length === 0 && line.length === 0) {
         continue;
+      }
+
+      if (!this.inPreBlock) {
+        // Anything indented is considered to be preformatted.
+        if (line.length > 0 && isWhiteSpace(line.charCodeAt(0))) {
+          this.startPreformattedBlock(line);
+        }
       }
 
       if (this.handleCodeBlock(line)) {
@@ -150,7 +164,7 @@ export class RestTextConverter {
       this.md.push(line.substring(0, line.length - 1));
     }
 
-    this.startPreformattedBlock();
+    this.startPreformattedBlock(line);
     return true;
   }
 
@@ -163,13 +177,17 @@ export class RestTextConverter {
     }
   }
 
-  private startPreformattedBlock(): void {
+  private startPreformattedBlock(line: string): void {
     // Remove previous empty line so we avoid double empties.
     this.tryRemovePrecedingEmptyLine();
     // Lie about the language since we don't want preformatted text
     // to be colorized as Python. HTML is more 'appropriate' as it does
     // not colorize -- or + or keywords like 'from'.
-    this.md.push('```html');
+    if (line.indexOf('# ') >= 0) {
+      this.md.push('```python');
+    } else {
+      this.md.push('```html');
+    }
     this.inPreBlock = true;
   }
 
