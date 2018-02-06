@@ -885,7 +885,7 @@
 				]
 			},
 			{
-				"type": "pythonExperiment",
+				"type": "pythonExperimental",
 				"label": "Python Experimental",
 				"languages": [
 					"python"
@@ -905,7 +905,7 @@
 						"description": "%python.snippet.launch.standard.description%",
 						"body": {
 							"name": "Python",
-							"type": "pythonExperiment",
+							"type": "pythonExperimental",
 							"request": "launch",
 							"stopOnEntry": true,
 							"pythonPath": "^\"\\${config:python.pythonPath}\"",
@@ -923,7 +923,7 @@
 						"description": "%python.snippet.launch.pyspark.description%",
 						"body": {
 							"name": "PySpark",
-							"type": "pythonExperiment",
+							"type": "pythonExperimental",
 							"request": "launch",
 							"stopOnEntry": true,
 							"osx": {
@@ -949,7 +949,7 @@
 						"description": "%python.snippet.launch.module.description%",
 						"body": {
 							"name": "Python Module",
-							"type": "pythonExperiment",
+							"type": "pythonExperimental",
 							"request": "launch",
 							"stopOnEntry": true,
 							"pythonPath": "^\"\\${config:python.pythonPath}\"",
@@ -967,7 +967,7 @@
 						"description": "%python.snippet.launch.terminal.description%",
 						"body": {
 							"name": "Integrated Terminal/Console",
-							"type": "pythonExperiment",
+							"type": "pythonExperimental",
 							"request": "launch",
 							"stopOnEntry": true,
 							"pythonPath": "^\"\\${config:python.pythonPath}\"",
@@ -984,7 +984,7 @@
 						"description": "%python.snippet.launch.externalTerminal.description%",
 						"body": {
 							"name": "External Terminal/Console",
-							"type": "pythonExperiment",
+							"type": "pythonExperimental",
 							"request": "launch",
 							"stopOnEntry": true,
 							"pythonPath": "^\"\\${config:python.pythonPath}\"",
@@ -1001,7 +1001,7 @@
 						"description": "%python.snippet.launch.django.description%",
 						"body": {
 							"name": "Django",
-							"type": "pythonExperiment",
+							"type": "pythonExperimental",
 							"request": "launch",
 							"stopOnEntry": true,
 							"pythonPath": "^\"\\${config:python.pythonPath}\"",
@@ -1025,7 +1025,7 @@
 						"description": "%python.snippet.launch.flask.description%",
 						"body": {
 							"name": "Flask",
-							"type": "pythonExperiment",
+							"type": "pythonExperimental",
 							"request": "launch",
 							"stopOnEntry": false,
 							"pythonPath": "^\"\\${config:python.pythonPath}\"",
@@ -1050,7 +1050,7 @@
 						"description": "%python.snippet.launch.flaskOld.description%",
 						"body": {
 							"name": "Flask (old)",
-							"type": "pythonExperiment",
+							"type": "pythonExperimental",
 							"request": "launch",
 							"stopOnEntry": false,
 							"pythonPath": "^\"\\${config:python.pythonPath}\"",
@@ -1069,7 +1069,7 @@
 						"description": "%python.snippet.launch.pyramid.description%",
 						"body": {
 							"name": "Pyramid",
-							"type": "pythonExperiment",
+							"type": "pythonExperimental",
 							"request": "launch",
 							"stopOnEntry": true,
 							"pythonPath": "^\"\\${config:python.pythonPath}\"",
@@ -1090,7 +1090,7 @@
 						"description": "%python.snippet.launch.watson.description%",
 						"body": {
 							"name": "Watson",
-							"type": "pythonExperiment",
+							"type": "pythonExperimental",
 							"request": "launch",
 							"stopOnEntry": true,
 							"pythonPath": "^\"\\${config:python.pythonPath}\"",
@@ -1113,7 +1113,7 @@
 						"description": "%python.snippet.launch.scrapy.description%",
 						"body": {
 							"name": "Scrapy",
-							"type": "pythonExperiment",
+							"type": "pythonExperimental",
 							"request": "launch",
 							"stopOnEntry": true,
 							"pythonPath": "^\"\\${config:python.pythonPath}\"",
@@ -1136,7 +1136,7 @@
 						"description": "%python.snippet.launch.attach.description%",
 						"body": {
 							"name": "Attach (Remote Debug)",
-							"type": "pythonExperiment",
+							"type": "pythonExperimental",
 							"request": "attach",
 							"localRoot": "^\"\\${workspaceFolder}\"",
 							"remoteRoot": "^\"\\${workspaceFolder}\"",
@@ -1298,7 +1298,7 @@
 				"initialConfigurations": [
 					{
 						"name": "Python",
-						"type": "pythonExperiment",
+						"type": "pythonExperimental",
 						"request": "launch",
 						"stopOnEntry": true,
 						"pythonPath": "${config:python.pythonPath}",
@@ -1312,7 +1312,7 @@
 					},
 					{
 						"name": "Python: Attach",
-						"type": "pythonExperiment",
+						"type": "pythonExperimental",
 						"request": "attach",
 						"localRoot": "${workspaceFolder}",
 						"remoteRoot": "${workspaceFolder}",
@@ -1322,7 +1322,7 @@
 					},
 					{
 						"name": "Python: Terminal (integrated)",
-						"type": "pythonExperiment",
+						"type": "pythonExperimental",
 						"request": "launch",
 						"stopOnEntry": true,
 						"pythonPath": "${config:python.pythonPath}",
@@ -1335,7 +1335,7 @@
 					},
 					{
 						"name": "Python: Terminal (external)",
-						"type": "pythonExperiment",
+						"type": "pythonExperimental",
 						"request": "launch",
 						"stopOnEntry": true,
 						"pythonPath": "${config:python.pythonPath}",
@@ -1348,7 +1348,7 @@
 					},
 					{
 						"name": "Python: Django",
-						"type": "pythonExperiment",
+						"type": "pythonExperimental",
 						"request": "launch",
 						"stopOnEntry": true,
 						"pythonPath": "${config:python.pythonPath}",
@@ -1368,7 +1368,7 @@
 					},
 					{
 						"name": "Python: Flask (0.11.x or later)",
-						"type": "pythonExperiment",
+						"type": "pythonExperimental",
 						"request": "launch",
 						"stopOnEntry": false,
 						"pythonPath": "${config:python.pythonPath}",
@@ -1389,7 +1389,7 @@
 					},
 					{
 						"name": "Python: Flask (0.10.x or earlier)",
-						"type": "pythonExperiment",
+						"type": "pythonExperimental",
 						"request": "launch",
 						"stopOnEntry": false,
 						"pythonPath": "${config:python.pythonPath}",
@@ -1404,7 +1404,7 @@
 					},
 					{
 						"name": "Python: PySpark",
-						"type": "pythonExperiment",
+						"type": "pythonExperimental",
 						"request": "launch",
 						"stopOnEntry": true,
 						"osx": {
@@ -1426,7 +1426,7 @@
 					},
 					{
 						"name": "Python: Module",
-						"type": "pythonExperiment",
+						"type": "pythonExperimental",
 						"request": "launch",
 						"stopOnEntry": true,
 						"pythonPath": "${config:python.pythonPath}",
@@ -1440,7 +1440,7 @@
 					},
 					{
 						"name": "Python: Pyramid",
-						"type": "pythonExperiment",
+						"type": "pythonExperimental",
 						"request": "launch",
 						"stopOnEntry": true,
 						"pythonPath": "${config:python.pythonPath}",
@@ -1457,7 +1457,7 @@
 					},
 					{
 						"name": "Python: Watson",
-						"type": "pythonExperiment",
+						"type": "pythonExperimental",
 						"request": "launch",
 						"stopOnEntry": true,
 						"pythonPath": "${config:python.pythonPath}",
