@@ -42,11 +42,12 @@ tesselation (N-dim simplices), convex hull facets, and Voronoi ridges
 ```
 For Delaunay triangulations and convex hulls, the neighborhood
 structure of the simplices satisfies the condition:
-
+```html
       `tess.neighbors[i,j]` is the neighboring simplex of the i-th  
       simplex, opposite to the j-vertex. It is -1 in case of no  
       neighbor.  
 
+```
 Convex hull facets also define a hyperplane equation:
 ```html
       (hull.equations[i,:-1] * coord).sum() + hull.equations[i,-1] == 0  
