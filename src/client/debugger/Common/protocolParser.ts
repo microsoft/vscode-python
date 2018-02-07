@@ -7,7 +7,7 @@ import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import { Readable } from 'stream';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IProtcolParser } from '../types';
+import { IProtocolParser } from '../types';
 
 const PROTOCOL_START_INDENTIFIER = '\r\n\r\n';
 
@@ -23,9 +23,8 @@ const PROTOCOL_START_INDENTIFIER = '\r\n\r\n';
  * @extends {EventEmitter}
  * @implements {IProtcolParser}
  */
-
 @injectable()
-export class ProtcolParser extends EventEmitter implements IProtcolParser {
+export class ProtocolParser extends EventEmitter implements IProtocolParser {
     private rawData = new Buffer(0);
     private contentLength: number;
 
@@ -36,7 +35,6 @@ export class ProtcolParser extends EventEmitter implements IProtcolParser {
             this.handleData(data);
         });
     }
-
     private dispatch(body: string): void {
         const message = JSON.parse(body) as DebugProtocol.ProtocolMessage;
 

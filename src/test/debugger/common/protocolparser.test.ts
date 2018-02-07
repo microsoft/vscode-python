@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 import { Transform } from 'stream';
-import { ProtcolParser } from '../../../client/debugger/Common/protocolParser';
+import { ProtocolParser } from '../../../client/debugger/Common/protocolParser';
 
 suite('Debugging - Protcol Parser', () => {
     test('Test request, response and event messages', async () => {
@@ -13,7 +13,7 @@ suite('Debugging - Protcol Parser', () => {
             }
         });
 
-        const protocolParser = new ProtcolParser(stream);
+        const protocolParser = new ProtocolParser(stream);
         let messagesDetected = 0;
         protocolParser.on('data', () => messagesDetected += 1);
         const requestDetected = new Promise<boolean>(resolve => {

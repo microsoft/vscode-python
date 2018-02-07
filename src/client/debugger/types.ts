@@ -5,7 +5,7 @@ export interface IDebugLauncherScriptProvider {
     getLauncherFilePath(): string;
 }
 
-export const IProtcolParser = Symbol('IProtcolParser');
-export interface IProtcolParser {
+export const IProtocolParser = Symbol('IProtocolParser');
+export interface IProtocolParser {
     on(event: string | symbol, listener: Function): this;
 }
