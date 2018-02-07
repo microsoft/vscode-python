@@ -107,6 +107,37 @@ suite('Standard Debugging - Misc tests', () => {
             const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 3 };
             await debugClient.hitBreakpoint(launchArgs, breakpointLocation);
         });
+        test('Test conditional breakpoints', async () => {
+            const threadIdPromise = debugClient.waitForEvent('thread');
+
+            await Promise.all([
+                debugClient.configurationSequence(),
+                debugClient.launch(buildLauncArgs('forever.py', false)),
+                debugClient.waitForEvent('initialized')
+            ]);
+
+            const breakpointLocation = { path: path.join(debugFilesPath, 'forever.py'), column: 0, line: 5 };
+            await debugClient.setBreakpointsRequest({
+                lines: [breakpointLocation.line],
+                breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column, condition: 'i == 3' }],
+                source: { path: breakpointLocation.path }
+            });
+            await sleep(1);
+            await threadIdPromise;
+            const frames = await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
+
+            // Wait for breakpoint to hit
+            const frameId = frames.body.stackFrames[0].id;
+            const scopes = await debugClient.scopesRequest({ frameId });
+
+            expect(scopes.body.scopes).of.length(1, 'Incorrect number of scopes');
+            const variablesReference = scopes.body.scopes[0].variablesReference;
+            const variables = await debugClient.variablesRequest({ variablesReference });
+
+            const vari = variables.body.variables.find(item => item.name === 'i')!;
+            expect(vari).to.be.not.equal('undefined', 'variable \'i\' is undefined');
+            expect(vari.value).to.be.equal('3');
+        });
         test('Test variables', async () => {
             const threadIdPromise = debugClient.waitForEvent('thread');
 
