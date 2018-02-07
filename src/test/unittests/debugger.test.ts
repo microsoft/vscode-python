@@ -71,15 +71,30 @@ suite('Unit Tests - debugging', () => {
         assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
 
+        const deferred = createDeferred<string>();
         const testFunction = [tests.testFunctions[0].testFunction];
-        testManager.runTest(CommandSource.commandPalette, { testFunction }, false, true);
-        const launched = await mockDebugLauncher.launched;
-        assert.isTrue(launched, 'Debugger not launched');
+        const runningPromise = testManager.runTest(CommandSource.commandPalette, { testFunction }, false, true);
+
+        // This promise should never resolve nor reject.
+        runningPromise
+           .then(() => deferred.reject('Debugger stopped when it shouldn\'t have'))
+           .catch(error => deferred.reject(error));
+
+        mockDebugLauncher.launched
+            .then((launched) => {
+                if (launched) {
+                    deferred.resolve('');
+                } else {
+                    deferred.reject('Debugger not launched');
+                }
+            }) .catch(error => deferred.reject(error));
+
+        await deferred.promise;
     }
 
     test('Debugger should start (unittest)', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
-        await testStartingDebugger('unittest');
+        await  testStartingDebugger('unittest');
     });
 
     test('Debugger should start (pytest)', async () => {
@@ -105,9 +120,10 @@ suite('Unit Tests - debugging', () => {
         const launched = await mockDebugLauncher.launched;
         assert.isTrue(launched, 'Debugger not launched');
 
-        testManager.discoverTests(CommandSource.commandPalette, true, true, true);
-
+        const discoveryPromise = testManager.discoverTests(CommandSource.commandPalette, true, true, true);
         await expect(runningPromise).to.be.rejectedWith(CANCELLATION_REASON, 'Incorrect reason for ending the debugger');
+        ioc.dispose(); // will cancel test discovery
+        await expect(discoveryPromise).to.be.rejectedWith(CANCELLATION_REASON, 'Incorrect reason for ending the debugger');
     }
 
     test('Debugger should stop when user invokes a test discovery (unittest)', async () => {
@@ -151,6 +167,7 @@ suite('Unit Tests - debugging', () => {
         runningPromise
             .then(() => 'Debugger stopped when it shouldn\'t have')
             .catch(() => 'Debugger crashed when it shouldn\'t have')
+            // tslint:disable-next-line: no-floating-promises
             .then(error => {
                 deferred.reject(error);
             });

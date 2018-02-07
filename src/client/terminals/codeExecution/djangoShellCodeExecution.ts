@@ -40,7 +40,7 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         const workspaceRoot = workspaceUri ? workspaceUri.uri.fsPath : defaultWorkspace;
         const managePyPath = workspaceRoot.length === 0 ? 'manage.py' : path.join(workspaceRoot, 'manage.py');
 
-        args.push(managePyPath.toCommandArgument());
+        args.push(managePyPath.fileToCommandArgument());
         args.push('shell');
         return { command, args };
     }

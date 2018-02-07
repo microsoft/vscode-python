@@ -20,6 +20,11 @@ interface String {
      * E.g. if an argument contains a space, then it will be enclosed within double quotes.
      */
     toCommandArgument(): string;
+    /**
+     * Appropriately formats a a file path so it can be used as an argument for a command in a shell.
+     * E.g. if an argument contains a space, then it will be enclosed within double quotes.
+     */
+    fileToCommandArgument(): string;
 }
 
 /**
@@ -47,5 +52,16 @@ String.prototype.toCommandArgument = function (this: string): string {
     if (!this) {
         return this;
     }
-    return (this.indexOf(' ') > 0 && !this.startsWith('"') && !this.endsWith('"')) ? `"${this}"` : this.toString();
+    return (this.indexOf(' ') >= 0 && !this.startsWith('"') && !this.endsWith('"')) ? `"${this}"` : this.toString();
+};
+
+/**
+ * Appropriately formats a a file path so it can be used as an argument for a command in a shell.
+ * E.g. if an argument contains a space, then it will be enclosed within double quotes.
+ */
+String.prototype.fileToCommandArgument = function (this: string): string {
+    if (!this) {
+        return this;
+    }
+    return this.toCommandArgument().replace(/\\/g, '/');
 };
