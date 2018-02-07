@@ -914,6 +914,12 @@
 					"description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory).",
 					"scope": "resource"
 				},
+				"python.jediMemoryLimit": {
+					"type": "number",
+					"default": "0",
+					"description": "Memory limit for the Jedi completion engine in megabytes. Zero (default) means 25% of the installed memory",
+					"scope": "resource"
+				},
 				"python.sortImports.path": {
 					"type": "string",
 					"description": "Path to isort script, default using inner version",

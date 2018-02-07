@@ -14,6 +14,7 @@ import { IPythonExecutionFactory } from '../common/process/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import * as logger from './../common/logger';
+import { settings } from 'cluster';
 
 const IS_WINDOWS = /^win/.test(process.platform);
 
@@ -261,7 +262,7 @@ export class JediProxy implements vscode.Disposable {
         }
         this.languageServerStarted = createDeferred<void>();
         const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(Uri.file(this.workspacePath));
-        const args = ['completion.py'];
+        const args = ['completion.py', `memory:${this.pythonSettings.jediMemoryLimit}`];
         if (typeof this.pythonSettings.jediPath !== 'string' || this.pythonSettings.jediPath.length === 0) {
             if (Array.isArray(this.pythonSettings.devOptions) &&
                 this.pythonSettings.devOptions.some(item => item.toUpperCase().trim() === 'USERELEASEAUTOCOMP')) {
