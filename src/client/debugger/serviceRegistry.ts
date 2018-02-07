@@ -6,5 +6,5 @@ import { ProtocolParser } from './Common/protocolParser';
 import { IProtocolParser } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IProtocolParser>(IProtocolParser, ProtocolParser);
+    serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
 }

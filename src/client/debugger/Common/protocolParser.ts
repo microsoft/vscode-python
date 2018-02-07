@@ -28,9 +28,11 @@ export class ProtocolParser extends EventEmitter implements IProtocolParser {
     private rawData = new Buffer(0);
     private contentLength: number;
 
-    constructor(stream: Readable) {
+    constructor() {
         super();
         this.contentLength = -1;
+    }
+    public connect(stream: Readable) {
         stream.on('data', (data: Buffer) => {
             this.handleData(data);
         });

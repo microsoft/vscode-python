@@ -13,7 +13,8 @@ suite('Debugging - Protcol Parser', () => {
             }
         });
 
-        const protocolParser = new ProtocolParser(stream);
+        const protocolParser = new ProtocolParser();
+        protocolParser.connect(stream);
         let messagesDetected = 0;
         protocolParser.on('data', () => messagesDetected += 1);
         const requestDetected = new Promise<boolean>(resolve => {
