@@ -158,7 +158,7 @@ async function selectAndRunTestMethod(cmdSource: CommandSource, resource: Uri, d
         return;
     }
     // tslint:disable-next-line:prefer-type-cast
-    await runTestsImpl(cmdSource, testManager.workspaceFolder, { testFunction: [selectedTestFn.testFunction] } as TestsToRun, debug);
+    await runTestsImpl(cmdSource, testManager.workspaceFolder, { testFunction: [selectedTestFn.testFunction] } as TestsToRun, false, debug);
 }
 async function selectAndRunTestFile(cmdSource: CommandSource) {
     const testManager = await getTestManager(true);

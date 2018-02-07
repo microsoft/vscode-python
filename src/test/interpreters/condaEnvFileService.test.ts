@@ -104,15 +104,20 @@ suite('Interpreters from Conda Environments Text File', () => {
         const interpreterPaths = [
             path.join(environmentsPath, 'conda', 'envs', 'numpy')
         ];
+        const pythonPath = path.join(interpreterPaths[0], 'pythonPath');
         condaService.setup(c => c.condaEnvironmentsFile).returns(() => environmentsFilePath);
+        condaService.setup(c => c.getInterpreterPath(TypeMoq.It.isAny())).returns(() => pythonPath);
+        fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(true));
         fileSystem.setup(fs => fs.readFile(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(interpreterPaths.join(EOL)));
 
-        AnacondaCompanyNames.forEach(async companyDisplayName => {
+        for (const companyName of AnacondaCompanyNames) {
+            const versionWithCompanyName = `Mock Version :: ${companyName}`;
+            interpreterVersion.setup(c => c.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(versionWithCompanyName));
             const interpreters = await condaFileProvider.getInterpreters();
 
             assert.equal(interpreters.length, 1, 'Incorrect number of entries');
-            assert.equal(interpreters[0].displayName, `${AnacondaDisplayName} Mock Version (numpy)`, 'Incorrect display name');
-        });
+            assert.equal(interpreters[0].displayName, `${AnacondaDisplayName} Mock Version`, 'Incorrect display name');
+        }
     });
 });
