@@ -12,3 +12,10 @@ export interface IProtocolParser {
     connect(stream: Readable): void;
     on(event: string | symbol, listener: Function): this;
 }
+
+export const IProtocolLogger = Symbol('IProtocolLogger');
+export interface IProtocolLogger {
+    connect(inputStream: Readable, outputStream: Readable): void;
+    logToFile(file: string): void;
+    disable(): void;
+}
