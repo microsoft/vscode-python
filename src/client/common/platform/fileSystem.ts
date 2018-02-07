@@ -77,4 +77,16 @@ export class FileSystem implements IFileSystem {
             return path1 === path2;
         }
     }
+
+    // tslint:disable-next-line:no-any
+    public appendFileSync(filename: string, data: any, encoding: string): void;
+    // tslint:disable-next-line:no-any
+    public appendFileSync(filename: string, data: any, options?: { encoding?: string; mode?: number; flag?: string; }): void;
+    // tslint:disable-next-line:no-any unified-signatures
+    public appendFileSync(filename: string, data: any, options?: { encoding?: string; mode?: string; flag?: string; }): void;
+    // tslint:disable-next-line:no-any
+    public appendFileSync(filename: string, data: any, optionsOrEncoding: any): void {
+        return fs.appendFileSync(filename, data, optionsOrEncoding);
+    }
+
 }
