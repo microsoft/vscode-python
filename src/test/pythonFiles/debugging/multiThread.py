@@ -10,5 +10,5 @@ def foo(x):
     while True:
         bar()
 
-threading.Thread(target = lambda: foo(2)).start()
+threading.Thread(target = lambda: foo(2), name="foo").start()
 foo(1)
