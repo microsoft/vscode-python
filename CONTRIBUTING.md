@@ -93,7 +93,7 @@ for a release are tracked in a
 [milestone](https://github.com/Microsoft/vscode-python/milestones)
 (which is actively updated as plans change).
 
-The overall schedule for a release is to code freeze for on the last
+The overall schedule for a release is to feature freeze for on the last
 Monday of the month to coincide with Visual Studio Code's code freeze.
 We then aim to release later that week so the latest version of the
 extension is already live by the time Visual Studio Code launches
@@ -104,16 +104,10 @@ between scheduled releases as necessary.
 All development is actively done in the `master` branch of the
 repository. It is what allows us to have an
 [insiders build](#insiders-build) which is expected to be stable at
-all times. We do keep the previous release as a branch in case the
+all times. We do keep the most recent release as a branch in case the
 need for a bugfix release arises. But once a new release is made we
-convert the older branch into a tag and delete the branch as
-Visual Studio Code's automatic updating makes keeping old versions
-around unnecessary.
-
-Since we try to spend about 25% of our development time fixing bugs
-and removing technical debt, the week of a release is mostly spent
-focusing on that topic. That way we don't ignore the health of the
-code base by accidentally focusing on new features exclusively.
+delete the older release branch (all releases are appropriately
+tagged, so history is lost).
 
 ### Issue triaging
 
@@ -142,21 +136,17 @@ lexicographically sort from earliest stage to latest stage). The
 suffix term for each label then specifies what is currently blocking
 the issue from being closed.
 
-* `1-`
-  * [`decision`](https://github.com/Microsoft/vscode-python/labels/awaiting%201-decision):
-    The issue is a feature enhancement request and a decision has not
-    been made as to whether we would accept a pull request
-    implementing the enhancement
-  * [`more info`](https://github.com/Microsoft/vscode-python/labels/awaiting%201-more%20info):
-    We need more information from the OP (original poster)
-  * [`verification`](https://github.com/Microsoft/vscode-python/labels/awaiting%201-verification):
-    We need to verify that the issue can be replicated
+* [`1-decision`](https://github.com/Microsoft/vscode-python/labels/awaiting%201-decision):
+The issue is a feature enhancement request and a decision has not
+been made as to whether we would accept a pull request
+implementing the enhancement
+* [`1-more info`](https://github.com/Microsoft/vscode-python/labels/awaiting%201-more%20info):
+We need more information from the OP (original poster)
+* [`1-verification`](https://github.com/Microsoft/vscode-python/labels/awaiting%201-verification):
+    We need to verify that the issue is reproducible
 * [`2-PR`](https://github.com/Microsoft/vscode-python/labels/awaiting%202-PR):
   The issue is valid and is now awaiting a fix to be created and
   merged into the `master` branch
-* [`4-validation`](https://github.com/Microsoft/vscode-python/labels/awaiting%204-validation):
-  A pull request has been merged and resolution of the issue should be
-  independently validated
 
 #### Closed issues
 
@@ -168,22 +158,21 @@ it should have an appropriate `closed-` label.
 
 1. Check that there is an issue corresponding to what the pull request
    is attempting to address
-   * If an issue exists, make sure it has reached the stage of being
-     labeled `awaiting 2-PR`
+   * If an issue exists, make sure it has reached the stage of
+     `awaiting 2-PR`
    * If no issue exists, open one and wait for it to reach the
      `awaiting 2-PR` stage before submitting the pull request
-1. Open the pull request, mentioning the appropriate issue(s) in the
+1. Create the pull request, mentioning the appropriate issue(s) in the
    pull request message body
    * The pull request is expected to have appropriate unit tests
    * The pull request must pass its CI run before merging will be
      considered
-   * Code coverage is expected to not worsen
+   * Code coverage is expected to (at minimum) not worsen
 1. Make sure all status checks are green (e.g. CLA check, CI, etc.)
 1. Address any review comments
 1. [Maintainers only] Merge the pull request
 1. [Maintainers only] Update affected issues to be:
    1. Closed (with an appropriate `closed-` label)
-   1. The stage is set to `awaiting 4-validation`
    1. The issue(s) are attached to the current milestone
    1. Register OSS usage
    1. Email CELA about any 3rd-party usage changes
@@ -194,11 +183,12 @@ Starting in 2018, the extension switched to
 [calendar versioning](http://calver.org/) since the extension
 auto-updates and thus there is no need to track its version
 number for backwards-compatibility. As such, the major version
-is the current year, the minor version is the current month, and
-the micro version is how many releases there have been that month in
-the year (starting at 0). For example, the first release in July 2018
-would be `2018.7.0`, the second release that month would be
-`2018.7.1`, etc.
+is the current year, the minor version is the month when feature
+freeze was reached, and the micro version is how many releases there
+have been since that feature freeze (starting at 0). For example
+the release made when we reach feature freeze in July 2018
+would be `2018.7.0`, and if a second release was necessary to fix a
+critical bug it would be `2018.7.1`.
 
 ## Insiders Build
 
@@ -214,7 +204,7 @@ file, please follow the instructions on
 [this page](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix)
 to install the extension.
 
-The insiders build of the extension ...:
+The insiders build of the extension:
 
 * Will be replaced with new releases published onto the
   [VS Code Marketplace](https://marketplace.visualstudio.com/VSCode).

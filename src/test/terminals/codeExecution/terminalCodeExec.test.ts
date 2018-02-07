@@ -154,7 +154,8 @@ suite('Terminal Code Execution', () => {
                 terminalSettings.setup(t => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
-                terminalService.verify(async t => await t.sendText(TypeMoq.It.isValue(`cd "${path.dirname(file.fsPath)}"`)), TypeMoq.Times.once());
+                const dir = `"${path.dirname(file.fsPath)}"`.fileToCommandArgument();
+                terminalService.verify(async t => await t.sendText(TypeMoq.It.isValue(`cd ${dir}`)), TypeMoq.Times.once());
             }
 
             test('Ensure we set current directory (and quote it when containing spaces) before executing file (non windows)', async () => {
@@ -213,7 +214,7 @@ suite('Terminal Code Execution', () => {
 
                 await executor.executeFile(file);
                 const expectedPythonPath = isWindows ? pythonPath.replace(/\\/g, '/') : pythonPath;
-                const expectedArgs = terminalArgs.concat(file.fsPath.indexOf(' ') > 0 ? `"${file.fsPath}"` : file.fsPath);
+                const expectedArgs = terminalArgs.concat(file.fsPath.fileToCommandArgument());
                 terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
             }
 

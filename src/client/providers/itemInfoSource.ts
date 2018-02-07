@@ -108,6 +108,7 @@ export class ItemInfoSource {
                 if (signature.length > 0) {
                     tooltip = tooltip.appendMarkdown(['```python', signature, '```', EOL].join(EOL));
                 }
+
                 const description = this.textConverter.toMarkdown(lines.join(EOL));
                 tooltip = tooltip.appendMarkdown(description);
 

@@ -101,13 +101,13 @@ suite('Variable Extraction', () => {
     test('Extract Variable', async () => {
         const startPos = new vscode.Position(234, 29);
         const endPos = new vscode.Position(234, 38);
-        testingVariableExtraction(false, startPos, endPos);
+        await testingVariableExtraction(false, startPos, endPos);
     });
 
     test('Extract Variable fails if whole string not selected', async () => {
         const startPos = new vscode.Position(234, 20);
         const endPos = new vscode.Position(234, 38);
-        testingVariableExtraction(true, startPos, endPos);
+        await testingVariableExtraction(true, startPos, endPos);
     });
 
     function testingVariableExtractionEndToEnd(shouldError: boolean, startPos: Position, endPos: Position) {

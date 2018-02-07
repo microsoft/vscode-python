@@ -15,7 +15,7 @@ import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } fr
 
 @injectable()
 export class CodeExecutionManager implements ICodeExecutionManager {
-    constructor( @inject(ICommandManager) private commandManager: ICommandManager,
+    constructor(@inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
         @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
@@ -28,8 +28,9 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         this.disposableRegistry.push(this.commandManager.registerCommand(Commands.Exec_Selection_In_Django_Shell, this.executeSelectionInDjangoShell.bind(this)));
     }
     @captureTelemetry(EXECUTION_CODE, { scope: 'file' }, false)
-    private async executeFileInterTerminal(file: Uri) {
+    private async executeFileInterTerminal(file?: Uri) {
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
+        file = file instanceof Uri ? file : undefined;
         const fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();
         if (!fileToExecute) {
             return;

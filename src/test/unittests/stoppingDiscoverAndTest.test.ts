@@ -5,6 +5,7 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { Uri } from 'vscode';
+import {createDeferred} from '../../client/common/helpers';
 import { Product } from '../../client/common/types';
 import { CANCELLATION_REASON, CommandSource, UNITTEST_PROVIDER } from '../../client/unittests/common/constants';
 import { ITestDiscoveryService } from '../../client/unittests/common/types';
@@ -60,9 +61,23 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
 
         const discoveryPromise = mockTestManager.discoverTests(CommandSource.auto);
         mockTestManager.discoveryDeferred.resolve(EmptyTests);
-        mockTestManager.runTest(CommandSource.ui);
+        const runningPromise = mockTestManager.runTest(CommandSource.ui);
+        const deferred = createDeferred<string>();
 
-        await expect(discoveryPromise).to.eventually.equal(EmptyTests);
+        // This promise should never resolve nor reject.
+        runningPromise
+            .then(() => Promise.reject('Debugger stopped when it shouldn\'t have'))
+            .catch(error =>  deferred.reject(error));
+
+       discoveryPromise.then(result => {
+            if (result === EmptyTests) {
+                deferred.resolve('');
+            } else {
+                deferred.reject('tests not empty');
+            }
+        }).catch(error => deferred.reject(error));
+
+        await deferred.promise;
     });
 
     test('Discovering tests should stop running tests', async () => {
@@ -75,7 +90,7 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         // User manually discovering tests will kill the existing test runner.
-        mockTestManager.discoverTests(CommandSource.ui, true, false, true);
+        await mockTestManager.discoverTests(CommandSource.ui, true, false, true);
         await expect(runPromise).to.eventually.be.rejectedWith(CANCELLATION_REASON);
     });
 });
