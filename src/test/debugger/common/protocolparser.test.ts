@@ -2,16 +2,12 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { Transform } from 'stream';
+import { PassThrough } from 'stream';
 import { ProtocolParser } from '../../../client/debugger/Common/protocolParser';
 
 suite('Debugging - Protcol Parser', () => {
     test('Test request, response and event messages', async () => {
-        const stream = new Transform({
-            transform(chunk, _encoding, callback) {
-                callback(null, chunk);
-            }
-        });
+        const stream = new PassThrough();
 
         const protocolParser = new ProtocolParser();
         protocolParser.connect(stream);
