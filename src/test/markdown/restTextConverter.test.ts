@@ -29,7 +29,7 @@ async function testConversion(fileName: string): Promise<void> {
   const cvt = new RestTextConverter();
   const file = path.join(srcPythoFilesPath, fileName);
   const source = await fs.readFile(`${file}.pydoc`, 'utf8');
-  const actual = cvt.toMarkdown(source, true);
+  const actual = cvt.toMarkdown(source);
   const expected = await fs.readFile(`${file}.md`, 'utf8');
   compareFiles(expected, actual);
 }

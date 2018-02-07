@@ -17,15 +17,11 @@ export class RestTextConverter {
   private md: string[] = [];
 
   // tslint:disable-next-line:cyclomatic-complexity
-  public toMarkdown(docstring: string, force?: boolean): string {
+  public toMarkdown(docstring: string): string {
     // Translates reStructruredText (Python doc syntax) to markdown.
     // It only translates as much as needed to display tooltips
     // and documentation in the completion list.
     // See https://en.wikipedia.org/wiki/ReStructuredText
-
-    if (!force && !this.shouldConvert(docstring)) {
-      return this.escapeMarkdown(docstring);
-    }
 
     const result = this.transformLines(docstring);
     this.state = State.Default;
@@ -40,34 +36,7 @@ export class RestTextConverter {
     return text
       .replace(/\#/g, '\\#')
       .replace(/\*/g, '\\*')
-      .replace(/\_/g, '\\_')
-      .replace(/\{/g, '\\{')
-      .replace(/\}/g, '\\}')
-      .replace(/\[/g, '\\[')
-      .replace(/\]/g, '\\]')
-      .replace(/\(/g, '\\(')
-      .replace(/\)/g, '\\)')
-      .replace(/\+/g, '\\+')
-      .replace(/\-/g, '\\+');
-  }
-
-  private shouldConvert(docstring: string): boolean {
-    // Heuristics that determe if string should be converted
-    // to markdown or just escaped.
-
-    // :: at the end of a string
-    const doubleColon = docstring.indexOf('::');
-    if (doubleColon >= 0 && doubleColon < docstring.length - 2) {
-      const ch = docstring.charCodeAt(doubleColon + 2);
-      if (ch === Char.LineFeed || ch === Char.CarriageReturn) {
-        return true;
-      }
-    }
-    // Section headers or lists
-    if (docstring.indexOf('===') >= 0 || docstring.indexOf('---') >= 0 || docstring.indexOf('.. ') >= 0) {
-      return true;
-    }
-    return false;
+      .replace(/\_/g, '\\_');
   }
 
   private transformLines(docstring: string): string {
@@ -126,8 +95,9 @@ export class RestTextConverter {
       return result; // Handle line in the new state
     }
 
-    line = this.convertEmphasis(line);
+    line = this.cleanup(line);
     line = line.replace(/``/g, '`'); // Convert double backticks to single.
+    line = this.escapeMarkdown(line);
     this.md.push(line);
 
     return 0;
@@ -202,12 +172,12 @@ export class RestTextConverter {
     const line = lines[i];
     if (i < lines.length - 1 && (lines[i + 1].startsWith('==='))) {
       // Section title -> heading level 3.
-      this.md.push(`### ${this.convertEmphasis(line)}`);
+      this.md.push(`### ${this.cleanup(line)}`);
       return true;
     }
     if (i < lines.length - 1 && (lines[i + 1].startsWith('---'))) {
       // Subsection title -> heading level 4.
-      this.md.push(`#### ${this.convertEmphasis(line)}`);
+      this.md.push(`#### ${this.cleanup(line)}`);
       return true;
     }
     return false;
@@ -268,13 +238,13 @@ export class RestTextConverter {
     }
   }
 
-  private convertEmphasis(line: string): string {
-    return line.replace(/\:([\w\W]+)\:/g, '**$1**'); // Convert :word: to **word**.
-  }
-
   private isListItem(line: string): boolean {
     const trimmed = line.trim();
     const ch = trimmed.length > 0 ? trimmed.charCodeAt(0) : 0;
     return ch === Char.Asterisk || ch === Char.Hyphen || isDecimal(ch);
+  }
+
+  private cleanup(line: string): string {
+    return line.replace(/:mod:/g, 'module:');
   }
 }

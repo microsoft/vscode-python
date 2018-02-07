@@ -1,4 +1,4 @@
-### Spatial algorithms and data structures (**mod**`scipy.spatial`)
+### Spatial algorithms and data structures (module:`scipy.spatial`)
 
 
 ### Nearest-neighbor Queries

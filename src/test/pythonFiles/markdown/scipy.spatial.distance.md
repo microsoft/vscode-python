@@ -1,4 +1,4 @@
-### Distance computations (**mod**`scipy.spatial.distance`)
+### Distance computations (module:`scipy.spatial.distance`)
 
 
 #### Function Reference
@@ -51,4 +51,4 @@ computing the distances between all pairs.
    sokalsneath      -- the Sokal-Sneath dissimilarity.  
    yule             -- the Yule dissimilarity.  
 ```
-**func**`hamming` also operates over discrete numerical vectors.
+:func:`hamming` also operates over discrete numerical vectors.
