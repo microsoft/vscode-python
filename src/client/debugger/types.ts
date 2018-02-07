@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import {Socket} from 'net';
 import { Readable } from 'stream';
 
 export interface IDebugLauncherScriptProvider {
@@ -18,4 +19,9 @@ export interface IProtocolLogger {
     connect(inputStream: Readable, outputStream: Readable): void;
     logToFile(file: string): void;
     disable(): void;
+}
+
+export const IDebugStreamProvider = Symbol('IDebugStreamProvider');
+export interface IDebugStreamProvider {
+    getInputAndOutputStreams(): Promise<{ input: NodeJS.ReadStream | Socket; output: NodeJS.WriteStream | Socket }>;
 }
