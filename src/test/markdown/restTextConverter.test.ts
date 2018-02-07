@@ -15,7 +15,7 @@ function compareFiles(expectedContent: string, actualContent: string) {
   for (let i = 0; i < Math.min(expectedLines.length, actualLines.length); i += 1) {
     const e = expectedLines[i];
     const a = actualLines[i];
-    expect(a, `Difference at line ${i}`).to.be.equal(e);
+    expect(e, `Difference at line ${i}`).to.be.equal(a);
   }
 
   expect(actualLines.length,
@@ -41,4 +41,5 @@ suite('Hover - RestTextConverter', () => {
   test('scipy.spatial.distance', async () => await testConversion('scipy.spatial.distance'));
   test('anydbm', async () => await testConversion('anydbm'));
   test('aifc', async () => await testConversion('aifc'));
+  test('astroid', async () => await testConversion('astroid'));
 });

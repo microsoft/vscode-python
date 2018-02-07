@@ -6,9 +6,14 @@ import { EOL } from 'os';
 import Char from 'typescript-char';
 import { isDecimal, isWhiteSpace } from '../../language/characters';
 
+enum State {
+  Default,
+  Preformatted,
+  Code
+}
+
 export class RestTextConverter {
-  private inPreBlock = false;
-  private inCodeBlock = false;
+  private state: State = State.Default;
   private md: string[] = [];
 
   // tslint:disable-next-line:cyclomatic-complexity
@@ -23,7 +28,7 @@ export class RestTextConverter {
     }
 
     const result = this.transformLines(docstring);
-    this.inPreBlock = this.inPreBlock = false;
+    this.state = State.Default;
     this.md = [];
 
     return result;
@@ -65,128 +70,132 @@ export class RestTextConverter {
     return false;
   }
 
-  // tslint:disable-next-line:cyclomatic-complexity
   private transformLines(docstring: string): string {
     const lines = docstring.split(/\r?\n/);
     for (let i = 0; i < lines.length; i += 1) {
-      let line = lines[i];
-
+      const line = lines[i];
       // Avoid leading empty lines
       if (this.md.length === 0 && line.length === 0) {
         continue;
       }
 
-      this.checkPreContent(lines, i);
-
-      if (this.handleCodeBlock(line)) {
-        continue;
+      switch (this.state) {
+        case State.Default:
+          i += this.inDefaultState(lines, i);
+          break;
+        case State.Preformatted:
+          i += this.inPreformattedState(lines, i);
+          break;
+        case State.Code:
+          this.inCodeState(line);
+          break;
+        default:
+          break;
       }
-
-      if (this.inPreBlock) {
-        // Preformatted block terminates by a line without leading
-        // whitespace or any special line like ..ABC::.
-        if (line.length > 0 && !isWhiteSpace(line.charCodeAt(0))) {
-          this.endPreformattedBlock();
-        }
-      }
-
-      if (this.handleSectionHeader(lines, i)) {
-        i += 1; // Eat line with === or ---
-        continue;
-      }
-
-      if (line.indexOf('generated/') >= 0) {
-        continue; // ignore generated content.
-      }
-      if (line.startsWith('===') || line.startsWith('---')) {
-        continue; // Eat standalone === or --- lines.
-      }
-
-      if (this.handleDoubleColon(line)) {
-        continue;
-      }
-      if (line.startsWith('..') && line.indexOf('::') > 0) {
-        // Ignore lines likes .. sectionauthor:: John Doe.
-        continue;
-      }
-
-      line = this.convertEmphasis(line);
-      line = line.replace(/``/g, '`'); // Convert double backticks to single.
-
-      if (line.length > 0 && isWhiteSpace(line.charCodeAt(0))) {
-        // Keep hard line breaks for the pre-indented content.
-        line = `  ${line}  `;
-      }
-
-      const prevLine = this.md.length > 0 ? this.md[this.md.length - 1] : undefined;
-      if (line.length === 0 && prevLine && (prevLine.length === 0 || prevLine.startsWith('```'))) {
-        continue; // Avoid more than one empty line in a row.
-      }
-
-      this.addLine(line);
     }
 
-    this.tryEndCodePreBlocks();
+    this.endCodeBlock();
+    this.endPreformattedBlock();
+
     return this.md.join(EOL).trim();
   }
 
-  private addLine(line: string): void {
+  private inDefaultState(lines: string[], i: number): number {
+    let line = lines[i];
+    if (line.startsWith('```')) {
+      this.startCodeBlock();
+      return 0;
+    }
+
+    if (line.startsWith('===') || line.startsWith('---')) {
+      return 0; // Eat standalone === or --- lines.
+    }
+    if (this.handleDoubleColon(line)) {
+      return 0;
+    }
+    if (this.isIgnorable(line)) {
+      return 0;
+    }
+
+    if (this.handleSectionHeader(lines, i)) {
+      return 1; // Eat line with === or ---
+    }
+
+    const result = this.checkPreContent(lines, i);
+    if (this.state !== State.Default) {
+      return result; // Handle line in the new state
+    }
+
+    line = this.convertEmphasis(line);
+    line = line.replace(/``/g, '`'); // Convert double backticks to single.
+    this.md.push(line);
+
+    return 0;
+  }
+
+  private inPreformattedState(lines: string[], i: number): number {
+    let line = lines[i];
+    if (this.isIgnorable(line)) {
+      return 0;
+    }
+    // Preformatted block terminates by a line without leading whitespace.
+    if (line.length > 0 && !isWhiteSpace(line.charCodeAt(0)) && !this.isListItem(line)) {
+      this.endPreformattedBlock();
+      return -1;
+    }
+
+    const prevLine = this.md.length > 0 ? this.md[this.md.length - 1] : undefined;
+    if (line.length === 0 && prevLine && (prevLine.length === 0 || prevLine.startsWith('```'))) {
+      return 0; // Avoid more than one empty line in a row.
+    }
+
     // Since we use HTML blocks as preformatted text
     // make sure we drop angle brackets since otherwise
     // they will render as tags and attributes
-    if (this.inPreBlock) {
-      line = line.replace(/</g, '').replace(/>/g, '');
-    }
-    this.md.push(line);
+    line = line.replace(/</g, ' ').replace(/>/g, ' ');
+    line = line.replace(/``/g, '`'); // Convert double backticks to single.
+    // Keep hard line breaks for the preformatted content
+    this.md.push(`${line}  `);
+    return 0;
   }
 
-  private checkPreContent(lines: string[], i: number): void {
-    if (this.inPreBlock) {
-      return;
-    }
-    // Indented is considered to be preformatted except
-    // when previous line is indented or begins list item.
-    const line = lines[i];
-    if (line.length === 0 || !isWhiteSpace(line.charCodeAt(0))) {
-      return;
+  private inCodeState(line: string): void {
+    const prevLine = this.md.length > 0 ? this.md[this.md.length - 1] : undefined;
+    if (line.length === 0 && prevLine && (prevLine.length === 0 || prevLine.startsWith('```'))) {
+      return; // Avoid more than one empty line in a row.
     }
 
-    let prevLine = i > 0 ? lines[i - 1] : undefined;
-    if (!prevLine) {
-      return;
-    }
-    if (prevLine.length === 0) {
-      this.startPreformattedBlock(line);
-      return;
-    }
-    if (isWhiteSpace(prevLine.charCodeAt(0))) {
-      return;
-    }
-
-    prevLine = prevLine.trim();
-    if (prevLine.length === 0) {
-      this.startPreformattedBlock(line);
-      return;
-    }
-
-    const ch = prevLine.charCodeAt(0);
-    if (ch === Char.Asterisk || ch === Char.Hyphen || isDecimal(ch)) {
-      return;
-    }
-
-    this.startPreformattedBlock(line);
-  }
-
-  private handleCodeBlock(line: string): boolean {
-    if (!line.startsWith('```')) {
-      return false;
-    }
-    if (this.inCodeBlock) {
+    if (line.startsWith('```')) {
       this.endCodeBlock();
     } else {
-      this.startCodeBlock();
+      this.md.push(line);
     }
-    return true;
+  }
+
+  private isIgnorable(line: string): boolean {
+    if (line.indexOf('generated/') >= 0) {
+      return true; // Drop generated content.
+    }
+    const trimmed = line.trim();
+    if (trimmed.startsWith('..') && trimmed.indexOf('::') > 0) {
+      // Ignore lines likes .. sectionauthor:: John Doe.
+      return true;
+    }
+    return false;
+  }
+
+  private checkPreContent(lines: string[], i: number): number {
+    const line = lines[i];
+    if (i === 0 || line.trim().length === 0) {
+      return 0;
+    }
+
+    if (!isWhiteSpace(line.charCodeAt(0)) && !this.isListItem(line)) {
+      return 0; // regular line, nothing to do here.
+    }
+    // Indented content is considered to be preformatted.
+    this.startPreformattedBlock();
+    return -1;
   }
 
   private handleSectionHeader(lines: string[], i: number): boolean {
@@ -216,61 +225,56 @@ export class RestTextConverter {
       this.md.push(line.substring(0, line.length - 1));
     }
 
-    this.startPreformattedBlock(line);
+    this.startPreformattedBlock();
     return true;
   }
 
-  private tryEndCodePreBlocks(): void {
-    if (this.inCodeBlock) {
-      this.endCodeBlock();
-    }
-    if (this.inPreBlock) {
-      this.endPreformattedBlock();
-    }
-  }
-
-  private startPreformattedBlock(line: string): void {
+  private startPreformattedBlock(): void {
     // Remove previous empty line so we avoid double empties.
-    this.tryRemovePrecedingEmptyLine();
+    this.tryRemovePrecedingEmptyLines();
     // Lie about the language since we don't want preformatted text
     // to be colorized as Python. HTML is more 'appropriate' as it does
     // not colorize -- or + or keywords like 'from'.
-    if (line.indexOf('# ') >= 0) {
-      this.md.push('```python');
-    } else {
-      this.md.push('```html');
-    }
-    this.inPreBlock = true;
+    this.md.push('```html');
+    this.state = State.Preformatted;
   }
 
   private endPreformattedBlock(): void {
-    if (this.inPreBlock) {
+    if (this.state === State.Preformatted) {
+      this.tryRemovePrecedingEmptyLines();
       this.md.push('```');
-      this.inPreBlock = false;
+      this.state = State.Default;
     }
   }
 
   private startCodeBlock(): void {
     // Remove previous empty line so we avoid double empties.
-    this.tryRemovePrecedingEmptyLine();
+    this.tryRemovePrecedingEmptyLines();
     this.md.push('```python');
-    this.inCodeBlock = true;
+    this.state = State.Code;
   }
 
   private endCodeBlock(): void {
-    if (this.inCodeBlock) {
+    if (this.state === State.Code) {
+      this.tryRemovePrecedingEmptyLines();
       this.md.push('```');
-      this.inCodeBlock = false;
+      this.state = State.Default;
     }
   }
 
-  private tryRemovePrecedingEmptyLine(): void {
-    if (this.md.length > 0 && this.md[this.md.length - 1].length === 0) {
+  private tryRemovePrecedingEmptyLines(): void {
+    while (this.md.length > 0 && this.md[this.md.length - 1].trim().length === 0) {
       this.md.pop();
     }
   }
 
   private convertEmphasis(line: string): string {
     return line.replace(/\:([\w\W]+)\:/g, '**$1**'); // Convert :word: to **word**.
+  }
+
+  private isListItem(line: string): boolean {
+    const trimmed = line.trim();
+    const ch = trimmed.length > 0 ? trimmed.charCodeAt(0) : 0;
+    return ch === Char.Asterisk || ch === Char.Hyphen || isDecimal(ch);
   }
 }
