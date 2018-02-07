@@ -106,7 +106,7 @@ export class ItemInfoSource {
 
                 // Tooltip is only used in hover
                 if (signature.length > 0) {
-                    tooltip = tooltip.appendMarkdown(['```python', signature, '```', EOL].join(EOL));
+                    tooltip = tooltip.appendMarkdown(['```python', signature, '```', ''].join(EOL));
                 }
 
                 const description = this.textConverter.toMarkdown(lines.join(EOL));
@@ -127,7 +127,7 @@ export class ItemInfoSource {
 
             if (item.description) {
                 if (signature.length > 0) {
-                    tooltip.appendMarkdown(['```python', signature, '```', EOL].join(EOL));
+                    tooltip.appendMarkdown(['```python', signature, '```', ''].join(EOL));
                 }
                 const description = this.textConverter.toMarkdown(item.description);
                 tooltip.appendMarkdown(description);
