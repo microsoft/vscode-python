@@ -16,12 +16,14 @@ suite('FileSystem', () => {
     setup(() => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         fileSystem = new FileSystem(platformService.object);
+        cleanTestFiles();
     });
-    teardown(() => {
+    teardown(cleanTestFiles);
+    function cleanTestFiles() {
         if (fs.existsSync(fileToAppendTo)) {
             fs.unlinkSync(fileToAppendTo);
         }
-    });
+    }
     test('ReadFile returns contents of a file', async () => {
         const file = __filename;
         const expectedContents = await fs.readFile(file).then(buffer => buffer.toString());
