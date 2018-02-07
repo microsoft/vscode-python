@@ -86,6 +86,9 @@ export interface IPathUtils {
 export const ICurrentProcess = Symbol('ICurrentProcess');
 export interface ICurrentProcess {
     readonly env: EnvironmentVariables;
+    readonly argv: string[];
+    readonly stdout: NodeJS.WriteStream;
+    readonly stdin: NodeJS.ReadStream;
 }
 
 export interface IPythonSettings {
