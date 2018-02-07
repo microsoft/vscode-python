@@ -4,7 +4,7 @@
 import { EOL } from 'os';
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
-import { isWhiteSpace } from '../../language/characters';
+import { isDecimal, isWhiteSpace } from '../../language/characters';
 
 export class RestTextConverter {
   private inPreBlock = false;
@@ -76,12 +76,7 @@ export class RestTextConverter {
         continue;
       }
 
-      if (!this.inPreBlock) {
-        // Anything indented is considered to be preformatted.
-        if (line.length > 0 && isWhiteSpace(line.charCodeAt(0))) {
-          this.startPreformattedBlock(line);
-        }
-      }
+      this.checkPreContent(lines, i);
 
       if (this.handleCodeBlock(line)) {
         continue;
@@ -143,6 +138,43 @@ export class RestTextConverter {
       line = line.replace(/</g, '').replace(/>/g, '');
     }
     this.md.push(line);
+  }
+
+  private checkPreContent(lines: string[], i: number): void {
+    if (this.inPreBlock) {
+      return;
+    }
+    // Indented is considered to be preformatted except
+    // when previous line is indented or begins list item.
+    const line = lines[i];
+    if (line.length === 0 || !isWhiteSpace(line.charCodeAt(0))) {
+      return;
+    }
+
+    let prevLine = i > 0 ? lines[i - 1] : undefined;
+    if (!prevLine) {
+      return;
+    }
+    if (prevLine.length === 0) {
+      this.startPreformattedBlock(line);
+      return;
+    }
+    if (isWhiteSpace(prevLine.charCodeAt(0))) {
+      return;
+    }
+
+    prevLine = prevLine.trim();
+    if (prevLine.length === 0) {
+      this.startPreformattedBlock(line);
+      return;
+    }
+
+    const ch = prevLine.charCodeAt(0);
+    if (ch === Char.Asterisk || ch === Char.Hyphen || isDecimal(ch)) {
+      return;
+    }
+
+    this.startPreformattedBlock(line);
   }
 
   private handleCodeBlock(line: string): boolean {
