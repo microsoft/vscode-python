@@ -83,7 +83,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         const fileDirPath = path.dirname(file.fsPath);
         const wkspace = this.workspace.getWorkspaceFolder(file);
         if (wkspace && fileDirPath !== wkspace.uri.fsPath && fileDirPath.length > 0) {
-            await this.getTerminalService(file).sendText(`cd ${fileDirPath.toCommandArgument()}`);
+            await this.getTerminalService(file).sendText(`cd ${fileDirPath.fileToCommandArgument()}`);
         }
     }
 }
