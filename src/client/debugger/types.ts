@@ -5,6 +5,8 @@
 
 import { Socket } from 'net';
 import { Readable } from 'stream';
+import { Disposable } from 'vscode';
+import { Logger } from 'vscode-debugadapter';
 import { Message } from 'vscode-debugadapter/lib/messages';
 
 export interface IDebugLauncherScriptProvider {
@@ -12,17 +14,16 @@ export interface IDebugLauncherScriptProvider {
 }
 
 export const IProtocolParser = Symbol('IProtocolParser');
-export interface IProtocolParser {
+export interface IProtocolParser extends Disposable {
     connect(stream: Readable): void;
     once(event: string | symbol, listener: Function): this;
     on(event: string | symbol, listener: Function): this;
 }
 
 export const IProtocolLogger = Symbol('IProtocolLogger');
-export interface IProtocolLogger {
+export interface IProtocolLogger extends Disposable {
     connect(inputStream: Readable, outputStream: Readable): void;
-    logToFile(file: string): void;
-    disable(): void;
+    setup(logger: Logger.ILogger): void;
 }
 
 export const IDebugStreamProvider = Symbol('IDebugStreamProvider');

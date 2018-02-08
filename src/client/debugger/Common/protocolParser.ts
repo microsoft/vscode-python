@@ -27,13 +27,24 @@ const PROTOCOL_START_INDENTIFIER = '\r\n\r\n';
 export class ProtocolParser extends EventEmitter implements IProtocolParser {
     private rawData = new Buffer(0);
     private contentLength: number;
-
+    private disposed: boolean;
+    private stream?: Readable;
     constructor() {
         super();
         this.contentLength = -1;
     }
+    public dispose() {
+        if (this.stream) {
+            this.stream.removeListener('data', this.dataCallbackHandler);
+            this.stream = undefined;
+        }
+    }
     public connect(stream: Readable) {
-        stream.on('data', (data) => this.handleData(data as Buffer));
+        this.stream = stream;
+        stream.addListener('data', this.dataCallbackHandler);
+    }
+    private dataCallbackHandler = (data: string | Buffer) => {
+        this.handleData(data as Buffer);
     }
     private dispatch(body: string): void {
         const message = JSON.parse(body) as DebugProtocol.ProtocolMessage;
@@ -68,7 +79,9 @@ export class ProtocolParser extends EventEmitter implements IProtocolParser {
         this.emit('data', message);
     }
     private handleData(data: Buffer): void {
-
+        if (this.disposed) {
+            return;
+        }
         this.rawData = Buffer.concat([this.rawData, data]);
 
         while (true) {
