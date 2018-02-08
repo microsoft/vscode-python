@@ -10,6 +10,7 @@ import { ThreadEvent } from 'vscode-debugadapter';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { sleep } from '../common';
+import { IS_MULTI_ROOT_TEST } from '../initialize';
 
 use(chaiAsPromised);
 
@@ -20,7 +21,11 @@ const DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'Ma
 // tslint:disable-next-line:max-func-body-length
 suite('Standard Debugging - Misc tests', () => {
     let debugClient: DebugClient;
-    setup(async () => {
+    setup(async function () {
+        if (!IS_MULTI_ROOT_TEST) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
         await new Promise(resolve => setTimeout(resolve, 1000));
         debugClient = new DebugClient('node', DEBUG_ADAPTER, 'python');
         await debugClient.start();
