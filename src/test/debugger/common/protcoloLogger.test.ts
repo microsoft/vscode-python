@@ -14,7 +14,7 @@ import { IProtocolLogger } from '../../../client/debugger/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Debugging - Protcol Logger', () => {
+suite('Debugging - Protocol Logger', () => {
     let protocolLogger: IProtocolLogger;
     const logFile = path.join(__dirname, 'created_for_testing_dummy.txt');
     setup(() => {

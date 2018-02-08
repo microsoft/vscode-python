@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { PassThrough } from 'stream';
 import { ProtocolParser } from '../../../client/debugger/Common/protocolParser';
 
-suite('Debugging - Protcol Parser', () => {
+suite('Debugging - Protocol Parser', () => {
     test('Test request, response and event messages', async () => {
         const stream = new PassThrough();
 

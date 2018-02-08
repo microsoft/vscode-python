@@ -43,4 +43,18 @@ suite('Debugging - Stream Provider', () => {
         expect(streams.input).to.not.be.equal(mockProcess.stdin);
         expect(streams.output).to.not.be.equal(mockProcess.stdout);
     });
+    test('Ensure existence of port is identified', async () => {
+        const port = await getFreePort({ host: 'localhost', port: 3000 });
+        const mockProcess = { argv: ['node', 'index.js', `--server=${port}`], env: [], stdin: '1234', stdout: '5678' };
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => mockProcess);
+
+        expect(streamProvider.useDebugSocketStream).to.be.equal(true, 'incorrect');
+    });
+    test('Ensure non-existence of port is identified', async () => {
+        const port = await getFreePort({ host: 'localhost', port: 3000 });
+        const mockProcess = { argv: ['node', 'index.js', `--other=${port}`], env: [], stdin: '1234', stdout: '5678' };
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => mockProcess);
+
+        expect(streamProvider.useDebugSocketStream).to.not.be.equal(true, 'incorrect');
+    });
 });

@@ -5,6 +5,7 @@ import { EventEmitter } from 'events';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ConfigurationTarget, Uri } from 'vscode';
+import { isTestExecution } from './constants';
 import {
     IAutoCompeteSettings,
     IFormattingSettings,
@@ -21,11 +22,6 @@ import { SystemVariables } from './variables/systemVariables';
 const untildify = require('untildify');
 
 export const IS_WINDOWS = /^win/.test(process.platform);
-
-export function isTestExecution(): boolean {
-    // tslint:disable-next-line:interface-name no-string-literal
-    return process.env['VSC_PYTHON_CI_TEST'] === '1';
-}
 
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {

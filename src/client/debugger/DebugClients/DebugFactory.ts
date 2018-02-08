@@ -10,7 +10,7 @@ export function CreateLaunchDebugClient(launchRequestOptions: LaunchRequestArgum
     if (launchRequestOptions.noDebug === true) {
         return new NonDebugClient(launchRequestOptions, debugSession, canLaunchTerminal, new NoDebugLauncherScriptProvider());
     }
-    const launchScriptProvider = launchRequestOptions.type === 'pythonExperimental' ? new DebuggerLauncherScriptProvider() : new DebuggerV2LauncherScriptProvider();
+    const launchScriptProvider = launchRequestOptions.type === 'pythonExperimental' ? new DebuggerV2LauncherScriptProvider() : new DebuggerLauncherScriptProvider();
     return new LocalDebugClient(launchRequestOptions, debugSession, canLaunchTerminal, launchScriptProvider);
 }
 export function CreateAttachDebugClient(attachRequestOptions: AttachRequestArguments, debugSession: DebugSession): DebugClient {

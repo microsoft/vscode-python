@@ -2,7 +2,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget, DiagnosticSeverity, Uri } from 'vscode';
+import {Socket} from 'net';
+import { ConfigurationTarget, DiagnosticSeverity, Disposable, Uri } from 'vscode';
+
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
@@ -212,4 +214,10 @@ export interface IConfigurationService {
     getSettings(resource?: Uri): IPythonSettings;
     isTestExecution(): boolean;
     updateSettingAsync(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
+}
+
+export const ISocketServer = Symbol('ISocketServer');
+export interface ISocketServer extends Disposable {
+    readonly client: Promise<Socket>;
+    Start(options?: { port?: number, host?: string }): Promise<number>;
 }
