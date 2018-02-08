@@ -10,7 +10,6 @@ import { ThreadEvent } from 'vscode-debugadapter';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { sleep } from '../common';
-import { initialize } from '../initialize';
 
 use(chaiAsPromised);
 
@@ -21,8 +20,6 @@ const DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'Ma
 // tslint:disable-next-line:max-func-body-length
 suite('Standard Debugging - Misc tests', () => {
     let debugClient: DebugClient;
-    suiteSetup(initialize);
-
     setup(async () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
         debugClient = new DebugClient('node', DEBUG_ADAPTER, 'python');
@@ -378,12 +375,6 @@ suite('Standard Debugging - Misc tests', () => {
 
         for (const thread of threads.body.threads) {
             const stackframes = await debugClient.stackTraceRequest({ threadId: thread.id });
-            if (thread.name !== 'MainThread') {
-                expect(thread.name).to.be.equal('foo', 'incorrect name for thread \'foo\'');
-            }
-            const framelength = thread.name === 'MainThread' ? 2 : 5;
-            expect(stackframes.body.stackFrames).of.length(framelength, 'incorrect number of frames');
-
             if (thread.name === 'MainThread') {
                 expect(stackframes.body.stackFrames[0].line).to.be.equal(11, 'incorrect line number for main thread stack');
                 expect(stackframes.body.stackFrames[0].source!.path).to.be.equal(pythonFile, 'incorrect source file for main thread stack');
@@ -391,6 +382,8 @@ suite('Standard Debugging - Misc tests', () => {
                 expect(stackframes.body.stackFrames[1].line).to.be.equal(14, 'incorrect line number for main thread stack');
                 expect(stackframes.body.stackFrames[1].source!.path).to.be.equal(pythonFile, 'incorrect source file for main thread stack');
             } else {
+                expect(thread.name).to.be.equal('foo', 'incorrect name for thread \'foo\'');
+
                 expect(stackframes.body.stackFrames[0].line).to.be.equal(11, 'incorrect line number for foo thread stack');
                 expect(stackframes.body.stackFrames[0].source!.path).to.be.equal(pythonFile, 'incorrect source file for foo thread stack');
 
