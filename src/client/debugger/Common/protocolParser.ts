@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
-import { Readable } from 'stream';
+import { Readable, Transform } from 'stream';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IProtocolParser } from '../types';
 
@@ -33,9 +33,13 @@ export class ProtocolParser extends EventEmitter implements IProtocolParser {
         this.contentLength = -1;
     }
     public connect(stream: Readable) {
-        stream.on('data', (data: Buffer) => {
-            this.handleData(data);
+        const throughOutStream = new Transform({
+            transform: (chunk, encoding, callback) => {
+                this.handleData(chunk as Buffer);
+                callback(null, chunk);
+            }
         });
+        stream.pipe(throughOutStream);
     }
     private dispatch(body: string): void {
         const message = JSON.parse(body) as DebugProtocol.ProtocolMessage;
