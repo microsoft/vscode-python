@@ -70,7 +70,7 @@ String.prototype.fileToCommandArgument = function (this: string): string {
 // tslint:disable-next-line:interface-name
 declare interface Promise<T> {
     /**
-     * Explicitly states that promise will run asynchronously.
+     * Catches task error and ignores them.
      */
     ignoreErrors(): void;
 }
