@@ -72,29 +72,13 @@ declare interface Promise<T> {
     /**
      * Explicitly states that promise will run asynchronously.
      */
-    doNotWait(onComplete?: () => void, onError?: (reason?: {}) => void): void;
+    ignoreErrors(): void;
 }
 
 /**
  * Explicitly tells that promise should be run asynchonously.
  */
-Promise.prototype.doNotWait = function <T>(this: Promise<T>, onComplete?: () => void, onError?: (reason?: {}) => void) {
-    this
-        .catch(reason => {
-            if (onError) {
-                //vscode.window.createOutputChannel(STANDARD_OUTPUT_CHANNEL).appendLine(`Promise exception: ${reason.ToString()}`);
-                onError(reason);
-            }
-        })
-        .then(() => {
-            if (onComplete) {
-                onComplete();
-            }
-        })
-        .catch(() => {
-            if (onError) {
-                //vscode.window.createOutputChannel(STANDARD_OUTPUT_CHANNEL).appendLine(`Promise exception: ${reason.ToString()}`);
-                onError();
-            }
-        });
+Promise.prototype.ignoreErrors = function <T>(this: Promise<T>) {
+    // tslint:disable-next-line:no-empty
+    this.catch(() => { });
 };

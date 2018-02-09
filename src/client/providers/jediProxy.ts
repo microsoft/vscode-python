@@ -153,7 +153,7 @@ export class JediProxy implements vscode.Disposable {
         this.logger = serviceContainer.get<ILogger>(ILogger);
         this.pythonSettings.on('change', () => this.pythonSettingsChangeHandler());
         this.initialized = createDeferred<void>();
-        this.startLanguageServer().doNotWait(() => this.initialized.resolve());
+        this.startLanguageServer().then(() => this.initialized.resolve()).ignoreErrors();
 
         // Check memory footprint periodically. Do not check on every request due to
         // the performance impact. See https://github.com/soyuka/pidusage - on Windows
@@ -233,7 +233,7 @@ export class JediProxy implements vscode.Disposable {
         }
         this.lastKnownPythonInterpreter = this.pythonSettings.pythonPath;
         this.additionalAutoCompletePaths = await this.buildAutoCompletePaths();
-        this.restartLanguageServer().doNotWait();
+        this.restartLanguageServer().ignoreErrors();
     }
     @debounce(1500)
     @swallowExceptions('JediProxy')
@@ -241,7 +241,7 @@ export class JediProxy implements vscode.Disposable {
         const newAutoComletePaths = await this.buildAutoCompletePaths();
         if (this.additionalAutoCompletePaths.join(',') !== newAutoComletePaths.join(',')) {
             this.additionalAutoCompletePaths = newAutoComletePaths;
-            this.restartLanguageServer().doNotWait();
+            this.restartLanguageServer().ignoreErrors();
         }
     }
     @swallowExceptions('JediProxy')
