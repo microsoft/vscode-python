@@ -313,7 +313,7 @@
 						"label": "%python.snippet.launch.standard.label%",
 						"description": "%python.snippet.launch.standard.description%",
 						"body": {
-							"name": "Python",
+							"name": "Python: Current File",
 							"type": "python",
 							"request": "launch",
 							"stopOnEntry": true,
@@ -706,7 +706,7 @@
 				},
 				"initialConfigurations": [
 					{
-						"name": "Python",
+						"name": "Python: Current File",
 						"type": "python",
 						"request": "launch",
 						"stopOnEntry": true,
