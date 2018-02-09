@@ -37,10 +37,8 @@ export interface IFileSystem {
     getSubDirectoriesAsync(rootDir: string): Promise<string[]>;
     arePathsSame(path1: string, path2: string): boolean;
     readFile(filePath: string): Promise<string>;
-    // tslint:disable-next-line:no-any
-    appendFileSync(filename: string, data: any, encoding: string): void;
-    // tslint:disable-next-line:no-any
-    appendFileSync(filename: string, data: any, options?: { encoding?: string; mode?: number; flag?: string; }): void;
-    // tslint:disable-next-line:no-any unified-signatures
-    appendFileSync(filename: string, data: any, options?: { encoding?: string; mode?: string; flag?: string; }): void;
+    appendFileSync(filename: string, data: {}, encoding: string): void;
+    appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string; }): void;
+    // tslint:disable-next-line:unified-signatures
+    appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string; }): void;
 }
