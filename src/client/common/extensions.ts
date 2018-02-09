@@ -7,14 +7,15 @@
  * @property {boolean} [removeEmptyEntries=true] - Whether to remove empty entries.
  */
 
+// https://stackoverflow.com/questions/39877156/how-to-extend-string-prototype-and-use-it-next-in-typescript
 // tslint:disable-next-line:interface-name
-interface String {
+declare interface String {
     /**
      * Split a string using the cr and lf characters and return them as an array.
      * By default lines are trimmed and empty lines are removed.
      * @param {SplitLinesOptions=} splitOptions - Options used for splitting the string.
      */
-    splitLines(splitOptions?: { trim: boolean, removeEmptyEntries: boolean }): string[];
+    splitLines(splitOptions?: { trim: boolean, removeEmptyEntries?: boolean }): string[];
     /**
      * Appropriately formats a string so it can be used as an argument for a command in a shell.
      * E.g. if an argument contains a space, then it will be enclosed within double quotes.
@@ -64,4 +65,36 @@ String.prototype.fileToCommandArgument = function (this: string): string {
         return this;
     }
     return this.toCommandArgument().replace(/\\/g, '/');
+};
+
+// tslint:disable-next-line:interface-name
+declare interface Promise<T> {
+    /**
+     * Explicitly states that promise will run asynchronously.
+     */
+    doNotWait(onComplete?: () => void, onError?: (reason?: {}) => void): void;
+}
+
+/**
+ * Explicitly tells that promise should be run asynchonously.
+ */
+Promise.prototype.doNotWait = function <T>(this: Promise<T>, onComplete?: () => void, onError?: (reason?: {}) => void) {
+    this
+        .catch(reason => {
+            if (onError) {
+                //vscode.window.createOutputChannel(STANDARD_OUTPUT_CHANNEL).appendLine(`Promise exception: ${reason.ToString()}`);
+                onError(reason);
+            }
+        })
+        .then(() => {
+            if (onComplete) {
+                onComplete();
+            }
+        })
+        .catch(() => {
+            if (onError) {
+                //vscode.window.createOutputChannel(STANDARD_OUTPUT_CHANNEL).appendLine(`Promise exception: ${reason.ToString()}`);
+                onError();
+            }
+        });
 };

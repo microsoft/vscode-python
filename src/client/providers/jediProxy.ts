@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable-next-line:no-var-requires no-require-imports
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as pidusage from 'pidusage';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
@@ -11,10 +13,10 @@ import { debounce, swallowExceptions } from '../common/decorators';
 import '../common/extensions';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IPythonExecutionFactory } from '../common/process/types';
+import { ILogger } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import * as logger from './../common/logger';
-import { settings } from 'cluster';
 
 const IS_WINDOWS = /^win/.test(process.platform);
 
@@ -141,14 +143,17 @@ export class JediProxy implements vscode.Disposable {
     private languageServerStarted: Deferred<void>;
     private initialized: Deferred<void>;
     private environmentVariablesProvider: IEnvironmentVariablesProvider;
+    private logger: ILogger;
+
     public constructor(private extensionRootDir: string, workspacePath: string, private serviceContainer: IServiceContainer) {
         this.workspacePath = workspacePath;
         this.pythonSettings = PythonSettings.getInstance(vscode.Uri.file(workspacePath));
         this.lastKnownPythonInterpreter = this.pythonSettings.pythonPath;
+        this.logger = serviceContainer.get<ILogger>(ILogger);
         this.pythonSettings.on('change', () => this.pythonSettingsChangeHandler());
         this.initialized = createDeferred<void>();
         // tslint:disable-next-line:no-empty
-        this.startLanguageServer().catch(() => { }).then(() => this.initialized.resolve());
+        this.startLanguageServer().doNotWait(() => this.initialized.resolve());
     }
 
     private static getProperty<T>(o: object, name: string): T {
@@ -171,6 +176,15 @@ export class JediProxy implements vscode.Disposable {
         if (!this.proc) {
             return Promise.reject(new Error('Python proc not initialized'));
         }
+
+        pidusage.stat(this.proc.pid, async (err, result) => {
+            const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 512), 8192);
+            if (result.memory > limit * 1024 * 1024) {
+                this.logger.logWarning(`IntelliSense process memory consumption exceeded limit of ${limit} MB and process will be restarted.\nThe limit is controlled by the 'python.jediMemoryLimit' setting.`);
+                await this.restartLanguageServer();
+            }
+        });
+
         const executionCmd = <IExecutionCommand<T>>cmd;
         const payload = this.createPayload(executionCmd);
         executionCmd.deferred = createDeferred<T>();
@@ -192,8 +206,8 @@ export class JediProxy implements vscode.Disposable {
     }
 
     // keep track of the directory so we can re-spawn the process.
-    private initialize() {
-        this.spawnProcess(path.join(this.extensionRootDir, 'pythonFiles'))
+    private initialize(): Promise<void> {
+        return this.spawnProcess(path.join(this.extensionRootDir, 'pythonFiles'))
             .catch(ex => {
                 if (this.languageServerStarted) {
                     this.languageServerStarted.reject(ex);
@@ -208,7 +222,7 @@ export class JediProxy implements vscode.Disposable {
         }
         this.lastKnownPythonInterpreter = this.pythonSettings.pythonPath;
         this.additionalAutoCompletePaths = await this.buildAutoCompletePaths();
-        this.restartLanguageServer();
+        this.restartLanguageServer().doNotWait();
     }
     @debounce(1500)
     @swallowExceptions('JediProxy')
@@ -216,19 +230,19 @@ export class JediProxy implements vscode.Disposable {
         const newAutoComletePaths = await this.buildAutoCompletePaths();
         if (this.additionalAutoCompletePaths.join(',') !== newAutoComletePaths.join(',')) {
             this.additionalAutoCompletePaths = newAutoComletePaths;
-            this.restartLanguageServer();
+            this.restartLanguageServer().doNotWait();
         }
     }
     @swallowExceptions('JediProxy')
-    private async startLanguageServer() {
+    private async startLanguageServer(): Promise<void> {
         const newAutoComletePaths = await this.buildAutoCompletePaths();
         this.additionalAutoCompletePaths = newAutoComletePaths;
-        this.restartLanguageServer();
+        return this.restartLanguageServer();
     }
-    private restartLanguageServer() {
+    private restartLanguageServer(): Promise<void> {
         this.killProcess();
         this.clearPendingRequests();
-        this.initialize();
+        return this.initialize();
     }
 
     private clearPendingRequests() {
@@ -262,7 +276,7 @@ export class JediProxy implements vscode.Disposable {
         }
         this.languageServerStarted = createDeferred<void>();
         const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(Uri.file(this.workspacePath));
-        const args = ['completion.py', `memory:${this.pythonSettings.jediMemoryLimit}`];
+        const args = ['completion.py'];
         if (typeof this.pythonSettings.jediPath !== 'string' || this.pythonSettings.jediPath.length === 0) {
             if (Array.isArray(this.pythonSettings.devOptions) &&
                 this.pythonSettings.devOptions.some(item => item.toUpperCase().trim() === 'USERELEASEAUTOCOMP')) {
