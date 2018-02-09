@@ -9,7 +9,7 @@ import { IFileSystem, IPlatformService } from './types';
 
 @injectable()
 export class FileSystem implements IFileSystem {
-    constructor( @inject(IPlatformService) private platformService: IPlatformService) { }
+    constructor(@inject(IPlatformService) private platformService: IPlatformService) { }
 
     public get directorySeparatorChar(): string {
         return path.sep;
@@ -78,14 +78,11 @@ export class FileSystem implements IFileSystem {
         }
     }
 
-    // tslint:disable-next-line:no-any
-    public appendFileSync(filename: string, data: any, encoding: string): void;
-    // tslint:disable-next-line:no-any
-    public appendFileSync(filename: string, data: any, options?: { encoding?: string; mode?: number; flag?: string; }): void;
-    // tslint:disable-next-line:no-any unified-signatures
-    public appendFileSync(filename: string, data: any, options?: { encoding?: string; mode?: string; flag?: string; }): void;
-    // tslint:disable-next-line:no-any
-    public appendFileSync(filename: string, data: any, optionsOrEncoding: any): void {
+    public appendFileSync(filename: string, data: {}, encoding: string): void;
+    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string; }): void;
+    // tslint:disable-next-line:unified-signatures
+    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string; }): void;
+    public appendFileSync(filename: string, data: {}, optionsOrEncoding: {}): void {
         return fs.appendFileSync(filename, data, optionsOrEncoding);
     }
 

@@ -26,12 +26,11 @@ const PROTOCOL_START_INDENTIFIER = '\r\n\r\n';
 @injectable()
 export class ProtocolParser extends EventEmitter implements IProtocolParser {
     private rawData = new Buffer(0);
-    private contentLength: number;
+    private contentLength: number = -1;
     private disposed: boolean;
     private stream?: Readable;
     constructor() {
         super();
-        this.contentLength = -1;
     }
     public dispose() {
         if (this.stream) {
