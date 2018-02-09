@@ -88,13 +88,6 @@ export class PythonDebugger extends DebugSession {
                 process.on('SIGTERM', dispose);
             }
 
-            // Pause all input streams and stop piping input into our debug stream.
-            session.on('_py_pre_launch', () => {
-                throughInStream.pause();
-                stdin.pause();
-                throughInStream.unpipe(handshakeDebugInStream);
-            });
-
             session.on('_py_enable_protocol_logging', enabled => {
                 if (enabled) {
                     logger.setup(LogLevel.Verbose, true);
@@ -115,18 +108,11 @@ export class PythonDebugger extends DebugSession {
 
                 // Wait for PTVSD to reply back with initialized event.
                 debugSoketProtocolParser.once('event_initialized', (initialized: DebugProtocol.InitializedEvent) => {
-                    // debugSoketProtocolParser.dispose();
+                    throughInStream.unpipe(handshakeDebugInStream);
 
                     throughInStream.pipe(debuggerSocket);
 
-                    // Just in case we need to jump start things.
-                    throughInStream.read(0);
-                    stdin.read(0);
-
                     debuggerSocket.pipe(throughOutStream);
-
-                    throughInStream.resume();
-                    stdin.resume();
 
                     // Forward the initialized event sent by PTVSD onto VSCode.
                     protocolMessageWriter.write(throughOutStream, initialized);
