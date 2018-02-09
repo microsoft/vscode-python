@@ -6,10 +6,18 @@ const PREFIX = 'Python Extension: ';
 @injectable()
 export class Logger implements ILogger {
     public logError(message: string, ex?: Error) {
-        console.error(`${PREFIX}${message}`, error);
+        if (ex) {
+            console.error(`${PREFIX}${message}`, error);
+        } else {
+            console.error(`${PREFIX}${message}`);
+        }
     }
     public logWarning(message: string, ex?: Error) {
-        console.warn(`${PREFIX}${message}`, ex);
+        if (ex) {
+            console.warn(`${PREFIX}${message}`, ex);
+        } else {
+            console.warn(`${PREFIX}${message}`);
+        }
     }
 }
 // tslint:disable-next-line:no-any

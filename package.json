@@ -905,7 +905,7 @@
                         "label": "%python.snippet.launch.standard.label%",
                         "description": "%python.snippet.launch.standard.description%",
                         "body": {
-                            "name": "Python",
+                            "name": "Python Experimental: Current File",
                             "type": "pythonExperimental",
                             "request": "launch",
                             "stopOnEntry": true,
@@ -918,51 +918,7 @@
                                 "RedirectOutput"
                             ]
                         }
-                    },
-                    {
-                        "label": "%python.snippet.launch.pyspark.label%",
-                        "description": "%python.snippet.launch.pyspark.description%",
-                        "body": {
-                            "name": "PySpark",
-                            "type": "pythonExperimental",
-                            "request": "launch",
-                            "stopOnEntry": true,
-                            "osx": {
-                                "pythonPath": "^\"\\${env:SPARK_HOME}/bin/spark-submit\""
-                            },
-                            "windows": {
-                                "pythonPath": "^\"\\${env:SPARK_HOME}/bin/spark-submit.cmd\""
-                            },
-                            "linux": {
-                                "pythonPath": "^\"\\${env:SPARK_HOME}/bin/spark-submit\""
-                            },
-                            "program": "^\"\\${file}\"",
-                            "cwd": "^\"\\${workspaceFolder}\"",
-                            "env": {},
-                            "envFile": "^\"\\${workspaceFolder}/.env\"",
-                            "debugOptions": [
-                                "RedirectOutput"
-                            ]
-                        }
-                    },
-                    {
-                        "label": "%python.snippet.launch.module.label%",
-                        "description": "%python.snippet.launch.module.description%",
-                        "body": {
-                            "name": "Python Module",
-                            "type": "pythonExperimental",
-                            "request": "launch",
-                            "stopOnEntry": true,
-                            "pythonPath": "^\"\\${config:python.pythonPath}\"",
-                            "module": "module.name",
-                            "cwd": "^\"\\${workspaceFolder}\"",
-                            "env": {},
-                            "envFile": "^\"\\${workspaceFolder}/.env\"",
-                            "debugOptions": [
-                                "RedirectOutput"
-                            ]
-                        }
-                    },
+                    }
                     {
                         "label": "%python.snippet.launch.terminal.label%",
                         "description": "%python.snippet.launch.terminal.description%",
@@ -995,155 +951,6 @@
                             "env": {},
                             "envFile": "^\"\\${workspaceFolder}/.env\"",
                             "debugOptions": []
-                        }
-                    },
-                    {
-                        "label": "%python.snippet.launch.django.label%",
-                        "description": "%python.snippet.launch.django.description%",
-                        "body": {
-                            "name": "Django",
-                            "type": "pythonExperimental",
-                            "request": "launch",
-                            "stopOnEntry": true,
-                            "pythonPath": "^\"\\${config:python.pythonPath}\"",
-                            "program": "^\"\\${workspaceFolder}/manage.py\"",
-                            "cwd": "^\"\\${workspaceFolder}\"",
-                            "args": [
-                                "runserver",
-                                "--noreload",
-                                "--nothreading"
-                            ],
-                            "env": {},
-                            "envFile": "^\"\\${workspaceFolder}/.env\"",
-                            "debugOptions": [
-                                "RedirectOutput",
-                                "DjangoDebugging"
-                            ]
-                        }
-                    },
-                    {
-                        "label": "%python.snippet.launch.flask.label%",
-                        "description": "%python.snippet.launch.flask.description%",
-                        "body": {
-                            "name": "Flask",
-                            "type": "pythonExperimental",
-                            "request": "launch",
-                            "stopOnEntry": false,
-                            "pythonPath": "^\"\\${config:python.pythonPath}\"",
-                            "program": "fully qualified path fo 'flask' executable. Generally located along with python interpreter",
-                            "cwd": "^\"\\${workspaceFolder}\"",
-                            "env": {
-                                "FLASK_APP": "^\"\\${workspaceFolder}/quickstart/app.py\""
-                            },
-                            "args": [
-                                "run",
-                                "--no-debugger",
-                                "--no-reload"
-                            ],
-                            "envFile": "^\"\\${workspaceFolder}/.env\"",
-                            "debugOptions": [
-                                "RedirectOutput"
-                            ]
-                        }
-                    },
-                    {
-                        "label": "%python.snippet.launch.flaskOld.label%",
-                        "description": "%python.snippet.launch.flaskOld.description%",
-                        "body": {
-                            "name": "Flask (old)",
-                            "type": "pythonExperimental",
-                            "request": "launch",
-                            "stopOnEntry": false,
-                            "pythonPath": "^\"\\${config:python.pythonPath}\"",
-                            "program": "^\"\\${workspaceFolder}/run.py\"",
-                            "cwd": "^\"\\${workspaceFolder}\"",
-                            "args": [],
-                            "env": {},
-                            "envFile": "^\"\\${workspaceFolder}/.env\"",
-                            "debugOptions": [
-                                "RedirectOutput"
-                            ]
-                        }
-                    },
-                    {
-                        "label": "%python.snippet.launch.pyramid.label%",
-                        "description": "%python.snippet.launch.pyramid.description%",
-                        "body": {
-                            "name": "Pyramid",
-                            "type": "pythonExperimental",
-                            "request": "launch",
-                            "stopOnEntry": true,
-                            "pythonPath": "^\"\\${config:python.pythonPath}\"",
-                            "cwd": "^\"\\${workspaceFolder}\"",
-                            "env": {},
-                            "envFile": "^\"\\${workspaceFolder}/.env\"",
-                            "args": [
-                                "^\"\\${workspaceFolder}/development.ini\""
-                            ],
-                            "debugOptions": [
-                                "RedirectOutput",
-                                "Pyramid"
-                            ]
-                        }
-                    },
-                    {
-                        "label": "%python.snippet.launch.watson.label%",
-                        "description": "%python.snippet.launch.watson.description%",
-                        "body": {
-                            "name": "Watson",
-                            "type": "pythonExperimental",
-                            "request": "launch",
-                            "stopOnEntry": true,
-                            "pythonPath": "^\"\\${config:python.pythonPath}\"",
-                            "program": "^\"\\${workspaceFolder}/console.py\"",
-                            "cwd": "^\"\\${workspaceFolder}\"",
-                            "args": [
-                                "dev",
-                                "runserver",
-                                "--noreload=True"
-                            ],
-                            "env": {},
-                            "envFile": "^\"\\${workspaceFolder}/.env\"",
-                            "debugOptions": [
-                                "RedirectOutput"
-                            ]
-                        }
-                    },
-                    {
-                        "label": "%python.snippet.launch.scrapy.label%",
-                        "description": "%python.snippet.launch.scrapy.description%",
-                        "body": {
-                            "name": "Scrapy",
-                            "type": "pythonExperimental",
-                            "request": "launch",
-                            "stopOnEntry": true,
-                            "pythonPath": "^\"\\${config:python.pythonPath}\"",
-                            "program": "~/.virtualenvs/scrapy/bin/scrapy",
-                            "cwd": "^\"\\${workspaceFolder}\"",
-                            "args": [
-                                "crawl",
-                                "specs",
-                                "-o",
-                                "bikes.json"
-                            ],
-                            "console": "integratedTerminal",
-                            "env": {},
-                            "envFile": "^\"\\${workspaceFolder}/.env\"",
-                            "debugOptions": []
-                        }
-                    },
-                    {
-                        "label": "%python.snippet.launch.attach.label%",
-                        "description": "%python.snippet.launch.attach.description%",
-                        "body": {
-                            "name": "Attach (Remote Debug)",
-                            "type": "pythonExperimental",
-                            "request": "attach",
-                            "localRoot": "^\"\\${workspaceFolder}\"",
-                            "remoteRoot": "^\"\\${workspaceFolder}\"",
-                            "port": 3000,
-                            "secret": "my_secret",
-                            "host": "localhost"
                         }
                     }
                 ],
@@ -1261,44 +1068,11 @@
                                 "default": "localhost"
                             }
                         }
-                    },
-                    "attach": {
-                        "required": [
-                            "localRoot",
-                            "remoteRoot"
-                        ],
-                        "properties": {
-                            "localRoot": {
-                                "type": "string",
-                                "description": "Local source root that corrresponds to the 'remoteRoot'.",
-                                "default": "${workspaceFolder}"
-                            },
-                            "remoteRoot": {
-                                "type": "string",
-                                "description": "The source root of the remote host.",
-                                "default": ""
-                            },
-                            "port": {
-                                "type": "number",
-                                "description": "Debug port to attach",
-                                "default": 0
-                            },
-                            "host": {
-                                "type": "string",
-                                "description": "IP Address of the of remote server (default is localhost or use 127.0.0.1).",
-                                "default": "localhost"
-                            },
-                            "secret": {
-                                "type": "string",
-                                "description": "Secret used to authenticate for remote debugging.",
-                                "default": ""
-                            }
-                        }
                     }
                 },
                 "initialConfigurations": [
                     {
-                        "name": "Python",
+                        "name": "Python Experimental: Current File",
                         "type": "pythonExperimental",
                         "request": "launch",
                         "stopOnEntry": true,
@@ -1312,17 +1086,7 @@
                         ]
                     },
                     {
-                        "name": "Python: Attach",
-                        "type": "pythonExperimental",
-                        "request": "attach",
-                        "localRoot": "${workspaceFolder}",
-                        "remoteRoot": "${workspaceFolder}",
-                        "port": 3000,
-                        "secret": "my_secret",
-                        "host": "localhost"
-                    },
-                    {
-                        "name": "Python: Terminal (integrated)",
+                        "name": "Python Experimental: Terminal (integrated)",
                         "type": "pythonExperimental",
                         "request": "launch",
                         "stopOnEntry": true,
@@ -1335,7 +1099,7 @@
                         "debugOptions": []
                     },
                     {
-                        "name": "Python: Terminal (external)",
+                        "name": "Python Experimental: Terminal (external)",
                         "type": "pythonExperimental",
                         "request": "launch",
                         "stopOnEntry": true,
@@ -1346,134 +1110,6 @@
                         "env": {},
                         "envFile": "${workspaceFolder}/.env",
                         "debugOptions": []
-                    },
-                    {
-                        "name": "Python: Django",
-                        "type": "pythonExperimental",
-                        "request": "launch",
-                        "stopOnEntry": true,
-                        "pythonPath": "${config:python.pythonPath}",
-                        "program": "${workspaceFolder}/manage.py",
-                        "cwd": "${workspaceFolder}",
-                        "args": [
-                            "runserver",
-                            "--noreload",
-                            "--nothreading"
-                        ],
-                        "env": {},
-                        "envFile": "${workspaceFolder}/.env",
-                        "debugOptions": [
-                            "RedirectOutput",
-                            "DjangoDebugging"
-                        ]
-                    },
-                    {
-                        "name": "Python: Flask (0.11.x or later)",
-                        "type": "pythonExperimental",
-                        "request": "launch",
-                        "stopOnEntry": false,
-                        "pythonPath": "${config:python.pythonPath}",
-                        "program": "fully qualified path fo 'flask' executable. Generally located along with python interpreter",
-                        "cwd": "${workspaceFolder}",
-                        "env": {
-                            "FLASK_APP": "${workspaceFolder}/quickstart/app.py"
-                        },
-                        "args": [
-                            "run",
-                            "--no-debugger",
-                            "--no-reload"
-                        ],
-                        "envFile": "${workspaceFolder}/.env",
-                        "debugOptions": [
-                            "RedirectOutput"
-                        ]
-                    },
-                    {
-                        "name": "Python: Flask (0.10.x or earlier)",
-                        "type": "pythonExperimental",
-                        "request": "launch",
-                        "stopOnEntry": false,
-                        "pythonPath": "${config:python.pythonPath}",
-                        "program": "${workspaceFolder}/run.py",
-                        "cwd": "${workspaceFolder}",
-                        "args": [],
-                        "env": {},
-                        "envFile": "${workspaceFolder}/.env",
-                        "debugOptions": [
-                            "RedirectOutput"
-                        ]
-                    },
-                    {
-                        "name": "Python: PySpark",
-                        "type": "pythonExperimental",
-                        "request": "launch",
-                        "stopOnEntry": true,
-                        "osx": {
-                            "pythonPath": "${env:SPARK_HOME}/bin/spark-submit"
-                        },
-                        "windows": {
-                            "pythonPath": "${env:SPARK_HOME}/bin/spark-submit.cmd"
-                        },
-                        "linux": {
-                            "pythonPath": "${env:SPARK_HOME}/bin/spark-submit"
-                        },
-                        "program": "${file}",
-                        "cwd": "${workspaceFolder}",
-                        "env": {},
-                        "envFile": "${workspaceFolder}/.env",
-                        "debugOptions": [
-                            "RedirectOutput"
-                        ]
-                    },
-                    {
-                        "name": "Python: Module",
-                        "type": "pythonExperimental",
-                        "request": "launch",
-                        "stopOnEntry": true,
-                        "pythonPath": "${config:python.pythonPath}",
-                        "module": "module.name",
-                        "cwd": "${workspaceFolder}",
-                        "env": {},
-                        "envFile": "${workspaceFolder}/.env",
-                        "debugOptions": [
-                            "RedirectOutput"
-                        ]
-                    },
-                    {
-                        "name": "Python: Pyramid",
-                        "type": "pythonExperimental",
-                        "request": "launch",
-                        "stopOnEntry": true,
-                        "pythonPath": "${config:python.pythonPath}",
-                        "cwd": "${workspaceFolder}",
-                        "env": {},
-                        "envFile": "${workspaceFolder}/.env",
-                        "args": [
-                            "${workspaceFolder}/development.ini"
-                        ],
-                        "debugOptions": [
-                            "RedirectOutput",
-                            "Pyramid"
-                        ]
-                    },
-                    {
-                        "name": "Python: Watson",
-                        "type": "pythonExperimental",
-                        "request": "launch",
-                        "stopOnEntry": true,
-                        "pythonPath": "${config:python.pythonPath}",
-                        "program": "${workspaceFolder}/console.py",
-                        "cwd": "${workspaceFolder}",
-                        "args": [
-                            "dev",
-                            "runserver",
-                            "--noreload=True"
-                        ],
-                        "env": {},
-                        "envFile": "${workspaceFolder}/.env",
-                        "debugOptions": [
-                            "RedirectOutput"
-                        ]
                     }
                 ]
             }
@@ -1504,6 +1140,12 @@
                     "type": "string",
                     "default": "",
                     "description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory).",
+                    "scope": "resource"
+                },
+                "python.jediMemoryLimit": {
+                    "type": "number",
+                    "default": "0",
+                    "description": "Memory limit for the Jedi completion engine in megabytes. Zero (default) means 1024 MB",
                     "scope": "resource"
                 },
                 "python.sortImports.path": {
@@ -2178,6 +1820,10 @@
         "minimatch": "^3.0.3",
         "named-js-regexp": "^1.3.1",
         "opn": "^5.1.0",
+<<<<<<< HEAD
+=======
+        "pidusage": "^1.2.0",
+>>>>>>> master
         "reflect-metadata": "^0.1.12",
         "rxjs": "^5.5.2",
         "semver": "^5.4.1",
@@ -2248,10 +1894,13 @@
         "typescript-formatter": "^6.0.0",
         "vscode": "^1.1.5",
         "vscode-debugadapter-testsupport": "^1.25.0"
+<<<<<<< HEAD
     },
     "__metadata": {
         "id": "f1f59ae4-9318-4f3c-a9b5-81b2eaa5f8a5",
         "publisherDisplayName": "Microsoft",
         "publisherId": "998b010b-e2af-44a5-a6cd-0b5fd3b9b6f8"
+=======
+>>>>>>> master
     }
 }
