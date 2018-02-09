@@ -18,7 +18,6 @@ export class DebuggerLauncherScriptProvider implements IDebugLauncherScriptProvi
 
 export class DebuggerV2LauncherScriptProvider implements IDebugLauncherScriptProvider {
     public getLauncherFilePath(): string {
-        //return path.join(path.dirname(__dirname), '..', '..', '..', 'pythonFiles', 'experimental', 'ptvsd_launcher.py');
-        return '/Users/donjayamanne/Desktop/Development/vscode/ptvsd/ptvsd_launcher.py';
+        return path.join(path.dirname(__dirname), '..', '..', '..', 'pythonFiles', 'experimental', 'ptvsd_launcher.py');
     }
 }
