@@ -92,6 +92,7 @@ export interface IPythonSettings {
     readonly pythonPath: string;
     readonly venvPath: string;
     readonly jediPath: string;
+    readonly jediMemoryLimit: number;
     readonly devOptions: string[];
     readonly linting: ILintingSettings;
     readonly formatting: IFormattingSettings;
