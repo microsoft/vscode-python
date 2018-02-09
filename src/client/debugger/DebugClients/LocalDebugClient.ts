@@ -7,10 +7,12 @@ import { open } from '../../common/open';
 import { PathUtils } from '../../common/platform/pathUtils';
 import { CurrentProcess } from '../../common/process/currentProcess';
 import { EnvironmentVariablesService } from '../../common/variables/environment';
-import { IDebugServer, IPythonProcess } from '../Common/Contracts';
+import { IServiceContainer } from '../../ioc/types';
+import { IDebugServer, IPythonProcess, LaunchRequestArguments } from '../Common/Contracts';
 import { IS_WINDOWS } from '../Common/Utils';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { LocalDebugServer } from '../DebugServers/LocalDebugServer';
+import { LocalDebugServerV2 } from '../DebugServers/LocalDebugServerV2';
 import { IDebugLauncherScriptProvider } from '../types';
 import { DebugClient, DebugType } from './DebugClient';
 import { DebugClientHelper } from './helper';
@@ -41,13 +43,17 @@ export class LocalDebugClient extends DebugClient {
         return DebugServerStatus.Unknown;
     }
     // tslint:disable-next-line:no-any
-    constructor(args: any, debugSession: DebugSession, private canLaunchTerminal: boolean, private launcherScriptProvider: IDebugLauncherScriptProvider) {
+    constructor(args: LaunchRequestArguments, debugSession: DebugSession, private canLaunchTerminal: boolean, private launcherScriptProvider: IDebugLauncherScriptProvider) {
         super(args, debugSession);
     }
 
-    public CreateDebugServer(pythonProcess: IPythonProcess): BaseDebugServer {
-        this.pythonProcess = pythonProcess;
-        this.debugServer = new LocalDebugServer(this.debugSession, this.pythonProcess, this.args);
+    public CreateDebugServer(pythonProcess?: IPythonProcess, serviceContainer?: IServiceContainer): BaseDebugServer {
+        if ((this.args as LaunchRequestArguments).type === 'pythonExperimental') {
+            this.debugServer = new LocalDebugServerV2(this.debugSession, this.args, serviceContainer!);
+        } else {
+            this.pythonProcess = pythonProcess!;
+            this.debugServer = new LocalDebugServer(this.debugSession, this.pythonProcess!, this.args);
+        }
         return this.debugServer;
     }
 

@@ -12,9 +12,9 @@ export class RemoteDebugClient extends DebugClient {
         super(args, debugSession);
     }
 
-    public CreateDebugServer(pythonProcess: IPythonProcess): BaseDebugServer {
-        this.pythonProcess = pythonProcess;
-        this.debugServer = new RemoteDebugServer(this.debugSession, this.pythonProcess, this.args);
+    public CreateDebugServer(pythonProcess?: IPythonProcess): BaseDebugServer {
+        this.pythonProcess = pythonProcess!;
+        this.debugServer = new RemoteDebugServer(this.debugSession, this.pythonProcess!, this.args);
         return this.debugServer!;
     }
     public get DebugType(): DebugType {
