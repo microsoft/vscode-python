@@ -5,10 +5,14 @@ import { PassThrough } from 'stream';
 import * as TypeMoq from 'typemoq';
 import { Logger } from 'vscode-debugadapter';
 import { ProtocolLogger } from '../../../client/debugger/Common/protocolLogger';
+import { IProtocolLogger } from '../../../client/debugger/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Debugging - Protocol Logger', () => {
-    const protocolLogger = new ProtocolLogger();
+    let protocolLogger: IProtocolLogger;
+    setup(() => {
+        protocolLogger = new ProtocolLogger();
+    });
     test('Ensure messages are buffered untill logger is provided', async () => {
         const inputStream = new PassThrough();
         const outputStream = new PassThrough();
@@ -27,8 +31,8 @@ suite('Debugging - Protocol Logger', () => {
         const logger = TypeMoq.Mock.ofType<Logger.Logger>();
         protocolLogger.setup(logger.object);
 
-        logger.verify(l => l.verbose('\nFrom Client:'), TypeMoq.Times.exactly(3));
-        logger.verify(l => l.verbose('\nTo Client:'), TypeMoq.Times.exactly(3));
+        logger.verify(l => l.verbose('From Client:'), TypeMoq.Times.exactly(3));
+        logger.verify(l => l.verbose('To Client:'), TypeMoq.Times.exactly(3));
 
         const expectedLogFileContents = ['A', '1', 'B', 'C', '2', '3'];
         for (const expectedContent of expectedLogFileContents) {
@@ -53,8 +57,8 @@ suite('Debugging - Protocol Logger', () => {
         outputStream.write('2');
         outputStream.write('3');
 
-        logger.verify(l => l.verbose('\nFrom Client:'), TypeMoq.Times.exactly(3));
-        logger.verify(l => l.verbose('\nTo Client:'), TypeMoq.Times.exactly(3));
+        logger.verify(l => l.verbose('From Client:'), TypeMoq.Times.exactly(3));
+        logger.verify(l => l.verbose('To Client:'), TypeMoq.Times.exactly(3));
 
         const expectedLogFileContents = ['A', '1', 'B', 'C', '2', '3'];
         for (const expectedContent of expectedLogFileContents) {
@@ -80,8 +84,8 @@ suite('Debugging - Protocol Logger', () => {
         outputStream.write('2');
         outputStream.write('3');
 
-        logger.verify(l => l.verbose('\nFrom Client:'), TypeMoq.Times.exactly(1));
-        logger.verify(l => l.verbose('\nTo Client:'), TypeMoq.Times.exactly(1));
+        logger.verify(l => l.verbose('From Client:'), TypeMoq.Times.exactly(1));
+        logger.verify(l => l.verbose('To Client:'), TypeMoq.Times.exactly(1));
 
         const expectedLogFileContents = ['A', '1'];
         const notExpectedLogFileContents = ['B', 'C', '2', '3'];

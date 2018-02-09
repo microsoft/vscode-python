@@ -8,11 +8,15 @@ import { Socket } from 'net';
 import { Message } from 'vscode-debugadapter/lib/messages';
 import { IProtocolMessageWriter } from '../types';
 
+const TWO_CRLF = '\r\n\r\n';
+
 @injectable()
 export class ProtocolMessageWriter implements IProtocolMessageWriter {
     public write(stream: Socket | NodeJS.WriteStream, message: Message): void {
         const json = JSON.stringify(message);
-        const content = `Content-Length: ${Buffer.byteLength(json, 'utf8')}\r\n\r\n${json}`;
-        stream.write(content, 'utf8');
+        const length = Buffer.byteLength(json, 'utf8');
+
+        stream.write(`Content-Length: ${length.toString()}${TWO_CRLF}`, 'utf8');
+        stream.write(json, 'utf8');
     }
 }

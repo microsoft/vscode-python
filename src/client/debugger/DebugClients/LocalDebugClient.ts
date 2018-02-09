@@ -91,7 +91,7 @@ export class LocalDebugClient extends DebugClient {
         }
     }
     // tslint:disable-next-line:max-func-body-length member-ordering no-any
-    public async LaunchApplicationToDebug(dbgServer: IDebugServer, processErrored: (error: any) => void): Promise<any> {
+    public async LaunchApplicationToDebug(dbgServer: IDebugServer): Promise<any> {
         const pathUtils = new PathUtils(IS_WINDOWS);
         const currentProcess = new CurrentProcess();
         const helper = new DebugClientHelper(new EnvironmentVariablesService(pathUtils), pathUtils, currentProcess);

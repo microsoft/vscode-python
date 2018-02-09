@@ -2,37 +2,20 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { Readable, Transform } from 'stream';
+import { Readable } from 'stream';
 import { Logger } from 'vscode-debugadapter';
 import { IProtocolLogger } from '../types';
 
 @injectable()
 export class ProtocolLogger implements IProtocolLogger {
-    // private readonly inLoggerStream: Transform;
-    // private readonly outLoggerStream: Transform;
     private inputStream?: Readable;
     private outputStream?: Readable;
     private messagesToLog: string[] = [];
     private logger?: Logger.ILogger;
-    constructor() {
-        // this.inLoggerStream = new Transform({
-        //     transform: (chunk, encoding, callback) => {
-        //         this.logMessages(['From Client:', chunk.toString()]);
-        //         callback(null, chunk);
-        //     }
-        // });
-        // this.outLoggerStream = new Transform({
-        //     transform: (chunk, encoding, callback) => {
-        //         this.logMessages(['To Client:', chunk.toString()]);
-        //         callback(null, chunk);
-        //     }
-        // });
-
-    }
     public dispose() {
         if (this.inputStream) {
             this.inputStream.removeListener('data', this.fromDataCallbackHandler);
-            this.outputStream.removeListener('data', this.toDataCallbackHandler);
+            this.outputStream!.removeListener('data', this.toDataCallbackHandler);
             this.messagesToLog = [];
             this.inputStream = undefined;
             this.outputStream = undefined;
