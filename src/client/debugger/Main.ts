@@ -2,14 +2,14 @@
 "use strict";
 
 // This line should always be right on top.
-// tslint:disable-next-line:no-any
+// tslint:disable:no-any no-floating-promises
 if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
 import * as fs from "fs";
 import * as path from "path";
-import { DebugSession, Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable, LoggingDebugSession, logger } from "vscode-debugadapter";
+import { Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable, LoggingDebugSession, logger } from "vscode-debugadapter";
 import { ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DEBUGGER } from '../../client/telemetry/constants';
@@ -278,7 +278,7 @@ export class PythonDebugger extends LoggingDebugSession {
         const that = this;
 
         this.startDebugServer().then(dbgServer => {
-            return that.debugClient!.LaunchApplicationToDebug(dbgServer, that.unhandledProcessError.bind(that));
+            return that.debugClient!.LaunchApplicationToDebug(dbgServer);
         }).catch(error => {
             this.sendEvent(new OutputEvent(`${error}${'\n'}`, "stderr"));
             response.success = false;
@@ -288,18 +288,6 @@ export class PythonDebugger extends LoggingDebugSession {
             }
             this.sendErrorResponse(response, 200, errorMsg);
         });
-    }
-    protected unhandledProcessError(error: any) {
-        if (!error) { return; }
-        let errorMsg = typeof error === "string" ? error : ((error.message && error.message.length > 0) ? error.message : "");
-        if (isNotInstalledError(error)) {
-            errorMsg = `Failed to launch the Python Process, please validate the path '${this.launchArgs.pythonPath}'`;
-        }
-        if (errorMsg.length > 0) {
-            this.sendEvent(new OutputEvent(`${errorMsg}${'\n'}`, "stderr"));
-        }
-        this.terminateEventSent = true;
-        this.sendEvent(new TerminatedEvent());
     }
     protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments) {
         if ((args as any).diagnosticLogging === true) {
@@ -315,7 +303,7 @@ export class PythonDebugger extends LoggingDebugSession {
         this.canStartDebugger().then(() => {
             return this.startDebugServer();
         }).then(dbgServer => {
-            return that.debugClient!.LaunchApplicationToDebug(dbgServer, () => { });
+            return that.debugClient!.LaunchApplicationToDebug(dbgServer);
         }).catch(error => {
             this.sendEvent(new OutputEvent(`${error}${'\n'}`, "stderr"));
             this.sendErrorResponse(that.entryResponse!, 2000, error);
