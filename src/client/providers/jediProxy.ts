@@ -6,8 +6,9 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as pidusage from 'pidusage';
-import * as vscode from 'vscode';
+import { setInterval } from 'timers';
 import { Uri } from 'vscode';
+import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { debounce, swallowExceptions } from '../common/decorators';
 import '../common/extensions';
@@ -152,8 +153,12 @@ export class JediProxy implements vscode.Disposable {
         this.logger = serviceContainer.get<ILogger>(ILogger);
         this.pythonSettings.on('change', () => this.pythonSettingsChangeHandler());
         this.initialized = createDeferred<void>();
-        // tslint:disable-next-line:no-empty
         this.startLanguageServer().doNotWait(() => this.initialized.resolve());
+
+        // Check memory footprint periodically. Do not check on every request due to
+        // the performance impact. See https://github.com/soyuka/pidusage - on Windows
+        // it is using wmic which means spawning cmd.exe process on every request.
+        setInterval(() => this.checkJediMemoryFootprint(), 2000);
     }
 
     private static getProperty<T>(o: object, name: string): T {
@@ -176,14 +181,6 @@ export class JediProxy implements vscode.Disposable {
         if (!this.proc) {
             return Promise.reject(new Error('Python proc not initialized'));
         }
-
-        pidusage.stat(this.proc.pid, async (err, result) => {
-            const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 512), 8192);
-            if (result.memory > limit * 1024 * 1024) {
-                this.logger.logWarning(`IntelliSense process memory consumption exceeded limit of ${limit} MB and process will be restarted.\nThe limit is controlled by the 'python.jediMemoryLimit' setting.`);
-                await this.restartLanguageServer();
-            }
-        });
 
         const executionCmd = <IExecutionCommand<T>>cmd;
         const payload = this.createPayload(executionCmd);
@@ -215,6 +212,20 @@ export class JediProxy implements vscode.Disposable {
                 this.handleError('spawnProcess', ex);
             });
     }
+
+    private checkJediMemoryFootprint() {
+        if (!this.proc || this.proc.killed) {
+            return;
+        }
+        pidusage.stat(this.proc.pid, async (err, result) => {
+            const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 1024), 8192);
+            if (result.memory > limit * 1024 * 1024) {
+                this.logger.logWarning(`IntelliSense process memory consumption exceeded limit of ${limit} MB and process will be restarted.\nThe limit is controlled by the 'python.jediMemoryLimit' setting.`);
+                await this.restartLanguageServer();
+            }
+        });
+    }
+
     @swallowExceptions('JediProxy')
     private async pythonSettingsChangeHandler() {
         if (this.lastKnownPythonInterpreter === this.pythonSettings.pythonPath) {
