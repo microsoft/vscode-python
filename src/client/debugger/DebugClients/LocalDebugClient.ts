@@ -48,7 +48,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     }
 
     public CreateDebugServer(pythonProcess?: IPythonProcess, serviceContainer?: IServiceContainer): BaseDebugServer {
-        if ((this.args as LaunchRequestArguments).type === 'pythonExperimental') {
+        if (this.args.type === 'pythonExperimental') {
             this.debugServer = new LocalDebugServerV2(this.debugSession, this.args, serviceContainer!);
         } else {
             this.pythonProcess = pythonProcess!;

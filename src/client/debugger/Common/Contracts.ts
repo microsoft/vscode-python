@@ -45,7 +45,7 @@ export interface ExceptionHandling {
 }
 
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
-    type?: string;
+    type?: 'python' | 'pythonExperimental';
     /** An absolute path to the program to debug. */
     module?: string;
     program: string;
