@@ -31,12 +31,12 @@ export class LocalDebugServerV2 extends BaseDebugServer {
     }
 
     public async Start(): Promise<IDebugServer> {
-        // This is required to prevent the launcher from aborting if the PTVSD process spits out any errors in stderr stream.
-        this.isRunning = true;
         const host = typeof this.args.host === 'string' && this.args.host.trim().length > 0 ? this.args.host!.trim() : 'localhost';
         const socketServer = this.socketServer = this.serviceContainer.get<ISocketServer>(ISocketServer);
         const port = await socketServer.Start({ port: this.args.port, host });
         socketServer.client.then(socket => {
+            // This is required to prevent the launcher from aborting if the PTVSD process spits out any errors in stderr stream.
+            this.isRunning = true;
             this.debugClientConnected.resolve(true);
             this.clientSocket.resolve(socket);
         }).catch(ex => {
