@@ -354,8 +354,6 @@ suite('Standard Debugging - Misc tests', () => {
         await debugClient.assertStoppedLocation('exception', pauseLocation);
     });
     test('Test multi-threaded debugging', async () => {
-        const threadIdPromise = debugClient.waitForEvent('thread');
-
         await Promise.all([
             debugClient.configurationSequence(),
             debugClient.launch(buildLauncArgs('multiThread.py', false)),
@@ -370,31 +368,37 @@ suite('Standard Debugging - Misc tests', () => {
         });
 
         // hit breakpoint.
-        const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
-        const stackFramesPromise = debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
-        await debugClient.continueRequest({ threadId });
-        await stackFramesPromise;
+        await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
 
         const threads = await debugClient.threadsRequest();
         expect(threads.body.threads).of.lengthOf(2, 'incorrect number of threads');
+    });
+    test('Test stack frames', async () => {
+        await Promise.all([
+            debugClient.configurationSequence(),
+            debugClient.launch(buildLauncArgs('stackFrame.py', false)),
+            debugClient.waitForEvent('initialized')
+        ]);
+        const pythonFile = path.join(debugFilesPath, 'stackFrame.py');
+        const breakpointLocation = { path: pythonFile, column: 0, line: 5 };
+        await debugClient.setBreakpointsRequest({
+            lines: [breakpointLocation.line],
+            breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
+            source: { path: breakpointLocation.path }
+        });
 
-        for (const thread of threads.body.threads) {
-            const stackframes = await debugClient.stackTraceRequest({ threadId: thread.id });
-            if (thread.name === 'MainThread') {
-                expect(stackframes.body.stackFrames[0].line).to.be.equal(11, 'incorrect line number for main thread stack');
-                expect(stackframes.body.stackFrames[0].source!.path).to.be.equal(pythonFile, 'incorrect source file for main thread stack');
+        // hit breakpoint.
+        const stackframes = await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
 
-                expect(stackframes.body.stackFrames[1].line).to.be.equal(14, 'incorrect line number for main thread stack');
-                expect(stackframes.body.stackFrames[1].source!.path).to.be.equal(pythonFile, 'incorrect source file for main thread stack');
-            } else {
-                expect(thread.name).to.be.equal('foo', 'incorrect name for thread \'foo\'');
+        expect(stackframes.body.stackFrames[0].line).to.be.equal(5);
+        expect(stackframes.body.stackFrames[0].source!.path).to.be.equal(pythonFile);
+        expect(stackframes.body.stackFrames[0].name).to.be.equal('foo');
 
-                expect(stackframes.body.stackFrames[0].line).to.be.equal(11, 'incorrect line number for foo thread stack');
-                expect(stackframes.body.stackFrames[0].source!.path).to.be.equal(pythonFile, 'incorrect source file for foo thread stack');
+        expect(stackframes.body.stackFrames[1].line).to.be.equal(8);
+        expect(stackframes.body.stackFrames[1].source!.path).to.be.equal(pythonFile);
+        expect(stackframes.body.stackFrames[1].name).to.be.equal('bar');
 
-                expect(stackframes.body.stackFrames[1].line).to.be.equal(13, 'incorrect line number for foo thread stack');
-                expect(stackframes.body.stackFrames[1].source!.path).to.be.equal(pythonFile, 'incorrect source file for foo thread stack');
-            }
-        }
+        expect(stackframes.body.stackFrames[2].line).to.be.equal(10);
+        expect(stackframes.body.stackFrames[2].source!.path).to.be.equal(pythonFile);
     });
 });
