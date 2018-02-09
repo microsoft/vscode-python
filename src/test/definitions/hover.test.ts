@@ -157,8 +157,8 @@ suite('Hover Definition', () => {
                 'share state.' + EOL +
                 '' + EOL +
                 'Class Random can also be subclassed if you want to use a different basic' + EOL +
-                'generator of your own devising: in that case, override the following' + EOL + EOL +
-                '`methods` random(), seed(), getstate(), and setstate().' + EOL + EOL +
+                'generator of your own devising: in that case, override the following' + EOL +
+                'methods: random(), seed(), getstate(), and setstate().' + EOL +
                 'Optionally, implement a getrandbits() method so that randrange()' + EOL +
                 'can cover arbitrarily large ranges.';
 

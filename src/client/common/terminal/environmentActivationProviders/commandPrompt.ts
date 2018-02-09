@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
 import { IPlatformService } from '../../platform/types';
@@ -29,9 +28,9 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
         }
 
         if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.bat')) {
-            return [`${scriptFile.toCommandArgument()}`];
+            return [scriptFile.fileToCommandArgument()];
         } else if ((targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore) && scriptFile.endsWith('activate.ps1')) {
-            return [`& ${scriptFile.toCommandArgument()}`];
+            return [`& ${scriptFile.fileToCommandArgument()}`];
         } else if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.ps1')) {
             // lets not try to run the powershell file from command prompt (user may not have powershell)
             return [];
@@ -40,7 +39,7 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
             if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
                 // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
                 const powershellExe = targetShell === TerminalShellType.powershell ? 'powershell' : 'pwsh';
-                const activationCmd = `${scriptFile.toCommandArgument()}`;
+                const activationCmd = scriptFile.fileToCommandArgument();
                 return [
                     `& cmd /k "${activationCmd} & ${powershellExe}"`
                 ];
