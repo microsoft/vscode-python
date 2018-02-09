@@ -76,4 +76,11 @@ suite('Language.Tokenizer', () => {
             assert.equal(tokens.getItemAt(i).type, TokenType.Comment);
         }
     });
+    test('Unknown token', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('.');
+        assert.equal(tokens.count, 1);
+
+        assert.equal(tokens.getItemAt(0).type, TokenType.Unknown);
+    });
 });

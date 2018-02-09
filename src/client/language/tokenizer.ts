@@ -300,7 +300,7 @@ export class Tokenizer implements ITokenizer {
                 break;
 
             default:
-                break;
+                return false;
         }
         this.tokens.push(new Token(TokenType.Operator, this.cs.position, length));
         this.cs.advance(length);
