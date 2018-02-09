@@ -42,7 +42,7 @@ export class PythonDebugger extends LoggingDebugSession {
     private registeredBreakpointsByFileName: Map<string, IPythonBreakpoint[]>;
     private debuggerLoaded: Promise<any>;
     private debuggerLoadedPromiseResolve: () => void;
-    private debugClient?: DebugClient;
+    private debugClient?: DebugClient<{}>;
     private configurationDone: Promise<any>;
     private configurationDonePromiseResolve?: () => void;
     private lastException?: IPythonException;

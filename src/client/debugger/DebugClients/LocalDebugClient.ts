@@ -29,7 +29,7 @@ enum DebugServerStatus {
     NotRunning = 3
 }
 
-export class LocalDebugClient extends DebugClient {
+export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     protected pyProc: child_process.ChildProcess | undefined;
     protected pythonProcess: IPythonProcess;
     protected debugServer: BaseDebugServer | undefined;
@@ -148,7 +148,7 @@ export class LocalDebugClient extends DebugClient {
         });
         proc.stderr.setEncoding('utf8');
         proc.stderr.on('data', error => {
-            if ((this.args as LaunchRequestArguments).type === 'pythonExperimental') {
+            if (this.args.type === 'pythonExperimental') {
                 return;
             }
             // We generally don't need to display the errors as stderr output is being captured by debugger

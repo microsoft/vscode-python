@@ -11,9 +11,9 @@ export enum DebugType {
     Remote,
     RunLocal
 }
-export abstract class DebugClient extends EventEmitter {
+export abstract class DebugClient<T> extends EventEmitter {
     protected debugSession: DebugSession;
-    constructor(protected args: any, debugSession: DebugSession) {
+    constructor(protected args: T, debugSession: DebugSession) {
         super();
         this.debugSession = debugSession;
     }

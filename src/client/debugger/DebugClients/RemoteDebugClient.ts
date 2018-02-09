@@ -1,10 +1,10 @@
 import { DebugSession } from 'vscode-debugadapter';
-import { IPythonProcess } from '../Common/Contracts';
+import { AttachRequestArguments, IPythonProcess } from '../Common/Contracts';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { RemoteDebugServer } from '../DebugServers/RemoteDebugServer';
 import { DebugClient, DebugType } from './DebugClient';
 
-export class RemoteDebugClient extends DebugClient {
+export class RemoteDebugClient extends DebugClient<AttachRequestArguments> {
     private pythonProcess: IPythonProcess;
     private debugServer?: BaseDebugServer;
     // tslint:disable-next-line:no-any

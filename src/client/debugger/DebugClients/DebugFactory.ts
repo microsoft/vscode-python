@@ -6,13 +6,13 @@ import { LocalDebugClient } from './LocalDebugClient';
 import { NonDebugClient } from './NonDebugClient';
 import { RemoteDebugClient } from './RemoteDebugClient';
 
-export function CreateLaunchDebugClient(launchRequestOptions: LaunchRequestArguments, debugSession: DebugSession, canLaunchTerminal: boolean): DebugClient {
+export function CreateLaunchDebugClient(launchRequestOptions: LaunchRequestArguments, debugSession: DebugSession, canLaunchTerminal: boolean): DebugClient<{}> {
     if (launchRequestOptions.noDebug === true) {
         return new NonDebugClient(launchRequestOptions, debugSession, canLaunchTerminal, new NoDebugLauncherScriptProvider());
     }
     const launchScriptProvider = launchRequestOptions.type === 'pythonExperimental' ? new DebuggerV2LauncherScriptProvider() : new DebuggerLauncherScriptProvider();
     return new LocalDebugClient(launchRequestOptions, debugSession, canLaunchTerminal, launchScriptProvider);
 }
-export function CreateAttachDebugClient(attachRequestOptions: AttachRequestArguments, debugSession: DebugSession): DebugClient {
+export function CreateAttachDebugClient(attachRequestOptions: AttachRequestArguments, debugSession: DebugSession): DebugClient<{}> {
     return new RemoteDebugClient(attachRequestOptions, debugSession);
 }
