@@ -138,10 +138,12 @@ export class PythonDebugger extends DebugSession {
     }
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
         const body = response.body!;
+
         body.supportsExceptionInfoRequest = true;
         body.supportsConfigurationDoneRequest = true;
         body.supportsConditionalBreakpoints = true;
         body.supportsSetVariable = true;
+        body.supportsExceptionOptions = true;
         body.exceptionBreakpointFilters = [
             {
                 filter: 'raised',
