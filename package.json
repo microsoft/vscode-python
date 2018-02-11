@@ -902,24 +902,6 @@
 				"runtime": "node",
 				"configurationSnippets": [
 					{
-						"label": "Python Experimental",
-						"description": "%python.snippet.launch.standard.description%",
-						"body": {
-							"name": "Python Experimental: Current File",
-							"type": "pythonExperimental",
-							"request": "launch",
-							"stopOnEntry": true,
-							"pythonPath": "^\"\\${config:python.pythonPath}\"",
-							"program": "^\"\\${file}\"",
-							"cwd": "^\"\\${workspaceFolder}\"",
-							"env": {},
-							"envFile": "^\"\\${workspaceFolder}/.env\"",
-							"debugOptions": [
-								"RedirectOutput"
-							]
-						}
-					},
-					{
 						"label": "Python Experimental: Terminal (integrated)",
 						"description": "%python.snippet.launch.terminal.description%",
 						"body": {
@@ -987,12 +969,11 @@
 							},
 							"console": {
 								"enum": [
-									"none",
 									"integratedTerminal",
 									"externalTerminal"
 								],
 								"description": "Where to launch the debug target: internal console, integrated terminal, or external terminal.",
-								"default": "none"
+								"default": "integratedTerminal"
 							},
 							"cwd": {
 								"type": "string",
