@@ -66,7 +66,9 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
             this.debugServer!.Stop();
             this.debugServer = undefined;
         }
-
+        if (this.args.type === 'pythonExperimental' && this.pyProc) {
+            this.pyProc.kill();
+        }
         if (this.pyProc) {
             try {
                 this.pyProc!.send('EXIT');

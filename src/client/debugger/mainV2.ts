@@ -19,6 +19,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { createDeferred, isNotInstalledError } from '../common/helpers';
 import { IServiceContainer } from '../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from './Common/Contracts';
+import { DebugClient } from './DebugClients/DebugClient';
 import { CreateLaunchDebugClient } from './DebugClients/DebugFactory';
 import { BaseDebugServer } from './DebugServers/BaseDebugServer';
 import { initializeIoc } from './serviceRegistry';
@@ -26,6 +27,7 @@ import { IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtoco
 
 export class PythonDebugger extends DebugSession {
     public debugServer?: BaseDebugServer;
+    public debugClient?: DebugClient<{}>;
     public client = createDeferred<Socket>();
     private supportsRunInTerminalRequest: boolean;
     constructor(private readonly serviceContainer: IServiceContainer,
@@ -78,9 +80,7 @@ export class PythonDebugger extends DebugSession {
             session.setRunAsServer(isServerMode);
 
             function dispose() {
-                if (session) {
-                    session.shutdown();
-                }
+                session.shutdown();
             }
             outputProtocolParser.once('event_terminated', dispose);
             outputProtocolParser.once('response_disconnect', dispose);
@@ -133,6 +133,10 @@ export class PythonDebugger extends DebugSession {
         if (this.debugServer) {
             this.debugServer.Stop();
             this.debugServer = undefined;
+        }
+        if (this.debugClient) {
+            this.debugClient.Stop();
+            this.debugClient = undefined;
         }
         super.shutdown();
     }
