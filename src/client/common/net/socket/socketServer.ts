@@ -1,13 +1,23 @@
 import { EventEmitter } from 'events';
+import { injectable } from 'inversify';
 import * as net from 'net';
-import { createDeferred } from '../../helpers';
+import { createDeferred, Deferred } from '../../helpers';
+import { ISocketServer } from '../../types';
 
-export class SocketServer extends EventEmitter {
+@injectable()
+export class SocketServer extends EventEmitter implements ISocketServer {
     private socketServer: net.Server | undefined;
+    private clientSocket: Deferred<net.Socket>;
+    public get client(): Promise<net.Socket> {
+        return this.clientSocket.promise;
+    }
     constructor() {
         super();
+        this.clientSocket = createDeferred<net.Socket>();
     }
-
+    public dispose() {
+        this.Stop();
+    }
     public Stop() {
         if (!this.socketServer) { return; }
         try {
@@ -37,6 +47,9 @@ export class SocketServer extends EventEmitter {
     }
 
     private connectionListener(client: net.Socket) {
+        if (!this.clientSocket.completed) {
+            this.clientSocket.resolve(client);
+        }
         client.on('close', () => {
             this.emit('close', client);
         });

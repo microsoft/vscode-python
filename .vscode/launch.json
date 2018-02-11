@@ -34,6 +34,22 @@
             "preLaunchTask": "Compile"
         },
         {
+            "name": "Launch Experimental Debugger as debugServer", // https://code.visualstudio.com/docs/extensions/example-debuggers
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/out/client/debugger/mainV2.js",
+            "stopOnEntry": false,
+            "args": [
+                "--server=4711"
+            ],
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/client/**/*.js"
+            ],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Compile"
+        },
+        {
             "name": "Launch Tests",
             "type": "extensionHost",
             "request": "launch",

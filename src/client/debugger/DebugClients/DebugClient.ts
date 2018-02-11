@@ -4,19 +4,20 @@ import { BaseDebugServer } from "../DebugServers/BaseDebugServer";
 import { IPythonProcess, IDebugServer } from "../Common/Contracts";
 import { DebugSession } from "vscode-debugadapter";
 import { EventEmitter } from 'events';
+import { IServiceContainer } from "../../ioc/types";
 
 export enum DebugType {
     Local,
     Remote,
     RunLocal
 }
-export abstract class DebugClient extends EventEmitter {
+export abstract class DebugClient<T> extends EventEmitter {
     protected debugSession: DebugSession;
-    constructor(protected args: any, debugSession: DebugSession) {
+    constructor(protected args: T, debugSession: DebugSession) {
         super();
         this.debugSession = debugSession;
     }
-    public abstract CreateDebugServer(pythonProcess: IPythonProcess): BaseDebugServer;
+    public abstract CreateDebugServer(pythonProcess?: IPythonProcess, serviceContainer?: IServiceContainer): BaseDebugServer ;
     public get DebugType(): DebugType {
         return DebugType.Local;
     }
@@ -24,7 +25,7 @@ export abstract class DebugClient extends EventEmitter {
     public Stop() {
     }
 
-    public LaunchApplicationToDebug(dbgServer: IDebugServer, processErrored: (error: any) => void): Promise<any> {
+    public LaunchApplicationToDebug(dbgServer: IDebugServer): Promise<any> {
         return Promise.resolve();
     }
 }

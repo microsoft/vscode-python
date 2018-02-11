@@ -2,14 +2,14 @@
 "use strict";
 
 // This line should always be right on top.
-// tslint:disable-next-line:no-any
+// tslint:disable:no-any no-floating-promises
 if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
 import * as fs from "fs";
 import * as path from "path";
-import { DebugSession, Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable } from "vscode-debugadapter";
+import { Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable, LoggingDebugSession, logger } from "vscode-debugadapter";
 import { ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DEBUGGER } from '../../client/telemetry/constants';
@@ -25,6 +25,7 @@ import { BaseDebugServer } from "./DebugServers/BaseDebugServer";
 import { PythonProcess } from "./PythonProcess";
 import { IS_WINDOWS } from './Common/Utils';
 import { sendPerformanceTelemetry, capturePerformanceTelemetry, PerformanceTelemetryCondition } from "./Common/telemetry";
+import { LogLevel } from "vscode-debugadapter/lib/logger";
 
 const CHILD_ENUMEARATION_TIMEOUT = 5000;
 
@@ -33,7 +34,7 @@ interface IDebugVariable {
     evaluateChildren?: Boolean;
 }
 
-export class PythonDebugger extends DebugSession {
+export class PythonDebugger extends LoggingDebugSession {
     private _variableHandles: Handles<IDebugVariable>;
     private _pythonStackFrames: Handles<IPythonStackFrame>;
     private breakPointCounter: number = 0;
@@ -41,14 +42,14 @@ export class PythonDebugger extends DebugSession {
     private registeredBreakpointsByFileName: Map<string, IPythonBreakpoint[]>;
     private debuggerLoaded: Promise<any>;
     private debuggerLoadedPromiseResolve: () => void;
-    private debugClient?: DebugClient;
+    private debugClient?: DebugClient<{}>;
     private configurationDone: Promise<any>;
     private configurationDonePromiseResolve?: () => void;
     private lastException?: IPythonException;
     private _supportsRunInTerminalRequest: boolean;
     private terminateEventSent: boolean;
     public constructor(debuggerLinesStartAt1: boolean, isServer: boolean) {
-        super(debuggerLinesStartAt1, isServer === true);
+        super(path.join(__dirname, '..', '..', '..', 'debug.log'), debuggerLinesStartAt1, isServer === true);
         this._variableHandles = new Handles<IDebugVariable>();
         this._pythonStackFrames = new Handles<IPythonStackFrame>();
         this.registeredBreakpoints = new Map<number, IPythonBreakpoint>();
@@ -210,6 +211,9 @@ export class PythonDebugger extends DebugSession {
     }
     @capturePerformanceTelemetry('launch')
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
+        if (args.diagnosticLogging === true) {
+            logger.setup(LogLevel.Verbose, args.logToFile === true);
+        }
         // Some versions may still exist with incorrect launch.json values
         const setting = '${config.python.pythonPath}';
         if (args.pythonPath === setting) {
@@ -274,7 +278,7 @@ export class PythonDebugger extends DebugSession {
         const that = this;
 
         this.startDebugServer().then(dbgServer => {
-            return that.debugClient!.LaunchApplicationToDebug(dbgServer, that.unhandledProcessError.bind(that));
+            return that.debugClient!.LaunchApplicationToDebug(dbgServer);
         }).catch(error => {
             this.sendEvent(new OutputEvent(`${error}${'\n'}`, "stderr"));
             response.success = false;
@@ -285,19 +289,10 @@ export class PythonDebugger extends DebugSession {
             this.sendErrorResponse(response, 200, errorMsg);
         });
     }
-    protected unhandledProcessError(error: any) {
-        if (!error) { return; }
-        let errorMsg = typeof error === "string" ? error : ((error.message && error.message.length > 0) ? error.message : "");
-        if (isNotInstalledError(error)) {
-            errorMsg = `Failed to launch the Python Process, please validate the path '${this.launchArgs.pythonPath}'`;
-        }
-        if (errorMsg.length > 0) {
-            this.sendEvent(new OutputEvent(`${errorMsg}${'\n'}`, "stderr"));
-        }
-        this.terminateEventSent = true;
-        this.sendEvent(new TerminatedEvent());
-    }
     protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments) {
+        if ((args as any).diagnosticLogging === true) {
+            logger.setup(LogLevel.Verbose, (args as any).logToFile === true);
+        }
         this.sendEvent(new TelemetryEvent(DEBUGGER, { trigger: 'attach' }));
 
         this.attachArgs = args;
@@ -308,7 +303,7 @@ export class PythonDebugger extends DebugSession {
         this.canStartDebugger().then(() => {
             return this.startDebugServer();
         }).then(dbgServer => {
-            return that.debugClient!.LaunchApplicationToDebug(dbgServer, () => { });
+            return that.debugClient!.LaunchApplicationToDebug(dbgServer);
         }).catch(error => {
             this.sendEvent(new OutputEvent(`${error}${'\n'}`, "stderr"));
             this.sendErrorResponse(that.entryResponse!, 2000, error);
@@ -741,4 +736,4 @@ export class PythonDebugger extends DebugSession {
     }
 }
 
-DebugSession.run(PythonDebugger);
+LoggingDebugSession.run(PythonDebugger);

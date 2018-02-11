@@ -385,7 +385,8 @@
                             "console": "integratedTerminal",
                             "env": {},
                             "envFile": "^\"\\${workspaceFolder}/.env\"",
-                            "debugOptions": []
+                            "debugOptions": [],
+                            "internalConsoleOptions": "neverOpen"
                         }
                     },
                     {
@@ -402,7 +403,8 @@
                             "console": "externalTerminal",
                             "env": {},
                             "envFile": "^\"\\${workspaceFolder}/.env\"",
-                            "debugOptions": []
+                            "debugOptions": [],
+                            "internalConsoleOptions": "neverOpen"
                         }
                     },
                     {
@@ -740,7 +742,8 @@
                         "console": "integratedTerminal",
                         "env": {},
                         "envFile": "${workspaceFolder}/.env",
-                        "debugOptions": []
+                        "debugOptions": [],
+                        "internalConsoleOptions": "neverOpen"
                     },
                     {
                         "name": "Python: Terminal (external)",
@@ -753,7 +756,8 @@
                         "console": "externalTerminal",
                         "env": {},
                         "envFile": "${workspaceFolder}/.env",
-                        "debugOptions": []
+                        "debugOptions": [],
+                        "internalConsoleOptions": "neverOpen"
                     },
                     {
                         "name": "Python: Django",
@@ -882,6 +886,161 @@
                         "debugOptions": [
                             "RedirectOutput"
                         ]
+                    }
+                ]
+            },
+            {
+                "type": "pythonExperimental",
+                "label": "Python Experimental",
+                "languages": [
+                    "python"
+                ],
+                "enableBreakpointsFor": {
+                    "languageIds": [
+                        "python",
+                        "html"
+                    ]
+                },
+                "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
+                "program": "./out/client/debugger/mainV2.js",
+                "runtime": "node",
+                "configurationSnippets": [
+                    {
+                        "label": "Python Experimental: Terminal (integrated)",
+                        "description": "%python.snippet.launch.terminal.description%",
+                        "body": {
+                            "name": "Integrated Terminal/Console",
+                            "type": "pythonExperimental",
+                            "request": "launch",
+                            "stopOnEntry": true,
+                            "pythonPath": "^\"\\${config:python.pythonPath}\"",
+                            "program": "^\"\\${file}\"",
+                            "cwd": "",
+                            "console": "integratedTerminal",
+                            "env": {},
+                            "envFile": "^\"\\${workspaceFolder}/.env\"",
+                            "debugOptions": [],
+                            "internalConsoleOptions": "neverOpen"
+                        }
+                    },
+                    {
+                        "label": "Python Experimental: Terminal (external)",
+                        "description": "%python.snippet.launch.externalTerminal.description%",
+                        "body": {
+                            "name": "External Terminal/Console",
+                            "type": "pythonExperimental",
+                            "request": "launch",
+                            "stopOnEntry": true,
+                            "pythonPath": "^\"\\${config:python.pythonPath}\"",
+                            "program": "^\"\\${file}\"",
+                            "cwd": "",
+                            "console": "externalTerminal",
+                            "env": {},
+                            "envFile": "^\"\\${workspaceFolder}/.env\"",
+                            "debugOptions": [],
+                            "internalConsoleOptions": "neverOpen"
+                        }
+                    }
+                ],
+                "configurationAttributes": {
+                    "launch": {
+                        "properties": {
+                            "program": {
+                                "type": "string",
+                                "description": "Absolute path to the program.",
+                                "default": "${file}"
+                            },
+                            "pythonPath": {
+                                "type": "string",
+                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings.json",
+                                "default": "${config:python.pythonPath}"
+                            },
+                            "args": {
+                                "type": "array",
+                                "description": "Command line arguments passed to the program",
+                                "default": [],
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "Automatically stop after launch.",
+                                "default": false
+                            },
+                            "console": {
+                                "enum": [
+                                    "integratedTerminal",
+                                    "externalTerminal"
+                                ],
+                                "description": "Where to launch the debug target: internal console, integrated terminal, or external terminal.",
+                                "default": "integratedTerminal"
+                            },
+                            "cwd": {
+                                "type": "string",
+                                "description": "Absolute path to the working directory of the program being debugged. Default is the root directory of the file (leave empty).",
+                                "default": ""
+                            },
+                            "debugOptions": {
+                                "type": "array",
+                                "description": "Advanced options, view read me for further details.",
+                                "items": {
+                                    "type": "string",
+                                    "enum": [
+                                        "Sudo"
+                                    ]
+                                },
+                                "default": []
+                            },
+                            "env": {
+                                "type": "object",
+                                "description": "Environment variables defined as a key value pair. Property ends up being the Environment Variable and the value of the property ends up being the value of the Env Variable.",
+                                "default": {}
+                            },
+                            "envFile": {
+                                "type": "string",
+                                "description": "Absolute path to a file containing environment variable definitions.",
+                                "default": ""
+                            },
+                            "port": {
+                                "type": "number",
+                                "description": "Debug port (default is 0, resulting in the use of a dynamic port).",
+                                "default": 0
+                            },
+                            "host": {
+                                "type": "string",
+                                "description": "IP address of the of the local debug server (default is localhost).",
+                                "default": "localhost"
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "name": "Python Experimental: Current File (Integrated Terminal)",
+                        "type": "pythonExperimental",
+                        "request": "launch",
+                        "pythonPath": "${config:python.pythonPath}",
+                        "program": "${file}",
+                        "cwd": "",
+                        "console": "integratedTerminal",
+                        "env": {},
+                        "envFile": "${workspaceFolder}/.env",
+                        "debugOptions": [],
+                        "internalConsoleOptions": "neverOpen"
+                    },
+                    {
+                        "name": "Python Experimental: Current File (External Terminal)",
+                        "type": "pythonExperimental",
+                        "request": "launch",
+                        "pythonPath": "${config:python.pythonPath}",
+                        "program": "${file}",
+                        "cwd": "",
+                        "console": "externalTerminal",
+                        "env": {},
+                        "envFile": "${workspaceFolder}/.env",
+                        "debugOptions": [],
+                        "internalConsoleOptions": "neverOpen"
                     }
                 ]
             }
@@ -1663,5 +1822,10 @@
         "typescript-formatter": "^6.0.0",
         "vscode": "^1.1.5",
         "vscode-debugadapter-testsupport": "^1.25.0"
+    },
+    "__metadata": {
+        "id": "f1f59ae4-9318-4f3c-a9b5-81b2eaa5f8a5",
+        "publisherDisplayName": "Microsoft",
+        "publisherId": "998b010b-e2af-44a5-a6cd-0b5fd3b9b6f8"
     }
 }

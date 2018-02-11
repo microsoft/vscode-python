@@ -7,10 +7,13 @@ import { open } from '../../common/open';
 import { PathUtils } from '../../common/platform/pathUtils';
 import { CurrentProcess } from '../../common/process/currentProcess';
 import { EnvironmentVariablesService } from '../../common/variables/environment';
-import { IDebugServer, IPythonProcess } from '../Common/Contracts';
+import { IServiceContainer } from '../../ioc/types';
+import { IDebugServer, IPythonProcess, LaunchRequestArguments } from '../Common/Contracts';
 import { IS_WINDOWS } from '../Common/Utils';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { LocalDebugServer } from '../DebugServers/LocalDebugServer';
+import { LocalDebugServerV2 } from '../DebugServers/LocalDebugServerV2';
+import { IDebugLauncherScriptProvider } from '../types';
 import { DebugClient, DebugType } from './DebugClient';
 import { DebugClientHelper } from './helper';
 
@@ -26,7 +29,7 @@ enum DebugServerStatus {
     NotRunning = 3
 }
 
-export class LocalDebugClient extends DebugClient {
+export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     protected pyProc: child_process.ChildProcess | undefined;
     protected pythonProcess: IPythonProcess;
     protected debugServer: BaseDebugServer | undefined;
@@ -40,13 +43,17 @@ export class LocalDebugClient extends DebugClient {
         return DebugServerStatus.Unknown;
     }
     // tslint:disable-next-line:no-any
-    constructor(args: any, debugSession: DebugSession, private canLaunchTerminal: boolean) {
+    constructor(args: LaunchRequestArguments, debugSession: DebugSession, private canLaunchTerminal: boolean, private launcherScriptProvider: IDebugLauncherScriptProvider) {
         super(args, debugSession);
     }
 
-    public CreateDebugServer(pythonProcess: IPythonProcess): BaseDebugServer {
-        this.pythonProcess = pythonProcess;
-        this.debugServer = new LocalDebugServer(this.debugSession, this.pythonProcess, this.args);
+    public CreateDebugServer(pythonProcess?: IPythonProcess, serviceContainer?: IServiceContainer): BaseDebugServer {
+        if (this.args.type === 'pythonExperimental') {
+            this.debugServer = new LocalDebugServerV2(this.debugSession, this.args, serviceContainer!);
+        } else {
+            this.pythonProcess = pythonProcess!;
+            this.debugServer = new LocalDebugServer(this.debugSession, this.pythonProcess!, this.args);
+        }
         return this.debugServer;
     }
 
@@ -59,7 +66,9 @@ export class LocalDebugClient extends DebugClient {
             this.debugServer!.Stop();
             this.debugServer = undefined;
         }
-
+        if (this.args.type === 'pythonExperimental' && this.pyProc) {
+            this.pyProc.kill();
+        }
         if (this.pyProc) {
             try {
                 this.pyProc!.send('EXIT');
@@ -76,11 +85,6 @@ export class LocalDebugClient extends DebugClient {
             this.pyProc = undefined;
         }
     }
-    protected getLauncherFilePath(): string {
-        const currentFileName = module.filename;
-        const ptVSToolsPath = path.join(path.dirname(currentFileName), '..', '..', '..', '..', 'pythonFiles', 'PythonTools');
-        return path.join(ptVSToolsPath, 'visualstudio_py_launcher.py');
-    }
     // tslint:disable-next-line:no-any
     private displayError(error: any) {
         const errorMsg = typeof error === 'string' ? error : ((error.message && error.message.length > 0) ? error.message : '');
@@ -89,7 +93,7 @@ export class LocalDebugClient extends DebugClient {
         }
     }
     // tslint:disable-next-line:max-func-body-length member-ordering no-any
-    public async LaunchApplicationToDebug(dbgServer: IDebugServer, processErrored: (error: any) => void): Promise<any> {
+    public async LaunchApplicationToDebug(dbgServer: IDebugServer): Promise<any> {
         const pathUtils = new PathUtils(IS_WINDOWS);
         const currentProcess = new CurrentProcess();
         const helper = new DebugClientHelper(new EnvironmentVariablesService(pathUtils), pathUtils, currentProcess);
@@ -105,7 +109,7 @@ export class LocalDebugClient extends DebugClient {
             if (typeof this.args.pythonPath === 'string' && this.args.pythonPath.trim().length > 0) {
                 pythonPath = this.args.pythonPath;
             }
-            const ptVSToolsFilePath = this.getLauncherFilePath();
+            const ptVSToolsFilePath = this.launcherScriptProvider.getLauncherFilePath();
             const launcherArgs = this.buildLauncherArguments();
 
             const args = [ptVSToolsFilePath, processCwd, dbgServer.port.toString(), '34806ad9-833a-4524-8cd6-18ca4aa74f14'].concat(launcherArgs);
@@ -146,6 +150,9 @@ export class LocalDebugClient extends DebugClient {
         });
         proc.stderr.setEncoding('utf8');
         proc.stderr.on('data', error => {
+            if (this.args.type === 'pythonExperimental') {
+                return;
+            }
             // We generally don't need to display the errors as stderr output is being captured by debugger
             // and it gets sent out to the debug client.
 
