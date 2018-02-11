@@ -165,7 +165,7 @@ export class PythonDebugger extends DebugSession {
         this.sendResponse(response);
     }
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
-        const enableLogging = (args as any).logToFile === true;
+        const enableLogging = args.logToFile === true;
         this.emit('_py_enable_protocol_logging', enableLogging);
 
         this.emit('_py_pre_launch');

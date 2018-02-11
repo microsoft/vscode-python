@@ -211,8 +211,8 @@ export class PythonDebugger extends LoggingDebugSession {
     }
     @capturePerformanceTelemetry('launch')
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
-        if ((args as any).diagnosticLogging === true) {
-            logger.setup(LogLevel.Verbose, (args as any).logToFile === true);
+        if (args.diagnosticLogging === true) {
+            logger.setup(LogLevel.Verbose, args.logToFile === true);
         }
         // Some versions may still exist with incorrect launch.json values
         const setting = '${config.python.pythonPath}';
