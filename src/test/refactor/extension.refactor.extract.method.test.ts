@@ -87,15 +87,10 @@ suite('Method Extraction', () => {
                     assert.equal(foundEdit.length, 1, 'Edit not found');
                 });
             }).catch((error: any) => {
-                if (ignoreErrorHandling) {
-                    return Promise.reject(error!);
-                }
-                if (shouldError) {
+                if (!ignoreErrorHandling && shouldError) {
                     // Wait a minute this shouldn't work, what's going on
                     assert.equal(true, true, 'Error raised as expected');
-                    return;
                 }
-
                 return Promise.reject(error!);
             });
     }
@@ -112,58 +107,39 @@ suite('Method Extraction', () => {
         await testingMethodExtraction(true, startPos, endPos);
     });
 
-    function testingMethodExtractionEndToEnd(shouldError: boolean, startPos: Position, endPos: Position) {
+    async function testingMethodExtractionEndToEnd(shouldError: boolean, startPos: Position, endPos: Position): Promise<void> {
         const ch = new MockOutputChannel('Python');
-        let textDocument: vscode.TextDocument;
-        let textEditor: vscode.TextEditor;
         const rangeOfTextToExtract = new vscode.Range(startPos, endPos);
         let ignoreErrorHandling = false;
 
-        return vscode.workspace.openTextDocument(refactorTargetFile).then(document => {
-            textDocument = document;
-            return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
-            assert(vscode.window.activeTextEditor, 'No active editor');
-            editor.selections = [new vscode.Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end)];
-            editor.selection = new vscode.Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end);
-            textEditor = editor;
-            return;
-        }).then(() => {
-            return extractMethod(EXTENSION_DIR, textEditor, rangeOfTextToExtract, ch, ioc.serviceContainer).then(() => {
-                if (shouldError) {
-                    ignoreErrorHandling = true;
-                    assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
-                }
-                return textEditor.document.save();
-            }).then(() => {
-                assert.equal(ch.output.length, 0, 'Output channel is not empty');
-                assert.equal(textDocument.lineAt(241).text.trim().indexOf('def newmethod'), 0, 'New Method not created');
-                assert.equal(textDocument.lineAt(239).text.trim().startsWith('self.newmethod'), true, 'New Method not being used');
-            }).catch((error: any) => {
-                if (ignoreErrorHandling) {
-                    return Promise.reject(error!);
-                }
-                if (shouldError) {
-                    // Wait a minute this shouldn't work, what's going on
-                    assert.equal(true, true, 'Error raised as expected');
-                    return;
-                }
+        const textDocument = await vscode.workspace.openTextDocument(refactorTargetFile);
+        const editor = await vscode.window.showTextDocument(textDocument);
 
-                return Promise.reject(error!);
-            });
-        }, error => {
+        editor.selections = [new vscode.Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end)];
+        editor.selection = new vscode.Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end);
+
+        try {
+            await extractMethod(EXTENSION_DIR, editor, rangeOfTextToExtract, ch, ioc.serviceContainer);
+            if (shouldError) {
+                ignoreErrorHandling = true;
+                assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
+            }
+            await editor.document.save();
+
+            assert.equal(ch.output.length, 0, 'Output channel is not empty');
+            assert.equal(textDocument.lineAt(241).text.trim().indexOf('def newmethod'), 0, 'New Method not created');
+            assert.equal(textDocument.lineAt(239).text.trim().startsWith('self.newmethod'), true, 'New Method not being used');
+        } catch (error) {
             if (ignoreErrorHandling) {
-                return Promise.reject(error);
+                return Promise.reject(error!);
             }
             if (shouldError) {
                 // Wait a minute this shouldn't work, what's going on
                 assert.equal(true, true, 'Error raised as expected');
-            } else {
-                // tslint:disable-next-line:prefer-template restrict-plus-operands
-                assert.fail(error, null, 'Method extraction failed\n' + ch.output, '');
-                return Promise.reject(error);
+                return;
             }
-        });
+            return Promise.reject(error!);
+        }
     }
 
     // This test fails on linux (text document not getting updated in time)
