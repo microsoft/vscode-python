@@ -145,21 +145,21 @@ export class PythonDebugger extends LoggingDebugSession {
         this.stopDebugServer();
     }
     private onPythonThreadCreated(pyThread: IPythonThread) {
-        this.sendEvent(new ThreadEvent("started", pyThread.Id));
+        this.sendEvent(new ThreadEvent("started", pyThread.Int32Id));
     }
     private onStepCompleted(pyThread: IPythonThread) {
-        this.sendEvent(new StoppedEvent("step", pyThread.Id));
+        this.sendEvent(new StoppedEvent("step", pyThread.Int32Id));
     }
     private onPythonException(pyThread: IPythonThread, ex: IPythonException) {
         this.lastException = ex;
-        this.sendEvent(new StoppedEvent("exception", pyThread.Id, `${ex.TypeName}, ${ex.Description}`));
+        this.sendEvent(new StoppedEvent("exception", pyThread.Int32Id, `${ex.TypeName}, ${ex.Description}`));
         this.sendEvent(new OutputEvent(`${ex.TypeName}, ${ex.Description}\n`, "stderr"));
     }
     private onPythonThreadExited(pyThread: IPythonThread) {
-        this.sendEvent(new ThreadEvent("exited", pyThread.Id));
+        this.sendEvent(new ThreadEvent("exited", pyThread.Int32Id));
     }
     private onPythonProcessPaused(pyThread: IPythonThread) {
-        this.sendEvent(new StoppedEvent("user request", pyThread.Id));
+        this.sendEvent(new StoppedEvent("user request", pyThread.Int32Id));
     }
     private onPythonModuleLoaded(module: IPythonModule) {
     }
@@ -181,7 +181,7 @@ export class PythonDebugger extends LoggingDebugSession {
             // tslint:disable-next-line:no-non-null-assertion
             const thread = pyThread!;
             if (this.launchArgs && this.launchArgs.stopOnEntry === true) {
-                this.sendEvent(new StoppedEvent("entry", thread.Id));
+                this.sendEvent(new StoppedEvent("entry", thread.Int32Id));
             } else if (this.launchArgs && this.launchArgs.stopOnEntry === false) {
                 this.configurationDone.then(() => {
                     this.pythonProcess!.SendResumeThread(thread.Id);
@@ -320,7 +320,7 @@ export class PythonDebugger extends LoggingDebugSession {
     private onBreakpointHit(pyThread: IPythonThread, breakpointId: number) {
         // Break only if the breakpoint exists and it is enabled
         if (this.registeredBreakpoints.has(breakpointId) && this.registeredBreakpoints.get(breakpointId)!.Enabled === true) {
-            this.sendEvent(new StoppedEvent("breakpoint", pyThread.Id));
+            this.sendEvent(new StoppedEvent("breakpoint", pyThread.Int32Id));
         }
         else {
             this.pythonProcess!.SendResumeThread(pyThread.Id);
@@ -429,7 +429,7 @@ export class PythonDebugger extends LoggingDebugSession {
         const threads: Thread[] = [];
         if (this.pythonProcess) {
             this.pythonProcess!.Threads.forEach(t => {
-                threads.push(new Thread(t.Id, t.Name));
+                threads.push(new Thread(t.Int32Id, t.Name));
             });
         }
 
@@ -466,14 +466,13 @@ export class PythonDebugger extends LoggingDebugSession {
     }
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
         this.debuggerLoaded.then(() => {
-            if (this.terminateEventSent || !this.pythonProcess || !this.pythonProcess!.Threads.has(args.threadId)) {
+            if (this.terminateEventSent || !this.pythonProcess || Array.from(this.pythonProcess!.Threads.values()).findIndex(t => t.Int32Id === args.threadId) === -1) {
                 response.body = {
                     stackFrames: []
                 };
                 return this.sendResponse(response);
             }
-
-            const pyThread = this.pythonProcess!.Threads.get(args.threadId)!;
+            const pyThread = Array.from(this.pythonProcess!.Threads.values()).find(t => t.Int32Id === args.threadId)!;
             let maxFrames = typeof args.levels === "number" && args.levels > 0 ? args.levels : pyThread.Frames.length - 1;
             maxFrames = maxFrames < pyThread.Frames.length ? maxFrames : pyThread.Frames.length;
 
