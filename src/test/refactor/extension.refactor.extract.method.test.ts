@@ -10,7 +10,7 @@ import { getTextEditsFromPatch } from '../../client/common/editor';
 import { extractMethod } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
-import { closeActiveWindows, initialize, initializeTest, IS_TRAVIS, wait } from './../initialize';
+import { closeActiveWindows, initialize, initializeTest, wait } from './../initialize';
 import { MockOutputChannel } from './../mockClasses';
 
 const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
@@ -143,13 +143,11 @@ suite('Method Extraction', () => {
     }
 
     // This test fails on linux (text document not getting updated in time)
-    if (!IS_TRAVIS) {
-        test('Extract Method (end to end)', async () => {
-            const startPos = new vscode.Position(239, 0);
-            const endPos = new vscode.Position(241, 35);
-            await testingMethodExtractionEndToEnd(false, startPos, endPos);
-        });
-    }
+    test('Extract Method (end to end)', async () => {
+        const startPos = new vscode.Position(239, 0);
+        const endPos = new vscode.Position(241, 35);
+        await testingMethodExtractionEndToEnd(false, startPos, endPos);
+    });
 
     test('Extract Method will fail if complete statements are not selected', async () => {
         const startPos = new vscode.Position(239, 30);
