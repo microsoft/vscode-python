@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
 import { TerminalShellType } from '../types';
@@ -24,7 +23,7 @@ export class Bash extends BaseActivationCommandProvider {
         if (!scriptFile) {
             return;
         }
-        return [`source ${scriptFile.toCommandArgument()}`];
+        return [`source ${scriptFile.fileToCommandArgument()}`];
     }
 
     private getScriptsInOrderOfPreference(targetShell: TerminalShellType): string[] {

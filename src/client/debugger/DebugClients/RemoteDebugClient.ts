@@ -1,10 +1,10 @@
 import { DebugSession } from 'vscode-debugadapter';
-import { IPythonProcess } from '../Common/Contracts';
+import { AttachRequestArguments, IPythonProcess } from '../Common/Contracts';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { RemoteDebugServer } from '../DebugServers/RemoteDebugServer';
 import { DebugClient, DebugType } from './DebugClient';
 
-export class RemoteDebugClient extends DebugClient {
+export class RemoteDebugClient extends DebugClient<AttachRequestArguments> {
     private pythonProcess: IPythonProcess;
     private debugServer?: BaseDebugServer;
     // tslint:disable-next-line:no-any
@@ -12,9 +12,9 @@ export class RemoteDebugClient extends DebugClient {
         super(args, debugSession);
     }
 
-    public CreateDebugServer(pythonProcess: IPythonProcess): BaseDebugServer {
-        this.pythonProcess = pythonProcess;
-        this.debugServer = new RemoteDebugServer(this.debugSession, this.pythonProcess, this.args);
+    public CreateDebugServer(pythonProcess?: IPythonProcess): BaseDebugServer {
+        this.pythonProcess = pythonProcess!;
+        this.debugServer = new RemoteDebugServer(this.debugSession, this.pythonProcess!, this.args);
         return this.debugServer!;
     }
     public get DebugType(): DebugType {

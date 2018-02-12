@@ -3,6 +3,7 @@
 
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
+import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
@@ -11,11 +12,18 @@ import { IFileSystem, IPlatformService } from '../../../client/common/platform/t
 suite('FileSystem', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let fileSystem: IFileSystem;
+    const fileToAppendTo = path.join(__dirname, 'created_for_testing_dummy.txt');
     setup(() => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         fileSystem = new FileSystem(platformService.object);
+        cleanTestFiles();
     });
-
+    teardown(cleanTestFiles);
+    function cleanTestFiles() {
+        if (fs.existsSync(fileToAppendTo)) {
+            fs.unlinkSync(fileToAppendTo);
+        }
+    }
     test('ReadFile returns contents of a file', async () => {
         const file = __filename;
         const expectedContents = await fs.readFile(file).then(buffer => buffer.toString());
@@ -58,5 +66,12 @@ suite('FileSystem', () => {
 
     test('Case sensitivity is not ignored when comparing file names on linux', async () => {
         caseSensitivityFileCheck(false, false, true);
+    });
+
+    test('Test appending to file', async () => {
+        const dataToAppend = `Some Data\n${new Date().toString()}\nAnd another line`;
+        fileSystem.appendFileSync(fileToAppendTo, dataToAppend);
+        const fileContents = await fileSystem.readFile(fileToAppendTo);
+        expect(fileContents).to.be.equal(dataToAppend);
     });
 });
