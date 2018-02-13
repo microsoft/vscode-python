@@ -78,9 +78,11 @@ suite('Language.Tokenizer', () => {
     });
     test('Unknown token', async () => {
         const t = new Tokenizer();
-        const tokens = t.tokenize('.');
-        assert.equal(tokens.count, 1);
+        const tokens = t.tokenize('.@x');
+        assert.equal(tokens.count, 3);
 
         assert.equal(tokens.getItemAt(0).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(1).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(2).type, TokenType.Identifier);
     });
 });

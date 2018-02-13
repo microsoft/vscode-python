@@ -59,7 +59,7 @@ export class Tokenizer implements ITokenizer {
             throw new Error('Invalid range length');
         }
 
-        this.mode = mode ? mode : TokenizerMode.Full;
+        this.mode = mode !== undefined ? mode : TokenizerMode.Full;
 
         this.cs = new CharacterStream(text);
         this.cs.position = start;
@@ -126,6 +126,10 @@ export class Tokenizer implements ITokenizer {
                 break;
             case Char.Colon:
                 this.tokens.push(new Token(TokenType.Colon, this.cs.position, 1));
+                break;
+            case Char.Period:
+            case Char.At:
+                this.tokens.push(new Token(TokenType.Unknown, this.cs.position, 1));
                 break;
             default:
                 if (this.isPossibleNumber()) {
