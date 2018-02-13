@@ -15,13 +15,8 @@
     },
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
     "tslint.enable": true,
-    "python.linting.enabled": true,
+    "python.linting.enabled": false,
     "python.unitTest.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
-    "python.formatting.provider": "none",
-    "files.insertFinalNewline": true,
-    "python.linting.pep8Enabled": false,
-    "python.linting.prospectorEnabled": false,
-    "python.linting.pydocstyleEnabled": false,
-    "python.linting.pylintEnabled": true
+    "python.formatting.provider": "none"
 }
