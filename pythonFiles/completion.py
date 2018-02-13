@@ -88,7 +88,7 @@ class JediCompletion(object):
             return ''
         return '%s(%s)' % (
             completion.name,
-            ', '.join(self._get_param_name(p.description) for p in completion.params if p))
+            ', '.join(p.description[6:] for p in completion.params if p))
 
     def _get_call_signatures(self, script):
         """Extract call signatures from jedi.api.Script object in failsafe way.
@@ -639,7 +639,7 @@ class JediCompletion(object):
 if __name__ == '__main__':
     cachePrefix = 'v'
     modulesToLoad = ''
-    if len(sys.argv) > 0 and sys.argv[1] == 'custom':
+    if len(sys.argv) > 2 and sys.argv[1] == 'custom':
         jediPath = sys.argv[2]
         jediPreview = True
         cachePrefix = 'custom_v'
@@ -648,8 +648,8 @@ if __name__ == '__main__':
     else:
         #release
         jediPath = os.path.dirname(__file__)
-        if len(sys.argv) > 2:
-            modulesToLoad = sys.argv[2]
+        if len(sys.argv) > 1:
+            modulesToLoad = sys.argv[1]
 
     sys.path.insert(0, jediPath)
     import jedi

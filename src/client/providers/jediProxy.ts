@@ -288,10 +288,7 @@ export class JediProxy implements vscode.Disposable {
         this.languageServerStarted = createDeferred<void>();
         const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(Uri.file(this.workspacePath));
         const args = ['completion.py'];
-        if (typeof this.pythonSettings.jediPath !== 'string' || this.pythonSettings.jediPath.length === 0) {
-            // Use released version of jedi.
-            args.push('release');
-        } else {
+        if (typeof this.pythonSettings.jediPath === 'string' && this.pythonSettings.jediPath.length > 0) {
             args.push('custom');
             args.push(this.pythonSettings.jediPath);
         }
