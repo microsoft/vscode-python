@@ -38,13 +38,14 @@ export function validatePathSync(filePath: string): boolean {
     return exists;
 }
 
-export function CreatePythonThread(id: number, isWorker: boolean, process: IPythonProcess, name: string = ''): IPythonThread {
+export function CreatePythonThread(id: number, isWorker: boolean, process: IPythonProcess, name: string = '', int32Id: number = 0): IPythonThread {
     return {
         IsWorkerThread: isWorker,
         Process: process,
         Name: name,
         Id: id,
-        Frames: []
+        Frames: [],
+        Int32Id: int32Id
     };
 }
 

@@ -158,6 +158,7 @@ export interface IPythonThread {
     Process: IPythonProcess;
     Name: string;
     Id: number;
+    Int32Id: number;
     Frames: IPythonStackFrame[];
 }
 

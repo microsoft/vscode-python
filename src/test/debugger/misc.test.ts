@@ -17,6 +17,7 @@ use(chaiAsPromised);
 const debugFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'debugging');
 
 const DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'Main.js');
+const MAX_SIGNED_INT32 = Math.pow(2, 31) - 1;
 
 // tslint:disable-next-line:max-func-body-length
 suite('Standard Debugging - Misc tests', () => {
@@ -98,6 +99,23 @@ suite('Standard Debugging - Misc tests', () => {
         ]);
 
         const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
+        await Promise.all([
+            debugClient.continueRequest({ threadId }),
+            debugClient.waitForEvent('terminated')
+        ]);
+    });
+    test('Ensure threadid is int32', async () => {
+        const threadIdPromise = debugClient.waitForEvent('thread');
+
+        await Promise.all([
+            debugClient.configurationSequence(),
+            debugClient.launch(buildLauncArgs('simplePrint.py', true)),
+            debugClient.waitForEvent('initialized'),
+            debugClient.waitForEvent('stopped')
+        ]);
+
+        const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
+        expect(threadId).to.be.lessThan(MAX_SIGNED_INT32 + 1, 'ThreadId is not an integer');
         await Promise.all([
             debugClient.continueRequest({ threadId }),
             debugClient.waitForEvent('terminated')
@@ -372,6 +390,9 @@ suite('Standard Debugging - Misc tests', () => {
 
         const threads = await debugClient.threadsRequest();
         expect(threads.body.threads).of.lengthOf(2, 'incorrect number of threads');
+        for (const thread of threads.body.threads) {
+            expect(thread.id).to.be.lessThan(MAX_SIGNED_INT32 + 1, 'ThreadId is not an integer');
+        }
     });
     test('Test stack frames', async () => {
         await Promise.all([
