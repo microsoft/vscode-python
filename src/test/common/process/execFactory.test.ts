@@ -4,6 +4,7 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { IProcessService } from '../../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
@@ -20,10 +21,14 @@ suite('PythonExecutableService', () => {
         const envVarsProvider = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>();
         procService = TypeMoq.Mock.ofType<IProcessService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        fileSystem.setup(f => f.fileExistsAsync(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider))).returns(() => envVarsProvider.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessService))).returns(() => procService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
         envVarsProvider.setup(v => v.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
+
     });
     test('Ensure resource is used when getting configuration service settings (undefined resource)', async () => {
         const pythonPath = `Python_Path_${new Date().toString()}`;
