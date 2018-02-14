@@ -65,9 +65,11 @@ export class IocContainer {
         this.disposables.forEach(disposable => disposable.dispose());
     }
 
-    public registerCommonTypes() {
+    public registerCommonTypes(registerFileSystem: boolean = true) {
         commonRegisterTypes(this.serviceManager);
-        this.registerFileSystemTypes();
+        if (registerFileSystem) {
+            this.registerFileSystemTypes();
+        }
     }
     public registerFileSystemTypes() {
         this.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
