@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { IServiceContainer } from '../ioc/types';
-import { ILinterManager } from './types';
+import { ILinterManager, ILintingEngine } from './types';
 
 export class LinterCommands implements vscode.Disposable {
     private disposables: vscode.Disposable[] = [];
@@ -19,6 +19,7 @@ export class LinterCommands implements vscode.Disposable {
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         commandManager.registerCommand(Commands.Set_Linter, this.setLinterAsync.bind(this));
         commandManager.registerCommand(Commands.Enable_Linter, this.enableLintingAsync.bind(this));
+        commandManager.registerCommand(Commands.Run_Linter, this.runLinting.bind(this));
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
@@ -76,6 +77,11 @@ export class LinterCommands implements vscode.Disposable {
             const enable = selection === options[0];
             await this.linterManager.enableLintingAsync(enable, this.settingsUri);
         }
+    }
+
+    public runLinting(): void {
+        const engine = this.serviceContainer.get<ILintingEngine>(ILintingEngine);
+        engine.lintOpenPythonFiles();
     }
 
     private get settingsUri(): vscode.Uri | undefined {

@@ -4,6 +4,7 @@
 import * as vscode from 'vscode';
 import { ExecutionInfo, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { LinterTrigger } from '../telemetry/types';
 
 export interface IErrorHandler {
     handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo): Promise<boolean>;
@@ -56,4 +57,10 @@ export enum LintMessageSeverity {
     Error,
     Warning,
     Information
+}
+
+export const ILintingEngine = Symbol('ILintingEngine');
+export interface ILintingEngine {
+    lintOpenPythonFiles(): void;
+    lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void>;
 }

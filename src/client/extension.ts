@@ -7,8 +7,8 @@ if ((Reflect as any).metadata === undefined) {
 }
 import { Container } from 'inversify';
 import * as os from 'os';
-import * as vscode from 'vscode';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
+import * as vscode from 'vscode';
 import { BannerService } from './banner';
 import { PythonSettings } from './common/configSettings';
 import * as settings from './common/configSettings';
@@ -35,6 +35,7 @@ import { IServiceContainer } from './ioc/types';
 import { JupyterProvider } from './jupyter/provider';
 import { JediFactory } from './languageServices/jediProxyFactory';
 import { LinterCommands } from './linters/linterCommands';
+import { LintingEngine } from './linters/lintingEngine';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { PythonCompletionItemProvider } from './providers/completionProvider';
 import { PythonDefinitionProvider } from './providers/definitionProvider';
@@ -168,22 +169,24 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     // tslint:disable-next-line:promise-function-async
-    const linterProvider = new LinterProvider(context, standardOutputChannel, (a, b) => Promise.resolve(false), serviceContainer);
+    const lintingEngine = new LintingEngine(serviceContainer, standardOutputChannel, (a, b) => Promise.resolve(false));
+    const linterProvider = new LinterProvider(context, lintingEngine, serviceContainer);
     context.subscriptions.push(linterProvider);
+
     const jupyterExtInstalled = vscode.extensions.getExtension('donjayamanne.jupyter');
     if (jupyterExtInstalled) {
         if (jupyterExtInstalled.isActive) {
             // tslint:disable-next-line:no-unsafe-any
             jupyterExtInstalled.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
             // tslint:disable-next-line:no-unsafe-any
-            linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
+            lintingEngine.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
         }
 
         jupyterExtInstalled.activate().then(() => {
             // tslint:disable-next-line:no-unsafe-any
             jupyterExtInstalled.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
             // tslint:disable-next-line:no-unsafe-any
-            linterProvider.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
+            lintingEngine.documentHasJupyterCodeCells = jupyterExtInstalled.exports.hasCodeCells;
         });
     }
     tests.activate(context, unitTestOutChannel, symbolProvider, serviceContainer);

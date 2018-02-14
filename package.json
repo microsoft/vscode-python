@@ -231,6 +231,11 @@
                 "command": "python.enableLinting",
                 "title": "%python.command.python.enableLinting.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.runLinting",
+                "title": "%python.command.python.runLinting.title%",
+                "category": "Python"
             }
         ],
         "menus": {
