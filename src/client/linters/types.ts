@@ -17,6 +17,7 @@ export interface ILinterInfo {
     readonly pathSettingName: string;
     readonly argsSettingName: string;
     readonly enabledSettingName: string;
+    readonly configFileNames: string[];
     enableAsync(flag: boolean, resource?: vscode.Uri): Promise<void>;
     isEnabled(resource?: vscode.Uri): boolean;
     pathName(resource?: vscode.Uri): string;

@@ -62,7 +62,7 @@ export class LinterProvider implements vscode.Disposable {
 
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.lintOpenPythonFiles()));
-
+        this.disposables.push(vscode.workspace.onDidSaveTextDocument((e) => this.onDocumentSaved(e)));
         this.initialize();
         this.configMonitor = new ConfigSettingMonitor('linting');
         this.configMonitor.on('change', this.lintSettingsChangedHandler.bind(this));
@@ -235,5 +235,14 @@ export class LinterProvider implements vscode.Disposable {
             executableSpecified: linterExecutablePathName.length > 0
         };
         sendTelemetryWhenDone(LINTING, promise, stopWatch, properties);
+    }
+
+    private onDocumentSaved(document: vscode.TextDocument) {
+        const linters = this.linterManager.getActiveLinters(document.uri);
+        const fileName = path.basename(document.uri.fsPath).toLowerCase();
+        const watchers = linters.filter((info) => info.configFileNames.indexOf(fileName) >= 0);
+        if (watchers.length > 0) {
+            setTimeout(() => this.lintOpenPythonFiles(), 1000);
+        }
     }
 }

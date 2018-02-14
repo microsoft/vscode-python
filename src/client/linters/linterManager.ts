@@ -32,11 +32,11 @@ export class LinterManager implements ILinterManager {
     private configService: IConfigurationService;
     private disabledForCurrentSession = false;
 
-    constructor( @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.linters = [
             new LinterInfo(Product.flake8, 'flake8', this.configService),
-            new LinterInfo(Product.pylint, 'pylint', this.configService),
+            new LinterInfo(Product.pylint, 'pylint', this.configService, ['.pylintrc', 'pylintrc']),
             new LinterInfo(Product.mypy, 'mypy', this.configService),
             new LinterInfo(Product.pep8, 'pep8', this.configService),
             new LinterInfo(Product.prospector, 'prospector', this.configService),
