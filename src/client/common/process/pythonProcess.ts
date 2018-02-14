@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
+import { Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
@@ -14,7 +15,7 @@ export class PythonExecutionService implements IPythonExecutionService {
     private procService: IProcessService;
     private configService: IConfigurationService;
 
-    constructor(serviceContainer: IServiceContainer, private envVars: EnvironmentVariables | undefined) {
+    constructor(serviceContainer: IServiceContainer, private envVars: EnvironmentVariables | undefined, private resource?: Uri) {
         this.procService = serviceContainer.get<IProcessService>(IProcessService);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
@@ -71,6 +72,6 @@ export class PythonExecutionService implements IPythonExecutionService {
         return result;
     }
     private get pythonPath(): string {
-        return this.configService.getSettings().pythonPath;
+        return this.configService.getSettings(this.resource).pythonPath;
     }
 }
