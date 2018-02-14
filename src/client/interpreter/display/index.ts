@@ -46,9 +46,6 @@ export class InterpreterDisplay implements IInterpreterDisplay {
             const wkspc = this.helper.getActiveWorkspaceUri();
             resource = wkspc ? wkspc.folderUri : undefined;
         }
-        if (!this.shouldRefresh(resource)) {
-            return;
-        }
         await this.updateDisplay(resource);
     }
     private shouldRefresh(workspaceFolder?: Uri) {
