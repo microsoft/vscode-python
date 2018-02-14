@@ -1,4 +1,4 @@
-import { ConfigurationTarget, Disposable, Uri } from 'vscode';
+import { CodeLensProvider, ConfigurationTarget, Disposable, TextDocument, Uri } from 'vscode';
 import { Architecture } from '../common/platform/types';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
@@ -7,7 +7,8 @@ export const CONDA_ENV_FILE_SERVICE = 'CondaEnvFileService';
 export const CONDA_ENV_SERVICE = 'CondaEnvService';
 export const CURRENT_PATH_SERVICE = 'CurrentPathService';
 export const KNOWN_PATH_SERVICE = 'KnownPathsService';
-export const VIRTUAL_ENV_SERVICE = 'VirtualEnvService';
+export const GLOBAL_VIRTUAL_ENV_SERVICE = 'VirtualEnvService';
+export const WORKSPACE_VIRTUAL_ENV_SERVICE = 'WorkspaceVirtualEnvService';
 
 export const IInterpreterVersionService = Symbol('IInterpreterVersionService');
 export interface IInterpreterVersionService {
@@ -16,8 +17,11 @@ export interface IInterpreterVersionService {
 }
 
 export const IKnownSearchPathsForInterpreters = Symbol('IKnownSearchPathsForInterpreters');
-export const IKnownSearchPathsForVirtualEnvironments = Symbol('IKnownSearchPathsForVirtualEnvironments');
 
+export const IVirtualEnvironmentsSearchPathProvider = Symbol('IVirtualEnvironmentsSearchPathProvider');
+export interface IVirtualEnvironmentsSearchPathProvider {
+    getSearchPaths(resource?: Uri): string[];
+}
 export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
 
 export interface IInterpreterLocatorService extends Disposable {
@@ -67,7 +71,6 @@ export type PythonInterpreter = {
 
 export type WorkspacePythonPath = {
     folderUri: Uri;
-    pytonPath?: string;
     configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder;
 };
 
@@ -79,4 +82,19 @@ export interface IInterpreterService {
     getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;
     refresh(): Promise<void>;
     initialize(): void;
+}
+
+export const IInterpreterDisplay = Symbol('IInterpreterDisplay');
+export interface IInterpreterDisplay {
+    refresh(resource?: Uri): Promise<void>;
+}
+
+export const IShebangCodeLensProvider = Symbol('IShebangCodeLensProvider');
+export interface IShebangCodeLensProvider extends CodeLensProvider {
+    detectShebang(document: TextDocument): Promise<string | undefined>;
+}
+
+export const IInterpreterHelper = Symbol('IInterpreterHelper');
+export interface IInterpreterHelper {
+    getActiveWorkspaceUri(): WorkspacePythonPath | undefined;
 }

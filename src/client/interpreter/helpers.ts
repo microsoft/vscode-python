@@ -1,5 +1,8 @@
-import { ConfigurationTarget, window, workspace } from 'vscode';
-import { WorkspacePythonPath } from './contracts';
+import { inject, injectable } from 'inversify';
+import { ConfigurationTarget } from 'vscode';
+import { IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { IServiceContainer } from '../ioc/types';
+import { IInterpreterHelper, WorkspacePythonPath } from './contracts';
 
 export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
     if (!stdout) {
@@ -8,18 +11,26 @@ export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
     const lines = stdout.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
     return lines.length > 0 ? lines[0] : '';
 }
-export function getActiveWorkspaceUri(): WorkspacePythonPath | undefined {
-    if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
-        return undefined;
+
+@injectable()
+export class InterpreterHelper implements IInterpreterHelper {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
     }
-    if (workspace.workspaceFolders.length === 1) {
-        return { folderUri: workspace.workspaceFolders[0].uri, configTarget: ConfigurationTarget.Workspace };
-    }
-    if (window.activeTextEditor) {
-        const workspaceFolder = workspace.getWorkspaceFolder(window.activeTextEditor.document.uri);
-        if (workspaceFolder) {
-            return { configTarget: ConfigurationTarget.WorkspaceFolder, folderUri: workspaceFolder.uri };
+    public getActiveWorkspaceUri(): WorkspacePythonPath | undefined {
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
+
+        if (!Array.isArray(workspaceService.workspaceFolders) || workspaceService.workspaceFolders.length === 0) {
+            return;
+        }
+        if (workspaceService.workspaceFolders.length === 1) {
+            return { folderUri: workspaceService.workspaceFolders[0].uri, configTarget: ConfigurationTarget.Workspace };
+        }
+        if (documentManager.activeTextEditor) {
+            const workspaceFolder = workspaceService.getWorkspaceFolder(documentManager.activeTextEditor.document.uri);
+            if (workspaceFolder) {
+                return { configTarget: ConfigurationTarget.WorkspaceFolder, folderUri: workspaceFolder.uri };
+            }
         }
     }
-    return undefined;
 }

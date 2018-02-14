@@ -1,111 +1,131 @@
-import * as assert from 'assert';
 import * as path from 'path';
-import { ConfigurationTarget, Uri, workspace } from 'vscode';
-import { PythonSettings } from '../../client/common/configSettings';
-import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
+import * as TypeMoq from 'typemoq';
+import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
+import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
-import { WorkspacePythonPathUpdaterService } from '../../client/interpreter/configuration/services/workspaceUpdaterService';
-import { IInterpreterVersionService } from '../../client/interpreter/contracts';
-import { closeActiveWindows, initialize, initializeTest } from '../initialize';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { IPythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/types';
+import { IServiceContainer } from '../../client/ioc/types';
 
-const workspaceRoot = path.join(__dirname, '..', '..', '..', 'src', 'test');
+// tslint:disable:no-invalid-template-strings max-func-body-length
 
-// tslint:disable-next-line:max-func-body-length
 suite('Python Path Settings Updater', () => {
-    let ioc: UnitTestIocContainer;
-    suiteSetup(initialize);
-    setup(async () => {
-        await initializeTest();
-        initializeDI();
-    });
-    suiteTeardown(async () => {
-        await closeActiveWindows();
-        await initializeTest();
-    });
-    teardown(async () => {
-        await closeActiveWindows();
-        await initializeTest();
-        ioc.dispose();
-    });
-
-    function initializeDI() {
-        ioc = new UnitTestIocContainer();
-        ioc.registerCommonTypes();
-        ioc.registerProcessTypes();
-        ioc.registerVariableTypes();
-        ioc.registerInterpreterTypes();
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let updaterServiceFactory: IPythonPathUpdaterServiceFactory;
+    function setupMocks() {
+        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+        updaterServiceFactory = new PythonPathUpdaterServiceFactory(serviceContainer.object);
     }
+    function setupConfigProvider(resource?: Uri): TypeMoq.IMock<WorkspaceConfiguration> {
+        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        workspaceService.setup(w => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(resource))).returns(() => workspaceConfig.object);
+        return workspaceConfig;
+    }
+    suite('Global', () => {
+        setup(setupMocks);
+        test('Python Path should not be updated when current pythonPath is the same', async () => {
+            const updater = updaterServiceFactory.getGlobalPythonPathConfigurationService();
+            const pythonPath = `xGlobalPythonPath${new Date().getMilliseconds()}`;
+            const workspaceConfig = setupConfigProvider();
+            workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => {
+                // tslint:disable-next-line:no-any
+                return { globalValue: pythonPath } as any;
+            });
 
-    // Create Github issue VS Code bug (global changes not reflected immediately)
+            await updater.updatePythonPath(pythonPath);
+            workspaceConfig.verify(w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+        });
+        test('Python Path should be updated when current pythonPath is different', async () => {
+            const updater = updaterServiceFactory.getGlobalPythonPathConfigurationService();
+            const pythonPath = `xGlobalPythonPath${new Date().getMilliseconds()}`;
+            const workspaceConfig = setupConfigProvider();
+            workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
-    // test('Updating Global Python Path should work', async () => {
-    //     const globalUpdater = new GlobalPythonPathUpdaterService();
-    //     const pythonPath = `xGlobalPythonPath${new Date().getMilliseconds()}`;
-    //     await globalUpdater.updatePythonPath(pythonPath);
-    //     const globalPythonValue = workspace.getConfiguration('python').inspect('pythonPath').globalValue;
-    //     assert.equal(globalPythonValue, pythonPath, 'Global Python Path not updated');
-    // });
-
-    // test('Updating Global Python Path using the factory service should work', async () => {
-    //     const globalUpdater = new PythonPathUpdaterServiceFactory().getGlobalPythonPathConfigurationService();
-    //     const pythonPath = `xGlobalPythonPathFromFactory${new Date().getMilliseconds()}`;
-    //     await globalUpdater.updatePythonPath(pythonPath);
-    //     const globalPythonValue = workspace.getConfiguration('python').inspect('pythonPath').globalValue;
-    //     assert.equal(globalPythonValue, pythonPath, 'Global Python Path not updated');
-    // });
-
-    // test('Updating Global Python Path using the PythonPathUpdaterService should work', async () => {
-    //     const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory());
-    //     const pythonPath = `xGlobalPythonPathFromUpdater${new Date().getMilliseconds()}`;
-    //     await updaterService.updatePythonPath(pythonPath, ConfigurationTarget.Global);
-    //     const globalPythonValue = workspace.getConfiguration('python').inspect('pythonPath').globalValue;
-    //     assert.equal(globalPythonValue, pythonPath, 'Global Python Path not updated');
-    // });
-
-    test('Updating Workspace Python Path should work', async () => {
-        const workspaceUri = Uri.file(workspaceRoot);
-        const workspaceUpdater = new WorkspacePythonPathUpdaterService(workspace.getWorkspaceFolder(workspaceUri)!.uri);
-        const pythonPath = `xWorkspacePythonPath${new Date().getMilliseconds()}`;
-        await workspaceUpdater.updatePythonPath(pythonPath);
-        const workspaceValue = workspace.getConfiguration('python').inspect('pythonPath')!.workspaceValue!;
-        assert.equal(workspaceValue, pythonPath, 'Workspace Python Path not updated');
+            await updater.updatePythonPath(pythonPath);
+            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(true)), TypeMoq.Times.once());
+        });
     });
 
-    test('Updating Workspace Python Path using the factor service should work', async () => {
-        const workspaceUri = Uri.file(workspaceRoot);
-        const factory = new PythonPathUpdaterServiceFactory();
-        const workspaceUpdater = factory.getWorkspacePythonPathConfigurationService(workspace.getWorkspaceFolder(workspaceUri)!.uri);
-        const pythonPath = `xWorkspacePythonPathFromFactory${new Date().getMilliseconds()}`;
-        await workspaceUpdater.updatePythonPath(pythonPath);
-        // tslint:disable-next-line:no-any
-        const workspaceValue = workspace.getConfiguration('python', null as any as Uri).inspect('pythonPath')!.workspaceValue!;
-        assert.equal(workspaceValue, pythonPath, 'Workspace Python Path not updated');
-    });
+    suite('WorkspaceFolder', () => {
+        setup(setupMocks);
+        test('Python Path should not be updated when current pythonPath is the same', async () => {
+            const workspaceFolderPath = path.join('user', 'desktop', 'development');
+            const workspaceFolder = Uri.file(workspaceFolderPath);
+            const updater = updaterServiceFactory.getWorkspaceFolderPythonPathConfigurationService(workspaceFolder);
+            const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
+            const workspaceConfig = setupConfigProvider(workspaceFolder);
+            workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => {
+                // tslint:disable-next-line:no-any
+                return { workspaceFolderValue: pythonPath } as any;
+            });
 
-    test('Updating Workspace Python Path using the PythonPathUpdaterService should work', async () => {
-        const workspaceUri = Uri.file(workspaceRoot);
-        const interpreterVersionService = ioc.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-        const updaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), interpreterVersionService);
-        const pythonPath = `xWorkspacePythonPathFromUpdater${new Date().getMilliseconds()}`;
-        await updaterService.updatePythonPath(pythonPath, ConfigurationTarget.Workspace, 'ui', workspace.getWorkspaceFolder(workspaceUri)!.uri);
-        // tslint:disable-next-line:no-any
-        const workspaceValue = workspace.getConfiguration('python', null as any as Uri).inspect('pythonPath')!.workspaceValue!;
-        assert.equal(workspaceValue, pythonPath, 'Workspace Python Path not updated');
-    });
+            await updater.updatePythonPath(pythonPath);
+            workspaceConfig.verify(w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+        });
+        test('Python Path should be updated when current pythonPath is different', async () => {
+            const workspaceFolderPath = path.join('user', 'desktop', 'development');
+            const workspaceFolder = Uri.file(workspaceFolderPath);
+            const updater = updaterServiceFactory.getWorkspaceFolderPythonPathConfigurationService(workspaceFolder);
+            const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
+            const workspaceConfig = setupConfigProvider(workspaceFolder);
+            workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
-    test('Python Path should be relative to workspaceFolder', async () => {
-        const workspaceUri = workspace.getWorkspaceFolder(Uri.file(workspaceRoot))!.uri;
-        const pythonInterpreter = `xWorkspacePythonPath${new Date().getMilliseconds()}`;
-        const pythonPath = path.join(workspaceUri.fsPath, 'x', 'y', 'z', pythonInterpreter);
-        const workspaceUpdater = new WorkspacePythonPathUpdaterService(workspaceUri);
-        await workspaceUpdater.updatePythonPath(pythonPath);
-        // tslint:disable-next-line:no-any
-        const workspaceValue = workspace.getConfiguration('python', null as any as Uri).inspect('pythonPath')!.workspaceValue!;
-        // tslint:disable-next-line:no-invalid-template-strings
-        assert.equal(workspaceValue, path.join('${workspaceFolder}', 'x', 'y', 'z', pythonInterpreter), 'Workspace Python Path not updated');
-        const resolvedPath = PythonSettings.getInstance(Uri.file(workspaceRoot)).pythonPath;
-        assert.equal(resolvedPath, pythonPath, 'Resolved Workspace Python Path not updated');
-    });
+            await updater.updatePythonPath(pythonPath);
+            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder)), TypeMoq.Times.once());
+        });
+        test('Python Path should be updated with ${workspaceFolder} for relative paths', async () => {
+            const workspaceFolderPath = path.join('user', 'desktop', 'development');
+            const workspaceFolder = Uri.file(workspaceFolderPath);
+            const updater = updaterServiceFactory.getWorkspaceFolderPythonPathConfigurationService(workspaceFolder);
+            const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
+            const expectedPythonPath = path.join('${workspaceFolder}', 'env', 'bin', 'python');
+            const workspaceConfig = setupConfigProvider(workspaceFolder);
+            workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
+            await updater.updatePythonPath(pythonPath);
+            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder)), TypeMoq.Times.once());
+        });
+    });
+    suite('Workspace (multiroot scenario)', () => {
+        setup(setupMocks);
+        test('Python Path should not be updated when current pythonPath is the same', async () => {
+            const workspaceFolderPath = path.join('user', 'desktop', 'development');
+            const workspaceFolder = Uri.file(workspaceFolderPath);
+            const updater = updaterServiceFactory.getWorkspacePythonPathConfigurationService(workspaceFolder);
+            const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
+            const workspaceConfig = setupConfigProvider(workspaceFolder);
+            workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => {
+                // tslint:disable-next-line:no-any
+                return { workspaceValue: pythonPath } as any;
+            });
+
+            await updater.updatePythonPath(pythonPath);
+            workspaceConfig.verify(w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+        });
+        test('Python Path should be updated when current pythonPath is different', async () => {
+            const workspaceFolderPath = path.join('user', 'desktop', 'development');
+            const workspaceFolder = Uri.file(workspaceFolderPath);
+            const updater = updaterServiceFactory.getWorkspacePythonPathConfigurationService(workspaceFolder);
+            const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
+            const workspaceConfig = setupConfigProvider(workspaceFolder);
+            workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
+
+            await updater.updatePythonPath(pythonPath);
+            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(false)), TypeMoq.Times.once());
+        });
+        test('Python Path should be updated with ${workspaceFolder} for relative paths', async () => {
+            const workspaceFolderPath = path.join('user', 'desktop', 'development');
+            const workspaceFolder = Uri.file(workspaceFolderPath);
+            const updater = updaterServiceFactory.getWorkspacePythonPathConfigurationService(workspaceFolder);
+            const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
+            const expectedPythonPath = path.join('${workspaceFolder}', 'env', 'bin', 'python');
+            const workspaceConfig = setupConfigProvider(workspaceFolder);
+            workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
+
+            await updater.updatePythonPath(pythonPath);
+            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(false)), TypeMoq.Times.once());
+        });
+    });
 });

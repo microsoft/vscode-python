@@ -1,164 +1,202 @@
-import * as assert from 'assert';
-import * as child_process from 'child_process';
+import { expect } from 'chai';
 import { EOL } from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
-import { PythonSettings } from '../../client/common/configSettings';
-import { IInterpreterService, InterpreterType } from '../../client/interpreter/contracts';
+import { ConfigurationTarget, Disposable, StatusBarAlignment, StatusBarItem, Uri, WorkspaceFolder } from 'vscode';
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
+import { IFileSystem } from '../../client/common/platform/types';
+import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../../client/common/types';
+import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
-import { getFirstNonEmptyLineFromMultilineString } from '../../client/interpreter/helpers';
-import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
-import { clearPythonPathInWorkspaceFolder, rootWorkspaceUri, updateSetting } from '../common';
-import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
-import { MockStatusBarItem } from '../mockClasses';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
-import { MockInterpreterVersionProvider } from './mocks';
-import { MockVirtualEnv } from './mocks';
-
-const fileInNonRootWorkspace = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
+import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
+import { IServiceContainer } from '../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters Display', () => {
-    let ioc: UnitTestIocContainer;
-    const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
-    suiteSetup(initialize);
-    setup(async () => {
-        initializeDI();
-        await initializeTest();
-        if (IS_MULTI_ROOT_TEST) {
-            await initializeMultiRoot();
+    let applicationShell: TypeMoq.IMock<IApplicationShell>;
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
+    let virtualEnvMgr: TypeMoq.IMock<IVirtualEnvironmentManager>;
+    let versionProvider: TypeMoq.IMock<IInterpreterVersionService>;
+    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let disposableRegistry: Disposable[];
+    let statusBar: TypeMoq.IMock<StatusBarItem>;
+    let pythonSettings: TypeMoq.IMock<IPythonSettings>;
+    let configurationService: TypeMoq.IMock<IConfigurationService>;
+    let interpreterDisplay: IInterpreterDisplay;
+    let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
+    setup(() => {
+        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        virtualEnvMgr = TypeMoq.Mock.ofType<IVirtualEnvironmentManager>();
+        versionProvider = TypeMoq.Mock.ofType<IInterpreterVersionService>();
+        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
+        disposableRegistry = [];
+        statusBar = TypeMoq.Mock.ofType<StatusBarItem>();
+        pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+        configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
+
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => applicationShell.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService))).returns(() => interpreterService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IVirtualEnvironmentManager))).returns(() => virtualEnvMgr.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterVersionService))).returns(() => versionProvider.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => disposableRegistry);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configurationService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper))).returns(() => interpreterHelper.object);
+
+        applicationShell.setup(a => a.createStatusBarItem(TypeMoq.It.isValue(StatusBarAlignment.Left), TypeMoq.It.isValue(undefined))).returns(() => statusBar.object);
+
+        interpreterDisplay = new InterpreterDisplay(serviceContainer.object);
+    });
+    function setupWorkspaceFolder(resource: Uri, workspaceFolder?: Uri) {
+        if (workspaceFolder) {
+            const mockFolder = TypeMoq.Mock.ofType<WorkspaceFolder>();
+            mockFolder.setup(w => w.uri).returns(() => workspaceFolder);
+            workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource))).returns(() => mockFolder.object);
+        } else {
+            workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource))).returns(() => undefined);
         }
-    });
-    teardown(async () => {
-        ioc.dispose();
-        await clearPythonPathInWorkspaceFolder(fileInNonRootWorkspace);
-        await initialize();
-        await closeActiveWindows();
-    });
-    function initializeDI() {
-        ioc = new UnitTestIocContainer();
-        ioc.registerCommonTypes();
-        ioc.registerVariableTypes();
-        ioc.registerProcessTypes();
     }
-    test('Must have command name', () => {
-        const statusBar = new MockStatusBarItem();
-        const displayNameProvider = new MockInterpreterVersionProvider('');
-        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        interpreterService.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
-        // tslint:disable-next-line:no-unused-expression
-        new InterpreterDisplay(statusBar, interpreterService.object, new VirtualEnvironmentManager([]), displayNameProvider);
-        assert.equal(statusBar.command, 'python.setInterpreter', 'Incorrect command name');
+    test('Sattusbar must be created and have command name initialized', () => {
+        statusBar.verify(s => s.command = TypeMoq.It.isValue('python.setInterpreter'), TypeMoq.Times.once());
+        expect(disposableRegistry).to.be.lengthOf.above(0);
+        expect(disposableRegistry).contain(statusBar.object);
     });
-    test('Must get display name from interpreter itself', async () => {
-        const statusBar = new MockStatusBarItem();
-        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        interpreterService.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
-        const displayName = 'Mock Display Name';
-        const displayNameProvider = new MockInterpreterVersionProvider(displayName);
-        const display = new InterpreterDisplay(statusBar, interpreterService.object, new VirtualEnvironmentManager([]), displayNameProvider);
-        await display.refresh();
+    test('Display name and tooltip must come from interpreter info', async () => {
+        const resource = Uri.file('x');
+        const workspaceFolder = Uri.file('workspace');
+        const activeInterpreter: PythonInterpreter = {
+            displayName: 'Dummy_Display_Name',
+            type: InterpreterType.Unknown,
+            path: path.join('user', 'development', 'env', 'bin', 'python')
+        };
+        setupWorkspaceFolder(resource, workspaceFolder);
+        interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve([]));
+        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(activeInterpreter));
 
-        assert.equal(statusBar.text, displayName, 'Incorrect display name');
-    });
-    test('Must suffix display name with name of interpreter', async () => {
-        const statusBar = new MockStatusBarItem();
-        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        interpreterService.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
-        const env1 = new MockVirtualEnv(false, 'Mock 1');
-        const env2 = new MockVirtualEnv(true, 'Mock 2');
-        const env3 = new MockVirtualEnv(true, 'Mock 3');
-        const displayName = 'Mock Display Name';
-        const displayNameProvider = new MockInterpreterVersionProvider(displayName);
-        const display = new InterpreterDisplay(statusBar, interpreterService.object, new VirtualEnvironmentManager([env1, env2, env3]), displayNameProvider);
-        await display.refresh();
-        assert.equal(statusBar.text, `${displayName} (${env2.name})`, 'Incorrect display name');
-    });
-    test('Must display default \'Display name\' for unknown interpreter', async () => {
-        const statusBar = new MockStatusBarItem();
-        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        interpreterService.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
-        const displayName = 'Mock Display Name';
-        const displayNameProvider = new MockInterpreterVersionProvider(displayName, true);
-        const display = new InterpreterDisplay(statusBar, interpreterService.object, new VirtualEnvironmentManager([]), displayNameProvider);
-        // Change interpreter to an invalid value
-        const pythonPath = 'UnknownInterpreter';
-        await updateSetting('pythonPath', pythonPath, rootWorkspaceUri, configTarget);
-        await display.refresh();
+        await interpreterDisplay.refresh(resource);
 
+        statusBar.verify(s => s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!, TypeMoq.Times.once());
+        statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(activeInterpreter.path)!, TypeMoq.Times.once());
+    });
+    test('Display name and tooltip must include company display name from interpreter info', async () => {
+        const resource = Uri.file('x');
+        const workspaceFolder = Uri.file('workspace');
+        const activeInterpreter: PythonInterpreter = {
+            displayName: 'Dummy_Display_Name',
+            type: InterpreterType.Unknown,
+            companyDisplayName: 'Company Name',
+            path: path.join('user', 'development', 'env', 'bin', 'python')
+        };
+        setupWorkspaceFolder(resource, workspaceFolder);
+        interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve([]));
+        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(activeInterpreter));
+        const expectedTooltip = `${activeInterpreter.path}${EOL}${activeInterpreter.companyDisplayName}`;
+
+        await interpreterDisplay.refresh(resource);
+
+        statusBar.verify(s => s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!, TypeMoq.Times.once());
+        statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(expectedTooltip)!, TypeMoq.Times.once());
+    });
+    test('If interpreter is not idenfied then tooltip should point to python Path', async () => {
+        const resource = Uri.file('x');
+        const pythonPath = path.join('user', 'development', 'env', 'bin', 'python');
+        const workspaceFolder = Uri.file('workspace');
+        setupWorkspaceFolder(resource, workspaceFolder);
+        interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve([]));
+        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(undefined));
+        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
+        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
+
+        await interpreterDisplay.refresh(resource);
+
+        statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(pythonPath), TypeMoq.Times.once());
+    });
+    test('If interpreter file does not exist then update status bar accordingly', async () => {
+        const resource = Uri.file('x');
+        const pythonPath = path.join('user', 'development', 'env', 'bin', 'python');
+        const workspaceFolder = Uri.file('workspace');
+        setupWorkspaceFolder(resource, workspaceFolder);
+        // tslint:disable-next-line:no-any
+        interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve([{} as any]));
+        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(undefined));
+        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
+        fileSystem.setup(f => f.fileExistsAsync(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
         const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
-        assert.equal(statusBar.text, defaultDisplayName, 'Incorrect display name');
-    });
-    test('Must get display name from a list of interpreters', async () => {
-        const pythonPath = await new Promise<string>(resolve => {
-            child_process.execFile(PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath, ['-c', 'import sys;print(sys.executable)'], (_, stdout) => {
-                resolve(getFirstNonEmptyLineFromMultilineString(stdout));
-            });
-        }).then(value => value.length === 0 ? PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath : value);
-        const statusBar = new MockStatusBarItem();
-        const interpreters = [
-            { displayName: 'One', path: 'c:/path1/one.exe', type: InterpreterType.VirtualEnv },
-            { displayName: 'Two', path: pythonPath, type: InterpreterType.VirtualEnv },
-            { displayName: 'Three', path: 'c:/path3/three.exe', type: InterpreterType.VirtualEnv }
-        ];
-        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        interpreterService.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve(interpreters));
-        interpreterService.setup(p => p.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(interpreters[1]));
-        const displayName = 'Mock Display Name';
-        const displayNameProvider = new MockInterpreterVersionProvider(displayName, true);
-        const display = new InterpreterDisplay(statusBar, interpreterService.object, new VirtualEnvironmentManager([]), displayNameProvider);
-        await display.refresh();
+        versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(defaultDisplayName));
+        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
 
-        assert.equal(statusBar.text, interpreters[1].displayName, 'Incorrect display name');
-    });
-    test('Must suffix tooltip with the companyDisplayName of interpreter', async () => {
-        const pythonPath = await new Promise<string>(resolve => {
-            child_process.execFile(PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath, ['-c', 'import sys;print(sys.executable)'], (_, stdout) => {
-                resolve(getFirstNonEmptyLineFromMultilineString(stdout));
-            });
-        }).then(value => value.length === 0 ? PythonSettings.getInstance(Uri.file(fileInNonRootWorkspace)).pythonPath : value);
+        await interpreterDisplay.refresh(resource);
 
-        const statusBar = new MockStatusBarItem();
-        const interpreters = [
-            { displayName: 'One', path: 'c:/path1/one.exe', companyDisplayName: 'One 1', type: InterpreterType.VirtualEnv },
-            { displayName: 'Two', path: pythonPath, companyDisplayName: 'Two 2', type: InterpreterType.VirtualEnv },
-            { displayName: 'Three', path: 'c:/path3/three.exe', companyDisplayName: 'Three 3', type: InterpreterType.VirtualEnv }
-        ];
-        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        interpreterService.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve(interpreters));
-        interpreterService.setup(p => p.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(interpreters[1]));
-        const displayNameProvider = new MockInterpreterVersionProvider('');
-        const display = new InterpreterDisplay(statusBar, interpreterService.object, new VirtualEnvironmentManager([]), displayNameProvider);
-        await display.refresh();
-
-        assert.equal(statusBar.text, interpreters[1].displayName, 'Incorrect display name');
-        assert.equal(statusBar.tooltip, `${pythonPath}${EOL}${interpreters[1].companyDisplayName}`, 'Incorrect tooltip');
+        statusBar.verify(s => s.color = TypeMoq.It.isValue('yellow'), TypeMoq.Times.once());
+        statusBar.verify(s => s.text = TypeMoq.It.isValue('$(alert) Select Python Environment'), TypeMoq.Times.once());
     });
-    test('Will update status prompting user to select an interpreter', async () => {
-        const statusBar = new MockStatusBarItem();
-        const interpreters = [
-            { displayName: 'One', path: 'c:/path1/one.exe', companyDisplayName: 'One 1', type: InterpreterType.VirtualEnv },
-            { displayName: 'Two', path: 'c:/asdf', companyDisplayName: 'Two 2', type: InterpreterType.VirtualEnv },
-            { displayName: 'Three', path: 'c:/path3/three.exe', companyDisplayName: 'Three 3', type: InterpreterType.VirtualEnv }
-        ];
-        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        interpreterService.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve(interpreters));
-        const displayNameProvider = new MockInterpreterVersionProvider('', true);
-        const display = new InterpreterDisplay(statusBar, interpreterService.object, new VirtualEnvironmentManager([]), displayNameProvider);
-        // Change interpreter to an invalid value
-        const pythonPath = 'UnknownInterpreter';
-        await updateSetting('pythonPath', pythonPath, rootWorkspaceUri, configTarget);
-        await display.refresh();
+    test('Suffix display name with the virtual env name', async () => {
+        const resource = Uri.file('x');
+        const pythonPath = path.join('user', 'development', 'env', 'bin', 'python');
+        const workspaceFolder = Uri.file('workspace');
+        setupWorkspaceFolder(resource, workspaceFolder);
+        // tslint:disable-next-line:no-any
+        interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve([{} as any]));
+        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(undefined));
+        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
+        fileSystem.setup(f => f.fileExistsAsync(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
+        const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
+        versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(defaultDisplayName));
+        // tslint:disable-next-line:no-any
+        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve({ name: 'Mock Env Name' } as any));
+        const expectedText = `${defaultDisplayName} (Mock Env Name)`;
 
-        assert.equal(statusBar.text, '$(alert) Select Python Environment', 'Incorrect display name');
+        await interpreterDisplay.refresh(resource);
+
+        statusBar.verify(s => s.text = TypeMoq.It.isValue(expectedText), TypeMoq.Times.once());
     });
-    async function initializeMultiRoot() {
-        // For multiroot environments, we need a file open to determine the best interpreter that needs to be displayed
-        await openDummyFile();
-    }
-    async function openDummyFile() {
-        const document = await workspace.openTextDocument(fileInNonRootWorkspace);
-        await window.showTextDocument(document);
-    }
+    test('Use version of interpreter instead of a default interpreter name', async () => {
+        const resource = Uri.file('x');
+        const pythonPath = path.join('user', 'development', 'env', 'bin', 'python');
+        const workspaceFolder = Uri.file('workspace');
+        setupWorkspaceFolder(resource, workspaceFolder);
+        // tslint:disable-next-line:no-any
+        interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve([{} as any]));
+        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(undefined));
+        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
+        fileSystem.setup(f => f.fileExistsAsync(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
+        const displayName = 'Version from Interperter';
+        versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(displayName));
+        // tslint:disable-next-line:no-any
+        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
+
+        await interpreterDisplay.refresh(resource);
+
+        statusBar.verify(s => s.text = TypeMoq.It.isValue(displayName), TypeMoq.Times.once());
+    });
+    test('Ensure we try to identify the active workspace when a resource is not provided ', async () => {
+        const workspaceFolder = Uri.file('x');
+        const resource = workspaceFolder;
+        const activeInterpreter: PythonInterpreter = {
+            displayName: 'Dummy_Display_Name',
+            type: InterpreterType.Unknown,
+            companyDisplayName: 'Company Name',
+            path: path.join('user', 'development', 'env', 'bin', 'python')
+        };
+        interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(resource))).returns(() => Promise.resolve([]));
+        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(resource))).returns(() => Promise.resolve(activeInterpreter));
+        const expectedTooltip = `${activeInterpreter.path}${EOL}${activeInterpreter.companyDisplayName}`;
+        interpreterHelper.setup(i => i.getActiveWorkspaceUri()).returns(() => { return { folderUri: workspaceFolder, configTarget: ConfigurationTarget.Workspace }; });
+
+        await interpreterDisplay.refresh();
+
+        statusBar.verify(s => s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!, TypeMoq.Times.once());
+        statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(expectedTooltip)!, TypeMoq.Times.once());
+    });
 });
