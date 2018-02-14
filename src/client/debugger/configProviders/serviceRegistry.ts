@@ -1,0 +1,15 @@
+
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
+import { DebugConfigurationProvider } from 'vscode';
+import { PythonDebugConfigurationProvider, PythonV2DebugConfigurationProvider } from '..';
+import { IServiceManager } from '../../ioc/types';
+import { IDebugConfigurationProvider } from '../types';
+
+export function registerTypes(serviceManager: IServiceManager) {
+    serviceManager.addSingleton<DebugConfigurationProvider>(IDebugConfigurationProvider, PythonDebugConfigurationProvider);
+    serviceManager.addSingleton<DebugConfigurationProvider>(IDebugConfigurationProvider, PythonV2DebugConfigurationProvider);
+}

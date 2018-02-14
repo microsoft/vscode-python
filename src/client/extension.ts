@@ -6,9 +6,8 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 import { Container } from 'inversify';
-import * as os from 'os';
-import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import * as vscode from 'vscode';
+import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import { BannerService } from './banner';
 import { PythonSettings } from './common/configSettings';
 import * as settings from './common/configSettings';
@@ -22,7 +21,9 @@ import { registerTypes as processRegisterTypes } from './common/process/serviceR
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
-import { SimpleConfigurationProvider } from './debugger';
+import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
+import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
+import { IDebugConfigurationProvider } from './debugger/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import { ICondaService, IInterpreterService, IShebangCodeLensProvider } from './interpreter/contracts';
@@ -90,6 +91,7 @@ export async function activate(context: vscode.ExtensionContext) {
     platformRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
+    debugConfigurationRegisterTypes(serviceManager);
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
@@ -189,11 +191,9 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
 
-    // In case we have CR LF
-    const triggerCharacters: string[] = os.EOL.split('');
-    triggerCharacters.shift();
-
-    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
+    serviceContainer.getAll<BaseConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
+        context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));
+    });
     activationDeferred.resolve();
 
     // tslint:disable-next-line:no-unused-expression
