@@ -5,6 +5,7 @@ import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { ConfigSettingMonitor } from '../common/configSettingMonitor';
 import { PythonSettings } from '../common/configSettings';
 import { LinterErrors, PythonLanguage } from '../common/constants';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { ILinterInfo, ILinterManager, ILintMessage, LintMessageSeverity } from '../linters/types';
 import { sendTelemetryWhenDone } from '../telemetry';
@@ -46,6 +47,8 @@ export class LinterProvider implements vscode.Disposable {
     private context: vscode.ExtensionContext;
     private disposables: vscode.Disposable[];
     private configMonitor: ConfigSettingMonitor;
+    private interpreterService: IInterpreterService;
+
     public constructor(
         context: vscode.ExtensionContext,
         outputChannel: vscode.OutputChannel,
@@ -56,6 +59,10 @@ export class LinterProvider implements vscode.Disposable {
         this.outputChannel = outputChannel;
         this.context = context;
         this.disposables = [];
+
+        this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.lintOpenPythonFiles()));
+
         this.initialize();
         this.configMonitor = new ConfigSettingMonitor('linting');
         this.configMonitor.on('change', this.lintSettingsChangedHandler.bind(this));
@@ -106,7 +113,6 @@ export class LinterProvider implements vscode.Disposable {
             }
         });
         this.context.subscriptions.push(disposable);
-        this.lintOpenPythonFiles();
     }
 
     private lintOpenPythonFiles() {
@@ -186,43 +192,38 @@ export class LinterProvider implements vscode.Disposable {
                 this.sendLinterRunTelemetry(info, document.uri, promise, stopWatch, trigger);
                 return promise;
             });
-        this.documentHasJupyterCodeCells(document, cancelToken.token)
-            .then(hasJupyterCodeCells => {
-                // linters will resolve asynchronously - keep a track of all
-                // diagnostics reported as them come in.
-                let diagnostics: vscode.Diagnostic[] = [];
 
-                promises.forEach(p => {
-                    p.then(msgs => {
-                        if (cancelToken.token.isCancellationRequested) {
-                            return;
-                        }
+        const hasJupyterCodeCells = await this.documentHasJupyterCodeCells(document, cancelToken.token);
+        // linters will resolve asynchronously - keep a track of all
+        // diagnostics reported as them come in.
+        let diagnostics: vscode.Diagnostic[] = [];
 
-                        // Build the message and suffix the message with the name of the linter used.
-                        msgs.forEach(d => {
-                            // Ignore magic commands from jupyter.
-                            if (hasJupyterCodeCells && document.lineAt(d.line - 1).text.trim().startsWith('%') &&
-                                (d.code === LinterErrors.pylint.InvalidSyntax ||
-                                    d.code === LinterErrors.prospector.InvalidSyntax ||
-                                    d.code === LinterErrors.flake8.InvalidSyntax)) {
-                                return;
-                            }
-                            diagnostics.push(createDiagnostics(d, document));
-                        });
+        for (const p of promises) {
+            const msgs = await p;
+            if (cancelToken.token.isCancellationRequested) {
+                break;
+            }
 
-                        // Limit the number of messages to the max value.
-                        diagnostics = diagnostics.filter((value, index) => index <= settings.linting.maxNumberOfProblems);
+            diagnostics = [];
+            if (this.isDocumentOpen(document.uri)) {
+                // Build the message and suffix the message with the name of the linter used.
+                for (const m of msgs) {
+                    // Ignore magic commands from jupyter.
+                    if (hasJupyterCodeCells && document.lineAt(m.line - 1).text.trim().startsWith('%') &&
+                        (m.code === LinterErrors.pylint.InvalidSyntax ||
+                            m.code === LinterErrors.prospector.InvalidSyntax ||
+                            m.code === LinterErrors.flake8.InvalidSyntax)) {
+                        return;
+                    }
+                    diagnostics.push(createDiagnostics(m, document));
+                }
 
-                        if (!this.isDocumentOpen(document.uri)) {
-                            diagnostics = [];
-                        }
-                        // Set all diagnostics found in this pass, as this method always clears existing diagnostics.
-                        this.diagnosticCollection.set(document.uri, diagnostics);
-                    })
-                        .catch(ex => console.error('Python Extension: documentHasJupyterCodeCells.promises', ex));
-                });
-            })
-            .catch(ex => console.error('Python Extension: documentHasJupyterCodeCells', ex));
+                // Limit the number of messages to the max value.
+                diagnostics = diagnostics.filter((value, index) => index <= settings.linting.maxNumberOfProblems);
+            }
+            // Set all diagnostics found in this pass, as this method always clears existing diagnostics.
+            this.diagnosticCollection.set(document.uri, diagnostics);
+        }
     }
 
     private sendLinterRunTelemetry(info: ILinterInfo, resource: Uri, promise: Promise<ILintMessage[]>, stopWatch: StopWatch, trigger: LinterTrigger): void {

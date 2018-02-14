@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ConfigurationTarget, Disposable, StatusBarAlignment, Uri, window, workspace } from 'vscode';
+import { ConfigurationTarget, Disposable, Event, EventEmitter, StatusBarAlignment, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IDisposableRegistry } from '../common/types';
@@ -20,7 +20,9 @@ export class InterpreterManager implements Disposable, IInterpreterService {
     private display: InterpreterDisplay | null | undefined;
     private interpreterProvider: PythonInterpreterLocatorService;
     private pythonPathUpdaterService: PythonPathUpdaterService;
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    private didChangeInterpreterEmitter = new EventEmitter<void>();
+
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         const virtualEnvMgr = serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
         const statusBar = window.createStatusBarItem(StatusBarAlignment.Left);
         this.interpreterProvider = serviceContainer.get<PythonInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
@@ -31,6 +33,7 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         disposables.push(statusBar);
         disposables.push(this.display!);
+        disposables.push(this.didChangeInterpreterEmitter);
     }
     public async refresh() {
         return this.display!.refresh();
@@ -72,9 +75,14 @@ export class InterpreterManager implements Disposable, IInterpreterService {
             await this.pythonPathUpdaterService.updatePythonPath(pythonPath, activeWorkspace.configTarget, 'load', activeWorkspace.folderUri);
         }
     }
+
     public dispose(): void {
         this.display = null;
         this.interpreterProvider.dispose();
+    }
+
+    public get onDidChangeInterpreter(): Event<void> {
+        return this.didChangeInterpreterEmitter.event;
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
@@ -119,6 +127,7 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         return false;
     }
     private onConfigChanged() {
+        this.didChangeInterpreterEmitter.fire();
         if (this.display) {
             this.display!.refresh()
                 .catch(ex => console.error('Python Extension: display.refresh', ex));
