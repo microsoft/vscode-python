@@ -945,6 +945,11 @@
                 "configurationAttributes": {
                     "launch": {
                         "properties": {
+                            "module": {
+                                "type": "string",
+                                "description": "Name of the module to be debugged.",
+                                "default": ""
+                            },
                             "program": {
                                 "type": "string",
                                 "description": "Absolute path to the program.",
