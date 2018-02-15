@@ -34,7 +34,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.17.0"
+        "vscode": "^1.18.0"
     },
     "recommendations": [
         "donjayamanne.jupyter"
@@ -1748,6 +1748,7 @@
         "inversify": "^4.5.2",
         "line-by-line": "^0.1.5",
         "lodash": "^4.17.4",
+        "md5": "^2.2.1",
         "minimatch": "^3.0.3",
         "named-js-regexp": "^1.3.1",
         "opn": "^5.1.0",
@@ -1781,11 +1782,13 @@
         "@types/iconv-lite": "0.0.1",
         "@types/istanbul": "^0.4.29",
         "@types/lodash": "^4.14.74",
+        "@types/md5": "^2.1.32",
         "@types/mocha": "^2.2.43",
         "@types/node": "^6.0.40",
         "@types/semver": "^5.4.0",
         "@types/shortid": "0.0.29",
         "@types/sinon": "^2.3.2",
+        "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.3.27",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.0",

@@ -1,15 +1,22 @@
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, window } from 'vscode';
+import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { PYTHON_INTERPRETER } from '../../telemetry/constants';
 import { StopWatch } from '../../telemetry/stopWatch';
 import { PythonInterpreterTelemetry } from '../../telemetry/types';
 import { IInterpreterVersionService } from '../contracts';
-import { IPythonPathUpdaterServiceFactory } from './types';
+import { IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } from './types';
 
-export class PythonPathUpdaterService {
-    constructor(private pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory,
-        private interpreterVersionService: IInterpreterVersionService) { }
+@injectable()
+export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManager {
+    private readonly pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory;
+    private readonly interpreterVersionService: IInterpreterVersionService;
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        this.pythonPathSettingsUpdaterFactory = serviceContainer.get<IPythonPathUpdaterServiceFactory>(IPythonPathUpdaterServiceFactory);
+        this.interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
+    }
     public async updatePythonPath(pythonPath: string, configTarget: ConfigurationTarget, trigger: 'ui' | 'shebang' | 'load', wkspace?: Uri): Promise<void> {
         const stopWatch = new StopWatch();
         const pythonPathUpdater = this.getPythonUpdaterService(configTarget, wkspace);

@@ -4,7 +4,7 @@
 import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as untildify from 'untildify';
+import untildify = require('untildify');
 import { IPythonModule, IPythonProcess, IPythonThread } from './Contracts';
 
 export const IS_WINDOWS = /^win/.test(process.platform);
