@@ -217,6 +217,5 @@ function checkDocumentation(item: vscode.CompletionItem, expectedContains: strin
     assert.notEqual(documentation, null, 'Documentation is not MarkdownString');
 
     const inDoc = documentation.value.indexOf(expectedContains) >= 0;
-    const inDetails = item.detail!.indexOf(expectedContains) >= 0;
-    assert.equal(inDoc !== inDetails, true, 'Documentation incorrect');
+    assert.equal(inDoc, true, 'Documentation incorrect');
 }

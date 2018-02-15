@@ -228,9 +228,6 @@ suite('Hover Definition', () => {
             assert.equal(normalizeMarkedString(def[0].contents[0]), '```python' + EOL +
                 'class Thread(group=None, target=None, name=None, args=(), kwargs=None, verbose=None)' + EOL +
                 '```' + EOL +
-                'Thread(self, group=None, target=None, name=None,' + EOL +
-                'args=(), kwargs=None, verbose=None)' + EOL +
-                '' + EOL +
                 'A class that represents a thread of control.' + EOL +
                 '' + EOL +
                 'This class can be safely subclassed in a limited fashion.', 'Invalid content items');
@@ -254,11 +251,8 @@ suite('Hover Definition', () => {
             if (contents.indexOf('```python') === -1) {
                 assert.fail(contents, '', 'First line is incorrect', 'compare');
             }
-            if (contents.indexOf('Random number generator base class used by bound module functions.') === -1) {
-                assert.fail(contents, '', '\'Random number generator\' message missing', 'compare');
-            }
-            if (contents.indexOf('Class Random can also be subclassed if you want to use a different basic') === -1) {
-                assert.fail(contents, '', '\'Class Random message\' missing', 'compare');
+            if (contents.indexOf('rnd: Random') === -1) {
+                assert.fail(contents, '', 'Variable name or type are missing', 'compare');
             }
         }).then(done, done);
     });

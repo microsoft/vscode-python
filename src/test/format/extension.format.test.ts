@@ -1,4 +1,3 @@
-import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -8,6 +7,7 @@ import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { MockProcessService } from '../mocks/proc';
+import { compareFiles } from '../textUtils';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const ch = vscode.window.createOutputChannel('Tests');
@@ -92,7 +92,7 @@ suite('Formatting', () => {
         await textEditor.edit(editBuilder => {
             edits.forEach(edit => editBuilder.replace(edit.range, edit.newText));
         });
-        assert.equal(textEditor.document.getText(), formattedContents, 'Formatted text is not the same');
+        compareFiles(formattedContents, textEditor.document.getText());
     }
     test('AutoPep8', async () => await testFormatting(new AutoPep8Formatter(ioc.serviceContainer), formattedAutoPep8, autoPep8FileToFormat, 'autopep8.output'));
 

@@ -9,6 +9,7 @@ import * as utils from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
 import { IPythonPathUpdaterServiceManager } from './configuration/types';
 import { IInterpreterDisplay, IInterpreterHelper, IInterpreterLocatorService, IInterpreterService, IInterpreterVersionService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE } from './contracts';
+import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
 @injectable()
 export class InterpreterManager implements Disposable, IInterpreterService {
@@ -84,7 +85,12 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         }
         const pythonExecutableName = path.basename(fullyQualifiedPath);
         const versionInfo = await this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService).getVersion(fullyQualifiedPath, pythonExecutableName);
+        const virtualEnvManager = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
+        const virtualEnvName = await virtualEnvManager.detect(fullyQualifiedPath).then(env => env ? env.name : '');
+        const dislayNameSuffix = virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
+        const displayName = `${versionInfo}${dislayNameSuffix}`;
         return {
+            displayName,
             path: fullyQualifiedPath,
             type: InterpreterType.Unknown,
             version: versionInfo

@@ -76,11 +76,105 @@ suite('Language.Tokenizer', () => {
             assert.equal(tokens.getItemAt(i).type, TokenType.Comment);
         }
     });
+    test('Period/At to unknown token', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('.@x');
+        assert.equal(tokens.count, 3);
+
+        assert.equal(tokens.getItemAt(0).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(1).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(2).type, TokenType.Identifier);
+    });
     test('Unknown token', async () => {
         const t = new Tokenizer();
-        const tokens = t.tokenize('.');
+        const tokens = t.tokenize('~$');
         assert.equal(tokens.count, 1);
 
         assert.equal(tokens.getItemAt(0).type, TokenType.Unknown);
+    });
+    test('Hex number', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('1 0X2 0x3 0x');
+        assert.equal(tokens.count, 4);
+
+        assert.equal(tokens.getItemAt(0).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(0).length, 1);
+
+        assert.equal(tokens.getItemAt(1).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(1).length, 3);
+
+        assert.equal(tokens.getItemAt(2).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(2).length, 3);
+
+        assert.equal(tokens.getItemAt(3).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(3).length, 2);
+    });
+    test('Binary number', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('1 0B1 0b010 0b3 0b');
+        assert.equal(tokens.count, 6);
+
+        assert.equal(tokens.getItemAt(0).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(0).length, 1);
+
+        assert.equal(tokens.getItemAt(1).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(1).length, 3);
+
+        assert.equal(tokens.getItemAt(2).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(2).length, 5);
+
+        assert.equal(tokens.getItemAt(3).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(3).length, 1);
+
+        assert.equal(tokens.getItemAt(4).type, TokenType.Identifier);
+        assert.equal(tokens.getItemAt(4).length, 2);
+
+        assert.equal(tokens.getItemAt(5).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(5).length, 2);
+    });
+    test('Octal number', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('1 0o4 0o077 0o9 0oO');
+        assert.equal(tokens.count, 6);
+
+        assert.equal(tokens.getItemAt(0).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(0).length, 1);
+
+        assert.equal(tokens.getItemAt(1).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(1).length, 3);
+
+        assert.equal(tokens.getItemAt(2).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(2).length, 5);
+
+        assert.equal(tokens.getItemAt(3).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(3).length, 1);
+
+        assert.equal(tokens.getItemAt(4).type, TokenType.Identifier);
+        assert.equal(tokens.getItemAt(4).length, 2);
+
+        assert.equal(tokens.getItemAt(5).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(5).length, 3);
+    });
+    test('Operators', async () => {
+        const text = '< <> << <<= ' +
+            '== != > >> >>= ' +
+            '+ -' +
+            '* ** / /= //=' +
+            '*= += -= **= ' +
+            '& &= | |= ^ ^=';
+        const tokens = new Tokenizer().tokenize(text);
+        const lengths = [
+            1, 2, 2, 3,
+            2, 2, 1, 2, 3,
+            1, 1,
+            1, 2, 1, 2, 3,
+            2, 2, 2, 3,
+            1, 2, 1, 2, 1, 2];
+        assert.equal(tokens.count, lengths.length);
+        for (let i = 0; i < tokens.count; i += 1) {
+            const t = tokens.getItemAt(i);
+            assert.equal(t.type, TokenType.Operator, `${t.type} at ${i} is not an operator`);
+            assert.equal(t.length, lengths[i], `Length ${t.length} at ${i} (text ${text.substr(t.start, t.length)}), expected ${lengths[i]}`);
+        }
     });
 });
