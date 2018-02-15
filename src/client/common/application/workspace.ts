@@ -35,4 +35,7 @@ export class WorkspaceService implements IWorkspaceService {
     public findFiles(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, token?: vscode.CancellationToken): Thenable<vscode.Uri[]> {
         return vscode.workspace.findFiles(include, exclude, maxResults, token);
     }
+    public get textDocuments(): vscode.TextDocument[] {
+        return vscode.workspace.textDocuments;
+    }
 }

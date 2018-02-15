@@ -494,6 +494,13 @@ export interface IWorkspaceService {
      * @return The full configuration or a subset.
      */
     getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration;
+    /**
+     * All text documents currently known to the system.
+     *
+     * @readonly
+     */
+    // tslint:disable-next-line:member-ordering
+    readonly textDocuments: TextDocument[];
 }
 
 export const ITerminalManager = Symbol('ITerminalManager');
