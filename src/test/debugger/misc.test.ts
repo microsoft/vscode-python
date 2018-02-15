@@ -10,7 +10,7 @@ import { ThreadEvent } from 'vscode-debugadapter';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { sleep } from '../common';
-import { IS_MULTI_ROOT_TEST } from '../initialize';
+import { IS_CI_SERVER, IS_MULTI_ROOT_TEST } from '../initialize';
 
 use(chaiAsPromised);
 
@@ -23,19 +23,16 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
 [DEBUG_ADAPTER, EXPERIMENTAL_DEBUG_ADAPTER].forEach(testAdapterFilePath => {
     const debugAdapterFileName = path.basename(testAdapterFilePath);
     const debuggerType = debugAdapterFileName === 'Main.js' ? 'python' : 'pythonExperimental';
-    // tslint:disable-next-line:max-func-body-length
     suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
 
-        // tslint:disable-next-line:max-func-body-length
         let debugClient: DebugClient;
         setup(async function () {
             if (!IS_MULTI_ROOT_TEST) {
-                // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
-            if (debuggerType !== 'python') {
-                // tslint:disable-next-line:no-invalid-this
-                // return this.skip();
+            // Temporary, untill new version of PTVSD is bundled we cannot run tests
+            if (debuggerType !== 'python' && IS_CI_SERVER) {
+                return this.skip();
             }
             await new Promise(resolve => setTimeout(resolve, 1000));
             debugClient = new DebugClient('node', testAdapterFilePath, debuggerType);
@@ -52,18 +49,20 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
         });
 
         function buildLauncArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
+            // Temporary, untill new version of PTVSD is bundled we cannot run tests.
+            // For now lets run test locally.
+            const pythonPath = debuggerType === 'python' ? 'python' : '/Users/donjayamanne/anaconda3/envs/py36/bin/python';
+            const env = debuggerType === 'python' ? {} : { PYTHONPATH: '/Users/donjayamanne/Desktop/Development/vscode/ptvsd' };
             return {
                 program: path.join(debugFilesPath, pythonFile),
                 cwd: debugFilesPath,
                 stopOnEntry,
                 debugOptions: ['RedirectOutput'],
-                pythonPath: '/Users/donjayamanne/anaconda3/envs/py36/bin/python',
+                pythonPath,
                 args: [],
-                env: {
-                    PYTHONPATH: '/Users/donjayamanne/Desktop/Development/vscode/ptvsd'
-                },
+                env,
                 envFile: '',
-                logToFile: true,
+                logToFile: false,
                 type: debuggerType
             };
         }
@@ -131,20 +130,16 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 debugClient.waitForEvent('terminated')
             ]);
         });
-        test('Ensure threadid is int32', async function () {
-            if (debuggerType !== 'python') {
-                return this.skip();
-            }
-            const threadIdPromise = debugClient.waitForEvent('thread');
+        test('Ensure threadid is int32', async () => {
+            const launchArgs = buildLauncArgs('sample2.py', false);
+            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
+            await debugClient.hitBreakpoint(launchArgs, breakpointLocation);
 
-            await Promise.all([
-                debugClient.configurationSequence(),
-                debugClient.launch(buildLauncArgs('simplePrint.py', true)),
-                debugClient.waitForEvent('initialized'),
-                debugClient.waitForEvent('stopped')
-            ]);
+            const threads = await debugClient.threadsRequest();
+            expect(threads).to.be.not.equal(undefined, 'no threads response');
+            expect(threads.body.threads).to.be.lengthOf(1);
 
-            const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
+            const threadId = threads.body.threads[0].id;
             expect(threadId).to.be.lessThan(MAX_SIGNED_INT32 + 1, 'ThreadId is not an integer');
             await Promise.all([
                 debugClient.continueRequest({ threadId }),
@@ -202,7 +197,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 source: { path: breakpointLocation.path }
             });
 
-            const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
+            await threadIdPromise;
             const stackFramesPromise = debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
 
             // Wait for breakpoint to hit
@@ -226,8 +221,6 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
             expect(vardoc).to.be.not.equal('undefined', 'variable \'__doc__\' is undefined');
         });
         test('Test editing variables', async () => {
-            const threadIdPromise = debugClient.waitForEvent('thread');
-
             await Promise.all([
                 debugClient.configurationSequence(),
                 debugClient.launch(buildLauncArgs('sample2.py', false)),
@@ -241,7 +234,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 source: { path: breakpointLocation.path }
             });
 
-            const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
+            // const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
             const stackFramesPromise = debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
 
             // Wait for breakpoint to hit
@@ -275,7 +268,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 source: { path: breakpointLocation.path }
             });
 
-            const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
+            await threadIdPromise;
             const stackFramesPromise = debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
 
             // Wait for breakpoint to hit
@@ -305,146 +298,140 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
             const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
             await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
 
+            await debugClient.nextRequest({ threadId });
             const functionLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 7 };
-            let stackFramesPromise = debugClient.assertStoppedLocation('step', functionLocation);
-            await debugClient.nextRequest({ threadId });
-            await stackFramesPromise;
+            await debugClient.assertStoppedLocation('step', functionLocation);
 
+            await debugClient.nextRequest({ threadId });
             const functionInvocationLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 11 };
-            stackFramesPromise = debugClient.assertStoppedLocation('step', functionInvocationLocation);
-            await debugClient.nextRequest({ threadId });
-            await stackFramesPromise;
+            await debugClient.assertStoppedLocation('step', functionInvocationLocation);
 
+            await debugClient.nextRequest({ threadId });
             const printLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 13 };
-            stackFramesPromise = debugClient.assertStoppedLocation('step', printLocation);
-            await debugClient.nextRequest({ threadId });
-            await stackFramesPromise;
+            await debugClient.assertStoppedLocation('step', printLocation);
         });
-        // test('Test stepin and stepout', async () => {
-        //     const threadIdPromise = debugClient.waitForEvent('thread');
+        test('Test stepin and stepout', async () => {
+            const threadIdPromise = debugClient.waitForEvent('thread');
 
-        //     await Promise.all([
-        //         debugClient.configurationSequence(),
-        //         debugClient.launch(buildLauncArgs('sample2.py', true)),
-        //         debugClient.waitForEvent('initialized')
-        //     ]);
+            await Promise.all([
+                debugClient.configurationSequence(),
+                debugClient.launch(buildLauncArgs('sample2.py', false)),
+                debugClient.waitForEvent('initialized')
+            ]);
 
-        //     const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 3 };
-        //     await debugClient.setBreakpointsRequest({
-        //         lines: [breakpointLocation.line],
-        //         breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
-        //         source: { path: breakpointLocation.path }
-        //     });
+            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
+            await debugClient.setBreakpointsRequest({
+                lines: [breakpointLocation.line],
+                breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
+                source: { path: breakpointLocation.path }
+            });
 
-        //     // hit breakpoint.
-        //     const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
-        //     let stackFramesPromise = debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
-        //     await debugClient.continueRequest({ threadId });
-        //     await stackFramesPromise;
+            // hit breakpoint.
+            await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
+            const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
 
-        //     const functionLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
-        //     stackFramesPromise = debugClient.assertStoppedLocation('step', functionLocation);
-        //     await debugClient.nextRequest({ threadId });
-        //     await stackFramesPromise;
+            await debugClient.nextRequest({ threadId });
+            const functionLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 7 };
+            await debugClient.assertStoppedLocation('step', functionLocation);
 
-        //     const functionInvocationLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 9 };
-        //     stackFramesPromise = debugClient.assertStoppedLocation('step', functionInvocationLocation);
-        //     await debugClient.nextRequest({ threadId });
-        //     await stackFramesPromise;
+            await debugClient.nextRequest({ threadId });
+            const functionInvocationLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 11 };
+            await debugClient.assertStoppedLocation('step', functionInvocationLocation);
 
-        //     const loopPrintLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 6 };
-        //     stackFramesPromise = debugClient.assertStoppedLocation('step', loopPrintLocation);
-        //     await debugClient.stepInRequest({ threadId });
-        //     await stackFramesPromise;
+            await debugClient.stepInRequest({ threadId });
+            const loopPrintLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 8 };
+            await debugClient.assertStoppedLocation('step', loopPrintLocation);
 
-        //     stackFramesPromise = debugClient.assertStoppedLocation('step', functionInvocationLocation);
-        //     await debugClient.stepOutRequest({ threadId });
-        //     await stackFramesPromise;
+            await debugClient.stepOutRequest({ threadId });
+            await debugClient.assertStoppedLocation('step', functionInvocationLocation);
 
-        //     const printLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 11 };
-        //     stackFramesPromise = debugClient.assertStoppedLocation('step', printLocation);
-        //     await debugClient.nextRequest({ threadId });
-        //     await stackFramesPromise;
-        // });
-        // test('Test pausing', async () => {
-        //     const threadIdPromise = debugClient.waitForEvent('thread');
+            await debugClient.nextRequest({ threadId });
+            const printLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 13 };
+            await debugClient.assertStoppedLocation('step', printLocation);
+        });
+        test('Test pausing', async function () {
+            if (debuggerType !== 'python') {
+                return this.skip();
+            }
 
-        //     await Promise.all([
-        //         debugClient.configurationSequence(),
-        //         debugClient.launch(buildLauncArgs('forever.py', true)),
-        //         debugClient.waitForEvent('initialized'),
-        //         debugClient.waitForEvent('stopped')
-        //     ]);
+            await Promise.all([
+                debugClient.configurationSequence(),
+                debugClient.launch(buildLauncArgs('forever.py', false)),
+                debugClient.waitForEvent('initialized')
+            ]);
 
-        //     const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
-        //     await debugClient.continueRequest({ threadId });
+            await sleep(3);
+            const pauseLocation = { path: path.join(debugFilesPath, 'forever.py'), line: 5 };
+            const pausePromise = debugClient.assertStoppedLocation('pause', pauseLocation);
+            const threads = await debugClient.threadsRequest();
+            expect(threads).to.be.not.equal(undefined, 'no threads response');
+            expect(threads.body.threads).to.be.lengthOf(1);
+            await debugClient.pauseRequest({ threadId: threads.body.threads[0].id });
+            await pausePromise;
+        });
+        test('Test pausing on exceptions', async function () {
+            if (debuggerType !== 'python') {
+                return this.skip();
+            }
+            await Promise.all([
+                debugClient.configurationSequence(),
+                debugClient.launch(buildLauncArgs('sample3WithEx.py', false)),
+                debugClient.waitForEvent('initialized')
+            ]);
 
-        //     await sleep(3);
-        //     const pauseLocation = { path: path.join(debugFilesPath, 'forever.py'), line: 5 };
-        //     const pausePromise = debugClient.assertStoppedLocation('user request', pauseLocation);
-        //     await debugClient.pauseRequest({ threadId });
-        //     await pausePromise;
-        // });
-        // test('Test pausing on exceptions', async () => {
-        //     await Promise.all([
-        //         debugClient.configurationSequence(),
-        //         debugClient.launch(buildLauncArgs('sample3WithEx.py', false)),
-        //         debugClient.waitForEvent('initialized')
-        //     ]);
+            const pauseLocation = { path: path.join(debugFilesPath, 'sample3WithEx.py'), line: 5 };
+            await debugClient.assertStoppedLocation('exception', pauseLocation);
+        });
+        test('Test multi-threaded debugging', async () => {
+            await Promise.all([
+                debugClient.configurationSequence(),
+                debugClient.launch(buildLauncArgs('multiThread.py', false)),
+                debugClient.waitForEvent('initialized')
+            ]);
+            const pythonFile = path.join(debugFilesPath, 'multiThread.py');
+            const breakpointLocation = { path: pythonFile, column: 0, line: 11 };
+            await debugClient.setBreakpointsRequest({
+                lines: [breakpointLocation.line],
+                breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
+                source: { path: breakpointLocation.path }
+            });
 
-        //     const pauseLocation = { path: path.join(debugFilesPath, 'sample3WithEx.py'), line: 5 };
-        //     await debugClient.assertStoppedLocation('exception', pauseLocation);
-        // });
-        // test('Test multi-threaded debugging', async () => {
-        //     await Promise.all([
-        //         debugClient.configurationSequence(),
-        //         debugClient.launch(buildLauncArgs('multiThread.py', false)),
-        //         debugClient.waitForEvent('initialized')
-        //     ]);
-        //     const pythonFile = path.join(debugFilesPath, 'multiThread.py');
-        //     const breakpointLocation = { path: pythonFile, column: 0, line: 11 };
-        //     await debugClient.setBreakpointsRequest({
-        //         lines: [breakpointLocation.line],
-        //         breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
-        //         source: { path: breakpointLocation.path }
-        //     });
+            // hit breakpoint.
+            await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
 
-        //     // hit breakpoint.
-        //     await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
+            const threads = await debugClient.threadsRequest();
+            expect(threads.body.threads).of.lengthOf(2, 'incorrect number of threads');
+            for (const thread of threads.body.threads) {
+                expect(thread.id).to.be.lessThan(MAX_SIGNED_INT32 + 1, 'ThreadId is not an integer');
+            }
+        });
+        test('Test stack frames', async () => {
+            await Promise.all([
+                debugClient.configurationSequence(),
+                debugClient.launch(buildLauncArgs('stackFrame.py', false)),
+                debugClient.waitForEvent('initialized')
+            ]);
+            const pythonFile = path.join(debugFilesPath, 'stackFrame.py');
+            const breakpointLocation = { path: pythonFile, column: 0, line: 5 };
+            await debugClient.setBreakpointsRequest({
+                lines: [breakpointLocation.line],
+                breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
+                source: { path: breakpointLocation.path }
+            });
 
-        //     const threads = await debugClient.threadsRequest();
-        //     expect(threads.body.threads).of.lengthOf(2, 'incorrect number of threads');
-        //     for (const thread of threads.body.threads) {
-        //         expect(thread.id).to.be.lessThan(MAX_SIGNED_INT32 + 1, 'ThreadId is not an integer');
-        //     }
-        // });
-        // test('Test stack frames', async () => {
-        //     await Promise.all([
-        //         debugClient.configurationSequence(),
-        //         debugClient.launch(buildLauncArgs('stackFrame.py', false)),
-        //         debugClient.waitForEvent('initialized')
-        //     ]);
-        //     const pythonFile = path.join(debugFilesPath, 'stackFrame.py');
-        //     const breakpointLocation = { path: pythonFile, column: 0, line: 5 };
-        //     await debugClient.setBreakpointsRequest({
-        //         lines: [breakpointLocation.line],
-        //         breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
-        //         source: { path: breakpointLocation.path }
-        //     });
+            // hit breakpoint.
+            const stackframes = await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
 
-        //     // hit breakpoint.
-        //     const stackframes = await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
+            expect(stackframes.body.stackFrames[0].line).to.be.equal(5);
+            expect(stackframes.body.stackFrames[0].source!.path).to.be.equal(pythonFile);
+            expect(stackframes.body.stackFrames[0].name).to.be.equal('foo');
 
-        //     expect(stackframes.body.stackFrames[0].line).to.be.equal(5);
-        //     expect(stackframes.body.stackFrames[0].source!.path).to.be.equal(pythonFile);
-        //     expect(stackframes.body.stackFrames[0].name).to.be.equal('foo');
+            expect(stackframes.body.stackFrames[1].line).to.be.equal(8);
+            expect(stackframes.body.stackFrames[1].source!.path).to.be.equal(pythonFile);
+            expect(stackframes.body.stackFrames[1].name).to.be.equal('bar');
 
-        //     expect(stackframes.body.stackFrames[1].line).to.be.equal(8);
-        //     expect(stackframes.body.stackFrames[1].source!.path).to.be.equal(pythonFile);
-        //     expect(stackframes.body.stackFrames[1].name).to.be.equal('bar');
-
-        //     expect(stackframes.body.stackFrames[2].line).to.be.equal(10);
-        //     expect(stackframes.body.stackFrames[2].source!.path).to.be.equal(pythonFile);
-        // });
+            expect(stackframes.body.stackFrames[2].line).to.be.equal(10);
+            expect(stackframes.body.stackFrames[2].source!.path).to.be.equal(pythonFile);
+        });
     });
 });

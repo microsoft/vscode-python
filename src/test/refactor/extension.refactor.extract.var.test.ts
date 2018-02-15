@@ -10,7 +10,7 @@ import { getTextEditsFromPatch } from '../../client/common/editor';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
-import { closeActiveWindows, initialize, initializeTest, IS_TRAVIS, wait } from './../initialize';
+import { closeActiveWindows, initialize, initializeTest, IS_CI_SERVER, wait } from './../initialize';
 import { MockOutputChannel } from './../mockClasses';
 
 const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
@@ -125,7 +125,7 @@ suite('Variable Extraction', () => {
     }
 
     // This test fails on linux (text document not getting updated in time)
-    if (!IS_TRAVIS) {
+    if (!IS_CI_SERVER) {
         test('Extract Variable (end to end)', async () => {
             const startPos = new vscode.Position(234, 29);
             const endPos = new vscode.Position(234, 38);

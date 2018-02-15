@@ -159,7 +159,7 @@ export class PythonDebugger extends LoggingDebugSession {
         this.sendEvent(new ThreadEvent("exited", pyThread.Int32Id));
     }
     private onPythonProcessPaused(pyThread: IPythonThread) {
-        this.sendEvent(new StoppedEvent("user request", pyThread.Int32Id));
+        this.sendEvent(new StoppedEvent("pause", pyThread.Int32Id));
     }
     private onPythonModuleLoaded(module: IPythonModule) {
     }
