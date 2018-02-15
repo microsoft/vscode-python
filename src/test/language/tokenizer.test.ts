@@ -76,7 +76,7 @@ suite('Language.Tokenizer', () => {
             assert.equal(tokens.getItemAt(i).type, TokenType.Comment);
         }
     });
-    test('Unknown token', async () => {
+    test('Period/At to unknown token', async () => {
         const t = new Tokenizer();
         const tokens = t.tokenize('.@x');
         assert.equal(tokens.count, 3);
@@ -84,5 +84,78 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.getItemAt(0).type, TokenType.Unknown);
         assert.equal(tokens.getItemAt(1).type, TokenType.Unknown);
         assert.equal(tokens.getItemAt(2).type, TokenType.Identifier);
+    });
+    test('Unknown token', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('~$');
+        assert.equal(tokens.count, 1);
+
+        assert.equal(tokens.getItemAt(0).type, TokenType.Unknown);
+    });
+    test('Hex number', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('1 0X2 0x3 0x');
+        assert.equal(tokens.count, 4);
+
+        assert.equal(tokens.getItemAt(0).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(0).length, 1);
+
+        assert.equal(tokens.getItemAt(1).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(1).length, 3);
+
+        assert.equal(tokens.getItemAt(2).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(2).length, 3);
+
+        assert.equal(tokens.getItemAt(3).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(3).length, 2);
+    });
+    test('Binary number', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('1 0B1 0b010 0b3 0b');
+        assert.equal(tokens.count, 6);
+
+        assert.equal(tokens.getItemAt(0).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(0).length, 1);
+
+        assert.equal(tokens.getItemAt(1).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(1).length, 3);
+
+        assert.equal(tokens.getItemAt(2).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(2).length, 5);
+
+        assert.equal(tokens.getItemAt(3).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(3).length, 3);
+
+        assert.equal(tokens.getItemAt(4).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(4).length, 1);
+
+        assert.equal(tokens.getItemAt(5).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(5).length, 1);
+    });
+    test('Octal number', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('1 0o4 0o077 0o9 0oO');
+        assert.equal(tokens.count, 7);
+
+        assert.equal(tokens.getItemAt(0).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(0).length, 1);
+
+        assert.equal(tokens.getItemAt(1).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(1).length, 3);
+
+        assert.equal(tokens.getItemAt(2).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(2).length, 5);
+
+        assert.equal(tokens.getItemAt(3).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(3).length, 3);
+
+        assert.equal(tokens.getItemAt(4).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(4).length, 1);
+
+        assert.equal(tokens.getItemAt(5).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(5).length, 1);
+
+        assert.equal(tokens.getItemAt(6).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(6).length, 1);
     });
 });
