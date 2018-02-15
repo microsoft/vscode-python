@@ -21,15 +21,16 @@ export class LinterProvider implements vscode.Disposable {
     private configMonitor: ConfigSettingMonitor;
     private interpreterService: IInterpreterService;
     private linterManager: ILinterManager;
+    private engine: ILintingEngine;
 
     public constructor(
         context: vscode.ExtensionContext,
-        private engine: ILintingEngine,
         serviceContainer: IServiceContainer) {
 
         this.context = context;
         this.disposables = [];
 
+        this.engine = serviceContainer.get<ILintingEngine>(ILintingEngine);
         this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
 

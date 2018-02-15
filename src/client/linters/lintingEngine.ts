@@ -1,17 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { inject, injectable } from 'inversify';
 import { Minimatch } from 'minimatch';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { LinterErrors, PythonLanguage } from '../common/constants';
-import { IConfigurationService } from '../common/types';
+import { LinterErrors, PythonLanguage, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { IConfigurationService, IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { JupyterProvider } from '../jupyter/provider';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { LINTING } from '../telemetry/constants';
 import { StopWatch } from '../telemetry/stopWatch';
 import { LinterTrigger, LintingTelemetry } from '../telemetry/types';
 import { ILinterInfo, ILinterManager, ILintingEngine, ILintMessage, LintMessageSeverity } from './types';
+
+const PYTHON: vscode.DocumentFilter = { language: 'python' };
 
 const lintSeverityToVSSeverity = new Map<LintMessageSeverity, vscode.DiagnosticSeverity>();
 lintSeverityToVSSeverity.set(LintMessageSeverity.Error, vscode.DiagnosticSeverity.Error);
@@ -25,15 +29,19 @@ interface DocumentHasJupyterCodeCells {
   (doc: vscode.TextDocument, token: vscode.CancellationToken): Promise<Boolean>;
 }
 
+@injectable()
 export class LintingEngine implements ILintingEngine {
+  private documentHasJupyterCodeCells: DocumentHasJupyterCodeCells;
   private configurationService: IConfigurationService;
   private linterManager: ILinterManager;
   private diagnosticCollection: vscode.DiagnosticCollection;
   private pendingLintings = new Map<string, vscode.CancellationTokenSource>();
   private outputChannel: vscode.OutputChannel;
 
-  constructor(private serviceContainer: IServiceContainer, outputChannel: vscode.OutputChannel, public documentHasJupyterCodeCells: DocumentHasJupyterCodeCells) {
+  constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    this.documentHasJupyterCodeCells = (a, b) => Promise.resolve(false);
     this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+    this.outputChannel = serviceContainer.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
     this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
   }
@@ -121,6 +129,20 @@ export class LintingEngine implements ILintingEngine {
       // Set all diagnostics found in this pass, as this method always clears existing diagnostics.
       this.diagnosticCollection.set(document.uri, diagnostics);
     }
+  }
+
+  // tslint:disable-next-line:no-any
+  public async linkJupiterExtension(jupiter: vscode.Extension<any> | undefined): Promise<void> {
+    if (!jupiter) {
+      return;
+    }
+    if (!jupiter.isActive) {
+      await jupiter.activate();
+    }
+    // tslint:disable-next-line:no-unsafe-any
+    jupiter.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
+    // tslint:disable-next-line:no-unsafe-any
+    this.documentHasJupyterCodeCells = jupiter.exports.hasCodeCells;
   }
 
   private sendLinterRunTelemetry(info: ILinterInfo, resource: vscode.Uri, promise: Promise<ILintMessage[]>, stopWatch: StopWatch, trigger: LinterTrigger): void {
