@@ -10,12 +10,13 @@ import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
+    GLOBAL_VIRTUAL_ENV_SERVICE,
     IInterpreterLocatorService,
     InterpreterType,
     KNOWN_PATH_SERVICE,
     PythonInterpreter,
-    VIRTUAL_ENV_SERVICE,
-    WINDOWS_REGISTRY_SERVICE
+    WINDOWS_REGISTRY_SERVICE,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../contracts';
 import { fixInterpreterDisplayName } from './helpers';
 
@@ -24,7 +25,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     private disposables: Disposable[] = [];
     private platform: IPlatformService;
 
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
     }
@@ -67,7 +68,8 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         }
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, CONDA_ENV_SERVICE));
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, CONDA_ENV_FILE_SERVICE));
-        locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, VIRTUAL_ENV_SERVICE));
+        locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, GLOBAL_VIRTUAL_ENV_SERVICE));
+        locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE));
 
         if (!this.platform.isWindows) {
             locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, KNOWN_PATH_SERVICE));

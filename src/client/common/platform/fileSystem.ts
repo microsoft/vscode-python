@@ -9,7 +9,7 @@ import { IFileSystem, IPlatformService } from './types';
 
 @injectable()
 export class FileSystem implements IFileSystem {
-    constructor( @inject(IPlatformService) private platformService: IPlatformService) { }
+    constructor(@inject(IPlatformService) private platformService: IPlatformService) { }
 
     public get directorySeparatorChar(): string {
         return path.sep;
@@ -77,4 +77,13 @@ export class FileSystem implements IFileSystem {
             return path1 === path2;
         }
     }
+
+    public appendFileSync(filename: string, data: {}, encoding: string): void;
+    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string; }): void;
+    // tslint:disable-next-line:unified-signatures
+    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string; }): void;
+    public appendFileSync(filename: string, data: {}, optionsOrEncoding: {}): void {
+        return fs.appendFileSync(filename, data, optionsOrEncoding);
+    }
+
 }

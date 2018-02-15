@@ -135,7 +135,7 @@ suite('Terminal Code Execution', () => {
 
                 await executor.executeFile(file);
 
-                terminalService.verify(async t => await t.sendText(TypeMoq.It.isValue(`cd ${path.dirname(file.fsPath)}`)), TypeMoq.Times.once());
+                terminalService.verify(async t => await t.sendText(TypeMoq.It.isValue(`cd ${path.dirname(file.fsPath).fileToCommandArgument()}`)), TypeMoq.Times.once());
             }
             test('Ensure we set current directory before executing file (non windows)', async () => {
                 await ensureWeSetCurrentDirectoryBeforeExecutingAFile(false);
@@ -154,7 +154,7 @@ suite('Terminal Code Execution', () => {
                 terminalSettings.setup(t => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
-                const dir = `"${path.dirname(file.fsPath)}"`.fileToCommandArgument();
+                const dir = path.dirname(file.fsPath).fileToCommandArgument();
                 terminalService.verify(async t => await t.sendText(TypeMoq.It.isValue(`cd ${dir}`)), TypeMoq.Times.once());
             }
 

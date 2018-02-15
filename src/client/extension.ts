@@ -6,7 +6,6 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 import { Container } from 'inversify';
-import * as os from 'os';
 import * as vscode from 'vscode';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import { BannerService } from './banner';
@@ -19,15 +18,15 @@ import { PythonInstaller } from './common/installer/pythonInstallation';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
-import { IProcessService } from './common/process/types';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { GLOBAL_MEMENTO, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
-import { SimpleConfigurationProvider } from './debugger';
+import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
+import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
+import { IDebugConfigurationProvider } from './debugger/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import { InterpreterSelector } from './interpreter/configuration/interpreterSelector';
-import { ICondaService, IInterpreterService, IInterpreterVersionService } from './interpreter/contracts';
-import { ShebangCodeLensProvider } from './interpreter/display/shebangCodeLensProvider';
+import { IInterpreterSelector } from './interpreter/configuration/types';
+import { ICondaService, IInterpreterService, IShebangCodeLensProvider } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
@@ -92,6 +91,7 @@ export async function activate(context: vscode.ExtensionContext) {
     platformRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
+    debugConfigurationRegisterTypes(serviceManager);
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
@@ -114,9 +114,7 @@ export async function activate(context: vscode.ExtensionContext) {
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
 
-    const processService = serviceContainer.get<IProcessService>(IProcessService);
-    const interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-    context.subscriptions.push(new InterpreterSelector(interpreterManager, interpreterVersionService, processService));
+    context.subscriptions.push(serviceContainer.get<IInterpreterSelector>(IInterpreterSelector));
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
     const jediFactory = new JediFactory(context.asAbsolutePath('.'), serviceContainer);
@@ -154,7 +152,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
     context.subscriptions.push(vscode.languages.registerReferenceProvider(PYTHON, new PythonReferenceProvider(jediFactory)));
     context.subscriptions.push(vscode.languages.registerCompletionItemProvider(PYTHON, new PythonCompletionItemProvider(jediFactory, serviceContainer), '.'));
-    context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, new ShebangCodeLensProvider(processService)));
+    context.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON, serviceContainer.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)));
 
     const symbolProvider = new PythonSymbolProvider(jediFactory);
     context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider(PYTHON, symbolProvider));
@@ -193,11 +191,9 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
 
-    // In case we have CR LF
-    const triggerCharacters: string[] = os.EOL.split('');
-    triggerCharacters.shift();
-
-    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('python', new SimpleConfigurationProvider()));
+    serviceContainer.getAll<BaseConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
+        context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));
+    });
     activationDeferred.resolve();
 
     // tslint:disable-next-line:no-unused-expression

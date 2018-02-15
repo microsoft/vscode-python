@@ -56,46 +56,31 @@ suite('Variable Extraction', () => {
         ioc.registerVariableTypes();
     }
 
-    function testingVariableExtraction(shouldError: boolean, startPos: Position, endPos: Position) {
+    async function testingVariableExtraction(shouldError: boolean, startPos: Position, endPos: Position): Promise<void> {
         const pythonSettings = PythonSettings.getInstance(vscode.Uri.file(refactorTargetFile));
         const rangeOfTextToExtract = new vscode.Range(startPos, endPos);
         const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile), ioc.serviceContainer);
-        let expectedTextEdits: vscode.TextEdit[];
-        let ignoreErrorHandling = false;
-        let mockTextDoc: vscode.TextDocument;
-        const DIFF = '--- a/refactor.py\n+++ b/refactor.py\n@@ -232,7 +232,8 @@\n         sys.stdout.flush()\n \n     def watch(self):\n-        self._write_response("STARTED")\n+        myNewVariable = "STARTED"\n+        self._write_response(myNewVariable)\n         while True:\n             try:\n                 self._process_request(self._input.readline())\n';
-        return new Promise<vscode.TextDocument>((resolve, reject) => {
-            vscode.workspace.openTextDocument(refactorTargetFile).then(textDocument => {
-                mockTextDoc = textDocument;
-                expectedTextEdits = getTextEditsFromPatch(textDocument.getText(), DIFF);
-                resolve();
-            }, reject);
-        })
-            .then(() => proxy.extractVariable<RenameResponse>(mockTextDoc, 'myNewVariable', refactorTargetFile, rangeOfTextToExtract, options))
-            .then(response => {
-                if (shouldError) {
-                    ignoreErrorHandling = true;
-                    assert.fail(null, null, 'Extraction should fail with an error', '');
-                }
-                const textEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
-                assert.equal(response.results.length, 1, 'Invalid number of items in response');
-                assert.equal(textEdits.length, expectedTextEdits.length, 'Invalid number of Text Edits');
-                textEdits.forEach(edit => {
-                    const foundEdit = expectedTextEdits.filter(item => item.newText === edit.newText && item.range.isEqual(edit.range));
-                    assert.equal(foundEdit.length, 1, 'Edit not found');
-                });
-            }).catch((error: any) => {
-                if (ignoreErrorHandling) {
-                    return Promise.reject(error!);
-                }
-                if (shouldError) {
-                    // Wait a minute this shouldn't work, what's going on
-                    assert.equal(true, true, 'Error raised as expected');
-                    return;
-                }
 
-                return Promise.reject(error!);
+        const DIFF = '--- a/refactor.py\n+++ b/refactor.py\n@@ -232,7 +232,8 @@\n         sys.stdout.flush()\n \n     def watch(self):\n-        self._write_response("STARTED")\n+        myNewVariable = "STARTED"\n+        self._write_response(myNewVariable)\n         while True:\n             try:\n                 self._process_request(self._input.readline())\n';
+        const mockTextDoc = await vscode.workspace.openTextDocument(refactorTargetFile);
+        const expectedTextEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
+        try {
+            const response = await proxy.extractVariable<RenameResponse>(mockTextDoc, 'myNewVariable', refactorTargetFile, rangeOfTextToExtract, options);
+            if (shouldError) {
+                assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
+            }
+            const textEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
+            assert.equal(response.results.length, 1, 'Invalid number of items in response');
+            assert.equal(textEdits.length, expectedTextEdits.length, 'Invalid number of Text Edits');
+            textEdits.forEach(edit => {
+                const foundEdit = expectedTextEdits.filter(item => item.newText === edit.newText && item.range.isEqual(edit.range));
+                assert.equal(foundEdit.length, 1, 'Edit not found');
             });
+        } catch (error) {
+            if (!shouldError) {
+                assert.equal('Error', 'No error', `${error}`);
+            }
+        }
     }
 
     test('Extract Variable', async () => {
@@ -110,58 +95,33 @@ suite('Variable Extraction', () => {
         await testingVariableExtraction(true, startPos, endPos);
     });
 
-    function testingVariableExtractionEndToEnd(shouldError: boolean, startPos: Position, endPos: Position) {
+    async function testingVariableExtractionEndToEnd(shouldError: boolean, startPos: Position, endPos: Position): Promise<void> {
         const ch = new MockOutputChannel('Python');
-        let textDocument: vscode.TextDocument;
-        let textEditor: vscode.TextEditor;
         const rangeOfTextToExtract = new vscode.Range(startPos, endPos);
-        let ignoreErrorHandling = false;
-        return vscode.workspace.openTextDocument(refactorTargetFile).then(document => {
-            textDocument = document;
-            return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
-            assert(vscode.window.activeTextEditor, 'No active editor');
-            editor.selections = [new vscode.Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end)];
-            editor.selection = new vscode.Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end);
-            textEditor = editor;
-            return;
-        }).then(() => {
-            return extractVariable(EXTENSION_DIR, textEditor, rangeOfTextToExtract, ch, ioc.serviceContainer).then(() => {
-                if (shouldError) {
-                    ignoreErrorHandling = true;
-                    assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
-                }
-                return textEditor.document.save();
-            }).then(() => {
-                assert.equal(ch.output.length, 0, 'Output channel is not empty');
-                assert.equal(textDocument.lineAt(234).text.trim().indexOf('newvariable'), 0, 'New Variable not created');
-                assert.equal(textDocument.lineAt(234).text.trim().endsWith('= "STARTED"'), true, 'Started Text Assigned to variable');
-                assert.equal(textDocument.lineAt(235).text.indexOf('(newvariable') >= 0, true, 'New Variable not being used');
-            }).catch((error: any) => {
-                if (ignoreErrorHandling) {
-                    return Promise.reject(error!);
-                }
-                if (shouldError) {
-                    // Wait a minute this shouldn't work, what's going on
-                    assert.equal(true, true, 'Error raised as expected');
-                    return;
-                }
 
-                return Promise.reject(error)!;
-            });
-        }, error => {
-            if (ignoreErrorHandling) {
-                return Promise.reject(error);
-            }
+        const textDocument = await vscode.workspace.openTextDocument(refactorTargetFile);
+        const editor = await vscode.window.showTextDocument(textDocument);
+
+        editor.selections = [new vscode.Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end)];
+        editor.selection = new vscode.Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end);
+        try {
+            await extractVariable(EXTENSION_DIR, editor, rangeOfTextToExtract, ch, ioc.serviceContainer);
             if (shouldError) {
-                // Wait a minute this shouldn't work, what's going on
-                assert.equal(true, true, 'Error raised as expected');
-            } else {
-                // tslint:disable-next-line:prefer-template restrict-plus-operands
-                assert.fail(error + '', null, 'Variable extraction failed\n' + ch.output, '');
-                return Promise.reject(error);
+                assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
             }
-        });
+            assert.equal(ch.output.length, 0, 'Output channel is not empty');
+
+            const newVarDefLine = textDocument.lineAt(editor.selection.start);
+            const newVarRefLine = textDocument.lineAt(newVarDefLine.lineNumber + 1);
+
+            assert.equal(newVarDefLine.text.trim().indexOf('newvariable'), 0, 'New Variable not created');
+            assert.equal(newVarDefLine.text.trim().endsWith('= "STARTED"'), true, 'Started Text Assigned to variable');
+            assert.equal(newVarRefLine.text.indexOf('(newvariable') >= 0, true, 'New Variable not being used');
+        } catch (error) {
+            if (!shouldError) {
+                assert.fail('Error', 'No error', `${error}`);
+            }
+        }
     }
 
     // This test fails on linux (text document not getting updated in time)

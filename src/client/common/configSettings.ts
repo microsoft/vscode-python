@@ -5,6 +5,7 @@ import { EventEmitter } from 'events';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ConfigurationTarget, Uri } from 'vscode';
+import { isTestExecution } from './constants';
 import {
     IAutoCompeteSettings,
     IFormattingSettings,
@@ -22,16 +23,12 @@ const untildify = require('untildify');
 
 export const IS_WINDOWS = /^win/.test(process.platform);
 
-export function isTestExecution(): boolean {
-    // tslint:disable-next-line:interface-name no-string-literal
-    return process.env['VSC_PYTHON_CI_TEST'] === '1';
-}
-
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
 
     public jediPath: string;
+    public jediMemoryLimit: number;
     public envFile: string;
     public disablePromptForFeatures: string[];
     public venvPath: string;
@@ -116,6 +113,8 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         } else {
             this.jediPath = '';
         }
+        this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
+
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.envFile = systemVariables.resolveAny(pythonSettings.get<string>('envFile'))!;
         // tslint:disable-next-line:no-any

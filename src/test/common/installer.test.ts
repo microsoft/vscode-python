@@ -37,12 +37,13 @@ suite('Installer', () => {
     });
     teardown(async () => {
         ioc.dispose();
-        closeActiveWindows();
+        await closeActiveWindows();
     });
 
     function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerUnitTestTypes();
+        ioc.registerFileSystemTypes();
         ioc.registerVariableTypes();
         ioc.registerLinterTypes();
         ioc.registerFormatterTypes();

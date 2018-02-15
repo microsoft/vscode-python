@@ -10,6 +10,7 @@ import { SocketStream } from "../common/net/socket/SocketStream";
 import { ExtractTryStatements } from "./Common/TryParser";
 import * as path from "path";
 import { IdDispenser } from '../common/idDispenser';
+import '../../client/common/extensions';
 
 export class PythonProcessCallbackHandler extends EventEmitter {
     private process: IPythonProcess;
@@ -113,7 +114,7 @@ export class PythonProcessCallbackHandler extends EventEmitter {
             return;
         }
 
-        let pyThread = utils.CreatePythonThread(threadId, this._createdFirstThread, this.process);
+        let pyThread = utils.CreatePythonThread(threadId, this._createdFirstThread, this.process, '', this.process.Threads.size + 1);
         this._createdFirstThread = true;
         this.process.Threads.set(threadId, pyThread);
         this.emit("threadCreated", pyThread);
@@ -220,7 +221,7 @@ export class PythonProcessCallbackHandler extends EventEmitter {
                 });
                 this.stream.WriteString("-");
             });
-        });
+        }).ignoreErrors();
     }
     private GetHandledExceptionRanges(fileName: string): Promise<{ startLine: number, endLine: number, expressions: string[] }[]> {
         return ExtractTryStatements(fileName).then(statements => {

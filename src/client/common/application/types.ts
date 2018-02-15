@@ -5,8 +5,9 @@
 // tslint:disable:no-any unified-signatures
 
 import * as vscode from 'vscode';
-import { CancellationToken, Disposable, Event, FileSystemWatcher, GlobPattern, TextDocument, TextDocumentShowOptions, WorkspaceConfiguration } from 'vscode';
+import { CancellationToken, ConfigurationChangeEvent, Disposable, Event, FileSystemWatcher, GlobPattern, TextDocument, TextDocumentShowOptions, WorkspaceConfiguration, WorkspaceFolderPickOptions } from 'vscode';
 import { TextEditor, TextEditorEdit, TextEditorOptionsChangeEvent, TextEditorSelectionChangeEvent, TextEditorViewColumnChangeEvent } from 'vscode';
+import { StatusBarAlignment, StatusBarItem } from 'vscode';
 import { Uri, ViewColumn, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { Terminal, TerminalOptions } from 'vscode';
 
@@ -197,6 +198,55 @@ export interface IApplicationShell {
      * @param url Url to open.
      */
     openUrl(url: string): void;
+
+    /**
+     * Set a message to the status bar. This is a short hand for the more powerful
+     * status bar [items](#window.createStatusBarItem).
+     *
+     * @param text The message to show, supports icon substitution as in status bar [items](#StatusBarItem.text).
+     * @param hideAfterTimeout Timeout in milliseconds after which the message will be disposed.
+     * @return A disposable which hides the status bar message.
+     */
+    setStatusBarMessage(text: string, hideAfterTimeout: number): Disposable;
+
+    /**
+     * Set a message to the status bar. This is a short hand for the more powerful
+     * status bar [items](#window.createStatusBarItem).
+     *
+     * @param text The message to show, supports icon substitution as in status bar [items](#StatusBarItem.text).
+     * @param hideWhenDone Thenable on which completion (resolve or reject) the message will be disposed.
+     * @return A disposable which hides the status bar message.
+     */
+    setStatusBarMessage(text: string, hideWhenDone: Thenable<any>): Disposable;
+
+    /**
+     * Set a message to the status bar. This is a short hand for the more powerful
+     * status bar [items](#window.createStatusBarItem).
+     *
+     * *Note* that status bar messages stack and that they must be disposed when no
+     * longer used.
+     *
+     * @param text The message to show, supports icon substitution as in status bar [items](#StatusBarItem.text).
+     * @return A disposable which hides the status bar message.
+     */
+    setStatusBarMessage(text: string): Disposable;
+
+    /**
+     * Creates a status bar [item](#StatusBarItem).
+     *
+     * @param alignment The alignment of the item.
+     * @param priority The priority of the item. Higher values mean the item should be shown more to the left.
+     * @return A new status bar item.
+     */
+    createStatusBarItem(alignment?: StatusBarAlignment, priority?: number): StatusBarItem;
+    /**
+     * Shows a selection list of [workspace folders](#workspace.workspaceFolders) to pick from.
+     * Returns `undefined` if no folder is open.
+     *
+     * @param options Configures the behavior of the workspace folder list.
+     * @return A promise that resolves to the workspace folder or `undefined`.
+     */
+    showWorkspaceFolderPick(options?: WorkspaceFolderPickOptions): Thenable<WorkspaceFolder | undefined>;
 }
 
 export const ICommandManager = Symbol('ICommandManager');
@@ -371,7 +421,7 @@ export interface IWorkspaceService {
     /**
      * An event that is emitted when the [configuration](#WorkspaceConfiguration) changed.
      */
-    readonly onDidChangeConfiguration: Event<void>;
+    readonly onDidChangeConfiguration: Event<ConfigurationChangeEvent>;
 
     /**
      * Returns the [workspace folder](#WorkspaceFolder) that contains a given uri.

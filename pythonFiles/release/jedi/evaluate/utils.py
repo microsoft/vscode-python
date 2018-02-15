@@ -2,11 +2,19 @@
 import sys
 import contextlib
 import functools
-import re
-from ast import literal_eval
 
-from jedi._compatibility import unicode, reraise
-from jedi import settings
+from jedi._compatibility import reraise
+
+
+def to_list(func):
+    def wrapper(*args, **kwargs):
+        return list(func(*args, **kwargs))
+    return wrapper
+
+
+def unite(iterable):
+    """Turns a two dimensional array into a one dimensional."""
+    return set(typ for types in iterable for typ in types)
 
 
 class UncaughtAttributeError(Exception):
@@ -81,29 +89,6 @@ class PushBackIterator(object):
 
 
 @contextlib.contextmanager
-def scale_speed_settings(factor):
-    a = settings.max_executions
-    b = settings.max_until_execution_unique
-    settings.max_executions *= factor
-    settings.max_until_execution_unique *= factor
-    try:
-        yield
-    finally:
-        settings.max_executions = a
-        settings.max_until_execution_unique = b
-
-
-def indent_block(text, indention='    '):
-    """This function indents a text block with a default of four spaces."""
-    temp = ''
-    while text and text[-1] == '\n':
-        temp += text[-1]
-        text = text[:-1]
-    lines = text.split('\n')
-    return '\n'.join(map(lambda s: indention + s, lines)) + temp
-
-
-@contextlib.contextmanager
 def ignored(*exceptions):
     """
     Context manager that ignores all of the specified exceptions. This will
@@ -115,40 +100,11 @@ def ignored(*exceptions):
         pass
 
 
-def source_to_unicode(source, encoding=None):
-    def detect_encoding():
-        """
-        For the implementation of encoding definitions in Python, look at:
-        - http://www.python.org/dev/peps/pep-0263/
-        - http://docs.python.org/2/reference/lexical_analysis.html#encoding-declarations
-        """
-        byte_mark = literal_eval(r"b'\xef\xbb\xbf'")
-        if source.startswith(byte_mark):
-            # UTF-8 byte-order mark
-            return 'utf-8'
-
-        first_two_lines = re.match(r'(?:[^\n]*\n){0,2}', str(source)).group(0)
-        possible_encoding = re.search(r"coding[=:]\s*([-\w.]+)",
-                                      first_two_lines)
-        if possible_encoding:
-            return possible_encoding.group(1)
-        else:
-            # the default if nothing else has been set -> PEP 263
-            return encoding if encoding is not None else 'iso-8859-1'
-
-    if isinstance(source, unicode):
-        # only cast str/bytes
-        return source
-
-    # cast to unicode by default
-    return unicode(source, detect_encoding(), 'replace')
-
-
-def splitlines(string):
-    """
-    A splitlines for Python code. In contrast to Python's ``str.splitlines``,
-    looks at form feeds and other special characters as normal text. Just
-    splits ``\n`` and ``\r\n``.
-    Also different: Returns ``['']`` for an empty string input.
-    """
-    return re.split('\n|\r\n', string)
+def indent_block(text, indention='    '):
+    """This function indents a text block with a default of four spaces."""
+    temp = ''
+    while text and text[-1] == '\n':
+        temp += text[-1]
+        text = text[:-1]
+    lines = text.split('\n')
+    return '\n'.join(map(lambda s: indention + s, lines)) + temp

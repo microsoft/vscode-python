@@ -44,7 +44,10 @@ export interface ExceptionHandling {
     unhandled: string[];
 }
 
+export type DebuggerType = 'python' | 'pythonExperimental';
+
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
+    type?: DebuggerType;
     /** An absolute path to the program to debug. */
     module?: string;
     program: string;
@@ -61,6 +64,8 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
     console?: 'none' | 'integratedTerminal' | 'externalTerminal';
     port?: number;
     host?: string;
+    diagnosticLogging?: boolean;
+    logToFile?: boolean;
 }
 
 export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
@@ -155,6 +160,7 @@ export interface IPythonThread {
     Process: IPythonProcess;
     Name: string;
     Id: number;
+    Int32Id: number;
     Frames: IPythonStackFrame[];
 }
 

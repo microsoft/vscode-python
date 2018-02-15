@@ -9,7 +9,7 @@ import { BaseDebugServer } from './BaseDebugServer';
 export class LocalDebugServer extends BaseDebugServer {
     private debugSocketServer: net.Server | undefined;
 
-    constructor(debugSession: DebugSession, pythonProcess: IPythonProcess, private args: LaunchRequestArguments) {
+    constructor(debugSession: DebugSession, pythonProcess: IPythonProcess | undefined, private args: LaunchRequestArguments) {
         super(debugSession, pythonProcess);
     }
 
