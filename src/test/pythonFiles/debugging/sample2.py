@@ -1,3 +1,5 @@
+import time
+time.sleep(3)
 a = 1
 b = 2
 print(a + b)
