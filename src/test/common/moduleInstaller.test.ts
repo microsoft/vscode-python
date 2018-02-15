@@ -24,7 +24,7 @@ import { rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
-import { closeActiveWindows, initializeTest } from './../initialize';
+import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Module Installer', () => {
@@ -33,7 +33,7 @@ suite('Module Installer', () => {
     let condaService: TypeMoq.IMock<ICondaService>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
 
-    const workspaceUri = Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
+    const workspaceUri =  Uri.file(path.join(__dirname, '..', '..', '..', 'src', 'test'));
     suiteSetup(initializeTest);
     setup(async () => {
         initializeDI();
@@ -184,6 +184,43 @@ suite('Module Installer', () => {
         await pipInstaller.installModule(moduleName);
 
         expect(argsSent.join(' ')).equal(`-m pip install -U ${moduleName} --user`, 'Invalid command sent to terminal for installation.');
+    });
+
+    suite('Global Pip Install', () => {
+
+        async function setGlobaInstallationSetting(value: boolean){
+            const configService = ioc.serviceManager.get<IConfigurationService>(IConfigurationService);
+            const configTarget = IS_MULTI_ROOT_TEST  ? ConfigurationTarget.WorkspaceFolder  :  ConfigurationTarget.Workspace;
+            const multirootPath = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc');
+            const settingsUri = IS_MULTI_ROOT_TEST  ? Uri.file(multirootPath) : rootWorkspaceUri ;
+            await configService.updateSettingAsync('globalModuleInstallation', value, settingsUri, configTarget);
+        }
+
+        setup(async () => setGlobaInstallationSetting(true));
+
+        teardown(async () => setGlobaInstallationSetting(false));
+
+        test('Validate global pip install arguments', async () => {
+            const interpreterPath = await getCurrentPythonPath();
+            const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
+            mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ path: interpreterPath, type: InterpreterType.Unknown }]));
+            ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
+
+            const moduleName = 'xyz';
+
+            const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
+            const pipInstaller = moduleInstallers.find(item => item.displayName === 'Pip')!;
+
+            expect(pipInstaller).not.to.be.an('undefined', 'Pip installer not found');
+
+            let argsSent: string[] = [];
+            mockTerminalService
+                .setup(async t => await t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+                .returns((cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
+            await pipInstaller.installModule(moduleName);
+
+            expect(argsSent.join(' ')).equal(`-m pip install -U ${moduleName}`, 'Invalid command sent to terminal for installation.');
+        });
     });
 
     test('Validate Conda install arguments', async () => {
