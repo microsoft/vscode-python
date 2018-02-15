@@ -3,11 +3,12 @@
 
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
+import { ConfigurationChangeEvent } from 'vscode';
 import { IWorkspaceService } from './types';
 
 @injectable()
 export class WorkspaceService implements IWorkspaceService {
-    public get onDidChangeConfiguration(): vscode.Event<void> {
+    public get onDidChangeConfiguration(): vscode.Event<ConfigurationChangeEvent> {
         return vscode.workspace.onDidChangeConfiguration;
     }
     public get rootPath(): string | undefined {

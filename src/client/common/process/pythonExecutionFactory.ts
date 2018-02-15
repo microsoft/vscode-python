@@ -11,13 +11,13 @@ import { IPythonExecutionFactory, IPythonExecutionService } from './types';
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
     private envVarsService: IEnvironmentVariablesProvider;
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-            this.envVarsService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
-        }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+        this.envVarsService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+    }
     public async create(resource?: Uri): Promise<IPythonExecutionService> {
         return this.envVarsService.getEnvironmentVariables(resource)
             .then(customEnvVars => {
-                return new PythonExecutionService(this.serviceContainer, customEnvVars);
+                return new PythonExecutionService(this.serviceContainer, customEnvVars, resource);
             });
     }
 }

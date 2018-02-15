@@ -1,8 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
+// tslint:disable:no-any
+
+import { injectable, unmanaged } from 'inversify';
+import * as md5 from 'md5';
 import { Uri } from 'vscode';
+import { IWorkspaceService } from '../../../common/application/types';
 import { createDeferred, Deferred } from '../../../common/helpers';
 import { IPersistentStateFactory } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
@@ -10,50 +14,73 @@ import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
 
 @injectable()
 export abstract class CacheableLocatorService implements IInterpreterLocatorService {
-    private getInterpretersPromise: Deferred<PythonInterpreter[]>;
-    private readonly cacheKey: string;
-    constructor(name: string,
-        protected readonly serviceContainer: IServiceContainer) {
-        this.cacheKey = `INTERPRETERS_CACHE_${name}`;
+    private readonly promisesPerResource = new Map<string, Deferred<PythonInterpreter[]>>();
+    private readonly cacheKeyPrefix: string;
+    constructor(@unmanaged() name: string,
+        @unmanaged() protected readonly serviceContainer: IServiceContainer,
+        @unmanaged() private cachePerWorkspace: boolean = false) {
+        this.cacheKeyPrefix = `INTERPRETERS_CACHE_${name}`;
     }
     public abstract dispose();
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
-        if (!this.getInterpretersPromise) {
-            this.getInterpretersPromise = createDeferred<PythonInterpreter[]>();
+        const cacheKey = this.getCacheKey(resource);
+        let deferred = this.promisesPerResource.get(cacheKey);
+        if (!deferred) {
+            deferred = createDeferred<PythonInterpreter[]>();
+            this.promisesPerResource.set(cacheKey, deferred);
             this.getInterpretersImplementation(resource)
                 .then(async items => {
-                    await this.cacheInterpreters(items);
-                    this.getInterpretersPromise.resolve(items);
+                    await this.cacheInterpreters(items, resource);
+                    deferred!.resolve(items);
                 })
-                .catch(ex => this.getInterpretersPromise.reject(ex));
+                .catch(ex => deferred!.reject(ex));
         }
-        if (this.getInterpretersPromise.completed) {
-            return this.getInterpretersPromise.promise;
+        if (deferred.completed) {
+            return deferred.promise;
         }
 
-        const cachedInterpreters = this.getCachedInterpreters();
-        return Array.isArray(cachedInterpreters) ? cachedInterpreters : this.getInterpretersPromise.promise;
+        const cachedInterpreters = this.getCachedInterpreters(resource);
+        return Array.isArray(cachedInterpreters) ? cachedInterpreters : deferred.promise;
     }
 
     protected abstract getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]>;
-
-    private getCachedInterpreters() {
+    private createPersistenceStore(resource?: Uri) {
+        const cacheKey = this.getCacheKey(resource);
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        // tslint:disable-next-line:no-any
-        const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(this.cacheKey, undefined as any);
-        if (!Array.isArray(globalPersistence.value)) {
+        if (this.cachePerWorkspace) {
+            return persistentFactory.createWorkspacePersistentState<PythonInterpreter[]>(cacheKey, undefined as any);
+        } else {
+            return persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(cacheKey, undefined as any);
+        }
+
+    }
+    private getCachedInterpreters(resource?: Uri) {
+        const persistence = this.createPersistenceStore(resource);
+        if (!Array.isArray(persistence.value)) {
             return;
         }
-        return globalPersistence.value.map(item => {
+        return persistence.value.map(item => {
             return {
                 ...item,
                 cachedEntry: true
             };
         });
     }
-    private async cacheInterpreters(interpreters: PythonInterpreter[]) {
-        const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const globalPersistence = persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(this.cacheKey, []);
-        await globalPersistence.updateValue(interpreters);
+    private async cacheInterpreters(interpreters: PythonInterpreter[], resource?: Uri) {
+        const persistence = this.createPersistenceStore(resource);
+        await persistence.updateValue(interpreters);
+    }
+    private getCacheKey(resource?: Uri) {
+        if (!resource || !this.cachePerWorkspace) {
+            return this.cacheKeyPrefix;
+        }
+        // Ensure we have separate caches per workspace where necessary.Î
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        if (!Array.isArray(workspaceService.workspaceFolders)) {
+            return this.cacheKeyPrefix;
+        }
+
+        const workspace = workspaceService.getWorkspaceFolder(resource);
+        return workspace ? `${this.cacheKeyPrefix}:${md5(workspace.uri.fsPath)}` : this.cacheKeyPrefix;
     }
 }

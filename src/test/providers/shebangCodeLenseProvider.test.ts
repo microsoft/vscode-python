@@ -4,7 +4,6 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { CancellationTokenSource } from 'vscode';
 import { IS_WINDOWS, PythonSettings } from '../../client/common/configSettings';
-import { IProcessService } from '../../client/common/process/types';
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { getFirstNonEmptyLineFromMultilineString } from '../../client/interpreter/helpers';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
@@ -103,8 +102,7 @@ suite('Shebang detection', () => {
     }
 
     async function setupCodeLens(document: vscode.TextDocument) {
-        const processService = ioc.serviceContainer.get<IProcessService>(IProcessService);
-        const codeLensProvider = new ShebangCodeLensProvider(processService);
+        const codeLensProvider = new ShebangCodeLensProvider(ioc.serviceContainer);
         return await codeLensProvider.provideCodeLenses(document, new CancellationTokenSource().token);
     }
 });

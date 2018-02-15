@@ -1,62 +1,59 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ConfigurationTarget, Disposable, Event, EventEmitter, StatusBarAlignment, Uri, window, workspace } from 'vscode';
+import { ConfigurationTarget, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
 import { IPythonExecutionFactory } from '../common/process/types';
-import { IDisposableRegistry } from '../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../common/types';
 import * as utils from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
-import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterService';
-import { PythonPathUpdaterServiceFactory } from './configuration/pythonPathUpdaterServiceFactory';
-import { IInterpreterLocatorService, IInterpreterService, IInterpreterVersionService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PythonInterpreter } from './contracts';
-import { InterpreterDisplay } from './display';
-import { getActiveWorkspaceUri } from './helpers';
-import { PythonInterpreterLocatorService } from './locators';
-import { VirtualEnvService } from './locators/services/virtualEnvService';
-import { IVirtualEnvironmentManager } from './virtualEnvs/types';
+import { IPythonPathUpdaterServiceManager } from './configuration/types';
+import {
+    IInterpreterDisplay, IInterpreterHelper, IInterpreterLocatorService,
+    IInterpreterService, IInterpreterVersionService, INTERPRETER_LOCATOR_SERVICE,
+    InterpreterType, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE
+} from './contracts';
 
 @injectable()
 export class InterpreterManager implements Disposable, IInterpreterService {
-    private display: InterpreterDisplay | null | undefined;
-    private interpreterProvider: PythonInterpreterLocatorService;
-    private pythonPathUpdaterService: PythonPathUpdaterService;
-    private didChangeInterpreterEmitter = new EventEmitter<void>();
+    private readonly interpreterProvider: IInterpreterLocatorService;
+    private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager;
+    private readonly helper: IInterpreterHelper;
+    private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-        const virtualEnvMgr = serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
-        const statusBar = window.createStatusBarItem(StatusBarAlignment.Left);
-        this.interpreterProvider = serviceContainer.get<PythonInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
-        const versionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-        this.display = new InterpreterDisplay(statusBar, this, virtualEnvMgr, versionService);
-        this.pythonPathUpdaterService = new PythonPathUpdaterService(new PythonPathUpdaterServiceFactory(), versionService);
+        this.interpreterProvider = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
+        this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
 
-        const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        disposables.push(statusBar);
-        disposables.push(this.display!);
-        disposables.push(this.didChangeInterpreterEmitter);
+        this.pythonPathUpdaterService = this.serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager);
     }
-    public async refresh() {
-        return this.display!.refresh();
+
+    public async refresh(resource?: Uri) {
+        const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
+        return interpreterDisplay.refresh(resource);
     }
+
     public initialize() {
         const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        disposables.push(window.onDidChangeActiveTextEditor(() => this.refresh()));
-        PythonSettings.getInstance().addListener('change', () => this.onConfigChanged());
+        const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
+        disposables.push(documentManager.onDidChangeActiveTextEditor((e) => this.refresh(e.document.uri)));
+        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        (configService.getSettings() as PythonSettings).addListener('change', this.onConfigChanged);
     }
+
     public getInterpreters(resource?: Uri) {
         return this.interpreterProvider.getInterpreters(resource);
     }
+
     public async autoSetInterpreter() {
         if (!this.shouldAutoSetInterpreter()) {
             return;
         }
-        const activeWorkspace = getActiveWorkspaceUri();
+        const activeWorkspace = this.helper.getActiveWorkspaceUri();
         if (!activeWorkspace) {
             return;
         }
-        const virtualEnvMgr = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
-        const versionService = this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-        const virtualEnvInterpreterProvider = new VirtualEnvService([activeWorkspace.folderUri.fsPath], virtualEnvMgr, versionService, this.serviceContainer);
+        const virtualEnvInterpreterProvider = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
         const interpreters = await virtualEnvInterpreterProvider.getInterpreters(activeWorkspace.folderUri);
         const workspacePathUpper = activeWorkspace.folderUri.fsPath.toUpperCase();
 
@@ -77,8 +74,10 @@ export class InterpreterManager implements Disposable, IInterpreterService {
     }
 
     public dispose(): void {
-        this.display = null;
         this.interpreterProvider.dispose();
+        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        (configService.getSettings() as PythonSettings).removeListener('change', this.onConfigChanged);
+        this.didChangeInterpreterEmitter.dispose();
     }
 
     public get onDidChangeInterpreter(): Event<void> {
@@ -108,11 +107,12 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         };
     }
     private shouldAutoSetInterpreter() {
-        const activeWorkspace = getActiveWorkspaceUri();
+        const activeWorkspace = this.helper.getActiveWorkspaceUri();
         if (!activeWorkspace) {
             return false;
         }
-        const pythonConfig = workspace.getConfiguration('python', activeWorkspace.folderUri);
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const pythonConfig = workspaceService.getConfiguration('python', activeWorkspace.folderUri);
         const pythonPathInConfig = pythonConfig.inspect<string>('pythonPath');
         // If we have a value in user settings, then don't auto set the interpreter path.
         if (pythonPathInConfig && pythonPathInConfig!.globalValue !== undefined && pythonPathInConfig!.globalValue !== 'python') {
@@ -126,11 +126,10 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         }
         return false;
     }
-    private onConfigChanged() {
+    private onConfigChanged = () => {
         this.didChangeInterpreterEmitter.fire();
-        if (this.display) {
-            this.display!.refresh()
-                .catch(ex => console.error('Python Extension: display.refresh', ex));
-        }
+        const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
+        interpreterDisplay.refresh()
+            .catch(ex => console.error('Python Extension: display.refresh', ex));
     }
 }

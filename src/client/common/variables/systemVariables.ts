@@ -3,44 +3,6 @@ import * as Types from './sysTypes';
 import { IStringDictionary, ISystemVariables } from './types';
 /* tslint:disable:rule1 no-any no-unnecessary-callback-wrapper jsdoc-format no-for-in prefer-const no-increment-decrement */
 
-export abstract class Parser {
-
-    protected static merge<T>(destination: T, source: T, overwrite: boolean): void {
-        Object.keys(source).forEach((key) => {
-            const destValue = (destination as any as { [key: string]: string })[key];
-            const sourceValue = (source as any as { [key: string]: string })[key];
-            if (Types.isUndefined(sourceValue)) {
-                return;
-            }
-            if (Types.isUndefined(destValue)) {
-                (destination as any as { [key: string]: string })[key] = sourceValue;
-            } else {
-                if (overwrite) {
-                    if (Types.isObject(destValue) && Types.isObject(sourceValue)) {
-                        this.merge(destValue, sourceValue, overwrite);
-                    } else {
-                        (destination as any as { [key: string]: string })[key] = sourceValue;
-                    }
-                }
-            }
-        });
-    }
-
-    // tslint:disable-next-line:no-empty
-    protected log(message: string): void { }
-
-    // tslint:disable-next-line:no-any
-    protected is(value: any, func: (value: any) => boolean, wrongTypeState?: any, wrongTypeMessage?: string, undefinedState?: any, undefinedMessage?: string): boolean {
-        if (Types.isUndefined(value)) {
-            return false;
-        }
-        if (!func(value)) {
-            return false;
-        }
-        return true;
-    }
-}
-
 export abstract class AbstractSystemVariables implements ISystemVariables {
 
     public resolve(value: string): string;
