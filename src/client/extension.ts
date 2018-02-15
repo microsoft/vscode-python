@@ -172,7 +172,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const jupyterExtension = vscode.extensions.getExtension('donjayamanne.jupyter');
     const lintingEngine = serviceContainer.get<ILintingEngine>(ILintingEngine);
-    lintingEngine.linkJupiterExtension(jupyterExtension);
+    lintingEngine.linkJupiterExtension(jupyterExtension).ignoreErrors();
 
     tests.activate(context, unitTestOutChannel, symbolProvider, serviceContainer);
 
