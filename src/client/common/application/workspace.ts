@@ -38,4 +38,13 @@ export class WorkspaceService implements IWorkspaceService {
     public get textDocuments(): vscode.TextDocument[] {
         return vscode.workspace.textDocuments;
     }
+    public get onDidOpenTextDocument(): vscode.Event<vscode.TextDocument> {
+        return vscode.workspace.onDidOpenTextDocument;
+    }
+    public get onDidCloseTextDocument(): vscode.Event<vscode.TextDocument> {
+        return vscode.workspace.onDidCloseTextDocument;
+    }
+    public get onDidSaveTextDocument(): vscode.Event<vscode.TextDocument> {
+        return vscode.workspace.onDidSaveTextDocument;
+    }
 }

@@ -13,7 +13,7 @@ import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LinterCommands } from '../../client/linters/linterCommands';
 import { LinterManager } from '../../client/linters/linterManager';
-import { ILinterManager } from '../../client/linters/types';
+import { ILinterManager, ILintingEngine } from '../../client/linters/types';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 // tslint:disable-next-line:max-func-body-length
@@ -22,6 +22,7 @@ suite('Linting - Linter Selector', () => {
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let commands: LinterCommands;
     let lm: ILinterManager;
+    let engine: TypeMoq.IMock<ILintingEngine>;
 
     suiteSetup(initialize);
     setup(async () => {
@@ -42,6 +43,9 @@ suite('Linting - Linter Selector', () => {
         const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, commandManager.object);
         serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
+
+        engine = TypeMoq.Mock.ofType<ILintingEngine>();
+        serviceManager.addSingletonInstance<ILintingEngine>(ILintingEngine, engine.object);
 
         lm = new LinterManager(serviceContainer);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
@@ -67,6 +71,11 @@ suite('Linting - Linter Selector', () => {
 
     test('No linters active', async () => {
         await selectLinterAsync([Product.flake8]);
+    });
+
+    test('Run linter command', async () => {
+        commands.runLinting();
+        engine.verify(p => p.lintOpenPythonFiles(), TypeMoq.Times.once());
     });
 
     async function enableDisableLinterAsync(enable: boolean): Promise<void> {

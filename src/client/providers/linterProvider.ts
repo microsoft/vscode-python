@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
+import { IWorkspaceService } from '../common/application/types';
 import { ConfigSettingMonitor } from '../common/configSettingMonitor';
-import { PythonSettings } from '../common/configSettings';
+import { IFileSystem } from '../common/platform/types';
+import { IConfigurationService } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { ILinterManager, ILintingEngine } from '../linters/types';
-import { LinterTrigger } from '../telemetry/types';
 
 const uriSchemesToIgnore = ['git', 'showModifications', 'svn'];
 
@@ -20,73 +20,45 @@ export class LinterProvider implements vscode.Disposable {
     private disposables: vscode.Disposable[];
     private configMonitor: ConfigSettingMonitor;
     private interpreterService: IInterpreterService;
+    private workspace: IWorkspaceService;
+    private configuration: IConfigurationService;
     private linterManager: ILinterManager;
     private engine: ILintingEngine;
+    private fs: IFileSystem;
 
-    public constructor(
-        context: vscode.ExtensionContext,
-        serviceContainer: IServiceContainer) {
-
+    public constructor(context: vscode.ExtensionContext, serviceContainer: IServiceContainer) {
         this.context = context;
         this.disposables = [];
 
+        this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
         this.engine = serviceContainer.get<ILintingEngine>(ILintingEngine);
         this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
 
+        this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.engine.lintOpenPythonFiles()));
-        this.disposables.push(vscode.workspace.onDidSaveTextDocument((e) => this.onDocumentSaved(e)));
 
-        this.initialize();
+        this.workspace.onDidOpenTextDocument(e => this.onDocumentOpened(e), this.context.subscriptions);
+        this.workspace.onDidCloseTextDocument(e => this.onDocumentClosed(e), this.context.subscriptions);
+        this.workspace.onDidSaveTextDocument((e) => this.onDocumentSaved(e), this.context.subscriptions);
+
         this.configMonitor = new ConfigSettingMonitor('linting');
         this.configMonitor.on('change', this.lintSettingsChangedHandler.bind(this));
     }
+
+    public get diagnostics(): vscode.DiagnosticCollection {
+        return this.diagnosticCollection;
+    }
+
     public dispose() {
         this.disposables.forEach(d => d.dispose());
         this.configMonitor.dispose();
     }
+
     private isDocumentOpen(uri: vscode.Uri): boolean {
-        return vscode.workspace.textDocuments.some(document => document.uri.fsPath === uri.fsPath);
-    }
-
-    private initialize() {
-        this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
-
-        let disposable = vscode.workspace.onDidSaveTextDocument((e) => {
-            const settings = PythonSettings.getInstance(e.uri);
-            if (e.languageId !== 'python' || !settings.linting.enabled || !settings.linting.lintOnSave) {
-                return;
-            }
-            this.lintDocument(e, 100, 'save');
-        });
-        this.context.subscriptions.push(disposable);
-
-        vscode.workspace.onDidOpenTextDocument((e) => {
-            const settings = PythonSettings.getInstance(e.uri);
-            if (e.languageId !== 'python' || !settings.linting.enabled) {
-                return;
-            }
-            // Exclude files opened by vscode when showing a diff view.
-            if (uriSchemesToIgnore.indexOf(e.uri.scheme) >= 0) {
-                return;
-            }
-            if (!e.uri.path || (path.basename(e.uri.path) === e.uri.path && !fs.existsSync(e.uri.path))) {
-                return;
-            }
-            this.lintDocument(e, 100, 'auto');
-        }, this.context.subscriptions);
-
-        disposable = vscode.workspace.onDidCloseTextDocument(textDocument => {
-            if (!textDocument || !textDocument.fileName || !textDocument.uri) {
-                return;
-            }
-
-            // Check if this document is still open as a duplicate editor.
-            if (!this.isDocumentOpen(textDocument.uri) && this.diagnosticCollection.has(textDocument.uri)) {
-                this.diagnosticCollection.set(textDocument.uri, []);
-            }
-        });
-        this.context.subscriptions.push(disposable);
+        return this.workspace.textDocuments.some(document => this.fs.arePathsSame(document.uri.fsPath, uri.fsPath));
     }
 
     private lintSettingsChangedHandler(configTarget: ConfigurationTarget, wkspaceOrFolder: Uri) {
@@ -103,27 +75,44 @@ export class LinterProvider implements vscode.Disposable {
         });
     }
 
-    // tslint:disable-next-line:member-ordering no-any
-    private lastTimeout: any;
-    private lintDocument(document: vscode.TextDocument, delay: number, trigger: LinterTrigger): void {
-        // Since this is a hack, lets wait for 2 seconds before linting.
-        // Give user to continue typing before we waste CPU time.
-        if (this.lastTimeout) {
-            clearTimeout(this.lastTimeout);
-            this.lastTimeout = 0;
+    private async onDocumentOpened(document: vscode.TextDocument): Promise<void> {
+        const settings = this.configuration.getSettings(document.uri);
+        if (document.languageId !== 'python' || !settings.linting.enabled) {
+            return;
         }
-
-        this.lastTimeout = setTimeout(async () => {
-            await this.engine.lintDocument(document, trigger);
-        }, delay);
+        // Exclude files opened by vscode when showing a diff view.
+        if (uriSchemesToIgnore.indexOf(document.uri.scheme) >= 0) {
+            return;
+        }
+        if (!document.uri.path ||
+            (path.basename(document.uri.path) === document.uri.path && !await this.fs.fileExistsAsync(document.uri.path))) {
+            return;
+        }
+        this.engine.lintDocument(document, 'auto').ignoreErrors();
     }
 
     private onDocumentSaved(document: vscode.TextDocument) {
+        const settings = this.configuration.getSettings(document.uri);
+        if (document.languageId === 'python' && settings.linting.enabled && settings.linting.lintOnSave) {
+            this.engine.lintDocument(document, 'save').ignoreErrors();
+            return;
+        }
+
         const linters = this.linterManager.getActiveLinters(document.uri);
         const fileName = path.basename(document.uri.fsPath).toLowerCase();
         const watchers = linters.filter((info) => info.configFileNames.indexOf(fileName) >= 0);
         if (watchers.length > 0) {
             setTimeout(() => this.engine.lintOpenPythonFiles(), 1000);
+        }
+    }
+
+    private onDocumentClosed(document: vscode.TextDocument) {
+        if (!document || !document.fileName || !document.uri) {
+            return;
+        }
+        // Check if this document is still open as a duplicate editor.
+        if (!this.isDocumentOpen(document.uri) && this.diagnosticCollection.has(document.uri)) {
+            this.diagnosticCollection.set(document.uri, []);
         }
     }
 }

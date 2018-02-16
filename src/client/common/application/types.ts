@@ -424,6 +424,19 @@ export interface IWorkspaceService {
     readonly onDidChangeConfiguration: Event<ConfigurationChangeEvent>;
 
     /**
+     * An event that is emitted when a [text document](#TextDocument) is opened.
+     */
+    readonly onDidOpenTextDocument: Event<TextDocument>;
+    /**
+     * An event that is emitted when a [text document](#TextDocument) is disposed.
+     */
+    readonly onDidCloseTextDocument: Event<TextDocument>;
+    /**
+     * An event that is emitted when a [text document](#TextDocument) is saved to disk.
+     */
+    readonly onDidSaveTextDocument: Event<TextDocument>;
+
+    /**
      * Returns the [workspace folder](#WorkspaceFolder) that contains a given uri.
      * * returns `undefined` when the given uri doesn't match any workspace folder
      * * returns the *input* when the given uri is a workspace folder itself
