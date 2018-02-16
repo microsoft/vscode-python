@@ -104,7 +104,7 @@ suite('Interpreters Display', () => {
         statusBar.verify(s => s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!, TypeMoq.Times.once());
         statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(expectedTooltip)!, TypeMoq.Times.once());
     });
-    test('If interpreter is not idenfied then tooltip should point to python Path', async () => {
+    test('If interpreter is not idenfied then tooltip should point to python Path and text containing the folder name', async () => {
         const resource = Uri.file('x');
         const pythonPath = path.join('user', 'development', 'env', 'bin', 'python');
         const workspaceFolder = Uri.file('workspace');
@@ -114,10 +114,30 @@ suite('Interpreters Display', () => {
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
         virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
+        versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns((_path, defaultDisplayName) => Promise.resolve(defaultDisplayName));
 
         await interpreterDisplay.refresh(resource);
 
         statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(pythonPath), TypeMoq.Times.once());
+        statusBar.verify(s => s.text = TypeMoq.It.isValue(`${path.basename(pythonPath)} [Environment]`), TypeMoq.Times.once());
+    });
+    test('If virtual environment interpreter is not idenfied then text should contain the type of virtual environment', async () => {
+        const resource = Uri.file('x');
+        const pythonPath = path.join('user', 'development', 'env', 'bin', 'python');
+        const workspaceFolder = Uri.file('workspace');
+        setupWorkspaceFolder(resource, workspaceFolder);
+        interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve([]));
+        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(undefined));
+        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
+        // tslint:disable-next-line:no-any
+        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve({ name: 'Mock Name' } as any));
+        versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns((_path, defaultDisplayName) => Promise.resolve(defaultDisplayName));
+
+        await interpreterDisplay.refresh(resource);
+
+        statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(pythonPath), TypeMoq.Times.once());
+        statusBar.verify(s => s.text = TypeMoq.It.isValue(`${path.basename(pythonPath)} [Environment] (Mock Name)`), TypeMoq.Times.once());
     });
     test('If interpreter file does not exist then update status bar accordingly', async () => {
         const resource = Uri.file('x');

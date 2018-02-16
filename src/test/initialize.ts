@@ -3,7 +3,6 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { PythonSettings } from '../client/common/configSettings';
 import { activated } from '../client/extension';
-import { StopWatch } from '../client/telemetry/stopWatch';
 import { clearPythonPathInWorkspaceFolder, resetGlobalPythonPathSetting, setPythonPathInWorkspaceRoot } from './common';
 
 const dummyPythonFile = path.join(__dirname, '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
@@ -16,7 +15,7 @@ process.env['VSC_PYTHON_CI_TEST'] = '1';
 
 const PYTHON_PATH = getPythonPath();
 // tslint:disable-next-line:no-string-literal prefer-template
-export const IS_TRAVIS = (process.env['TRAVIS'] + '') === 'true';
+export const IS_CI_SERVER = (typeof process.env['TRAVIS'] === 'string' ? process.env['TRAVIS'] : '') === 'true';
 export const TEST_TIMEOUT = 25000;
 export const IS_MULTI_ROOT_TEST = isMultitrootTest();
 
