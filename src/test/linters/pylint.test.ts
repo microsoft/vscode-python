@@ -9,7 +9,6 @@ import { Pylint } from '../../client/linters/pylint';
 
 suite('Linting - Pylintrc search', () => {
     const basePath = '/user/a/b/c/d';
-    const file = path.join(basePath, 'file.py');
     const pylintrc = 'pylintrc';
     const dotPylintrc = '.pylintrc';
 
@@ -23,11 +22,11 @@ suite('Linting - Pylintrc search', () => {
 
     test('pylintrc in the file folder', async () => {
         fileSystem.setup(x => x.fileExistsAsync(path.join(basePath, pylintrc))).returns(() => Promise.resolve(true));
-        let result = await Pylint.hasConfigurationFile(fileSystem.object, file, platformService.object);
+        let result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the file folder.`);
 
         fileSystem.setup(x => x.fileExistsAsync(path.join(basePath, dotPylintrc))).returns(() => Promise.resolve(true));
-        result = await Pylint.hasConfigurationFile(fileSystem.object, file, platformService.object);
+        result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the file folder.`);
     });
     test('pylintrc up the module tree', async () => {
@@ -41,7 +40,7 @@ suite('Linting - Pylintrc search', () => {
         fileSystem.setup(x => x.fileExistsAsync(module3)).returns(() => Promise.resolve(true));
         fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
 
-        const result = await Pylint.hasConfigurationFile(fileSystem.object, file, platformService.object);
+        const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the module tree.`);
     });
     test('.pylintrc up the module tree', async () => {
@@ -56,7 +55,7 @@ suite('Linting - Pylintrc search', () => {
         fileSystem.setup(x => x.fileExistsAsync(module3)).returns(() => Promise.resolve(true));
         fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
 
-        const result = await Pylint.hasConfigurationFile(fileSystem.object, file, platformService.object);
+        const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the module tree.`);
     });
     test('.pylintrc up the ~ folder', async () => {
@@ -64,7 +63,7 @@ suite('Linting - Pylintrc search', () => {
         const rc = path.join(home, dotPylintrc);
         fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
 
-        const result = await Pylint.hasConfigurationFile(fileSystem.object, file, platformService.object);
+        const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the ~ folder.`);
     });
     test('pylintrc up the ~/.config folder', async () => {
@@ -72,7 +71,7 @@ suite('Linting - Pylintrc search', () => {
         const rc = path.join(home, '.config', pylintrc);
         fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
 
-        const result = await Pylint.hasConfigurationFile(fileSystem.object, file, platformService.object);
+        const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the  ~/.config folder.`);
     });
     test('pylintrc in the /etc folder', async () => {
@@ -80,7 +79,7 @@ suite('Linting - Pylintrc search', () => {
         const rc = path.join('/etc', pylintrc);
         fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
 
-        const result = await Pylint.hasConfigurationFile(fileSystem.object, file, platformService.object);
+        const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the /etc folder.`);
     });
 });

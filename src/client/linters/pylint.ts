@@ -25,11 +25,14 @@ export class Pylint extends BaseLinter {
         let minArgs: string[] = [];
         // Only use minimal checkers if
         //  a) there are no custom arguments and
-        //  b) there is no pylintrc file
+        //  b) there is no pylintrc file next to the file or at the workspace root
         const uri = document.uri;
         const settings = this.configService.getSettings(uri);
         if (settings.linting.pylintUseMinimalCheckers
             && this.info.linterArgs(uri).length === 0
+            // Check pylintrc next to the file
+            && !await Pylint.hasConfigurationFile(this.fileSystem, path.dirname(uri.fsPath), this.platformService)
+            // Checn for pylintrc at the root (function will strip the file name)
             && !await Pylint.hasConfigurationFile(this.fileSystem, this.getWorkspaceRootPath(document), this.platformService)) {
             minArgs = [
                 '--disable=all',
@@ -51,7 +54,7 @@ export class Pylint extends BaseLinter {
     }
 
     // tslint:disable-next-line:member-ordering
-    public static async hasConfigurationFile(fs: IFileSystem, filePath: string, platformService: IPlatformService): Promise<boolean> {
+    public static async hasConfigurationFile(fs: IFileSystem, folder: string, platformService: IPlatformService): Promise<boolean> {
         // https://pylint.readthedocs.io/en/latest/user_guide/run.html
         // https://github.com/PyCQA/pylint/blob/975e08148c0faa79958b459303c47be1a2e1500a/pylint/config.py
         // 1. pylintrc in the current working directory
@@ -69,7 +72,7 @@ export class Pylint extends BaseLinter {
             return true;
         }
 
-        let dir = path.dirname(filePath);
+        let dir = folder;
         const pylintrc = 'pylintrc';
         const dotPylintrc = '.pylintrc';
         if (await fs.fileExistsAsync(path.join(dir, pylintrc)) || await fs.fileExistsAsync(path.join(dir, dotPylintrc))) {
