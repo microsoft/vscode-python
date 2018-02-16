@@ -10,23 +10,23 @@ Python configuration issues? Please check https://code.visualstudio.com/docs/pyt
 -->
 
 ## Environment data
-VS Code version: 
-Python Extension version: 
-Python Version: 
-OS and version: 
+VS Code version:  
+Python Extension version:  
+Python Version:   
+OS and version:    
 
 ## Actual behavior
 
 ## Expected  behavior
 
-## Steps to reproduce:
--
--
+## Steps to reproduce:  
+-  
+-  
 
 ## Logs
-Output from ```Python``` output panel
+Output from ```Python``` output panel  
 ```
-```
+```   
 Output from ```Console window``` (Help->Developer Tools menu)
 ```
 ```
