@@ -25,6 +25,8 @@ import { BaseDebugServer } from './DebugServers/BaseDebugServer';
 import { initializeIoc } from './serviceRegistry';
 import { IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
 
+const DEBUGGER_CONNECT_TIMEOUT = 10000;
+
 export class PythonDebugger extends DebugSession {
     public debugServer?: BaseDebugServer;
     public debugClient?: DebugClient<{}>;
@@ -179,9 +181,8 @@ export class PythonDebugger extends DebugSession {
         const enableLogging = args.logToFile === true;
         this.emit('_py_enable_protocol_logging', enableLogging);
 
-        this.emit('_py_pre_launch');
-
         this.startPTVSDDebugger(args)
+            .then(() => this.waitForDebuggerConnection())
             .then(() => this.sendResponse(response))
             .catch(ex => {
                 const message = this.getErrorUserFriendlyMessage(args, ex) || 'Debug Error';
@@ -193,6 +194,21 @@ export class PythonDebugger extends DebugSession {
         this.debugServer = launcher.CreateDebugServer(undefined, this.serviceContainer);
         const serverInfo = await this.debugServer!.Start();
         return launcher.LaunchApplicationToDebug(serverInfo);
+    }
+    private async waitForDebuggerConnection() {
+        return new Promise<void>(async (resolve, reject) => {
+            let rejected = false;
+            const timeout = setTimeout(() => {
+                rejected = true;
+                reject(new Error('Timeout waiting for debugger connection'));
+            }, DEBUGGER_CONNECT_TIMEOUT);
+
+            await this.debugServer!.client;
+            timeout.unref();
+            if (!rejected) {
+                resolve();
+            }
+        });
     }
     private getErrorUserFriendlyMessage(launchArgs: LaunchRequestArguments, error: any): string | undefined {
         if (!error) {
