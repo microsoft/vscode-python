@@ -30,7 +30,7 @@ export class Pylint extends BaseLinter {
         const settings = this.configService.getSettings(uri);
         if (settings.linting.pylintUseMinimalCheckers
             && this.info.linterArgs(uri).length === 0
-            && !await Pylint.hasConfigurationFile(this.fileSystem, uri.fsPath, this.platformService)) {
+            && !await Pylint.hasConfigurationFile(this.fileSystem, this.getWorkspaceRootPath(document), this.platformService)) {
             minArgs = [
                 '--disable=all',
                 '--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,unused-wildcard-import,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode'
