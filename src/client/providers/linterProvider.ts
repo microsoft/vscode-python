@@ -4,7 +4,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
-import { IWorkspaceService } from '../common/application/types';
+import { IDocumentManager } from '../common/application/types';
 import { ConfigSettingMonitor } from '../common/configSettingMonitor';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
@@ -20,7 +20,7 @@ export class LinterProvider implements vscode.Disposable {
     private disposables: vscode.Disposable[];
     private configMonitor: ConfigSettingMonitor;
     private interpreterService: IInterpreterService;
-    private workspace: IWorkspaceService;
+    private documents: IDocumentManager;
     private configuration: IConfigurationService;
     private linterManager: ILinterManager;
     private engine: ILintingEngine;
@@ -34,15 +34,15 @@ export class LinterProvider implements vscode.Disposable {
         this.engine = serviceContainer.get<ILintingEngine>(ILintingEngine);
         this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-        this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.documents = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
 
         this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.engine.lintOpenPythonFiles()));
 
-        this.workspace.onDidOpenTextDocument(e => this.onDocumentOpened(e), this.context.subscriptions);
-        this.workspace.onDidCloseTextDocument(e => this.onDocumentClosed(e), this.context.subscriptions);
-        this.workspace.onDidSaveTextDocument((e) => this.onDocumentSaved(e), this.context.subscriptions);
+        this.documents.onDidOpenTextDocument(e => this.onDocumentOpened(e), this.context.subscriptions);
+        this.documents.onDidCloseTextDocument(e => this.onDocumentClosed(e), this.context.subscriptions);
+        this.documents.onDidSaveTextDocument((e) => this.onDocumentSaved(e), this.context.subscriptions);
 
         this.configMonitor = new ConfigSettingMonitor('linting');
         this.configMonitor.on('change', this.lintSettingsChangedHandler.bind(this));
@@ -58,7 +58,7 @@ export class LinterProvider implements vscode.Disposable {
     }
 
     private isDocumentOpen(uri: vscode.Uri): boolean {
-        return this.workspace.textDocuments.some(document => this.fs.arePathsSame(document.uri.fsPath, uri.fsPath));
+        return this.documents.textDocuments.some(document => this.fs.arePathsSame(document.uri.fsPath, uri.fsPath));
     }
 
     private lintSettingsChangedHandler(configTarget: ConfigurationTarget, wkspaceOrFolder: Uri) {

@@ -35,15 +35,6 @@ export class WorkspaceService implements IWorkspaceService {
     public findFiles(include: vscode.GlobPattern, exclude?: vscode.GlobPattern, maxResults?: number, token?: vscode.CancellationToken): Thenable<vscode.Uri[]> {
         return vscode.workspace.findFiles(include, exclude, maxResults, token);
     }
-    public get textDocuments(): vscode.TextDocument[] {
-        return vscode.workspace.textDocuments;
-    }
-    public get onDidOpenTextDocument(): vscode.Event<vscode.TextDocument> {
-        return vscode.workspace.onDidOpenTextDocument;
-    }
-    public get onDidCloseTextDocument(): vscode.Event<vscode.TextDocument> {
-        return vscode.workspace.onDidCloseTextDocument;
-    }
     public get onDidSaveTextDocument(): vscode.Event<vscode.TextDocument> {
         return vscode.workspace.onDidSaveTextDocument;
     }

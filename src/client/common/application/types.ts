@@ -313,6 +313,12 @@ export const IDocumentManager = Symbol('IDocumentManager');
 
 export interface IDocumentManager {
     /**
+     * All text documents currently known to the system.
+     *
+     * @readonly
+     */
+    readonly textDocuments: TextDocument[];
+    /**
      * The currently active editor or `undefined`. The active editor is the one
      * that currently has focus or, when none has focus, the one that has changed
      * input most recently.
@@ -352,6 +358,14 @@ export interface IDocumentManager {
      */
     readonly onDidChangeTextEditorViewColumn: Event<TextEditorViewColumnChangeEvent>;
 
+    /**
+     * An event that is emitted when a [text document](#TextDocument) is opened.
+     */
+    readonly onDidOpenTextDocument: Event<TextDocument>;
+    /**
+     * An event that is emitted when a [text document](#TextDocument) is disposed.
+     */
+    readonly onDidCloseTextDocument: Event<TextDocument>;
     /**
      * An event that is emitted when a [text document](#TextDocument) is saved to disk.
      */
@@ -424,19 +438,6 @@ export interface IWorkspaceService {
     readonly onDidChangeConfiguration: Event<ConfigurationChangeEvent>;
 
     /**
-     * An event that is emitted when a [text document](#TextDocument) is opened.
-     */
-    readonly onDidOpenTextDocument: Event<TextDocument>;
-    /**
-     * An event that is emitted when a [text document](#TextDocument) is disposed.
-     */
-    readonly onDidCloseTextDocument: Event<TextDocument>;
-    /**
-     * An event that is emitted when a [text document](#TextDocument) is saved to disk.
-     */
-    readonly onDidSaveTextDocument: Event<TextDocument>;
-
-    /**
      * Returns the [workspace folder](#WorkspaceFolder) that contains a given uri.
      * * returns `undefined` when the given uri doesn't match any workspace folder
      * * returns the *input* when the given uri is a workspace folder itself
@@ -507,13 +508,6 @@ export interface IWorkspaceService {
      * @return The full configuration or a subset.
      */
     getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration;
-    /**
-     * All text documents currently known to the system.
-     *
-     * @readonly
-     */
-    // tslint:disable-next-line:member-ordering
-    readonly textDocuments: TextDocument[];
 }
 
 export const ITerminalManager = Symbol('ITerminalManager');

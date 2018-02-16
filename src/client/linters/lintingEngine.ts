@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Minimatch } from 'minimatch';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IWorkspaceService } from '../common/application/types';
+import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { LinterErrors, PythonLanguage, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IConfigurationService, IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -33,7 +33,8 @@ interface DocumentHasJupyterCodeCells {
 @injectable()
 export class LintingEngine implements ILintingEngine {
   private documentHasJupyterCodeCells: DocumentHasJupyterCodeCells;
-  private workspaceService: IWorkspaceService;
+  private workspace: IWorkspaceService;
+  private documents: IDocumentManager;
   private configurationService: IConfigurationService;
   private linterManager: ILinterManager;
   private diagnosticCollection: vscode.DiagnosticCollection;
@@ -42,7 +43,8 @@ export class LintingEngine implements ILintingEngine {
 
   constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
     this.documentHasJupyterCodeCells = (a, b) => Promise.resolve(false);
-    this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    this.documents = serviceContainer.get<IDocumentManager>(IDocumentManager);
+    this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     this.outputChannel = serviceContainer.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
@@ -50,7 +52,7 @@ export class LintingEngine implements ILintingEngine {
   }
 
   public lintOpenPythonFiles(): void {
-    this.workspaceService.textDocuments.forEach(async document => {
+    this.documents.textDocuments.forEach(async document => {
       if (document.languageId === PythonLanguage.language) {
         await this.lintDocument(document, 'auto');
       }
@@ -59,7 +61,7 @@ export class LintingEngine implements ILintingEngine {
 
   public async lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void> {
     // Check if we need to lint this document
-    const workspaceFolder = this.workspaceService.getWorkspaceFolder(document.uri);
+    const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
     const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
     const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
     const settings = this.configurationService.getSettings(document.uri);
@@ -160,7 +162,7 @@ export class LintingEngine implements ILintingEngine {
   }
 
   private isDocumentOpen(uri: vscode.Uri): boolean {
-    return this.workspaceService.textDocuments.some(document => document.uri.fsPath === uri.fsPath);
+    return this.documents.textDocuments.some(document => document.uri.fsPath === uri.fsPath);
   }
 
   private createDiagnostics(message: ILintMessage, document: vscode.TextDocument): vscode.Diagnostic {

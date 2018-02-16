@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
-import { IWorkspaceService } from '../../client/common/application/types';
+import { IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/helpers';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, ILintingSettings, IPythonSettings, Product } from '../../client/common/types';
@@ -23,7 +23,7 @@ suite('Linting - Provider', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let engine: TypeMoq.IMock<ILintingEngine>;
     let configService: TypeMoq.IMock<IConfigurationService>;
-    let workspace: TypeMoq.IMock<IWorkspaceService>;
+    let docManager: TypeMoq.IMock<IDocumentManager>;
     let settings: TypeMoq.IMock<IPythonSettings>;
     let lm: ILinterManager;
     let serviceContainer: ServiceContainer;
@@ -50,8 +50,8 @@ suite('Linting - Provider', () => {
         engine = TypeMoq.Mock.ofType<ILintingEngine>();
         serviceManager.addSingletonInstance<ILintingEngine>(ILintingEngine, engine.object);
 
-        workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
-        serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
+        docManager = TypeMoq.Mock.ofType<IDocumentManager>();
+        serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, docManager.object);
 
         const lintSettings = TypeMoq.Mock.ofType<ILintingSettings>();
         lintSettings.setup(x => x.enabled).returns(() => true);
@@ -71,7 +71,7 @@ suite('Linting - Provider', () => {
     });
 
     test('Lint on open file', () => {
-        workspace.setup(x => x.onDidOpenTextDocument).returns(() => emitter.event);
+        docManager.setup(x => x.onDidOpenTextDocument).returns(() => emitter.event);
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.py'));
         document.setup(x => x.languageId).returns(() => 'python');
 
@@ -82,7 +82,7 @@ suite('Linting - Provider', () => {
     });
 
     test('Lint on save file', () => {
-        workspace.setup(x => x.onDidSaveTextDocument).returns(() => emitter.event);
+        docManager.setup(x => x.onDidSaveTextDocument).returns(() => emitter.event);
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.py'));
         document.setup(x => x.languageId).returns(() => 'python');
 
@@ -93,7 +93,7 @@ suite('Linting - Provider', () => {
     });
 
     test('No lint on open other files', () => {
-        workspace.setup(x => x.onDidOpenTextDocument).returns(() => emitter.event);
+        docManager.setup(x => x.onDidOpenTextDocument).returns(() => emitter.event);
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.cs'));
         document.setup(x => x.languageId).returns(() => 'csharp');
 
@@ -104,7 +104,7 @@ suite('Linting - Provider', () => {
     });
 
     test('No lint on save other files', () => {
-        workspace.setup(x => x.onDidSaveTextDocument).returns(() => emitter.event);
+        docManager.setup(x => x.onDidSaveTextDocument).returns(() => emitter.event);
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.cs'));
         document.setup(x => x.languageId).returns(() => 'csharp');
 
@@ -125,7 +125,7 @@ suite('Linting - Provider', () => {
     });
 
     test('Lint on save pylintrc', async () => {
-        workspace.setup(x => x.onDidSaveTextDocument).returns(() => emitter.event);
+        docManager.setup(x => x.onDidSaveTextDocument).returns(() => emitter.event);
         document.setup(x => x.uri).returns(() => vscode.Uri.file('.pylintrc'));
 
         await lm.setActiveLintersAsync([Product.pylint]);
@@ -143,13 +143,13 @@ suite('Linting - Provider', () => {
     test('Diagnostic not cleared on file opened in another tab', () => testClearDiagnosticsOnClose(false));
 
     function testClearDiagnosticsOnClose(closed: boolean) {
-        workspace.setup(x => x.onDidCloseTextDocument).returns(() => emitter.event);
+        docManager.setup(x => x.onDidCloseTextDocument).returns(() => emitter.event);
 
         const uri = vscode.Uri.file('test.py');
         document.setup(x => x.uri).returns(() => uri);
         document.setup(x => x.isClosed).returns(() => closed);
 
-        workspace.setup(x => x.textDocuments).returns(() => closed ? [] : [document.object]);
+        docManager.setup(x => x.textDocuments).returns(() => closed ? [] : [document.object]);
 
         const provider = new LinterProvider(context.object, serviceContainer);
         const diags: vscode.Diagnostic[] = [];
