@@ -81,7 +81,7 @@ export class PythonDebugger extends DebugSession {
             let terminatedEventSent = false;
             function dispose() {
                 if (!terminatedEventSent) {
-                    protocolMessageWriter.write(process.stdout, new TerminatedEvent());
+                    protocolMessageWriter.write(stdout, new TerminatedEvent());
                     terminatedEventSent = true;
                 }
                 session.shutdown();
@@ -106,6 +106,7 @@ export class PythonDebugger extends DebugSession {
             outputProtocolParser.on('response_launch', async () => {
                 const debuggerSocket = await session.debugServer!.client;
                 debuggerSocket.on('end', dispose);
+                debuggerSocket.on('error', dispose);
                 const debugSoketProtocolParser = serviceContainer.get<IProtocolParser>(IProtocolParser);
                 debugSoketProtocolParser.connect(debuggerSocket);
 
