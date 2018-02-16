@@ -359,7 +359,10 @@ export class Tokenizer implements ITokenizer {
     }
 
     private skipToSingleEndQuote(quote: number): void {
-        while (!this.cs.isEndOfStream() && this.cs.currentChar !== quote) {
+        while (!this.cs.isEndOfStream()) {
+            if (this.cs.currentChar === quote && this.cs.prevChar !== Char.Backslash) {
+                break;
+            }
             this.cs.moveNext();
         }
         this.cs.moveNext();
