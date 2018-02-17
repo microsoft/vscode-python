@@ -24,7 +24,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         const productName = ProductNames.get(product)!;
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         if (channels.length === 0) {
-            appShell.showInformationMessage(`No installers available to install ${productName}.`);
+            await this.showNoInstallersMessage(resource);
             return;
         }
 
