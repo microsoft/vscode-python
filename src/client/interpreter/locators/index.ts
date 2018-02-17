@@ -18,7 +18,7 @@ import {
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../contracts';
-import { fixInterpreterDisplayName } from './helpers';
+import { fixInterpreterDisplayName, isMacDefaultPythonPath } from './helpers';
 
 @injectable()
 export class PythonInterpreterLocatorService implements IInterpreterLocatorService {
@@ -45,7 +45,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             .map(fixInterpreterDisplayName)
             .map(item => { item.path = path.normalize(item.path); return item; })
             .reduce<PythonInterpreter[]>((accumulator, current) => {
-                if (this.platform.isMac && current.path === '/usr/bin/python') {
+                if (this.platform.isMac && isMacDefaultPythonPath(current.path)) {
                     return accumulator;
                 }
                 const existingItem = accumulator.find(item => arePathsSame(item.path, current.path));
