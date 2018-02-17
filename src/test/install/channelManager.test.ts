@@ -51,6 +51,7 @@ suite('Installation - channels', () => {
     });
 
     test('No installers message: Unknown/Mac', async () => {
+        platform.setup(x => x.isWindows).returns(() => false);
         platform.setup(x => x.isMac).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Unknown, (message: string, url: string) => {
             verifyMessage(message, ['Pip'], ['Conda']);
@@ -59,6 +60,7 @@ suite('Installation - channels', () => {
     });
 
     test('No installers message: Conda/Mac', async () => {
+        platform.setup(x => x.isWindows).returns(() => false);
         platform.setup(x => x.isMac).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Conda, (message: string, url: string) => {
             verifyMessage(message, ['Pip', 'Conda'], []);
@@ -67,6 +69,8 @@ suite('Installation - channels', () => {
     });
 
     test('No installers message: Unknown/Linux', async () => {
+        platform.setup(x => x.isWindows).returns(() => false);
+        platform.setup(x => x.isMac).returns(() => false);
         platform.setup(x => x.isLinux).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Unknown, (message: string, url: string) => {
             verifyMessage(message, ['Pip'], ['Conda']);
@@ -75,6 +79,8 @@ suite('Installation - channels', () => {
     });
 
     test('No installers message: Conda/Linux', async () => {
+        platform.setup(x => x.isWindows).returns(() => false);
+        platform.setup(x => x.isMac).returns(() => false);
         platform.setup(x => x.isLinux).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Conda, (message: string, url: string) => {
             verifyMessage(message, ['Pip', 'Conda'], []);
@@ -92,7 +98,7 @@ suite('Installation - channels', () => {
     }
 
     function verifyUrl(url: string, terms: string[]) {
-        assert.equal(url.indexOf('https://') > 0, true, 'Search Url must be https.');
+        assert.equal(url.indexOf('https://') >= 0, true, 'Search Url must be https.');
         for (const term of terms) {
             assert.equal(url.indexOf(term) >= 0, true, `Search Url does not contain ${term}.`);
         }
