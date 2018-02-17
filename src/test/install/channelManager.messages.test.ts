@@ -135,7 +135,8 @@ suite('Installation - channel messages', () => {
             type: interpreterType,
             path: ''
         };
-        interpreters.setup(x => x.getActiveInterpreter(TypeMoq.It.isAny()))
+        interpreters
+            .setup(x => x.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => new Promise<PythonInterpreter>((resolve, reject) => resolve(activeInterpreter)));
         const channels = new InstallationChannelManager(serviceContainer);
 
