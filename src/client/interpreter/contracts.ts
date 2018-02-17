@@ -53,8 +53,7 @@ export interface ICondaService {
 export enum InterpreterType {
     Unknown = 1,
     Conda = 2,
-    VirtualEnv = 4,
-    VEnv = 8
+    VirtualEnv = 4
 }
 
 export type PythonInterpreter = {

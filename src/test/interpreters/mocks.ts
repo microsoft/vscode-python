@@ -1,8 +1,7 @@
 import { injectable } from 'inversify';
 import { Architecture, IRegistry, RegistryHive } from '../../client/common/platform/types';
 import { IPersistentState } from '../../client/common/types';
-import { IInterpreterVersionService, InterpreterType } from '../../client/interpreter/contracts';
-import { IVirtualEnvironmentIdentifier } from '../../client/interpreter/virtualEnvs/types';
+import { IInterpreterVersionService } from '../../client/interpreter/contracts';
 
 @injectable()
 export class MockRegistry implements IRegistry {
@@ -34,15 +33,6 @@ export class MockRegistry implements IRegistry {
         });
 
         return items ? Promise.resolve(items.value) : Promise.resolve(null);
-    }
-}
-
-@injectable()
-export class MockVirtualEnv implements IVirtualEnvironmentIdentifier {
-    constructor(private isDetected: boolean, public name: string, public type: InterpreterType.VirtualEnv | InterpreterType.VEnv = InterpreterType.VirtualEnv) {
-    }
-    public async detect(pythonPath: string): Promise<boolean> {
-        return Promise.resolve(this.isDetected);
     }
 }
 

@@ -41,9 +41,7 @@ import { getKnownSearchPathsForInterpreters, KnownPathsService } from './locator
 import { WindowsRegistryService } from './locators/services/windowsRegistryService';
 import { WorkspaceVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvService } from './locators/services/workspaceVirtualEnvService';
 import { VirtualEnvironmentManager } from './virtualEnvs/index';
-import { IVirtualEnvironmentIdentifier, IVirtualEnvironmentManager } from './virtualEnvs/types';
-import { VEnv } from './virtualEnvs/venv';
-import { VirtualEnv } from './virtualEnvs/virtualEnv';
+import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<string[]>(IKnownSearchPathsForInterpreters, getKnownSearchPathsForInterpreters());
@@ -51,9 +49,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace');
 
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-    serviceManager.addSingleton<IVirtualEnvironmentIdentifier>(IVirtualEnvironmentIdentifier, VirtualEnv);
-    serviceManager.addSingleton<IVirtualEnvironmentIdentifier>(IVirtualEnvironmentIdentifier, VEnv);
-
     serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
 
     serviceManager.addSingleton<IInterpreterVersionService>(IInterpreterVersionService, InterpreterVersionService);

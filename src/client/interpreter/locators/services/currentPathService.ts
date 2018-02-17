@@ -36,12 +36,12 @@ export class CurrentPathService extends CacheableLocatorService {
     }
     private async getInterpreterDetails(interpreter: string) {
         let displayName = await this.versionProvider.getVersion(interpreter, path.basename(interpreter));
-        const virtualEnv = await this.virtualEnvMgr.detect(interpreter);
-        displayName += virtualEnv ? ` (${virtualEnv.name})` : '';
+        const virtualEnvName = await this.virtualEnvMgr.detect(interpreter);
+        displayName += virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
         return {
             displayName,
             path: interpreter,
-            type: virtualEnv ? virtualEnv.type : InterpreterType.Unknown
+            type: virtualEnvName ? InterpreterType.VirtualEnv : InterpreterType.Unknown
         };
     }
     private async getInterpreter(pythonPath: string, defaultValue: string) {

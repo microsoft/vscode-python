@@ -1,21 +1,26 @@
-import { injectable, multiInject } from 'inversify';
-import { IVirtualEnvironmentIdentifier, IVirtualEnvironmentManager } from './types';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { inject, injectable } from 'inversify';
+import { IProcessService } from '../../common/process/types';
+import { IServiceContainer } from '../../ioc/types';
+import { IVirtualEnvironmentManager } from './types';
 
 @injectable()
 export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
-    constructor(@multiInject(IVirtualEnvironmentIdentifier) private envs: IVirtualEnvironmentIdentifier[]) {
+    private processService: IProcessService;
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        this.processService = serviceContainer.get<IProcessService>(IProcessService);
     }
-    public detect(pythonPath: string): Promise<IVirtualEnvironmentIdentifier | undefined> {
-        const promises = this.envs
-            .map(item => item.detect(pythonPath)
-                .then(result => {
-                    return { env: item, result };
-                }));
-
-        return Promise.all(promises)
-            .then(results => {
-                const env = results.find(items => items.result === true);
-                return env ? env.env : undefined;
-            });
+    public async detect(pythonPath: string): Promise<string> {
+        // https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
+        const output = await this.processService.exec(pythonPath, ['-c', 'import sys;print(hasattr(sys, "real_prefix"))']);
+        if (output.stdout.length > 0) {
+            const result = output.stdout.trim();
+            if (result === 'True') {
+                return 'virtualenv';
+            }
+        }
+        return '';
     }
 }

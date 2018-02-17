@@ -113,7 +113,7 @@ suite('Interpreters Display', () => {
         interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(undefined));
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
-        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
+        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
         versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns((_path, defaultDisplayName) => Promise.resolve(defaultDisplayName));
 
         await interpreterDisplay.refresh(resource);
@@ -152,7 +152,7 @@ suite('Interpreters Display', () => {
         fileSystem.setup(f => f.fileExistsAsync(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
         const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
         versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(defaultDisplayName));
-        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
+        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
 
         await interpreterDisplay.refresh(resource);
 
@@ -194,7 +194,7 @@ suite('Interpreters Display', () => {
         const displayName = 'Version from Interperter';
         versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(displayName));
         // tslint:disable-next-line:no-any
-        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
+        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
 
         await interpreterDisplay.refresh(resource);
 
