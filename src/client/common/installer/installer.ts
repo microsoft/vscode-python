@@ -13,7 +13,7 @@ import { IPlatformService } from '../platform/types';
 import { IProcessService, IPythonExecutionFactory } from '../process/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { IInstaller, ILogger, InstallerResponse, IOutputChannel, ModuleNamePurpose, Product } from '../types';
-import { IModuleInstaller } from './types';
+import { IInstallationChannelManager, IModuleInstaller } from './types';
 
 export { Product } from '../types';
 
@@ -71,7 +71,7 @@ ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
 
 @injectable()
 export class Installer implements IInstaller {
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private outputChannel: vscode.OutputChannel) {
     }
     // tslint:disable-next-line:no-empty
@@ -135,7 +135,9 @@ export class Installer implements IInstaller {
         if (product === Product.ctags) {
             return this.installCTags();
         }
-        const installer = await this.getInstallationChannel(product, resource);
+
+        const channels = this.serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager);
+        const installer = await channels.getInstallationChannel(product, resource);
         if (!installer) {
             return InstallerResponse.Ignore;
         }
@@ -191,32 +193,7 @@ export class Installer implements IInstaller {
         }
         return InstallerResponse.Ignore;
     }
-    private async getInstallationChannel(product: Product, resource?: Uri): Promise<IModuleInstaller | undefined> {
-        const productName = ProductNames.get(product)!;
-        const channels = await this.getInstallationChannels(resource);
-        if (channels.length === 0) {
-            window.showInformationMessage(`No installers available to install ${productName}.`);
-            return;
-        }
-        if (channels.length === 1) {
-            return channels[0];
-        }
-        const placeHolder = `Select an option to install ${productName}`;
-        const options = channels.map(installer => {
-            return {
-                label: `Install using ${installer.displayName}`,
-                description: '',
-                installer
-            } as QuickPickItem & { installer: IModuleInstaller };
-        });
-        const selection = await window.showQuickPick(options, { matchOnDescription: true, matchOnDetail: true, placeHolder });
-        return selection ? selection.installer : undefined;
-    }
-    private async getInstallationChannels(resource?: Uri): Promise<IModuleInstaller[]> {
-        const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
-        const supportedInstallers = await Promise.all(installers.map(async installer => installer.isSupported(resource).then(supported => supported ? installer : undefined)));
-        return supportedInstallers.filter(installer => installer !== undefined).map(installer => installer!);
-    }
+
     // tslint:disable-next-line:no-any
     private updateSetting(setting: string, value: any, resource?: Uri) {
         if (resource && workspace.getWorkspaceFolder(resource)) {

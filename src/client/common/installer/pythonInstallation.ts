@@ -3,6 +3,7 @@
 'use strict';
 
 import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../interpreter/contracts';
+import { isMacDefaultPythonPath } from '../../interpreter/locators/helpers';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
 import { IPlatformService } from '../platform/types';
@@ -15,7 +16,7 @@ export class PythonInstaller {
     constructor(private serviceContainer: IServiceContainer) {
         this.locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
         this.shell = serviceContainer.get<IApplicationShell>(IApplicationShell);
-   }
+    }
 
     public async checkPythonInstallation(settings: IPythonSettings): Promise<boolean> {
         if (settings.disableInstallationChecks === true) {
@@ -25,7 +26,7 @@ export class PythonInstaller {
         if (interpreters.length > 0) {
             const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
             if (platform.isMac &&
-                settings.pythonPath === 'python' &&
+                isMacDefaultPythonPath(settings.pythonPath) &&
                 interpreters[0].type === InterpreterType.Unknown) {
                 await this.shell.showWarningMessage('Selected interpreter is macOS system Python which is not recommended. Please select different interpreter');
             }

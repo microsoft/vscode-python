@@ -3,11 +3,13 @@
 'use strict';
 
 import { IServiceManager } from '../../ioc/types';
+import { InstallationChannelManager } from './channelManager';
 import { CondaInstaller } from './condaInstaller';
 import { PipInstaller } from './pipInstaller';
-import { IModuleInstaller } from './types';
+import { IInstallationChannelManager, IModuleInstaller } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
+    serviceManager.addSingleton<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
 }

@@ -54,10 +54,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
                 .then(dirs => {
                     const scriptOrBinDirs = dirs.filter(dir => {
                         const folderName = path.basename(dir);
-                        // Perform case insistive search on windows.
-                        // On windows its named eitgher 'Scripts' or 'scripts'.
-                        const folderNameToCheck = isWindows ? folderName.toUpperCase() : folderName;
-                        return folderNameToCheck === dirToLookFor;
+                        return this.fileSystem.arePathsSame(folderName, dirToLookFor);
                     });
                     return scriptOrBinDirs.length === 1 ? scriptOrBinDirs[0] : '';
                 })
@@ -68,18 +65,14 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
                 }));
     }
     private async getVirtualEnvDetails(interpreter: string): Promise<PythonInterpreter> {
-        return Promise.all([
-            this.versionProvider.getVersion(interpreter, path.basename(interpreter)),
-            this.virtualEnvMgr.detect(interpreter)
-        ])
-            .then(([displayName, virtualEnv]) => {
-                const virtualEnvSuffix = virtualEnv ? virtualEnv.name : this.getVirtualEnvironmentRootDirectory(interpreter);
-                return {
-                    displayName: `${displayName} (${virtualEnvSuffix})`.trim(),
-                    path: interpreter,
-                    type: virtualEnv ? virtualEnv.type : InterpreterType.Unknown
-                };
-            });
+        const displayName = await this.versionProvider.getVersion(interpreter, path.basename(interpreter));
+        const virtualEnv = await this.virtualEnvMgr.detect(interpreter);
+        const virtualEnvSuffix = virtualEnv ? virtualEnv.name : this.getVirtualEnvironmentRootDirectory(interpreter);
+        return {
+            displayName: `${displayName} (${virtualEnvSuffix})`.trim(),
+            path: interpreter,
+            type: virtualEnv ? virtualEnv.type : InterpreterType.Unknown
+        };
     }
     private getVirtualEnvironmentRootDirectory(interpreter: string) {
         // Python interperters are always in a subdirectory of the environment folder.

@@ -13,26 +13,12 @@ import { IPlatformService } from '../platform/types';
 import { IProcessService, IPythonExecutionFactory } from '../process/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { IConfigurationService, IInstaller, ILogger, InstallerResponse, IOutputChannel, ModuleNamePurpose, Product } from '../types';
-import { IModuleInstaller } from './types';
+import { ProductNames } from './productNames';
+import { IInstallationChannelManager, IModuleInstaller } from './types';
 
 export { Product } from '../types';
 
 const CTagsInsllationScript = os.platform() === 'darwin' ? 'brew install ctags' : 'sudo apt-get install exuberant-ctags';
-
-// tslint:disable-next-line:variable-name
-const ProductNames = new Map<Product, string>();
-ProductNames.set(Product.autopep8, 'autopep8');
-ProductNames.set(Product.flake8, 'flake8');
-ProductNames.set(Product.mypy, 'mypy');
-ProductNames.set(Product.nosetest, 'nosetest');
-ProductNames.set(Product.pep8, 'pep8');
-ProductNames.set(Product.pylama, 'pylama');
-ProductNames.set(Product.prospector, 'prospector');
-ProductNames.set(Product.pydocstyle, 'pydocstyle');
-ProductNames.set(Product.pylint, 'pylint');
-ProductNames.set(Product.pytest, 'pytest');
-ProductNames.set(Product.yapf, 'yapf');
-ProductNames.set(Product.rope, 'rope');
 
 enum ProductType {
     Linter,
@@ -59,7 +45,8 @@ abstract class BaseInstaller {
             return InstallerResponse.Installed;
         }
 
-        const installer = await this.getInstallationChannel(product, resource);
+        const channels = this.serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager);
+        const installer = await channels.getInstallationChannel(product, resource);
         if (!installer) {
             return InstallerResponse.Ignore;
         }
@@ -99,34 +86,6 @@ abstract class BaseInstaller {
 
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
         throw new Error('getExecutableNameFromSettings is not supported on this object');
-    }
-
-    private async getInstallationChannel(product: Product, resource?: Uri): Promise<IModuleInstaller | undefined> {
-        const productName = ProductNames.get(product)!;
-        const channels = await this.getInstallationChannels(resource);
-        if (channels.length === 0) {
-            window.showInformationMessage(`No installers available to install ${productName}.`);
-            return;
-        }
-        if (channels.length === 1) {
-            return channels[0];
-        }
-        const placeHolder = `Select an option to install ${productName}`;
-        const options = channels.map(installer => {
-            return {
-                label: `Install using ${installer.displayName}`,
-                description: '',
-                installer
-            } as QuickPickItem & { installer: IModuleInstaller };
-        });
-        const selection = await window.showQuickPick(options, { matchOnDescription: true, matchOnDetail: true, placeHolder });
-        return selection ? selection.installer : undefined;
-    }
-
-    private async getInstallationChannels(resource?: Uri): Promise<IModuleInstaller[]> {
-        const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
-        const supportedInstallers = await Promise.all(installers.map(async installer => installer.isSupported(resource).then(supported => supported ? installer : undefined)));
-        return supportedInstallers.filter(installer => installer !== undefined).map(installer => installer!);
     }
 }
 
@@ -253,7 +212,7 @@ class RefactoringLibraryInstaller extends BaseInstaller {
 export class ProductInstaller implements IInstaller {
     private ProductTypes = new Map<Product, ProductType>();
 
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private outputChannel: vscode.OutputChannel) {
         this.ProductTypes.set(Product.flake8, ProductType.Linter);
         this.ProductTypes.set(Product.mypy, ProductType.Linter);
