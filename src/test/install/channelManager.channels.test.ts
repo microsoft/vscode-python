@@ -11,7 +11,7 @@ import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Installation - channels', () => {
+suite('Installation - installation channels', () => {
     let serviceManager: ServiceManager;
     let serviceContainer: IServiceContainer;
 
@@ -38,14 +38,14 @@ suite('Installation - channels', () => {
         const channels = await cm.getInstallationChannels();
         assert.equal(channels.length, 2, 'Incorrect number of channels');
         assert.equal(channels[0], installer1.object, 'Incorrect installer 1');
-        assert.equal(channels[0], installer3.object, 'Incorrect installer 2');
+        assert.equal(channels[1], installer3.object, 'Incorrect installer 2');
     });
 
     function mockInstaller(supported: boolean, name: string): TypeMoq.IMock<IModuleInstaller> {
         const installer = TypeMoq.Mock.ofType<IModuleInstaller>();
         installer
             .setup(x => x.isSupported(TypeMoq.It.isAny()))
-            .returns(() => new Promise<boolean>((resolve) => resolve(true)));
+            .returns(() => new Promise<boolean>((resolve) => resolve(supported)));
         serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, installer.object, name);
         return installer;
     }

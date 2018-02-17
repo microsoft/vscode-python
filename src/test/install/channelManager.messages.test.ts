@@ -13,7 +13,7 @@ import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Installation - channels', () => {
+suite('Installation - channel messages', () => {
     let serviceContainer: IServiceContainer;
     let platform: TypeMoq.IMock<IPlatformService>;
     let appShell: TypeMoq.IMock<IApplicationShell>;

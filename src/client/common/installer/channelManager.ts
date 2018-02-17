@@ -42,17 +42,25 @@ export class InstallationChannelManager implements IInstallationChannelManager {
 
     public async getInstallationChannels(resource?: Uri): Promise<IModuleInstaller[]> {
         const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
-        const supportedInstallers = await Promise.all(installers.map(async installer => installer.isSupported(resource).then(supported => supported ? installer : undefined)));
-        return supportedInstallers.filter(installer => installer !== undefined).map(installer => installer!);
+        const supportedInstallers: IModuleInstaller[] = [];
+        for (const mi of installers) {
+            if (await mi.isSupported(resource)) {
+                supportedInstallers.push(mi);
+            }
+        }
+        return supportedInstallers;
     }
 
     public async showNoInstallersMessage(resource?: Uri): Promise<void> {
         const interpreters = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const interpreter = await interpreters.getActiveInterpreter(resource);
+        if (!interpreter) {
+            return; // Handled in the Python installation check.
+        }
 
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const search = 'Search for help';
-        let result: string;
+        let result: string | undefined;
         if (interpreter.type === InterpreterType.Conda) {
             result = await appShell.showErrorMessage('There is no Conda or Pip installer available in the selected environment.', search);
         } else {
