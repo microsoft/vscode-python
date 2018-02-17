@@ -11,7 +11,7 @@ import { CacheableLocatorService } from './cacheableLocatorService';
 
 @injectable()
 export class CurrentPathService extends CacheableLocatorService {
-    public constructor( @inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
+    public constructor(@inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
         @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService,
         @inject(IProcessService) private processService: IProcessService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
@@ -35,18 +35,14 @@ export class CurrentPathService extends CacheableLocatorService {
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))));
     }
     private async getInterpreterDetails(interpreter: string) {
-        return Promise.all([
-            this.versionProvider.getVersion(interpreter, path.basename(interpreter)),
-            this.virtualEnvMgr.detect(interpreter)
-        ])
-            .then(([displayName, virtualEnv]) => {
-                displayName += virtualEnv ? ` (${virtualEnv.name})` : '';
-                return {
-                    displayName,
-                    path: interpreter,
-                    type: InterpreterType.Unknown
-                };
-            });
+        let displayName = await this.versionProvider.getVersion(interpreter, path.basename(interpreter));
+        const virtualEnv = await this.virtualEnvMgr.detect(interpreter);
+        displayName += virtualEnv ? ` (${virtualEnv.name})` : '';
+        return {
+            displayName,
+            path: interpreter,
+            type: virtualEnv ? virtualEnv.type : InterpreterType.Unknown
+        };
     }
     private async getInterpreter(pythonPath: string, defaultValue: string) {
         return this.processService.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], {})

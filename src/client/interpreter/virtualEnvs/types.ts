@@ -11,5 +11,5 @@ export interface IVirtualEnvironmentIdentifier {
 }
 export const IVirtualEnvironmentManager = Symbol('VirtualEnvironmentManager');
 export interface IVirtualEnvironmentManager {
-    detect(pythonPath: string): Promise<IVirtualEnvironmentIdentifier | void>;
+    detect(pythonPath: string): Promise<IVirtualEnvironmentIdentifier | undefined>;
 }
