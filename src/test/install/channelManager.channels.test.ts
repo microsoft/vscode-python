@@ -58,7 +58,7 @@ suite('Installation - installation channels', () => {
             .callback((i: string[], o: QuickPickOptions) => {
                 items = i;
             })
-            .returns(() => new Promise<string>((resolve, reject) => resolve('')));
+            .returns(() => new Promise<string | undefined>((resolve, reject) => resolve(undefined)));
 
         installer1.setup(x => x.displayName).returns(() => 'Name 1');
         installer2.setup(x => x.displayName).returns(() => 'Name 2');
