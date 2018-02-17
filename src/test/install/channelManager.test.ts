@@ -110,14 +110,16 @@ suite('Installation - channels', () => {
             .returns(() => new Promise<PythonInterpreter>((resolve, reject) => resolve(activeInterpreter)));
         const channels = new InstallationChannelManager(serviceContainer);
 
-        let url: string;
-        let message: string;
+        let url: string = '';
+        let message: string = '';
+        let search: string = '';
         appShell
-            .setup(x => x.showErrorMessage(TypeMoq.It.isAnyString()))
-            .callback((s: string) => {
-                message = s;
+            .setup(x => x.showErrorMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
+            .callback((m: string, s: string) => {
+                message = m;
+                search = s;
             })
-            .returns(() => new Promise<string>(resolve, reject) => resolve('Search for help'));
+            .returns(() => new Promise<string>((resolve, reject) => resolve(search)));
         appShell.setup(x => x.openUrl(TypeMoq.It.isAnyString())).callback((s: string) => {
             url = s;
         });
