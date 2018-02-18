@@ -9,14 +9,13 @@ import { IServiceContainer } from '../../ioc/types';
 import { IInterpreterService, IShebangCodeLensProvider, PythonInterpreter, WorkspacePythonPath } from '../contracts';
 import { IInterpreterSelector, IPythonPathUpdaterServiceManager } from './types';
 
-interface IInterpreterQuickPickItem extends QuickPickItem {
+export interface IInterpreterQuickPickItem extends QuickPickItem {
     path: string;
 }
 
 @injectable()
 export class InterpreterSelector implements IInterpreterSelector {
     private disposables: Disposable[] = [];
-    private pythonPathUpdaterService: IPythonPathUpdaterServiceManager;
     private readonly interpreterManager: IInterpreterService;
     private readonly workspaceService: IWorkspaceService;
     private readonly applicationShell: IApplicationShell;
@@ -33,11 +32,19 @@ export class InterpreterSelector implements IInterpreterSelector {
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
         this.disposables.push(commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this)));
         this.disposables.push(commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this)));
-        this.pythonPathUpdaterService = serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager);
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
     }
+
+    public async getSuggestions(resourceUri?: Uri) {
+        let interpreters = await this.interpreterManager.getInterpreters(resourceUri);
+        interpreters = await this.removeDuplicates(interpreters);
+        // tslint:disable-next-line:no-non-null-assertion
+        interpreters.sort((a, b) => a.displayName! > b.displayName! ? 1 : -1);
+        return Promise.all(interpreters.map(item => this.suggestionToQuickPickItem(item, resourceUri)));
+    }
+
     private async getWorkspaceToSetPythonPath(): Promise<WorkspacePythonPath | undefined> {
         if (!Array.isArray(this.workspaceService.workspaceFolders) || this.workspaceService.workspaceFolders.length === 0) {
             return undefined;
@@ -51,6 +58,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         const workspaceFolder = await applicationShell.showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
         return workspaceFolder ? { folderUri: workspaceFolder.uri, configTarget: ConfigurationTarget.WorkspaceFolder } : undefined;
     }
+
     private async suggestionToQuickPickItem(suggestion: PythonInterpreter, workspaceUri?: Uri): Promise<IInterpreterQuickPickItem> {
         let detail = suggestion.path;
         if (workspaceUri && suggestion.path.startsWith(workspaceUri.fsPath)) {
@@ -66,27 +74,18 @@ export class InterpreterSelector implements IInterpreterSelector {
         };
     }
 
-    private async getSuggestions(resourceUri?: Uri) {
-        let interpreters = await this.interpreterManager.getInterpreters(resourceUri);
-        interpreters = await this.removeDuplicates(interpreters);
-        // tslint:disable-next-line:no-non-null-assertion
-        interpreters.sort((a, b) => a.displayName! > b.displayName! ? 1 : -1);
-        return Promise.all(interpreters.map(item => this.suggestionToQuickPickItem(item, resourceUri)));
-    }
-
     private async removeDuplicates(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
         const result: PythonInterpreter[] = [];
-        for (const i of interpreters) {
-            const index = result.findIndex(x => x.displayName === i.displayName);
-            if (index >= 0) {
-                const existing = interpreters[index];
-                const realPath = await this.fileSystem.getRealPathAsync(i.path);
-                if (this.fileSystem.arePathsSame(realPath, existing.path)) {
-                    continue;
-                }
+        await Promise.all(interpreters.filter(async x => {
+            x.realPath = await this.fileSystem.getRealPathAsync(x.path);
+            return true;
+        }));
+        interpreters.forEach(x => {
+            if (result.findIndex(a => a.displayName === x.displayName
+                && a.type === x.type && this.fileSystem.arePathsSame(a.realPath!, x.realPath!)) < 0) {
+                result.push(x);
             }
-            result.push(i);
-        }
+        });
         return result;
     }
 
@@ -116,7 +115,8 @@ export class InterpreterSelector implements IInterpreterSelector {
 
         const selection = await this.applicationShell.showQuickPick(suggestions, quickPickOptions);
         if (selection !== undefined) {
-            await this.pythonPathUpdaterService.updatePythonPath(selection.path, configTarget, 'ui', wkspace);
+            const pythonPathUpdaterService = this.serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager);
+            await pythonPathUpdaterService.updatePythonPath(selection.path, configTarget, 'ui', wkspace);
         }
     }
 
@@ -131,16 +131,17 @@ export class InterpreterSelector implements IInterpreterSelector {
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(this.documentManager.activeTextEditor!.document.uri);
         const isWorkspaceChange = Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length === 1;
 
+        const pythonPathUpdaterService = this.serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager);
         if (isGlobalChange) {
-            await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Global, 'shebang');
+            await pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Global, 'shebang');
             return;
         }
 
         if (isWorkspaceChange || !workspaceFolder) {
-            await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Workspace, 'shebang', this.workspaceService.workspaceFolders![0].uri);
+            await pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.Workspace, 'shebang', this.workspaceService.workspaceFolders![0].uri);
             return;
         }
 
-        await this.pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.WorkspaceFolder, 'shebang', workspaceFolder.uri);
+        await pythonPathUpdaterService.updatePythonPath(shebang, ConfigurationTarget.WorkspaceFolder, 'shebang', workspaceFolder.uri);
     }
 }
