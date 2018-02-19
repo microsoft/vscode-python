@@ -154,7 +154,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
             const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
             await debugClient.hitBreakpoint(launchArgs, breakpointLocation);
         });
-        test('Should kill python process when ending debug session', async () => {
+        test('Should kill python process when ending debug session', async function () {
             if (debuggerType === 'python') {
                 return this.skip();
             }
