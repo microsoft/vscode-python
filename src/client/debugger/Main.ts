@@ -211,8 +211,8 @@ export class PythonDebugger extends LoggingDebugSession {
     }
     @capturePerformanceTelemetry('launch')
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
-        if (args.diagnosticLogging === true) {
-            logger.setup(LogLevel.Verbose, args.logToFile === true);
+        if (args.logToFile === true) {
+            logger.setup(LogLevel.Verbose, true);
         }
         // Some versions may still exist with incorrect launch.json values
         const setting = '${config.python.pythonPath}';
@@ -290,8 +290,8 @@ export class PythonDebugger extends LoggingDebugSession {
         });
     }
     protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments) {
-        if ((args as any).diagnosticLogging === true) {
-            logger.setup(LogLevel.Verbose, (args as any).logToFile === true);
+        if (args.logToFile === true) {
+            logger.setup(LogLevel.Verbose, true);
         }
         this.sendEvent(new TelemetryEvent(DEBUGGER, { trigger: 'attach' }));
 
@@ -734,5 +734,15 @@ export class PythonDebugger extends LoggingDebugSession {
         }).catch(error => this.sendErrorResponse(response, 2000, error));
     }
 }
+
+process.on('uncaughtException', (err: Error) => {
+    logger.error(`Uncaught Exception: ${err && err.message ? err.message : ''}`);
+    logger.error(err && err.name ? err.name : '');
+    logger.error(err && err.stack ? err.stack : '');
+    // Catch all, incase we have string exceptions being raised.
+    logger.error(err ? err.toString() : '');
+    // Wait for 1 second before we die, we need to ensure errors are written to the log file.
+    setTimeout(() => process.exit(-1), 1000);
+});
 
 LoggingDebugSession.run(PythonDebugger);

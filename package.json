@@ -674,6 +674,11 @@
                                 "type": "string",
                                 "description": "IP address of the of the local debug server (default is localhost).",
                                 "default": "localhost"
+                            },
+                            "logToFile": {
+                                "type": "boolean",
+                                "description": "Enable logging of debugger events to a log file.",
+                                "default": false
                             }
                         }
                     },
@@ -707,6 +712,11 @@
                                 "type": "string",
                                 "description": "Secret used to authenticate for remote debugging.",
                                 "default": ""
+                            },
+                            "logToFile": {
+                                "type": "boolean",
+                                "description": "Enable logging of debugger events to a log file.",
+                                "default": false
                             }
                         }
                     }
@@ -1021,6 +1031,11 @@
                                 "type": "string",
                                 "description": "IP address of the of the local debug server (default is localhost).",
                                 "default": "localhost"
+                            },
+                            "logToFile": {
+                                "type": "boolean",
+                                "description": "Enable logging of debugger events to a log file.",
+                                "default": false
                             }
                         }
                     }

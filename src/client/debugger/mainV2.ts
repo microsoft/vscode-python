@@ -10,6 +10,7 @@ if ((Reflect as any).metadata === undefined) {
 }
 
 import { Socket } from 'net';
+import * as once from 'once';
 import * as path from 'path';
 import { PassThrough } from 'stream';
 import { DebugSession, ErrorDestination, logger, OutputEvent, TerminatedEvent } from 'vscode-debugadapter';
@@ -24,7 +25,6 @@ import { CreateLaunchDebugClient } from './DebugClients/DebugFactory';
 import { BaseDebugServer } from './DebugServers/BaseDebugServer';
 import { initializeIoc } from './serviceRegistry';
 import { IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
-import * as once from 'once';
 
 const DEBUGGER_CONNECT_TIMEOUT = 10000;
 const MIN_DEBUGGER_CONNECT_TIMEOUT = DEBUGGER_CONNECT_TIMEOUT / 2;
@@ -41,7 +41,9 @@ export class PythonDebugger extends DebugSession {
     }
     public shutdown(processId?: number): void {
         if (this.killDebuggerProces && processId) {
-            process.kill(processId);
+            try {
+                process.kill(processId);
+            } catch { }
         }
         if (this.debugServer) {
             this.debugServer.Stop();
@@ -191,13 +193,12 @@ async function startDebugger() {
         let terminatedEventSent = false;
         let debuggerSocket: Socket | undefined;
 
-        const dispose = once(function dispose() {
-            // TODO: This might not be the right way.
-            session.shutdown(debuggerProcessId);
+        const dispose = once(() => {
             if (debuggerSocket) {
                 throughInStream.unpipe(debuggerSocket);
                 debuggerSocket.unpipe(throughOutStream);
             }
+            session.shutdown(debuggerProcessId);
             if (!terminatedEventSent) {
                 // Possible VS Code has closed its stream.
                 try {
@@ -213,6 +214,7 @@ async function startDebugger() {
         });
         // When VS Code sends a disconnect request, PTVSD replies back with a response, but its upto us to kill the process.
         // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
+        // Also its possible PTVSD might run to completion.
         outputProtocolParser.once('response_disconnect', () => setTimeout(dispose, 500));
         if (!isServerMode) {
             process.on('SIGTERM', dispose);
@@ -243,8 +245,8 @@ async function startDebugger() {
             debugSoketProtocolParser.once('event_initialized', (initialized: DebugProtocol.InitializedEvent) => {
                 // Get ready for PTVSD to communicate directly with VS Code.
                 throughInStream.unpipe(handshakeDebugInStream);
-                throughInStream.pipe(debuggerSocket);
-                debuggerSocket.pipe(throughOutStream);
+                throughInStream.pipe(debuggerSocket!);
+                debuggerSocket!.pipe(throughOutStream);
                 // Forward the initialized event sent by PTVSD onto VSCode.
                 // This is what will cause PTVSD to start the actualy work.
                 protocolMessageWriter.write(throughOutStream, initialized);
@@ -264,6 +266,16 @@ async function startDebugger() {
     }
 }
 
+process.on('uncaughtException', (err: Error) => {
+    logger.error(`Uncaught Exception: ${err && err.message ? err.message : ''}`);
+    logger.error(err && err.name ? err.name : '');
+    logger.error(err && err.stack ? err.stack : '');
+    // Catch all, incase we have string exceptions being raised.
+    logger.error(err ? err.toString() : '');
+    // Wait for 1 second before we die, we need to ensure errors are written to the log file.
+    setTimeout(() => process.exit(-1), 1000);
+});
+
 startDebugger().catch(ex => {
-    // Not necessary except for perhaps debugging.
+    // Not necessary except for debugging and to kill linter warning about unhandled promises.
 });
