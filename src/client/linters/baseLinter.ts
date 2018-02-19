@@ -1,10 +1,10 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
+import { IWorkspaceService } from '../common/application/types';
 import '../common/extensions';
 import { IPythonToolExecutionService } from '../common/process/types';
-import { ExecutionInfo, ILogger, Product } from '../common/types';
 import { IConfigurationService, IPythonSettings } from '../common/types';
+import { ExecutionInfo, ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/errorHandler';
 import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LintMessageSeverity } from './types';
@@ -38,25 +38,27 @@ export abstract class BaseLinter implements ILinter {
     private errorHandler: ErrorHandler;
     private _pythonSettings: IPythonSettings;
     private _info: ILinterInfo;
+    private workspace: IWorkspaceService;
 
     protected get pythonSettings(): IPythonSettings {
         return this._pythonSettings;
     }
 
     constructor(product: Product,
-        protected readonly outputChannel: OutputChannel,
+        protected readonly outputChannel: vscode.OutputChannel,
         protected readonly serviceContainer: IServiceContainer,
         protected readonly columnOffset = 0) {
         this._info = serviceContainer.get<ILinterManager>(ILinterManager).getLinterInfo(product);
         this.errorHandler = new ErrorHandler(this.info.product, outputChannel, serviceContainer);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
 
     public get info(): ILinterInfo {
         return this._info;
     }
 
-    public isLinterExecutableSpecified(resource: Uri) {
+    public isLinterExecutableSpecified(resource: vscode.Uri) {
         const executablePath = this.info.pathName(resource);
         return path.basename(executablePath).length > 0 && path.basename(executablePath) !== executablePath;
     }
@@ -66,7 +68,7 @@ export abstract class BaseLinter implements ILinter {
     }
 
     protected getWorkspaceRootPath(document: vscode.TextDocument): string {
-        const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
+        const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
         const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
         return typeof workspaceRootPath === 'string' ? workspaceRootPath : __dirname;
     }
@@ -107,7 +109,7 @@ export abstract class BaseLinter implements ILinter {
         const cwd = this.getWorkspaceRootPath(document);
         const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
         try {
-            const result = await pythonToolsExecutionService.exec(executionInfo, {cwd, token: cancellation, mergeStdOutErr: true}, document.uri);
+            const result = await pythonToolsExecutionService.exec(executionInfo, { cwd, token: cancellation, mergeStdOutErr: true }, document.uri);
             this.displayLinterResultHeader(result.stdout);
             return await this.parseMessages(result.stdout, document, cancellation, regEx);
         } catch (error) {
@@ -116,12 +118,12 @@ export abstract class BaseLinter implements ILinter {
         }
     }
 
-    protected async parseMessages(output: string, document: TextDocument, token: CancellationToken, regEx: string) {
+    protected async parseMessages(output: string, document: vscode.TextDocument, token: vscode.CancellationToken, regEx: string) {
         const outputLines = output.splitLines({ removeEmptyEntries: false, trim: false });
         return this.parseLines(outputLines, regEx);
     }
 
-    protected handleError(error: Error, resource: Uri, execInfo: ExecutionInfo) {
+    protected handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo) {
         this.errorHandler.handleError(error, resource, execInfo)
             .catch(this.logger.logError.bind(this, 'Error in errorHandler.handleError'));
     }
