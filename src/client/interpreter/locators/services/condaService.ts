@@ -28,7 +28,7 @@ export class CondaService implements ICondaService {
         const homeDir = this.platform.isWindows ? process.env.USERPROFILE : (process.env.HOME || process.env.HOMEPATH);
         return homeDir ? path.join(homeDir, '.conda', 'environments.txt') : undefined;
     }
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IInterpreterLocatorService) @named(WINDOWS_REGISTRY_SERVICE) @optional() private registryLookupForConda?: IInterpreterLocatorService) {
         this.processService = this.serviceContainer.get<IProcessService>(IProcessService);
         this.platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
@@ -106,10 +106,10 @@ export class CondaService implements ICondaService {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
 
         // From the list of conda environments find this dir.
-        let matchingEnvs = environments!.filter(item => fs.arePathsSame(item.path, interpreterPathToMatch));
+        let matchingEnvs = Array.isArray(environments) ? environments.filter(item => fs.arePathsSame(item.path, interpreterPathToMatch)) : [];
         if (matchingEnvs.length === 0) {
             environments = await this.getCondaEnvironments(true);
-            matchingEnvs = environments!.filter(item => fs.arePathsSame(item.path, interpreterPathToMatch));
+            matchingEnvs = Array.isArray(environments) ? environments.filter(item => fs.arePathsSame(item.path, interpreterPathToMatch)) : [];
         }
 
         if (matchingEnvs.length > 0) {
