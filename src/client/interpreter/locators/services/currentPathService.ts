@@ -34,15 +34,20 @@ export class CurrentPathService extends CacheableLocatorService {
             // tslint:disable-next-line:promise-function-async
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))));
     }
-    private async getInterpreterDetails(interpreter: string) {
-        let displayName = await this.versionProvider.getVersion(interpreter, path.basename(interpreter));
-        const virtualEnvName = await this.virtualEnvMgr.detect(interpreter);
-        displayName += virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
-        return {
-            displayName,
-            path: interpreter,
-            type: virtualEnvName ? InterpreterType.VirtualEnv : InterpreterType.Unknown
-        };
+
+    private async getInterpreterDetails(interpreter: string): Promise<PythonInterpreter> {
+        return Promise.all([
+            this.versionProvider.getVersion(interpreter, path.basename(interpreter)),
+            this.virtualEnvMgr.detect(interpreter)
+        ]).
+            then(([displayName, virtualEnvName]) => {
+                displayName += virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
+                return {
+                    displayName,
+                    path: interpreter,
+                    type: virtualEnvName ? InterpreterType.VirtualEnv : InterpreterType.Unknown
+                };
+            });
     }
     private async getInterpreter(pythonPath: string, defaultValue: string) {
         return this.processService.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], {})

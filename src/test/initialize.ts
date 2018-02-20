@@ -63,7 +63,7 @@ function getPythonPath(): string {
         // tslint:disable-next-line:no-unsafe-any
         return process.env.TRAVIS_PYTHON_PATH;
     }
-    return '/usr/local/bin/python3';
+    return 'python';
 }
 
 function isMultitrootTest() {
