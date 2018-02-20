@@ -40,12 +40,13 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
         });
         teardown(async () => {
             // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await sleep(1000);
             try {
                 // tslint:disable-next-line:no-empty
                 await debugClient.stop().catch(() => { });
                 // tslint:disable-next-line:no-empty
             } catch (ex) { }
+            await sleep(1000);
         });
 
         function buildLauncArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
