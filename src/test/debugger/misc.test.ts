@@ -1,16 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-suspicious-comment max-func-body-length no-invalid-this
+// tslint:disable:no-suspicious-comment max-func-body-length no-invalid-this no-var-requires no-require-imports no-any
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { ThreadEvent } from 'vscode-debugadapter';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
+import { DebugProtocol } from 'vscode-debugprotocol';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { sleep } from '../common';
 import { IS_CI_SERVER, IS_MULTI_ROOT_TEST } from '../initialize';
+
+const isProcessRunning = require('is-running') as (number) => boolean;
 
 use(chaiAsPromised);
 
@@ -51,8 +54,8 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
         function buildLauncArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
             // Temporary, untill new version of PTVSD is bundled we cannot run tests.
             // For now lets run test locally.
-            const pythonPath = debuggerType === 'python' ? 'python' : '/Users/donjayamanne/anaconda3/envs/py36/bin/python';
-            const env = debuggerType === 'python' ? {} : { PYTHONPATH: '/Users/donjayamanne/Desktop/Development/vscode/ptvsd' };
+            const pythonPath = debuggerType === 'python' ? 'python' : '/Users/donjayamanne/Desktop/Development/PythonStuff/IssueRepos/debuggerTests/.envp36/bin/python';
+            const env = debuggerType === 'python' ? {} : { PYTHONPATH: '/Users/donjayamanne/Desktop/Development/PythonStuff/IssueRepos/expPTVSD/ptvsd' };
             return {
                 program: path.join(debugFilesPath, pythonFile),
                 cwd: debugFilesPath,
@@ -150,6 +153,24 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
             const launchArgs = buildLauncArgs('sample2.py', false);
             const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
             await debugClient.hitBreakpoint(launchArgs, breakpointLocation);
+        });
+        test('Should kill python process when ending debug session', async function () {
+            if (debuggerType === 'python') {
+                return this.skip();
+            }
+            const launchArgs = buildLauncArgs('sample2.py', false);
+            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
+            const processPromise = debugClient.waitForEvent('process') as Promise<DebugProtocol.ProcessEvent>;
+            await debugClient.hitBreakpoint(launchArgs, breakpointLocation);
+            const processInfo = await processPromise;
+            const processId = processInfo.body.systemProcessId;
+            expect(processId).to.be.greaterThan(0, 'Invalid process id');
+
+            await debugClient.stop();
+            await sleep(1000);
+
+            // Confirm the process is dead
+            expect(isProcessRunning(processId)).to.be.equal(false, 'Python (debugee) Process is still alive');
         });
         test('Test conditional breakpoints', async () => {
             const threadIdPromise = debugClient.waitForEvent('thread');

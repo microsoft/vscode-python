@@ -34,7 +34,6 @@ export class CurrentPathService extends CacheableLocatorService {
             // tslint:disable-next-line:promise-function-async
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))));
     }
-
     private async getInterpreterDetails(interpreter: string): Promise<PythonInterpreter> {
         return Promise.all([
             this.versionProvider.getVersion(interpreter, path.basename(interpreter)),

@@ -3,13 +3,14 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length
+// tslint:disable:no-any max-func-body-length no-empty no-require-imports no-var-requires
+
 if ((Reflect as any).metadata === undefined) {
-    // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
 
 import { Socket } from 'net';
+import * as once from 'once';
 import * as path from 'path';
 import { PassThrough } from 'stream';
 import { DebugSession, ErrorDestination, logger, OutputEvent, TerminatedEvent } from 'vscode-debugadapter';
@@ -33,114 +34,17 @@ export class PythonDebugger extends DebugSession {
     public debugClient?: DebugClient<{}>;
     public client = createDeferred<Socket>();
     private supportsRunInTerminalRequest: boolean;
+    private killDebuggerProces: boolean;
     constructor(private readonly serviceContainer: IServiceContainer,
         isServer?: boolean) {
         super(false, isServer);
     }
-    public static async run() {
-        const serviceContainer = initializeIoc();
-        const debugStreamProvider = serviceContainer.get<IDebugStreamProvider>(IDebugStreamProvider);
-        const { input, output } = await debugStreamProvider.getInputAndOutputStreams();
-        const isServerMode = debugStreamProvider.useDebugSocketStream;
-        const protocolMessageWriter = serviceContainer.get<IProtocolMessageWriter>(IProtocolMessageWriter);
-        // tslint:disable-next-line:no-empty
-        logger.init(() => { }, path.join(__dirname, '..', '..', '..', 'experimental_debug.log'));
-        const stdin = input;
-        const stdout = output;
-
-        try {
-
-            stdin.pause();
-
-            const handshakeDebugOutStream = new PassThrough();
-            const handshakeDebugInStream = new PassThrough();
-
-            const throughOutStream = new PassThrough();
-            const throughInStream = new PassThrough();
-
-            const inputProtocolParser = serviceContainer.get<IProtocolParser>(IProtocolParser);
-            inputProtocolParser.connect(throughInStream);
-
-            const outputProtocolParser = serviceContainer.get<IProtocolParser>(IProtocolParser);
-            outputProtocolParser.connect(throughOutStream);
-
-            const protocolLogger = serviceContainer.get<IProtocolLogger>(IProtocolLogger);
-            protocolLogger.connect(throughInStream, throughOutStream);
-
-            // Keep track of the initialize message, we'll need to re-send this to ptvsd, for bootstrapping.
-            const initializeRequest = new Promise<DebugProtocol.InitializeRequest>(resolve => {
-                inputProtocolParser.on('request_initialize', (data) => {
-                    resolve(data);
-                    inputProtocolParser.dispose();
-                });
-            });
-
-            throughOutStream.pipe(stdout);
-            handshakeDebugOutStream.pipe(throughOutStream);
-
-            // Lets start our debugger.
-            const session = new PythonDebugger(serviceContainer, isServerMode);
-            session.setRunAsServer(isServerMode);
-            let terminatedEventSent = false;
-            function dispose() {
-                if (!terminatedEventSent) {
-                    protocolMessageWriter.write(stdout, new TerminatedEvent());
-                    terminatedEventSent = true;
-                }
-                session.shutdown();
-            }
-            outputProtocolParser.once('event_terminated', () => {
-                terminatedEventSent = true;
-                dispose();
-            });
-            if (!isServerMode) {
-                process.on('SIGTERM', dispose);
-            }
-
-            session.on('_py_enable_protocol_logging', enabled => {
-                if (enabled) {
-                    logger.setup(LogLevel.Verbose, true);
-                    protocolLogger.setup(logger);
-                } else {
-                    protocolLogger.dispose();
-                }
-            });
-
-            outputProtocolParser.on('response_launch', async () => {
-                const debuggerSocket = await session.debugServer!.client;
-                debuggerSocket.on('end', dispose);
-                debuggerSocket.on('error', dispose);
-                const debugSoketProtocolParser = serviceContainer.get<IProtocolParser>(IProtocolParser);
-                debugSoketProtocolParser.connect(debuggerSocket);
-
-                // The PTVSD process has launched, now send the initialize request to it.
-                const request = await initializeRequest;
-                protocolMessageWriter.write(debuggerSocket, request);
-
-                // Wait for PTVSD to reply back with initialized event.
-                debugSoketProtocolParser.once('event_initialized', (initialized: DebugProtocol.InitializedEvent) => {
-                    throughInStream.unpipe(handshakeDebugInStream);
-
-                    throughInStream.pipe(debuggerSocket);
-
-                    debuggerSocket.pipe(throughOutStream);
-
-                    // Forward the initialized event sent by PTVSD onto VSCode.
-                    protocolMessageWriter.write(throughOutStream, initialized);
-                });
-            });
-
-            throughInStream.pipe(handshakeDebugInStream);
-            stdin.pipe(throughInStream);
-            session.start(handshakeDebugInStream, handshakeDebugOutStream);
-            stdin.resume();
-        } catch (ex) {
-            logger.error(`Debugger crashed.${ex.message}`);
-            protocolMessageWriter.write(stdout, new Event('error', `Debugger Error: ${ex.message}`));
-            protocolMessageWriter.write(stdout, new OutputEvent(ex.toString(), 'stderr'));
+    public shutdown(processId?: number): void {
+        if (this.killDebuggerProces && processId) {
+            try {
+                process.kill(processId);
+            } catch { }
         }
-    }
-    public shutdown(): void {
         if (this.debugServer) {
             this.debugServer.Stop();
             this.debugServer = undefined;
@@ -180,8 +84,7 @@ export class PythonDebugger extends DebugSession {
         this.sendResponse(response);
     }
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
-        const enableLogging = args.logToFile === true;
-        this.emit('_py_enable_protocol_logging', enableLogging);
+        this.killDebuggerProces = true;
 
         this.startPTVSDDebugger(args)
             .then(() => this.waitForDebuggerConnection(args))
@@ -218,6 +121,8 @@ export class PythonDebugger extends DebugSession {
         });
     }
     private getConnectionTimeout(args: LaunchRequestArguments) {
+        // The timeout can be overridden, but won't be documented unless we see the need for it.
+        // This is just a fail safe mechanism, if the current timeout isn't enough (let study the current behaviour before exposing this setting).
         const connectionTimeout = typeof (args as any).connectionTimeout === 'number' ? (args as any).connectionTimeout as number : DEBUGGER_CONNECT_TIMEOUT;
         return Math.max(connectionTimeout, MIN_DEBUGGER_CONNECT_TIMEOUT);
     }
@@ -234,6 +139,145 @@ export class PythonDebugger extends DebugSession {
     }
 }
 
-PythonDebugger.run().catch(ex => {
-    // Not necessary except for perhaps debugging.
+async function startDebugger() {
+    const serviceContainer = initializeIoc();
+    const debugStreamProvider = serviceContainer.get<IDebugStreamProvider>(IDebugStreamProvider);
+    const { input, output } = await debugStreamProvider.getInputAndOutputStreams();
+    const isServerMode = debugStreamProvider.useDebugSocketStream;
+    const protocolMessageWriter = serviceContainer.get<IProtocolMessageWriter>(IProtocolMessageWriter);
+    // tslint:disable-next-line:no-empty
+    logger.init(() => { }, path.join(__dirname, '..', '..', '..', 'experimental_debug.log'));
+    const stdin = input;
+    const stdout = output;
+
+    try {
+        stdin.pause();
+        const handshakeDebugOutStream = new PassThrough();
+        const handshakeDebugInStream = new PassThrough();
+        const throughOutStream = new PassThrough();
+        const throughInStream = new PassThrough();
+
+        const inputProtocolParser = serviceContainer.get<IProtocolParser>(IProtocolParser);
+        inputProtocolParser.connect(throughInStream);
+        const outputProtocolParser = serviceContainer.get<IProtocolParser>(IProtocolParser);
+        outputProtocolParser.connect(throughOutStream);
+
+        const protocolLogger = serviceContainer.get<IProtocolLogger>(IProtocolLogger);
+        protocolLogger.connect(throughInStream, throughOutStream);
+        function enableDisableLogging(enabled: boolean) {
+            if (enabled) {
+                logger.setup(LogLevel.Verbose, true);
+                protocolLogger.setup(logger);
+            } else {
+                protocolLogger.dispose();
+            }
+        }
+
+        // Keep track of the initialize and launch requests, we'll need to re-send these to ptvsd, for bootstrapping.
+        const initializeRequest = new Promise<DebugProtocol.InitializeRequest>(resolve => inputProtocolParser.on('request_initialize', resolve));
+        const launchRequest = new Promise<DebugProtocol.LaunchRequest>(resolve => {
+            inputProtocolParser.on('request_launch', (data: DebugProtocol.LaunchRequest) => {
+                const enableLogging = (data.arguments as LaunchRequestArguments).logToFile === true;
+                enableDisableLogging(enableLogging);
+                resolve(data);
+                inputProtocolParser.dispose();
+            });
+        });
+
+        // Connect our intermetiate pipes.
+        throughOutStream.pipe(stdout);
+        handshakeDebugOutStream.pipe(throughOutStream);
+
+        // Lets start our debugger.
+        const session = new PythonDebugger(serviceContainer, isServerMode);
+        session.setRunAsServer(isServerMode);
+        let debuggerProcessId: number | undefined;
+        let terminatedEventSent = false;
+        let debuggerSocket: Socket | undefined;
+
+        const dispose = once(() => {
+            if (debuggerSocket) {
+                throughInStream.unpipe(debuggerSocket);
+                debuggerSocket.unpipe(throughOutStream);
+            }
+            session.shutdown(debuggerProcessId);
+            if (!terminatedEventSent) {
+                // Possible VS Code has closed its stream.
+                try {
+                    protocolMessageWriter.write(stdout, new TerminatedEvent());
+                } catch { }
+                terminatedEventSent = true;
+            }
+        });
+
+        outputProtocolParser.once('event_terminated', () => {
+            terminatedEventSent = true;
+            dispose();
+        });
+        // When VS Code sends a disconnect request, PTVSD replies back with a response, but its upto us to kill the process.
+        // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
+        // Also its possible PTVSD might run to completion.
+        outputProtocolParser.once('response_disconnect', () => setTimeout(dispose, 500));
+        if (!isServerMode) {
+            process.on('SIGTERM', dispose);
+        }
+
+        outputProtocolParser.on('response_launch', async () => {
+            // By now we're connected to the client.
+            debuggerSocket = await session.debugServer!.client;
+            // We need to handle both end and error, sometimes the socket will error out without ending (if debugee is killed).
+            debuggerSocket.on('end', dispose);
+            debuggerSocket.on('error', dispose);
+
+            const debugSoketProtocolParser = serviceContainer.get<IProtocolParser>(IProtocolParser);
+            debugSoketProtocolParser.connect(debuggerSocket);
+
+            // Send PTVSD a bogus launch request, and wait for it to respond.
+            // This needs to be done, so PTVSD can keep track of how it was launched (whether it as for attach or launch).
+            protocolMessageWriter.write(debuggerSocket, await launchRequest);
+            await new Promise(resolve => debugSoketProtocolParser.once('response_launch', resolve));
+
+            // The PTVSD process has launched, now send the initialize request to it.
+            protocolMessageWriter.write(debuggerSocket, await initializeRequest);
+
+            // Keep track of processid for killing it.
+            debugSoketProtocolParser.once('event_process', (proc: DebugProtocol.ProcessEvent) => debuggerProcessId = proc.body.systemProcessId);
+
+            // Wait for PTVSD to reply back with initialized event.
+            debugSoketProtocolParser.once('event_initialized', (initialized: DebugProtocol.InitializedEvent) => {
+                // Get ready for PTVSD to communicate directly with VS Code.
+                throughInStream.unpipe(handshakeDebugInStream);
+                throughInStream.pipe(debuggerSocket!);
+                debuggerSocket!.pipe(throughOutStream);
+                // Forward the initialized event sent by PTVSD onto VSCode.
+                // This is what will cause PTVSD to start the actualy work.
+                protocolMessageWriter.write(throughOutStream, initialized);
+            });
+        });
+
+        // Start handling requests in the session instance.
+        // The session (PythonDebugger class) will only perform the bootstrapping (launching of PTVSD).
+        throughInStream.pipe(handshakeDebugInStream);
+        stdin.pipe(throughInStream);
+        session.start(handshakeDebugInStream, handshakeDebugOutStream);
+        stdin.resume();
+    } catch (ex) {
+        logger.error(`Debugger crashed.${ex.message}`);
+        protocolMessageWriter.write(stdout, new Event('error', `Debugger Error: ${ex.message}`));
+        protocolMessageWriter.write(stdout, new OutputEvent(ex.toString(), 'stderr'));
+    }
+}
+
+process.on('uncaughtException', (err: Error) => {
+    logger.error(`Uncaught Exception: ${err && err.message ? err.message : ''}`);
+    logger.error(err && err.name ? err.name : '');
+    logger.error(err && err.stack ? err.stack : '');
+    // Catch all, incase we have string exceptions being raised.
+    logger.error(err ? err.toString() : '');
+    // Wait for 1 second before we die, we need to ensure errors are written to the log file.
+    setTimeout(() => process.exit(-1), 1000);
+});
+
+startDebugger().catch(ex => {
+    // Not necessary except for debugging and to kill linter warning about unhandled promises.
 });

@@ -64,7 +64,6 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
     console?: 'none' | 'integratedTerminal' | 'externalTerminal';
     port?: number;
     host?: string;
-    diagnosticLogging?: boolean;
     logToFile?: boolean;
 }
 
@@ -75,6 +74,7 @@ export interface AttachRequestArguments extends DebugProtocol.AttachRequestArgum
     port?: number;
     host?: string;
     secret?: string;
+    logToFile?: boolean;
 }
 
 export interface IDebugServer {
