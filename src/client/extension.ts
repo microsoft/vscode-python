@@ -103,14 +103,14 @@ export async function activate(context: vscode.ExtensionContext) {
     sortImports.activate(context, standardOutputChannel, serviceContainer);
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
 
+    // This must be completed before we can continue.
+    interpreterManager.initialize();
+    await interpreterManager.autoSetInterpreter();
+
     const pythonInstaller = new PythonInstaller(serviceContainer);
     pythonInstaller.checkPythonInstallation(PythonSettings.getInstance())
         .catch(ex => console.error('Python Extension: pythonInstaller.checkPythonInstallation', ex));
 
-    // This must be completed before we can continue.
-    await interpreterManager.autoSetInterpreter();
-
-    interpreterManager.initialize();
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
 
