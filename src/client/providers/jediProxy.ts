@@ -192,11 +192,12 @@ export class JediProxy implements vscode.Disposable {
         } catch (ex) {
             console.error(ex);
             //If 'This socket is closed.' that means process didn't start at all (at least not properly).
-            if (ex.message === 'This socket is closed.') {
-                this.killProcess();
-            } else {
-                this.handleError('sendCommand', ex.message);
-            }
+
+            // External python process might crash.
+            // Restart it.
+            this.killProcess();
+            this.initialize();
+
             return Promise.reject(ex);
         }
         return executionCmd.deferred.promise;
