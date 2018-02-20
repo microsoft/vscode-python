@@ -102,7 +102,7 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         const pythonExecutableName = path.basename(fullyQualifiedPath);
         const versionInfo = await this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService).getVersion(fullyQualifiedPath, pythonExecutableName);
         const virtualEnvManager = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
-        const virtualEnvName = await virtualEnvManager.detect(fullyQualifiedPath);
+        const virtualEnvName = await virtualEnvManager.getEnvironmentName(fullyQualifiedPath);
         const dislayNameSuffix = virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
         const displayName = `${versionInfo}${dislayNameSuffix}`;
         return {

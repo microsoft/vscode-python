@@ -3,5 +3,5 @@
 
 export const IVirtualEnvironmentManager = Symbol('VirtualEnvironmentManager');
 export interface IVirtualEnvironmentManager {
-    detect(pythonPath: string): Promise<string>;
+    getEnvironmentName(pythonPath: string): Promise<string>;
 }

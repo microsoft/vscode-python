@@ -67,7 +67,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
     private async getVirtualEnvDetails(interpreter: string): Promise<PythonInterpreter> {
         return Promise.all([
             this.versionProvider.getVersion(interpreter, path.basename(interpreter)),
-            this.virtualEnvMgr.detect(interpreter)
+            this.virtualEnvMgr.getEnvironmentName(interpreter)
         ])
             .then(([displayName, virtualEnvName]) => {
                 const virtualEnvSuffix = virtualEnvName.length ? virtualEnvName : this.getVirtualEnvironmentRootDirectory(interpreter);

@@ -12,7 +12,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.processService = serviceContainer.get<IProcessService>(IProcessService);
     }
-    public async detect(pythonPath: string): Promise<string> {
+    public async getEnvironmentName(pythonPath: string): Promise<string> {
         // https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
         const output = await this.processService.exec(pythonPath, ['-c', 'import sys;print(hasattr(sys, "real_prefix"))']);
         if (output.stdout.length > 0) {
