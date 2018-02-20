@@ -1297,7 +1297,7 @@
                 },
                 "python.linting.flake8CategorySeverity.F": {
                     "type": "string",
-                    "default": "Error",
+                    "default": "Warning",
                     "description": "Severity of Flake8 message type 'F'.",
                     "enum": [
                         "Hint",

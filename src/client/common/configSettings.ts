@@ -168,9 +168,12 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                 W: vscode.DiagnosticSeverity.Warning
             },
             flake8CategorySeverity: {
-                F: vscode.DiagnosticSeverity.Error,
                 E: vscode.DiagnosticSeverity.Error,
-                W: vscode.DiagnosticSeverity.Warning
+                W: vscode.DiagnosticSeverity.Warning,
+                // Per http://flake8.pycqa.org/en/latest/glossary.html#term-error-code
+                // 'F' does not mean 'fatal as in PyLint but rather 'pyflakes' such as
+                // unused imports, variables, etc.
+                F: vscode.DiagnosticSeverity.Warning
             },
             mypyCategorySeverity: {
                 error: vscode.DiagnosticSeverity.Error,
