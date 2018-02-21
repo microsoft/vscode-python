@@ -43,12 +43,13 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
         });
         teardown(async () => {
             // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await sleep(1000);
             try {
                 // tslint:disable-next-line:no-empty
                 await debugClient.stop().catch(() => { });
                 // tslint:disable-next-line:no-empty
             } catch (ex) { }
+            await sleep(1000);
         });
 
         function buildLauncArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
@@ -134,15 +135,19 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
             ]);
         });
         test('Ensure threadid is int32', async () => {
-            const launchArgs = buildLauncArgs('sample2.py', false);
-            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
-            await debugClient.hitBreakpoint(launchArgs, breakpointLocation);
+            if (debuggerType !== 'python') {
+                return this.skip();
+            }
+            const threadIdPromise = debugClient.waitForEvent('thread');
 
-            const threads = await debugClient.threadsRequest();
-            expect(threads).to.be.not.equal(undefined, 'no threads response');
-            expect(threads.body.threads).to.be.lengthOf(1);
+            await Promise.all([
+                debugClient.configurationSequence(),
+                debugClient.launch(buildLauncArgs('simplePrint.py', true)),
+                debugClient.waitForEvent('initialized'),
+                debugClient.waitForEvent('stopped')
+            ]);
 
-            const threadId = threads.body.threads[0].id;
+            const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
             expect(threadId).to.be.lessThan(MAX_SIGNED_INT32 + 1, 'ThreadId is not an integer');
             await Promise.all([
                 debugClient.continueRequest({ threadId }),

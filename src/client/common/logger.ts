@@ -7,7 +7,7 @@ const PREFIX = 'Python Extension: ';
 export class Logger implements ILogger {
     public logError(message: string, ex?: Error) {
         if (ex) {
-            console.error(`${PREFIX}${message}`, error);
+            console.error(`${PREFIX}${message}`, ex);
         } else {
             console.error(`${PREFIX}${message}`);
         }

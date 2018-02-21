@@ -76,10 +76,7 @@ export class InterpreterSelector implements IInterpreterSelector {
 
     private async removeDuplicates(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
         const result: PythonInterpreter[] = [];
-        await Promise.all(interpreters.filter(async x => {
-            x.realPath = await this.fileSystem.getRealPathAsync(x.path);
-            return true;
-        }));
+        await Promise.all(interpreters.map(async item => item.realPath = await this.fileSystem.getRealPathAsync(item.path)));
         interpreters.forEach(x => {
             if (result.findIndex(a => a.displayName === x.displayName
                 && a.type === x.type && this.fileSystem.arePathsSame(a.realPath!, x.realPath!)) < 0) {
