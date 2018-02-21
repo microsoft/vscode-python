@@ -67,7 +67,7 @@ export class PythonDebugger extends DebugSession {
             {
                 filter: 'raised',
                 label: 'Raised Exceptions',
-                default: true
+                default: false
             },
             {
                 filter: 'uncaught',
@@ -195,24 +195,29 @@ async function startDebugger() {
         let terminatedEventSent = false;
         let debuggerSocket: Socket | undefined;
 
-        const dispose = once(() => {
+        const dispose = once(async () => {
+            // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
+            // Also its possible PTVSD might run to completion.
+            await new Promise(resolve => setTimeout(resolve, 500));
             if (debuggerSocket) {
                 throughInStream.unpipe(debuggerSocket);
                 debuggerSocket.unpipe(throughOutStream);
             }
-            session.shutdown(debuggerProcessId);
             if (!terminatedEventSent) {
                 // Possible VS Code has closed its stream.
                 try {
                     protocolMessageWriter.write(stdout, new TerminatedEvent());
+                    // Wait for this message to go out before we proceed (the process will die after this).
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 } catch { }
                 terminatedEventSent = true;
             }
+            session.shutdown(debuggerProcessId);
         });
 
         outputProtocolParser.once('event_terminated', () => {
             terminatedEventSent = true;
-            dispose();
+            dispose().catch(() => { });
         });
         // When VS Code sends a disconnect request, PTVSD replies back with a response, but its upto us to kill the process.
         // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
