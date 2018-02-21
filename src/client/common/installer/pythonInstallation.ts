@@ -35,8 +35,10 @@ export class PythonInstaller {
             return true;
         }
 
-        await this.shell.showErrorMessage('Python is not installed. Please download and install Python before using the extension.');
-        this.shell.openUrl('https://www.python.org/downloads');
+        const download = 'Download';
+        if (await this.shell.showErrorMessage('Python is not installed. Please download and install Python before using the extension.', download) === download) {
+            this.shell.openUrl('https://www.python.org/downloads');
+        }
         return false;
     }
 }

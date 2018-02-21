@@ -127,9 +127,9 @@ export class Tokenizer implements ITokenizer {
             case Char.Colon:
                 this.tokens.push(new Token(TokenType.Colon, this.cs.position, 1));
                 break;
-            case Char.Period:
             case Char.At:
-                this.tokens.push(new Token(TokenType.Unknown, this.cs.position, 1));
+            case Char.Period:
+                this.tokens.push(new Token(TokenType.Operator, this.cs.position, 1));
                 break;
             default:
                 if (this.isPossibleNumber()) {

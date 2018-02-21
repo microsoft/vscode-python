@@ -48,7 +48,7 @@ export class LineFormatter {
                     break;
 
                 case TokenType.Identifier:
-                    if (!prev || (!this.isOpenBraceType(prev.type) && prev.type !== TokenType.Colon)) {
+                    if (prev && !this.isOpenBraceType(prev.type) && prev.type !== TokenType.Colon && prev.type !== TokenType.Operator) {
                         this.builder.softAppendSpace();
                     }
                     this.builder.append(this.text.substring(t.start, t.end));
@@ -81,22 +81,42 @@ export class LineFormatter {
 
     private handleOperator(index: number): void {
         const t = this.tokens.getItemAt(index);
-        if (index >= 2 && t.length === 1 && this.text.charCodeAt(t.start) === Char.Equal) {
-            if (this.braceCounter.isOpened(TokenType.OpenBrace)) {
-                // Check if this is = in function arguments. If so, do not
-                // add spaces around it.
-                const prev = this.tokens.getItemAt(index - 1);
-                const prevPrev = this.tokens.getItemAt(index - 2);
-                if (prev.type === TokenType.Identifier &&
-                    (prevPrev.type === TokenType.Comma || prevPrev.type === TokenType.OpenBrace)) {
-                    this.builder.append('=');
+        if (t.length === 1) {
+            const opCode = this.text.charCodeAt(t.start);
+            switch (opCode) {
+                case Char.Equal:
+                    if (index >= 2 && this.handleEqual(t, index)) {
+                        return;
+                    }
+                    break;
+                case Char.Period:
+                    this.builder.append('.');
                     return;
-                }
+                case Char.At:
+                    this.builder.append('@');
+                    return;
+                default:
+                    break;
             }
         }
         this.builder.softAppendSpace();
         this.builder.append(this.text.substring(t.start, t.end));
         this.builder.softAppendSpace();
+    }
+
+    private handleEqual(t: IToken, index: number): boolean {
+        if (this.braceCounter.isOpened(TokenType.OpenBrace)) {
+            // Check if this is = in function arguments. If so, do not
+            // add spaces around it.
+            const prev = this.tokens.getItemAt(index - 1);
+            const prevPrev = this.tokens.getItemAt(index - 2);
+            if (prev.type === TokenType.Identifier &&
+                (prevPrev.type === TokenType.Comma || prevPrev.type === TokenType.OpenBrace)) {
+                this.builder.append('=');
+                return true;
+            }
+        }
+        return false;
     }
 
     private handleOther(t: IToken): void {
