@@ -231,7 +231,7 @@ export function getTempFileWithDocumentContents(document: TextDocument): Promise
         const fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
         fs.writeFile(fileName, document.getText(), ex => {
             if (ex) {
-                return reject(`Failed to create a temporary file, ${ex.message}`);
+                reject(`Failed to create a temporary file, ${ex.message}`);
             }
             resolve(fileName);
         });

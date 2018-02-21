@@ -99,17 +99,18 @@ export abstract class BaseFormatter {
     }
 
     private async createTempFile(document: vscode.TextDocument): Promise<string> {
-        if (document.isDirty) {
-            return getTempFileWithDocumentContents(document);
-        }
-        return Promise.resolve(document.fileName);
+        return document.isDirty
+            ? await getTempFileWithDocumentContents(document)
+            : document.fileName;
     }
+
     private deleteTempFile(originalFile: string, tempFile: string): Promise<void> {
         if (originalFile !== tempFile) {
             return fs.unlink(tempFile);
         }
         return Promise.resolve();
     }
+
     private checkCancellation(originalFile: string, tempFile: string, token?: vscode.CancellationToken): boolean {
         if (token && token.isCancellationRequested) {
             this.deleteTempFile(originalFile, tempFile).ignoreErrors();

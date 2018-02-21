@@ -116,7 +116,7 @@ suite('Formatting', () => {
 
         const textDocument = await vscode.workspace.openTextDocument(fileToFormat);
         const textEditor = await vscode.window.showTextDocument(textDocument);
-        textEditor.edit(builder => {
+        await textEditor.edit(builder => {
             // Make file dirty. Trailing blanks will be removed.
             builder.insert(new vscode.Position(0, 0), '\n    \n');
         });
@@ -125,7 +125,7 @@ suite('Formatting', () => {
         const configFile = path.join(dir, '.style.yapf');
         try {
             // Create yapf configuration file
-            const content = '[style]\nbased_on_style = pep8\nindent_width=3\n';
+            const content = '[style]\nbased_on_style = pep8\nindent_width=5\n';
             fs.writeFileSync(configFile, content);
 
             const options = { insertSpaces: textEditor.options.insertSpaces! as boolean, tabSize: 1 };
