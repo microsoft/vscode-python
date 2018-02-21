@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
+import * as path from 'path';
 // tslint:disable-next-line:no-require-imports
 import untildify = require('untildify');
 import { Uri } from 'vscode';
@@ -36,16 +37,20 @@ export class WorkspaceVirtualEnvironmentsSearchPathProvider implements IVirtualE
         }
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         if (Array.isArray(workspaceService.workspaceFolders) && workspaceService.workspaceFolders.length > 0) {
+            let wsPath: string | undefined;
             if (resource && workspaceService.workspaceFolders.length > 1) {
                 const wkspaceFolder = workspaceService.getWorkspaceFolder(resource);
                 if (wkspaceFolder) {
-                    paths.push(wkspaceFolder.uri.fsPath);
+                    wsPath = wkspaceFolder.uri.fsPath;
                 }
             } else {
-                paths.push(workspaceService.workspaceFolders[0].uri.fsPath);
+                wsPath = workspaceService.workspaceFolders[0].uri.fsPath;
+            }
+            if (wsPath) {
+                paths.push(wsPath);
+                paths.push(path.join(wsPath, '.direnv'));
             }
         }
         return paths;
-
     }
 }
