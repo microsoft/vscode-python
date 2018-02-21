@@ -8,7 +8,6 @@ if ((Reflect as any).metadata === undefined) {
 import { Container } from 'inversify';
 import * as vscode from 'vscode';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
-import { BannerService } from './banner';
 import { PythonSettings } from './common/configSettings';
 import * as settings from './common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
@@ -182,9 +181,6 @@ export async function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));
     });
     activationDeferred.resolve();
-
-    // tslint:disable-next-line:no-unused-expression
-    new BannerService(persistentStateFactory);
 
     const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtension);
     deprecationMgr.initialize();
