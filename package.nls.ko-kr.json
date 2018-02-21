@@ -23,7 +23,7 @@
     "python.command.jupyter.gotToPreviousCell.title": "이전 셀로 이동",
     "python.command.jupyter.gotToNextCell.title": "다음 셀로 이동",
     "python.command.python.goToPythonObject.title": " Python 객체로 이동",
-	"python.snippet.launch.standard.label": "Python",
+	"python.snippet.launch.standard.label": "Python: Current File",
 	"python.snippet.launch.standard.description": "표준 출력으로 Python 프로그램 디버그",
 	"python.snippet.launch.pyspark.label": "Python: PySpark",
 	"python.snippet.launch.pyspark.description": "PySpark 디버그",
