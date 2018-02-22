@@ -12,7 +12,7 @@ sys.stdout.write('attached')
 sys.stdout.flush()
 
 name = input()
-sys.stdout.write(name)
+sys.stdout.write('Peter Smith')
 sys.stdout.flush()
 input()
 sys.stdout.write('end')
