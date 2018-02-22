@@ -15,7 +15,7 @@ let grep: string | undefined;
 // We do this to ensure we only run debugger test, as debugger tests are very flaky on CI.
 // So the solution is to run them separately and first on CI.
 if (IS_CI_SERVER && IS_CI_SERVER_TEST_DEBUGGER) {
-grep = 'Standard Debugging - Misc tests';
+    grep = 'Standard Debugging - Misc tests';
 }
 
 // You can directly control Mocha options by uncommenting the following lines.
@@ -26,7 +26,7 @@ const options: MochaSetupOptions & { retries: number } = {
     useColors: true,
     timeout: 25000,
     retries: 3,
-    grep
+    grep: 'Standard Debugging - Misc tests'
 };
 testRunner.configure(options, { coverageConfig: '../coverconfig.json' });
 module.exports = testRunner;
