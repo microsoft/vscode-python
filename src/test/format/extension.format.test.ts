@@ -109,7 +109,7 @@ suite('Formatting', () => {
         const formattedFile = path.join(targetDir, resultsName);
 
         if (!fs.pathExistsSync(targetDir)) {
-            fs.mkdirSync(targetDir);
+            fs.mkdirpSync(targetDir);
         }
         fs.copySync(path.join(sourceDir, originalName), fileToFormat, { overwrite: true });
         fs.copySync(path.join(sourceDir, resultsName), formattedFile, { overwrite: true });
