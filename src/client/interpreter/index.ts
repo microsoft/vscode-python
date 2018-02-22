@@ -11,7 +11,7 @@ import { IPythonPathUpdaterServiceManager } from './configuration/types';
 import {
     IInterpreterDisplay, IInterpreterHelper, IInterpreterLocatorService,
     IInterpreterService, IInterpreterVersionService, INTERPRETER_LOCATOR_SERVICE,
-    InterpreterType, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE
+    InterpreterType, PIPENV_SERVICE, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE
 } from './contracts';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
@@ -46,7 +46,7 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         return this.interpreterProvider.getInterpreters(resource);
     }
 
-    public async autoSetInterpreter() {
+    public async autoSetInterpreter(): Promise<void> {
         if (!this.shouldAutoSetInterpreter()) {
             return;
         }
@@ -54,15 +54,23 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         if (!activeWorkspace) {
             return;
         }
+
+        // Check pipenv first
+        const pipenvService = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
+        let interpreters = await pipenvService.getInterpreters(activeWorkspace.folderUri);
+        if (interpreters.length > 0) {
+            await this.pythonPathUpdaterService.updatePythonPath(interpreters[0].path, activeWorkspace.configTarget, 'load', activeWorkspace.folderUri);
+            return;
+        }
+        // Now check virtual environments under the workspace root
         const virtualEnvInterpreterProvider = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
-        const interpreters = await virtualEnvInterpreterProvider.getInterpreters(activeWorkspace.folderUri);
+        interpreters = await virtualEnvInterpreterProvider.getInterpreters(activeWorkspace.folderUri);
         const workspacePathUpper = activeWorkspace.folderUri.fsPath.toUpperCase();
 
         const interpretersInWorkspace = interpreters.filter(interpreter => interpreter.path.toUpperCase().startsWith(workspacePathUpper));
         if (interpretersInWorkspace.length === 0) {
             return;
         }
-
         // Always pick the highest version by default.
         // Ensure this new environment is at the same level as the current workspace.
         // In windows the interpreter is under scripts/python.exe on linux it is under bin/python.
