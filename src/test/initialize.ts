@@ -7,6 +7,8 @@ import { PythonSettings } from '../client/common/configSettings';
 import { activated } from '../client/extension';
 import { clearPythonPathInWorkspaceFolder, resetGlobalPythonPathSetting, setPythonPathInWorkspaceRoot } from './common';
 
+export * from './constants';
+
 const dummyPythonFile = path.join(__dirname, '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
 const multirootPath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc');
 const workspace3Uri = vscode.Uri.file(path.join(multirootPath, 'workspace3'));
@@ -15,12 +17,6 @@ const workspace3Uri = vscode.Uri.file(path.join(multirootPath, 'workspace3'));
 process.env['VSC_PYTHON_CI_TEST'] = '1';
 
 const PYTHON_PATH = getPythonPath();
-export const IS_CI_SERVER = (typeof process.env['TRAVIS'] === 'string' ? process.env['TRAVIS'] : '') === 'true';
-export const TEST_TIMEOUT = 25000;
-export const IS_MULTI_ROOT_TEST = isMultitrootTest();
-export const IS_CI_SERVER_TEST_DEBUGGER = process.env['IS_CI_SERVER_TEST_DEBUGGER'] === '1';
-// If running on CI server, then run debugger tests ONLY if the corresponding flag is enabled.
-export const TEST_DEBUGGER = IS_CI_SERVER ? IS_CI_SERVER_TEST_DEBUGGER : true;
 
 // Ability to use custom python environments for testing
 export async function initializePython() {
@@ -67,8 +63,4 @@ function getPythonPath(): string {
         return process.env.TRAVIS_PYTHON_PATH;
     }
     return 'python';
-}
-
-function isMultitrootTest() {
-    return Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 1;
 }
