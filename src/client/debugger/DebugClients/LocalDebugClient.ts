@@ -161,10 +161,6 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         if (Array.isArray(this.args.debugOptions)) {
             vsDebugOptions = this.args.debugOptions.filter(opt => VALID_DEBUG_OPTIONS.indexOf(opt) >= 0);
         }
-        // If internal or external console, then don't re-direct the output.
-        if (this.args.console === 'integratedTerminal' || this.args.console === 'externalTerminal') {
-            vsDebugOptions = vsDebugOptions.filter(opt => opt !== 'RedirectOutput');
-        }
 
         // Include a dummy value, to ensure something gets sent.
         // Else, argument positions get messed up due to an empty string.
