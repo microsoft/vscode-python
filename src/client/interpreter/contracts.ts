@@ -1,4 +1,5 @@
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
+import { IModuleInstaller } from '../common/installer/types';
 import { Architecture } from '../common/platform/types';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
@@ -97,4 +98,10 @@ export interface IShebangCodeLensProvider extends CodeLensProvider {
 export const IInterpreterHelper = Symbol('IInterpreterHelper');
 export interface IInterpreterHelper {
     getActiveWorkspaceUri(): WorkspacePythonPath | undefined;
+}
+
+export const IPipEnvService = Symbol('IPipEnvService');
+export interface IPipEnvService {
+    getInterpreterPath(resource?: Uri): Promise<string | undefined>;
+    getInstaller(resource?: Uri): Promise<IModuleInstaller | undefined>;
 }

@@ -20,6 +20,7 @@ import {
     IInterpreterVersionService,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
+    IPipEnvService,
     IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
@@ -38,6 +39,7 @@ import { CondaService } from './locators/services/condaService';
 import { CurrentPathService } from './locators/services/currentPathService';
 import { GlobalVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvService } from './locators/services/globalVirtualEnvService';
 import { getKnownSearchPathsForInterpreters, KnownPathsService } from './locators/services/KnownPathsService';
+import { PipEnvService } from './locators/services/pipEnvService';
 import { WindowsRegistryService } from './locators/services/windowsRegistryService';
 import { WorkspaceVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvService } from './locators/services/workspaceVirtualEnvService';
 import { VirtualEnvironmentManager } from './virtualEnvs/index';
@@ -49,6 +51,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace');
 
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+    serviceManager.addSingleton<IPipEnvService>(IPipEnvService, PipEnvService);
     serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
 
     serviceManager.addSingleton<IInterpreterVersionService>(IInterpreterVersionService, InterpreterVersionService);

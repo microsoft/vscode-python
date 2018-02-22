@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { QuickPickItem, Uri } from 'vscode';
-import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
+import { IInterpreterService, InterpreterType, IPipEnvService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
 import { IPlatformService } from '../platform/types';
@@ -41,6 +41,13 @@ export class InstallationChannelManager implements IInstallationChannelManager {
     }
 
     public async getInstallationChannels(resource?: Uri): Promise<IModuleInstaller[]> {
+        // First try pipenv as it overrides other methods
+        const pipenv = this.serviceContainer.get<IPipEnvService>(IPipEnvService);
+        const installer = await pipenv.getInstaller(resource);
+        if (installer) {
+            return [installer];
+        }
+
         const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
         const supportedInstallers: IModuleInstaller[] = [];
         for (const mi of installers) {
@@ -48,7 +55,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
                 supportedInstallers.push(mi);
             }
         }
-        return supportedInstallers;
+        return [];
     }
 
     public async showNoInstallersMessage(resource?: Uri): Promise<void> {
