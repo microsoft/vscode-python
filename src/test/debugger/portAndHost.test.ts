@@ -8,7 +8,7 @@ import * as net from 'net';
 import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
-import { IS_MULTI_ROOT_TEST } from '../initialize';
+import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 
 use(chaiAsPromised);
 
@@ -24,7 +24,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
     suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
         let debugClient: DebugClient;
         setup(async function () {
-            if (!IS_MULTI_ROOT_TEST) {
+            if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }

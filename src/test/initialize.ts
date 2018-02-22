@@ -1,3 +1,5 @@
+// tslint:disable:no-string-literal
+
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -10,14 +12,15 @@ const multirootPath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWksp
 const workspace3Uri = vscode.Uri.file(path.join(multirootPath, 'workspace3'));
 
 //First thing to be executed.
-// tslint:disable-next-line:no-string-literal
 process.env['VSC_PYTHON_CI_TEST'] = '1';
 
 const PYTHON_PATH = getPythonPath();
-// tslint:disable-next-line:no-string-literal prefer-template
 export const IS_CI_SERVER = (typeof process.env['TRAVIS'] === 'string' ? process.env['TRAVIS'] : '') === 'true';
 export const TEST_TIMEOUT = 25000;
 export const IS_MULTI_ROOT_TEST = isMultitrootTest();
+export const IS_CI_SERVER_TEST_DEBUGGER = process.env['IS_CI_SERVER_TEST_DEBUGGER'] === '1';
+// If running on CI server, then run debugger tests ONLY if the corresponding flag is enabled.
+export const TEST_DEBUGGER = IS_CI_SERVER ? IS_CI_SERVER_TEST_DEBUGGER : true;
 
 // Ability to use custom python environments for testing
 export async function initializePython() {
