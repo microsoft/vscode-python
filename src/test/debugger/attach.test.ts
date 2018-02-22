@@ -55,14 +55,14 @@ suite('Attach Debugger', () => {
         };
 
         const customEnv = { ...process.env };
-
+        console.log('1');
         // Set the path for PTVSD to be picked up.
         // tslint:disable-next-line:no-string-literal
         customEnv['PYTHONPATH'] = ptvsdPath;
         const procService = new ProcessService(new BufferDecoder());
         const result = procService.execObservable('python', [fileToDebug, port.toString()], { env: customEnv, cwd: path.dirname(fileToDebug) });
         procToKill = result.proc;
-
+        console.log('2');
         const completed = createDeferred();
         const expectedOutputs = [
             { value: 'start', deferred: createDeferred() },
@@ -72,7 +72,7 @@ suite('Attach Debugger', () => {
         const startOutputReceived = expectedOutputs[0].deferred.promise;
         const firstOutputReceived = expectedOutputs[1].deferred.promise;
         const secondOutputReceived = expectedOutputs[2].deferred.promise;
-
+        console.log('3');
         result.out.subscribe(output => {
             if (expectedOutputs[0].value === output.out) {
                 expectedOutputs.shift()!.deferred.resolve();
@@ -82,16 +82,17 @@ suite('Attach Debugger', () => {
         }, () => {
             completed.resolve();
         });
-
+        console.log('4');
         await startOutputReceived;
-
+        console.log('5');
         const threadIdPromise = createDeferred<number>();
+        console.log('6');
         debugClient.on('thread', (data: ThreadEvent) => {
             if (data.body.reason === 'started') {
                 threadIdPromise.resolve(data.body.threadId);
             }
         });
-
+        console.log('7');
         const initializePromise = debugClient.initializeRequest({
             adapterID: 'python',
             linesStartAt1: true,
@@ -99,24 +100,28 @@ suite('Attach Debugger', () => {
             supportsRunInTerminalRequest: true,
             pathFormat: 'path'
         });
+        console.log('8');
         await debugClient.attachRequest(args);
+        console.log('9');
         await initializePromise;
-
+        console.log('10');
         // Wait till we get the thread of the program.
         const threadId = await threadIdPromise.promise;
         expect(threadId).to.be.greaterThan(0, 'ThreadId not received');
-
+        console.log('11');
         // Continue the program.
         await debugClient.continueRequest({ threadId });
-
+        console.log('12');
         // Value for input prompt.
         result.proc.stdin.write(`Peter Smith${EOL}`);
         await firstOutputReceived;
-
+        console.log('13');
         result.proc.stdin.write(`${EOL}`);
         await secondOutputReceived;
+        console.log('14');
         await completed.promise;
-
+        console.log('15');
         await debugClient.waitForEvent('terminated');
+        console.log('16');
     });
 });
