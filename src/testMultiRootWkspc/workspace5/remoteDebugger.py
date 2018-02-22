@@ -8,6 +8,9 @@ address = ('127.0.0.1', int(sys.argv[1]))
 ptvsd.enable_attach('super_secret', address)
 ptvsd.wait_for_attach()
 
+sys.stdout.write('attached')
+sys.stdout.flush()
+
 name = input()
 sys.stdout.write(name)
 sys.stdout.flush()

@@ -67,12 +67,14 @@ suite('Attach Debugger', () => {
         const completed = createDeferred();
         const expectedOutputs = [
             { value: 'start', deferred: createDeferred() },
+            { value: 'attached', deferred: createDeferred() },
             { value: 'Peter Smith', deferred: createDeferred() },
             { value: 'end', deferred: createDeferred() }
         ];
         const startOutputReceived = expectedOutputs[0].deferred.promise;
         const firstOutputReceived = expectedOutputs[1].deferred.promise;
         const secondOutputReceived = expectedOutputs[2].deferred.promise;
+        const thirdOutputReceived = expectedOutputs[2].deferred.promise;
         console.log('3');
         result.out.subscribe(output => {
             console.log('output:');
@@ -113,17 +115,18 @@ suite('Attach Debugger', () => {
         expect(threadId).to.be.greaterThan(0, 'ThreadId not received');
         await sleep(1000);
         console.log('11');
+        await firstOutputReceived;
         // Continue the program.
         // await debugClient.continueRequest({ threadId });
         console.log('12');
         // Value for input prompt.
         result.proc.stdin.write(`Peter Smith${EOL}`);
-        await firstOutputReceived;
+        await secondOutputReceived;
         console.log('13');
         result.proc.stdin.write(`${EOL}`);
-        await secondOutputReceived;
+        await thirdOutputReceived;
         console.log('14');
-        await completed.promise;
+        //await completed.promise;
         console.log('15');
         await debugClient.waitForEvent('terminated');
         console.log('16');
