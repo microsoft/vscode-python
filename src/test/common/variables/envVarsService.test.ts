@@ -4,10 +4,11 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
+import { PathUtils } from '../../../client/common/platform/pathUtils';
+import { PlatformService } from '../../../client/common/platform/platformService';
 import { IPathUtils } from '../../../client/common/types';
+import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
-import { closeActiveWindows, initialize, initializeTest } from '../../initialize';
-import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
 
 use(chaiAsPromised);
 
@@ -15,22 +16,11 @@ const envFilesFolderPath = path.join(__dirname, '..', '..', '..', '..', 'src', '
 
 // tslint:disable-next-line:max-func-body-length
 suite('Environment Variables Service', () => {
-    let ioc: UnitTestIocContainer;
+    let pathUtils: IPathUtils;
     let variablesService: IEnvironmentVariablesService;
-    suiteSetup(initialize);
     setup(() => {
-        ioc = new UnitTestIocContainer();
-        ioc.registerCommonTypes();
-        ioc.registerVariableTypes();
-        ioc.registerProcessTypes();
-        variablesService = ioc.serviceContainer.get<IEnvironmentVariablesService>(IEnvironmentVariablesService);
-        return initializeTest();
-    });
-    suiteTeardown(closeActiveWindows);
-    teardown(async () => {
-        ioc.dispose();
-        await closeActiveWindows();
-        await initializeTest();
+        pathUtils = new PathUtils(new PlatformService().isWindows);
+        variablesService = new EnvironmentVariablesService(pathUtils);
     });
 
     test('Custom variables should be undefined with non-existent files', async () => {
@@ -81,7 +71,7 @@ suite('Environment Variables Service', () => {
     });
 
     test('Ensure path variabnles variables are not merged into target', async () => {
-        const pathVariable = ioc.serviceContainer.get<IPathUtils>(IPathUtils).getPathVariableName();
+        const pathVariable = pathUtils.getPathVariableName();
         const vars1 = { ONE: '1', TWO: 'TWO', PYTHONPATH: 'PYTHONPATH' };
         vars1[pathVariable] = 'PATH';
         const vars2 = { ONE: 'ONE', THREE: '3' };
@@ -94,7 +84,7 @@ suite('Environment Variables Service', () => {
     });
 
     test('Ensure path variabnles variables in target are left untouched', async () => {
-        const pathVariable = ioc.serviceContainer.get<IPathUtils>(IPathUtils).getPathVariableName();
+        const pathVariable = pathUtils.getPathVariableName();
         const vars1 = { ONE: '1', TWO: 'TWO' };
         const vars2 = { ONE: 'ONE', THREE: '3', PYTHONPATH: 'PYTHONPATH' };
         vars2[pathVariable] = 'PATH';
@@ -139,7 +129,7 @@ suite('Environment Variables Service', () => {
     });
 
     test('Ensure appending PATH has no effect if an empty string is provided and path does not exist in vars object', async () => {
-        const pathVariable = ioc.serviceContainer.get<IPathUtils>(IPathUtils).getPathVariableName();
+        const pathVariable = pathUtils.getPathVariableName();
         const vars = { ONE: '1' };
         vars[pathVariable] = 'PATH';
         variablesService.appendPath(vars);
@@ -177,7 +167,7 @@ suite('Environment Variables Service', () => {
     });
 
     test('Ensure PATH is appeneded', async () => {
-        const pathVariable = ioc.serviceContainer.get<IPathUtils>(IPathUtils).getPathVariableName();
+        const pathVariable = pathUtils.getPathVariableName();
         const vars = { ONE: '1' };
         vars[pathVariable] = 'PATH';
         const pathToAppend = `/usr/one${path.delimiter}/usr/three`;
