@@ -17,17 +17,16 @@ export class PythonExecutionService implements IPythonExecutionService {
     private readonly procService: IProcessService;
     private readonly configService: IConfigurationService;
     private readonly fileSystem: IFileSystem;
-    private readonly versionService: IInterpreterVersionService;
 
-    constructor(serviceContainer: IServiceContainer, private envVars: EnvironmentVariables | undefined, private resource?: Uri) {
+    constructor(private serviceContainer: IServiceContainer, private envVars: EnvironmentVariables | undefined, private resource?: Uri) {
         this.procService = serviceContainer.get<IProcessService>(IProcessService);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
-        this.versionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
     }
 
     public async getVersion(): Promise<string> {
-        return this.versionService.getVersion(this.pythonPath, '');
+        const versionService = this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
+        return versionService.getVersion(this.pythonPath, '');
     }
     public async getExecutablePath(): Promise<string> {
         // If we've passed the python file, then return the file.

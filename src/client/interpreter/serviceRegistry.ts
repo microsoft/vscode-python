@@ -20,7 +20,6 @@ import {
     IInterpreterVersionService,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
-    IPipEnvService,
     IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
@@ -52,7 +51,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace');
 
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-    serviceManager.addSingleton<IPipEnvService>(IPipEnvService, PipEnvService);
     serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
 
     serviceManager.addSingleton<IInterpreterVersionService>(IInterpreterVersionService, InterpreterVersionService);

@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { QuickPickItem, Uri } from 'vscode';
-import { IInterpreterService, InterpreterType, IPipEnvService } from '../../interpreter/contracts';
+import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
 import { IPlatformService } from '../platform/types';
@@ -41,21 +41,27 @@ export class InstallationChannelManager implements IInstallationChannelManager {
     }
 
     public async getInstallationChannels(resource?: Uri): Promise<IModuleInstaller[]> {
-        // First try pipenv as it overrides other methods
-        const pipenv = this.serviceContainer.get<IPipEnvService>(IPipEnvService);
-        const installer = await pipenv.getInstaller(resource);
-        if (installer) {
-            return [installer];
-        }
-
-        const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
+        let installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
         const supportedInstallers: IModuleInstaller[] = [];
+        if (installers.length === 0) {
+            return [];
+        }
+        // group by priority and pick supported from the highest priority
+        installers = installers.sort((a, b) => b.priority - a.priority);
+        let currentPri = installers[0].priority;
         for (const mi of installers) {
+            if (mi.priority !== currentPri) {
+                if (supportedInstallers.length > 0) {
+                    break; // return highest priority supported installers
+                }
+                // If none supported, try next priority group
+                currentPri = mi.priority;
+            }
             if (await mi.isSupported(resource)) {
                 supportedInstallers.push(mi);
             }
         }
-        return [];
+        return supportedInstallers;
     }
 
     public async showNoInstallersMessage(resource?: Uri): Promise<void> {

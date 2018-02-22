@@ -50,7 +50,6 @@ export interface IPythonExecutionFactory {
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
 
 export interface IPythonExecutionService {
-    getVersion(): Promise<string>;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
 

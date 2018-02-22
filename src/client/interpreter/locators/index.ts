@@ -14,12 +14,12 @@ import {
     IInterpreterLocatorService,
     InterpreterType,
     KNOWN_PATH_SERVICE,
+    PIPENV_SERVICE,
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../contracts';
 import { fixInterpreterDisplayName, isMacDefaultPythonPath } from './helpers';
-import { PipEnvService } from './services/pipEnvService';
 
 @injectable()
 export class PythonInterpreterLocatorService implements IInterpreterLocatorService {
@@ -32,7 +32,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     }
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
         // Pipenv always wins
-        const pipenv = new PipEnvService(this.serviceContainer);
+        const pipenv = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
         const interpreters = await pipenv.getInterpreters(resource);
         if (interpreters.length > 0) {
             return interpreters;

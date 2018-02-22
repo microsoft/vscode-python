@@ -1,11 +1,13 @@
 import { EventEmitter } from 'events';
 import { Uri } from 'vscode';
-import { createDeferred, Deferred } from '../../client/common/helpers';
 import { IModuleInstaller } from '../../client/common/installer/types';
 
 export class MockModuleInstaller extends EventEmitter implements IModuleInstaller {
     constructor(public readonly displayName: string, private supported: boolean) {
         super();
+    }
+    public get priority(): number {
+        return 0;
     }
     public async installModule(name: string): Promise<void> {
         this.emit('installModule', name);

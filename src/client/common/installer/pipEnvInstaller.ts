@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IPipEnvService } from '../../interpreter/contracts';
+import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { IModuleInstaller } from './types';
@@ -12,14 +12,17 @@ const pipenvName = 'pipenv';
 
 @injectable()
 export class PipEnvInstaller implements IModuleInstaller {
-    private readonly pipenv: IPipEnvService;
+    private readonly pipenv: IInterpreterLocatorService;
 
     public get displayName() {
         return pipenvName;
     }
+    public get priority(): number {
+        return 10;
+    }
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-        this.pipenv = this.serviceContainer.get<IPipEnvService>(IPipEnvService);
+        this.pipenv = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
     }
 
     public installModule(name: string): Promise<void> {
@@ -28,6 +31,7 @@ export class PipEnvInstaller implements IModuleInstaller {
     }
 
     public async isSupported(resource?: Uri): Promise<boolean> {
-        return await this.pipenv.getInterpreterPath(resource) !== undefined;
+        const interpreters = await this.pipenv.getInterpreters(resource);
+        return interpreters && interpreters.length > 0;
     }
 }
