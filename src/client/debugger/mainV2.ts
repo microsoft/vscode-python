@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-any max-func-body-length no-empty no-require-imports no-var-requires no-suspicious-comment
+// tslint:disable:no-any max-func-body-length no-empty no-require-imports no-var-requires
 
 if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
@@ -64,12 +64,11 @@ export class PythonDebugger extends DebugSession {
         body.supportsSetVariable = true;
         body.supportsExceptionOptions = true;
         body.exceptionBreakpointFilters = [
-            // TODO: Temporary workaround for PTVSD #85
-            // {
-            //     filter: 'raised',
-            //     label: 'Raised Exceptions',
-            //     default: false
-            // },
+            {
+                filter: 'raised',
+                label: 'Raised Exceptions',
+                default: false
+            },
             {
                 filter: 'uncaught',
                 label: 'Uncaught Exceptions',
