@@ -26,7 +26,7 @@ const options: MochaSetupOptions & { retries: number } = {
     useColors: true,
     timeout: 25000,
     retries: 3,
-    grep: 'Standard Debugging - Misc tests'
+    grep
 };
 testRunner.configure(options, { coverageConfig: '../coverconfig.json' });
 module.exports = testRunner;
