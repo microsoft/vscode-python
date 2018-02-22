@@ -14,6 +14,7 @@ environment:
       PYTHON_VERSION: "3.6.3"
       PYTHON_ARCH: "32"
       nodejs_version: "8.9.1"
+      TRAVIS: "true"
 
     # - PYTHON: "C:\\Python36-x64"
     #   PYTHON_VERSION: "3.6.3"
@@ -37,6 +38,7 @@ install:
 test_script:
   - yarn run clean
   - yarn run vscode:prepublish
+  - yarn run testDebugger --silent
   - yarn run testSingleWorkspace --silent
   - yarn run testMultiWorkspace --silent
 
