@@ -26,8 +26,8 @@ import { BaseDebugServer } from './DebugServers/BaseDebugServer';
 import { initializeIoc } from './serviceRegistry';
 import { IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
 
-const DEBUGGER_CONNECT_TIMEOUT = 10000;
-const MIN_DEBUGGER_CONNECT_TIMEOUT = DEBUGGER_CONNECT_TIMEOUT / 2;
+const DEBUGGER_CONNECT_TIMEOUT = 20000;
+const MIN_DEBUGGER_CONNECT_TIMEOUT = 5000;
 
 export class PythonDebugger extends DebugSession {
     public debugServer?: BaseDebugServer;
@@ -123,7 +123,7 @@ export class PythonDebugger extends DebugSession {
     private getConnectionTimeout(args: LaunchRequestArguments) {
         // The timeout can be overridden, but won't be documented unless we see the need for it.
         // This is just a fail safe mechanism, if the current timeout isn't enough (let study the current behaviour before exposing this setting).
-        const connectionTimeout = typeof (args as any).connectionTimeout === 'number' ? (args as any).connectionTimeout as number : DEBUGGER_CONNECT_TIMEOUT;
+        const connectionTimeout = typeof (args as any).timeout === 'number' ? (args as any).timeout as number : DEBUGGER_CONNECT_TIMEOUT;
         return Math.max(connectionTimeout, MIN_DEBUGGER_CONNECT_TIMEOUT);
     }
     private getErrorUserFriendlyMessage(launchArgs: LaunchRequestArguments, error: any): string | undefined {
