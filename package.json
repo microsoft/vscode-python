@@ -445,10 +445,10 @@
                             "request": "launch",
                             "stopOnEntry": false,
                             "pythonPath": "^\"\\${config:python.pythonPath}\"",
-                            "program": "fully qualified path fo 'flask' executable. Generally located along with python interpreter",
+                            "module": "flask",
                             "cwd": "^\"\\${workspaceFolder}\"",
                             "env": {
-                                "FLASK_APP": "^\"\\${workspaceFolder}/quickstart/app.py\""
+                                "FLASK_APP": "^\"\\${workspaceFolder}/app.py\""
                             },
                             "args": [
                                 "run",
@@ -465,7 +465,7 @@
                         "label": "%python.snippet.launch.flaskOld.label%",
                         "description": "%python.snippet.launch.flaskOld.description%",
                         "body": {
-                            "name": "Flask (old)",
+                            "name": "Flask (0.10.x or earlier)",
                             "type": "python",
                             "request": "launch",
                             "stopOnEntry": false,
@@ -800,10 +800,10 @@
                         "request": "launch",
                         "stopOnEntry": false,
                         "pythonPath": "${config:python.pythonPath}",
-                        "program": "fully qualified path fo 'flask' executable. Generally located along with python interpreter",
+                        "module": "flask",
                         "cwd": "${workspaceFolder}",
                         "env": {
-                            "FLASK_APP": "${workspaceFolder}/quickstart/app.py"
+                            "FLASK_APP": "${workspaceFolder}/app.py"
                         },
                         "args": [
                             "run",
