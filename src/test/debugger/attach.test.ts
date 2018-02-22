@@ -25,11 +25,7 @@ const DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'Ma
 suite('Attach Debugger', () => {
     let debugClient: DebugClient;
     let procToKill: ChildProcess;
-    suiteSetup(function () {
-        // tslint:disable-next-line:no-invalid-this
-        this.skip();
-        return initialize();
-    });
+    suiteSetup(initialize);
 
     setup(async () => {
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -40,7 +36,8 @@ suite('Attach Debugger', () => {
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
         await new Promise(resolve => setTimeout(resolve, 1000));
         try {
-            debugClient.stop();
+            // tslint:disable-next-line:no-empty
+            await debugClient.stop().catch(() => { });
             // tslint:disable-next-line:no-empty
         } catch (ex) { }
         if (procToKill) {
