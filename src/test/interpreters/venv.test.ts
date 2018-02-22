@@ -15,54 +15,62 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 
 suite('Virtual environments', () => {
-  let serviceManager: ServiceManager;
-  let serviceContainer: ServiceContainer;
-  let settings: TypeMoq.IMock<IPythonSettings>;
-  let config: TypeMoq.IMock<IConfigurationService>;
-  let workspace: TypeMoq.IMock<IWorkspaceService>;
+    let serviceManager: ServiceManager;
+    let serviceContainer: ServiceContainer;
+    let settings: TypeMoq.IMock<IPythonSettings>;
+    let config: TypeMoq.IMock<IConfigurationService>;
+    let workspace: TypeMoq.IMock<IWorkspaceService>;
 
-  setup(async () => {
-    const cont = new Container();
-    serviceManager = new ServiceManager(cont);
-    serviceContainer = new ServiceContainer(cont);
+    setup(async () => {
+        const cont = new Container();
+        serviceManager = new ServiceManager(cont);
+        serviceContainer = new ServiceContainer(cont);
 
-    settings = TypeMoq.Mock.ofType<IPythonSettings>();
-    config = TypeMoq.Mock.ofType<IConfigurationService>();
-    workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
+        settings = TypeMoq.Mock.ofType<IPythonSettings>();
+        config = TypeMoq.Mock.ofType<IConfigurationService>();
+        workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
 
-    config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+        config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
-    serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, config.object);
-    serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
-  });
+        serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, config.object);
+        serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
+    });
 
-  test('Global search paths', async () => {
-    const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider();
+    test('Global search paths', async () => {
+        const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider();
 
-    const folders = ['Envs', '.virtualenvs', '.pyenv', path.join('.pyenv', 'versions')];
-    const paths = pathProvider.getSearchPaths();
-    const homedir = os.homedir();
-    const expected = folders.map(item => path.join(homedir, item));
-    expect(paths).to.deep.equal(expected);
-  });
+        const homedir = os.homedir();
+        let folders = ['Envs', '.virtualenvs', '.pyenv', path.join('.pyenv', 'versions')];
+        let paths = pathProvider.getSearchPaths();
+        let expected = folders.map(item => path.join(homedir, item));
+        expect(paths).to.deep.equal(expected, 'Global search folder list is incorrect.');
 
-  test('Workspace search paths', async () => {
-    settings.setup(x => x.venvPath).returns(() => `~${path.sep}foo`);
+        // tslint:disable-next-line:no-string-literal
+        process.env['PYENV_ROOT'] = path.join(homedir, 'some_folder');
+        paths = pathProvider.getSearchPaths();
 
-    const wsRoot = TypeMoq.Mock.ofType<WorkspaceFolder>();
-    wsRoot.setup(x => x.uri).returns(() => Uri.file('root'));
+        folders = ['Envs', '.virtualenvs', 'some_folder', path.join('some_folder', 'versions')];
+        expected = folders.map(item => path.join(homedir, item));
+        expect(paths).to.deep.equal(expected, 'PYENV_ROOT not resolved correctly.');
+    });
 
-    const folder1 = TypeMoq.Mock.ofType<WorkspaceFolder>();
-    folder1.setup(x => x.uri).returns(() => Uri.file('dir1'));
+    test('Workspace search paths', async () => {
+        settings.setup(x => x.venvPath).returns(() => `~${path.sep}foo`);
 
-    workspace.setup(x => x.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => wsRoot.object);
-    workspace.setup(x => x.workspaceFolders).returns(() => [wsRoot.object, folder1.object]);
+        const wsRoot = TypeMoq.Mock.ofType<WorkspaceFolder>();
+        wsRoot.setup(x => x.uri).returns(() => Uri.file('root'));
 
-    const pathProvider = new WorkspaceVirtualEnvironmentsSearchPathProvider(serviceContainer);
-    const paths = pathProvider.getSearchPaths(Uri.file(''));
+        const folder1 = TypeMoq.Mock.ofType<WorkspaceFolder>();
+        folder1.setup(x => x.uri).returns(() => Uri.file('dir1'));
 
-    const homedir = os.homedir();
-    const expected = [path.join(homedir, 'foo'), `${path.sep}root`, `${path.sep}root${path.sep}.direnv`];
-    expect(paths).to.deep.equal(expected);
-  });
+        workspace.setup(x => x.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => wsRoot.object);
+        workspace.setup(x => x.workspaceFolders).returns(() => [wsRoot.object, folder1.object]);
+
+        const pathProvider = new WorkspaceVirtualEnvironmentsSearchPathProvider(serviceContainer);
+        const paths = pathProvider.getSearchPaths(Uri.file(''));
+
+        const homedir = os.homedir();
+        const expected = [path.join(homedir, 'foo'), `${path.sep}root`, `${path.sep}root${path.sep}.direnv`];
+        expect(paths).to.deep.equal(expected, 'Workspace venv folder search list does not match.');
+    });
 });
