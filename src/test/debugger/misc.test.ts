@@ -243,7 +243,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
             expect(varb).to.be.not.equal('undefined', 'variable \'b\' is undefined');
             expect(varb.value).to.be.equal('2');
             expect(varfile).to.be.not.equal('undefined', 'variable \'__file__\' is undefined');
-            expect(varfile.value).to.be.equal(`'${path.join(debugFilesPath, 'sample2.py')}'`);
+            expect(path.normalize(varfile.value)).to.be.equal(`'${path.normalize(path.join(debugFilesPath, 'sample2.py'))}'`);
             expect(vardoc).to.be.not.equal('undefined', 'variable \'__doc__\' is undefined');
         });
         test('Test editing variables', async () => {
