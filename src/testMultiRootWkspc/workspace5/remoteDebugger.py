@@ -10,10 +10,8 @@ ptvsd.wait_for_attach()
 
 sys.stdout.write('attached')
 sys.stdout.flush()
+# Give the debugger some time to add a breakpoint.
+time.sleep(2)
 
-name = input()
-sys.stdout.write('Peter Smith')
-sys.stdout.flush()
-input()
 sys.stdout.write('end')
 sys.stdout.flush()
