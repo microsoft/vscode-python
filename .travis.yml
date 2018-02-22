@@ -29,6 +29,13 @@ script:
   - yarn run clean
   - yarn run vscode:prepublish
   - yarn run cover:enable
+  - yarn run testDebugger --silent
+  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
+        bash <(curl -s https://codecov.io/bash);
+    fi
+  - yarn run clean
+  - yarn run vscode:prepublish
+  - yarn run cover:enable
   - yarn run testSingleWorkspace --silent
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
