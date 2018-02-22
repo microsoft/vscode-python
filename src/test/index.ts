@@ -10,13 +10,10 @@ import * as testRunner from './testRunner';
 process.env.VSC_PYTHON_CI_TEST = '1';
 process.env.IS_MULTI_ROOT_TEST = IS_MULTI_ROOT_TEST;
 
-let grep: string | undefined;
 // If running on CI server and we're running the debugger tests, then ensure we only run debug tests.
 // We do this to ensure we only run debugger test, as debugger tests are very flaky on CI.
 // So the solution is to run them separately and first on CI.
-if (IS_CI_SERVER && IS_CI_SERVER_TEST_DEBUGGER) {
-    grep = 'Standard Debugging - Misc tests';
-}
+const grep = IS_CI_SERVER && IS_CI_SERVER_TEST_DEBUGGER ? 'Standard Debugging - Misc tests' : undefined;
 
 // You can directly control Mocha options by uncommenting the following lines.
 // See https://github.com/mochajs/mocha/wiki/Using-mocha-programmatically#set-options for more info.
