@@ -14,6 +14,7 @@ import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { AttachRequestArguments } from '../../client/debugger/Common/Contracts';
 import { initialize } from '../initialize';
+import { sleep } from '../common';
 
 use(chaiAsPromised);
 
@@ -110,9 +111,10 @@ suite('Attach Debugger', () => {
         // Wait till we get the thread of the program.
         const threadId = await threadIdPromise.promise;
         expect(threadId).to.be.greaterThan(0, 'ThreadId not received');
+        await sleep(1000);
         console.log('11');
         // Continue the program.
-        await debugClient.continueRequest({ threadId });
+        // await debugClient.continueRequest({ threadId });
         console.log('12');
         // Value for input prompt.
         result.proc.stdin.write(`Peter Smith${EOL}`);
