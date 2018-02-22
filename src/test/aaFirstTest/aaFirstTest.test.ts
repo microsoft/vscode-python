@@ -9,7 +9,7 @@ import { initialize } from '../initialize';
 // Sometimes it can take more than 25 seconds to complete (as the extension looks for interpeters, and the like).
 // So lets wait for a max of 1 minute for the extension to activate (note, subsequent load times are faster).
 
-suite('Autocomplete', () => {
+suite('Activate Extension', () => {
     suiteSetup(async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(60000);
