@@ -66,22 +66,8 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
             this.debugServer!.Stop();
             this.debugServer = undefined;
         }
-        if (this.args.type === 'pythonExperimental' && this.pyProc) {
-            this.pyProc.kill();
-        }
         if (this.pyProc) {
-            try {
-                this.pyProc!.send('EXIT');
-                // tslint:disable-next-line:no-empty
-            } catch { }
-            try {
-                this.pyProc!.stdin.write('EXIT');
-                // tslint:disable-next-line:no-empty
-            } catch { }
-            try {
-                this.pyProc!.disconnect();
-                // tslint:disable-next-line:no-empty
-            } catch { }
+            this.pyProc.kill();
             this.pyProc = undefined;
         }
     }

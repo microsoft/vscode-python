@@ -134,7 +134,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 debugClient.waitForEvent('terminated')
             ]);
         });
-        test('Ensure threadid is int32', async () => {
+        test('Ensure threadid is int32', async function () {
             if (debuggerType !== 'python') {
                 return this.skip();
             }
