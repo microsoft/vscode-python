@@ -52,7 +52,7 @@ suite('Installation - installation channels', () => {
         mockInstaller(true, '1');
         mockInstaller(false, '2');
         mockInstaller(true, '3');
-        const pipenv = mockInstaller(false, 'pipenv', 10);
+        const pipenvInstaller = mockInstaller(true, 'pipenv', 10);
 
         const interpreter: PythonInterpreter = {
             path: 'pipenv',
@@ -63,7 +63,7 @@ suite('Installation - installation channels', () => {
         const cm = new InstallationChannelManager(serviceContainer);
         const channels = await cm.getInstallationChannels();
         assert.equal(channels.length, 1, 'Incorrect number of channels');
-        assert.equal(channels[0], pipenv.object, 'Installer must be pipenv');
+        assert.equal(channels[0], pipenvInstaller.object, 'Installer must be pipenv');
     });
 
     test('Select installer', async () => {
