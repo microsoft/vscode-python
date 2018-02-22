@@ -8,7 +8,8 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
-import { IConfigurationService, IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, ICurrentProcess, IPythonSettings } from '../../client/common/types';
+import { EnvironmentVariables } from '../../client/common/variables/types';
 import { GlobalVirtualEnvironmentsSearchPathProvider } from '../../client/interpreter/locators/services/globalVirtualEnvService';
 import { WorkspaceVirtualEnvironmentsSearchPathProvider } from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -20,6 +21,7 @@ suite('Virtual environments', () => {
     let settings: TypeMoq.IMock<IPythonSettings>;
     let config: TypeMoq.IMock<IConfigurationService>;
     let workspace: TypeMoq.IMock<IWorkspaceService>;
+    let process: TypeMoq.IMock<ICurrentProcess>;
 
     setup(async () => {
         const cont = new Container();
@@ -29,15 +31,18 @@ suite('Virtual environments', () => {
         settings = TypeMoq.Mock.ofType<IPythonSettings>();
         config = TypeMoq.Mock.ofType<IConfigurationService>();
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
+        process = TypeMoq.Mock.ofType<ICurrentProcess>();
 
         config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, config.object);
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
+        serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, process.object);
     });
 
     test('Global search paths', async () => {
-        const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider();
+        const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
+        const envMap: EnvironmentVariables = {};
 
         const homedir = os.homedir();
         let folders = ['Envs', '.virtualenvs', '.pyenv', path.join('.pyenv', 'versions')];
@@ -45,8 +50,9 @@ suite('Virtual environments', () => {
         let expected = folders.map(item => path.join(homedir, item));
         expect(paths).to.deep.equal(expected, 'Global search folder list is incorrect.');
 
+        process.setup(x => x.env).returns(() => envMap);
         // tslint:disable-next-line:no-string-literal
-        process.env['PYENV_ROOT'] = path.join(homedir, 'some_folder');
+        envMap['PYENV_ROOT'] = path.join(homedir, 'some_folder');
         paths = pathProvider.getSearchPaths();
 
         folders = ['Envs', '.virtualenvs', 'some_folder', path.join('some_folder', 'versions')];
