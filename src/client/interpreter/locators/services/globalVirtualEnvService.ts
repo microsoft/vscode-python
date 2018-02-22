@@ -23,8 +23,15 @@ export class GlobalVirtualEnvService extends BaseVirtualEnvService {
 @injectable()
 export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvironmentsSearchPathProvider {
     public getSearchPaths(_resource?: Uri): string[] {
-        const folders = ['Envs', '.virtualenvs', '.pyenv', path.join('.pyenv', 'versions')];
         const homedir = os.homedir();
-        return folders.map(item => path.join(homedir, item));
+        const folders = ['Envs', '.virtualenvs'].map(item => path.join(homedir, item));
+
+        // tslint:disable-next-line:no-string-literal
+        let pyenvRoot = process.env['PYENV_ROOT'];
+        pyenvRoot = pyenvRoot ? pyenvRoot : path.join(homedir, '.pyenv');
+
+        folders.push(pyenvRoot);
+        folders.push(path.join(pyenvRoot, 'versions'));
+        return folders;
     }
 }
