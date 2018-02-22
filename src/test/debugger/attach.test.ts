@@ -74,6 +74,8 @@ suite('Attach Debugger', () => {
         const secondOutputReceived = expectedOutputs[2].deferred.promise;
         console.log('3');
         result.out.subscribe(output => {
+            console.log('output:');
+            console.log(output);
             if (expectedOutputs[0].value === output.out) {
                 expectedOutputs.shift()!.deferred.resolve();
             }
