@@ -1,26 +1,10 @@
 environment:
   matrix:
-    # - PYTHON: "C:\\Python27"
-    #   PYTHON_VERSION: "2.7.14"
-    #   PYTHON_ARCH: "32"
-    #   nodejs_version: "8.9.1"
-
-    # - PYTHON: "C:\\Python27-x64"
-    #   PYTHON_VERSION: "2.7.14"
-    #   PYTHON_ARCH: "64"
-    #   nodejs_version: "8.9.1"
-
     - PYTHON: "C:\\Python36"
       PYTHON_VERSION: "3.6.3"
       PYTHON_ARCH: "32"
       nodejs_version: "8.9.1"
       TRAVIS: "true"
-
-    # - PYTHON: "C:\\Python36-x64"
-    #   PYTHON_VERSION: "3.6.3"
-    #   PYTHON_ARCH: "64"
-    #   nodejs_version: "8.9.1"
-
 
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
