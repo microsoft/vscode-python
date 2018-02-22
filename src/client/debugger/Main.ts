@@ -26,6 +26,7 @@ import { PythonProcess } from "./PythonProcess";
 import { IS_WINDOWS } from './Common/Utils';
 import { sendPerformanceTelemetry, capturePerformanceTelemetry, PerformanceTelemetryCondition } from "./Common/telemetry";
 import { LogLevel } from "vscode-debugadapter/lib/logger";
+import { IS_CI_SERVER_TEST_DEBUGGER } from "../../test/constants";
 
 const CHILD_ENUMEARATION_TIMEOUT = 5000;
 
@@ -733,6 +734,12 @@ export class PythonDebugger extends LoggingDebugSession {
             });
         }).catch(error => this.sendErrorResponse(response, 2000, error));
     }
+}
+
+if (IS_CI_SERVER_TEST_DEBUGGER) {
+    process.stdin.on('error', () => { });
+    process.stdout.on('error', () => { });
+    process.stderr.on('error', () => { });
 }
 
 process.on('uncaughtException', (err: Error) => {
