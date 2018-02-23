@@ -47,8 +47,8 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             });
     }
     private getProspectiveDirectoriesForLookup(subDirs: string[]) {
-        const isWindows = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
-        const dirToLookFor = isWindows ? 'SCRIPTS' : 'bin';
+        const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
+        const dirToLookFor = platform.virtualEnvBinName;
         return subDirs.map(subDir =>
             this.fileSystem.getSubDirectoriesAsync(subDir)
                 .then(dirs => {
