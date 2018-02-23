@@ -1,7 +1,10 @@
 """Generate the changelog."""
+import enum
 import operator
 import pathlib
 import re
+
+import click
 
 
 FILENAME_RE = re.compile(r"(?P<issue>\d+)(?P<nonce>-\S+)?\.md")
@@ -10,7 +13,7 @@ ENTRY_TEMPLATE = "- {entry} ([#{issue}]({issue_url}))"
 SECTION_DEPTH = "##"
 
 
-def news_entries(directory):
+def news_entries(directory, *, cleanup=False):
     """Iterate over the news entries in the directory."""
     for path in directory.iterdir():
         if path.name == 'README.md':
@@ -18,10 +21,11 @@ def news_entries(directory):
         match = FILENAME_RE.match(path.name)
         if match is None:
             raise ValueError(f'{path} has a bad file name')
-        issue = match.group('issue')
+        issue = int(match.group('issue'))
         entry = path.read_text("utf-8")
         # I want dataclasses!
         yield issue, entry
+        # XXX if cleanup: `git rm` the file
 
 
 def sections(directory):
@@ -37,12 +41,12 @@ def sections(directory):
     yield from (section[1:] for section in ordered_found)
 
 
-def gather(directory):
+def gather(directory, *, cleanup=False):
     """Gather all the entries together."""
     data = []
     for name, path in sections(directory):
         # I want dataclasses!
-        data.append((name, news_entries(path)))
+        data.append((name, news_entries(path, cleanup=cleanup)))
     return data
 
 
@@ -64,14 +68,31 @@ def changelog_markdown(data):
     return "\n".join(changelog)
 
 
-def main(directory):
-    # XXX Dry-run (validate, but don't print anything)
-    # XXX Final (`git rm` news entry files)
-    # XXX Directory containing sections
-    # XXX Location of package.json
-    data = gather(directory)
-    print(changelog_markdown(data))
+class RunType(enum.Enum):
+
+    """Possible run-time options."""
+
+    dry_run = 0
+    interim = 1
+    final = 2
+
+
+@click.command()
+@click.option('--dry-run', 'run_type', flag_value=RunType.dry_run,
+              help='validate input')
+@click.option('--interim', 'run_type', flag_value=RunType.interim, default=True,
+              help='generate Markdown')
+@click.option('--final', 'run_type', flag_value=RunType.final,
+              help='generate Markdown & `git rm` news files')
+@click.argument('directory', default=pathlib.Path(__file__).parent,
+                type=click.Path(exists=True, file_okay=False))
+def main(run_type, directory):
+    cleanup = run_type == RunType.final
+    data = gather(directory, cleanup=cleanup)
+    markdown = changelog_markdown(data)
+    if run_type != RunType.dry_run:
+        print(markdown)
 
 
 if __name__ == '__main__':
-    main(pathlib.Path(__file__).parent)
+    main()
