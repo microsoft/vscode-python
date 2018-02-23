@@ -1,8 +1,10 @@
 """Generate the changelog."""
 import enum
 import operator
+import os
 import pathlib
 import re
+import subprocess
 
 import click
 
@@ -13,8 +15,15 @@ ENTRY_TEMPLATE = "- {entry} ([#{issue}]({issue_url}))"
 SECTION_DEPTH = "##"
 
 
+def git_rm(path):
+    """Run git-rm on the path."""
+    status = subprocess.run(['git', 'rm', os.fspath(path.resolve())],
+                            shell=True)
+    status.check_returncode()
+
+
 def news_entries(directory, *, cleanup=False):
-    """Iterate over the news entries in the directory."""
+    """Yield news entries in the directory."""
     for path in directory.iterdir():
         if path.name == 'README.md':
             continue
@@ -23,13 +32,14 @@ def news_entries(directory, *, cleanup=False):
             raise ValueError(f'{path} has a bad file name')
         issue = int(match.group('issue'))
         entry = path.read_text("utf-8")
+        if cleanup:
+            git_rm(path)
         # I want dataclasses!
         yield issue, entry
-        # XXX if cleanup: `git rm` the file
 
 
 def sections(directory):
-    """Iterate over the sections."""
+    """Yield the sections in their appropriate order."""
     found = []
     for path in directory.iterdir():
         if not path.is_dir():

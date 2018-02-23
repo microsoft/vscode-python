@@ -7,6 +7,7 @@ import announce as ann
 
 @pytest.fixture
 def directory(tmpdir):
+    """Fixture to create a temp directory wrapped in a pathlib.Path object."""
     return pathlib.Path(tmpdir)
 
 
@@ -34,6 +35,21 @@ def test_news_entry_README_skipping(directory):
     entry = directory / 'README.md'
     entry.write_text('Hello, world!')
     assert len(list(ann.news_entries(directory))) == 0
+
+
+def test_news_entry_cleanup(directory, monkeypatch):
+    rm_path = None
+    def fake_git_rm(path):
+        nonlocal rm_path
+        rm_path = path
+    monkeypatch.setattr(ann, 'git_rm', fake_git_rm)
+    issue = 42
+    normal_entry = directory / f'{issue}.md'
+    body = 'Hello, world!'
+    normal_entry.write_text(body, encoding='utf-8')
+    results = list(ann.news_entries(directory, cleanup=True))
+    assert len(results) == 1
+    assert normal_entry == rm_path
 
 
 def test_sections_sorting(directory):
@@ -78,6 +94,23 @@ def test_gather(directory):
     assert len(entries_dict) == 2
     assert entries_dict[1] == 'Fix 1'
     assert entries_dict[3] == 'Fix 2'
+
+
+def test_gather_cleanup(directory, monkeypatch):
+    rm_path = None
+    def fake_git_rm(path):
+        nonlocal rm_path
+        rm_path = path
+    monkeypatch.setattr(ann, 'git_rm', fake_git_rm)
+    fixes = directory / '2 Fixes'
+    fixes.mkdir()
+    fix1 = fixes / '1.md'
+    fix1.write_text('Fix 1', encoding='utf-8')
+    results = ann.gather(directory, cleanup=True)
+    assert len(results) == 1
+    section, entries = results.pop()
+    assert len(list(entries)) == 1  # Exhaust generator.
+    assert rm_path == fix1
 
 def test_entry_markdown():
     markdown = ann.entry_markdown((42, 'Hello, world!'))
