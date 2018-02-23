@@ -16,16 +16,15 @@ import {
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
 @injectable()
-export class InterpreterManager implements Disposable, IInterpreterService {
-    private readonly interpreterProvider: IInterpreterLocatorService;
+export class InterpreterService implements Disposable, IInterpreterService {
+    private readonly locator: IInterpreterLocatorService;
     private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager;
     private readonly helper: IInterpreterHelper;
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-        this.interpreterProvider = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
+        this.locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
-
         this.pythonPathUpdaterService = this.serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager);
     }
 
@@ -43,7 +42,7 @@ export class InterpreterManager implements Disposable, IInterpreterService {
     }
 
     public getInterpreters(resource?: Uri) {
-        return this.interpreterProvider.getInterpreters(resource);
+        return this.locator.getInterpreters(resource);
     }
 
     public async autoSetInterpreter(): Promise<void> {
@@ -54,7 +53,6 @@ export class InterpreterManager implements Disposable, IInterpreterService {
         if (!activeWorkspace) {
             return;
         }
-
         // Check pipenv first
         const pipenvService = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
         let interpreters = await pipenvService.getInterpreters(activeWorkspace.folderUri);
@@ -72,10 +70,10 @@ export class InterpreterManager implements Disposable, IInterpreterService {
             return;
         }
         // Always pick the highest version by default.
+        const pythonPath = interpretersInWorkspace.sort((a, b) => a.version! > b.version! ? 1 : -1)[0].path;
         // Ensure this new environment is at the same level as the current workspace.
         // In windows the interpreter is under scripts/python.exe on linux it is under bin/python.
         // Meaning the sub directory must be either scripts, bin or other (but only one level deep).
-        const pythonPath = interpretersInWorkspace.sort((a, b) => a.version! > b.version! ? 1 : -1)[0].path;
         const relativePath = path.dirname(pythonPath).substring(activeWorkspace.folderUri.fsPath.length);
         if (relativePath.split(path.sep).filter(l => l.length > 0).length === 2) {
             await this.pythonPathUpdaterService.updatePythonPath(pythonPath, activeWorkspace.configTarget, 'load', activeWorkspace.folderUri);
@@ -83,7 +81,7 @@ export class InterpreterManager implements Disposable, IInterpreterService {
     }
 
     public dispose(): void {
-        this.interpreterProvider.dispose();
+        this.locator.dispose();
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         (configService.getSettings() as PythonSettings).removeListener('change', this.onConfigChanged);
         this.didChangeInterpreterEmitter.dispose();

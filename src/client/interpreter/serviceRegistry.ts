@@ -30,7 +30,7 @@ import {
 import { InterpreterDisplay } from './display';
 import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
 import { InterpreterHelper } from './helpers';
-import { InterpreterManager } from './index';
+import { InterpreterService } from './interpreterService';
 import { InterpreterVersionService } from './interpreterVersion';
 import { PythonInterpreterLocatorService } from './locators/index';
 import { CondaEnvFileService } from './locators/services/condaEnvFileService';
@@ -68,7 +68,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     } else {
         serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, KnownPathsService, KNOWN_PATH_SERVICE);
     }
-    serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterManager);
+    serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
     serviceManager.addSingleton<IInterpreterDisplay>(IInterpreterDisplay, InterpreterDisplay);
 
     serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(IPythonPathUpdaterServiceFactory, PythonPathUpdaterServiceFactory);
