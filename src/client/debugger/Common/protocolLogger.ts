@@ -13,6 +13,9 @@ export class ProtocolLogger implements IProtocolLogger {
     private messagesToLog: string[] = [];
     private logger?: Logger.ILogger;
     public dispose() {
+        this.disconnect();
+    }
+    public disconnect() {
         if (this.inputStream) {
             this.inputStream.removeListener('data', this.fromDataCallbackHandler);
             this.outputStream!.removeListener('data', this.toDataCallbackHandler);
