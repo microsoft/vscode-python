@@ -100,6 +100,7 @@ suite('Module Installer', () => {
         const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
+        ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
 
         const processService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
         processService.onExec((file, args, options, callback) => {
@@ -111,7 +112,7 @@ suite('Module Installer', () => {
             }
         });
         const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
-        expect(moduleInstallers).length(3, 'Incorrect number of installers');
+        expect(moduleInstallers).length(4, 'Incorrect number of installers');
 
         const pipInstaller = moduleInstallers.find(item => item.displayName === 'Pip')!;
         expect(pipInstaller).not.to.be.an('undefined', 'Pip installer not found');
@@ -132,6 +133,7 @@ suite('Module Installer', () => {
         const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ architecture: Architecture.Unknown, companyDisplayName: '', displayName: '', envName: '', path: pythonPath, type: InterpreterType.Conda, version: '' }]));
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
+        ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
 
         const processService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
         processService.onExec((file, args, options, callback) => {
@@ -143,7 +145,7 @@ suite('Module Installer', () => {
             }
         });
         const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
-        expect(moduleInstallers).length(3, 'Incorrect number of installers');
+        expect(moduleInstallers).length(4, 'Incorrect number of installers');
 
         const pipInstaller = moduleInstallers.find(item => item.displayName === 'Pip')!;
         expect(pipInstaller).not.to.be.an('undefined', 'Pip installer not found');
@@ -171,6 +173,7 @@ suite('Module Installer', () => {
         const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ path: interpreterPath, type: InterpreterType.Unknown }]));
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
+        ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
 
         const moduleName = 'xyz';
 
@@ -193,6 +196,7 @@ suite('Module Installer', () => {
         const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ path: interpreterPath, type: InterpreterType.Conda }]));
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
+        ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
 
         const moduleName = 'xyz';
 

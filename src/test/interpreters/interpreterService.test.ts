@@ -3,6 +3,7 @@
 
 import { expect } from 'chai';
 import { Container } from 'inversify';
+import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
@@ -48,7 +49,6 @@ suite('Interpreters service', () => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
 
         workspace.setup(x => x.getConfiguration('python', TypeMoq.It.isAny())).returns(() => config.object);
-
         serviceManager.addSingletonInstance<IInterpreterHelper>(IInterpreterHelper, helper.object);
         serviceManager.addSingletonInstance<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager, updater.object);
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
@@ -77,7 +77,7 @@ suite('Interpreters service', () => {
             return { key: 'python' };
         });
         const interpreter: PythonInterpreter = {
-            path: '/folder/py1/bin/python.exe',
+            path: path.join(path.sep, 'folder', 'py1', 'bin', 'python.exe'),
             type: InterpreterType.Unknown
         };
         setupLocators([interpreter], []);
@@ -125,13 +125,14 @@ suite('Interpreters service', () => {
         config.setup(x => x.inspect('pythonPath')).returns(() => {
             return { key: 'python' };
         });
+        const intPath = path.join(path.sep, 'root', 'under', 'bin', 'python.exe');
         const interpreter: PythonInterpreter = {
-            path: '/root/under/bin/python.exe',
+            path: intPath,
             type: InterpreterType.Unknown
         };
 
         setupLocators([interpreter], []);
-        await verifyUpdateCallData('/root/under/bin/python.exe', ConfigurationTarget.Workspace, 'root');
+        await verifyUpdateCallData(intPath, ConfigurationTarget.Workspace, 'root');
     });
 
     async function verifyUpdateCalled(times: TypeMoq.Times) {
@@ -164,7 +165,7 @@ suite('Interpreters service', () => {
         expect(pp!).to.be.equal(pythonPath, 'invalid Python path');
         expect(confTarget).to.be.equal(target, 'invalid configuration target');
         expect(trigger).to.be.equal('load', 'invalid trigger');
-        expect(wks.fsPath).to.be.equal(`/${wksFolder}`, 'invalid workspace Uri');
+        expect(wks.fsPath).to.be.equal(`${path.sep}${wksFolder}`, 'invalid workspace Uri');
     }
 
     function setupWorkspace(folder: string) {
