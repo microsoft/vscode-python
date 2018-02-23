@@ -23,7 +23,7 @@ const options: MochaSetupOptions & { retries: number } = {
     useColors: true,
     timeout: 25000,
     retries: 3,
-    grep: 'SocketCallbackHandler'
+    grep
 };
 testRunner.configure(options, { coverageConfig: '../coverconfig.json' });
 module.exports = testRunner;
