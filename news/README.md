@@ -20,8 +20,8 @@ would be saved in the `1 Fixes` directory and named `42.md`
 regarding issue #42) and could contain the following:
 
 ```markdown
-[Answer](https://en.wikipedia.org/wiki/42_(number)#The_Hitchhiker's_Guide_to_the_Galaxy) to the Ultimate Question of
-Life, the Universe, and Everything!
+[Answer](https://en.wikipedia.org/wiki/42_(number))
+to the Ultimate Question of Life, the Universe, and Everything!
 ```
 
 This would then be made into an entry in the changelog that was in the
@@ -30,4 +30,27 @@ to issue #42.
 
 ## Generating the changelog
 
-XXX
+The `announce` script can do 3 possible things:
+
+1. Validate that the changelog _could_ be successfully generated
+2. Generate the changelog entry
+3. Generate the changelog entry **and** `git-rm` the news entries
+
+The first option is used in CI to make sure any added news entries
+will not cause trouble at release time. The second option is for
+filling in the changelog for interim releases, e.g. a beta release.
+The third option is for final releases that get published to the
+[VS Code marketplace](https://marketplace.visualstudio.com/VSCode).
+
+For options 2 & 3, the changelog is sent to stdout so it's temporarily
+saved to a file:
+
+```sh
+python3 news/announce.py > entry.txt
+```
+
+It can also be redirected to a file or into an editor buffer, e.g.:
+
+```sh
+python3 news/announce.py --final | code-insiders
+```
