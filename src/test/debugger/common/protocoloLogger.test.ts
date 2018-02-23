@@ -76,7 +76,7 @@ suite('Debugging - Protocol Logger', () => {
         inputStream.write('A');
         outputStream.write('1');
 
-        protocolLogger.dispose();
+        protocolLogger.disconnect();
 
         inputStream.write('B');
         inputStream.write('C');

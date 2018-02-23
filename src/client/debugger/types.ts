@@ -23,6 +23,7 @@ export interface IProtocolParser extends Disposable {
 export const IProtocolLogger = Symbol('IProtocolLogger');
 export interface IProtocolLogger extends Disposable {
     connect(inputStream: Readable, outputStream: Readable): void;
+    disconnect(): void;
     setup(logger: Logger.ILogger): void;
 }
 
