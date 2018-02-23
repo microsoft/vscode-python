@@ -74,7 +74,6 @@ export class CondaService implements ICondaService {
             // Failed because either:
             //   1. conda is not installed.
             //   2. `conda info --json` has changed signature.
-            this.logger.logError('Failed to get conda info from conda', ex);
         }
     }
     /**

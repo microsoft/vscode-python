@@ -68,7 +68,7 @@ export class LintingEngine implements ILintingEngine {
     if (document.languageId !== PythonLanguage.language) {
       return;
     }
-    if (!this.linterManager.isLintingEnabled()) {
+    if (!this.linterManager.isLintingEnabled(document.uri)) {
       this.diagnosticCollection.set(document.uri, []);
     }
     const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => {
@@ -97,7 +97,7 @@ export class LintingEngine implements ILintingEngine {
     const promises: Promise<ILintMessage[]>[] = this.linterManager.getActiveLinters(document.uri)
       .map(info => {
         const stopWatch = new StopWatch();
-        const linter = this.linterManager.createLinter(info.product, this.outputChannel, this.serviceContainer);
+        const linter = this.linterManager.createLinter(info.product, this.outputChannel, this.serviceContainer, document.uri);
         const promise = linter.lint(document, cancelToken.token);
         this.sendLinterRunTelemetry(info, document.uri, promise, stopWatch, trigger);
         return promise;

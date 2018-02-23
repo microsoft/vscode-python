@@ -11,7 +11,7 @@ import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { sleep } from '../common';
-import { IS_CI_SERVER, IS_MULTI_ROOT_TEST } from '../initialize';
+import { IS_CI_SERVER, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 
 const isProcessRunning = require('is-running') as (number) => boolean;
 
@@ -30,7 +30,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
 
         let debugClient: DebugClient;
         setup(async function () {
-            if (!IS_MULTI_ROOT_TEST) {
+            if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
                 this.skip();
             }
             // Temporary, untill new version of PTVSD is bundled we cannot run tests
@@ -134,7 +134,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 debugClient.waitForEvent('terminated')
             ]);
         });
-        test('Ensure threadid is int32', async () => {
+        test('Ensure threadid is int32', async function () {
             if (debuggerType !== 'python') {
                 return this.skip();
             }
@@ -243,7 +243,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
             expect(varb).to.be.not.equal('undefined', 'variable \'b\' is undefined');
             expect(varb.value).to.be.equal('2');
             expect(varfile).to.be.not.equal('undefined', 'variable \'__file__\' is undefined');
-            expect(varfile.value).to.be.equal(`'${path.join(debugFilesPath, 'sample2.py')}'`);
+            expect(path.normalize(varfile.value)).to.be.equal(`'${path.normalize(path.join(debugFilesPath, 'sample2.py'))}'`);
             expect(vardoc).to.be.not.equal('undefined', 'variable \'__doc__\' is undefined');
         });
         test('Test editing variables', async () => {

@@ -4,13 +4,14 @@ import time
 
 sys.stdout.write('start')
 sys.stdout.flush()
-address = ('0.0.0.0', int(sys.argv[1]))
+address = ('127.0.0.1', int(sys.argv[1]))
 ptvsd.enable_attach('super_secret', address)
 ptvsd.wait_for_attach()
 
-name = input()
-sys.stdout.write(name)
+sys.stdout.write('attached')
 sys.stdout.flush()
-input()
+# Give the debugger some time to add a breakpoint.
+time.sleep(2)
+
 sys.stdout.write('end')
 sys.stdout.flush()

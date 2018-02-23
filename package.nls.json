@@ -27,7 +27,7 @@
     "python.command.python.setLinter.title": "Select Linter",
     "python.command.python.enableLinting.title": "Enable Linting",
     "python.command.python.runLinting.title": "Run Linting",
-    "python.snippet.launch.standard.label": "Python",
+    "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.standard.description": "Debug a Python program with standard output",
     "python.snippet.launch.pyspark.label": "Python: PySpark",
     "python.snippet.launch.pyspark.description": "Debug PySpark",

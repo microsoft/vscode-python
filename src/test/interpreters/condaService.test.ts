@@ -19,7 +19,6 @@ const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', '
 
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters Conda Service', () => {
-    let logger: TypeMoq.IMock<ILogger>;
     let processService: TypeMoq.IMock<IProcessService>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let condaService: CondaService;
@@ -27,7 +26,7 @@ suite('Interpreters Conda Service', () => {
     let registryInterpreterLocatorService: TypeMoq.IMock<IInterpreterLocatorService>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     setup(async () => {
-        logger = TypeMoq.Mock.ofType<ILogger>();
+        const logger = TypeMoq.Mock.ofType<ILogger>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         registryInterpreterLocatorService = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
@@ -391,7 +390,6 @@ suite('Interpreters Conda Service', () => {
 
         const condaInfo = await condaService.getCondaInfo();
         assert.equal(condaInfo, undefined, 'Conda info does not match');
-        logger.verify(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.once());
     });
 
     test('Returns conda environments when conda exists', async () => {
@@ -453,7 +451,6 @@ suite('Interpreters Conda Service', () => {
 
         const condaInfo = await condaService.getCondaInfo();
         assert.equal(condaInfo, undefined, 'Conda info does not match');
-        logger.verify(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.once());
     });
 
     test('Must use Conda env from Registry to locate conda.exe', async () => {

@@ -735,6 +735,10 @@ export class PythonDebugger extends LoggingDebugSession {
     }
 }
 
+process.stdin.on('error', () => { });
+process.stdout.on('error', () => { });
+process.stderr.on('error', () => { });
+
 process.on('uncaughtException', (err: Error) => {
     logger.error(`Uncaught Exception: ${err && err.message ? err.message : ''}`);
     logger.error(err && err.name ? err.name : '');

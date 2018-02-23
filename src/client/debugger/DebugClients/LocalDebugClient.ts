@@ -66,22 +66,8 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
             this.debugServer!.Stop();
             this.debugServer = undefined;
         }
-        if (this.args.type === 'pythonExperimental' && this.pyProc) {
-            this.pyProc.kill();
-        }
         if (this.pyProc) {
-            try {
-                this.pyProc!.send('EXIT');
-                // tslint:disable-next-line:no-empty
-            } catch { }
-            try {
-                this.pyProc!.stdin.write('EXIT');
-                // tslint:disable-next-line:no-empty
-            } catch { }
-            try {
-                this.pyProc!.disconnect();
-                // tslint:disable-next-line:no-empty
-            } catch { }
+            this.pyProc.kill();
             this.pyProc = undefined;
         }
     }
@@ -174,10 +160,6 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         let vsDebugOptions = ['RedirectOutput'];
         if (Array.isArray(this.args.debugOptions)) {
             vsDebugOptions = this.args.debugOptions.filter(opt => VALID_DEBUG_OPTIONS.indexOf(opt) >= 0);
-        }
-        // If internal or external console, then don't re-direct the output.
-        if (this.args.console === 'integratedTerminal' || this.args.console === 'externalTerminal') {
-            vsDebugOptions = vsDebugOptions.filter(opt => opt !== 'RedirectOutput');
         }
 
         // Include a dummy value, to ensure something gets sent.

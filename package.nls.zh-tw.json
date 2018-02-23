@@ -27,7 +27,7 @@
     "python.command.python.setLinter.title": "選擇 Linter",
     "python.command.python.enableLinting.title": "啟用 Linting",
     "python.command.python.runLinting.title": "執行 Linting",
-    "python.snippet.launch.standard.label": "Python",
+    "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.standard.description": "使用標準輸出偵錯 Python 程式",
     "python.snippet.launch.pyspark.label": "Python：PySpark",
     "python.snippet.launch.pyspark.description": "偵錯 PySpark",

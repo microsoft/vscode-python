@@ -23,7 +23,7 @@
     "python.command.jupyter.gotToPreviousCell.title": "转到前一个 Cell",
     "python.command.jupyter.gotToNextCell.title": "转到下一个 Cell",
     "python.command.python.goToPythonObject.title": "转到 Python 对象",
-    "python.snippet.launch.standard.label": "Python",
+    "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.standard.description": "使用标准输出调试 Python 应用",
     "python.snippet.launch.pyspark.label": "Python: PySpark",
     "python.snippet.launch.pyspark.description": "调试 PySpark",

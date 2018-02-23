@@ -1,7 +1,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
-import { ConfigurationTarget, QuickPickItem, Uri, window, workspace } from 'vscode';
+import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import * as vscode from 'vscode';
 import { IFormatterHelper } from '../../formatters/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -13,7 +13,7 @@ import { IPlatformService } from '../platform/types';
 import { IProcessService, IPythonExecutionFactory } from '../process/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { IInstaller, ILogger, InstallerResponse, IOutputChannel, ModuleNamePurpose, Product } from '../types';
-import { IInstallationChannelManager, IModuleInstaller } from './types';
+import { IInstallationChannelManager } from './types';
 
 export { Product } from '../types';
 
@@ -144,7 +144,7 @@ export class Installer implements IInstaller {
 
         const moduleName = this.translateProductToModuleName(product, ModuleNamePurpose.install);
         const logger = this.serviceContainer.get<ILogger>(ILogger);
-        await installer.installModule(moduleName)
+        await installer.installModule(moduleName, resource)
             .catch(logger.logError.bind(logger, `Error in installing the module '${moduleName}'`));
 
         return this.isInstalled(product)

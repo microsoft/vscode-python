@@ -6,6 +6,7 @@ import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
+import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
     IInterpreterHelper,
@@ -32,6 +33,7 @@ suite('Interpreters service', () => {
     let config: TypeMoq.IMock<WorkspaceConfiguration>;
     let pipenvLocator: TypeMoq.IMock<IInterpreterLocatorService>;
     let wksLocator: TypeMoq.IMock<IInterpreterLocatorService>;
+    let fileSystem: TypeMoq.IMock<IFileSystem>;
 
     setup(async () => {
         const cont = new Container();
@@ -43,6 +45,7 @@ suite('Interpreters service', () => {
         locator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
 
         workspace.setup(x => x.getConfiguration('python', TypeMoq.It.isAny())).returns(() => config.object);
 
@@ -50,6 +53,7 @@ suite('Interpreters service', () => {
         serviceManager.addSingletonInstance<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager, updater.object);
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
         serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, locator.object, INTERPRETER_LOCATOR_SERVICE);
+        serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
 
         pipenvLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         wksLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
