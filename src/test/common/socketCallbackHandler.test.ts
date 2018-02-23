@@ -143,34 +143,30 @@ class MockSocketClient {
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('SocketCallbackHandler', () => {
+    let socketServer: SocketServer;
+    setup(() => socketServer = new SocketServer());
+    teardown(() => socketServer.Stop());
     test('Succesfully starts without any specific host or port', async () => {
-        const socketServer = new SocketServer();
         await socketServer.Start();
     });
     test('Succesfully starts with port=0 and no host', async () => {
-        const socketServer = new SocketServer();
         await socketServer.Start({ port: 0 });
     });
     test('Succesfully starts with port=0 and host=localhost', async () => {
-        const socketServer = new SocketServer();
         await socketServer.Start({ port: 0, host: 'localhost' });
     });
     test('Succesfully starts with host=127.0.0.1', async () => {
-        const socketServer = new SocketServer();
         await socketServer.Start({ host: '127.0.0.1' });
     });
     test('Succesfully starts with port=0 and host=127.0.0.1', async () => {
-        const socketServer = new SocketServer();
         await socketServer.Start({ port: 0, host: '127.0.0.1' });
     });
     test('Succesfully starts with specific port', async () => {
-        const socketServer = new SocketServer();
         const availablePort = await getFreePort({ host: 'localhost' });
         const port = await socketServer.Start({ port: availablePort, host: 'localhost' });
         assert.equal(port, availablePort, 'Server is not listening on the provided port number');
     });
     test('Succesful Handshake', done => {
-        const socketServer = new SocketServer();
         let socketClient: MockSocketClient;
         let callbackHandler: MockSocketCallbackHandler;
         socketServer.Start().then(port => {
@@ -206,7 +202,6 @@ suite('SocketCallbackHandler', () => {
         }).then(done).catch(done);
     });
     test('Unsuccesful Handshake', done => {
-        const socketServer = new SocketServer();
         let socketClient: MockSocketClient;
         let callbackHandler: MockSocketCallbackHandler;
         socketServer.Start().then(port => {
@@ -248,7 +243,6 @@ suite('SocketCallbackHandler', () => {
         }).then(done).catch(done);
     });
     test('Ping with message', done => {
-        const socketServer = new SocketServer();
         let socketClient: MockSocketClient;
         let callbackHandler: MockSocketCallbackHandler;
         socketServer.Start().then(port => {
@@ -296,7 +290,6 @@ suite('SocketCallbackHandler', () => {
         }).then(done).catch(done);
     });
     test('Succesful Handshake with port=0 and host=localhost', done => {
-        const socketServer = new SocketServer();
         let socketClient: MockSocketClient;
         let callbackHandler: MockSocketCallbackHandler;
         socketServer.Start({ port: 0, host: 'localhost' }).then(port => {
@@ -332,7 +325,6 @@ suite('SocketCallbackHandler', () => {
         }).then(done).catch(done);
     });
     test('Succesful Handshake with specific port', done => {
-        const socketServer = new SocketServer();
         let socketClient: MockSocketClient;
         let callbackHandler: MockSocketCallbackHandler;
         let availablePort = 0;
