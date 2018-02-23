@@ -10,7 +10,7 @@ import { createDeferred } from '../../client/common/helpers';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { AttachRequestArguments } from '../../client/debugger/Common/Contracts';
-import { initialize } from '../initialize';
+import { initialize, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 
 // tslint:disable:max-func-body-length no-empty
 
@@ -24,6 +24,10 @@ suite('Attach Debugger', () => {
     suiteSetup(initialize);
 
     setup(async () => {
+        if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
         await new Promise(resolve => setTimeout(resolve, 1000));
         debugClient = new DebugClient('node', DEBUG_ADAPTER, 'python');
         await debugClient.start();
