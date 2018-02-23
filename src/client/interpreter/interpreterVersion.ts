@@ -3,7 +3,7 @@ import '../common/extensions';
 import { IProcessService } from '../common/process/types';
 import { IInterpreterVersionService } from './contracts';
 
-const PIP_VERSION_REGEX = '\\d+\\.\\d+(\\.\\d+)';
+export const PIP_VERSION_REGEX = '\\d+\\.\\d+(\\.\\d+)';
 
 @injectable()
 export class InterpreterVersionService implements IInterpreterVersionService {

@@ -6,6 +6,7 @@ import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { CondaInstaller } from '../../client/common/installer/condaInstaller';
 import { Installer } from '../../client/common/installer/installer';
+import { PipEnvInstaller } from '../../client/common/installer/pipEnvInstaller';
 import { PipInstaller } from '../../client/common/installer/pipInstaller';
 import { IModuleInstaller } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
@@ -18,7 +19,7 @@ import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../client/common/terminal/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IPythonSettings, IsWindows } from '../../client/common/types';
-import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../client/interpreter/contracts';
+import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PIPENV_SERVICE } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
@@ -67,6 +68,7 @@ suite('Module Installer', () => {
 
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
         ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
+        ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipEnvInstaller);
         condaService = TypeMoq.Mock.ofType<ICondaService>();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
@@ -207,5 +209,32 @@ suite('Module Installer', () => {
         await pipInstaller.installModule(moduleName);
 
         expect(argsSent.join(' ')).equal(`-m pip install -U ${moduleName}`, 'Invalid command sent to terminal for installation.');
+    });
+
+    test('Validate pipenv install arguments', async () => {
+        const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
+        mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ path: 'interpreterPath', type: InterpreterType.VirtualEnv }]));
+        ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, PIPENV_SERVICE);
+
+        const moduleName = 'xyz';
+        const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
+        const pipInstaller = moduleInstallers.find(item => item.displayName === 'pipenv')!;
+
+        expect(pipInstaller).not.to.be.an('undefined', 'pipenv installer not found');
+
+        let argsSent: string[] = [];
+        let command: string | undefined;
+        mockTerminalService
+            .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+            .returns((cmd: string, args: string[]) => {
+                argsSent = args;
+                command = cmd;
+                return Promise.resolve(void 0);
+            });
+
+        await pipInstaller.installModule(moduleName);
+
+        expect(command!).equal('pipenv', 'Invalid command sent to terminal for installation.');
+        expect(argsSent.join(' ')).equal(`install ${moduleName}`, 'Invalid command arguments sent to terminal for installation.');
     });
 });
