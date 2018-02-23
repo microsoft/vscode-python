@@ -65,8 +65,8 @@ def changelog_markdown(data):
 
 
 def main(directory):
-    # XXX Dry-run
-    # XXX Final
+    # XXX Dry-run (validate, but don't print anything)
+    # XXX Final (`git rm` news entry files)
     # XXX Directory containing sections
     # XXX Location of package.json
     data = gather(directory)
