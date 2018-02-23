@@ -34,6 +34,8 @@ def sections(directory):
     for path in directory.iterdir():
         if not path.is_dir():
             continue
+        if ' ' not in path.name:
+            raise ValueError('directory is missing position part')
         position, _, title = path.name.partition(' ')
         found.append((int(position), title, path))
     ordered_found = sorted(found, key=operator.itemgetter(0))
