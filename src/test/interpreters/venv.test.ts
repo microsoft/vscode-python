@@ -42,21 +42,28 @@ suite('Virtual environments', () => {
 
     test('Global search paths', async () => {
         const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
-        const envMap: EnvironmentVariables = {};
 
         const homedir = os.homedir();
-        let folders = ['Envs', '.virtualenvs', '.pyenv', path.join('.pyenv', 'versions')];
+        const folders = ['Envs', '.virtualenvs', '.pyenv'];
+        settings.setup(x => x.venvFolders).returns(() => folders);
+
         let paths = pathProvider.getSearchPaths();
         let expected = folders.map(item => path.join(homedir, item));
+        expected.push(path.join('.pyenv', 'versions'));
+
         expect(paths).to.deep.equal(expected, 'Global search folder list is incorrect.');
 
+        const envMap: EnvironmentVariables = {};
         process.setup(x => x.env).returns(() => envMap);
+
+        const customFolder = path.join(homedir, 'some_folder');
         // tslint:disable-next-line:no-string-literal
-        envMap['PYENV_ROOT'] = path.join(homedir, 'some_folder');
+        envMap['PYENV_ROOT'] = customFolder;
         paths = pathProvider.getSearchPaths();
 
-        folders = ['Envs', '.virtualenvs', 'some_folder', path.join('some_folder', 'versions')];
         expected = folders.map(item => path.join(homedir, item));
+        expected.push(customFolder);
+        expected.push(path.join(customFolder, 'versions'));
         expect(paths).to.deep.equal(expected, 'PYENV_ROOT not resolved correctly.');
     });
 

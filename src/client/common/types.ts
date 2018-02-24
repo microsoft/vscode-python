@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {Socket} from 'net';
+import { Socket } from 'net';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, Uri } from 'vscode';
 
 import { EnvironmentVariables } from './variables/types';
@@ -96,6 +96,7 @@ export interface ICurrentProcess {
 export interface IPythonSettings {
     readonly pythonPath: string;
     readonly venvPath: string;
+    readonly venvFolders: string[];
     readonly jediPath: string;
     readonly jediMemoryLimit: number;
     readonly devOptions: string[];
