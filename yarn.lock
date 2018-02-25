@@ -224,9 +224,13 @@ anymatch@^1.3.0:
     micromatch "^2.1.5"
     normalize-path "^2.0.0"
 
-applicationinsights@0.15.6:
-  version "0.15.6"
-  resolved "https://registry.yarnpkg.com/applicationinsights/-/applicationinsights-0.15.6.tgz#201a0682c0704fe4bdd9a92d0b2cbe34d2ae5972"
+applicationinsights@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/applicationinsights/-/applicationinsights-1.0.1.tgz#53446b830fe8d5d619eee2a278b31d3d25030927"
+  dependencies:
+    diagnostic-channel "0.2.0"
+    diagnostic-channel-publishers "0.2.1"
+    zone.js "0.7.6"
 
 aproba@^1.0.3:
   version "1.2.0"
@@ -932,6 +936,16 @@ detect-indent@^2.0.0:
 detect-libc@^1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/detect-libc/-/detect-libc-1.0.3.tgz#fa137c4bd698edf55cd5cd02ac559f91a4c4ba9b"
+
+diagnostic-channel-publishers@0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/diagnostic-channel-publishers/-/diagnostic-channel-publishers-0.2.1.tgz#8e2d607a8b6d79fe880b548bc58cc6beb288c4f3"
+
+diagnostic-channel@0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/diagnostic-channel/-/diagnostic-channel-0.2.0.tgz#cc99af9612c23fb1fff13612c72f2cbfaa8d5a17"
+  dependencies:
+    semver "^5.3.0"
 
 diff-match-patch@^1.0.0:
   version "1.0.0"
@@ -4432,12 +4446,11 @@ vscode-debugprotocol@1.25.0, vscode-debugprotocol@^1.0.1:
   version "1.25.0"
   resolved "https://registry.yarnpkg.com/vscode-debugprotocol/-/vscode-debugprotocol-1.25.0.tgz#7a7e38df4cad8839e37ebcd06ed903902d97a7e3"
 
-vscode-extension-telemetry@^0.0.5:
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/vscode-extension-telemetry/-/vscode-extension-telemetry-0.0.5.tgz#21e2abb4cbce3326e469ddbb322123b3702f3f85"
+vscode-extension-telemetry@0.0.14:
+  version "0.0.14"
+  resolved "https://registry.yarnpkg.com/vscode-extension-telemetry/-/vscode-extension-telemetry-0.0.14.tgz#17454705b6bb8757351b955d812923f02ee895bf"
   dependencies:
-    applicationinsights "0.15.6"
-    winreg "0.0.13"
+    applicationinsights "1.0.1"
 
 vscode-jsonrpc@^3.5.0:
   version "3.5.0"
@@ -4509,10 +4522,6 @@ wide-align@^1.1.0:
 window-size@0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/window-size/-/window-size-0.1.0.tgz#5438cd2ea93b202efa3a19fe8887aee7c94f9c9d"
-
-winreg@0.0.13:
-  version "0.0.13"
-  resolved "https://registry.yarnpkg.com/winreg/-/winreg-0.0.13.tgz#76bfe02e1dd0c9c8275fb9fdf17a9f36846e3483"
 
 winreg@^1.2.4:
   version "1.2.4"
@@ -4588,3 +4597,7 @@ yazl@^2.2.1:
   resolved "https://registry.yarnpkg.com/yazl/-/yazl-2.4.3.tgz#ec26e5cc87d5601b9df8432dbdd3cd2e5173a071"
   dependencies:
     buffer-crc32 "~0.2.3"
+
+zone.js@0.7.6:
+  version "0.7.6"
+  resolved "https://registry.yarnpkg.com/zone.js/-/zone.js-0.7.6.tgz#fbbc39d3e0261d0986f1ba06306eb3aeb0d22009"

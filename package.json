@@ -1792,7 +1792,7 @@
         "untildify": "^3.0.2",
         "vscode-debugadapter": "^1.0.1",
         "vscode-debugprotocol": "^1.0.1",
-        "vscode-extension-telemetry": "^0.0.5",
+        "vscode-extension-telemetry": "^0.0.14",
         "vscode-languageclient": "^3.1.0",
         "vscode-languageserver": "^3.1.0",
         "winreg": "^1.2.4",
