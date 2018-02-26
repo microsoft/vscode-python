@@ -18,17 +18,13 @@ import { initialize, IS_APPVEYOR, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../i
 const fileToDebug = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger.py');
 const ptvsdPath = path.join(__dirname, '..', '..', '..', 'pythonFiles', 'PythonTools');
 const DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'Main.js');
-const TEST_RETRY_COUNT = 3;
 
-suite('Attach Debugger', function () {
-    // This test is flaky on AppVeyor, so lets try this a couple of times.
-    this.retries(TEST_RETRY_COUNT);
+suite('Attach Debugger', () => {
     let debugClient: DebugClient;
     let procToKill: ChildProcess;
     suiteSetup(initialize);
 
     setup(async function () {
-        await sleep(3000);
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
@@ -48,10 +44,9 @@ suite('Attach Debugger', function () {
             } catch { }
         }
     });
-    let testRunCounter = 0;
     test('Confirm we are able to attach to a running program', async () => {
-        // Let this test silently faill just on AppVeyor.
-        if (IS_APPVEYOR && testRunCounter++ > TEST_RETRY_COUNT) {
+        // Lets skip this test on AppVeyor (very flaky on AppVeyor).
+        if (IS_APPVEYOR) {
             return;
         }
 
