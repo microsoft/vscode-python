@@ -116,7 +116,7 @@ export class PipEnvService implements IInterpreterLocatorService {
             // tslint:disable-next-line:no-empty
         } catch (error) {
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            appShell.showWarningMessage(`Workspace contains pipfile but attempt to run 'pipenv --venv' failed with $${error}. Make sure pipenv is on the PATH.`);
+            appShell.showWarningMessage(`Workspace contains pipfile but attempt to run 'pipenv --venv' failed with ${error}. Make sure pipenv is on the PATH.`);
         }
     }
 }
