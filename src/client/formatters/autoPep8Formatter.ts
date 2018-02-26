@@ -24,7 +24,7 @@ export class AutoPep8Formatter extends BaseFormatter {
             autoPep8Args.push(...['--line-range', (range!.start.line + 1).toString(), (range!.end.line + 1).toString()]);
         }
         const promise = super.provideDocumentFormattingEdits(document, options, token, autoPep8Args);
-        sendTelemetryWhenDone(FORMAT, promise, stopWatch, { tool: 'autoppep8', hasCustomArgs, formatSelection });
+        sendTelemetryWhenDone(FORMAT, promise, stopWatch, { tool: 'autopep8', hasCustomArgs, formatSelection });
         return promise;
     }
 }
