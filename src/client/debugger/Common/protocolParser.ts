@@ -32,14 +32,11 @@ export class ProtocolParser extends EventEmitter implements IProtocolParser {
     constructor() {
         super();
     }
-    public disconnect() {
+    public dispose() {
         if (this.stream) {
             this.stream.removeListener('data', this.dataCallbackHandler);
             this.stream = undefined;
         }
-    }
-    public dispose() {
-        this.disconnect();
     }
     public connect(stream: Readable) {
         this.stream = stream;
