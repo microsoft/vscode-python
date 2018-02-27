@@ -157,14 +157,11 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     }
     // tslint:disable-next-line:member-ordering
     protected buildLauncherArguments(): string[] {
-        let vsDebugOptions = ['RedirectOutput'];
+        const vsDebugOptions = ['RedirectOutput'];
         if (Array.isArray(this.args.debugOptions)) {
-            vsDebugOptions = this.args.debugOptions.filter(opt => VALID_DEBUG_OPTIONS.indexOf(opt) >= 0);
+            this.args.debugOptions.filter(opt => VALID_DEBUG_OPTIONS.indexOf(opt) >= 0)
+                .forEach(item => vsDebugOptions.push(item));
         }
-
-        // Include a dummy value, to ensure something gets sent.
-        // Else, argument positions get messed up due to an empty string.
-        vsDebugOptions = vsDebugOptions.length === 0 ? ['DUMMYVALUE'] : vsDebugOptions;
 
         const programArgs = Array.isArray(this.args.args) && this.args.args.length > 0 ? this.args.args : [];
         if (typeof this.args.module === 'string' && this.args.module.length > 0) {
