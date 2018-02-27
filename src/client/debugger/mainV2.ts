@@ -29,6 +29,7 @@ import { CreateLaunchDebugClient } from './DebugClients/DebugFactory';
 import { BaseDebugServer } from './DebugServers/BaseDebugServer';
 import { initializeIoc } from './serviceRegistry';
 import { IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
+const killProcessTree = require('tree-kill');
 
 const DEBUGGER_CONNECT_TIMEOUT = 20000;
 const MIN_DEBUGGER_CONNECT_TIMEOUT = 5000;
@@ -270,7 +271,7 @@ class DebugManager implements Disposable {
         if (this.killPTVSDProcess && this.ptvsdProcessId) {
             logger.verbose('killing process');
             try {
-                process.kill(this.ptvsdProcessId!);
+                killProcessTree(this.ptvsdProcessId!);
             } catch { }
             this.killPTVSDProcess = false;
             this.ptvsdProcessId = undefined;
