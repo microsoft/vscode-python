@@ -69,6 +69,3 @@ export function isTestExecution(): boolean {
     // tslint:disable-next-line:interface-name no-string-literal
     return process.env['VSC_PYTHON_CI_TEST'] === '1';
 }
-
-// tslint:disable-next-line:no-empty
-export const nop = () => { };

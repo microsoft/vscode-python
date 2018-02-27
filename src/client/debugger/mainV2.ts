@@ -19,7 +19,7 @@ import { LogLevel } from 'vscode-debugadapter/lib/logger';
 import { Event } from 'vscode-debugadapter/lib/messages';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import '../../client/common/extensions';
-import { nop } from '../common/constants';
+import { noop, sleep } from '../common/core.utils';
 import { createDeferred, Deferred, isNotInstalledError } from '../common/helpers';
 import { ICurrentProcess } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -34,9 +34,6 @@ const killProcessTree = require('tree-kill');
 const DEBUGGER_CONNECT_TIMEOUT = 20000;
 const MIN_DEBUGGER_CONNECT_TIMEOUT = 5000;
 
-async function sleep(timeout: number) {
-    return new Promise(resolve => setTimeout(resolve, timeout));
-}
 /**
  * Primary purpose of this class is to perform the handshake with VS Code and launch PTVSD process.
  * I.e. it communicate with VS Code before PTVSD gets into the picture, once PTVSD is launched, PTVSD will talk directly to VS Code.
@@ -386,7 +383,7 @@ class DebugManager implements Disposable {
 }
 
 async function startDebugger() {
-    logger.init(nop, path.join(__dirname, '..', '..', '..', 'experimental_debug.log'));
+    logger.init(noop, path.join(__dirname, '..', '..', '..', 'experimental_debug.log'));
     const serviceContainer = initializeIoc();
     const protocolMessageWriter = serviceContainer.get<IProtocolMessageWriter>(IProtocolMessageWriter);
     try {
