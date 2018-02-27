@@ -16,6 +16,7 @@ export interface IDebugLauncherScriptProvider {
 export const IProtocolParser = Symbol('IProtocolParser');
 export interface IProtocolParser extends Disposable {
     connect(stream: Readable): void;
+    disconnect(): void;
     once(event: string | symbol, listener: Function): this;
     on(event: string | symbol, listener: Function): this;
 }
