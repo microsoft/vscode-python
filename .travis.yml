@@ -47,8 +47,8 @@ script:
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
     fi
-  - if [ $TRAVIS_PYTHON_VERSION != "2.7" ]; then
-        python3 news/announce.py --dry-run
+  - if [ "$TRAVIS_PYTHON_VERSION" != "2.7" ]; then
+        python3 news/announce.py --dry-run;
     fi
 after_success:
   - if [ $AZURE_STORAGE_ACCOUNT ]; then
