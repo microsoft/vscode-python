@@ -240,6 +240,7 @@ class DebugManager implements Disposable {
      * @memberof DebugManager
      */
     private shutdown = async () => {
+        logger.verbose('check and shutdown');
         if (this.hasShutdown) {
             return;
         }
@@ -251,9 +252,6 @@ class DebugManager implements Disposable {
             this.ptvsdSocket.unpipe(this.throughOutputStream);
         }
 
-        // No need to kill python process if it sent the terminated event.
-        // That's an indication its dying.
-        const killPTVSDProcess = this.killPTVSDProcess && this.ptvsdProcessId && !this.terminatedEventSent;
         if (!this.terminatedEventSent) {
             // Possible VS Code has closed its stream.
             try {
@@ -269,7 +267,7 @@ class DebugManager implements Disposable {
             this.terminatedEventSent = true;
         }
 
-        if (killPTVSDProcess) {
+        if (this.killPTVSDProcess && this.ptvsdProcessId) {
             logger.verbose('killing process');
             try {
                 process.kill(this.ptvsdProcessId!);
@@ -372,9 +370,10 @@ class DebugManager implements Disposable {
         logger.verbose('onEventTerminated');
         this.terminatedEventSent = true;
         // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
-        setTimeout(this.shutdown, 100);
+        setTimeout(this.shutdown, 300);
     }
     private onResponseDisconnect = async () => {
+        logger.verbose('onResponseDisconnect');
         // When VS Code sends a disconnect request, PTVSD replies back with a response, but its upto us to kill the process.
         // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
         // Also its possible PTVSD might run to completion.
