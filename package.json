@@ -1086,6 +1086,19 @@
                     "description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs).",
                     "scope": "resource"
                 },
+                "python.venvFolders": {
+                    "type": "array",
+                    "default": [
+                        "envs",
+                        ".pyenv",
+                        ".direnv"
+                    ],
+                    "description": "Folders to look into for virtual environments.",
+                    "scope": "resource",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "python.envFile": {
                     "type": "string",
                     "description": "Absolute path to a file containing environment variable definitions.",

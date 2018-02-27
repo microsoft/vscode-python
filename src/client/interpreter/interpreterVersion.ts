@@ -3,11 +3,11 @@ import '../common/extensions';
 import { IProcessService } from '../common/process/types';
 import { IInterpreterVersionService } from './contracts';
 
-const PIP_VERSION_REGEX = '\\d\\.\\d(\\.\\d)+';
+export const PIP_VERSION_REGEX = '\\d+\\.\\d+(\\.\\d+)';
 
 @injectable()
 export class InterpreterVersionService implements IInterpreterVersionService {
-    constructor( @inject(IProcessService) private processService: IProcessService) { }
+    constructor(@inject(IProcessService) private processService: IProcessService) { }
     public async getVersion(pythonPath: string, defaultValue: string): Promise<string> {
         return this.processService.exec(pythonPath, ['--version'], { mergeStdOutErr: true })
             .then(output => output.stdout.splitLines()[0])

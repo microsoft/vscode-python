@@ -41,9 +41,22 @@ export class InstallationChannelManager implements IInstallationChannelManager {
     }
 
     public async getInstallationChannels(resource?: Uri): Promise<IModuleInstaller[]> {
-        const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
+        let installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
         const supportedInstallers: IModuleInstaller[] = [];
+        if (installers.length === 0) {
+            return [];
+        }
+        // group by priority and pick supported from the highest priority
+        installers = installers.sort((a, b) => b.priority - a.priority);
+        let currentPri = installers[0].priority;
         for (const mi of installers) {
+            if (mi.priority !== currentPri) {
+                if (supportedInstallers.length > 0) {
+                    break; // return highest priority supported installers
+                }
+                // If none supported, try next priority group
+                currentPri = mi.priority;
+            }
             if (await mi.isSupported(resource)) {
                 supportedInstallers.push(mi);
             }

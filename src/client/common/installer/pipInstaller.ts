@@ -14,14 +14,17 @@ export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
     public get displayName() {
         return 'Pip';
     }
-    constructor( @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    public get priority(): number {
+        return 0;
+    }
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }
     public isSupported(resource?: Uri): Promise<boolean> {
         return this.isPipAvailable(resource);
     }
     protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
-        const proxyArgs = [];
+        const proxyArgs: string[] = [];
         const proxy = workspace.getConfiguration('http').get('proxy', '');
         if (proxy.length > 0) {
             proxyArgs.push('--proxy');

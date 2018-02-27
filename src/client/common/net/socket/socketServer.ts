@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import * as net from 'net';
+import { nop } from '../../constants';
 import { createDeferred, Deferred } from '../../helpers';
 import { ISocketServer } from '../../types';
 
@@ -56,9 +57,7 @@ export class SocketServer extends EventEmitter implements ISocketServer {
         client.on('data', (data: Buffer) => {
             this.emit('data', client, data);
         });
-        client.on('error', (err: Error) => {
-            this.emit('error', client, err);
-        });
+        client.on('error', (err: Error) => nop);
 
         client.on('timeout', d => {
             // let msg = "Debugger client timedout, " + d;

@@ -9,8 +9,8 @@ import { IPlatformService } from './types';
 
 @injectable()
 export class PlatformService implements IPlatformService {
-     private _isWindows: boolean;
-     private _isMac: boolean;
+    private _isWindows: boolean;
+    private _isMac: boolean;
 
     constructor() {
         this._isWindows = /^win/.test(process.platform);
@@ -30,4 +30,8 @@ export class PlatformService implements IPlatformService {
     }
     public get pathVariableName() {
         return this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
-    }}
+    }
+    public get virtualEnvBinName() {
+        return this.isWindows ? 'scripts' : 'bin';
+    }
+}

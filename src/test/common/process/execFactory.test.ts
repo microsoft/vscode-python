@@ -5,10 +5,10 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { IProcessService } from '../../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import { InterpreterVersionService } from '../../../client/interpreter/interpreterVersion';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
@@ -38,8 +38,8 @@ suite('PythonExecutableService', () => {
         configService.setup(c => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => pythonSettings.object);
         procService.setup(p => p.exec(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: pythonVersion }));
 
-        const factory = await new PythonExecutionFactory(serviceContainer.object).create();
-        const version = await factory.getVersion();
+        const versionService = new InterpreterVersionService(procService.object);
+        const version = await versionService.getVersion(pythonPath, '');
 
         expect(version).to.be.equal(pythonVersion);
     });
@@ -52,8 +52,8 @@ suite('PythonExecutableService', () => {
         configService.setup(c => c.getSettings(TypeMoq.It.isValue(resource))).returns(() => pythonSettings.object);
         procService.setup(p => p.exec(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: pythonVersion }));
 
-        const factory = await new PythonExecutionFactory(serviceContainer.object).create(resource);
-        const version = await factory.getVersion();
+        const versionService = new InterpreterVersionService(procService.object);
+        const version = await versionService.getVersion(pythonPath, '');
 
         expect(version).to.be.equal(pythonVersion);
     });

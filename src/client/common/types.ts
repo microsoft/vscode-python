@@ -97,6 +97,7 @@ export interface ICurrentProcess {
 export interface IPythonSettings {
     readonly pythonPath: string;
     readonly venvPath: string;
+    readonly venvFolders: string[];
     readonly jediPath: string;
     readonly jediMemoryLimit: number;
     readonly devOptions: string[];
