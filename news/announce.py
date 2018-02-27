@@ -114,8 +114,7 @@ class RunType(enum.Enum):
 @click.argument('directory', default=pathlib.Path(__file__).parent,
                 type=click.Path(exists=True, file_okay=False))
 def main(run_type, directory):
-    cleanup = run_type == RunType.final
-    data = gather(directory, cleanup=cleanup)
+    data = gather(directory)
     markdown = changelog_markdown(data)
     if run_type != RunType.dry_run:
         print(markdown)
