@@ -258,8 +258,6 @@ class DebugManager implements Disposable {
             try {
                 logger.verbose('Sending Terminated Event');
                 this.sendMessage(new TerminatedEvent(), this.outputStream);
-                // Wait for this message to go out before we proceed (the process will die after this).
-                await sleep(100);
             } catch (err) {
                 const message = `Error in sending Terminated Event: ${err && err.message ? err.message : err.toString()}`;
                 const details = [message, err && err.name ? err.name : '', err && err.stack ? err.stack : ''].join(EOL);
@@ -271,6 +269,11 @@ class DebugManager implements Disposable {
         if (this.killPTVSDProcess && this.ptvsdProcessId) {
             logger.verbose('killing process');
             try {
+                // 1. Wait for some time, its possible the program has run to completion.
+                // We need to wait till the process exits (else the message `Terminated: 15` gets printed onto the screen).
+                // 2. Also, its possible we manually sent the `Terminated` event above.
+                // Hence we need to wait till VSC receives the above event.
+                await sleep(100);
                 killProcessTree(this.ptvsdProcessId!);
             } catch { }
             this.killPTVSDProcess = false;
