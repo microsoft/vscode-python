@@ -5,6 +5,7 @@ import os
 import pathlib
 import re
 import subprocess
+import types
 
 import click
 
@@ -12,17 +13,17 @@ import click
 FILENAME_RE = re.compile(r"(?P<issue>\d+)(?P<nonce>-\S+)?\.md")
 ISSUE_URL = "https://github.com/Microsoft/vscode-python/issues/{issue}"
 ENTRY_TEMPLATE = "- {entry} ([#{issue}]({issue_url}))"
-SECTION_DEPTH = "##"
+SECTION_DEPTH = "###"
 
 
-def git_rm(path):
-    """Run git-rm on the path."""
-    status = subprocess.run(['git', 'rm', os.fspath(path.resolve())],
-                            shell=True)
-    status.check_returncode()
+def NewsEntry(issue_number, description, path):
+    """Construct a data object for a news entry."""
+    # TODO: replace with a dataclass in Python 3.7.
+    return types.SimpleNamespace(issue_number=issue_number,
+                                 description=description, path=path)
 
 
-def news_entries(directory, *, cleanup=False):
+def news_entries(directory):
     """Yield news entries in the directory."""
     for path in directory.iterdir():
         if path.name == 'README.md':
@@ -32,10 +33,13 @@ def news_entries(directory, *, cleanup=False):
             raise ValueError(f'{path} has a bad file name')
         issue = int(match.group('issue'))
         entry = path.read_text("utf-8")
-        if cleanup:
-            git_rm(path)
-        # I want dataclasses!
-        yield issue, entry
+        yield NewsEntry(issue, entry, path)
+
+
+def SectionTitle(index, title, path):
+    """Create a data object for a section of the changelog."""
+    # TODO: replace with a dataclass in Python 3.7.
+    return types.SimpleNamespace(index=index, title=title, path=path)
 
 
 def sections(directory):
@@ -44,28 +48,26 @@ def sections(directory):
     for path in directory.iterdir():
         if not path.is_dir():
             continue
-        if ' ' not in path.name:
+        position, sep, title = path.name.partition(' ')
+        if not sep:
             raise ValueError('directory is missing position part')
-        position, _, title = path.name.partition(' ')
-        found.append((int(position), title, path))
-    ordered_found = sorted(found, key=operator.itemgetter(0))
-    # I want dataclasses!
-    yield from (section[1:] for section in ordered_found)
+        found.append(SectionTitle(int(position), title, path))
+    return sorted(found, key=operator.attrgetter('index'))
 
 
-def gather(directory, *, cleanup=False):
+def gather(directory):
     """Gather all the entries together."""
     data = []
-    for name, path in sections(directory):
-        # I want dataclasses!
-        data.append((name, news_entries(path, cleanup=cleanup)))
+    for section in sections(directory):
+        data.append((section, list(news_entries(section.path))))
     return data
 
 
 def entry_markdown(entry):
     """Generate the Markdown for the specified entry."""
-    issue_url = ISSUE_URL.format(issue=entry[0])
-    return ENTRY_TEMPLATE.format(entry=entry[1], issue=entry[0],
+    issue_url = ISSUE_URL.format(issue=entry.issue_number)
+    return ENTRY_TEMPLATE.format(entry=entry.description,
+                                 issue=entry.issue_number,
                                  issue_url=issue_url)
 
 
@@ -73,15 +75,28 @@ def changelog_markdown(data):
     """Generate the Markdown for the release."""
     changelog = []
     for section, entries in data:
-        changelog.append(f"{SECTION_DEPTH} {section}")
+        changelog.append(f"{SECTION_DEPTH} {section.title}")
         changelog.append("")
         changelog.extend(map(entry_markdown, entries))
         changelog.append("")
     return "\n".join(changelog)
 
 
-class RunType(enum.Enum):
+def git_rm(path):
+    """Run git-rm on the path."""
+    status = subprocess.run(['git', 'rm', os.fspath(path.resolve())],
+                            shell=True)
+    status.check_returncode()
 
+
+def cleanup(data):
+    """Remove news entries from git and disk."""
+    for section, entries in data:
+        for entry in entries:
+            git_rm(entry.path)
+
+
+class RunType(enum.Enum):
     """Possible run-time options."""
 
     dry_run = 0
@@ -104,6 +119,8 @@ def main(run_type, directory):
     markdown = changelog_markdown(data)
     if run_type != RunType.dry_run:
         print(markdown)
+    if run_type == RunType.final:
+        cleanup(data)
 
 
 if __name__ == '__main__':

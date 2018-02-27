@@ -20,9 +20,9 @@ def test_news_entry_formatting(directory):
     nonce_entry.write_text(body, encoding='utf-8')
     results = list(ann.news_entries(directory))
     assert len(results) == 2
-    for found_issue, found_body in results:
-        assert found_issue == issue
-        assert found_body == body
+    for result in results:
+        assert result.issue_number == issue
+        assert result.description == body
 
 
 def test_bad_news_entry_file_name(directory):
@@ -37,28 +37,13 @@ def test_news_entry_README_skipping(directory):
     assert len(list(ann.news_entries(directory))) == 0
 
 
-def test_news_entry_cleanup(directory, monkeypatch):
-    rm_path = None
-    def fake_git_rm(path):
-        nonlocal rm_path
-        rm_path = path
-    monkeypatch.setattr(ann, 'git_rm', fake_git_rm)
-    issue = 42
-    normal_entry = directory / f'{issue}.md'
-    body = 'Hello, world!'
-    normal_entry.write_text(body, encoding='utf-8')
-    results = list(ann.news_entries(directory, cleanup=True))
-    assert len(results) == 1
-    assert normal_entry == rm_path
-
-
 def test_sections_sorting(directory):
     dir2 = directory / '2 Hello'
     dir1 = directory / '1 World'
     dir2.mkdir()
     dir1.mkdir()
     results = list(ann.sections(directory))
-    assert [found[0] for found in results] == ['World', 'Hello']
+    assert [found.title for found in results] == ['World', 'Hello']
 
 
 def test_sections_naming(directory):
@@ -83,48 +68,36 @@ def test_gather(directory):
     results = ann.gather(directory)
     assert len(results) == 2
     section, entries = results[0]
-    assert section == 'Enhancements'
-    entries_dict = dict(entries)
-    assert len(entries_dict) == 2
-    assert entries_dict[2] == 'Enhancement 1'
-    assert entries_dict[4] == 'Enhancement 2'
+    assert section.title == 'Enhancements'
+    assert len(entries) == 2
+    assert entries[0].description == 'Enhancement 1'
+    assert entries[1].description == 'Enhancement 2'
     section, entries = results[1]
-    assert section == 'Fixes'
-    entries_dict = dict(entries)
-    assert len(entries_dict) == 2
-    assert entries_dict[1] == 'Fix 1'
-    assert entries_dict[3] == 'Fix 2'
+    assert len(entries) == 2
+    assert section.title == 'Fixes'
+    assert entries[0].description == 'Fix 1'
+    assert entries[1].description == 'Fix 2'
 
 
-def test_gather_cleanup(directory, monkeypatch):
-    rm_path = None
-    def fake_git_rm(path):
-        nonlocal rm_path
-        rm_path = path
-    monkeypatch.setattr(ann, 'git_rm', fake_git_rm)
-    fixes = directory / '2 Fixes'
-    fixes.mkdir()
-    fix1 = fixes / '1.md'
-    fix1.write_text('Fix 1', encoding='utf-8')
-    results = ann.gather(directory, cleanup=True)
-    assert len(results) == 1
-    section, entries = results.pop()
-    assert len(list(entries)) == 1  # Exhaust generator.
-    assert rm_path == fix1
+
 
 def test_entry_markdown():
-    markdown = ann.entry_markdown((42, 'Hello, world!'))
+    markdown = ann.entry_markdown(ann.NewsEntry(42, 'Hello, world!', None))
     assert '42' in markdown
     assert 'Hello, world!' in markdown
     assert 'https://github.com/Microsoft/vscode-python/issues/42' in markdown
 
 
 def test_changelog_markdown():
-    data = [('Enhancements', [(2, 'Enhancement 1'), (4, 'Enhancement 2')]),
-            ('Fixes', [(1, 'Fix 1'), (3, 'Fix 2')])]
+    data = [(ann.SectionTitle(1, 'Enhancements', None),
+                [ann.NewsEntry(2, 'Enhancement 1', None),
+                 ann.NewsEntry(4, 'Enhancement 2', None)]),
+            (ann.SectionTitle(1, 'Fixes', None),
+                [ann.NewsEntry(1, 'Fix 1', None),
+                 ann.NewsEntry(3, 'Fix 2', None)])]
     markdown = ann.changelog_markdown(data)
-    assert '## Enhancements' in markdown
-    assert '## Fixes' in markdown
+    assert '### Enhancements' in markdown
+    assert '### Fixes' in markdown
     assert '1' in markdown
     assert 'Fix 1' in markdown
     assert '2' in markdown
@@ -135,3 +108,21 @@ def test_changelog_markdown():
     assert 'https://github.com/Microsoft/vscode-python/issues/3' in markdown
     assert '4' in markdown
     assert 'Enhancement 2' in markdown
+
+
+def test_cleanup(directory, monkeypatch):
+    rm_path = None
+    def fake_git_rm(path):
+        nonlocal rm_path
+        rm_path = path
+    monkeypatch.setattr(ann, 'git_rm', fake_git_rm)
+    fixes = directory / '2 Fixes'
+    fixes.mkdir()
+    fix1 = fixes / '1.md'
+    fix1.write_text('Fix 1', encoding='utf-8')
+    results = ann.gather(directory)
+    assert len(results) == 1
+    ann.cleanup(results)
+    section, entries = results.pop()
+    assert len(entries) == 1
+    assert rm_path == entries[0].path
