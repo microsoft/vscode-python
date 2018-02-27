@@ -31,6 +31,7 @@ export namespace Commands {
     export const Create_Terminal = 'python.createTerminal';
     export const Set_Linter = 'python.setLinter';
     export const Enable_Linter = 'python.enableLinting';
+    export const Run_Linter = 'python.runLinting';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';

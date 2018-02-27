@@ -4,6 +4,7 @@
 import * as vscode from 'vscode';
 import { ExecutionInfo, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { LinterTrigger } from '../telemetry/types';
 
 export interface IErrorHandler {
     handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo): Promise<boolean>;
@@ -17,6 +18,7 @@ export interface ILinterInfo {
     readonly pathSettingName: string;
     readonly argsSettingName: string;
     readonly enabledSettingName: string;
+    readonly configFileNames: string[];
     enableAsync(flag: boolean, resource?: vscode.Uri): Promise<void>;
     isEnabled(resource?: vscode.Uri): boolean;
     pathName(resource?: vscode.Uri): string;
@@ -55,4 +57,12 @@ export enum LintMessageSeverity {
     Error,
     Warning,
     Information
+}
+
+export const ILintingEngine = Symbol('ILintingEngine');
+export interface ILintingEngine {
+    lintOpenPythonFiles(): void;
+    lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void>;
+    // tslint:disable-next-line:no-any
+    linkJupiterExtension(jupiter: vscode.Extension<any> | undefined): Promise<void>;
 }

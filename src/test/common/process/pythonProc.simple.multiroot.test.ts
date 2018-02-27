@@ -10,7 +10,10 @@ import * as path from 'path';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
+import { PlatformService } from '../../../client/common/platform/platformService';
+import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
 import { IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
@@ -57,6 +60,8 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
         serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
+        serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
+        serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
 
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);

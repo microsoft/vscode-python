@@ -36,7 +36,7 @@ suite('Multiroot Linting', () => {
 
     function initializeDI() {
         ioc = new UnitTestIocContainer();
-        ioc.registerCommonTypes();
+        ioc.registerCommonTypes(false);
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();

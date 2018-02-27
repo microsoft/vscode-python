@@ -3,8 +3,10 @@
 
 import { IServiceManager } from '../ioc/types';
 import { LinterManager } from './linterManager';
-import { ILinterManager } from './types';
+import { LintingEngine } from './lintingEngine';
+import { ILinterManager, ILintingEngine } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
+    serviceManager.addSingleton<ILintingEngine>(ILintingEngine, LintingEngine);
     serviceManager.addSingleton<ILinterManager>(ILinterManager, LinterManager);
 }

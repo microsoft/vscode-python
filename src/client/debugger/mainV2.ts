@@ -12,7 +12,7 @@ if ((Reflect as any).metadata === undefined) {
 import { Socket } from 'net';
 import * as path from 'path';
 import { PassThrough } from 'stream';
-import { DebugSession, ErrorDestination, logger, OutputEvent } from 'vscode-debugadapter';
+import { DebugSession, ErrorDestination, logger, OutputEvent, TerminatedEvent } from 'vscode-debugadapter';
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
 import { Event } from 'vscode-debugadapter/lib/messages';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -78,12 +78,18 @@ export class PythonDebugger extends DebugSession {
             // Lets start our debugger.
             const session = new PythonDebugger(serviceContainer, isServerMode);
             session.setRunAsServer(isServerMode);
-
+            let terminatedEventSent = false;
             function dispose() {
+                if (!terminatedEventSent) {
+                    protocolMessageWriter.write(process.stdout, new TerminatedEvent());
+                    terminatedEventSent = true;
+                }
                 session.shutdown();
             }
-            outputProtocolParser.once('event_terminated', dispose);
-            outputProtocolParser.once('response_disconnect', dispose);
+            outputProtocolParser.once('event_terminated', () => {
+                terminatedEventSent = true;
+                dispose();
+            });
             if (!isServerMode) {
                 process.on('SIGTERM', dispose);
             }
@@ -99,6 +105,7 @@ export class PythonDebugger extends DebugSession {
 
             outputProtocolParser.on('response_launch', async () => {
                 const debuggerSocket = await session.debugServer!.client;
+                debuggerSocket.on('end', dispose);
                 const debugSoketProtocolParser = serviceContainer.get<IProtocolParser>(IProtocolParser);
                 debugSoketProtocolParser.connect(debuggerSocket);
 

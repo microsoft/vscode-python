@@ -112,6 +112,13 @@ suite('Linting - Manager', () => {
         assert.equal(after![0].id, before![0].id, 'Should not be able to set unsupported linter');
     });
 
+    test('Pylint configuration file watch', async () => {
+        const pylint = lm.getLinterInfo(Product.pylint);
+        assert.equal(pylint.configFileNames.length, 2, 'Pylint configuration file count is incorrect.');
+        assert.notEqual(pylint.configFileNames.indexOf('pylintrc'), -1, 'Pylint configuration files miss pylintrc.');
+        assert.notEqual(pylint.configFileNames.indexOf('.pylintrc'), -1, 'Pylint configuration files miss .pylintrc.');
+    });
+
     EnumEx.getValues<Product>(Product).forEach(product => {
         const linterIdMapping = new Map<Product, LinterId>();
         linterIdMapping.set(Product.flake8, 'flake8');

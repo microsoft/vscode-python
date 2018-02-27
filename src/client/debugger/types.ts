@@ -36,3 +36,5 @@ export const IProtocolMessageWriter = Symbol('IProtocolMessageWriter');
 export interface IProtocolMessageWriter {
     write(stream: Socket | NodeJS.WriteStream, message: Message): void;
 }
+
+export const IDebugConfigurationProvider = Symbol('DebugConfigurationProvider');

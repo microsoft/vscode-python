@@ -9,6 +9,9 @@ import { IDocumentManager } from './types';
 
 @injectable()
 export class DocumentManager implements IDocumentManager {
+    public get textDocuments(): TextDocument[] {
+        return workspace.textDocuments;
+    }
     public get activeTextEditor(): TextEditor | undefined {
         return window.activeTextEditor;
     }
@@ -29,6 +32,12 @@ export class DocumentManager implements IDocumentManager {
     }
     public get onDidChangeTextEditorViewColumn(): Event<TextEditorViewColumnChangeEvent> {
         return window.onDidChangeTextEditorViewColumn;
+    }
+    public get onDidOpenTextDocument(): Event<TextDocument> {
+        return workspace.onDidOpenTextDocument;
+    }
+    public get onDidCloseTextDocument(): Event<TextDocument> {
+        return workspace.onDidCloseTextDocument;
     }
     public get onDidSaveTextDocument(): Event<TextDocument> {
         return workspace.onDidSaveTextDocument;

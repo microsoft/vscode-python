@@ -38,6 +38,7 @@ suite('Formating On Save', () => {
     function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerFormatterTypes();
+        ioc.registerFileSystemTypes();
         ioc.registerProcessTypes();
         ioc.registerVariableTypes();
         ioc.registerMockProcess();

@@ -64,6 +64,21 @@ suite('Language.Tokenizer', () => {
             assert.equal(tokens.getItemAt(i).type, TokenType.String);
         }
     });
+    test('Strings: single quote escape', async () => {
+        const t = new Tokenizer();
+        // tslint:disable-next-line:quotemark
+        const tokens = t.tokenize("'\\'quoted\\''");
+        assert.equal(tokens.count, 1);
+        assert.equal(tokens.getItemAt(0).type, TokenType.String);
+        assert.equal(tokens.getItemAt(0).length, 12);
+    });
+    test('Strings: double quote escape', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('"\\"quoted\\""');
+        assert.equal(tokens.count, 1);
+        assert.equal(tokens.getItemAt(0).type, TokenType.String);
+        assert.equal(tokens.getItemAt(0).length, 12);
+    });
     test('Comments', async () => {
         const t = new Tokenizer();
         const tokens = t.tokenize(' #co"""mment1\n\t\n#comm\'ent2 ');

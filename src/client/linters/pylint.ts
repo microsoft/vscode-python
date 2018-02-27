@@ -11,6 +11,9 @@ import { IServiceContainer } from '../ioc/types';
 import { BaseLinter } from './baseLinter';
 import { ILintMessage } from './types';
 
+const pylintrc = 'pylintrc';
+const dotPylintrc = '.pylintrc';
+
 export class Pylint extends BaseLinter {
     private fileSystem: IFileSystem;
     private platformService: IPlatformService;
@@ -25,12 +28,16 @@ export class Pylint extends BaseLinter {
         let minArgs: string[] = [];
         // Only use minimal checkers if
         //  a) there are no custom arguments and
-        //  b) there is no pylintrc file
+        //  b) there is no pylintrc file next to the file or at the workspace root
         const uri = document.uri;
+        const workspaceRoot = this.getWorkspaceRootPath(document);
         const settings = this.configService.getSettings(uri);
         if (settings.linting.pylintUseMinimalCheckers
             && this.info.linterArgs(uri).length === 0
-            && !await Pylint.hasConfigurationFile(this.fileSystem, uri.fsPath, this.platformService)) {
+            // Check pylintrc next to the file or above up to and including the workspace root
+            && !await Pylint.hasConfigrationFileInWorkspace(this.fileSystem, path.dirname(uri.fsPath), workspaceRoot)
+            // Check for pylintrc at the root and above
+            && !await Pylint.hasConfigurationFile(this.fileSystem, this.getWorkspaceRootPath(document), this.platformService)) {
             minArgs = [
                 '--disable=all',
                 '--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,unused-wildcard-import,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode'
@@ -51,7 +58,7 @@ export class Pylint extends BaseLinter {
     }
 
     // tslint:disable-next-line:member-ordering
-    public static async hasConfigurationFile(fs: IFileSystem, filePath: string, platformService: IPlatformService): Promise<boolean> {
+    public static async hasConfigurationFile(fs: IFileSystem, folder: string, platformService: IPlatformService): Promise<boolean> {
         // https://pylint.readthedocs.io/en/latest/user_guide/run.html
         // https://github.com/PyCQA/pylint/blob/975e08148c0faa79958b459303c47be1a2e1500a/pylint/config.py
         // 1. pylintrc in the current working directory
@@ -69,9 +76,7 @@ export class Pylint extends BaseLinter {
             return true;
         }
 
-        let dir = path.dirname(filePath);
-        const pylintrc = 'pylintrc';
-        const dotPylintrc = '.pylintrc';
+        let dir = folder;
         if (await fs.fileExistsAsync(path.join(dir, pylintrc)) || await fs.fileExistsAsync(path.join(dir, dotPylintrc))) {
             return true;
         }
@@ -87,7 +92,7 @@ export class Pylint extends BaseLinter {
             }
             current = above;
             above = path.dirname(above);
-        } while (current !== above);
+        } while (!fs.arePathsSame(current, above));
 
         dir = path.resolve('~');
         if (await fs.fileExistsAsync(path.join(dir, dotPylintrc))) {
@@ -102,6 +107,21 @@ export class Pylint extends BaseLinter {
                 return true;
             }
         }
+        return false;
+    }
+
+    // tslint:disable-next-line:member-ordering
+    public static async hasConfigrationFileInWorkspace(fs: IFileSystem, folder: string, root: string): Promise<boolean> {
+        // Search up from file location to the workspace root
+        let current = folder;
+        let above = path.dirname(current);
+        do {
+            if (await fs.fileExistsAsync(path.join(current, pylintrc)) || await fs.fileExistsAsync(path.join(current, dotPylintrc))) {
+                return true;
+            }
+            current = above;
+            above = path.dirname(above);
+        } while (!fs.arePathsSame(current, root) && !fs.arePathsSame(current, above));
         return false;
     }
 }

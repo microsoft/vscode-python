@@ -1,13 +1,20 @@
+import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { CancellationToken, CodeLens, TextDocument } from 'vscode';
 import * as settings from '../../common/configSettings';
 import { IProcessService } from '../../common/process/types';
 import { IS_WINDOWS } from '../../common/utils';
+import { IServiceContainer } from '../../ioc/types';
+import { IShebangCodeLensProvider } from '../contracts';
 
-export class ShebangCodeLensProvider implements vscode.CodeLensProvider {
+@injectable()
+export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
     // tslint:disable-next-line:no-any
     public onDidChangeCodeLenses: vscode.Event<void> = vscode.workspace.onDidChangeConfiguration as any as vscode.Event<void>;
-    constructor(private processService: IProcessService) { }
+    private readonly processService: IProcessService;
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        this.processService = serviceContainer.get<IProcessService>(IProcessService);
+    }
     public async detectShebang(document: TextDocument): Promise<string | undefined> {
         const firstLine = document.lineAt(0);
         if (firstLine.isEmptyOrWhitespace) {

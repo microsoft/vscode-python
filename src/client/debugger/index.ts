@@ -1,1 +1,2 @@
-export * from './configProviders/simpleProvider';
+export * from './configProviders/pythonProvider';
+export * from './configProviders/pyhtonV2Provider';
