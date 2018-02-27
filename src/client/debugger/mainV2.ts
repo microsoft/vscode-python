@@ -33,6 +33,9 @@ import { IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtoco
 const DEBUGGER_CONNECT_TIMEOUT = 20000;
 const MIN_DEBUGGER_CONNECT_TIMEOUT = 5000;
 
+async function sleep(timeout: number) {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+}
 /**
  * Primary purpose of this class is to perform the handshake with VS Code and launch PTVSD process.
  * I.e. it communicate with VS Code before PTVSD gets into the picture, once PTVSD is launched, PTVSD will talk directly to VS Code.
@@ -187,8 +190,6 @@ class DebugManager implements Disposable {
         if (value) {
             logger.setup(LogLevel.Verbose, true);
             this.protocolLogger.setup(logger);
-        } else {
-            this.protocolLogger.disconnect();
         }
     }
     constructor(private readonly serviceContainer: IServiceContainer) {
@@ -257,9 +258,9 @@ class DebugManager implements Disposable {
             // Possible VS Code has closed its stream.
             try {
                 logger.verbose('Sending Terminated Event');
-                this.sendMessage(new TerminatedEvent(), this.throughOutputStream);
+                this.sendMessage(new TerminatedEvent(), this.outputStream);
                 // Wait for this message to go out before we proceed (the process will die after this).
-                await new Promise(resolve => setTimeout(resolve, 100));
+                await sleep(100);
             } catch (err) {
                 const message = `Error in sending Terminated Event: ${err && err.message ? err.message : err.toString()}`;
                 const details = [message, err && err.name ? err.name : '', err && err.stack ? err.stack : ''].join(EOL);
@@ -283,24 +284,25 @@ class DebugManager implements Disposable {
         }
 
         logger.verbose('disposing');
+        await sleep(100);
         // Dispose last, we don't want to dispose the protocol loggers too early.
         this.disposables.forEach(disposable => disposable.dispose());
     }
-    private sendMessage(message: DebugProtocol.ProtocolMessage, outputStream: Socket | PassThrough | NodeJS.WriteStream = this.throughOutputStream): void {
+    private sendMessage(message: DebugProtocol.ProtocolMessage, outputStream: Socket | PassThrough | NodeJS.WriteStream): void {
         this.protocolMessageWriter.write(outputStream, message);
+        this.protocolMessageWriter.write(this.throughOutputStream, message);
     }
     private startDebugSession() {
         this.debugSession = new PythonDebugger(this.serviceContainer);
         this.debugSession.setRunAsServer(this.isServerMode);
 
-        // Connect our intermetiate pipes.
-        this.throughOutputStream.pipe(this.outputStream);
         this.debugSessionOutputStream.pipe(this.throughOutputStream);
+        this.debugSessionOutputStream.pipe(this.outputStream);
 
         // Start handling requests in the session instance.
         // The session (PythonDebugger class) will only perform the bootstrapping (launching of PTVSD).
-        this.throughInputStream.pipe(this.debugSessionInputStream);
         this.inputStream.pipe(this.throughInputStream);
+        this.inputStream.pipe(this.debugSessionInputStream);
 
         this.debugSession.start(this.debugSessionInputStream, this.debugSessionOutputStream);
     }
@@ -346,14 +348,16 @@ class DebugManager implements Disposable {
         // Wait for PTVSD to reply back with initialized event.
         debugSoketProtocolParser.once('event_initialized', (initialized: DebugProtocol.InitializedEvent) => {
             // Get ready for PTVSD to communicate directly with VS Code.
-            this.throughInputStream.unpipe(this.debugSessionInputStream);
-            this.debugSessionInputStream.unpipe(this.throughOutputStream);
-            this.throughInputStream.pipe(this.ptvsdSocket!);
+            this.inputStream.unpipe(this.debugSessionInputStream);
+            this.debugSessionOutputStream.unpipe(this.outputStream);
+
+            this.inputStream.pipe(this.ptvsdSocket!);
             this.ptvsdSocket!.pipe(this.throughOutputStream);
+            this.ptvsdSocket!.pipe(this.outputStream);
 
             // Forward the initialized event sent by PTVSD onto VSCode.
             // This is what will cause PTVSD to start the actualy work.
-            this.sendMessage(initialized);
+            this.sendMessage(initialized, this.outputStream);
         });
     }
     private onRequestInitialize = (request: DebugProtocol.InitializeRequest) => {
@@ -363,8 +367,6 @@ class DebugManager implements Disposable {
         this.killPTVSDProcess = true;
         this.loggingEnabled = (request.arguments as LaunchRequestArguments).logToFile === true;
         this.launchRequestDeferred.resolve(request);
-        // NOTE: Beyond this point we're no longer interested in listing to what VS Code has to say.
-        this.inputProtocolParser.disconnect();
     }
     private onEventTerminated = async () => {
         logger.verbose('onEventTerminated');
