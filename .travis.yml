@@ -48,6 +48,7 @@ script:
         bash <(curl -s https://codecov.io/bash);
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" != "2.7" ]; then
+        python3 -m pip install --user --upgrade -r news/requirements.txt;
         python3 news/announce.py --dry-run;
     fi
 after_success:
