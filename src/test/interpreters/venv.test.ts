@@ -49,7 +49,7 @@ suite('Virtual environments', () => {
 
         let paths = pathProvider.getSearchPaths();
         let expected = folders.map(item => path.join(homedir, item));
-        expected.push(path.join('.pyenv', 'versions'));
+        expected.push(path.join(homedir, '.pyenv', 'versions'));
 
         expect(paths).to.deep.equal(expected, 'Global search folder list is incorrect.');
 

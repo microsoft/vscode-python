@@ -42,9 +42,11 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
             folders.push(pyenvRoot);
             folders.push(path.join(pyenvRoot, 'versions'));
         } else {
+            // Check if .pyenv/versions is in the list
             const pyenvVersions = path.join('.pyenv', 'versions');
             if (venvFolders.indexOf('.pyenv') >= 0 && venvFolders.indexOf(pyenvVersions) < 0) {
-                folders.push(pyenvVersions);
+                // if .pyenv is in the list, but .pyenv/versions is not, add it.
+                folders.push(path.join(homedir, pyenvVersions));
             }
         }
         return folders;
