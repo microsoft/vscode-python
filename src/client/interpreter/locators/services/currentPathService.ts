@@ -11,7 +11,7 @@ import { CacheableLocatorService } from './cacheableLocatorService';
 
 @injectable()
 export class CurrentPathService extends CacheableLocatorService {
-    public constructor( @inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
+    public constructor(@inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
         @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService,
         @inject(IProcessService) private processService: IProcessService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
@@ -34,17 +34,17 @@ export class CurrentPathService extends CacheableLocatorService {
             // tslint:disable-next-line:promise-function-async
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))));
     }
-    private async getInterpreterDetails(interpreter: string) {
+    private async getInterpreterDetails(interpreter: string): Promise<PythonInterpreter> {
         return Promise.all([
             this.versionProvider.getVersion(interpreter, path.basename(interpreter)),
-            this.virtualEnvMgr.detect(interpreter)
-        ])
-            .then(([displayName, virtualEnv]) => {
-                displayName += virtualEnv ? ` (${virtualEnv.name})` : '';
+            this.virtualEnvMgr.getEnvironmentName(interpreter)
+        ]).
+            then(([displayName, virtualEnvName]) => {
+                displayName += virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
                 return {
                     displayName,
                     path: interpreter,
-                    type: InterpreterType.Unknown
+                    type: virtualEnvName ? InterpreterType.VirtualEnv : InterpreterType.Unknown
                 };
             });
     }

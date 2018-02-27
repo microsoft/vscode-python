@@ -104,7 +104,7 @@ suite('Interpreters Display', () => {
         statusBar.verify(s => s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!, TypeMoq.Times.once());
         statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(expectedTooltip)!, TypeMoq.Times.once());
     });
-    test('If interpreter is not idenfied then tooltip should point to python Path and text containing the folder name', async () => {
+    test('If interpreter is not identified then tooltip should point to python Path and text containing the folder name', async () => {
         const resource = Uri.file('x');
         const pythonPath = path.join('user', 'development', 'env', 'bin', 'python');
         const workspaceFolder = Uri.file('workspace');
@@ -113,7 +113,7 @@ suite('Interpreters Display', () => {
         interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(undefined));
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
-        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
+        virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
         versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns((_path, defaultDisplayName) => Promise.resolve(defaultDisplayName));
 
         await interpreterDisplay.refresh(resource);
@@ -121,7 +121,7 @@ suite('Interpreters Display', () => {
         statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(pythonPath), TypeMoq.Times.once());
         statusBar.verify(s => s.text = TypeMoq.It.isValue(`${path.basename(pythonPath)} [Environment]`), TypeMoq.Times.once());
     });
-    test('If virtual environment interpreter is not idenfied then text should contain the type of virtual environment', async () => {
+    test('If virtual environment interpreter is not identified then text should contain the type of virtual environment', async () => {
         const resource = Uri.file('x');
         const pythonPath = path.join('user', 'development', 'env', 'bin', 'python');
         const workspaceFolder = Uri.file('workspace');
@@ -131,7 +131,7 @@ suite('Interpreters Display', () => {
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
         // tslint:disable-next-line:no-any
-        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve({ name: 'Mock Name' } as any));
+        virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve('Mock Name'));
         versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns((_path, defaultDisplayName) => Promise.resolve(defaultDisplayName));
 
         await interpreterDisplay.refresh(resource);
@@ -152,7 +152,7 @@ suite('Interpreters Display', () => {
         fileSystem.setup(f => f.fileExistsAsync(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
         const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
         versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(defaultDisplayName));
-        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
+        virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
 
         await interpreterDisplay.refresh(resource);
 
@@ -173,7 +173,7 @@ suite('Interpreters Display', () => {
         const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
         versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(defaultDisplayName));
         // tslint:disable-next-line:no-any
-        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve({ name: 'Mock Env Name' } as any));
+        virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve('Mock Env Name'));
         const expectedText = `${defaultDisplayName} (Mock Env Name)`;
 
         await interpreterDisplay.refresh(resource);
@@ -194,7 +194,7 @@ suite('Interpreters Display', () => {
         const displayName = 'Version from Interperter';
         versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(displayName));
         // tslint:disable-next-line:no-any
-        virtualEnvMgr.setup(v => v.detect(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
+        virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
 
         await interpreterDisplay.refresh(resource);
 

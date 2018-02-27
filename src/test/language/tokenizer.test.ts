@@ -91,14 +91,22 @@ suite('Language.Tokenizer', () => {
             assert.equal(tokens.getItemAt(i).type, TokenType.Comment);
         }
     });
-    test('Period/At to unknown token', async () => {
+    test('Period to operator token', async () => {
         const t = new Tokenizer();
-        const tokens = t.tokenize('.@x');
+        const tokens = t.tokenize('x.y');
         assert.equal(tokens.count, 3);
 
-        assert.equal(tokens.getItemAt(0).type, TokenType.Unknown);
-        assert.equal(tokens.getItemAt(1).type, TokenType.Unknown);
+        assert.equal(tokens.getItemAt(0).type, TokenType.Identifier);
+        assert.equal(tokens.getItemAt(1).type, TokenType.Operator);
         assert.equal(tokens.getItemAt(2).type, TokenType.Identifier);
+    });
+    test('@ to operator token', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('@x');
+        assert.equal(tokens.count, 2);
+
+        assert.equal(tokens.getItemAt(0).type, TokenType.Operator);
+        assert.equal(tokens.getItemAt(1).type, TokenType.Identifier);
     });
     test('Unknown token', async () => {
         const t = new Tokenizer();

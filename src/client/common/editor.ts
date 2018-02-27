@@ -1,5 +1,6 @@
 import * as dmp from 'diff-match-patch';
 import * as fs from 'fs';
+import * as md5 from 'md5';
 import { EOL } from 'os';
 import * as path from 'path';
 import { Position, Range, TextDocument, TextEdit, WorkspaceEdit } from 'vscode';
@@ -220,18 +221,19 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
 export function getTempFileWithDocumentContents(document: TextDocument): Promise<string> {
     return new Promise<string>((resolve, reject) => {
         const ext = path.extname(document.uri.fsPath);
-        // tslint:disable-next-line:no-shadowed-variable no-require-imports
-        const tmp = require('tmp');
-        tmp.file({ postfix: ext }, (err, tmpFilePath, fd) => {
-            if (err) {
-                return reject(err);
+        // Don't create file in temp folder since external utilities
+        // look into configuration files in the workspace and are not able
+        // to find custom rules if file is saved in a random disk location.
+        // This means temp file has to be created in the same folder
+        // as the original one and then removed.
+
+        // tslint:disable-next-line:no-require-imports
+        const fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
+        fs.writeFile(fileName, document.getText(), ex => {
+            if (ex) {
+                reject(`Failed to create a temporary file, ${ex.message}`);
             }
-            fs.writeFile(tmpFilePath, document.getText(), ex => {
-                if (ex) {
-                    return reject(`Failed to create a temporary file, ${ex.message}`);
-                }
-                resolve(tmpFilePath);
-            });
+            resolve(fileName);
         });
     });
 }

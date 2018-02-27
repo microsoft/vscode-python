@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Container } from 'inversify';
-import { Disposable, Memento, OutputChannel, Uri } from 'vscode';
+import { Disposable, Memento, OutputChannel } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
 import { Logger } from '../client/common/logger';
 import { IS_64_BIT, IS_WINDOWS } from '../client/common/platform/constants';
@@ -55,11 +55,6 @@ export class IocContainer {
         const testOutputChannel = new MockOutputChannel('Python Test - UnitTests');
         this.disposables.push(testOutputChannel);
         this.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, testOutputChannel, TEST_OUTPUT_CHANNEL);
-    }
-    public async getPythonVersion(resource?: string | Uri): Promise<string> {
-        const factory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const resourceToUse = (typeof resource === 'string') ? Uri.file(resource as string) : (resource as Uri);
-        return factory.create(resourceToUse).then(pythonProc => pythonProc.getVersion());
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());

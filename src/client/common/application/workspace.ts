@@ -12,7 +12,7 @@ export class WorkspaceService implements IWorkspaceService {
         return vscode.workspace.onDidChangeConfiguration;
     }
     public get rootPath(): string | undefined {
-        return vscode.workspace.rootPath;
+        return Array.isArray(vscode.workspace.workspaceFolders) ? vscode.workspace.workspaceFolders[0].uri.fsPath : undefined;
     }
     public get workspaceFolders(): vscode.WorkspaceFolder[] | undefined {
         return vscode.workspace.workspaceFolders;

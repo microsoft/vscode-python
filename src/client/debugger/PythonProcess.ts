@@ -398,9 +398,11 @@ export class PythonProcess extends EventEmitter implements IPythonProcess {
         proc.stderr.on('data', (error: string) => {
             this.emit("error", error.toString());
         });
+        proc.stderr.on('error', () => { });
         proc.stdout.on('data', (d: string) => {
             this.emit("output", undefined, d);
         });
+        proc.stdout.on('error', () => { });
         proc.on('close', () => {
             this.emit('detach');
         });

@@ -197,7 +197,8 @@ build of the extension onto a cloud storage provider.
 If you are interested in helping us test our development builds or would like
 to stay ahead of the curve, then please feel free to download and install the
 extension from the following
-[location](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix).
+[location](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)
+(if the CI build is passing: [![Build Status](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python)).
 Once you have downloaded the
 [ms-python-insiders.vsix](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)
 file, please follow the instructions on

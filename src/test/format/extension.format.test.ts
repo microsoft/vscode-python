@@ -23,6 +23,7 @@ const yapfFileToAutoFormat = path.join(formatFilesPath, 'yapfFileToAutoFormat.py
 let formattedYapf = '';
 let formattedAutoPep8 = '';
 
+// tslint:disable-next-line:max-func-body-length
 suite('Formatting', () => {
     let ioc: UnitTestIocContainer;
 
@@ -94,7 +95,53 @@ suite('Formatting', () => {
         });
         compareFiles(formattedContents, textEditor.document.getText());
     }
-    test('AutoPep8', async () => await testFormatting(new AutoPep8Formatter(ioc.serviceContainer), formattedAutoPep8, autoPep8FileToFormat, 'autopep8.output'));
 
+    test('AutoPep8', async () => await testFormatting(new AutoPep8Formatter(ioc.serviceContainer), formattedAutoPep8, autoPep8FileToFormat, 'autopep8.output'));
     test('Yapf', async () => await testFormatting(new YapfFormatter(ioc.serviceContainer), formattedYapf, yapfFileToFormat, 'yapf.output'));
+
+    test('Yapf on dirty file', async () => {
+        const sourceDir = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'formatting');
+        const targetDir = path.join(__dirname, '..', 'pythonFiles', 'formatting');
+
+        const originalName = 'formatWhenDirty.py';
+        const resultsName = 'formatWhenDirtyResult.py';
+        const fileToFormat = path.join(targetDir, originalName);
+        const formattedFile = path.join(targetDir, resultsName);
+
+        if (!fs.pathExistsSync(targetDir)) {
+            fs.mkdirpSync(targetDir);
+        }
+        fs.copySync(path.join(sourceDir, originalName), fileToFormat, { overwrite: true });
+        fs.copySync(path.join(sourceDir, resultsName), formattedFile, { overwrite: true });
+
+        const textDocument = await vscode.workspace.openTextDocument(fileToFormat);
+        const textEditor = await vscode.window.showTextDocument(textDocument);
+        await textEditor.edit(builder => {
+            // Make file dirty. Trailing blanks will be removed.
+            builder.insert(new vscode.Position(0, 0), '\n    \n');
+        });
+
+        const dir = path.dirname(fileToFormat);
+        const configFile = path.join(dir, '.style.yapf');
+        try {
+            // Create yapf configuration file
+            const content = '[style]\nbased_on_style = pep8\nindent_width=5\n';
+            fs.writeFileSync(configFile, content);
+
+            const options = { insertSpaces: textEditor.options.insertSpaces! as boolean, tabSize: 1 };
+            const formatter = new YapfFormatter(ioc.serviceContainer);
+            const edits = await formatter.formatDocument(textDocument, options, new CancellationTokenSource().token);
+            await textEditor.edit(editBuilder => {
+                edits.forEach(edit => editBuilder.replace(edit.range, edit.newText));
+            });
+
+            const expected = fs.readFileSync(formattedFile).toString();
+            const actual = textEditor.document.getText();
+            compareFiles(expected, actual);
+        } finally {
+            if (fs.existsSync(configFile)) {
+                fs.unlinkSync(configFile);
+            }
+        }
+    });
 });

@@ -15,8 +15,8 @@ export class JediFactory implements Disposable {
         this.disposables.forEach(disposable => disposable.dispose());
         this.disposables = [];
     }
-    public getJediProxyHandler<T extends ICommandResult>(resource: Uri): JediProxyHandler<T> {
-        const workspaceFolder = workspace.getWorkspaceFolder(resource);
+    public getJediProxyHandler<T extends ICommandResult>(resource?: Uri): JediProxyHandler<T> {
+        const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
         let workspacePath = workspaceFolder ? workspaceFolder.uri.fsPath : undefined;
         if (!workspacePath) {
             if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {

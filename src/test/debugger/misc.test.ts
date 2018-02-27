@@ -1,16 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-suspicious-comment max-func-body-length no-invalid-this
+// tslint:disable:no-suspicious-comment max-func-body-length no-invalid-this no-var-requires no-require-imports no-any
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { ThreadEvent } from 'vscode-debugadapter';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
+import { DebugProtocol } from 'vscode-debugprotocol';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { sleep } from '../common';
-import { IS_CI_SERVER, IS_MULTI_ROOT_TEST } from '../initialize';
+import { IS_CI_SERVER, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
+
+const isProcessRunning = require('is-running') as (number) => boolean;
 
 use(chaiAsPromised);
 
@@ -27,7 +30,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
 
         let debugClient: DebugClient;
         setup(async function () {
-            if (!IS_MULTI_ROOT_TEST) {
+            if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
                 this.skip();
             }
             // Temporary, untill new version of PTVSD is bundled we cannot run tests
@@ -40,19 +43,20 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
         });
         teardown(async () => {
             // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await sleep(1000);
             try {
                 // tslint:disable-next-line:no-empty
                 await debugClient.stop().catch(() => { });
                 // tslint:disable-next-line:no-empty
             } catch (ex) { }
+            await sleep(1000);
         });
 
         function buildLauncArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
             // Temporary, untill new version of PTVSD is bundled we cannot run tests.
             // For now lets run test locally.
-            const pythonPath = debuggerType === 'python' ? 'python' : '/Users/donjayamanne/anaconda3/envs/py36/bin/python';
-            const env = debuggerType === 'python' ? {} : { PYTHONPATH: '/Users/donjayamanne/Desktop/Development/vscode/ptvsd' };
+            const pythonPath = debuggerType === 'python' ? 'python' : '/Users/donjayamanne/Desktop/Development/PythonStuff/IssueRepos/debuggerTests/.envp36/bin/python';
+            const env = debuggerType === 'python' ? {} : { PYTHONPATH: '/Users/donjayamanne/Desktop/Development/PythonStuff/IssueRepos/expPTVSD/ptvsd' };
             return {
                 program: path.join(debugFilesPath, pythonFile),
                 cwd: debugFilesPath,
@@ -130,16 +134,20 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 debugClient.waitForEvent('terminated')
             ]);
         });
-        test('Ensure threadid is int32', async () => {
-            const launchArgs = buildLauncArgs('sample2.py', false);
-            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
-            await debugClient.hitBreakpoint(launchArgs, breakpointLocation);
+        test('Ensure threadid is int32', async function () {
+            if (debuggerType !== 'python') {
+                return this.skip();
+            }
+            const threadIdPromise = debugClient.waitForEvent('thread');
 
-            const threads = await debugClient.threadsRequest();
-            expect(threads).to.be.not.equal(undefined, 'no threads response');
-            expect(threads.body.threads).to.be.lengthOf(1);
+            await Promise.all([
+                debugClient.configurationSequence(),
+                debugClient.launch(buildLauncArgs('simplePrint.py', true)),
+                debugClient.waitForEvent('initialized'),
+                debugClient.waitForEvent('stopped')
+            ]);
 
-            const threadId = threads.body.threads[0].id;
+            const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
             expect(threadId).to.be.lessThan(MAX_SIGNED_INT32 + 1, 'ThreadId is not an integer');
             await Promise.all([
                 debugClient.continueRequest({ threadId }),
@@ -150,6 +158,24 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
             const launchArgs = buildLauncArgs('sample2.py', false);
             const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
             await debugClient.hitBreakpoint(launchArgs, breakpointLocation);
+        });
+        test('Should kill python process when ending debug session', async function () {
+            if (debuggerType === 'python') {
+                return this.skip();
+            }
+            const launchArgs = buildLauncArgs('sample2.py', false);
+            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
+            const processPromise = debugClient.waitForEvent('process') as Promise<DebugProtocol.ProcessEvent>;
+            await debugClient.hitBreakpoint(launchArgs, breakpointLocation);
+            const processInfo = await processPromise;
+            const processId = processInfo.body.systemProcessId;
+            expect(processId).to.be.greaterThan(0, 'Invalid process id');
+
+            await debugClient.stop();
+            await sleep(1000);
+
+            // Confirm the process is dead
+            expect(isProcessRunning(processId)).to.be.equal(false, 'Python (debugee) Process is still alive');
         });
         test('Test conditional breakpoints', async () => {
             const threadIdPromise = debugClient.waitForEvent('thread');
@@ -217,7 +243,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
             expect(varb).to.be.not.equal('undefined', 'variable \'b\' is undefined');
             expect(varb.value).to.be.equal('2');
             expect(varfile).to.be.not.equal('undefined', 'variable \'__file__\' is undefined');
-            expect(varfile.value).to.be.equal(`'${path.join(debugFilesPath, 'sample2.py')}'`);
+            expect(path.normalize(varfile.value)).to.be.equal(`'${path.normalize(path.join(debugFilesPath, 'sample2.py'))}'`);
             expect(vardoc).to.be.not.equal('undefined', 'variable \'__doc__\' is undefined');
         });
         test('Test editing variables', async () => {

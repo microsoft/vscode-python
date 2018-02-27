@@ -22,3 +22,7 @@ export function fixInterpreterDisplayName(item: PythonInterpreter) {
     }
     return item;
 }
+
+export function isMacDefaultPythonPath(p: string) {
+    return p === 'python' || p === '/usr/bin/python';
+}

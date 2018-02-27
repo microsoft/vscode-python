@@ -2,6 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as os from 'os';
 import * as path from 'path';
 import { OutputChannel } from 'vscode';
 import { CancellationToken, TextDocument } from 'vscode';
@@ -76,13 +77,12 @@ export class Pylint extends BaseLinter {
             return true;
         }
 
-        let dir = folder;
-        if (await fs.fileExistsAsync(path.join(dir, pylintrc)) || await fs.fileExistsAsync(path.join(dir, dotPylintrc))) {
+        if (await fs.fileExistsAsync(path.join(folder, pylintrc)) || await fs.fileExistsAsync(path.join(folder, dotPylintrc))) {
             return true;
         }
 
-        let current = dir;
-        let above = path.dirname(dir);
+        let current = folder;
+        let above = path.dirname(folder);
         do {
             if (!await fs.fileExistsAsync(path.join(current, '__init__.py'))) {
                 break;
@@ -94,11 +94,11 @@ export class Pylint extends BaseLinter {
             above = path.dirname(above);
         } while (!fs.arePathsSame(current, above));
 
-        dir = path.resolve('~');
-        if (await fs.fileExistsAsync(path.join(dir, dotPylintrc))) {
+        const home = os.homedir();
+        if (await fs.fileExistsAsync(path.join(home, dotPylintrc))) {
             return true;
         }
-        if (await fs.fileExistsAsync(path.join(dir, '.config', pylintrc))) {
+        if (await fs.fileExistsAsync(path.join(home, '.config', pylintrc))) {
             return true;
         }
 

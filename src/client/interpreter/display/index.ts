@@ -81,9 +81,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         }
         this.statusBar.show();
     }
-    private async getVirtualEnvironmentName(pythonPath: string) {
-        return this.virtualEnvMgr
-            .detect(pythonPath)
-            .then(env => env ? env.name : '');
+    private async getVirtualEnvironmentName(pythonPath: string): Promise<string> {
+        return this.virtualEnvMgr.getEnvironmentName(pythonPath);
     }
 }

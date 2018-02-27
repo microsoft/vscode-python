@@ -25,6 +25,7 @@ export interface IPlatformService {
     isLinux: boolean;
     is64bit: boolean;
     pathVariableName: 'Path' | 'PATH';
+    virtualEnvBinName: 'bin' | 'scripts';
 }
 
 export const IFileSystem = Symbol('IFileSystem');
@@ -41,4 +42,5 @@ export interface IFileSystem {
     appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string; }): void;
     // tslint:disable-next-line:unified-signatures
     appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string; }): void;
+    getRealPathAsync(path: string): Promise<string>;
 }

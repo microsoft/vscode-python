@@ -72,8 +72,10 @@ import { IServiceContainer } from '../../../client/ioc/types';
             expect(debugConfig).to.have.property('type', provider.debugType);
             expect(debugConfig).to.have.property('request', 'launch');
             expect(debugConfig).to.have.property('program', pythonFile);
-            expect(debugConfig).to.have.property('cwd', __dirname);
-            expect(debugConfig).to.have.property('envFile', path.join(__dirname, '.env'));
+            expect(debugConfig).to.have.property('cwd');
+            expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(__dirname.toLowerCase());
+            expect(debugConfig).to.have.property('envFile');
+            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env').toLowerCase());
             expect(debugConfig).to.have.property('env');
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -92,8 +94,10 @@ import { IServiceContainer } from '../../../client/ioc/types';
             expect(debugConfig).to.have.property('type', provider.debugType);
             expect(debugConfig).to.have.property('request', 'launch');
             expect(debugConfig).to.have.property('program', pythonFile);
-            expect(debugConfig).to.have.property('cwd', __dirname);
-            expect(debugConfig).to.have.property('envFile', path.join(__dirname, '.env'));
+            expect(debugConfig).to.have.property('cwd');
+            expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(__dirname.toLowerCase());
+            expect(debugConfig).to.have.property('envFile');
+            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env').toLowerCase());
             expect(debugConfig).to.have.property('env');
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -106,14 +110,17 @@ import { IServiceContainer } from '../../../client/ioc/types';
             setupWorkspaces([]);
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(undefined, {} as DebugConfiguration);
+            const filePath = Uri.file(path.dirname('')).fsPath;
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
             expect(debugConfig).to.have.property('pythonPath', pythonPath);
             expect(debugConfig).to.have.property('type', provider.debugType);
             expect(debugConfig).to.have.property('request', 'launch');
             expect(debugConfig).to.have.property('program', pythonFile);
-            expect(debugConfig).to.have.property('cwd', Uri.file(path.dirname('')).fsPath);
-            expect(debugConfig).to.have.property('envFile', path.join(Uri.file(path.dirname('')).fsPath, '.env'));
+            expect(debugConfig).to.have.property('cwd');
+            expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(filePath.toLowerCase());
+            expect(debugConfig).to.have.property('envFile');
+            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env').toLowerCase());
             expect(debugConfig).to.have.property('env');
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -166,14 +173,17 @@ import { IServiceContainer } from '../../../client/ioc/types';
             setupWorkspaces([defaultWorkspace]);
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(undefined, {} as DebugConfiguration);
+            const filePath = Uri.file(defaultWorkspace).fsPath;
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
             expect(debugConfig).to.have.property('pythonPath', pythonPath);
             expect(debugConfig).to.have.property('type', provider.debugType);
             expect(debugConfig).to.have.property('request', 'launch');
             expect(debugConfig).to.have.property('program', activeFile);
-            expect(debugConfig).to.have.property('cwd', Uri.file(defaultWorkspace).fsPath);
-            expect(debugConfig).to.have.property('envFile', path.join(Uri.file(defaultWorkspace).fsPath, '.env'));
+            expect(debugConfig).to.have.property('cwd');
+            expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(filePath.toLowerCase());
+            expect(debugConfig).to.have.property('envFile');
+            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env').toLowerCase());
             expect(debugConfig).to.have.property('env');
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);

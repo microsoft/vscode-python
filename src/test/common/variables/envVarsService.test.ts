@@ -62,7 +62,7 @@ suite('Environment Variables Service', () => {
         const expectedPythonPath = '/usr/one/three:/usr/one/four';
         const expectedPath = '/usr/x:/usr/y';
         expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
-        expect(Object.keys(vars!)).lengthOf(4, 'Incorrect number of variables');
+        expect(Object.keys(vars!)).lengthOf(5, 'Incorrect number of variables');
         expect(vars).to.have.property('X', '1', 'X value is invalid');
         expect(vars).to.have.property('Y', '2', 'Y value is invalid');
         expect(vars).to.have.property('PYTHONPATH', expectedPythonPath, 'PYTHONPATH value is invalid');

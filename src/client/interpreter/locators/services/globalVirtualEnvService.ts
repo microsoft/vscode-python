@@ -4,14 +4,13 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
+import * as os from 'os';
+import * as path from 'path';
 import { Uri } from 'vscode';
-import { IPlatformService } from '../../../common/platform/types';
+import { IConfigurationService, ICurrentProcess } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { IVirtualEnvironmentsSearchPathProvider } from '../../contracts';
 import { BaseVirtualEnvService } from './baseVirtualEnvService';
-
-// tslint:disable-next-line:no-require-imports no-var-requires
-const untildify = require('untildify');
 
 @injectable()
 export class GlobalVirtualEnvService extends BaseVirtualEnvService {
@@ -24,16 +23,30 @@ export class GlobalVirtualEnvService extends BaseVirtualEnvService {
 
 @injectable()
 export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvironmentsSearchPathProvider {
-    public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    private readonly process: ICurrentProcess;
+    private readonly config: IConfigurationService;
 
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        this.process = serviceContainer.get<ICurrentProcess>(ICurrentProcess);
+        this.config = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
+
     public getSearchPaths(_resource?: Uri): string[] {
-        const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
-        if (platformService.isWindows) {
-            return [];
+        const homedir = os.homedir();
+        const venvFolders = this.config.getSettings(_resource).venvFolders;
+        const folders = venvFolders.map(item => path.join(homedir, item));
+
+        // tslint:disable-next-line:no-string-literal
+        const pyenvRoot = this.process.env['PYENV_ROOT'];
+        if (pyenvRoot) {
+            folders.push(pyenvRoot);
+            folders.push(path.join(pyenvRoot, 'versions'));
         } else {
-            return ['/Envs', '/.virtualenvs', '/.pyenv', '/.pyenv/versions']
-                .map(item => untildify(`~${item}`));
+            const pyenvVersions = path.join('.pyenv', 'versions');
+            if (venvFolders.indexOf('.pyenv') >= 0 && venvFolders.indexOf(pyenvVersions) < 0) {
+                folders.push(pyenvVersions);
+            }
         }
+        return folders;
     }
 }

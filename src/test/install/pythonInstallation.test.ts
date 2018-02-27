@@ -9,7 +9,7 @@ import { IApplicationShell } from '../../client/common/application/types';
 import { PythonInstaller } from '../../client/common/installer/pythonInstallation';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IPythonSettings } from '../../client/common/types';
-import { IInterpreterLocatorService } from '../../client/interpreter/contracts';
+import { IInterpreterLocatorService, IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -35,9 +35,19 @@ class TestContext {
         this.locator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         this.settings = TypeMoq.Mock.ofType<IPythonSettings>();
 
+        const activeInterpreter: PythonInterpreter = {
+            type: InterpreterType.Unknown,
+            path: ''
+        };
+        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        interpreterService
+            .setup(x => x.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => new Promise<PythonInterpreter>((resolve, reject) => resolve(activeInterpreter)));
+
         this.serviceManager.addSingletonInstance<IPlatformService>(IPlatformService, this.platform.object);
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, this.appShell.object);
         this.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, this.locator.object);
+        this.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
         this.pythonInstaller = new PythonInstaller(this.serviceContainer);
 
         this.platform.setup(x => x.isMac).returns(() => isMac);
@@ -71,7 +81,11 @@ suite('Installation', () => {
         let openUrlCalled = false;
         let url;
 
-        c.appShell.setup(x => x.showErrorMessage(TypeMoq.It.isAnyString())).callback(() => showErrorMessageCalled = true);
+        const download = 'Download';
+        c.appShell
+            .setup(x => x.showErrorMessage(TypeMoq.It.isAnyString(), download))
+            .callback(() => showErrorMessageCalled = true)
+            .returns(() => Promise.resolve(download));
         c.appShell.setup(x => x.openUrl(TypeMoq.It.isAnyString())).callback((s: string) => {
             openUrlCalled = true;
             url = s;
@@ -83,6 +97,17 @@ suite('Installation', () => {
         assert.equal(showErrorMessageCalled, true, 'Error message not shown');
         assert.equal(openUrlCalled, true, 'Python download page not opened');
         assert.equal(url, 'https://www.python.org/downloads', 'Python download page is incorrect');
+
+        showErrorMessageCalled = false;
+        openUrlCalled = false;
+        c.appShell
+            .setup(x => x.showErrorMessage(TypeMoq.It.isAnyString(), download))
+            .callback(() => showErrorMessageCalled = true)
+            .returns(() => Promise.resolve(''));
+
+        await c.pythonInstaller.checkPythonInstallation(c.settings.object);
+        assert.equal(showErrorMessageCalled, true, 'Error message not shown');
+        assert.equal(openUrlCalled, false, 'Python download page was opened');
     });
 
     test('Mac: Default Python warning', async () => {

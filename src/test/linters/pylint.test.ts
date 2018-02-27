@@ -3,6 +3,7 @@
 
 import { expect } from 'chai';
 import { Container } from 'inversify';
+import * as os from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, OutputChannel, TextDocument, Uri, WorkspaceFolder } from 'vscode';
@@ -100,7 +101,7 @@ suite('Linting - Pylintrc search', () => {
         expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the module tree.`);
     });
     test('.pylintrc up the ~ folder', async () => {
-        const home = path.resolve('~');
+        const home = os.homedir();
         const rc = path.join(home, dotPylintrc);
         fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
 
@@ -108,7 +109,7 @@ suite('Linting - Pylintrc search', () => {
         expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the ~ folder.`);
     });
     test('pylintrc up the ~/.config folder', async () => {
-        const home = path.resolve('~');
+        const home = os.homedir();
         const rc = path.join(home, '.config', pylintrc);
         fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
 

@@ -9,6 +9,7 @@ export const CURRENT_PATH_SERVICE = 'CurrentPathService';
 export const KNOWN_PATH_SERVICE = 'KnownPathsService';
 export const GLOBAL_VIRTUAL_ENV_SERVICE = 'VirtualEnvService';
 export const WORKSPACE_VIRTUAL_ENV_SERVICE = 'WorkspaceVirtualEnvService';
+export const PIPENV_SERVICE = 'PipEnvService';
 
 export const IInterpreterVersionService = Symbol('IInterpreterVersionService');
 export interface IInterpreterVersionService {
@@ -53,8 +54,7 @@ export interface ICondaService {
 export enum InterpreterType {
     Unknown = 1,
     Conda = 2,
-    VirtualEnv = 4,
-    VEnv = 8
+    VirtualEnv = 4
 }
 
 export type PythonInterpreter = {
@@ -67,6 +67,7 @@ export type PythonInterpreter = {
     envName?: string;
     envPath?: string;
     cachedEntry?: boolean;
+    realPath?: string;
 };
 
 export type WorkspacePythonPath = {

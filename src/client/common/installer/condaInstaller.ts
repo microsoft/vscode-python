@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { ICondaService, IInterpreterService, InterpreterType } from '../../interpreter/contracts';
+import { ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInfo, IConfigurationService } from '../types';
 import { ModuleInstaller } from './moduleInstaller';
@@ -15,7 +15,10 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
     public get displayName() {
         return 'Conda';
     }
-    constructor( @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    public get priority(): number {
+        return 0;
+    }
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }
     /**
@@ -27,16 +30,14 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
      * @returns {Promise<boolean>} Whether conda is supported as a module installer or not.
      */
     public async isSupported(resource?: Uri): Promise<boolean> {
-        if (typeof this.isCondaAvailable === 'boolean') {
+        if (this.isCondaAvailable !== undefined) {
             return this.isCondaAvailable!;
         }
         const condaLocator = this.serviceContainer.get<ICondaService>(ICondaService);
-        const available = await condaLocator.isCondaAvailable();
-
-        if (!available) {
+        this.isCondaAvailable = await condaLocator.isCondaAvailable();
+        if (!this.isCondaAvailable) {
             return false;
         }
-
         // Now we need to check if the current environment is a conda environment or not.
         return this.isCurrentEnvironmentACondaEnvironment(resource);
     }
@@ -48,11 +49,11 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
         const info = await condaService.getCondaEnvironment(pythonPath);
         const args = ['install'];
 
-        if (info.name) {
+        if (info && info.name) {
             // If we have the name of the conda environment, then use that.
             args.push('--name');
             args.push(info.name!);
-        } else if (info.path) {
+        } else if (info && info.path) {
             // Else provide the full path to the environment path.
             args.push('--prefix');
             args.push(info.path);

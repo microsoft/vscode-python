@@ -86,4 +86,11 @@ export class FileSystem implements IFileSystem {
         return fs.appendFileSync(filename, data, optionsOrEncoding);
     }
 
+    public getRealPathAsync(filePath: string): Promise<string> {
+        return new Promise<string>(resolve => {
+            fs.realpath(filePath, (err, realPath) => {
+                resolve(err ? filePath : realPath);
+            });
+        });
+    }
 }

@@ -47,17 +47,14 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             });
     }
     private getProspectiveDirectoriesForLookup(subDirs: string[]) {
-        const isWindows = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
-        const dirToLookFor = isWindows ? 'SCRIPTS' : 'bin';
+        const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
+        const dirToLookFor = platform.virtualEnvBinName;
         return subDirs.map(subDir =>
             this.fileSystem.getSubDirectoriesAsync(subDir)
                 .then(dirs => {
                     const scriptOrBinDirs = dirs.filter(dir => {
                         const folderName = path.basename(dir);
-                        // Perform case insistive search on windows.
-                        // On windows its named eitgher 'Scripts' or 'scripts'.
-                        const folderNameToCheck = isWindows ? folderName.toUpperCase() : folderName;
-                        return folderNameToCheck === dirToLookFor;
+                        return this.fileSystem.arePathsSame(folderName, dirToLookFor);
                     });
                     return scriptOrBinDirs.length === 1 ? scriptOrBinDirs[0] : '';
                 })
@@ -70,14 +67,14 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
     private async getVirtualEnvDetails(interpreter: string): Promise<PythonInterpreter> {
         return Promise.all([
             this.versionProvider.getVersion(interpreter, path.basename(interpreter)),
-            this.virtualEnvMgr.detect(interpreter)
+            this.virtualEnvMgr.getEnvironmentName(interpreter)
         ])
-            .then(([displayName, virtualEnv]) => {
-                const virtualEnvSuffix = virtualEnv ? virtualEnv.name : this.getVirtualEnvironmentRootDirectory(interpreter);
+            .then(([displayName, virtualEnvName]) => {
+                const virtualEnvSuffix = virtualEnvName.length ? virtualEnvName : this.getVirtualEnvironmentRootDirectory(interpreter);
                 return {
                     displayName: `${displayName} (${virtualEnvSuffix})`.trim(),
                     path: interpreter,
-                    type: virtualEnv ? virtualEnv.type : InterpreterType.Unknown
+                    type: virtualEnvName.length > 0 ? InterpreterType.VirtualEnv : InterpreterType.Unknown
                 };
             });
     }

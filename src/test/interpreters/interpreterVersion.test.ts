@@ -6,6 +6,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import '../../client/common/extensions';
 import { IProcessService } from '../../client/common/process/types';
 import { IInterpreterVersionService } from '../../client/interpreter/contracts';
+import { PIP_VERSION_REGEX } from '../../client/interpreter/interpreterVersion';
 import { initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -47,7 +48,7 @@ suite('Interpreters display version', () => {
         const output = result.stdout.splitLines()[0];
         // Take the second part, see below example.
         // pip 9.0.1 from /Users/donjayamanne/anaconda3/lib/python3.6/site-packages (python 3.6).
-        const re = new RegExp('\\d\\.\\d(\\.\\d)+', 'g');
+        const re = new RegExp(PIP_VERSION_REGEX, 'g');
         const matches = re.exec(output);
         assert.isNotNull(matches, 'No matches for version found');
         // tslint:disable-next-line:no-non-null-assertion
