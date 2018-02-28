@@ -61,8 +61,8 @@ export enum LintMessageSeverity {
 
 export const ILintingEngine = Symbol('ILintingEngine');
 export interface ILintingEngine {
-    lintOpenPythonFiles(): void;
-    lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void>;
+    lintOpenPythonFiles(): Promise<vscode.DiagnosticCollection>;
+    lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<vscode.DiagnosticCollection>;
     // tslint:disable-next-line:no-any
     linkJupiterExtension(jupiter: vscode.Extension<any> | undefined): Promise<void>;
 }

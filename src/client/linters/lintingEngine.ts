@@ -51,32 +51,31 @@ export class LintingEngine implements ILintingEngine {
     this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
   }
 
-  public lintOpenPythonFiles(): void {
-    this.documents.textDocuments.forEach(async document => {
+  public async lintOpenPythonFiles(): Promise<vscode.DiagnosticCollection> {
+    this.documents.textDocuments.forEach(document => {
       if (document.languageId === PythonLanguage.language) {
-        await this.lintDocument(document, 'auto');
+        this.lintDocument(document, 'auto').ignoreErrors();
       }
     });
+    return this.diagnosticCollection;
   }
 
-  public async lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void> {
+  public async lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<vscode.DiagnosticCollection> {
     // Check if we need to lint this document
     const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
     const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
     const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
     const settings = this.configurationService.getSettings(document.uri);
     if (document.languageId !== PythonLanguage.language) {
-      return;
+      return this.diagnosticCollection;
     }
     if (!this.linterManager.isLintingEnabled(document.uri)) {
       this.diagnosticCollection.set(document.uri, []);
     }
-    const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => {
-      return new Minimatch(pattern);
-    });
 
+    const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => new Minimatch(pattern));
     if (ignoreMinmatches.some(matcher => matcher.match(document.fileName) || matcher.match(relativeFileName))) {
-      return;
+      return this.diagnosticCollection;
     }
 
     if (this.pendingLintings.has(document.uri.fsPath)) {
@@ -122,17 +121,17 @@ export class LintingEngine implements ILintingEngine {
             (m.code === LinterErrors.pylint.InvalidSyntax ||
               m.code === LinterErrors.prospector.InvalidSyntax ||
               m.code === LinterErrors.flake8.InvalidSyntax)) {
-            return;
+            continue;
           }
           diagnostics.push(this.createDiagnostics(m, document));
         }
-
         // Limit the number of messages to the max value.
         diagnostics = diagnostics.filter((value, index) => index <= settings.linting.maxNumberOfProblems);
       }
     }
     // Set all diagnostics found in this pass, as this method always clears existing diagnostics.
     this.diagnosticCollection.set(document.uri, diagnostics);
+    return this.diagnosticCollection;
   }
 
   // tslint:disable-next-line:no-any

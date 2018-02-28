@@ -79,9 +79,9 @@ export class LinterCommands implements vscode.Disposable {
         }
     }
 
-    public runLinting(): void {
+    public runLinting(): Promise<vscode.DiagnosticCollection> {
         const engine = this.serviceContainer.get<ILintingEngine>(ILintingEngine);
-        engine.lintOpenPythonFiles();
+        return engine.lintOpenPythonFiles();
     }
 
     private get settingsUri(): vscode.Uri | undefined {
