@@ -91,6 +91,7 @@ export interface ICurrentProcess {
     readonly argv: string[];
     readonly stdout: NodeJS.WriteStream;
     readonly stdin: NodeJS.ReadStream;
+    on(event: string | symbol, listener: Function): this;
 }
 
 export interface IPythonSettings {

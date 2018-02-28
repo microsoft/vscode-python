@@ -4,7 +4,8 @@
 // tslint:disable:no-string-literal
 import { workspace } from 'vscode';
 
-export const IS_CI_SERVER = (typeof process.env['TRAVIS'] === 'string' ? process.env['TRAVIS'] : '') === 'true';
+export const IS_APPVEYOR = process.env['APPVEYOR'] === 'true';
+export const IS_CI_SERVER = process.env['TRAVIS'] === 'true' || IS_APPVEYOR;
 export const TEST_TIMEOUT = 25000;
 export const IS_MULTI_ROOT_TEST = isMultitrootTest();
 export const IS_CI_SERVER_TEST_DEBUGGER = process.env['IS_CI_SERVER_TEST_DEBUGGER'] === '1';

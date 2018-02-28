@@ -1,12 +1,16 @@
 # Contributing to the Python extension for Visual Studio Code
 
+[![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python) [![Build status (AppVeyor)](https://ci.appveyor.com/api/projects/status/s0pt8d79gqw222j7?svg=true)](https://ci.appveyor.com/project/DonJayamanne/vscode-python-v3vd6) [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)
+
+
+
 ## Contributing a pull request
 
 ### Prerequisites
 
 1. Node.js (>= 8.9.1, < 9.0.0), and [Yarn](https://yarnpkg.com/lang/en/docs/install/)
 2. Python 2.7 or later (required only for testing the extension and running unit tests)
-3. Windows, OS X or Linux
+3. Windows, macOS, or Linux
 4. Visual Studio Code
 5. Following VS Code extensions:
     * [TSLint](https://marketplace.visualstudio.com/items?itemName=eg2.tslint)
@@ -121,32 +125,13 @@ When an
 [issue is first opened](https://github.com/Microsoft/vscode-python/issues),
 it is triaged to contain at least three types of labels:
 
-1. `awaiting`
+1. `needs`
 1. `feature`
 1. `type`
 
 These labels cover what is blocking the issue from closing, what
 feature(s) of the extension are related to the issue, and what type of
 issue it is, respectively.
-
-While most of the labels are self-explanatory, the `awaiting` labels
-deserve some more explanation. Each label has a number that roughly
-corresponds to what step in the process it is at (so that the labels
-lexicographically sort from earliest stage to latest stage). The
-suffix term for each label then specifies what is currently blocking
-the issue from being closed.
-
-* [`1-decision`](https://github.com/Microsoft/vscode-python/labels/awaiting%201-decision):
-The issue is a feature enhancement request and a decision has not
-been made as to whether we would accept a pull request
-implementing the enhancement
-* [`1-more info`](https://github.com/Microsoft/vscode-python/labels/awaiting%201-more%20info):
-We need more information from the OP (original poster)
-* [`1-verification`](https://github.com/Microsoft/vscode-python/labels/awaiting%201-verification):
-    We need to verify that the issue is reproducible
-* [`2-PR`](https://github.com/Microsoft/vscode-python/labels/awaiting%202-PR):
-  The issue is valid and is now awaiting a fix to be created and
-  merged into the `master` branch
 
 #### Closed issues
 
@@ -192,7 +177,7 @@ critical bug it would be `2018.7.1`.
 
 ## Insiders Build
 
-Starting in 2018, we started publishing the latest development
+We publish the latest development
 build of the extension onto a cloud storage provider.
 If you are interested in helping us test our development builds or would like
 to stay ahead of the curve, then please feel free to download and install the

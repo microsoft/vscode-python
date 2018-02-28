@@ -4,9 +4,9 @@ cache: pip
 matrix:
     include:
         - os: linux
-          python: 2.7
+          python: "2.7"
         - os: linux
-          python: 3.6
+          python: "3.6-dev"
 before_install: |
   if [ $TRAVIS_OS_NAME == "linux" ]; then
     export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
@@ -46,6 +46,10 @@ script:
   - yarn run testMultiWorkspace --silent
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
+    fi
+  - if [ "$TRAVIS_PYTHON_VERSION" != "2.7" ]; then
+        python3 -m pip install --upgrade -r news/requirements.txt;
+        python3 news/announce.py --dry-run;
     fi
 after_success:
   - if [ $AZURE_STORAGE_ACCOUNT ]; then

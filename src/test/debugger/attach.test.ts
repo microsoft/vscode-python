@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable:no-invalid-this max-func-body-length no-empty no-increment-decrement
+
 import { expect } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as getFreePort from 'get-port';
@@ -10,9 +12,8 @@ import { createDeferred } from '../../client/common/helpers';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { AttachRequestArguments } from '../../client/debugger/Common/Contracts';
-import { initialize } from '../initialize';
-
-// tslint:disable:max-func-body-length no-empty
+import { sleep } from '../common';
+import { initialize, IS_APPVEYOR, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 
 const fileToDebug = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger.py');
 const ptvsdPath = path.join(__dirname, '..', '..', '..', 'pythonFiles', 'PythonTools');
@@ -23,14 +24,17 @@ suite('Attach Debugger', () => {
     let procToKill: ChildProcess;
     suiteSetup(initialize);
 
-    setup(async () => {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    setup(async function () {
+        if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
+            this.skip();
+        }
+        await sleep(1000);
         debugClient = new DebugClient('node', DEBUG_ADAPTER, 'python');
         await debugClient.start();
     });
     teardown(async () => {
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await sleep(1000);
         try {
             await debugClient.stop().catch(() => { });
         } catch (ex) { }
@@ -41,6 +45,11 @@ suite('Attach Debugger', () => {
         }
     });
     test('Confirm we are able to attach to a running program', async () => {
+        // Lets skip this test on AppVeyor (very flaky on AppVeyor).
+        if (IS_APPVEYOR) {
+            return;
+        }
+
         const port = await getFreePort({ host: 'localhost', port: 3000 });
         const args: AttachRequestArguments = {
             localRoot: path.dirname(fileToDebug),
