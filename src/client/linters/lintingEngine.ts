@@ -114,7 +114,6 @@ export class LintingEngine implements ILintingEngine {
         break;
       }
 
-      diagnostics = [];
       if (this.isDocumentOpen(document.uri)) {
         // Build the message and suffix the message with the name of the linter used.
         for (const m of msgs) {
@@ -131,9 +130,9 @@ export class LintingEngine implements ILintingEngine {
         // Limit the number of messages to the max value.
         diagnostics = diagnostics.filter((value, index) => index <= settings.linting.maxNumberOfProblems);
       }
-      // Set all diagnostics found in this pass, as this method always clears existing diagnostics.
-      this.diagnosticCollection.set(document.uri, diagnostics);
     }
+    // Set all diagnostics found in this pass, as this method always clears existing diagnostics.
+    this.diagnosticCollection.set(document.uri, diagnostics);
   }
 
   // tslint:disable-next-line:no-any
