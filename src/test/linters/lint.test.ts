@@ -261,8 +261,8 @@ suite('Linting', () => {
         assert.equal(ready, true, 'Timeout expired but linting results are not available still.');
 
         const messages = collection!.get(document.uri);
-        assert.notEqual(messages!.filter(x => x.source === 'pylint').length, 0, 'No pylint message.');
-        assert.notEqual(messages!.filter(x => x.source === 'flake8').length, 0, 'No flake8 message.');
+        assert.notEqual(messages!.filter(x => x.source === 'pylint').length, 0, 'No pylint messages.');
+        assert.notEqual(messages!.filter(x => x.source === 'flake8').length, 0, 'No flake8 messages.');
     });
 
     async function waitForCondition(predicate: () => boolean, interval = 1000, maxAttempts = 10): Promise<boolean> {
