@@ -255,7 +255,11 @@ suite('Linting', () => {
         const document = await vscode.workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         await vscode.window.showTextDocument(document);
 
-        await linterManager.setActiveLintersAsync([Product.pylint, Product.flake8]);
+        await configService.updateSettingAsync('linting.enabled', true, workspaceUri);
+        await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', false, workspaceUri);
+        await configService.updateSettingAsync('linting.pylintEnabled', true, workspaceUri);
+        await configService.updateSettingAsync('linting.flake8Enabled', true, workspaceUri);
+
         const collection = await vscode.commands.executeCommand('python.runLinting') as vscode.DiagnosticCollection;
         assert.notEqual(collection, undefined, 'python.runLinting did not return valid diagnostics collection.');
 
