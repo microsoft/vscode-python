@@ -14,7 +14,6 @@ import { IServiceContainer } from '../ioc/types';
 import { ILinterManager, ILintingEngine } from '../linters/types';
 
 export class LinterProvider implements vscode.Disposable {
-    private diagnosticCollection: vscode.DiagnosticCollection;
     private context: vscode.ExtensionContext;
     private disposables: vscode.Disposable[];
     private configMonitor: ConfigSettingMonitor;
@@ -36,7 +35,6 @@ export class LinterProvider implements vscode.Disposable {
         this.documents = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
 
-        this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.engine.lintOpenPythonFiles()));
 
         this.documents.onDidOpenTextDocument(e => this.onDocumentOpened(e), this.context.subscriptions);
@@ -48,13 +46,9 @@ export class LinterProvider implements vscode.Disposable {
 
         // On workspace reopen we don't get `onDocumentOpened` since it is first opened
         // and then the extension is activated. So schedule linting pass now.
-        if (!isTestExecution) {
-            setTimeout(() => this.engine.lintOpenPythonFiles().ignoreErrors(), 2000);
+        if (!isTestExecution()) {
+            setTimeout(() => this.engine.lintOpenPythonFiles().ignoreErrors(), 1200);
         }
-    }
-
-    public get diagnostics(): vscode.DiagnosticCollection {
-        return this.diagnosticCollection;
     }
 
     public dispose() {
@@ -104,8 +98,8 @@ export class LinterProvider implements vscode.Disposable {
             return;
         }
         // Check if this document is still open as a duplicate editor.
-        if (!this.isDocumentOpen(document.uri) && this.diagnosticCollection.has(document.uri)) {
-            this.diagnosticCollection.set(document.uri, []);
+        if (!this.isDocumentOpen(document.uri)) {
+            this.engine.clearDiagnostics(document);
         }
     }
 }

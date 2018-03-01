@@ -54,6 +54,16 @@ export class LintingEngine implements ILintingEngine {
     this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
   }
 
+  public get diagnostics(): vscode.DiagnosticCollection {
+    return this.diagnosticCollection;
+  }
+
+  public clearDiagnostics(document: vscode.TextDocument): void {
+    if (this.diagnosticCollection.has(document.uri)) {
+      this.diagnosticCollection.delete(document.uri);
+    }
+  }
+
   public async lintOpenPythonFiles(): Promise<vscode.DiagnosticCollection> {
     this.diagnosticCollection.clear();
     const promises = this.documents.textDocuments.map(async document => await this.lintDocument(document, 'auto'));

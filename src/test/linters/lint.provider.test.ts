@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { expect } from 'chai';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
@@ -150,14 +149,11 @@ suite('Linting - Provider', () => {
         document.setup(x => x.isClosed).returns(() => closed);
 
         docManager.setup(x => x.textDocuments).returns(() => closed ? [] : [document.object]);
-
+        // tslint:disable-next-line:prefer-const no-unused-variable
         const provider = new LinterProvider(context.object, serviceContainer);
-        const diags: vscode.Diagnostic[] = [];
-        diags.push(new vscode.Diagnostic(new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 1)), 'error'));
-        provider.diagnostics.set(uri, diags);
 
         emitter.fire(document.object);
-        const d = provider.diagnostics.get(uri);
-        expect(d).to.be.lengthOf(closed ? 0 : 1, 'Diagnostic collection not of expected length after file close.');
+        const timesExpected = closed ? TypeMoq.Times.once() : TypeMoq.Times.never();
+        engine.verify(x => x.clearDiagnostics(TypeMoq.It.isAny()), timesExpected);
     }
 });

@@ -251,9 +251,11 @@ suite('Linting', () => {
         await testEnablingDisablingOfLinter(Product.pylint, true, file);
     });
     test('Multiple linters', async () => {
-        await linterManager.setActiveLintersAsync([Product.pylint, Product.flake8]);
-
+        await closeActiveWindows();
         const document = await vscode.workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
+        await vscode.window.showTextDocument(document);
+
+        await linterManager.setActiveLintersAsync([Product.pylint, Product.flake8]);
         const collection = await vscode.commands.executeCommand('python.runLinting') as vscode.DiagnosticCollection;
         assert.notEqual(collection, undefined, 'python.runLinting did not return valid diagnostics collection.');
 
