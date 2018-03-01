@@ -99,7 +99,7 @@ suite('Linting', () => {
 
     suiteSetup(initialize);
     setup(async () => {
-        initializeDI();
+        await initializeDI();
         await initializeTest();
         await resetSettings();
     });
@@ -112,7 +112,7 @@ suite('Linting', () => {
         await deleteFile(path.join(workspaceUri.fsPath, '.pydocstyle'));
     });
 
-    function initializeDI() {
+    async function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes(false);
         ioc.registerProcessTypes();
@@ -122,6 +122,7 @@ suite('Linting', () => {
 
         linterManager = new LinterManager(ioc.serviceContainer);
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        await linterManager.enableLintingAsync(true);
     }
 
     async function resetSettings() {
@@ -265,7 +266,7 @@ suite('Linting', () => {
         assert.notEqual(messages!.filter(x => x.source === 'flake8').length, 0, 'No flake8 messages.');
     });
 
-    async function waitForCondition(predicate: () => boolean, interval = 1000, maxAttempts = 30): Promise<boolean> {
+    async function waitForCondition(predicate: () => boolean, interval = 1000, maxAttempts = 15): Promise<boolean> {
         return new Promise<boolean>(async (resolve) => {
             let retries = 0;
             while (!predicate() && retries < maxAttempts) {
