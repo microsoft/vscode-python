@@ -95,6 +95,7 @@ export interface ICurrentProcess {
 }
 
 export interface IPythonSettings {
+    readonly usePtvs: boolean;
     readonly pythonPath: string;
     readonly venvPath: string;
     readonly venvFolders: string[];

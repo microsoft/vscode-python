@@ -27,6 +27,7 @@ export const IS_WINDOWS = /^win/.test(process.platform);
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
 
+    public usePtvs: boolean;
     public jediPath: string;
     public jediMemoryLimit: number;
     public envFile: string;
@@ -102,6 +103,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         const workspaceRoot = this.workspaceRoot.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(this.workspaceRoot ? this.workspaceRoot.fsPath : undefined);
         const pythonSettings = vscode.workspace.getConfiguration('python', this.workspaceRoot);
+        this.usePtvs = pythonSettings.get<boolean>('usePtvs');
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
         this.pythonPath = getAbsolutePath(this.pythonPath, workspaceRoot);
