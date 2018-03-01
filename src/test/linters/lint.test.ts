@@ -265,7 +265,7 @@ suite('Linting', () => {
         assert.notEqual(messages!.filter(x => x.source === 'flake8').length, 0, 'No flake8 messages.');
     });
 
-    async function waitForCondition(predicate: () => boolean, interval = 1000, maxAttempts = 10): Promise<boolean> {
+    async function waitForCondition(predicate: () => boolean, interval = 1000, maxAttempts = 30): Promise<boolean> {
         return new Promise<boolean>(async (resolve) => {
             let retries = 0;
             while (!predicate() && retries < maxAttempts) {
