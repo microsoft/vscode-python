@@ -8,7 +8,7 @@ import { Product } from '../../client/common/installer/productInstaller';
 import { IConfigurationService, IOutputChannel } from '../../client/common/types';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
-import { deleteFile, PythonSettingKeys, rootWorkspaceUri, sleep } from '../common';
+import { deleteFile, PythonSettingKeys, rootWorkspaceUri } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { MockOutputChannel } from '../mockClasses';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -252,28 +252,14 @@ suite('Linting', () => {
     });
     test('Multiple linters', async () => {
         await linterManager.setActiveLintersAsync([Product.pylint, Product.flake8]);
-        await linterManager.enableLintingAsync(true);
 
         const document = await vscode.workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         const collection = await vscode.commands.executeCommand('python.runLinting') as vscode.DiagnosticCollection;
         assert.notEqual(collection, undefined, 'python.runLinting did not return valid diagnostics collection.');
-
-        await waitForCondition(() => collection!.has(document.uri) && collection!.get(document.uri)!.length >= 3);
 
         const messages = collection!.get(document.uri);
         assert.notEqual(messages!.length, 0, 'No diagnostic messages.');
         assert.notEqual(messages!.filter(x => x.source === 'pylint').length, 0, 'No pylint messages.');
         assert.notEqual(messages!.filter(x => x.source === 'flake8').length, 0, 'No flake8 messages.');
     });
-
-    async function waitForCondition(predicate: () => boolean, interval = 1000, maxAttempts = 30): Promise<boolean> {
-        return new Promise<boolean>(async (resolve) => {
-            let retries = 0;
-            while (!predicate() && retries < maxAttempts) {
-                await sleep(1000);
-                retries += 1;
-            }
-            resolve(retries < maxAttempts);
-        });
-    }
 });

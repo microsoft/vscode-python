@@ -6,7 +6,7 @@ import { Minimatch } from 'minimatch';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { LinterErrors, PythonLanguage, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { LinterErrors, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -55,18 +55,18 @@ export class LintingEngine implements ILintingEngine {
   }
 
   public async lintOpenPythonFiles(): Promise<vscode.DiagnosticCollection> {
-    this.documents.textDocuments.forEach(document => {
-      if (document.languageId === PythonLanguage.language) {
-        this.lintDocument(document, 'auto').ignoreErrors();
-      }
-    });
+    this.diagnosticCollection.clear();
+    const promises = this.documents.textDocuments.map(async document => await this.lintDocument(document, 'auto'));
+    await Promise.all(promises);
     return this.diagnosticCollection;
   }
 
-  public async lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<vscode.DiagnosticCollection> {
+  public async lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void> {
+    this.diagnosticCollection.set(document.uri, []);
+
     // Check if we need to lint this document
     if (!await this.shouldLintDocument(document)) {
-      return this.diagnosticCollection;
+      return;
     }
 
     if (this.pendingLintings.has(document.uri.fsPath)) {
@@ -123,7 +123,6 @@ export class LintingEngine implements ILintingEngine {
     }
     // Set all diagnostics found in this pass, as this method always clears existing diagnostics.
     this.diagnosticCollection.set(document.uri, diagnostics);
-    return this.diagnosticCollection;
   }
 
   // tslint:disable-next-line:no-any
