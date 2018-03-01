@@ -40,6 +40,7 @@ suite('Linting - LintingEngine', () => {
 
         const configService = TypeMoq.Mock.ofType<IConfigurationService>();
         configService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+        configService.setup(x => x.isTestExecution()).returns(() => true);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configService.object);
 
         const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
@@ -50,6 +51,7 @@ suite('Linting - LintingEngine', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny())).returns(() => lintManager.object);
 
         lintingEngine = new LintingEngine(serviceContainer.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILintingEngine), TypeMoq.It.isAny())).returns(() => lintingEngine);
     });
 
     test('Ensure document.uri is passed into isLintingEnabled', () => {

@@ -6,6 +6,7 @@ import * as vscode from 'vscode';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { IDocumentManager } from '../common/application/types';
 import { ConfigSettingMonitor } from '../common/configSettingMonitor';
+import { isTestExecution } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -47,7 +48,9 @@ export class LinterProvider implements vscode.Disposable {
 
         // On workspace reopen we don't get `onDocumentOpened` since it is first opened
         // and then the extension is activated. So schedule linting pass now.
-        setTimeout(() => this.engine.lintOpenPythonFiles().ignoreErrors(), 2000);
+        if (!isTestExecution) {
+            setTimeout(() => this.engine.lintOpenPythonFiles().ignoreErrors(), 2000);
+        }
     }
 
     public get diagnostics(): vscode.DiagnosticCollection {
