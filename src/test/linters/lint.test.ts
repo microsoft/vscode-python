@@ -99,7 +99,7 @@ suite('Linting', () => {
 
     suiteSetup(initialize);
     setup(async () => {
-        await initializeDI();
+        initializeDI();
         await initializeTest();
         await resetSettings();
     });
@@ -112,7 +112,7 @@ suite('Linting', () => {
         await deleteFile(path.join(workspaceUri.fsPath, '.pydocstyle'));
     });
 
-    async function initializeDI() {
+    function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes(false);
         ioc.registerProcessTypes();
@@ -122,7 +122,6 @@ suite('Linting', () => {
 
         linterManager = new LinterManager(ioc.serviceContainer);
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        await linterManager.enableLintingAsync(true);
     }
 
     async function resetSettings() {
@@ -253,20 +252,21 @@ suite('Linting', () => {
     });
     test('Multiple linters', async () => {
         await linterManager.setActiveLintersAsync([Product.pylint, Product.flake8]);
+        await linterManager.enableLintingAsync(true);
 
         const document = await vscode.workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         const collection = await vscode.commands.executeCommand('python.runLinting') as vscode.DiagnosticCollection;
         assert.notEqual(collection, undefined, 'python.runLinting did not return valid diagnostics collection.');
 
-        const ready = await waitForCondition(() => collection!.has(document.uri) && collection!.get(document.uri)!.length >= 3);
-        assert.equal(ready, true, 'Timeout expired but linting results are not available still.');
+        await waitForCondition(() => collection!.has(document.uri) && collection!.get(document.uri)!.length >= 3);
 
         const messages = collection!.get(document.uri);
+        assert.notEqual(messages!.length, 0, 'No diagnostic messages.');
         assert.notEqual(messages!.filter(x => x.source === 'pylint').length, 0, 'No pylint messages.');
         assert.notEqual(messages!.filter(x => x.source === 'flake8').length, 0, 'No flake8 messages.');
     });
 
-    async function waitForCondition(predicate: () => boolean, interval = 1000, maxAttempts = 15): Promise<boolean> {
+    async function waitForCondition(predicate: () => boolean, interval = 1000, maxAttempts = 30): Promise<boolean> {
         return new Promise<boolean>(async (resolve) => {
             let retries = 0;
             while (!predicate() && retries < maxAttempts) {
