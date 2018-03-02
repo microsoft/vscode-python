@@ -215,7 +215,7 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
 async function activateLanguageServer(context: vscode.ExtensionContext) {
     // The server is implemented in C#
     const commandOptions = { stdio: 'pipe' };
-    const serverModule = path.join(context.extensionPath, 'ptvs', 'Microsoft.PythonTools.VsCode.dll');
+    const serverModule = path.join(context.extensionPath, 'publish', 'Microsoft.PythonTools.VsCode.dll');
 
     // If the extension is launched in debug mode then the debug server options are used
     // Otherwise the run options are used
