@@ -21,7 +21,7 @@ const grep = IS_CI_SERVER && IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : undefined;
 const options: MochaSetupOptions & { retries: number } = {
     ui: 'tdd',
     useColors: true,
-    timeout: 35000,
+    timeout: 25000,
     retries: 3,
     grep
 };

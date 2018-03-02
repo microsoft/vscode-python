@@ -8,6 +8,7 @@ import { Product } from '../../client/common/installer/productInstaller';
 import { IConfigurationService, IOutputChannel } from '../../client/common/types';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
+import { StopWatch } from '../../client/telemetry/stopWatch';
 import { deleteFile, PythonSettingKeys, rootWorkspaceUri } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { MockOutputChannel } from '../mockClasses';
@@ -251,19 +252,41 @@ suite('Linting', () => {
         await testEnablingDisablingOfLinter(Product.pylint, true, file);
     });
     test('Multiple linters', async () => {
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(40000);
+
+        const sw = new StopWatch();
         await closeActiveWindows();
+        // tslint:disable-next-line:no-console
+        console.log(`Closed active windows ${sw.elapsedTime}`);
         const document = await vscode.workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
+        // tslint:disable-next-line:no-console
+        console.log(`Opened document ${sw.elapsedTime}`);
         await vscode.window.showTextDocument(document);
+        // tslint:disable-next-line:no-console
+        console.log(`Shown document ${sw.elapsedTime}`);
 
         await configService.updateSettingAsync('linting.enabled', true, workspaceUri);
+        // tslint:disable-next-line:no-console
+        console.log(`Updated linting.enabled ${sw.elapsedTime}`);
         await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', false, workspaceUri);
+        // tslint:disable-next-line:no-console
+        console.log(`Updated pylintUseMinimalCheckers ${sw.elapsedTime}`);
         await configService.updateSettingAsync('linting.pylintEnabled', true, workspaceUri);
+        // tslint:disable-next-line:no-console
+        console.log(`Updated pylintEnabled ${sw.elapsedTime}`);
         await configService.updateSettingAsync('linting.flake8Enabled', true, workspaceUri);
+        // tslint:disable-next-line:no-console
+        console.log(`Updated flake8Enabled ${sw.elapsedTime}`);
 
         const collection = await vscode.commands.executeCommand('python.runLinting') as vscode.DiagnosticCollection;
+        // tslint:disable-next-line:no-console
+        console.log(`Executed command ${sw.elapsedTime}`);
         assert.notEqual(collection, undefined, 'python.runLinting did not return valid diagnostics collection.');
 
         const messages = collection!.get(document.uri);
+        // tslint:disable-next-line:no-console
+        console.log(`Got messages ${sw.elapsedTime}`);
         assert.notEqual(messages!.length, 0, 'No diagnostic messages.');
         assert.notEqual(messages!.filter(x => x.source === 'pylint').length, 0, 'No pylint messages.');
         assert.notEqual(messages!.filter(x => x.source === 'flake8').length, 0, 'No flake8 messages.');
