@@ -251,7 +251,8 @@ suite('Linting', () => {
         await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await testEnablingDisablingOfLinter(Product.pylint, true, file);
     });
-    test('Multiple linters', async () => {
+    // tslint:disable-next-line:no-function-expression
+    test('Multiple linters', async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(40000);
 
