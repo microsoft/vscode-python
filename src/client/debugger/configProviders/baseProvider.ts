@@ -57,7 +57,7 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
             debugConfiguration.console = 'none';
         }
         // If using a terminal, then never open internal console.
-        if (debugConfiguration.console !== 'none') {
+        if (debugConfiguration.console !== 'none' && !debugConfiguration.internalConsoleOptions) {
             debugConfiguration.internalConsoleOptions = 'neverOpen';
         }
         if (!Array.isArray(debugConfiguration.debugOptions)) {
