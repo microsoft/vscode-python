@@ -21,6 +21,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import '../../client/common/extensions';
 import { noop, sleep } from '../common/core.utils';
 import { createDeferred, Deferred, isNotInstalledError } from '../common/helpers';
+import { IPlatformService } from '../common/platform/types';
 import { ICurrentProcess } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from './Common/Contracts';
@@ -333,6 +334,8 @@ class DebugManager implements Disposable {
 
         // Send PTVSD a bogus launch request, and wait for it to respond.
         // This needs to be done, so PTVSD can keep track of how it was launched (whether it as for attach or launch).
+        const launcRequest = await this.launchRequest;
+        (launcRequest.arguments as any).launcRequest = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
         this.sendMessage(await this.launchRequest, this.ptvsdSocket);
         await new Promise(resolve => debugSoketProtocolParser.once('response_launch', resolve));
 
