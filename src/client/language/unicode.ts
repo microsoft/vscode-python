@@ -2,26 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
-const unicodeLu = require('unicode/category/Lu');
-// tslint:disable-next-line:no-require-imports no-var-requires
-const unicodeLl = require('unicode/category/Ll');
-// tslint:disable-next-line:no-require-imports no-var-requires
-const unicodeLt = require('unicode/category/Lt');
-// tslint:disable-next-line:no-require-imports no-var-requires
-const unicodeLo = require('unicode/category/Lo');
-// tslint:disable-next-line:no-require-imports no-var-requires
-const unicodeLm = require('unicode/category/Lm');
-// tslint:disable-next-line:no-require-imports no-var-requires
-const unicodeNl = require('unicode/category/Nl');
-// tslint:disable-next-line:no-require-imports no-var-requires
-const unicodeMn = require('unicode/category/Mn');
-// tslint:disable-next-line:no-require-imports no-var-requires
-const unicodeMc = require('unicode/category/Mc');
-// tslint:disable-next-line:no-require-imports no-var-requires
-const unicodeNd = require('unicode/category/Nd');
-// tslint:disable-next-line:no-require-imports no-var-requires
-const unicodePc = require('unicode/category/Pc');
+// tslint:disable:no-require-imports no-var-requires
 
 export enum UnicodeCategory {
     Unknown,
@@ -38,6 +19,17 @@ export enum UnicodeCategory {
 }
 
 export function getUnicodeCategory(ch: number): UnicodeCategory {
+    const unicodeLu = require('unicode/category/Lu');
+    const unicodeLl = require('unicode/category/Ll');
+    const unicodeLt = require('unicode/category/Lt');
+    const unicodeLo = require('unicode/category/Lo');
+    const unicodeLm = require('unicode/category/Lm');
+    const unicodeNl = require('unicode/category/Nl');
+    const unicodeMn = require('unicode/category/Mn');
+    const unicodeMc = require('unicode/category/Mc');
+    const unicodeNd = require('unicode/category/Nd');
+    const unicodePc = require('unicode/category/Pc');
+
     if (unicodeLu[ch]) {
         return UnicodeCategory.UppercaseLetter;
     }

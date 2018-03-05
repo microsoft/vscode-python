@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2018.2.0-beta",
+    "version": "2018.2.0-rc",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -929,7 +929,7 @@
                         "label": "Python Experimental: Terminal (integrated)",
                         "description": "%python.snippet.launch.terminal.description%",
                         "body": {
-                            "name": "Integrated Terminal/Console",
+                            "name": "Python Experimental: Terminal (integrated)",
                             "type": "pythonExperimental",
                             "request": "launch",
                             "stopOnEntry": true,
@@ -947,7 +947,7 @@
                         "label": "Python Experimental: Terminal (external)",
                         "description": "%python.snippet.launch.externalTerminal.description%",
                         "body": {
-                            "name": "External Terminal/Console",
+                            "name": "Python Experimental: Terminal (external)",
                             "type": "pythonExperimental",
                             "request": "launch",
                             "stopOnEntry": true,
