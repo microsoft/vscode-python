@@ -123,15 +123,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(serviceContainer.get<IInterpreterSelector>(IInterpreterSelector));
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
-    activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
-    const jediFactory = new JediFactory(context.asAbsolutePath('.'), serviceContainer);
-    context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
-
-    context.subscriptions.push(new ReplProvider(serviceContainer));
-    context.subscriptions.push(new TerminalProvider(serviceContainer));
-    context.subscriptions.push(new LinterCommands(serviceContainer));
 
     if (!pythonSettings.usePtvs) {
+        activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
+        const jediFactory = new JediFactory(context.asAbsolutePath('.'), serviceContainer);
+        context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
+        context.subscriptions.push(new LinterCommands(serviceContainer));
+
         // Enable indentAction
         // tslint:disable-next-line:no-non-null-assertion
         vscode.languages.setLanguageConfiguration(PYTHON.language!, {
@@ -186,6 +184,9 @@ export async function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
         context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
     }
+
+    context.subscriptions.push(new ReplProvider(serviceContainer));
+    context.subscriptions.push(new TerminalProvider(serviceContainer));
 
     serviceContainer.getAll<BaseConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
         context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));
