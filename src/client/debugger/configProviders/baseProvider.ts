@@ -63,8 +63,8 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
-        // Redirect output when not using a terminal
-        if (debugConfiguration.debugOptions.indexOf('RedirectOutput') === -1 && debugConfiguration.console === 'none') {
+        // Always redirect output.
+        if (debugConfiguration.debugOptions.indexOf('RedirectOutput') === -1) {
             debugConfiguration.debugOptions.push('RedirectOutput');
         }
     }
