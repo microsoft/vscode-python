@@ -42,7 +42,7 @@ export class Pylint extends BaseLinter {
             minArgs = [
                 '--disable=all',
                 '--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,unused-wildcard-import,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode',
-                '–-disable-msg=E1601'
+                '–-disable=E1601'
             ];
         }
         const args = [
