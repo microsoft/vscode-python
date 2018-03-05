@@ -31,7 +31,8 @@ suite('Virtual environment manager', () => {
     serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
     const venvManager = new VirtualEnvironmentManager(serviceContainer);
     const name = await venvManager.getEnvironmentName('python');
-    expect(name).to.be.equal('', 'Running venv detection code failed.');
+    const result = name === '' || name === 'venv' || name === 'virtualenv';
+    expect(result).to.be.equal(true, 'Running venv detection code failed.');
   });
 
   async function testSuffix(expectedName: string) {
