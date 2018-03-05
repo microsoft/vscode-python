@@ -156,7 +156,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
         });
         test('Should break at print statement (line 3)', async () => {
             const launchArgs = buildLauncArgs('sample2.py', false);
-            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
+            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 5 };
             await debugClient.hitBreakpoint(launchArgs, breakpointLocation);
         });
         test('Should kill python process when ending debug session', async function () {
@@ -164,7 +164,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 return this.skip();
             }
             const launchArgs = buildLauncArgs('sample2.py', false);
-            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
+            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 5 };
             const processPromise = debugClient.waitForEvent('process') as Promise<DebugProtocol.ProcessEvent>;
             await debugClient.hitBreakpoint(launchArgs, breakpointLocation);
             const processInfo = await processPromise;
@@ -186,7 +186,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 debugClient.waitForEvent('initialized')
             ]);
 
-            const breakpointLocation = { path: path.join(debugFilesPath, 'forever.py'), column: 0, line: 5 };
+            const breakpointLocation = { path: path.join(debugFilesPath, 'forever.py'), column: 1, line: 5 };
             await debugClient.setBreakpointsRequest({
                 lines: [breakpointLocation.line],
                 breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column, condition: 'i == 3' }],
@@ -216,7 +216,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 debugClient.waitForEvent('initialized')
             ]);
 
-            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
+            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 5 };
             await debugClient.setBreakpointsRequest({
                 lines: [breakpointLocation.line],
                 breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
@@ -253,7 +253,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 debugClient.waitForEvent('initialized')
             ]);
 
-            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
+            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 5 };
             await debugClient.setBreakpointsRequest({
                 lines: [breakpointLocation.line],
                 breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
@@ -287,7 +287,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 debugClient.waitForEvent('initialized')
             ]);
 
-            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
+            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 5 };
             await debugClient.setBreakpointsRequest({
                 lines: [breakpointLocation.line],
                 breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
@@ -313,7 +313,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 debugClient.waitForEvent('initialized')
             ]);
 
-            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
+            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 5 };
             await debugClient.setBreakpointsRequest({
                 lines: [breakpointLocation.line],
                 breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
@@ -325,15 +325,15 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
             await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
 
             await debugClient.nextRequest({ threadId });
-            const functionLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 7 };
+            const functionLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 7 };
             await debugClient.assertStoppedLocation('step', functionLocation);
 
             await debugClient.nextRequest({ threadId });
-            const functionInvocationLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 11 };
+            const functionInvocationLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 11 };
             await debugClient.assertStoppedLocation('step', functionInvocationLocation);
 
             await debugClient.nextRequest({ threadId });
-            const printLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 13 };
+            const printLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 13 };
             await debugClient.assertStoppedLocation('step', printLocation);
         });
         test('Test stepin and stepout', async () => {
@@ -345,7 +345,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 debugClient.waitForEvent('initialized')
             ]);
 
-            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 5 };
+            const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 5 };
             await debugClient.setBreakpointsRequest({
                 lines: [breakpointLocation.line],
                 breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
@@ -357,22 +357,22 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
             const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
 
             await debugClient.nextRequest({ threadId });
-            const functionLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 7 };
+            const functionLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 7 };
             await debugClient.assertStoppedLocation('step', functionLocation);
 
             await debugClient.nextRequest({ threadId });
-            const functionInvocationLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 11 };
+            const functionInvocationLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 11 };
             await debugClient.assertStoppedLocation('step', functionInvocationLocation);
 
             await debugClient.stepInRequest({ threadId });
-            const loopPrintLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 8 };
+            const loopPrintLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 8 };
             await debugClient.assertStoppedLocation('step', loopPrintLocation);
 
             await debugClient.stepOutRequest({ threadId });
             await debugClient.assertStoppedLocation('step', functionInvocationLocation);
 
             await debugClient.nextRequest({ threadId });
-            const printLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 0, line: 13 };
+            const printLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 13 };
             await debugClient.assertStoppedLocation('step', printLocation);
         });
         test('Test pausing', async function () {
@@ -415,7 +415,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 debugClient.waitForEvent('initialized')
             ]);
             const pythonFile = path.join(debugFilesPath, 'multiThread.py');
-            const breakpointLocation = { path: pythonFile, column: 0, line: 11 };
+            const breakpointLocation = { path: pythonFile, column: 1, line: 11 };
             await debugClient.setBreakpointsRequest({
                 lines: [breakpointLocation.line],
                 breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
@@ -438,7 +438,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 debugClient.waitForEvent('initialized')
             ]);
             const pythonFile = path.join(debugFilesPath, 'stackFrame.py');
-            const breakpointLocation = { path: pythonFile, column: 0, line: 5 };
+            const breakpointLocation = { path: pythonFile, column: 1, line: 5 };
             await debugClient.setBreakpointsRequest({
                 lines: [breakpointLocation.line],
                 breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],

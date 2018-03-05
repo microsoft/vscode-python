@@ -99,7 +99,7 @@ suite('Attach Debugger', () => {
         await attachedOutputReceived;
 
         // Add a breakpoint.
-        const breakpointLocation = { path: fileToDebug, column: 0, line: 16 };
+        const breakpointLocation = { path: fileToDebug, column: 1, line: 16 };
         await debugClient.setBreakpointsRequest({
             lines: [breakpointLocation.line],
             breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
