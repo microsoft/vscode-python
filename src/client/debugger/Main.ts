@@ -486,7 +486,7 @@ export class PythonDebugger extends LoggingDebugSession {
                         return new StackFrame(frameId, frame.FunctionName,
                             new Source(path.basename(frame.FileName), fileName),
                             this.convertDebuggerLineToClient(frame.LineNo - 1),
-                            0);
+                            1);
                     }
                 });
             });
