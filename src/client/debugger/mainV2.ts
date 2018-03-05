@@ -21,7 +21,6 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import '../../client/common/extensions';
 import { noop, sleep } from '../common/core.utils';
 import { createDeferred, Deferred, isNotInstalledError } from '../common/helpers';
-import { IPlatformService } from '../common/platform/types';
 import { ICurrentProcess } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from './Common/Contracts';
@@ -332,11 +331,9 @@ class DebugManager implements Disposable {
         const debugSoketProtocolParser = this.serviceContainer.get<IProtocolParser>(IProtocolParser);
         debugSoketProtocolParser.connect(this.ptvsdSocket);
 
-        // Send PTVSD a bogus launch request, and wait for it to respond.
-        // This needs to be done, so PTVSD can keep track of how it was launched (whether it as for attach or launch).
-        const launchRequest = await this.launchRequest;
-        (launchRequest.arguments as any).fixFilePathCase = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
-        this.sendMessage(launchRequest, this.ptvsdSocket);
+        // Send PTVSD the launch request (PTVSD needs to do its own initialization using launch arguments).
+        // E.g. redirectOutput & fixFilePathCase found in launch request are used to initialize the debugger.
+        this.sendMessage(await this.launchRequest, this.ptvsdSocket);
         await new Promise(resolve => debugSoketProtocolParser.once('response_launch', resolve));
 
         // The PTVSD process has launched, now send the initialize request to it (required by PTVSD).

@@ -15,28 +15,25 @@ import { DebuggerType, LaunchRequestArguments } from '../Common/Contracts';
 // tslint:disable:no-invalid-template-strings
 
 export type PythonDebugConfiguration = DebugConfiguration & LaunchRequestArguments;
+export type PTVSDDebugConfiguration = PythonDebugConfiguration & { redirectOutput: boolean, fixFilePathCase: boolean };
 
 @injectable()
 export abstract class BaseConfigurationProvider implements DebugConfigurationProvider {
-    constructor(@unmanaged() public debugType: DebuggerType, private serviceContainer: IServiceContainer) { }
+    constructor(@unmanaged() public debugType: DebuggerType, protected serviceContainer: IServiceContainer) { }
     public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
         const config = debugConfiguration as PythonDebugConfiguration;
         const numberOfSettings = Object.keys(config);
-        const provideDefaultConfigSettings = (config.noDebug === true && numberOfSettings.length === 1) || numberOfSettings.length === 0;
         const workspaceFolder = this.getWorkspaceFolder(folder, config);
 
-        if (!provideDefaultConfigSettings) {
-            this.provideDefaults(workspaceFolder, config);
-            return config;
+        if ((config.noDebug === true && numberOfSettings.length === 1) || numberOfSettings.length === 0) {
+            const defaultProgram = this.getProgram(config);
+
+            config.name = 'Launch';
+            config.type = this.debugType;
+            config.request = 'launch';
+            config.program = defaultProgram ? defaultProgram : '';
+            config.env = {};
         }
-
-        const defaultProgram = this.getProgram(config);
-
-        config.name = 'Launch';
-        config.type = this.debugType;
-        config.request = 'launch';
-        config.program = defaultProgram ? defaultProgram : '';
-        config.env = {};
 
         this.provideDefaults(workspaceFolder, config);
         return config;

@@ -5,8 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+import { IPlatformService } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
-import { BaseConfigurationProvider, PythonDebugConfiguration } from './baseProvider';
+import { BaseConfigurationProvider, PTVSDDebugConfiguration, PythonDebugConfiguration } from './baseProvider';
 
 @injectable()
 export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvider {
@@ -19,5 +20,10 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
         if (debugConfiguration.console !== 'externalTerminal' && debugConfiguration.console !== 'integratedTerminal') {
             debugConfiguration.console = 'integratedTerminal';
         }
+
+        // Add PTVSD specific flags.
+        const ptvsdDebugConfigurationFlags = debugConfiguration as PTVSDDebugConfiguration;
+        ptvsdDebugConfigurationFlags.redirectOutput = Array.isArray(debugConfiguration.debugOptions) && debugConfiguration.debugOptions.indexOf('RedirectOutput') >= 0;
+        ptvsdDebugConfigurationFlags.fixFilePathCase = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
     }
 }
