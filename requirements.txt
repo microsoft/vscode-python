@@ -1,6 +1,6 @@
 autopep8==1.2.1
 yapf==0.6.2
-pylint==1.5.4
+pylint==1.8.2
 pep8==1.7.0
 prospector==0.11.7
 flake8==2.6.0
