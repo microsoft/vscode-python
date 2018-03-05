@@ -41,7 +41,8 @@ export class Pylint extends BaseLinter {
             && !await Pylint.hasConfigurationFile(this.fileSystem, this.getWorkspaceRootPath(document), this.platformService)) {
             minArgs = [
                 '--disable=all',
-                '--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,unused-wildcard-import,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode'
+                '--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,unused-wildcard-import,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode',
+                '–-disable=print-statement'
             ];
         }
         const args = [
