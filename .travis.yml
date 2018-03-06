@@ -29,6 +29,7 @@ install:
 script:
   - yarn run clean
   - yarn run vscode:prepublish
+  - yarn run cover:instrument
   - yarn run cover:enable
   - yarn run testDebugger --silent
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
