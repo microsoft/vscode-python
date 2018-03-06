@@ -702,10 +702,7 @@
                         "name": "Python: Flask (0.11.x or later)",
                         "type": "python",
                         "request": "launch",
-                        "stopOnEntry": false,
-                        "pythonPath": "${config:python.pythonPath}",
                         "module": "flask",
-                        "cwd": "${workspaceFolder}",
                         "env": {
                             "FLASK_APP": "${workspaceFolder}/app.py"
                         },
@@ -714,27 +711,6 @@
                             "--no-debugger",
                             "--no-reload"
                         ]
-                    },
-                    {
-                        "name": "Python: Flask (0.10.x or earlier)",
-                        "type": "python",
-                        "request": "launch",
-                        "program": "${workspaceFolder}/run.py"
-                    },
-                    {
-                        "name": "Python: PySpark",
-                        "type": "python",
-                        "request": "launch",
-                        "osx": {
-                            "pythonPath": "${env:SPARK_HOME}/bin/spark-submit"
-                        },
-                        "windows": {
-                            "pythonPath": "${env:SPARK_HOME}/bin/spark-submit.cmd"
-                        },
-                        "linux": {
-                            "pythonPath": "${env:SPARK_HOME}/bin/spark-submit"
-                        },
-                        "program": "${file}"
                     },
                     {
                         "name": "Python: Module",
