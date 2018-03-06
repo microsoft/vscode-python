@@ -377,6 +377,10 @@ const THREAD_TIMEOUT = 10000;
             await debugClient.assertStoppedLocation('step', printLocation);
         });
         test('Test pausing', async function () {
+            if (debuggerType !== 'python') {
+                return this.skip();
+            }
+            
             await Promise.all([
                 debugClient.configurationSequence(),
                 debugClient.launch(buildLauncArgs('forever.py', false)),
