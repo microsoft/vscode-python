@@ -16,7 +16,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         // https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
         // hasattr(sys, 'real_prefix') works for virtualenv while
         // '(hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))' works for venv
-        const code = 'import sys\nif hasattr(sys, "real_prefix"):\n  print("virtualenv")\nif hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix:\n  print("venv")';
+        const code = 'import sys\nif hasattr(sys, "real_prefix"):\n  print("virtualenv")\nelif hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix:\n  print("venv")';
         const output = await this.processService.exec(pythonPath, ['-c', code]);
         if (output.stdout.length > 0) {
             return output.stdout.trim();
