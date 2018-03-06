@@ -764,6 +764,26 @@
                             "runserver",
                             "--noreload=True"
                         ]
+                    },
+                    {
+                        "name": "Python: All debug Options",
+                        "type": "python",
+                        "request": "launch",
+                        "pythonPath": "${config:python.pythonPath}",
+                        "program": "${file}",
+                        "module": "module.name",
+                        "env": {
+                            "VAR1": "1",
+                            "VAR2": "2"
+                        },
+                        "envFile": "${workspaceFolder}/.env",
+                        "args": [
+                            "arg1",
+                            "arg2"
+                        ],
+                        "debugOptions": [
+                            "RedirectOutput"
+                        ]
                     }
                 ]
             },
@@ -891,7 +911,7 @@
                             "envFile": {
                                 "type": "string",
                                 "description": "Absolute path to a file containing environment variable definitions.",
-                                "default": ""
+                                "default": "${workspaceFolder}/.env"
                             },
                             "port": {
                                 "type": "number",
