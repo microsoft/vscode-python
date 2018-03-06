@@ -231,7 +231,7 @@ suite('Linting', () => {
     });
     test('PyLint with config in root', async () => {
         await fs.copy(path.join(pylintConfigPath, '.pylintrc'), path.join(workspaceUri.fsPath, '.pylintrc'));
-        await testLinterMessages(Product.pylint, path.join(pylintConfigPath, 'file.py'), []);
+        await testLinterMessages(Product.pylint, path.join(pylintConfigPath, 'file2.py'), []);
     });
     test('Flake8 with config in root', async () => {
         await testLinterMessages(Product.flake8, path.join(flake8ConfigPath, 'file.py'), filteredFlake8MessagesToBeReturned);
