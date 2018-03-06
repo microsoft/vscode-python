@@ -46,7 +46,8 @@ suite('PythonExecutableService', () => {
         }
         await clearPythonPathInWorkspaceFolder(workspace4Path);
 
-        await (new ConfigurationService()).updateSettingAsync('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
+        const config = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        await config.updateSettingAsync('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         await initialize();
     });
     setup(() => {
