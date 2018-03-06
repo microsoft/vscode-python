@@ -1548,14 +1548,18 @@
                 "id": "pip-requirements",
                 "aliases": [
                     "pip requirements",
-                    "requirements.txt"
+                    "requirements.txt",
+                    "requirements.in"
                 ],
                 "filenames": [
-                    "requirements.txt"
+                    "requirements.txt",
+                    "requirements.in"
                 ],
                 "filenamePatterns": [
                     "*-requirements.txt",
-                    "requirements-*.txt"
+                    "requirements-*.txt",
+                    "*-requirements.in",
+                    "requirements-*.in"
                 ],
                 "configuration": "./languages/pip-requirements.json"
             },
