@@ -5,6 +5,7 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { CancellationTokenSource } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
+import { createDeferred } from '../../../client/common/helpers';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { initialize } from './../../initialize';
@@ -85,17 +86,27 @@ suite('ProcessService', () => {
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { token: cancellationToken.token });
 
+        const def = createDeferred();
+        def.promise.then(done).catch(done);
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(output => {
             const value = output.out.trim();
             if (value === '1') {
                 cancellationToken.cancel();
             } else {
-                done('Output received when we shouldn\'t have.');
+                if (!def.completed) {
+                    def.reject('Output received when we shouldn\'t have.');
+                }
             }
         }, done, () => {
-            const errorMsg = cancellationToken.token.isCancellationRequested ? undefined : 'Program terminated even before cancelling it.';
-            done(errorMsg);
+            if (def.completed) {
+                return;
+            }
+            if (cancellationToken.token.isCancellationRequested) {
+                def.resolve();
+            } else {
+                def.reject('Program terminated even before cancelling it.');
+            }
         });
     });
 

@@ -932,10 +932,9 @@
                             "name": "Python Experimental: Terminal (integrated)",
                             "type": "pythonExperimental",
                             "request": "launch",
-                            "stopOnEntry": true,
                             "pythonPath": "^\"\\${config:python.pythonPath}\"",
                             "program": "^\"\\${file}\"",
-                            "cwd": "",
+                            "cwd": "^\"\\${workspaceFolder}\"",
                             "console": "integratedTerminal",
                             "env": {},
                             "envFile": "^\"\\${workspaceFolder}/.env\"",
@@ -950,15 +949,36 @@
                             "name": "Python Experimental: Terminal (external)",
                             "type": "pythonExperimental",
                             "request": "launch",
-                            "stopOnEntry": true,
                             "pythonPath": "^\"\\${config:python.pythonPath}\"",
                             "program": "^\"\\${file}\"",
-                            "cwd": "",
+                            "cwd": "^\"\\${workspaceFolder}\"",
                             "console": "externalTerminal",
                             "env": {},
                             "envFile": "^\"\\${workspaceFolder}/.env\"",
                             "debugOptions": [],
                             "internalConsoleOptions": "neverOpen"
+                        }
+                    },
+                    {
+                        "label": "Python Experimental: Django",
+                        "description": "%python.snippet.launch.django.description%",
+                        "body": {
+                            "name": "Django",
+                            "type": "python",
+                            "request": "launch",
+                            "pythonPath": "^\"\\${config:python.pythonPath}\"",
+                            "program": "^\"\\${workspaceFolder}/manage.py\"",
+                            "cwd": "^\"\\${workspaceFolder}\"",
+                            "console": "integratedTerminal",
+                            "internalConsoleOptions": "neverOpen",
+                            "args": [
+                                "runserver",
+                                "--noreload",
+                                "--nothreading"
+                            ],
+                            "env": {},
+                            "envFile": "^\"\\${workspaceFolder}/.env\"",
+                            "debugOptions": []
                         }
                     }
                 ],
@@ -1052,10 +1072,28 @@
                         "request": "launch",
                         "pythonPath": "${config:python.pythonPath}",
                         "program": "${file}",
-                        "cwd": "",
+                        "cwd": "${workspaceFolder}",
                         "console": "integratedTerminal",
                         "env": {},
                         "envFile": "${workspaceFolder}/.env",
+                        "debugOptions": [],
+                        "internalConsoleOptions": "neverOpen"
+                    },
+                    {
+                        "name": "Python Experimental: Django",
+                        "type": "pythonExperimental",
+                        "request": "launch",
+                        "pythonPath": "${config:python.pythonPath}",
+                        "program": "${workspaceFolder}/manage.py",
+                        "cwd": "${workspaceFolder}",
+                        "console": "integratedTerminal",
+                        "env": {},
+                        "envFile": "${workspaceFolder}/.env",
+                        "args": [
+                            "runserver",
+                            "--noreload",
+                            "--nothreading"
+                        ],
                         "debugOptions": [],
                         "internalConsoleOptions": "neverOpen"
                     },
@@ -1065,7 +1103,7 @@
                         "request": "launch",
                         "pythonPath": "${config:python.pythonPath}",
                         "program": "${file}",
-                        "cwd": "",
+                        "cwd": "${workspaceFolder}",
                         "console": "externalTerminal",
                         "env": {},
                         "envFile": "${workspaceFolder}/.env",
