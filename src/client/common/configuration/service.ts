@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
 import { PythonSettings } from '../configSettings';
-import { IFileSystem, IPlatformService } from '../platform/types';
+import { IProcessService } from '../process/types';
 import { IConfigurationService, IPythonSettings } from '../types';
 
 @injectable()
@@ -81,23 +80,8 @@ export class ConfigurationService implements IConfigurationService {
     }
 
     private async isDotNetInstalled(): Promise<boolean> {
-        const platform = this.services.get<IPlatformService>(IPlatformService);
-        const fs = this.services.get<IFileSystem>(IFileSystem);
-        const versions = ['2.0.0'];
-        let prefix: string;
-
-        if (platform.isWindows) {
-            const drive = process.env.SystemDrive;
-            prefix = `${drive}\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\`;
-        } else {
-            prefix = '/usr/local/share/dotnet/shared/Microsoft.NETCore.App/';
-        }
-
-        for (const ver of versions) {
-            if (await fs.directoryExistsAsync(path.join(prefix, ver))) {
-                return true;
-            }
-        }
-        return false;
+        const ps = this.services.get<IProcessService>(IProcessService);
+        const result = await ps.exec('dotnet', ['--version']);
+        return result.stdout.trim().startsWith('2.');
     }
 }
