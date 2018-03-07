@@ -1,11 +1,5 @@
 {
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": false,
-    "python.linting.pylintEnabled": true,
-    "python.linting.pylintUseMinimalCheckers": false,
-    "python.linting.pylamaEnabled": false,
-    "python.linting.pydocstyleEnabled": false,
-    "python.linting.mypyEnabled": false,
-    "python.linting.pep8Enabled": false,
-    "python.linting.prospectorEnabled": false
+    "python.linting.enabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.pylintEnabled": false
 }
