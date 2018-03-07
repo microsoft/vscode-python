@@ -154,18 +154,18 @@ class LinterInstaller extends BaseInstaller {
     public async promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const install = 'Install';
-        const disable = 'Disable linting';
+        const disableLinting = 'Disable linting';
 
         const response = await this.appShell
-            .showErrorMessage(`Linter ${productName} is not installed.`, install, disable);
+            .showErrorMessage(`Linter ${productName} is not installed.`, install, `Disable ${productName}`, disableLinting);
         if (response === install) {
             return this.install(product, resource);
         }
         const lm = this.serviceContainer.get<ILinterManager>(ILinterManager);
-        if (response === disable) {
+        if (response === disableLinting) {
             await lm.enableLintingAsync(false);
         } else {
-            lm.disableSessionLinting();
+            await lm.getLinterInfo(product).enableAsync(false);
         }
         return InstallerResponse.Ignore;
     }
