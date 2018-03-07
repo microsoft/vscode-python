@@ -1,13 +1,8 @@
 # Changelog
 
-## 2018.2.0 (07 Mar 2018)
+## 2018.2.0 (08 Mar 2018)
 
 [Release pushed by one week]
-
-Please note that due to the fix required for
-[#722](https://github.com/Microsoft/vscode-python/issues/722), anyone
-using the default linting rules provided by the extension will need
-to upgrade to Pylint 1.8 or newer.
 
 ### Thanks
 
@@ -38,13 +33,17 @@ contributed code in this release:
    ([#847](https://github.com/Microsoft/vscode-python/issues/847))
 1. Support `editor.formatOnType` ([#640](https://github.com/Microsoft/vscode-python/issues/640))
 1. Added a `zh-tw` translation ([#](https://github.com/Microsoft/vscode-python/pull/841))
+1. Prompting to install a linter now allows for disabling that specific
+   linter as well as linters globally
+   ([#971](https://github.com/Microsoft/vscode-python/issues/971))
 
 ### Fixes
 
 1. Work around a bug in Pylint when the default linter rules are
-   enabled and running Python 2.7 which triggered all `print`
-   statements to be flagged as errors (requires upgrading to Pylint
-   1.8) ([#722](https://github.com/Microsoft/vscode-python/issues/722))
+   enabled and running Python 2.7 which triggered `--py3k` checks
+   to be activated, e.g. all `print` statements to be flagged as
+   errors
+   ([#722](https://github.com/Microsoft/vscode-python/issues/722))
 1. Better detection of when a virtual environment is selected, leading
    to the extension accurately leaving off `--user` when installing
    Pylint ([#808](https://github.com/Microsoft/vscode-python/issues/808))
@@ -55,8 +54,6 @@ contributed code in this release:
     [#838](https://github.com/Microsoft/vscode-python/issues/838),
     [#442](https://github.com/Microsoft/vscode-python/issues/442))
 1. Fix `Got to Python object` ([#403](https://github.com/Microsoft/vscode-python/issues/403))
-1. Have flake8 `F` categories be warnings instead of errors
-   ([#815](https://github.com/Microsoft/vscode-python/issues/815))
 1. When reformatting a file, put the temporary file in the workspace
    folder so e.g. yapf detect their configuration files appropriately
    ([#730](https://github.com/Microsoft/vscode-python/issues/730))
@@ -93,6 +90,9 @@ contributed code in this release:
 1. Don't erroneously warn macOS users about using the system install
    of Python when a virtual environment is already selected
    ([#804](https://github.com/Microsoft/vscode-python/issues/804))
+1. Fix activating multiple linters without requiring a reload of
+   VS Code
+   ([#971](https://github.com/Microsoft/vscode-python/issues/971))
 
 ### Code Health
 
