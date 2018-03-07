@@ -165,8 +165,10 @@ class LinterInstaller extends BaseInstaller {
         const lm = this.serviceContainer.get<ILinterManager>(ILinterManager);
         if (response === disableAllLinting) {
             await lm.enableLintingAsync(false);
+            return InstallerResponse.Disabled;
         } else if (response === disableThisLinter) {
             await lm.getLinterInfo(product).enableAsync(false);
+            return InstallerResponse.Disabled;
         }
         return InstallerResponse.Ignore;
     }
