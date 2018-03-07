@@ -377,7 +377,8 @@ const THREAD_TIMEOUT = 10000;
             await debugClient.assertStoppedLocation('step', printLocation);
         });
         test('Test pausing', async function () {
-            if (debuggerType !== 'python') {
+            // TODO: re-enable for new debugger once it's running on CI
+            if (debuggerType !== 'pythonExperimental' || IS_CI_SERVER) {
                 return this.skip();
             }
 
@@ -398,8 +399,7 @@ const THREAD_TIMEOUT = 10000;
             await pausePromise;
         });
         test('Test pausing on exceptions', async function () {
-            // TODO: re-enable for new debugger once it's running on CI
-            if (debuggerType !== 'pythonExperimental' || IS_CI_SERVER) {
+            if (debuggerType !== 'python') {
                 return this.skip();
             }
 
