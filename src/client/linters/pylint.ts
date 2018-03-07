@@ -42,7 +42,11 @@ export class Pylint extends BaseLinter {
             // Disable all checkers up front and then selectively add back in:
             // - All F checkers
             // - Select W checkers
-            // -- All E checkers _manually_ (see https://github.com/Microsoft/vscode-python/issues/722)
+            // - All E checkers _manually_
+            //   (see https://github.com/Microsoft/vscode-python/issues/722 for
+            //    why; see
+            //    https://gist.github.com/brettcannon/eff7f38a60af48d39814cbb2f33b3d1d
+            //    for a script to regenerate the list of E checkers)
             minArgs = [
                 '--disable=all',
                 '--enable=F'
