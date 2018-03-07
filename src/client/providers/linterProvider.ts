@@ -9,6 +9,7 @@ import { ConfigSettingMonitor } from '../common/configSettingMonitor';
 import { isTestExecution } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { ILinterManager, ILintingEngine } from '../linters/types';
 
@@ -16,6 +17,7 @@ export class LinterProvider implements vscode.Disposable {
     private context: vscode.ExtensionContext;
     private disposables: vscode.Disposable[];
     private configMonitor: ConfigSettingMonitor;
+    private interpreterService: IInterpreterService;
     private documents: IDocumentManager;
     private configuration: IConfigurationService;
     private linterManager: ILinterManager;
@@ -29,8 +31,11 @@ export class LinterProvider implements vscode.Disposable {
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
         this.engine = serviceContainer.get<ILintingEngine>(ILintingEngine);
         this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
+        this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.documents = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
+
+        this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.engine.lintOpenPythonFiles()));
 
         this.documents.onDidOpenTextDocument(e => this.onDocumentOpened(e), this.context.subscriptions);
         this.documents.onDidCloseTextDocument(e => this.onDocumentClosed(e), this.context.subscriptions);
