@@ -113,6 +113,16 @@ suite('Linting - Provider', () => {
         engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.never());
     });
 
+    test('Lint on change interpreters', () => {
+        const e = new vscode.EventEmitter<void>();
+        interpreterService.setup(x => x.onDidChangeInterpreter).returns(() => e.event);
+
+        // tslint:disable-next-line:no-unused-variable
+        const provider = new LinterProvider(context.object, serviceContainer);
+        e.fire();
+        engine.verify(x => x.lintOpenPythonFiles(), TypeMoq.Times.once());
+    });
+
     test('Lint on save pylintrc', async () => {
         docManager.setup(x => x.onDidSaveTextDocument).returns(() => emitter.event);
         document.setup(x => x.uri).returns(() => vscode.Uri.file('.pylintrc'));
