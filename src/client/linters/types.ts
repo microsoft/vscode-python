@@ -38,7 +38,6 @@ export interface ILinterManager {
     getActiveLinters(resource?: vscode.Uri): ILinterInfo[];
     isLintingEnabled(resource?: vscode.Uri): boolean;
     enableLintingAsync(enable: boolean, resource?: vscode.Uri): Promise<void>;
-    disableSessionLinting(): void;
     setActiveLintersAsync(products: Product[], resource?: vscode.Uri): Promise<void>;
     createLinter(product: Product, outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer, resource?: vscode.Uri): ILinter;
 }

@@ -218,8 +218,11 @@ export class JediProxy implements vscode.Disposable {
             return;
         }
         pidusage.stat(this.proc.pid, async (err, result) => {
+            if (err) {
+                return console.error('Python Extension: (pidusage)', err);
+            }
             const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 1024), 8192);
-            if (result.memory > limit * 1024 * 1024) {
+            if (result && result.memory > limit * 1024 * 1024) {
                 this.logger.logWarning(`IntelliSense process memory consumption exceeded limit of ${limit} MB and process will be restarted.\nThe limit is controlled by the 'python.jediMemoryLimit' setting.`);
                 await this.restartLanguageServer();
             }

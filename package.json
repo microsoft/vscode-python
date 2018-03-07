@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2018.2.0-beta",
+    "version": "2018.2.0-rc",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -929,13 +929,12 @@
                         "label": "Python Experimental: Terminal (integrated)",
                         "description": "%python.snippet.launch.terminal.description%",
                         "body": {
-                            "name": "Integrated Terminal/Console",
+                            "name": "Python Experimental: Terminal (integrated)",
                             "type": "pythonExperimental",
                             "request": "launch",
-                            "stopOnEntry": true,
                             "pythonPath": "^\"\\${config:python.pythonPath}\"",
                             "program": "^\"\\${file}\"",
-                            "cwd": "",
+                            "cwd": "^\"\\${workspaceFolder}\"",
                             "console": "integratedTerminal",
                             "env": {},
                             "envFile": "^\"\\${workspaceFolder}/.env\"",
@@ -947,18 +946,39 @@
                         "label": "Python Experimental: Terminal (external)",
                         "description": "%python.snippet.launch.externalTerminal.description%",
                         "body": {
-                            "name": "External Terminal/Console",
+                            "name": "Python Experimental: Terminal (external)",
                             "type": "pythonExperimental",
                             "request": "launch",
-                            "stopOnEntry": true,
                             "pythonPath": "^\"\\${config:python.pythonPath}\"",
                             "program": "^\"\\${file}\"",
-                            "cwd": "",
+                            "cwd": "^\"\\${workspaceFolder}\"",
                             "console": "externalTerminal",
                             "env": {},
                             "envFile": "^\"\\${workspaceFolder}/.env\"",
                             "debugOptions": [],
                             "internalConsoleOptions": "neverOpen"
+                        }
+                    },
+                    {
+                        "label": "Python Experimental: Django",
+                        "description": "%python.snippet.launch.django.description%",
+                        "body": {
+                            "name": "Django",
+                            "type": "python",
+                            "request": "launch",
+                            "pythonPath": "^\"\\${config:python.pythonPath}\"",
+                            "program": "^\"\\${workspaceFolder}/manage.py\"",
+                            "cwd": "^\"\\${workspaceFolder}\"",
+                            "console": "integratedTerminal",
+                            "internalConsoleOptions": "neverOpen",
+                            "args": [
+                                "runserver",
+                                "--noreload",
+                                "--nothreading"
+                            ],
+                            "env": {},
+                            "envFile": "^\"\\${workspaceFolder}/.env\"",
+                            "debugOptions": []
                         }
                     }
                 ],
@@ -1052,10 +1072,28 @@
                         "request": "launch",
                         "pythonPath": "${config:python.pythonPath}",
                         "program": "${file}",
-                        "cwd": "",
+                        "cwd": "${workspaceFolder}",
                         "console": "integratedTerminal",
                         "env": {},
                         "envFile": "${workspaceFolder}/.env",
+                        "debugOptions": [],
+                        "internalConsoleOptions": "neverOpen"
+                    },
+                    {
+                        "name": "Python Experimental: Django",
+                        "type": "pythonExperimental",
+                        "request": "launch",
+                        "pythonPath": "${config:python.pythonPath}",
+                        "program": "${workspaceFolder}/manage.py",
+                        "cwd": "${workspaceFolder}",
+                        "console": "integratedTerminal",
+                        "env": {},
+                        "envFile": "${workspaceFolder}/.env",
+                        "args": [
+                            "runserver",
+                            "--noreload",
+                            "--nothreading"
+                        ],
                         "debugOptions": [],
                         "internalConsoleOptions": "neverOpen"
                     },
@@ -1065,7 +1103,7 @@
                         "request": "launch",
                         "pythonPath": "${config:python.pythonPath}",
                         "program": "${file}",
-                        "cwd": "",
+                        "cwd": "${workspaceFolder}",
                         "console": "externalTerminal",
                         "env": {},
                         "envFile": "${workspaceFolder}/.env",

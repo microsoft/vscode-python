@@ -67,7 +67,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
             await Promise.all([
                 this.fileSystem.fileExistsAsync(pythonPath),
                 this.versionProvider.getVersion(pythonPath, defaultDisplayName),
-                this.getVirtualEnvironmentName(pythonPath)
+                this.getVirtualEnvironmentName(pythonPath).catch(() => '')
             ])
                 .then(([interpreterExists, displayName, virtualEnvName]) => {
                     const dislayNameSuffix = virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';

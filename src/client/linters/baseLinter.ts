@@ -70,7 +70,7 @@ export abstract class BaseLinter implements ILinter {
     protected getWorkspaceRootPath(document: vscode.TextDocument): string {
         const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
         const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
-        return typeof workspaceRootPath === 'string' ? workspaceRootPath : __dirname;
+        return typeof workspaceRootPath === 'string' ? workspaceRootPath : path.dirname(document.uri.fsPath);
     }
     protected get logger(): ILogger {
         return this.serviceContainer.get<ILogger>(ILogger);

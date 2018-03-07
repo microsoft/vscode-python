@@ -3,7 +3,6 @@ import * as path from 'path';
 import { ConfigurationTarget, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
-import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../common/types';
 import * as utils from '../common/utils';
@@ -21,13 +20,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly locator: IInterpreterLocatorService;
     private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager;
     private readonly helper: IInterpreterHelper;
-    private readonly fs: IFileSystem;
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
-        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.pythonPathUpdaterService = this.serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager);
     }
 
@@ -134,19 +131,12 @@ export class InterpreterService implements Disposable, IInterpreterService {
             return false;
         }
         if (activeWorkspace.configTarget === ConfigurationTarget.Workspace) {
-            return !await this.isPythonPathDefined(pythonPathInConfig!.workspaceValue);
+            return pythonPathInConfig!.workspaceValue === undefined || pythonPathInConfig!.workspaceValue === 'python';
         }
         if (activeWorkspace.configTarget === ConfigurationTarget.WorkspaceFolder) {
-            return !await this.isPythonPathDefined(pythonPathInConfig!.workspaceFolderValue);
+            return pythonPathInConfig!.workspaceFolderValue === undefined || pythonPathInConfig!.workspaceFolderValue === 'python';
         }
         return false;
-    }
-
-    private async isPythonPathDefined(pythonPath: string | undefined): Promise<boolean> {
-        if (pythonPath === undefined || pythonPath === 'python') {
-            return false;
-        }
-        return await this.fs.directoryExistsAsync(pythonPath);
     }
 
     private onConfigChanged = () => {

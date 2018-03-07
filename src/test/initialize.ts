@@ -43,13 +43,6 @@ export async function initializeTest(): Promise<any> {
     PythonSettings.dispose();
 }
 
-export async function wait(timeoutMilliseconds: number) {
-    return new Promise(resolve => {
-        // tslint:disable-next-line:no-string-based-set-timeout
-        setTimeout(resolve, timeoutMilliseconds);
-    });
-}
-
 export async function closeActiveWindows(): Promise<void> {
     return new Promise<void>((resolve, reject) => vscode.commands.executeCommand('workbench.action.closeAllEditors')
         // tslint:disable-next-line:no-unnecessary-callback-wrapper
