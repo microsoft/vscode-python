@@ -380,7 +380,7 @@ const THREAD_TIMEOUT = 10000;
             if (debuggerType !== 'python') {
                 return this.skip();
             }
-            
+
             await Promise.all([
                 debugClient.configurationSequence(),
                 debugClient.launch(buildLauncArgs('forever.py', false)),
@@ -398,9 +398,11 @@ const THREAD_TIMEOUT = 10000;
             await pausePromise;
         });
         test('Test pausing on exceptions', async function () {
-            if (debuggerType !== 'python') {
+            // TODO: re-enable for new debugger once it's running on CI
+            if (debuggerType !== 'pythonExperimental' || IS_CI_SERVER) {
                 return this.skip();
             }
+
             await Promise.all([
                 debugClient.configurationSequence(),
                 debugClient.launch(buildLauncArgs('sample3WithEx.py', false)),
