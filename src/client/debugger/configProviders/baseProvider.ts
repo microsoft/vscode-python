@@ -24,30 +24,50 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
         const numberOfSettings = Object.keys(config);
         const provideDefaultConfigSettings = (config.noDebug === true && numberOfSettings.length === 1) || numberOfSettings.length === 0;
         const workspaceFolder = this.getWorkspaceFolder(folder, config);
+
         if (!provideDefaultConfigSettings) {
-            this.resolveAndUpdatePythonPath(workspaceFolder, config);
+            this.provideDefaults(workspaceFolder, config);
             return config;
         }
 
-        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const pythonPath = configService.getSettings(workspaceFolder).pythonPath;
         const defaultProgram = this.getProgram(config);
-        const envFile = workspaceFolder ? path.join(workspaceFolder.fsPath, '.env') : '';
 
         config.name = 'Launch';
         config.type = this.debugType;
         config.request = 'launch';
-        config.pythonPath = pythonPath;
         config.program = defaultProgram ? defaultProgram : '';
-        config.cwd = workspaceFolder ? workspaceFolder.fsPath : undefined;
-        config.envFile = envFile;
         config.env = {};
-        config.debugOptions = [];
 
-        this.provideDefaults(config);
+        this.provideDefaults(workspaceFolder, config);
         return config;
     }
-    protected abstract provideDefaults(debugConfiguration: PythonDebugConfiguration): void;
+    protected provideDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonDebugConfiguration): void {
+        this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
+        if (typeof debugConfiguration.cwd !== 'string' && workspaceFolder) {
+            debugConfiguration.cwd = workspaceFolder.fsPath;
+        }
+        if (typeof debugConfiguration.envFile !== 'string' && workspaceFolder) {
+            const envFile = workspaceFolder ? path.join(workspaceFolder.fsPath, '.env') : '';
+            debugConfiguration.envFile = envFile;
+        }
+        if (typeof debugConfiguration.stopOnEntry !== 'boolean') {
+            debugConfiguration.stopOnEntry = false;
+        }
+        if (!debugConfiguration.console) {
+            debugConfiguration.console = 'none';
+        }
+        // If using a terminal, then never open internal console.
+        if (debugConfiguration.console !== 'none') {
+            debugConfiguration.internalConsoleOptions = 'neverOpen';
+        }
+        if (!Array.isArray(debugConfiguration.debugOptions)) {
+            debugConfiguration.debugOptions = [];
+        }
+        // Redirect output when not using a terminal
+        if (debugConfiguration.debugOptions.indexOf('RedirectOutput') === -1 && debugConfiguration.console === 'none') {
+            debugConfiguration.debugOptions.push('RedirectOutput');
+        }
+    }
     private getWorkspaceFolder(folder: WorkspaceFolder | undefined, config: PythonDebugConfiguration): Uri | undefined {
         if (folder) {
             return folder.uri;
@@ -75,11 +95,13 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
         }
     }
     private resolveAndUpdatePythonPath(workspaceFolder: Uri | undefined, debugConfiguration: PythonDebugConfiguration): void {
-        if (!debugConfiguration || debugConfiguration.pythonPath !== '${config:python.pythonPath}') {
+        if (!debugConfiguration) {
             return;
         }
-        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const pythonPath = configService.getSettings(workspaceFolder).pythonPath;
-        debugConfiguration.pythonPath = pythonPath;
+        if (debugConfiguration.pythonPath === '${config:python.pythonPath}' || !debugConfiguration.pythonPath) {
+            const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+            const pythonPath = configService.getSettings(workspaceFolder).pythonPath;
+            debugConfiguration.pythonPath = pythonPath;
+        }
     }
 }
