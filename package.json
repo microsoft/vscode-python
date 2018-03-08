@@ -913,50 +913,26 @@
                         "type": "pythonExperimental",
                         "request": "launch",
                         "program": "${file}",
-<<<<<<< HEAD
-                        "cwd": "${workspaceFolder}",
-                        "console": "integratedTerminal",
-                        "env": {},
-                        "envFile": "${workspaceFolder}/.env",
-                        "debugOptions": [],
-                        "internalConsoleOptions": "neverOpen"
+                        "console": "integratedTerminal"
                     },
                     {
                         "name": "Python Experimental: Django",
                         "type": "pythonExperimental",
                         "request": "launch",
-                        "pythonPath": "${config:python.pythonPath}",
                         "program": "${workspaceFolder}/manage.py",
-                        "cwd": "${workspaceFolder}",
                         "console": "integratedTerminal",
-                        "env": {},
-                        "envFile": "${workspaceFolder}/.env",
                         "args": [
                             "runserver",
                             "--noreload",
                             "--nothreading"
-                        ],
-                        "debugOptions": [],
-                        "internalConsoleOptions": "neverOpen"
-=======
-                        "console": "integratedTerminal"
->>>>>>> :sparkles: simplify debug config
+                        ]
                     },
                     {
                         "name": "Python Experimental: Current File (External Terminal)",
                         "type": "pythonExperimental",
                         "request": "launch",
                         "program": "${file}",
-<<<<<<< HEAD
-                        "cwd": "${workspaceFolder}",
-                        "console": "externalTerminal",
-                        "env": {},
-                        "envFile": "${workspaceFolder}/.env",
-                        "debugOptions": [],
-                        "internalConsoleOptions": "neverOpen"
-=======
                         "console": "externalTerminal"
->>>>>>> :sparkles: simplify debug config
                     }
                 ]
             }
