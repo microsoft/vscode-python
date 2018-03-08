@@ -60,10 +60,10 @@ export async function activate(context: vscode.ExtensionContext) {
     const pythonSettings = configuration.getSettings();
 
     const activator: IExtensionActivator = pythonSettings.usePtvs
-        ? new PtvsExtensionActivator()
-        : new ClassicExtensionActivator();
+        ? new PtvsExtensionActivator(serviceManager, pythonSettings)
+        : new ClassicExtensionActivator(serviceManager, pythonSettings);
 
-    await activator.activate(context, serviceManager, pythonSettings);
+    await activator.activate(context);
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
     // tslint:disable-next-line:no-floating-promises

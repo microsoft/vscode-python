@@ -6,34 +6,43 @@ import * as vscode from 'vscode';
 import * as languageClient from 'vscode-languageclient';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
-import { IInterpreterService } from '../interpreter/contracts';
+import { IInterpreterService, IInterpreterVersionService, PythonInterpreter } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { IExtensionActivator } from './types';
 
+const PYTHON = 'python';
+const ptvsFolder = 'ptvs';
+const ptvsBinaryName = 'Microsoft.PythonTools.VsCode.dll';
+const dotNetCommand = 'dotnet';
+const languageClientName = 'Python Tools';
+const defaultPythonVersion = '2.7';
+
 export class PtvsExtensionActivator implements IExtensionActivator {
-  private PYTHON = 'python';
   private languageClent: languageClient.LanguageClient;
 
-  public async activate(context: vscode.ExtensionContext, services: IServiceContainer, pythonSettings: IPythonSettings): Promise<boolean> {
-    const configuration = services.get<IConfigurationService>(IConfigurationService);
+  constructor(private services: IServiceContainer, private pythonSettings: IPythonSettings) {
+  }
+
+  public async activate(context: vscode.ExtensionContext): Promise<boolean> {
+    const configuration = this.services.get<IConfigurationService>(IConfigurationService);
     if (! await configuration.checkDependencies()) {
       throw new Error('.NET Runtime is not installed.');
     }
 
     // The server is implemented in C#
     const commandOptions = { stdio: 'pipe' };
-    const serverModule = path.join(context.extensionPath, 'ptvs', 'Microsoft.PythonTools.VsCode.dll');
+    const serverModule = path.join(context.extensionPath, ptvsFolder, ptvsBinaryName);
 
     // If the extension is launched in debug mode then the debug server options are used
     // Otherwise the run options are used
     const serverOptions: languageClient.ServerOptions = {
-      run: { command: 'dotnet', args: [serverModule], options: commandOptions },
-      debug: { command: 'dotnet', args: [serverModule, '--debug'], options: commandOptions }
+      run: { command: dotNetCommand, args: [serverModule], options: commandOptions },
+      debug: { command: dotNetCommand, args: [serverModule, '--debug'], options: commandOptions }
     };
 
-    const clientOptions = await this.getPtvsOptions(services, pythonSettings);
+    const clientOptions = await this.getPtvsOptions();
     // Create the language client and start the client.
-    this.languageClent = new languageClient.LanguageClient(this.PYTHON, 'Python Tools', serverOptions, clientOptions);
+    this.languageClent = new languageClient.LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
     context.subscriptions.push(this.languageClent.start());
 
     await this.languageClent.onReady();
@@ -46,39 +55,33 @@ export class PtvsExtensionActivator implements IExtensionActivator {
     }
   }
 
-  private async getPtvsOptions(services: IServiceContainer, pythonSettings: IPythonSettings): Promise<languageClient.LanguageClientOptions> {
+  private async getPtvsOptions(): Promise<languageClient.LanguageClientOptions> {
     // tslint:disable-next-line:no-any
     const properties = new Map<string, any>();
     // tslint:disable-next-line:no-string-literal
-    properties['InterpreterPath'] = pythonSettings.pythonPath;
+    properties['InterpreterPath'] = this.pythonSettings.pythonPath;
     // tslint:disable-next-line:no-string-literal
     properties['UseDefaultDatabase'] = true;
 
-    const interpreserService = services.get<IInterpreterService>(IInterpreterService);
+    const interpreserService = this.services.get<IInterpreterService>(IInterpreterService);
     const interpreter = await interpreserService.getActiveInterpreter();
     if (interpreter) {
       if (interpreter.displayName) {
         // tslint:disable-next-line:no-string-literal
         properties['Description'] = interpreter.displayName;
       }
-
-      if (interpreter.version) {
-        // tslint:disable-next-line:no-string-literal
-        properties['Version'] = interpreter.version;
-      } else if (interpreter.displayName) {
-        // tslint:disable-next-line:no-string-literal
-        properties['Version'] = interpreter.displayName.indexOf('3.') > 0 ? '3.6' : '2.7';
-      }
+      // tslint:disable-next-line:no-string-literal
+      properties['Version'] = this.getInterpreterVersion(interpreter);
     }
 
-    const selector: string[] = [this.PYTHON];
-    const outputChannel = services.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+    const selector: string[] = [PYTHON];
+    const outputChannel = this.services.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     // Options to control the language client
     return {
       // Register the server for Python documents
       documentSelector: selector,
       synchronize: {
-        configurationSection: this.PYTHON
+        configurationSection: PYTHON
       },
       outputChannel: outputChannel,
       initializationOptions: {
@@ -87,5 +90,13 @@ export class PtvsExtensionActivator implements IExtensionActivator {
         }
       }
     };
+  }
+
+  private async getInterpreterVersion(interpreter: PythonInterpreter): Promise<string> {
+    if (interpreter.version) {
+      return interpreter.version;
+    }
+    const versionService = this.services.get<IInterpreterVersionService>(IInterpreterVersionService);
+    return await versionService.getVersion(this.pythonSettings.pythonPath, defaultPythonVersion);
   }
 }
