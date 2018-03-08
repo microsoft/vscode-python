@@ -199,8 +199,7 @@ def main():
     global _channel
 
     parser = OptionParser(prog = 'visualstudio_py_testlauncher', usage = 'Usage: %prog [<option>] <test names>... ')
-    parser.add_option('-s', '--secret', metavar='<secret>', help='restrict server to only allow clients that specify <secret> when connecting')
-    parser.add_option('-p', '--port', type='int', metavar='<port>', help='listen for debugger connections on <port>')
+    parser.add_option('--debug', action='store_true', help='Whether debugging the unit tests')
     parser.add_option('-x', '--mixed-mode', action='store_true', help='wait for mixed-mode debugger to attach')
     parser.add_option('-t', '--test', type='str', dest='tests', action='append', help='specifies a test to run')
     parser.add_option('--testFile', type='str', help='Fully qualitified path to file name')
@@ -214,9 +213,8 @@ def main():
     parser.add_option('--uc', '--catch', type='str', help='Catch control-C and display results')
     (opts, _) = parser.parse_args()
 
-    if opts.secret and opts.port:
+    if opts.debug:
         from ptvsd.visualstudio_py_debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
-        from ptvsd.attach_server import DEFAULT_PORT, enable_attach, wait_for_attach
     
     sys.path[0] = os.getcwd()
     if opts.result_port:
@@ -231,15 +229,11 @@ def main():
         sys.stdout = _TestOutput(sys.stdout, is_stdout = True)
         sys.stderr = _TestOutput(sys.stderr, is_stdout = False)
 
-    if opts.secret and opts.port:
+    if opts.debug:
         DONT_DEBUG.append(os.path.normcase(__file__))
         DEBUG_ENTRYPOINTS.add(get_code(main))
 
-        enable_attach(opts.secret, ('127.0.0.1', getattr(opts, 'port', DEFAULT_PORT)), redirect_output = True)
-        sys.stdout.flush()
-        print('READY')
-        sys.stdout.flush()
-        wait_for_attach()
+        pass
     elif opts.mixed_mode:
         # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(), 
         # so we have to use Win32 API in a loop to do the same thing.

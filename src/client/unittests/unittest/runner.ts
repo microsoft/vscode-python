@@ -93,13 +93,10 @@ export async function runTest(serviceContainer: IServiceContainer, testManager: 
             }
             if (options.debug === true) {
                 const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
-                return debugLauncher.getLaunchOptions(options.workspaceFolder)
-                    .then(debugPortAndHost => {
-                        testArgs.push(...['--secret=my_secret', `--port=${debugPortAndHost.port}`]);
-                        const launchOptions = { cwd: options.cwd, args: [testLauncherFile].concat(testArgs), token: options.token, outChannel: options.outChannel, port: debugPortAndHost.port, host: debugPortAndHost.host };
-                        // tslint:disable-next-line:prefer-type-cast no-any
-                        return debugLauncher.launchDebugger(launchOptions);
-                    });
+                testArgs.push(...['--debug']);
+                const launchOptions = { cwd: options.cwd, args: [testLauncherFile].concat(testArgs), token: options.token, outChannel: options.outChannel};
+                // tslint:disable-next-line:prefer-type-cast no-any
+                return debugLauncher.launchDebugger(launchOptions);
             } else {
                 // tslint:disable-next-line:prefer-type-cast no-any
                 const runOptions: Options = {

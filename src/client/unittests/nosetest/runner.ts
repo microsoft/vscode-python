@@ -59,15 +59,12 @@ export function runTest(serviceContainer: IServiceContainer, testResultsService:
     return promiseToGetXmlLogFile.then(() => {
         if (options.debug === true) {
             const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
-            return debugLauncher.getLaunchOptions(options.workspaceFolder)
-                .then(debugPortAndHost => {
-                    const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');
-                    const nosetestlauncherargs = [options.cwd, 'my_secret', debugPortAndHost.port.toString(), 'nose'];
-                    const debuggerArgs = [testLauncherFile].concat(nosetestlauncherargs).concat(noseTestArgs.concat(testPaths));
-                    const launchOptions = { cwd: options.cwd, args: debuggerArgs, token: options.token, outChannel: options.outChannel, port: debugPortAndHost.port, host: debugPortAndHost.host };
-                    // tslint:disable-next-line:prefer-type-cast no-any
-                    return debugLauncher.launchDebugger(launchOptions) as Promise<any>;
-                });
+            const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');
+            const nosetestlauncherargs = [options.cwd, 'nose'];
+            const debuggerArgs = [testLauncherFile].concat(nosetestlauncherargs).concat(noseTestArgs.concat(testPaths));
+            const launchOptions = { cwd: options.cwd, args: debuggerArgs, token: options.token, outChannel: options.outChannel };
+            // tslint:disable-next-line:prefer-type-cast no-any
+            return debugLauncher.launchDebugger(launchOptions) as Promise<any>;
         } else {
             // tslint:disable-next-line:prefer-type-cast no-any
             const runOptions: Options = {
