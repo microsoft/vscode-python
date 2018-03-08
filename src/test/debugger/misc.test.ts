@@ -9,9 +9,10 @@ import * as path from 'path';
 import { ThreadEvent } from 'vscode-debugadapter';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { noop } from '../../client/common/core.utils';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { sleep } from '../common';
-import { IS_CI_SERVER, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
+import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 
 const isProcessRunning = require('is-running') as (number) => boolean;
 
@@ -34,10 +35,6 @@ const THREAD_TIMEOUT = 10000;
             if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
                 this.skip();
             }
-            // Temporary, untill new version of PTVSD is bundled we cannot run tests
-            if (debuggerType !== 'python' && IS_CI_SERVER) {
-                return this.skip();
-            }
             await new Promise(resolve => setTimeout(resolve, 1000));
             debugClient = new DebugClient('node', testAdapterFilePath, debuggerType);
             await debugClient.start();
@@ -46,26 +43,20 @@ const THREAD_TIMEOUT = 10000;
             // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
             await sleep(1000);
             try {
-                // tslint:disable-next-line:no-empty
-                await debugClient.stop().catch(() => { });
+                await debugClient.stop().catch(noop);
                 // tslint:disable-next-line:no-empty
             } catch (ex) { }
             await sleep(1000);
         });
-
         function buildLauncArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
-            // Temporary, untill new version of PTVSD is bundled we cannot run tests.
-            // For now lets run test locally.
-            const pythonPath = debuggerType === 'python' ? 'python' : '/Users/donjayamanne/Desktop/Development/PythonStuff/IssueRepos/debuggerTests/.envp36/bin/python';
-            const env = debuggerType === 'python' ? {} : { PYTHONPATH: '/Users/donjayamanne/Desktop/Development/PythonStuff/IssueRepos/expPTVSD/ptvsd' };
             return {
                 program: path.join(debugFilesPath, pythonFile),
                 cwd: debugFilesPath,
                 stopOnEntry,
                 debugOptions: ['RedirectOutput'],
-                pythonPath,
+                pythonPath: 'python',
                 args: [],
-                env,
+                env: {},
                 envFile: '',
                 logToFile: false,
                 type: debuggerType
@@ -325,17 +316,23 @@ const THREAD_TIMEOUT = 10000;
             const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
             await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
 
-            await debugClient.nextRequest({ threadId });
             const functionLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 7 };
-            await debugClient.assertStoppedLocation('step', functionLocation);
+            await Promise.all([
+                debugClient.nextRequest({ threadId }),
+                debugClient.assertStoppedLocation('step', functionLocation)
+            ]);
 
-            await debugClient.nextRequest({ threadId });
             const functionInvocationLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 11 };
-            await debugClient.assertStoppedLocation('step', functionInvocationLocation);
+            await Promise.all([
+                debugClient.nextRequest({ threadId }),
+                debugClient.assertStoppedLocation('step', functionInvocationLocation)
+            ]);
 
-            await debugClient.nextRequest({ threadId });
             const printLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 13 };
-            await debugClient.assertStoppedLocation('step', printLocation);
+            await Promise.all([
+                debugClient.nextRequest({ threadId }),
+                debugClient.assertStoppedLocation('step', printLocation)
+            ]);
         });
         test('Test stepin and stepout', async () => {
             const threadIdPromise = debugClient.waitForEvent('thread', THREAD_TIMEOUT);
@@ -357,28 +354,37 @@ const THREAD_TIMEOUT = 10000;
             await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
             const threadId = ((await threadIdPromise) as ThreadEvent).body.threadId;
 
-            await debugClient.nextRequest({ threadId });
             const functionLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 7 };
-            await debugClient.assertStoppedLocation('step', functionLocation);
+            await Promise.all([
+                debugClient.nextRequest({ threadId }),
+                debugClient.assertStoppedLocation('step', functionLocation)
+            ]);
 
-            await debugClient.nextRequest({ threadId });
             const functionInvocationLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 11 };
-            await debugClient.assertStoppedLocation('step', functionInvocationLocation);
+            await Promise.all([
+                debugClient.nextRequest({ threadId }),
+                debugClient.assertStoppedLocation('step', functionInvocationLocation)
+            ]);
 
-            await debugClient.stepInRequest({ threadId });
             const loopPrintLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 8 };
-            await debugClient.assertStoppedLocation('step', loopPrintLocation);
+            await Promise.all([
+                debugClient.stepInRequest({ threadId }),
+                debugClient.assertStoppedLocation('step', loopPrintLocation)
+            ]);
 
-            await debugClient.stepOutRequest({ threadId });
-            await debugClient.assertStoppedLocation('step', functionInvocationLocation);
+            await Promise.all([
+                debugClient.stepOutRequest({ threadId }),
+                debugClient.assertStoppedLocation('step', functionInvocationLocation)
+            ]);
 
-            await debugClient.nextRequest({ threadId });
             const printLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 13 };
-            await debugClient.assertStoppedLocation('step', printLocation);
+            await Promise.all([
+                debugClient.nextRequest({ threadId }),
+                debugClient.assertStoppedLocation('step', printLocation)
+            ]);
         });
         test('Test pausing', async function () {
-            // TODO: re-enable for new debugger once it's running on CI
-            if (debuggerType !== 'pythonExperimental' || IS_CI_SERVER) {
+            if (debuggerType !== 'pythonExperimental') {
                 return this.skip();
             }
 
