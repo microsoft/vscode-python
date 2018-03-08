@@ -7,7 +7,9 @@ import * as languageClient from 'vscode-languageclient';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
 import { IInterpreterService, IInterpreterVersionService, PythonInterpreter } from '../interpreter/contracts';
+import { versionFromPythonVersionString } from '../interpreter/locators/helpers';
 import { IServiceContainer } from '../ioc/types';
+import { StopWatch } from '../telemetry/stopWatch';
 import { IExtensionActivator } from './types';
 
 const PYTHON = 'python';
@@ -25,9 +27,7 @@ export class PtvsExtensionActivator implements IExtensionActivator {
 
   public async activate(context: vscode.ExtensionContext): Promise<boolean> {
     const configuration = this.services.get<IConfigurationService>(IConfigurationService);
-    if (! await configuration.checkDependencies()) {
-      throw new Error('.NET Runtime is not installed.');
-    }
+    const sw = new StopWatch();
 
     // The server is implemented in C#
     const commandOptions = { stdio: 'pipe' };
@@ -41,10 +41,21 @@ export class PtvsExtensionActivator implements IExtensionActivator {
     };
 
     const clientOptions = await this.getPtvsOptions();
-    // Create the language client and start the client.
-    this.languageClent = new languageClient.LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
-    context.subscriptions.push(this.languageClent.start());
+    // tslint:disable-next-line:no-console
+    console.log(`Options determined: ${sw.elapsedTime} ms`);
+    try {
+      // Create the language client and start the client.
+      this.languageClent = new languageClient.LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
+      context.subscriptions.push(this.languageClent.start());
+    } catch (ex) {
+      if (!await configuration.checkDependencies()) {
+        throw new Error('.NET Runtime is not installed.');
+      }
+      throw ex;
+    }
 
+    // tslint:disable-next-line:no-console
+    console.log(`Language server started: ${sw.elapsedTime} ms`);
     await this.languageClent.onReady();
     return true;
   }
@@ -71,7 +82,7 @@ export class PtvsExtensionActivator implements IExtensionActivator {
         properties['Description'] = interpreter.displayName;
       }
       // tslint:disable-next-line:no-string-literal
-      properties['Version'] = this.getInterpreterVersion(interpreter);
+      properties['Version'] = await this.getInterpreterVersion(interpreter);
     }
 
     const selector: string[] = [PYTHON];
@@ -97,6 +108,7 @@ export class PtvsExtensionActivator implements IExtensionActivator {
       return interpreter.version;
     }
     const versionService = this.services.get<IInterpreterVersionService>(IInterpreterVersionService);
-    return await versionService.getVersion(this.pythonSettings.pythonPath, defaultPythonVersion);
+    const ver = await versionService.getVersion(this.pythonSettings.pythonPath, defaultPythonVersion);
+    return versionFromPythonVersionString(ver);
   }
 }

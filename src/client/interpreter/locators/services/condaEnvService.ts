@@ -7,6 +7,7 @@ import { IFileSystem } from '../../../common/platform/types';
 import { ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { CondaInfo, ICondaService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { versionFromPythonVersionString } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
 import { CondaHelper } from './condaHelper';
@@ -14,7 +15,7 @@ import { CondaHelper } from './condaHelper';
 @injectable()
 export class CondaEnvService extends CacheableLocatorService {
     private readonly condaHelper = new CondaHelper();
-    constructor( @inject(ICondaService) private condaService: ICondaService,
+    constructor(@inject(ICondaService) private condaService: ICondaService,
         @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService,
         @inject(ILogger) private logger: ILogger,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
@@ -53,7 +54,8 @@ export class CondaEnvService extends CacheableLocatorService {
                     displayName,
                     companyDisplayName: AnacondaCompanyName,
                     type: InterpreterType.Conda,
-                    envPath
+                    envPath,
+                    version: versionFromPythonVersionString(versionWithoutCompanyName)
                 };
                 return interpreter;
             });
