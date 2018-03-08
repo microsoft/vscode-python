@@ -34,6 +34,7 @@ script:
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
     fi
+  - rm -rf ./pythonFiles/experimental/ptvsd
   - yarn run clean
   - yarn run vscode:prepublish
   - yarn run cover:enable
