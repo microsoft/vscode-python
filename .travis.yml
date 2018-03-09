@@ -32,6 +32,7 @@ script:
   - yarn run cover:instrument
   - yarn run cover:enable
   - yarn run testDebugger --silent
+  - yarn run debugger-coverage
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
     fi
