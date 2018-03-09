@@ -109,30 +109,18 @@ gulp.task('cover:disable', () => {
 });
 
 function buildDebugAdapterCoverage() {
-    return new Promise((resolve, reject) => {
-        glob(path.join(__dirname, 'debug_coverage*/coverage.json'), async (err, matches) => {
-            if (err) {
-                reject(err)
-                return;
-            }
-            for (const coverageFile of matches) {
-                const finalCoverageFile = path.join(path.dirname(coverageFile), 'coverage-final.json');
-                await remapIstanbul(coverageFile, { 'json': finalCoverageFile });
-
+    const matches = glob.sync(path.join(__dirname, 'debug_coverage*/coverage.json'));
+    return Promise.all(matches.map(coverageFile => {
+        const finalCoverageFile = path.join(path.dirname(coverageFile), 'coverage-final.json');
+        return remapIstanbul(coverageFile, { 'json': finalCoverageFile })
+            .then(() => {
                 const collector = new istanbul.Collector();
                 const reporter = new istanbul.Reporter(undefined, path.dirname(coverageFile));
                 collector.add(JSON.parse(fs.readFileSync(finalCoverageFile, 'utf8')));
                 reporter.add('lcov');
-
-                await new Promise(resolve => {
-                    reporter.write(collector, false, function () {
-                        resolve()
-                    });
-                });
-            }
-            resolve();
-        });
-    });
+                reporter.write(collector, true);
+            });
+    }));
 }
 
 /**
