@@ -13,5 +13,4 @@ npm-debug.log
 coverage/
 .vscode-test/**
 .venv
-publish/
-ptvs/
+
