@@ -1713,6 +1713,7 @@
         "gulp-filter": "^5.0.1",
         "gulp-gitmodified": "^1.1.1",
         "gulp-json-editor": "^2.2.1",
+        "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^3.2.2",
         "gulp-watch": "^4.3.11",
         "husky": "^0.14.3",

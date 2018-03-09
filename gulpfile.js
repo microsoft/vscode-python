@@ -19,6 +19,8 @@ const path = require('path');
 const debounce = require('debounce');
 const jeditor = require("gulp-json-editor");
 const del = require('del');
+const sourcemaps = require('gulp-sourcemaps');
+const fs = require('fs');
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -279,8 +281,18 @@ const hygiene = (options) => {
 
     result = result
         .pipe(tscFilesTracker)
+        .pipe(sourcemaps.init())
         .pipe(tsc())
-        .js.pipe(gulp.dest(dest))
+        .pipe(sourcemaps.mapSources(function (sourcePath, file) {
+            const tsFileName = path.basename(file.path).replace(/js$/, 'ts');
+            const qualifiedSourcePath = path.dirname(file.path).replace('out/', 'src/').replace('out\\', 'src\\');
+            if (!fs.existsSync(path.join(qualifiedSourcePath, tsFileName))) {
+                console.error(`ERROR: (source-maps) ${file.path}[1,1]: Source file not found`);
+            }
+            return path.join(path.relative(path.dirname(file.path), qualifiedSourcePath), tsFileName);
+        }))
+        .pipe(sourcemaps.write('.', { includeContent: false }))
+        .pipe(gulp.dest(dest))
         .pipe(es.through(null, function () {
             if (errorCount > 0) {
                 const errorMessage = `Hygiene failed with errors 👎 . Check 'gulpfile.js'.`;
