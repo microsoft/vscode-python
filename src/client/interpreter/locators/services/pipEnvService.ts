@@ -69,7 +69,7 @@ export class PipEnvService extends CacheableLocatorService {
 
     private async getInterpreterPathFromPipenv(cwd: string): Promise<string | undefined> {
         // Quick check before actually running pipenv
-        if (!await this.fs.fileExistsAsync(path.join(cwd, 'pipfile'))) {
+        if (!await this.fs.fileExistsAsync(path.join(cwd, 'Pipfile'))) {
             return;
         }
         const venvFolder = await this.invokePipenv('--venv', cwd);
