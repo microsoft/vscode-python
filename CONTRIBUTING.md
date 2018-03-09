@@ -28,14 +28,11 @@ You may see warnings that ```The engine "vscode" appears to be invalid.```, you 
 
 ### Incremental Build
 
-Run the `Compile` and `Hygiene` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
+Run the `Compile` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
 
 ### Errors and Warnings
 
-TypeScript errors and warnings will be displayed in VS Code in the following areas:
-* Problems Panel (`CTRL+SHIFT+M` or `⇧⌘M`)
-* Terminal running the `Compile` task
-* Terminal running the `Hygiene` task
+TypeScript errors and warnings will be displayed in the `Problems` window of Visual Studio Code:
 
 ### Validate your changes
 
