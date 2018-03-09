@@ -105,7 +105,7 @@ gulp.task('cover:disable', () => {
 const hygiene = (options) => {
     options = options || {};
     let errorCount = 0;
-
+    console.log(colors.blue('Hygiene started.'));
     const indentation = es.through(function (file) {
         file.contents
             .toString('utf8')
@@ -275,6 +275,8 @@ const hygiene = (options) => {
             this.emit('end');
         }))
         .on('error', exitHandler.bind(this, options));
+
+    return result;
 };
 
 /**
