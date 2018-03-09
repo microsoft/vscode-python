@@ -109,18 +109,22 @@ gulp.task('cover:disable', () => {
 });
 
 function buildDebugAdapterCoverage() {
-    const matches = glob.sync(path.join(__dirname, 'debug_coverage*/coverage.json'));
-    return Promise.all(matches.map(coverageFile => {
-        const finalCoverageFile = path.join(path.dirname(coverageFile), 'coverage-final-upload.json');
-        return remapIstanbul(coverageFile, { 'json': finalCoverageFile })
-            .then(() => {
-                const collector = new istanbul.Collector();
-                const reporter = new istanbul.Reporter(undefined, path.dirname(coverageFile));
-                collector.add(JSON.parse(fs.readFileSync(finalCoverageFile, 'utf8')));
-                reporter.add('lcov');
-                reporter.write(collector, true);
-            });
-    }));
+    try {
+        const matches = glob.sync(path.join(__dirname, 'debug_coverage*/coverage.json'));
+        return Promise.all(matches.map(coverageFile => {
+            const finalCoverageFile = path.join(path.dirname(coverageFile), 'coverage-final-upload.json');
+            return remapIstanbul(coverageFile, { 'json': finalCoverageFile })
+                .then(() => {
+                    const collector = new istanbul.Collector();
+                    const reporter = new istanbul.Reporter(undefined, path.dirname(coverageFile));
+                    collector.add(JSON.parse(fs.readFileSync(finalCoverageFile, 'utf8')));
+                    reporter.add('lcov');
+                    reporter.write(collector, true);
+                });
+        })).catch(err => console.error(err));
+    } catch (ex) {
+        console.err('Error:', ex);
+    }
 }
 
 /**
