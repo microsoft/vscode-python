@@ -1,5 +1,12 @@
 # Changelog
 
+## 2018.2.1 (09 Mar 2018)
+
+### Fixes
+
+1. Check for `Pipfile` and not `pipfile` when looking for pipenv usage
+   (thanks to [Will Thompson for the fix](https://github.com/wjt))
+
 ## 2018.2.0 (08 Mar 2018)
 
 [Release pushed by one week]
