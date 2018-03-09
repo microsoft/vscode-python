@@ -53,6 +53,13 @@ const tslintFilter = [
     '!**/typings/**/*',
 ];
 
+const copyrightHeader = [
+    '// Copyright (c) Microsoft Corporation. All rights reserved.',
+    '// Licensed under the MIT License.',
+    '',
+    '\'use strict\';'
+].join('\n');
+
 gulp.task('hygiene', () => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }));
 
 gulp.task('compile', () => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }));
@@ -105,7 +112,19 @@ gulp.task('cover:disable', () => {
 const hygiene = (options) => {
     options = options || {};
     let errorCount = 0;
+    const addedFiles = getAddedFilesSync();
     console.log(colors.blue('Hygiene started.'));
+
+    const copyrights = es.through(function (file) {
+        if (addedFiles.indexOf(file.path) !== -1 && file.contents.toString('utf8').indexOf(copyrightHeader) !== 0) {
+            // Use tslint format.
+            console.error(`ERROR: (copyright) ${file.relative}[1,1]: Missing or bad copyright statement`);
+            errorCount++;
+        }
+
+        this.emit('data', file);
+    });
+
     const indentation = es.through(function (file) {
         file.contents
             .toString('utf8')
@@ -245,7 +264,8 @@ const hygiene = (options) => {
     }
 
     result = result
-        .pipe(filter(tslintFilter));
+        .pipe(filter(tslintFilter))
+        .pipe(copyrights);
 
     if (!options.skipFormatCheck) {
         // result = result
@@ -322,10 +342,17 @@ function run(options) {
 }
 function getStagedFilesSync() {
     const out = cp.execSync('git diff --cached --name-only', { encoding: 'utf8' });
-    const some = out
+    return out
         .split(/\r?\n/)
         .filter(l => !!l);
-    return some;
+}
+function getAddedFilesSync() {
+    const out = cp.execSync('git status -u -s', { encoding: 'utf8' });
+    return out
+        .split(/\r?\n/)
+        .filter(l => !!l)
+        .filter(l => l.startsWith('A') || l.startsWith('??'))
+        .map(l => path.join(__dirname, l.substring(2).trim()));
 }
 
 /**
