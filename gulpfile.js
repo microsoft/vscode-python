@@ -86,9 +86,9 @@ gulp.task('hygiene-modified', ['compile'], () => run({ mode: 'changes' }));
 
 gulp.task('clean', ['output:clean', 'cover:clean'], () => { });
 
-gulp.task('output:clean', () => del('coverage'));
+gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
 
-gulp.task('cover:clean', () => del('coverage'));
+gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 
 gulp.task('cover:enable', () => {
     return gulp.src("./coverconfig.json")
