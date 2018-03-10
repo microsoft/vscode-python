@@ -109,25 +109,31 @@ gulp.task('cover:disable', () => {
 });
 
 function buildDebugAdapterCoverage() {
-    const matches = glob.sync(path.join(__dirname, 'debug_coverage*/coverage.json'));
-    matches.forEach(coverageFile => {
-        const finalCoverageFile = path.join(path.dirname(coverageFile), 'coverage-final-upload.json');
-        const remappedCollector = remapIstanbul.remap(coverage, {
-            warn: warning => {
-                // We expect some warnings as any JS file without a typescript mapping will cause this.
-                // By default, we'll skip printing these to the console as it clutters it up.
-                if (this.options.verbose) {
-                    console.warn(warning);
+    try {
+        console.log('start');
+        const matches = glob.sync(path.join(__dirname, 'debug_coverage*/coverage.json'));
+        matches.forEach(coverageFile => {
+            const finalCoverageFile = path.join(path.dirname(coverageFile), 'coverage-final-upload.json');
+            const remappedCollector = remapIstanbul.remap(coverage, {
+                warn: warning => {
+                    // We expect some warnings as any JS file without a typescript mapping will cause this.
+                    // By default, we'll skip printing these to the console as it clutters it up.
+                    if (this.options.verbose) {
+                        console.warn(warning);
+                    }
                 }
-            }
-        });
+            });
 
-        const collector = new istanbul.Collector();
-        const reporter = new istanbul.Reporter(undefined, path.dirname(coverageFile));
-        collector.add(JSON.parse(fs.readFileSync(finalCoverageFile, 'utf8')));
-        reporter.add('lcov');
-        reporter.write(remappedCollector, true, () => console.log(`reports written to ${reportingDir}`));
-    });
+            const collector = new istanbul.Collector();
+            const reporter = new istanbul.Reporter(undefined, path.dirname(coverageFile));
+            collector.add(JSON.parse(fs.readFileSync(finalCoverageFile, 'utf8')));
+            reporter.add('lcov');
+            reporter.write(remappedCollector, true, () => console.log(`reports written to ${reportingDir}`));
+        });
+        console.log('end');
+    } catch (ex) {
+        console.error('Error', ex);
+    }
 }
 
 /**
