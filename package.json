@@ -1614,7 +1614,8 @@
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",
-        "cover:enable": "gulp cover:enable"
+        "cover:enable": "gulp cover:enable",
+        "debugger-coverage": "gulp debugger-coverage"
     },
     "dependencies": {
         "arch": "^2.1.0",
