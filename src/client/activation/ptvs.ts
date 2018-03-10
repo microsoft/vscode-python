@@ -4,7 +4,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as languageClient from 'vscode-languageclient';
-import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
 import { IInterpreterService, IInterpreterVersionService, PythonInterpreter } from '../interpreter/contracts';
 import { versionFromPythonVersionString } from '../interpreter/locators/helpers';
@@ -69,20 +69,28 @@ export class PtvsExtensionActivator implements IExtensionActivator {
   private async getPtvsOptions(): Promise<languageClient.LanguageClientOptions> {
     // tslint:disable-next-line:no-any
     const properties = new Map<string, any>();
+
+    // PTVS analysis engine needs full path to the interpreter
+    const interpreterService = this.services.get<IInterpreterService>(IInterpreterService);
+    const interpreter = await interpreterService.getActiveInterpreter();
+    if (!interpreter) {
+      throw Error('Interpreter path (pythonPath) is not set or interpreter does not exist.');
+    }
+
     // tslint:disable-next-line:no-string-literal
-    properties['InterpreterPath'] = this.pythonSettings.pythonPath;
+    properties['InterpreterPath'] = interpreter.path;
     // tslint:disable-next-line:no-string-literal
     properties['UseDefaultDatabase'] = true;
 
-    const interpreserService = this.services.get<IInterpreterService>(IInterpreterService);
-    const interpreter = await interpreserService.getActiveInterpreter();
-    if (interpreter) {
-      if (interpreter.displayName) {
-        // tslint:disable-next-line:no-string-literal
-        properties['Description'] = interpreter.displayName;
-      }
+    if (interpreter.displayName) {
       // tslint:disable-next-line:no-string-literal
-      properties['Version'] = await this.getInterpreterVersion(interpreter);
+      properties['Description'] = interpreter.displayName;
+    }
+    // tslint:disable-next-line:no-string-literal
+    properties['Version'] = await this.getInterpreterVersion(interpreter);
+    if (isTestExecution()) {
+      // tslint:disable-next-line:no-string-literal
+      properties['TestEnvironment'] = true;
     }
 
     const selector: string[] = [PYTHON];

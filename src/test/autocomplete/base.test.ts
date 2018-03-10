@@ -6,6 +6,7 @@ import * as assert from 'assert';
 import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { IConfigurationService } from '../../client/common/types';
 import { rootWorkspaceUri } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -24,10 +25,13 @@ const fileSuppress = path.join(autoCompPath, 'suppress.py');
 suite('Autocomplete', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
+    let isPtvs: boolean; // Temporary until all PTVS functionality is complete
+
     suiteSetup(async () => {
         await initialize();
         initializeDI();
         isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
+        isPtvs = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().usePtvs;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -95,6 +99,10 @@ suite('Autocomplete', () => {
 
     // https://github.com/DonJayamanne/pythonVSCode/issues/630
     test('For "abc.decorators"', async () => {
+        // Disabled for PTVS, see https://github.com/Microsoft/PTVS/issues/3857
+        if (isPtvs) {
+            return;
+        }
         const textDocument = await vscode.workspace.openTextDocument(fileDecorator);
         await vscode.window.showTextDocument(textDocument);
         let position = new vscode.Position(3, 9);
@@ -156,8 +164,11 @@ suite('Autocomplete', () => {
             const items = list!.items.filter(item => item.label === 'bar');
             assert.equal(items.length, 1, 'bar not found');
 
-            const expected = `说明 - keep this line, it works${EOL}delete following line, it works${EOL}如果存在需要等待审批或正在执行的任务，将不刷新页面`;
-            checkDocumentation(items[0], expected);
+            const expected1 = '说明 - keep this line, it works';
+            checkDocumentation(items[0], expected1);
+
+            const expected2 = '如果存在需要等待审批或正在执行的任务，将不刷新页面';
+            checkDocumentation(items[0], expected2);
         }).then(done, done);
     });
 
@@ -178,13 +189,21 @@ suite('Autocomplete', () => {
             items = list!.items.filter(item => item.label === 'showMessage');
             assert.equal(items.length, 1, 'showMessage not found');
 
-            const expected = `Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи. ${EOL}Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.`;
-            checkDocumentation(items[0], expected);
+            const expected1 = 'Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи.';
+            checkDocumentation(items[0], expected1);
+
+            const expected2 = 'Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.';
+            checkDocumentation(items[0], expected2);
         }).then(done, done);
     });
 
     // https://github.com/Microsoft/vscode-python/issues/110
     test('Suppress in strings/comments', async () => {
+        // Excluded from PTVS b/c skipping of strings and comments
+        // is not yet there. See https://github.com/Microsoft/PTVS/issues/3798
+        if (isPtvs) {
+            return;
+        }
         const positions = [
             new vscode.Position(0, 1),  // false
             new vscode.Position(0, 9),  // true
@@ -213,9 +232,18 @@ suite('Autocomplete', () => {
 
 // tslint:disable-next-line:no-any
 function checkDocumentation(item: vscode.CompletionItem, expectedContains: string): void {
-    const documentation = item.documentation as vscode.MarkdownString;
-    assert.notEqual(documentation, null, 'Documentation is not MarkdownString');
+    let isValidType = false;
+    let documentation: string;
 
-    const inDoc = documentation.value.indexOf(expectedContains) >= 0;
+    if (typeof item.documentation === 'string') {
+        isValidType = true;
+        documentation = item.documentation;
+    } else {
+        documentation = (item.documentation as vscode.MarkdownString).value;
+        isValidType = documentation !== undefined && documentation !== null;
+    }
+    assert.equal(isValidType, true, 'Documentation is neither string nor vscode.MarkdownString');
+
+    const inDoc = documentation.indexOf(expectedContains) >= 0;
     assert.equal(inDoc, true, 'Documentation incorrect');
 }
