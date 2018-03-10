@@ -112,7 +112,7 @@ function buildDebugAdapterCoverage() {
     const matches = glob.sync(path.join(__dirname, 'debug_coverage*/coverage.json'));
     matches.forEach(coverageFile => {
         const finalCoverageFile = path.join(path.dirname(coverageFile), 'coverage-final-upload.json');
-        const remappedCollector = remapIstanbul.remap(coverage, {
+        const remappedCollector = remapIstanbul.remap(JSON.parse(fs.readFileSync(coverageFile, 'utf8')), {
             warn: warning => {
                 // We expect some warnings as any JS file without a typescript mapping will cause this.
                 // By default, we'll skip printing these to the console as it clutters it up.
@@ -120,11 +120,9 @@ function buildDebugAdapterCoverage() {
             }
         });
 
-        const collector = new istanbul.Collector();
         const reporter = new istanbul.Reporter(undefined, path.dirname(coverageFile));
-        collector.add(JSON.parse(fs.readFileSync(finalCoverageFile, 'utf8')));
         reporter.add('lcov');
-        reporter.write(remappedCollector, true);
+        reporter.write(remappedCollector, true, () => { });
     });
 }
 
