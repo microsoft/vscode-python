@@ -198,31 +198,6 @@
                 "category": "Python"
             },
             {
-                "command": "jupyter.runSelectionLine",
-                "title": "%python.command.jupyter.runSelectionLine.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.execCurrentCell",
-                "title": "%python.command.jupyter.execCurrentCell.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.execCurrentCellAndAdvance",
-                "title": "%python.command.jupyter.execCurrentCellAndAdvance.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.gotToPreviousCell",
-                "title": "%python.command.jupyter.gotToPreviousCell.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.gotToNextCell",
-                "title": "%python.command.jupyter.gotToNextCell.title%",
-                "category": "Jupyter"
-            },
-            {
                 "command": "python.goToPythonObject",
                 "title": "%python.command.python.goToPythonObject.title%",
                 "category": "Python"
