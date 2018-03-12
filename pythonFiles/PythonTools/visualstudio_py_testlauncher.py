@@ -263,7 +263,7 @@ def main():
                 cov.start()
             except:
                 pass
-        if opts.tests is None and opts.testFile is None:
+        if opts.testFile is None:
             if opts.us is None:
                 opts.us = '.'
             if opts.up is None:
@@ -274,30 +274,29 @@ def main():
             # Easier approach is find the test suite and use that for running
             loader = unittest.TestLoader()
             # opts.us will be passed in
-            suites = loader.discover(opts.us, pattern=os.path.basename(opts.testFile))
-            suite = None
-            tests = None            
-            if opts.tests is None:
-                # Run everything in the test file
-                tests = suites
-            else:
-                # Run a specific test class or test method
-                for suite in suites._tests:
-                    for cls in suite._tests:                        
-                        try:
-                            for m in cls._tests:
-                                testId = m.id()
-                                if testId.startswith(opts.tests[0]):
-                                    suite = cls
-                                if testId == opts.tests[0]:
-                                    tests = m
-                                    break
-                        except Exception as err:
-                            errorMessage = traceback.format_exception()                            
-                            pass
-                if tests is None:
-                    tests = suite
-            if tests is None and suite is None:
+            tests = loader.discover(opts.us, pattern=os.path.basename(opts.testFile))
+        
+        if not opts.tests is None:
+            suites = tests
+            test_suite = None
+            tests = None
+            # Run a specific test class or test method
+            for suite in suites._tests:
+                for cls in suite._tests:                        
+                    try:
+                        for m in cls._tests:
+                            testId = m.id()
+                            if testId.startswith(opts.tests[0]):
+                                test_suite = cls
+                            if testId == opts.tests[0]:
+                                tests = m
+                                break
+                    except Exception as err:
+                        errorMessage = traceback.format_exception()                            
+                        pass
+            if tests is None:
+                tests = test_suite
+            if tests is None:
                 _channel.send_event(
                     name='error', 
                     outcome='',
