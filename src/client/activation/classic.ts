@@ -3,20 +3,16 @@
 
 import * as vscode from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { FeatureDeprecationManager } from '../common/featureDeprecationManager';
-import { IOutputChannel, IPersistentStateFactory, IPythonSettings } from '../common/types';
+import { IOutputChannel, IPythonSettings } from '../common/types';
 import { registerTypes as formattersRegisterTypes } from '../formatters/serviceRegistry';
 import { IShebangCodeLensProvider } from '../interpreter/contracts';
 import { IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { LinterCommands } from '../linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from '../linters/serviceRegistry';
-import { ILintingEngine } from '../linters/types';
 import { PythonCompletionItemProvider } from '../providers/completionProvider';
 import { PythonDefinitionProvider } from '../providers/definitionProvider';
-import { PythonFormattingEditProvider } from '../providers/formatProvider';
 import { PythonHoverProvider } from '../providers/hoverProvider';
-import { LinterProvider } from '../providers/linterProvider';
 import { activateGoToObjectDefinitionProvider } from '../providers/objectDefinitionProvider';
 import { PythonReferenceProvider } from '../providers/referenceProvider';
 import { PythonRenameProvider } from '../providers/renameProvider';
@@ -24,8 +20,6 @@ import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { activateSimplePythonRefactorProvider } from '../providers/simpleRefactorProvider';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
 import * as sortImports from '../sortImports';
-import { BlockFormatProviders } from '../typeFormatters/blockFormatProvider';
-import { OnEnterFormatter } from '../typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from '../unittests/common/constants';
 import * as tests from '../unittests/main';
 import { WorkspaceSymbols } from '../workspaceSymbols/main';
@@ -46,6 +40,8 @@ export class ClassicExtensionActivator implements IExtensionActivator {
 
     activateSimplePythonRefactorProvider(context, standardOutputChannel, this.serviceManager);
     const jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager);
+    context.subscriptions.push(jediFactory);
+
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
     context.subscriptions.push(new LinterCommands(this.serviceManager));
 
@@ -73,6 +69,7 @@ export class ClassicExtensionActivator implements IExtensionActivator {
     context.subscriptions.push(jediFactory);
     context.subscriptions.push(vscode.languages.registerRenameProvider(PYTHON, new PythonRenameProvider(this.serviceManager)));
     const definitionProvider = new PythonDefinitionProvider(jediFactory);
+
     context.subscriptions.push(vscode.languages.registerDefinitionProvider(PYTHON, definitionProvider));
     context.subscriptions.push(vscode.languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
     context.subscriptions.push(vscode.languages.registerReferenceProvider(PYTHON, new PythonReferenceProvider(jediFactory)));
@@ -85,31 +82,11 @@ export class ClassicExtensionActivator implements IExtensionActivator {
     if (this.pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
       context.subscriptions.push(vscode.languages.registerSignatureHelpProvider(PYTHON, new PythonSignatureProvider(jediFactory), '(', ','));
     }
-    if (this.pythonSettings.formatting.provider !== 'none') {
-      const formatProvider = new PythonFormattingEditProvider(context, this.serviceManager);
-      context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
-      context.subscriptions.push(vscode.languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
-    }
-
-    const linterProvider = new LinterProvider(context, this.serviceManager);
-    context.subscriptions.push(linterProvider);
-
-    const jupyterExtension = vscode.extensions.getExtension('donjayamanne.jupyter');
-    const lintingEngine = this.serviceManager.get<ILintingEngine>(ILintingEngine);
-    lintingEngine.linkJupiterExtension(jupyterExtension).ignoreErrors();
 
     const unitTestOutChannel = this.serviceManager.get<vscode.OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
     tests.activate(context, unitTestOutChannel, symbolProvider, this.serviceManager);
 
     context.subscriptions.push(new WorkspaceSymbols(this.serviceManager));
-    context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
-    context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
-
-    const persistentStateFactory = this.serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
-    const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtension);
-    deprecationMgr.initialize();
-    context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtension));
-
     return true;
   }
 

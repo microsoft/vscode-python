@@ -6,20 +6,21 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 import { Container } from 'inversify';
-import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import * as vscode from 'vscode';
+import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import { ClassicExtensionActivator } from './activation/classic';
 import { PtvsExtensionActivator } from './activation/ptvs';
 import { IExtensionActivator } from './activation/types';
 import { PythonSettings } from './common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { PythonInstaller } from './common/installer/pythonInstallation';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
-import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, ILogger, IMemento, IOutputChannel, WORKSPACE_MEMENTO } from './common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
@@ -30,6 +31,8 @@ import { registerTypes as interpretersRegisterTypes } from './interpreter/servic
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer } from './ioc/types';
+import { ILintingEngine } from './linters/types';
+import { LinterProvider } from './providers/linterProvider';
 import { ReplProvider } from './providers/replProvider';
 import { TerminalProvider } from './providers/terminalProvider';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
@@ -38,11 +41,14 @@ import { EDITOR_LOAD } from './telemetry/constants';
 import { StopWatch } from './telemetry/stopWatch';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager } from './terminals/types';
+import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
+import { OnEnterFormatter } from './typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
 
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
+const PYTHON: vscode.DocumentFilter = { language: 'python' };
 
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: vscode.ExtensionContext) {
@@ -75,6 +81,21 @@ export async function activate(context: vscode.ExtensionContext) {
 
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
+
+    const linterProvider = new LinterProvider(context, serviceManager);
+    context.subscriptions.push(linterProvider);
+
+    const jupyterExtension = vscode.extensions.getExtension('donjayamanne.jupyter');
+    const lintingEngine = serviceManager.get<ILintingEngine>(ILintingEngine);
+    lintingEngine.linkJupiterExtension(jupyterExtension).ignoreErrors();
+
+    context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
+    context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
+
+    const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
+    const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtension);
+    deprecationMgr.initialize();
+    context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtension));
 
     context.subscriptions.push(serviceContainer.get<IInterpreterSelector>(IInterpreterSelector));
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
