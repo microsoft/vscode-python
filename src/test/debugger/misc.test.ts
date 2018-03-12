@@ -11,6 +11,7 @@ import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { noop } from '../../client/common/core.utils';
+import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
@@ -40,9 +41,8 @@ let testCounter = 0;
             if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
                 this.skip();
             }
-            const coverageDirectory = path.join(EXTENSION_ROOT_DIR, `debug_coverage${testCounter += 1}`);
             await new Promise(resolve => setTimeout(resolve, 1000));
-            debugClient = new DebugClientEx(testAdapterFilePath, debuggerType, coverageDirectory, { cwd: EXTENSION_ROOT_DIR });
+            debugClient = createDebugAdapter();
             await debugClient.start();
         });
         teardown(async () => {
@@ -54,6 +54,19 @@ let testCounter = 0;
             } catch (ex) { }
             await sleep(1000);
         });
+        /**
+         * Creates the debug adapter.
+         * We do not need to support code coverage on AppVeyor, lets use the standard test adapter.
+         * @returns {DebugClient}
+         */
+        function createDebugAdapter(): DebugClient {
+            if (IS_WINDOWS) {
+                return new DebugClient('node', testAdapterFilePath, debuggerType);
+            } else {
+                const coverageDirectory = path.join(EXTENSION_ROOT_DIR, `debug_coverage${testCounter += 1}`);
+                return new DebugClientEx(testAdapterFilePath, debuggerType, coverageDirectory, { cwd: EXTENSION_ROOT_DIR });
+            }
+        }
         function buildLauncArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
             const env = {};
             if (debuggerType === 'pythonExperimental') {
