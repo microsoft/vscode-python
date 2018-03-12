@@ -1,8 +1,110 @@
 # Changelog
 
-## 2018.2.0
+## 2018.2.0 (08 Mar 2018)
 
-XXX
+[Release pushed by one week]
+
+### Thanks
+
+We appreciate everyone who contributed to this release (including
+those who reported bugs or provided feedback)!
+
+A special thanks goes out to the following external contributors who
+contributed code in this release:
+
+* [Andrea D'Amore](https://github.com/Microsoft/vscode-python/commits?author=anddam)
+* [Tzu-ping Chung](https://github.com/Microsoft/vscode-python/commits?author=uranusjr)
+* [Elliott Beach](https://github.com/Microsoft/vscode-python/commits?author=elliott-beach)
+* [Manuja Jay](https://github.com/Microsoft/vscode-python/commits?author=manujadev)
+* [philipwasserman](https://github.com/Microsoft/vscode-python/commits?author=philipwasserman)
+
+### Enhancements
+
+1. Experimental support for PTVSD 4.0.0-alpha (too many issues to list)
+1. Speed increases in interpreter selection ([#952](https://github.com/Microsoft/vscode-python/issues/952))
+1. Support for [direnv](https://direnv.net/)
+   ([#36](https://github.com/Microsoft/vscode-python/issues/36))
+1. Support for pipenv virtual environments; do note that using pipenv
+   automatically drops all other interpreters from the list of
+   possible interpreters as pipenv prefers to "own" your virtual
+   environment
+   ([#404](https://github.com/Microsoft/vscode-python/issues/404))
+1. Support for pyenv installs of Python
+   ([#847](https://github.com/Microsoft/vscode-python/issues/847))
+1. Support `editor.formatOnType` ([#640](https://github.com/Microsoft/vscode-python/issues/640))
+1. Added a `zh-tw` translation ([#](https://github.com/Microsoft/vscode-python/pull/841))
+1. Prompting to install a linter now allows for disabling that specific
+   linter as well as linters globally
+   ([#971](https://github.com/Microsoft/vscode-python/issues/971))
+
+### Fixes
+
+1. Work around a bug in Pylint when the default linter rules are
+   enabled and running Python 2.7 which triggered `--py3k` checks
+   to be activated, e.g. all `print` statements to be flagged as
+   errors
+   ([#722](https://github.com/Microsoft/vscode-python/issues/722))
+1. Better detection of when a virtual environment is selected, leading
+   to the extension accurately leaving off `--user` when installing
+   Pylint ([#808](https://github.com/Microsoft/vscode-python/issues/808))
+1. Better detection of a `pylintrc` is available to automatically disable our
+   default Pylint checks
+   ([#728](https://github.com/Microsoft/vscode-python/issues/728),
+    [#788](https://github.com/Microsoft/vscode-python/issues/788),
+    [#838](https://github.com/Microsoft/vscode-python/issues/838),
+    [#442](https://github.com/Microsoft/vscode-python/issues/442))
+1. Fix `Got to Python object` ([#403](https://github.com/Microsoft/vscode-python/issues/403))
+1. When reformatting a file, put the temporary file in the workspace
+   folder so e.g. yapf detect their configuration files appropriately
+   ([#730](https://github.com/Microsoft/vscode-python/issues/730))
+1. The banner to suggest someone installs Python now says `Download`
+   instead of `Close` ([#844](https://github.com/Microsoft/vscode-python/issues/844))
+1. Formatting while typing now treats `.` and `@` as operators,
+   preventing the incorrect insertion of whitespace
+   ([#840](https://github.com/Microsoft/vscode-python/issues/840))
+1. Debugging from a virtual environment named `env` now works
+   ([#691](https://github.com/Microsoft/vscode-python/issues/691))
+1. Disabling linting in a single folder of a mult-root workspace no
+   longer disables it for all folders ([#862](https://github.com/Microsoft/vscode-python/issues/862))
+1. Fix the default debugger settings for Flask apps
+   ([#573](https://github.com/Microsoft/vscode-python/issues/573))
+1. Format paths correctly when sending commands through WSL and git-bash;
+   this does not lead to official support for either terminal
+   ([#895](https://github.com/Microsoft/vscode-python/issues/895))
+1. Prevent run-away Jedi processes from consuming too much memory by
+   automatically killing the process; reload VS Code to start the
+   process again if desired
+   ([#926](https://github.com/Microsoft/vscode-python/issues/926),
+    [#263](https://github.com/Microsoft/vscode-python/issues/263))
+1. Support multiple linters again
+   ([#913](https://github.com/Microsoft/vscode-python/issues/913))
+1. Don't over-escape markup found in docstrings
+   ([#911](https://github.com/Microsoft/vscode-python/issues/911),
+    [#716](https://github.com/Microsoft/vscode-python/issues/716),
+    [#627](https://github.com/Microsoft/vscode-python/issues/627),
+    [#692](https://github.com/Microsoft/vscode-python/issues/692))
+1. Fix when the `Problems` pane lists file paths prefixed with `git:`
+   ([#916](https://github.com/Microsoft/vscode-python/issues/916))
+1. Fix inline documentation when an odd number of quotes exists
+   ([#786](https://github.com/Microsoft/vscode-python/issues/786))
+1. Don't erroneously warn macOS users about using the system install
+   of Python when a virtual environment is already selected
+   ([#804](https://github.com/Microsoft/vscode-python/issues/804))
+1. Fix activating multiple linters without requiring a reload of
+   VS Code
+   ([#971](https://github.com/Microsoft/vscode-python/issues/971))
+
+### Code Health
+
+1. Upgrade to Jedi 0.11.1
+   ([#674](https://github.com/Microsoft/vscode-python/issues/674),
+    [#607](https://github.com/Microsoft/vscode-python/issues/607),
+    [#99](https://github.com/Microsoft/vscode-python/issues/99))
+1. Removed the banner announcing the extension moving over to
+   Microsoft ([#830](https://github.com/Microsoft/vscode-python/issues/830))
+1. Renamed the default debugger configurations ([#412](https://github.com/Microsoft/vscode-python/issues/412))
+1. Remove some error logging about not finding conda
+   ([#864](https://github.com/Microsoft/vscode-python/issues/864))
 
 ## 2018.1.0 (01 Feb 2018)
 

@@ -113,19 +113,6 @@ suite('PythonExecutableService', () => {
         await expect(randomModuleIsInstalled).to.eventually.equal(false, `Random module '${randomModuleName}' is installed`);
     });
 
-    test('Value for \'python --version\' should be returned as version information', async () => {
-        const pythonPath = PythonSettings.getInstance(workspace4Path).pythonPath;
-        const expectedVersion = await new Promise<string>(resolve => {
-            execFile(pythonPath, ['--version'], (error, stdout, stdErr) => {
-                const out = (typeof stdErr === 'string' ? stdErr : '') + EOL + (typeof stdout === 'string' ? stdout : '');
-                resolve(out.trim());
-            });
-        });
-        const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
-        const version = await pythonExecService.getVersion();
-        expect(version).to.equal(expectedVersion, 'Versions are not the same');
-    });
-
     test('Ensure correct path to executable is returned', async () => {
         const pythonPath = PythonSettings.getInstance(workspace4Path).pythonPath;
         const expectedExecutablePath = await new Promise<string>(resolve => {

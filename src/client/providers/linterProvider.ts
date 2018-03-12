@@ -6,16 +6,14 @@ import * as vscode from 'vscode';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { IDocumentManager } from '../common/application/types';
 import { ConfigSettingMonitor } from '../common/configSettingMonitor';
+import { isTestExecution } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { ILinterManager, ILintingEngine } from '../linters/types';
 
-const uriSchemesToIgnore = ['git', 'showModifications', 'svn'];
-
 export class LinterProvider implements vscode.Disposable {
-    private diagnosticCollection: vscode.DiagnosticCollection;
     private context: vscode.ExtensionContext;
     private disposables: vscode.Disposable[];
     private configMonitor: ConfigSettingMonitor;
@@ -37,7 +35,6 @@ export class LinterProvider implements vscode.Disposable {
         this.documents = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
 
-        this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.engine.lintOpenPythonFiles()));
 
         this.documents.onDidOpenTextDocument(e => this.onDocumentOpened(e), this.context.subscriptions);
@@ -46,10 +43,12 @@ export class LinterProvider implements vscode.Disposable {
 
         this.configMonitor = new ConfigSettingMonitor('linting');
         this.configMonitor.on('change', this.lintSettingsChangedHandler.bind(this));
-    }
 
-    public get diagnostics(): vscode.DiagnosticCollection {
-        return this.diagnosticCollection;
+        // On workspace reopen we don't get `onDocumentOpened` since it is first opened
+        // and then the extension is activated. So schedule linting pass now.
+        if (!isTestExecution()) {
+            setTimeout(() => this.engine.lintOpenPythonFiles().ignoreErrors(), 1200);
+        }
     }
 
     public dispose() {
@@ -63,35 +62,23 @@ export class LinterProvider implements vscode.Disposable {
 
     private lintSettingsChangedHandler(configTarget: ConfigurationTarget, wkspaceOrFolder: Uri) {
         if (configTarget === ConfigurationTarget.Workspace) {
-            this.engine.lintOpenPythonFiles();
+            this.engine.lintOpenPythonFiles().ignoreErrors();
             return;
         }
         // Look for python files that belong to the specified workspace folder.
         workspace.textDocuments.forEach(async document => {
             const wkspaceFolder = workspace.getWorkspaceFolder(document.uri);
             if (wkspaceFolder && wkspaceFolder.uri.fsPath === wkspaceOrFolder.fsPath) {
-                await this.engine.lintDocument(document, 'auto');
+                this.engine.lintDocument(document, 'auto').ignoreErrors();
             }
         });
     }
 
-    private async onDocumentOpened(document: vscode.TextDocument): Promise<void> {
-        const settings = this.configuration.getSettings(document.uri);
-        if (document.languageId !== 'python' || !settings.linting.enabled) {
-            return;
-        }
-        // Exclude files opened by vscode when showing a diff view.
-        if (uriSchemesToIgnore.indexOf(document.uri.scheme) >= 0) {
-            return;
-        }
-        if (!document.uri.path ||
-            (path.basename(document.uri.path) === document.uri.path && !await this.fs.fileExistsAsync(document.uri.path))) {
-            return;
-        }
+    private onDocumentOpened(document: vscode.TextDocument): void {
         this.engine.lintDocument(document, 'auto').ignoreErrors();
     }
 
-    private onDocumentSaved(document: vscode.TextDocument) {
+    private onDocumentSaved(document: vscode.TextDocument): void {
         const settings = this.configuration.getSettings(document.uri);
         if (document.languageId === 'python' && settings.linting.enabled && settings.linting.lintOnSave) {
             this.engine.lintDocument(document, 'save').ignoreErrors();
@@ -111,8 +98,8 @@ export class LinterProvider implements vscode.Disposable {
             return;
         }
         // Check if this document is still open as a duplicate editor.
-        if (!this.isDocumentOpen(document.uri) && this.diagnosticCollection.has(document.uri)) {
-            this.diagnosticCollection.set(document.uri, []);
+        if (!this.isDocumentOpen(document.uri)) {
+            this.engine.clearDiagnostics(document);
         }
     }
 }

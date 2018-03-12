@@ -2,19 +2,20 @@
 THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
 Do Not Translate or Localize
 
-The Microsoft Python extension for Visual Studio Code incorporates third party material from the projects listed below. The original copyright notice and the license under which Microsoft received such third party material are set forth below. Microsoft reserves all other rights not expressly granted, whether by implication, estoppel or otherwise.
+Microsoft Python extension for Visual Studio Code  incorporates third party material from the projects listed below. The original copyright notice and the license under which Microsoft received such third party material are set forth below. Microsoft reserves all other rights not expressly granted, whether by implication, estoppel or otherwise.
 
-
-1.	Go for Visual Studio Code (https://github.com/Microsoft/vscode-go)
+1.
+Go for Visual Studio Code (https://github.com/Microsoft/vscode-go)
 2.	Files from the Python Project (https://www.python.org/)
 3.	Google Diff Match and Patch  (https://github.com/GerHobbelt/google-diff-match-patch)
 4.	isort (https://github.com/timothycrosley/isort)
 5.	jedi (https://github.com/davidhalter/jedi)
 6.	omnisharp-vscode (https://github.com/OmniSharp/omnisharp-vscode)
-7.	Python documentation (https://docs.python.org/)
-8.	python-functools32 (https://github.com/MiCHiLU/python-functools32/blob/master/functools32/functools32.py)
-9.	pythonVSCode (https://github.com/DonJayamanne/pythonVSCode)
-10.	Sphinx (http://sphinx-doc.org/)
+7.	parso  (https://github.com/davidhalter/parso)
+8.	Python documentation (https://docs.python.org/)
+9.	python-functools32 (https://github.com/MiCHiLU/python-functools32/blob/master/functools32/functools32.py)
+10.	pythonVSCode (https://github.com/DonJayamanne/pythonVSCode)
+11.	Sphinx (http://sphinx-doc.org/)
 
 
 %%
@@ -335,6 +336,97 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 =========================================
 END OF omnisharp-vscode NOTICES, INFORMATION, AND LICENSE
 
+%% parso  NOTICES, INFORMATION, AND LICENSE BEGIN HERE
+=========================================
+All contributions towards parso are MIT licensed.
+
+Some Python files have been taken from the standard library and are therefore
+PSF licensed. Modifications on these files are dual licensed (both MIT and
+PSF). These files are:
+
+- parso/pgen2/*
+- parso/tokenize.py
+- parso/token.py
+- test/test_pgen2.py
+
+Also some test files under test/normalizer_issue_files have been copied from
+https://github.com/PyCQA/pycodestyle (Expat License == MIT License).
+
+-------------------------------------------------------------------------------
+The MIT License (MIT)
+
+Copyright (c) <2013-2017> <David Halter and others, see AUTHORS.txt>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2
+--------------------------------------------
+
+1. This LICENSE AGREEMENT is between the Python Software Foundation
+("PSF"), and the Individual or Organization ("Licensee") accessing and
+otherwise using this software ("Python") in source or binary form and
+its associated documentation.
+
+2. Subject to the terms and conditions of this License Agreement, PSF hereby
+grants Licensee a nonexclusive, royalty-free, world-wide license to reproduce,
+analyze, test, perform and/or display publicly, prepare derivative works,
+distribute, and otherwise use Python alone or in any derivative version,
+provided, however, that PSF's License Agreement and PSF's notice of copyright,
+i.e., "Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+2011, 2012, 2013, 2014, 2015 Python Software Foundation; All Rights Reserved"
+are retained in Python alone or in any derivative version prepared by Licensee.
+
+3. In the event Licensee prepares a derivative work that is based on
+or incorporates Python or any part thereof, and wants to make
+the derivative work available to others as provided herein, then
+Licensee hereby agrees to include in any such work a brief summary of
+the changes made to Python.
+
+4. PSF is making Python available to Licensee on an "AS IS"
+basis.  PSF MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
+IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, PSF MAKES NO AND
+DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS
+FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF PYTHON WILL NOT
+INFRINGE ANY THIRD PARTY RIGHTS.
+
+5. PSF SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON
+FOR ANY INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS AS
+A RESULT OF MODIFYING, DISTRIBUTING, OR OTHERWISE USING PYTHON,
+OR ANY DERIVATIVE THEREOF, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
+
+6. This License Agreement will automatically terminate upon a material
+breach of its terms and conditions.
+
+7. Nothing in this License Agreement shall be deemed to create any
+relationship of agency, partnership, or joint venture between PSF and
+Licensee.  This License Agreement does not grant permission to use PSF
+trademarks or trade name in a trademark sense to endorse or promote
+products or services of Licensee, or any third party.
+
+8. By copying, installing or otherwise using Python, Licensee
+agrees to be bound by the terms and conditions of this License
+Agreement.
+=========================================
+END OF parso  NOTICES, INFORMATION, AND LICENSE
+
 %% Python documentation NOTICES, INFORMATION, AND LICENSE BEGIN HERE
 =========================================
 Terms and conditions for accessing or otherwise using Python
@@ -348,7 +440,7 @@ PSF LICENSE AGREEMENT FOR PYTHON 2.7.13
    analyze, test, perform and/or display publicly, prepare derivative works,
    distribute, and otherwise use Python 2.7.13 alone or in any derivative
    version, provided, however, that PSF's License Agreement and PSF's notice of
-   copyright, i.e., "Copyright � 2001-2017 Python Software Foundation; All Rights
+   copyright, i.e., "Copyright © 2001-2017 Python Software Foundation; All Rights
    Reserved" are retained in Python 2.7.13 alone or in any derivative version
    prepared by Licensee.
 
@@ -380,7 +472,6 @@ PSF LICENSE AGREEMENT FOR PYTHON 2.7.13
 
 8. By copying, installing or otherwise using Python 2.7.13, Licensee agrees
    to be bound by the terms and conditions of this License Agreement.
-
 BEOPEN.COM LICENSE AGREEMENT FOR PYTHON 2.0
 BEOPEN PYTHON OPEN SOURCE LICENSE AGREEMENT VERSION 1
 
@@ -422,7 +513,6 @@ BEOPEN PYTHON OPEN SOURCE LICENSE AGREEMENT VERSION 1
 
 7. By copying, installing or otherwise using the software, Licensee agrees to be
    bound by the terms and conditions of this License Agreement.
-
 CNRI LICENSE AGREEMENT FOR PYTHON 1.6.1
 1. This LICENSE AGREEMENT is between the Corporation for National Research
    Initiatives, having an office at 1895 Preston White Drive, Reston, VA 20191
@@ -435,7 +525,7 @@ CNRI LICENSE AGREEMENT FOR PYTHON 1.6.1
    analyze, test, perform and/or display publicly, prepare derivative works,
    distribute, and otherwise use Python 1.6.1 alone or in any derivative version,
    provided, however, that CNRI's License Agreement and CNRI's notice of copyright,
-   i.e., "Copyright � 1995-2001 Corporation for National Research Initiatives; All
+   i.e., "Copyright © 1995-2001 Corporation for National Research Initiatives; All
    Rights Reserved" are retained in Python 1.6.1 alone or in any derivative version
    prepared by Licensee.  Alternately, in lieu of CNRI's License Agreement,
    Licensee may substitute the following text (omitting the quotes): "Python 1.6.1
@@ -482,9 +572,8 @@ CNRI LICENSE AGREEMENT FOR PYTHON 1.6.1
 8. By clicking on the "ACCEPT" button where indicated, or by copying, installing
    or otherwise using Python 1.6.1, Licensee agrees to be bound by the terms and
    conditions of this License Agreement.
-
 CWI LICENSE AGREEMENT FOR PYTHON 0.9.0 THROUGH 1.2
-Copyright � 1991 - 1995, Stichting Mathematisch Centrum Amsterdam, The
+Copyright © 1991 - 1995, Stichting Mathematisch Centrum Amsterdam, The
 Netherlands.  All rights reserved.
 
 Permission to use, copy, modify, and distribute this software and its

@@ -190,14 +190,11 @@ export type launchOptions = {
     args: string[];
     token?: CancellationToken;
     outChannel?: OutputChannel;
-    port: number;
-    host: string;
 };
 
 export const ITestDebugLauncher = Symbol('ITestDebugLauncher');
 
 export interface ITestDebugLauncher {
-    getLaunchOptions(resource?: Uri): Promise<{ port: number, host: string }>;
     launchDebugger(options: launchOptions): Promise<void>;
 }
 

@@ -25,6 +25,7 @@ export interface IPlatformService {
     isLinux: boolean;
     is64bit: boolean;
     pathVariableName: 'Path' | 'PATH';
+    virtualEnvBinName: 'bin' | 'scripts';
 }
 
 export const IFileSystem = Symbol('IFileSystem');

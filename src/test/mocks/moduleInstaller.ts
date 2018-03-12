@@ -6,6 +6,9 @@ export class MockModuleInstaller extends EventEmitter implements IModuleInstalle
     constructor(public readonly displayName: string, private supported: boolean) {
         super();
     }
+    public get priority(): number {
+        return 0;
+    }
     public async installModule(name: string, resource?: Uri): Promise<void> {
         this.emit('installModule', name);
     }

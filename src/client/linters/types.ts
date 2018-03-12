@@ -38,7 +38,6 @@ export interface ILinterManager {
     getActiveLinters(resource?: vscode.Uri): ILinterInfo[];
     isLintingEnabled(resource?: vscode.Uri): boolean;
     enableLintingAsync(enable: boolean, resource?: vscode.Uri): Promise<void>;
-    disableSessionLinting(): void;
     setActiveLintersAsync(products: Product[], resource?: vscode.Uri): Promise<void>;
     createLinter(product: Product, outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer, resource?: vscode.Uri): ILinter;
 }
@@ -61,8 +60,10 @@ export enum LintMessageSeverity {
 
 export const ILintingEngine = Symbol('ILintingEngine');
 export interface ILintingEngine {
-    lintOpenPythonFiles(): void;
+    readonly diagnostics: vscode.DiagnosticCollection;
+    lintOpenPythonFiles(): Promise<vscode.DiagnosticCollection>;
     lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void>;
     // tslint:disable-next-line:no-any
     linkJupiterExtension(jupiter: vscode.Extension<any> | undefined): Promise<void>;
+    clearDiagnostics(document: vscode.TextDocument): void;
 }

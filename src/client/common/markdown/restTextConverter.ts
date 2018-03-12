@@ -36,7 +36,8 @@ export class RestTextConverter {
     return text
       .replace(/\#/g, '\\#')
       .replace(/\*/g, '\\*')
-      .replace(/\_/g, '\\_');
+      .replace(/\ _/g, ' \\_')
+      .replace(/^_/, '\\_');
   }
 
   private transformLines(docstring: string): string {

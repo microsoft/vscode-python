@@ -15,6 +15,9 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
     public get displayName() {
         return 'Conda';
     }
+    public get priority(): number {
+        return 0;
+    }
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }

@@ -1,4 +1,4 @@
-// tslint:disable:interface-name no-any max-func-body-length estrict-plus-operands
+// tslint:disable:interface-name no-any max-func-body-length estrict-plus-operands no-empty
 
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
@@ -10,12 +10,12 @@ import { getTextEditsFromPatch } from '../../client/common/editor';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
-import { closeActiveWindows, initialize, initializeTest, IS_CI_SERVER, wait } from './../initialize';
+import { closeActiveWindows, initialize, initializeTest, IS_CI_SERVER } from './../initialize';
 import { MockOutputChannel } from './../mockClasses';
 
 const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
 const refactorSourceFile = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'refactoring', 'standAlone', 'refactor.py');
-const refactorTargetFile = path.join(__dirname, '..', '..', '..', 'out', 'test', 'pythonFiles', 'refactoring', 'standAlone', 'refactor.py');
+const refactorTargetFileDir = path.join(__dirname, '..', '..', '..', 'out', 'test', 'pythonFiles', 'refactoring', 'standAlone');
 
 interface RenameResponse {
     results: [{ diff: string }];
@@ -25,28 +25,26 @@ suite('Variable Extraction', () => {
     // Hack hac hack
     const oldExecuteCommand = vscode.commands.executeCommand;
     const options: vscode.TextEditorOptions = { cursorStyle: vscode.TextEditorCursorStyle.Line, insertSpaces: true, lineNumbers: vscode.TextEditorLineNumbersStyle.Off, tabSize: 4 };
+    let refactorTargetFile = '';
     let ioc: UnitTestIocContainer;
-    suiteSetup(async () => {
-        fs.copySync(refactorSourceFile, refactorTargetFile, { overwrite: true });
-        await initialize();
-    });
+    suiteSetup(initialize);
     suiteTeardown(() => {
         vscode.commands.executeCommand = oldExecuteCommand;
         return closeActiveWindows();
     });
     setup(async () => {
         initializeDI();
-        if (fs.existsSync(refactorTargetFile)) {
-            await wait(500);
-            fs.unlinkSync(refactorTargetFile);
-        }
+        refactorTargetFile = path.join(refactorTargetFileDir, `refactor${new Date().getTime()}.py`);
         fs.copySync(refactorSourceFile, refactorTargetFile, { overwrite: true });
         await initializeTest();
         (<any>vscode).commands.executeCommand = (cmd) => Promise.resolve();
     });
-    teardown(() => {
+    teardown(async () => {
         vscode.commands.executeCommand = oldExecuteCommand;
-        return closeActiveWindows();
+        try {
+            await fs.unlink(refactorTargetFile);
+        } catch { }
+        await closeActiveWindows();
     });
 
     function initializeDI() {

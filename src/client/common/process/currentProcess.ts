@@ -4,6 +4,11 @@ import { EnvironmentVariables } from '../variables/types';
 
 @injectable()
 export class CurrentProcess implements ICurrentProcess {
+    public on = (event: string | symbol, listener: Function): this => {
+        process.on(event, listener);
+        // tslint:disable-next-line:no-any
+        return process as any;
+    }
     public get env(): EnvironmentVariables {
         return process.env;
     }

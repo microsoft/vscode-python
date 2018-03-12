@@ -1,32 +1,44 @@
 <!-- 
-Do you have a question? Please ask it on https://stackoverflow.com/questions/tagged/visual-studio-code+python. 
+Do you have a question instead of a bug report or enhancement request? Please ask it on https://stackoverflow.com/questions/tagged/visual-studio-code+python. 
 
-Unable to install linter or formatter? 'No installers available'? 
+Unable to install a linter or formatter? 'No installers available'? 
 Windows - https://stackoverflow.com/questions/4750806/how-do-i-install-pip-on-windows
-Linux - https://www.cyberciti.biz/faq/debian-ubuntu-centos-rhel-linux-install-pipclient/
-https://www.tecmint.com/install-pip-in-linux/
+Linux - https://www.cyberciti.biz/faq/debian-ubuntu-centos-rhel-linux-install-pipclient/ , https://www.tecmint.com/install-pip-in-linux/
 
 Python configuration issues? Please check https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites
+
+Otherwise **please** fill in the requested details below. "XXX" markers should not be present in the final bug report.
 -->
 
 ## Environment data
-VS Code version:  
-Python Extension version:  
-Python Version:   
-OS and version:    
+
+- VS Code version: < XXX >
+- Extension version (available under the Extensions sidebar): < XXX >
+- OS and version: < XXX >
+- Python version: < XXX; include the distribution details if applicable, e.g. Anaconda >
+- Type of virtual environment used (if applicable): < XXX: N/A | venv | virtualenv | conda | ... >
+- Relevant/affected Python packages and their versions: < XXX >
 
 ## Actual behavior
 
+< XXX >
+
 ## Expected  behavior
 
-## Steps to reproduce:  
--  
--  
+< XXX >
+
+## Steps to reproduce:
+1. < XXX >
 
 ## Logs
-Output from ```Python``` output panel  
+Output for `Python` in the `Output` panel (`View`→`Output`, change the drop-down the upper-right of the `Output` panel to `Python`)
+
 ```
+< XXX >
 ```   
-Output from ```Console window``` (Help->Developer Tools menu)
+
+Output from `Console` under the `Developer Tools` panel (toggle Developer Tools on under `Help`)
+
 ```
+< XXX >
 ```

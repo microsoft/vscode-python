@@ -9,6 +9,7 @@ export const CURRENT_PATH_SERVICE = 'CurrentPathService';
 export const KNOWN_PATH_SERVICE = 'KnownPathsService';
 export const GLOBAL_VIRTUAL_ENV_SERVICE = 'VirtualEnvService';
 export const WORKSPACE_VIRTUAL_ENV_SERVICE = 'WorkspaceVirtualEnvService';
+export const PIPENV_SERVICE = 'PipEnvService';
 
 export const IInterpreterVersionService = Symbol('IInterpreterVersionService');
 export interface IInterpreterVersionService {

@@ -6,7 +6,8 @@ import { Minimatch } from 'minimatch';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { LinterErrors, PythonLanguage, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { LinterErrors, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { JupyterProvider } from '../jupyter/provider';
@@ -40,6 +41,7 @@ export class LintingEngine implements ILintingEngine {
   private diagnosticCollection: vscode.DiagnosticCollection;
   private pendingLintings = new Map<string, vscode.CancellationTokenSource>();
   private outputChannel: vscode.OutputChannel;
+  private fileSystem: IFileSystem;
 
   constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
     this.documentHasJupyterCodeCells = (a, b) => Promise.resolve(false);
@@ -48,34 +50,32 @@ export class LintingEngine implements ILintingEngine {
     this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     this.outputChannel = serviceContainer.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
+    this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
     this.diagnosticCollection = vscode.languages.createDiagnosticCollection('python');
   }
 
-  public lintOpenPythonFiles(): void {
-    this.documents.textDocuments.forEach(async document => {
-      if (document.languageId === PythonLanguage.language) {
-        await this.lintDocument(document, 'auto');
-      }
-    });
+  public get diagnostics(): vscode.DiagnosticCollection {
+    return this.diagnosticCollection;
+  }
+
+  public clearDiagnostics(document: vscode.TextDocument): void {
+    if (this.diagnosticCollection.has(document.uri)) {
+      this.diagnosticCollection.delete(document.uri);
+    }
+  }
+
+  public async lintOpenPythonFiles(): Promise<vscode.DiagnosticCollection> {
+    this.diagnosticCollection.clear();
+    const promises = this.documents.textDocuments.map(async document => await this.lintDocument(document, 'auto'));
+    await Promise.all(promises);
+    return this.diagnosticCollection;
   }
 
   public async lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void> {
-    // Check if we need to lint this document
-    const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
-    const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
-    const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
-    const settings = this.configurationService.getSettings(document.uri);
-    if (document.languageId !== PythonLanguage.language) {
-      return;
-    }
-    if (!this.linterManager.isLintingEnabled(document.uri)) {
-      this.diagnosticCollection.set(document.uri, []);
-    }
-    const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => {
-      return new Minimatch(pattern);
-    });
+    this.diagnosticCollection.set(document.uri, []);
 
-    if (ignoreMinmatches.some(matcher => matcher.match(document.fileName) || matcher.match(relativeFileName))) {
+    // Check if we need to lint this document
+    if (!await this.shouldLintDocument(document)) {
       return;
     }
 
@@ -107,6 +107,7 @@ export class LintingEngine implements ILintingEngine {
     // linters will resolve asynchronously - keep a track of all
     // diagnostics reported as them come in.
     let diagnostics: vscode.Diagnostic[] = [];
+    const settings = this.configurationService.getSettings(document.uri);
 
     for (const p of promises) {
       const msgs = await p;
@@ -114,7 +115,6 @@ export class LintingEngine implements ILintingEngine {
         break;
       }
 
-      diagnostics = [];
       if (this.isDocumentOpen(document.uri)) {
         // Build the message and suffix the message with the name of the linter used.
         for (const m of msgs) {
@@ -123,17 +123,16 @@ export class LintingEngine implements ILintingEngine {
             (m.code === LinterErrors.pylint.InvalidSyntax ||
               m.code === LinterErrors.prospector.InvalidSyntax ||
               m.code === LinterErrors.flake8.InvalidSyntax)) {
-            return;
+            continue;
           }
           diagnostics.push(this.createDiagnostics(m, document));
         }
-
         // Limit the number of messages to the max value.
         diagnostics = diagnostics.filter((value, index) => index <= settings.linting.maxNumberOfProblems);
       }
-      // Set all diagnostics found in this pass, as this method always clears existing diagnostics.
-      this.diagnosticCollection.set(document.uri, diagnostics);
     }
+    // Set all diagnostics found in this pass, as this method always clears existing diagnostics.
+    this.diagnosticCollection.set(document.uri, diagnostics);
   }
 
   // tslint:disable-next-line:no-any
@@ -174,5 +173,30 @@ export class LintingEngine implements ILintingEngine {
     diagnostic.code = message.code;
     diagnostic.source = message.provider;
     return diagnostic;
+  }
+
+  private async shouldLintDocument(document: vscode.TextDocument): Promise<boolean> {
+    if (!this.linterManager.isLintingEnabled(document.uri)) {
+      this.diagnosticCollection.set(document.uri, []);
+      return false;
+    }
+
+    if (document.languageId !== PYTHON.language) {
+      return false;
+    }
+
+    const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
+    const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
+    const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
+
+    const settings = this.configurationService.getSettings(document.uri);
+    const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => new Minimatch(pattern));
+    if (ignoreMinmatches.some(matcher => matcher.match(document.fileName) || matcher.match(relativeFileName))) {
+      return false;
+    }
+    if (document.uri.scheme !== 'file' || !document.uri.fsPath) {
+      return false;
+    }
+    return await this.fileSystem.fileExistsAsync(document.uri.fsPath);
   }
 }

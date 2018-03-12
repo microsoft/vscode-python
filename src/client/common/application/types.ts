@@ -413,8 +413,6 @@ export interface IWorkspaceService {
      * ~~The folder that is open in the editor. `undefined` when no folder
      * has been opened.~~
      *
-     * @deprecated Use [`workspaceFolders`](#workspace.workspaceFolders) instead.
-     *
      * @readonly
      */
     readonly rootPath: string | undefined;

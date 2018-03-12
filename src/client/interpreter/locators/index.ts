@@ -14,6 +14,7 @@ import {
     IInterpreterLocatorService,
     InterpreterType,
     KNOWN_PATH_SERVICE,
+    PIPENV_SERVICE,
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
@@ -29,13 +30,19 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
     }
-    public async getInterpreters(resource?: Uri) {
+    public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
+        // Pipenv always wins
+        const pipenv = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
+        const interpreters = await pipenv.getInterpreters(resource);
+        if (interpreters.length > 0) {
+            return interpreters;
+        }
         return this.getInterpretersPerResource(resource);
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
     }
-    private async getInterpretersPerResource(resource?: Uri) {
+    private async getInterpretersPerResource(resource?: Uri): Promise<PythonInterpreter[]> {
         const locators = this.getLocators();
         const promises = locators.map(async provider => provider.getInterpreters(resource));
         const listOfInterpreters = await Promise.all(promises);
@@ -60,7 +67,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
                 return accumulator;
             }, []);
     }
-    private getLocators() {
+    private getLocators(): IInterpreterLocatorService[] {
         const locators: IInterpreterLocatorService[] = [];
         // The order of the services is important.
         if (this.platform.isWindows) {

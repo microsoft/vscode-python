@@ -3,6 +3,7 @@ import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { open } from '../../common/open';
 import { PathUtils } from '../../common/platform/pathUtils';
 import { CurrentProcess } from '../../common/process/currentProcess';
@@ -82,8 +83,14 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     public async LaunchApplicationToDebug(dbgServer: IDebugServer): Promise<any> {
         const pathUtils = new PathUtils(IS_WINDOWS);
         const currentProcess = new CurrentProcess();
-        const helper = new DebugClientHelper(new EnvironmentVariablesService(pathUtils), pathUtils, currentProcess);
+        const environmentVariablesService = new EnvironmentVariablesService(pathUtils);
+        const helper = new DebugClientHelper(environmentVariablesService, pathUtils, currentProcess);
         const environmentVariables = await helper.getEnvironmentVariables(this.args);
+        if (this.args.type === 'pythonExperimental') {
+            // Import the PTVSD debugger, allowing users to use their own latest copies.
+            const experimentalPTVSDPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd');
+            environmentVariablesService.appendPythonPath(environmentVariables, experimentalPTVSDPath);
+        }
         // tslint:disable-next-line:max-func-body-length cyclomatic-complexity no-any
         return new Promise<any>((resolve, reject) => {
             const fileDir = this.args && this.args.program ? path.dirname(this.args.program) : '';
@@ -157,14 +164,11 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     }
     // tslint:disable-next-line:member-ordering
     protected buildLauncherArguments(): string[] {
-        let vsDebugOptions = ['RedirectOutput'];
+        const vsDebugOptions = ['RedirectOutput'];
         if (Array.isArray(this.args.debugOptions)) {
-            vsDebugOptions = this.args.debugOptions.filter(opt => VALID_DEBUG_OPTIONS.indexOf(opt) >= 0);
+            this.args.debugOptions.filter(opt => VALID_DEBUG_OPTIONS.indexOf(opt) >= 0)
+                .forEach(item => vsDebugOptions.push(item));
         }
-
-        // Include a dummy value, to ensure something gets sent.
-        // Else, argument positions get messed up due to an empty string.
-        vsDebugOptions = vsDebugOptions.length === 0 ? ['DUMMYVALUE'] : vsDebugOptions;
 
         const programArgs = Array.isArray(this.args.args) && this.args.args.length > 0 ? this.args.args : [];
         if (typeof this.args.module === 'string' && this.args.module.length > 0) {

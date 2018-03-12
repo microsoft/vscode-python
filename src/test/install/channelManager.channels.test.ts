@@ -9,6 +9,7 @@ import { IApplicationShell } from '../../client/common/application/types';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IModuleInstaller } from '../../client/common/installer/types';
 import { Product } from '../../client/common/types';
+import { IInterpreterLocatorService, InterpreterType, PIPENV_SERVICE, PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -17,11 +18,14 @@ import { IServiceContainer } from '../../client/ioc/types';
 suite('Installation - installation channels', () => {
     let serviceManager: ServiceManager;
     let serviceContainer: IServiceContainer;
+    let pipEnv: TypeMoq.IMock<IInterpreterLocatorService>;
 
     setup(() => {
         const cont = new Container();
         serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
+        pipEnv = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
+        serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, pipEnv.object, PIPENV_SERVICE);
     });
 
     test('Single channel', async () => {
@@ -42,6 +46,24 @@ suite('Installation - installation channels', () => {
         assert.equal(channels.length, 2, 'Incorrect number of channels');
         assert.equal(channels[0], installer1.object, 'Incorrect installer 1');
         assert.equal(channels[1], installer3.object, 'Incorrect installer 2');
+    });
+
+    test('pipenv channel', async () => {
+        mockInstaller(true, '1');
+        mockInstaller(false, '2');
+        mockInstaller(true, '3');
+        const pipenvInstaller = mockInstaller(true, 'pipenv', 10);
+
+        const interpreter: PythonInterpreter = {
+            path: 'pipenv',
+            type: InterpreterType.VirtualEnv
+        };
+        pipEnv.setup(x => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([interpreter]));
+
+        const cm = new InstallationChannelManager(serviceContainer);
+        const channels = await cm.getInstallationChannels();
+        assert.equal(channels.length, 1, 'Incorrect number of channels');
+        assert.equal(channels[0], pipenvInstaller.object, 'Installer must be pipenv');
     });
 
     test('Select installer', async () => {
@@ -72,11 +94,12 @@ suite('Installation - installation channels', () => {
         assert.notEqual(items![1]!.label!.indexOf('Name 2'), -1, 'Incorrect second installer name');
     });
 
-    function mockInstaller(supported: boolean, name: string): TypeMoq.IMock<IModuleInstaller> {
+    function mockInstaller(supported: boolean, name: string, priority?: number): TypeMoq.IMock<IModuleInstaller> {
         const installer = TypeMoq.Mock.ofType<IModuleInstaller>();
         installer
             .setup(x => x.isSupported(TypeMoq.It.isAny()))
             .returns(() => new Promise<boolean>((resolve) => resolve(supported)));
+        installer.setup(x => x.priority).returns(() => priority ? priority : 0);
         serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, installer.object, name);
         return installer;
     }

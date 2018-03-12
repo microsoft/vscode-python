@@ -3,6 +3,7 @@
 
 import { injectable } from 'inversify';
 import { Uri } from 'vscode';
+import { IInterpreterVersionService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
@@ -13,24 +14,24 @@ import { ExecutionResult, IProcessService, IPythonExecutionService, ObservableEx
 
 @injectable()
 export class PythonExecutionService implements IPythonExecutionService {
-    private procService: IProcessService;
-    private configService: IConfigurationService;
-    private fileSystem: IFileSystem;
+    private readonly procService: IProcessService;
+    private readonly configService: IConfigurationService;
+    private readonly fileSystem: IFileSystem;
 
-    constructor(serviceContainer: IServiceContainer, private envVars: EnvironmentVariables | undefined, private resource?: Uri) {
+    constructor(private serviceContainer: IServiceContainer, private envVars: EnvironmentVariables | undefined, private resource?: Uri) {
         this.procService = serviceContainer.get<IProcessService>(IProcessService);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
     public async getVersion(): Promise<string> {
-        return this.procService.exec(this.pythonPath, ['--version'], { env: this.envVars, mergeStdOutErr: true })
-            .then(output => output.stdout.trim());
+        const versionService = this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
+        return versionService.getVersion(this.pythonPath, '');
     }
     public async getExecutablePath(): Promise<string> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
-        if (await this.fileSystem.fileExistsAsync(this.pythonPath)){
+        if (await this.fileSystem.fileExistsAsync(this.pythonPath)) {
             return this.pythonPath;
         }
         return this.procService.exec(this.pythonPath, ['-c', 'import sys;print(sys.executable)'], { env: this.envVars, throwOnStdErr: true })

@@ -7,6 +7,7 @@ import { Product } from '../types';
 export const IModuleInstaller = Symbol('IModuleInstaller');
 export interface IModuleInstaller {
     readonly displayName: string;
+    readonly priority: number;
     installModule(name: string, resource?: Uri): Promise<void>;
     isSupported(resource?: Uri): Promise<boolean>;
 }

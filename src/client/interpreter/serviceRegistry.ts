@@ -23,13 +23,14 @@ import {
     IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
+    PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from './contracts';
 import { InterpreterDisplay } from './display';
 import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
 import { InterpreterHelper } from './helpers';
-import { InterpreterManager } from './index';
+import { InterpreterService } from './interpreterService';
 import { InterpreterVersionService } from './interpreterVersion';
 import { PythonInterpreterLocatorService } from './locators/index';
 import { CondaEnvFileService } from './locators/services/condaEnvFileService';
@@ -38,6 +39,7 @@ import { CondaService } from './locators/services/condaService';
 import { CurrentPathService } from './locators/services/currentPathService';
 import { GlobalVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvService } from './locators/services/globalVirtualEnvService';
 import { getKnownSearchPathsForInterpreters, KnownPathsService } from './locators/services/KnownPathsService';
+import { PipEnvService } from './locators/services/pipEnvService';
 import { WindowsRegistryService } from './locators/services/windowsRegistryService';
 import { WorkspaceVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvService } from './locators/services/workspaceVirtualEnvService';
 import { VirtualEnvironmentManager } from './virtualEnvs/index';
@@ -58,6 +60,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, CurrentPathService, CURRENT_PATH_SERVICE);
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, GlobalVirtualEnvService, GLOBAL_VIRTUAL_ENV_SERVICE);
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, WorkspaceVirtualEnvService, WORKSPACE_VIRTUAL_ENV_SERVICE);
+    serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
 
     const isWindows = serviceManager.get<boolean>(IsWindows);
     if (isWindows) {
@@ -65,7 +68,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     } else {
         serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, KnownPathsService, KNOWN_PATH_SERVICE);
     }
-    serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterManager);
+    serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
     serviceManager.addSingleton<IInterpreterDisplay>(IInterpreterDisplay, InterpreterDisplay);
 
     serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(IPythonPathUpdaterServiceFactory, PythonPathUpdaterServiceFactory);
