@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
+import sys
+
 
 def parse_argv():
     """Parses arguments for use with the test launcher.
@@ -13,15 +16,32 @@ def parse_argv():
     return (sys.argv[1], sys.argv[2], sys.argv[3:])
 
 
+def exclude_current_file_from_debugger():
+    # Load the debugger package
+    try:
+        import ptvsd
+        import ptvsd.debugger as vspd
+        vspd.DONT_DEBUG.append(os.path.normcase(__file__))
+    except:
+        traceback.print_exc()
+        print('''
+Internal error detected. Please copy the above traceback and report at
+https://github.com/Microsoft/vscode-python/issues/new
+
+Press Enter to close. . .''')
+        try:
+            raw_input()
+        except NameError:
+            input()
+        sys.exit(1)
+
+
 def run(cwd, testRunner, args):
     """Runs the test
     cwd -- the current directory to be set
     testRuner -- test runner to be used `pytest` or `nose`
     args -- arguments passed into the test runner
     """
-
-    import os
-    import sys
     
     sys.path[0] = os.getcwd()
     os.chdir(cwd)
@@ -33,11 +53,12 @@ def run(cwd, testRunner, args):
         else:
             import nose
             nose.run(argv=args)
-        sys.exit()
+        sys.exit(0)
     finally:
         pass
 
 
 if __name__ == '__main__':
+    exclude_current_file_from_debugger()
     cwd, testRunner, args = parse_argv()
     run(cwd, testRunner, args)
