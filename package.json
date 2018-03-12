@@ -1548,8 +1548,7 @@
                 "id": "pip-requirements",
                 "aliases": [
                     "pip requirements",
-                    "requirements.txt",
-                    "requirements.in"
+                    "requirements.txt"
                 ],
                 "filenames": [
                     "requirements.txt",
