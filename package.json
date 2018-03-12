@@ -75,9 +75,6 @@
         "onCommand:python.runFailedTests",
         "onCommand:python.execSelectionInTerminal",
         "onCommand:python.execSelectionInDjangoShell",
-        "onCommand:jupyter.runSelectionLine",
-        "onCommand:jupyter.execCurrentCell",
-        "onCommand:jupyter.execCurrentCellAndAdvance",
         "onCommand:python.buildWorkspaceSymbols",
         "onCommand:python.updateSparkLibrary",
         "onCommand:python.startREPL",
@@ -92,13 +89,6 @@
             {
                 "language": "python",
                 "path": "./snippets/python.json"
-            }
-        ],
-        "keybindings": [
-            {
-                "command": "jupyter.runSelectionLine",
-                "key": "ctrl+alt+enter",
-                "when": "editorFocus && !replaceActive && !searchViewletVisible && !findWidgetVisible"
             }
         ],
         "commands": [

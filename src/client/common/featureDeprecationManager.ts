@@ -18,15 +18,6 @@ type deprecatedSettingAndValue = {
     values?: {}[];
 };
 
-const jupyterDeprecationInfo: deprecatedFeatureInfo = {
-    doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_JUPYTER',
-    message: 'This functionality has been moved to the \'Jupyter\' extension.',
-    moreInfoUrl: 'https://marketplace.visualstudio.com/items?itemName=donjayamanne.jupyter',
-    commands: ['jupyter.runSelectionLine', 'jupyter.execCurrentCell',
-        'jupyter.execCurrentCellAndAdvance', 'jupyter.gotToPreviousCell',
-        'jupyter.gotToNextCell']
-};
-
 const deprecatedFeatures: deprecatedFeatureInfo[] = [
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE',
@@ -53,9 +44,6 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         this.disposables.forEach(disposable => disposable.dispose());
     }
     public initialize() {
-        if (!this.jupyterExtensionInstalled) {
-            deprecatedFeatures.push(jupyterDeprecationInfo);
-        }
         deprecatedFeatures.forEach(this.registerDeprecation.bind(this));
     }
     private registerDeprecation(deprecatedInfo: deprecatedFeatureInfo) {
