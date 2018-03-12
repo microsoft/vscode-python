@@ -1431,6 +1431,12 @@
                     "description": "Pattern used to exclude files and folders from ctags See http://ctags.sourceforge.net/ctags.html.",
                     "scope": "resource"
                 },
+                "python.unitTest.useExperimentalDebugger": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Use the experimental debugger when debugging unit tests.",
+                    "scope": "resource"
+                },
                 "python.unitTest.promptToConfigure": {
                     "type": "boolean",
                     "default": true,

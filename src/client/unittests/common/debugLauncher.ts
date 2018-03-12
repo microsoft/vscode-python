@@ -1,30 +1,38 @@
-import { injectable } from 'inversify';
-import { debug, Uri, workspace } from 'vscode';
+import { inject, injectable } from 'inversify';
+import { Uri } from 'vscode';
+import { IDebugService, IWorkspaceService } from '../../common/application/types';
+import { IConfigurationService } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
 import { ITestDebugLauncher, launchOptions } from './types';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
     public async launchDebugger(options: launchOptions) {
         if (options.token && options.token!.isCancellationRequested) {
             return;
         }
         const cwdUri = options.cwd ? Uri.file(options.cwd) : undefined;
-
-        if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        if (!workspaceService.hasWorkspaceFolders) {
             throw new Error('Please open a workspace');
         }
-        let workspaceFolder = workspace.getWorkspaceFolder(cwdUri!);
+        let workspaceFolder = workspaceService.getWorkspaceFolder(cwdUri!);
         if (!workspaceFolder) {
-            workspaceFolder = workspace.workspaceFolders[0];
+            workspaceFolder = workspaceService.workspaceFolders![0];
         }
+        const cwd = cwdUri ? cwdUri.fsPath : workspaceFolder.uri.fsPath;
         const args = options.args.slice();
         const program = args.shift();
-        return debug.startDebugging(workspaceFolder, {
+        const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(Uri.file(cwd));
+        const debuggerType = configurationService.unitTest.useExperimentalDebugger === true ? 'pythonExperimental' : 'python';
+        return debugManager.startDebugging(workspaceFolder, {
             name: 'Debug Unit Test',
-            type: 'python',
+            type: debuggerType,
             request: 'launch',
             program,
-            cwd: cwdUri ? cwdUri.fsPath : workspaceFolder.uri.fsPath,
+            cwd,
             args,
             console: 'none',
             debugOptions: ['RedirectOutput']
