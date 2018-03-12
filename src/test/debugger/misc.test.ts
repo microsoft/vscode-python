@@ -84,23 +84,18 @@ const THREAD_TIMEOUT = 10000;
                 debugClient.waitForEvent('stopped')
             ]);
         });
-        test('test stderr output', async function () {
-            if (debuggerType !== 'python') {
-                return this.skip();
-            }
+        test('test stderr output for Python', async () => {
+            const output = debuggerType === 'python' ? 'stdout' : 'stderr';
             await Promise.all([
                 debugClient.configurationSequence(),
                 debugClient.launch(buildLauncArgs('stdErrOutput.py', false)),
                 debugClient.waitForEvent('initialized'),
                 //TODO: ptvsd does not differentiate.
-                debugClient.assertOutput('stdout', 'error output'),
+                debugClient.assertOutput(output, 'error output'),
                 debugClient.waitForEvent('terminated')
             ]);
         });
-        test('Test stdout output', async function () {
-            if (debuggerType !== 'python') {
-                return this.skip();
-            }
+        test('Test stdout output', async () => {
             await Promise.all([
                 debugClient.configurationSequence(),
                 debugClient.launch(buildLauncArgs('stdOutOutput.py', false)),
