@@ -1117,10 +1117,10 @@
             "type": "object",
             "title": "Python Configuration",
             "properties": {
-                "python.usePtvs": {
+                "python.ptvs.enabled": {
                     "type": "boolean",
                     "default": "true",
-                    "description": "Activates Python code analysis engine based Python Tools for Visual Studio (requires .NET Core).",
+                    "description": "Activates Python code analysis engine based Python Tools for Visual Studio.",
                     "scope": "resource"
                 },
                 "python.pythonPath": {

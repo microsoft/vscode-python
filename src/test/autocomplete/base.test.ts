@@ -31,7 +31,7 @@ suite('Autocomplete', () => {
         await initialize();
         initializeDI();
         isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
-        isPtvs = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().usePtvs;
+        isPtvs = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().ptvs.enabled;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);

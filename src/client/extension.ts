@@ -25,17 +25,21 @@ import { registerTypes as variableRegisterTypes } from './common/variables/servi
 import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
 import { IDebugConfigurationProvider } from './debugger/types';
+import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import { ICondaService, IInterpreterService } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer } from './ioc/types';
+import { LinterCommands } from './linters/linterCommands';
+import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ILintingEngine } from './linters/types';
 import { LinterProvider } from './providers/linterProvider';
 import { ReplProvider } from './providers/replProvider';
 import { TerminalProvider } from './providers/terminalProvider';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
+import * as sortImports from './sortImports';
 import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { StopWatch } from './telemetry/stopWatch';
@@ -65,11 +69,14 @@ export async function activate(context: vscode.ExtensionContext) {
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 
-    const activator: IExtensionActivator = pythonSettings.usePtvs
+    const activator: IExtensionActivator = pythonSettings.ptvs.enabled
         ? new PtvsExtensionActivator(serviceManager, pythonSettings)
         : new ClassicExtensionActivator(serviceManager, pythonSettings);
 
     await activator.activate(context);
+
+    const standardOutputChannel = serviceManager.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+    sortImports.activate(context, standardOutputChannel, serviceManager);
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
     // tslint:disable-next-line:no-floating-promises
@@ -82,12 +89,13 @@ export async function activate(context: vscode.ExtensionContext) {
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
 
-    const linterProvider = new LinterProvider(context, serviceManager);
-    context.subscriptions.push(linterProvider);
-
     const jupyterExtension = vscode.extensions.getExtension('donjayamanne.jupyter');
     const lintingEngine = serviceManager.get<ILintingEngine>(ILintingEngine);
     lintingEngine.linkJupiterExtension(jupyterExtension).ignoreErrors();
+
+    context.subscriptions.push(new LinterCommands(serviceManager));
+    const linterProvider = new LinterProvider(context, serviceManager);
+    context.subscriptions.push(linterProvider);
 
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
@@ -124,7 +132,9 @@ function registerServices(context: vscode.ExtensionContext, serviceManager: Serv
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
+    lintersRegisterTypes(serviceManager);
     interpretersRegisterTypes(serviceManager);
+    formattersRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);

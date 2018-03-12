@@ -57,6 +57,8 @@ export class PtvsExtensionActivator implements IExtensionActivator {
     // tslint:disable-next-line:no-console
     console.log(`Language server started: ${sw.elapsedTime} ms`);
     await this.languageClent.onReady();
+    // tslint:disable-next-line:no-console
+    console.log(`Language server ready: ${sw.elapsedTime} ms`);
     return true;
   }
 

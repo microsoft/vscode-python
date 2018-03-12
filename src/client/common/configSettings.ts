@@ -10,6 +10,7 @@ import {
     IAutoCompeteSettings,
     IFormattingSettings,
     ILintingSettings,
+    IPtvsSettings,
     IPythonSettings,
     ISortImportSettings,
     ITerminalSettings,
@@ -27,7 +28,7 @@ export const IS_WINDOWS = /^win/.test(process.platform);
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
 
-    public usePtvs: boolean;
+    public ptvs: IPtvsSettings;
     public jediPath: string;
     public jediMemoryLimit: number;
     public envFile: string;
@@ -103,21 +104,31 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         const workspaceRoot = this.workspaceRoot.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(this.workspaceRoot ? this.workspaceRoot.fsPath : undefined);
         const pythonSettings = vscode.workspace.getConfiguration('python', this.workspaceRoot);
-        this.usePtvs = pythonSettings.get<boolean>('usePtvs');
+
+        const ptvsSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('ptvs'))!;
+        if (this.ptvs) {
+            Object.assign<IPtvsSettings, IPtvsSettings>(this.ptvs, ptvsSettings);
+        } else {
+            this.ptvs = ptvsSettings;
+        }
+
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
         this.pythonPath = getAbsolutePath(this.pythonPath, workspaceRoot);
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
-        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
-        if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
-            this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), workspaceRoot);
-        } else {
-            this.jediPath = '';
+
+        if (!this.ptvs.enabled) {
+            // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+            this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
+            if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
+                this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), workspaceRoot);
+            } else {
+                this.jediPath = '';
+            }
+            this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
         }
-        this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.envFile = systemVariables.resolveAny(pythonSettings.get<string>('envFile'))!;
@@ -125,6 +136,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion no-any
         this.devOptions = systemVariables.resolveAny(pythonSettings.get<any[]>('devOptions'))!;
         this.devOptions = Array.isArray(this.devOptions) ? this.devOptions : [];
+
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const lintingSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('linting'))!;
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion

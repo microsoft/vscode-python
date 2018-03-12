@@ -4,12 +4,9 @@
 import * as vscode from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IOutputChannel, IPythonSettings } from '../common/types';
-import { registerTypes as formattersRegisterTypes } from '../formatters/serviceRegistry';
 import { IShebangCodeLensProvider } from '../interpreter/contracts';
 import { IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
-import { LinterCommands } from '../linters/linterCommands';
-import { registerTypes as lintersRegisterTypes } from '../linters/serviceRegistry';
 import { PythonCompletionItemProvider } from '../providers/completionProvider';
 import { PythonDefinitionProvider } from '../providers/definitionProvider';
 import { PythonHoverProvider } from '../providers/hoverProvider';
@@ -19,7 +16,6 @@ import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { activateSimplePythonRefactorProvider } from '../providers/simpleRefactorProvider';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
-import * as sortImports from '../sortImports';
 import { TEST_OUTPUT_CHANNEL } from '../unittests/common/constants';
 import * as tests from '../unittests/main';
 import { WorkspaceSymbols } from '../workspaceSymbols/main';
@@ -32,18 +28,12 @@ export class ClassicExtensionActivator implements IExtensionActivator {
   }
 
   public async activate(context: vscode.ExtensionContext): Promise<boolean> {
-    lintersRegisterTypes(this.serviceManager);
-    formattersRegisterTypes(this.serviceManager);
-
     const standardOutputChannel = this.serviceManager.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    sortImports.activate(context, standardOutputChannel, this.serviceManager);
-
     activateSimplePythonRefactorProvider(context, standardOutputChannel, this.serviceManager);
+
     const jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager);
     context.subscriptions.push(jediFactory);
-
     context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
-    context.subscriptions.push(new LinterCommands(this.serviceManager));
 
     // Enable indentAction
     // tslint:disable-next-line:no-non-null-assertion

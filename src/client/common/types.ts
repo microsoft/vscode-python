@@ -95,7 +95,7 @@ export interface ICurrentProcess {
 }
 
 export interface IPythonSettings {
-    readonly usePtvs: boolean;
+    readonly ptvs: IPtvsSettings;
     readonly pythonPath: string;
     readonly venvPath: string;
     readonly venvFolders: string[];
@@ -114,6 +114,11 @@ export interface IPythonSettings {
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
 }
+
+export interface IPtvsSettings {
+    readonly enabled: boolean;
+}
+
 export interface ISortImportSettings {
     readonly path: string;
     readonly args: string[];
