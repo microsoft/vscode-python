@@ -16,12 +16,8 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
     }
     protected provideDefaults(workspaceFolder: Uri, debugConfiguration: PythonDebugConfiguration): void {
         super.provideDefaults(workspaceFolder, debugConfiguration);
+
         debugConfiguration.stopOnEntry = false;
-        if (debugConfiguration.console !== 'externalTerminal' &&
-            debugConfiguration.console !== 'integratedTerminal' &&
-            debugConfiguration.console !== 'none') {
-            debugConfiguration.console = 'integratedTerminal';
-        }
 
         // Add PTVSD specific flags.
         const ptvsdDebugConfigurationFlags = debugConfiguration as PTVSDDebugConfiguration;

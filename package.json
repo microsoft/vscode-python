@@ -531,7 +531,7 @@
                                     "externalTerminal"
                                 ],
                                 "description": "Where to launch the debug target: internal console, integrated terminal, or external terminal.",
-                                "default": "none"
+                                "default": "integratedTerminal"
                             },
                             "cwd": {
                                 "type": "string",

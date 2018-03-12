@@ -51,7 +51,7 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
             debugConfiguration.stopOnEntry = false;
         }
         if (!debugConfiguration.console) {
-            debugConfiguration.console = 'none';
+            debugConfiguration.console = 'integratedTerminal';
         }
         // If using a terminal, then never open internal console.
         if (debugConfiguration.console !== 'none' && !debugConfiguration.internalConsoleOptions) {
