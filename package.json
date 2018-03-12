@@ -857,6 +857,7 @@
                             },
                             "console": {
                                 "enum": [
+                                    "none", 
                                     "integratedTerminal",
                                     "externalTerminal"
                                 ],
