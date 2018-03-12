@@ -1,14 +1,16 @@
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { Uri } from 'vscode';
 import { IDebugService, IWorkspaceService } from '../../common/application/types';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { IConfigurationService } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { ITestDebugLauncher, launchOptions } from './types';
+import { ITestDebugLauncher, LaunchOptions, TestProvider } from './types';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
-    public async launchDebugger(options: launchOptions) {
+    public async launchDebugger(options: LaunchOptions) {
         if (options.token && options.token!.isCancellationRequested) {
             return;
         }
@@ -21,21 +23,50 @@ export class DebugLauncher implements ITestDebugLauncher {
         if (!workspaceFolder) {
             workspaceFolder = workspaceService.workspaceFolders![0];
         }
+
         const cwd = cwdUri ? cwdUri.fsPath : workspaceFolder.uri.fsPath;
-        const args = options.args.slice();
-        const program = args.shift();
-        const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(Uri.file(cwd));
-        const debuggerType = configurationService.unitTest.useExperimentalDebugger === true ? 'pythonExperimental' : 'python';
+        const useExperimentalDebugger = configurationService.unitTest.useExperimentalDebugger === true;
+        const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
+        const debuggerType = useExperimentalDebugger ? 'pythonExperimental' : 'python';
+        const debugArgs = this.fixArgs(options.args, options.testProvider, useExperimentalDebugger);
+        const program = this.getTestLauncherScript(options.testProvider, useExperimentalDebugger);
+
         return debugManager.startDebugging(workspaceFolder, {
             name: 'Debug Unit Test',
             type: debuggerType,
             request: 'launch',
             program,
             cwd,
-            args,
+            args: debugArgs,
             console: 'none',
             debugOptions: ['RedirectOutput']
         }).then(() => void (0));
+    }
+    private fixArgs(args: string[], testProvider: TestProvider, useExperimentalDebugger: boolean): string[] {
+        if (testProvider === 'unittest' && useExperimentalDebugger) {
+            return args.filter(item => item !== '--debug');
+        } else {
+            return args;
+        }
+    }
+    private getTestLauncherScript(testProvider: TestProvider, useExperimentalDebugger: boolean) {
+        switch (testProvider) {
+            case 'unittest': {
+                return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'PythonTools', 'visualstudio_py_testlauncher.py');
+            }
+            case 'pytest':
+            case 'nosetest': {
+                if (useExperimentalDebugger) {
+                    return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'testlauncher.py');
+                } else {
+                    return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'PythonTools', 'testlauncher.py');
+                }
+
+            }
+            default: {
+                throw new Error(`Unknown test provider '${testProvider}'`);
+            }
+        }
     }
 }
