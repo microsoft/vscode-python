@@ -51,7 +51,7 @@ const THREAD_TIMEOUT = 10000;
             await sleep(1000);
         });
         function buildLauncArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
-            return {
+            const options: LaunchRequestArguments = {
                 program: path.join(debugFilesPath, pythonFile),
                 cwd: debugFilesPath,
                 stopOnEntry,
@@ -63,6 +63,13 @@ const THREAD_TIMEOUT = 10000;
                 logToFile: false,
                 type: debuggerType
             };
+
+            // Custom experimental debugger options (filled in by DebugConfigurationProvider).
+            if (debuggerType === 'pythonExperimental') {
+                (options as any).redirectOutput = true;
+            }
+
+            return options;
         }
 
         test('Should run program to the end', async () => {
