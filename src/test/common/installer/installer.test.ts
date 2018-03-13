@@ -6,7 +6,6 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
 import { Disposable, OutputChannel, Uri } from 'vscode';
 import { EnumEx } from '../../../client/common/enumUtils';
-import { Installer } from '../../../client/common/installer/installer';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import { IInstallationChannelManager, IModuleInstaller } from '../../../client/common/installer/types';
 import { IDisposableRegistry, ILogger, InstallerResponse, ModuleNamePurpose, Product } from '../../../client/common/types';
@@ -19,16 +18,15 @@ suite('Module Installerx', () => {
     [undefined, Uri.file('resource')].forEach(resource => {
         EnumEx.getNamesAndValues<Product>(Product).forEach(product => {
             let disposables: Disposable[] = [];
-            let installer: Installer;
+            let installer: ProductInstaller;
             let installationChannel: TypeMoq.IMock<IInstallationChannelManager>;
             let moduleInstaller: TypeMoq.IMock<IModuleInstaller>;
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-            let productInstallerFactory: ProductInstaller;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
 
-                installer = new Installer(serviceContainer.object, outputChannel.object);
+                installer = new ProductInstaller(serviceContainer.object, outputChannel.object);
 
                 disposables = [];
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny())).returns(() => disposables);
@@ -41,8 +39,6 @@ suite('Module Installerx', () => {
                 moduleInstaller.setup((x: any) => x.then).returns(() => undefined);
                 installationChannel.setup(i => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(moduleInstaller.object));
                 installationChannel.setup(i => i.getInstallationChannel(TypeMoq.It.isAny())).returns(() => Promise.resolve(moduleInstaller.object));
-
-                productInstallerFactory = new ProductInstaller(serviceContainer.object, outputChannel.object);
             });
             teardown(() => {
                 disposables.forEach(disposable => {
@@ -91,7 +87,7 @@ suite('Module Installerx', () => {
                         moduleInstaller.setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource))).returns(() => Promise.reject(new Error('UnitTesting')));
 
                         try {
-                            await productInstallerFactory.install(product.value, resource);
+                            await installer.install(product.value, resource);
                         } catch (ex) {
                             moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource)), TypeMoq.Times.once());
                         }

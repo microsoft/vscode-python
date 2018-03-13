@@ -5,9 +5,9 @@ import { ConfigurationTarget, Uri } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { CondaInstaller } from '../../client/common/installer/condaInstaller';
-import { Installer } from '../../client/common/installer/installer';
 import { PipEnvInstaller } from '../../client/common/installer/pipEnvInstaller';
 import { PipInstaller } from '../../client/common/installer/pipInstaller';
+import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { IModuleInstaller } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
@@ -59,7 +59,7 @@ suite('Module Installer', () => {
 
         ioc.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
         ioc.serviceManager.addSingleton<ILogger>(ILogger, Logger);
-        ioc.serviceManager.addSingleton<IInstaller>(IInstaller, Installer);
+        ioc.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
 
         mockTerminalService = TypeMoq.Mock.ofType<ITerminalService>();
         const mockTerminalFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
