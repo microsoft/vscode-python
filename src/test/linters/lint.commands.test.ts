@@ -36,6 +36,7 @@ suite('Linting - Linter Selector', () => {
         const cont = new Container();
         const serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
+        serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
 
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
@@ -74,7 +75,7 @@ suite('Linting - Linter Selector', () => {
     });
 
     test('Run linter command', async () => {
-        commands.runLinting();
+        await commands.runLinting();
         engine.verify(p => p.lintOpenPythonFiles(), TypeMoq.Times.once());
     });
 
