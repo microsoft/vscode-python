@@ -1,4 +1,4 @@
-# -*- coding：utf-8 -*-
+# -*- coding: utf-8 -*-
 # pylint: disable=E0401, W0512
 
 import os
