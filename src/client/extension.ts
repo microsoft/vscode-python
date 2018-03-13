@@ -6,8 +6,9 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 import { Container } from 'inversify';
-import * as vscode from 'vscode';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
+import * as vscode from 'vscode';
+import { IS_PTVS_ENGINE_TEST } from '../test/constants';
 import { ClassicExtensionActivator } from './activation/classic';
 import { PtvsExtensionActivator } from './activation/ptvs';
 import { IExtensionActivator } from './activation/types';
@@ -69,7 +70,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 
-    const activator: IExtensionActivator = pythonSettings.ptvs.enabled
+    const activator: IExtensionActivator = IS_PTVS_ENGINE_TEST || pythonSettings.ptvs.enabled
         ? new PtvsExtensionActivator(serviceManager, pythonSettings)
         : new ClassicExtensionActivator(serviceManager, pythonSettings);
 

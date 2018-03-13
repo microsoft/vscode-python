@@ -3,6 +3,7 @@
 
 // tslint:disable:no-string-literal
 import { workspace } from 'vscode';
+import { PythonSettings } from '../client/common/configSettings';
 
 export const IS_APPVEYOR = process.env['APPVEYOR'] === 'true';
 export const IS_CI_SERVER = process.env['TRAVIS'] === 'true' || IS_APPVEYOR;
@@ -15,3 +16,5 @@ export const TEST_DEBUGGER = IS_CI_SERVER ? IS_CI_SERVER_TEST_DEBUGGER : true;
 function isMultitrootTest() {
     return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;
 }
+
+export const IS_PTVS_ENGINE_TEST = process.env['VSC_PYTHON_PTVS'] === '1' || PythonSettings.getInstance().ptvs.enabled;

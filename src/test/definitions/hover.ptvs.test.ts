@@ -1,9 +1,11 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import * as assert from 'assert';
 import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { PythonSettings } from '../../client/common/configSettings';
-import { isPtvsEngine } from '../../client/common/constants';
+import { IS_PTVS_ENGINE_TEST } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { normalizeMarkedString } from '../textUtils';
 
@@ -21,8 +23,7 @@ let textDocument: vscode.TextDocument;
 // tslint:disable-next-line:max-func-body-length
 suite('Hover Definition (PTVS)', () => {
     suiteSetup(async function () {
-        const ptvsEngine = isPtvsEngine() || PythonSettings.getInstance().ptvs.enabled;
-        if (!ptvsEngine) {
+        if (!IS_PTVS_ENGINE_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
@@ -85,8 +86,8 @@ suite('Hover Definition (PTVS)', () => {
         // tslint:disable-next-line:prefer-template
         const expectedContent = 'def four.showMessage()' + EOL + EOL +
             '```html ' + EOL +
-            '        Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи.   ' + EOL +
-            '        Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.   ' + EOL +
+            '    Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи.    ' + EOL +
+            '    Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.   ' + EOL +
             '```';
         // tslint:disable-next-line:prefer-template
         assert.equal(normalizeMarkedString(def[0].contents[0]), expectedContent, 'Invalid contents');
@@ -137,27 +138,30 @@ suite('Hover Definition (PTVS)', () => {
     test('Highlight Function', async () => {
         const def = await openAndHover(fileHover, 8, 14);
         assert.equal(def.length, 1, 'Definition length is incorrect');
-        assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '8,11', 'Start position is incorrect');
+        assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '8,6', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '8,15', 'End position is incorrect');
         // tslint:disable-next-line:prefer-template
-        assert.equal(normalizeMarkedString(def[0].contents[0]), '```python' + EOL +
-            'def acos(x)' + EOL +
-            '```' + EOL +
+        assert.equal(normalizeMarkedString(def[0].contents[0]),
+            // tslint:disable-next-line:prefer-template
+            'built-in function acos(x)' + EOL + EOL +
+            'acos(x) ' + EOL +
+            ' ' + EOL +
             'Return the arc cosine (measured in radians) of x.', 'Invalid conents');
     });
 
     test('Highlight Multiline Method Signature', async () => {
         const def = await openAndHover(fileHover, 14, 14);
         assert.equal(def.length, 1, 'Definition length is incorrect');
-        assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '14,9', 'Start position is incorrect');
+        assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '14,4', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '14,15', 'End position is incorrect');
         // tslint:disable-next-line:prefer-template
-        assert.equal(normalizeMarkedString(def[0].contents[0]), '```python' + EOL +
-            'class Thread(group=None, target=None, name=None, args=(), kwargs=None, verbose=None)' + EOL +
-            '```' + EOL +
-            'A class that represents a thread of control.' + EOL +
-            '' + EOL +
-            'This class can be safely subclassed in a limited fashion.', 'Invalid content items');
+        assert.equal(normalizeMarkedString(def[0].contents[0]),
+            // tslint:disable-next-line:prefer-template
+            'Thread' + EOL + EOL +
+            'A class that represents a thread of control. ' + EOL +
+            '```html ' + EOL +
+            '    This class can be safely subclassed in a limited fashion.   ' + EOL +
+            '```', 'Invalid content items');
     });
 
     test('Variable', async () => {
@@ -165,21 +169,21 @@ suite('Hover Definition (PTVS)', () => {
         assert.equal(def.length, 1, 'Definition length is incorrect');
         assert.equal(def[0].contents.length, 1, 'Only expected one result');
         const contents = normalizeMarkedString(def[0].contents[0]);
-        if (contents.indexOf('```python') === -1) {
-            assert.fail(contents, '', 'First line is incorrect', 'compare');
-        }
-        if (contents.indexOf('rnd: Random') === -1) {
-            assert.fail(contents, '', 'Variable name or type are missing', 'compare');
+        if (contents.indexOf('Random') === -1) {
+            assert.fail(contents, '', 'Variable type is missing', 'compare');
         }
     });
 
-    test('format().capitalize()', async () => {
+    test('format().capitalize()', async function () {
+        // https://github.com/Microsoft/PTVS/issues/3868
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
         const def = await openAndHover(fileStringFormat, 5, 41);
         assert.equal(def.length, 1, 'Definition length is incorrect');
         assert.equal(def[0].contents.length, 1, 'Only expected one result');
         const contents = normalizeMarkedString(def[0].contents[0]);
-        if (contents.indexOf('def capitalize') === -1) {
-            assert.fail(contents, '', '\'def capitalize\' is missing', 'compare');
+        if (contents.indexOf('capitalize') === -1) {
+            assert.fail(contents, '', '\'capitalize\' is missing', 'compare');
         }
         if (contents.indexOf('Return a capitalized version of S') === -1 &&
             contents.indexOf('Return a copy of the string S with only its first character') === -1) {

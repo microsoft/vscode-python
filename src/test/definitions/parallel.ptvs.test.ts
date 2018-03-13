@@ -1,17 +1,30 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import * as assert from 'assert';
 import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Hover } from 'vscode';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
+import { IS_PTVS_ENGINE_TEST } from '../constants';
 import { closeActiveWindows, initialize } from '../initialize';
 import { normalizeMarkedString } from '../textUtils';
 
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
 const fileOne = path.join(autoCompPath, 'one.py');
 
-suite('Code, Hover Definition and Intellisense', () => {
-    suiteSetup(initialize);
+suite('Code, Hover Definition and Intellisense (PTVS)', () => {
+    suiteSetup(async function () {
+        // https://github.com/Microsoft/vscode-python/issues/1061
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
+
+        if (!IS_PTVS_ENGINE_TEST) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
+        await initialize();
+    });
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 
