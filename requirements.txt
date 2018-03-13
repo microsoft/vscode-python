@@ -1,10 +1,10 @@
-autopep8==1.2.1
-yapf==0.6.2
-pylint==1.8.2
-pep8==1.7.0
-prospector==0.11.7
-flake8==2.6.0
-pydocstyle==1.0.0
+autopep8
+yapf
+pylint
+pep8
+prospector
+flake8
+pydocstyle
 nose
 pytest
 fabric
