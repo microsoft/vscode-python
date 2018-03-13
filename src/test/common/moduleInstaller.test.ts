@@ -167,6 +167,22 @@ suite('Module Installer', () => {
         const condaInstaller = new CondaInstaller(serviceContainer.object);
         await expect(condaInstaller.isSupported()).to.eventually.equal(true, 'Conda is not supported');
     });
+    test('Ensure conda is not supported even if conda is available', async () => {
+        const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+
+        const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
+        const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+        const pythonPath = 'pythonABC';
+        settings.setup(s => s.pythonPath).returns(() => pythonPath);
+        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICondaService))).returns(() => condaService.object);
+        condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(true));
+        condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
+
+        const condaInstaller = new CondaInstaller(serviceContainer.object);
+        await expect(condaInstaller.isSupported()).to.eventually.equal(false, 'Conda should not be supported');
+    });
 
     test('Validate pip install arguments', async () => {
         const interpreterPath = await getCurrentPythonPath();
