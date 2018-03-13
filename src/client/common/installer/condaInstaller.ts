@@ -30,8 +30,8 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
      * @returns {Promise<boolean>} Whether conda is supported as a module installer or not.
      */
     public async isSupported(resource?: Uri): Promise<boolean> {
-        if (this.isCondaAvailable !== undefined) {
-            return this.isCondaAvailable!;
+        if (this.isCondaAvailable === false) {
+            return false;
         }
         const condaLocator = this.serviceContainer.get<ICondaService>(ICondaService);
         this.isCondaAvailable = await condaLocator.isCondaAvailable();
