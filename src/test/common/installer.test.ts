@@ -75,9 +75,6 @@ suite('Installer', () => {
             if (args.length > 1 && args[0] === '-c' && args[1] === `import ${moduleName}`) {
                 checkInstalledDef.resolve(true);
             }
-            if (product === Product.prospector && args.length > 0 && args[0] === '--version') {
-                checkInstalledDef.resolve(true);
-            }
             callback({ stdout: '' });
         });
         await installer.isInstalled(product, resource);

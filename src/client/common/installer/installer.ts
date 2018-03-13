@@ -164,14 +164,12 @@ export class Installer implements IInstaller {
         const executableName = this.getExecutableNameFromSettings(product, resource);
 
         const isModule = typeof moduleName === 'string' && moduleName.length > 0 && path.basename(executableName) === executableName;
-        // Prospector is an exception, it can be installed as a module, but not run as one.
-        if (product !== Product.prospector && isModule) {
+        if (isModule) {
             const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(resource);
             return pythonProcess.isModuleInstalled(executableName);
         } else {
             const process = this.serviceContainer.get<IProcessService>(IProcessService);
-            const prospectorPath = PythonSettings.getInstance(resource).linting.prospectorPath;
-            return process.exec(prospectorPath, ['--version'], { mergeStdOutErr: true })
+            return process.exec(executableName, ['--version'], { mergeStdOutErr: true })
                 .then(() => true)
                 .catch(() => false);
         }
