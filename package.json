@@ -1119,7 +1119,7 @@
             "properties": {
                 "python.ptvs.enabled": {
                     "type": "boolean",
-                    "default": "true",
+                    "default": "false",
                     "description": "Activates Python code analysis engine based Python Tools for Visual Studio.",
                     "scope": "resource"
                 },
