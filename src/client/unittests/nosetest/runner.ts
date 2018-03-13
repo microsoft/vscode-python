@@ -77,7 +77,7 @@ export function runTest(serviceContainer: IServiceContainer, testResultsService:
             return run(serviceContainer, 'nosetest', runOptions);
         }
     }).then(() => {
-        return updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
+        return options.debug ? options.tests : updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
     }).then(result => {
         xmlLogFileCleanup();
         return result;
