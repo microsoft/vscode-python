@@ -8,7 +8,7 @@ import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER, IS_MULTI_ROOT_TEST } from './
 import * as testRunner from './testRunner';
 
 process.env.VSC_PYTHON_CI_TEST = '1';
-process.env.IS_MULTI_ROOT_TEST = IS_MULTI_ROOT_TEST;
+process.env.IS_MULTI_ROOT_TEST = IS_MULTI_ROOT_TEST.toString();
 
 // If running on CI server and we're running the debugger tests, then ensure we only run debug tests.
 // We do this to ensure we only run debugger test, as debugger tests are very flaky on CI.
