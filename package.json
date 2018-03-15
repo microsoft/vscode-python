@@ -1694,7 +1694,7 @@
         "mocha": "^5.0.4",
         "relative": "^3.0.2",
         "remap-istanbul": "^0.10.1",
-        "retyped-diff-match-patch-tsd-ambient": "^1.0.0-1",
+        "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
         "shortid": "^2.2.8",
         "sinon": "^4.4.5",
         "tslint": "^5.9.1",

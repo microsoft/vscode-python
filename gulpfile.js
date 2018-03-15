@@ -21,6 +21,9 @@ const jeditor = require("gulp-json-editor");
 const del = require('del');
 const sourcemaps = require('gulp-sourcemaps');
 const fs = require('fs');
+const remapIstanbul = require('remap-istanbul');
+const istanbul = require('istanbul');
+const glob = require('glob');
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -73,6 +76,8 @@ gulp.task('compile', () => run({ mode: 'compile', skipFormatCheck: true, skipInd
 
 gulp.task('watch', ['hygiene-modified', 'hygiene-watch']);
 
+gulp.task('debugger-coverage', () => buildDebugAdapterCoverage());
+
 gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes' }), 1000)));
 
 gulp.task('hygiene-all', () => run({ mode: 'all' }));
@@ -102,6 +107,33 @@ gulp.task('cover:disable', () => {
         }))
         .pipe(gulp.dest("./out", { 'overwrite': true }));
 });
+
+function buildDebugAdapterCoverage() {
+    return new Promise((resolve, reject) => {
+        glob(path.join(__dirname, 'debug_coverage*/coverage.json'), async (err, matches) => {
+            if (err) {
+                reject(err)
+                return;
+            }
+            for (const coverageFile of matches) {
+                const finalCoverageFile = path.join(path.dirname(coverageFile), 'coverage-final.json');
+                await remapIstanbul(coverageFile, { 'json': finalCoverageFile });
+
+                const collector = new istanbul.Collector();
+                const reporter = new istanbul.Reporter(undefined, path.dirname(coverageFile));
+                collector.add(JSON.parse(fs.readFileSync(finalCoverageFile, 'utf8')));
+                reporter.add('lcov');
+
+                await new Promise(resolve => {
+                    reporter.write(collector, false, function () {
+                        resolve()
+                    });
+                });
+            }
+            resolve();
+        });
+    });
+}
 
 /**
 * @typedef {Object} hygieneOptions - creates a new type named 'SpecialType'
