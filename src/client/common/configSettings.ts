@@ -116,7 +116,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
 
         this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled'))!;
-        if (!this.jediEnabled) {
+        if (this.jediEnabled) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
             this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
             if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {

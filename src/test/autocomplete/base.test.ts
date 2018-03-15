@@ -31,7 +31,7 @@ suite('Autocomplete', () => {
         await initialize();
         initializeDI();
         isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
-        isAnalysisEngine = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().jediEnabled;
+        isAnalysisEngine = !ioc.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().jediEnabled;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);

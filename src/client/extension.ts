@@ -69,7 +69,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 
-    const activator: IExtensionActivator = IS_ANALYSIS_ENGINE_TEST || pythonSettings.jediEnabled
+    const activator: IExtensionActivator = IS_ANALYSIS_ENGINE_TEST || !pythonSettings.jediEnabled
         ? new AnalysisExtensionActivator(serviceManager, pythonSettings)
         : new ClassicExtensionActivator(serviceManager, pythonSettings);
 
