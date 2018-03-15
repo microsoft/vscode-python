@@ -19,4 +19,4 @@ function isMultitrootTest() {
 }
 
 export const IS_ANALYSIS_ENGINE_TEST =
-    !IS_TRAVIS && (process.env['VSC_PYTHON_PTVS'] === '1' || !PythonSettings.getInstance().jediEnabled);
+    !IS_TRAVIS && (process.env['VSC_PYTHON_ANALYSIS'] === '1' || !PythonSettings.getInstance().jediEnabled);
