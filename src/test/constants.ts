@@ -18,4 +18,5 @@ function isMultitrootTest() {
     return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;
 }
 
-export const IS_PTVS_ENGINE_TEST = !IS_TRAVIS && (process.env['VSC_PYTHON_PTVS'] === '1' || PythonSettings.getInstance().ptvs.enabled);
+export const IS_MS_CODE_ANALYSIS_ENGINE_TEST =
+    !IS_TRAVIS && (process.env['VSC_PYTHON_PTVS'] === '1' || PythonSettings.getInstance().msCodeAnalysis.enabled);

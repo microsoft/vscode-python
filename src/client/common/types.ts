@@ -95,7 +95,7 @@ export interface ICurrentProcess {
 }
 
 export interface IPythonSettings {
-    readonly ptvs: IPtvsSettings;
+    readonly msCodeAnalysis: IMsCodeAnalysisSettings;
     readonly pythonPath: string;
     readonly venvPath: string;
     readonly venvFolders: string[];
@@ -115,7 +115,7 @@ export interface IPythonSettings {
     readonly globalModuleInstallation: boolean;
 }
 
-export interface IPtvsSettings {
+export interface IMsCodeAnalysisSettings {
     readonly enabled: boolean;
 }
 

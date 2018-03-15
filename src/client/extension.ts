@@ -8,9 +8,9 @@ if ((Reflect as any).metadata === undefined) {
 import { Container } from 'inversify';
 import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import * as vscode from 'vscode';
-import { IS_PTVS_ENGINE_TEST } from '../test/constants';
+import { IS_MS_CODE_ANALYSIS_ENGINE_TEST } from '../test/constants';
 import { ClassicExtensionActivator } from './activation/classic';
-import { PtvsExtensionActivator } from './activation/ptvs';
+import { MsCodeAnalysisExtensionActivator } from './activation/msCodeAnalysis';
 import { IExtensionActivator } from './activation/types';
 import { PythonSettings } from './common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
@@ -70,8 +70,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 
-    const activator: IExtensionActivator = IS_PTVS_ENGINE_TEST || pythonSettings.ptvs.enabled
-        ? new PtvsExtensionActivator(serviceManager, pythonSettings)
+    const activator: IExtensionActivator = IS_MS_CODE_ANALYSIS_ENGINE_TEST || pythonSettings.msCodeAnalysis.enabled
+        ? new MsCodeAnalysisExtensionActivator(serviceManager, pythonSettings)
         : new ClassicExtensionActivator(serviceManager, pythonSettings);
 
     await activator.activate(context);

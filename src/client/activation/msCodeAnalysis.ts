@@ -13,13 +13,13 @@ import { StopWatch } from '../telemetry/stopWatch';
 import { IExtensionActivator } from './types';
 
 const PYTHON = 'python';
-const ptvsFolder = 'ptvs';
-const ptvsBinaryName = 'Microsoft.PythonTools.VsCode.dll';
+const msCodeAnalysisFolder = 'msCodeAnalysis';
+const msCodeAnalysisBinaryName = 'Microsoft.PythonTools.VsCode.dll';
 const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 const defaultPythonVersion = '2.7';
 
-export class PtvsExtensionActivator implements IExtensionActivator {
+export class MsCodeAnalysisExtensionActivator implements IExtensionActivator {
   private languageClent: languageClient.LanguageClient;
 
   constructor(private services: IServiceContainer, private pythonSettings: IPythonSettings) {
@@ -31,7 +31,7 @@ export class PtvsExtensionActivator implements IExtensionActivator {
 
     // The server is implemented in C#
     const commandOptions = { stdio: 'pipe' };
-    const serverModule = path.join(context.extensionPath, ptvsFolder, ptvsBinaryName);
+    const serverModule = path.join(context.extensionPath, msCodeAnalysisFolder, msCodeAnalysisBinaryName);
 
     // If the extension is launched in debug mode then the debug server options are used
     // Otherwise the run options are used
@@ -40,7 +40,7 @@ export class PtvsExtensionActivator implements IExtensionActivator {
       debug: { command: dotNetCommand, args: [serverModule, '--debug'], options: commandOptions }
     };
 
-    const clientOptions = await this.getPtvsOptions();
+    const clientOptions = await this.getMsCodeAnalysisOptions();
     // tslint:disable-next-line:no-console
     console.log(`Options determined: ${sw.elapsedTime} ms`);
     try {
@@ -68,11 +68,11 @@ export class PtvsExtensionActivator implements IExtensionActivator {
     }
   }
 
-  private async getPtvsOptions(): Promise<languageClient.LanguageClientOptions> {
+  private async getMsCodeAnalysisOptions(): Promise<languageClient.LanguageClientOptions> {
     // tslint:disable-next-line:no-any
     const properties = new Map<string, any>();
 
-    // PTVS analysis engine needs full path to the interpreter
+    // Microsoft Python code analysis engine needs full path to the interpreter
     const interpreterService = this.services.get<IInterpreterService>(IInterpreterService);
     const interpreter = await interpreterService.getActiveInterpreter();
     if (!interpreter) {

@@ -10,7 +10,7 @@ import {
     IAutoCompeteSettings,
     IFormattingSettings,
     ILintingSettings,
-    IPtvsSettings,
+    IMsCodeAnalysisSettings,
     IPythonSettings,
     ISortImportSettings,
     ITerminalSettings,
@@ -28,7 +28,7 @@ export const IS_WINDOWS = /^win/.test(process.platform);
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
 
-    public ptvs: IPtvsSettings;
+    public msCodeAnalysis: IMsCodeAnalysisSettings;
     public jediPath: string;
     public jediMemoryLimit: number;
     public envFile: string;
@@ -105,11 +105,11 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         const systemVariables: SystemVariables = new SystemVariables(this.workspaceRoot ? this.workspaceRoot.fsPath : undefined);
         const pythonSettings = vscode.workspace.getConfiguration('python', this.workspaceRoot);
 
-        const ptvsSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('ptvs'))!;
-        if (this.ptvs) {
-            Object.assign<IPtvsSettings, IPtvsSettings>(this.ptvs, ptvsSettings);
+        const msCodeAnalysisSettings = systemVariables.resolveAny(pythonSettings.get<IMsCodeAnalysisSettings>('msCodeAnalysis'))!;
+        if (this.msCodeAnalysis) {
+            Object.assign<IMsCodeAnalysisSettings, IMsCodeAnalysisSettings>(this.msCodeAnalysis, msCodeAnalysisSettings);
         } else {
-            this.ptvs = ptvsSettings;
+            this.msCodeAnalysis = msCodeAnalysisSettings;
         }
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
@@ -119,7 +119,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
 
-        if (!this.ptvs.enabled) {
+        if (!this.msCodeAnalysis.enabled) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
             this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
             if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {

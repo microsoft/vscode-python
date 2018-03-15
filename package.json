@@ -1117,10 +1117,10 @@
             "type": "object",
             "title": "Python Configuration",
             "properties": {
-                "python.ptvs.enabled": {
+                "python.msCodeAnalysis.enabled": {
                     "type": "boolean",
                     "default": "false",
-                    "description": "Activates Python code analysis engine based Python Tools for Visual Studio.",
+                    "description": "Activates Microsoft Python code analysis engine.",
                     "scope": "resource"
                 },
                 "python.pythonPath": {
