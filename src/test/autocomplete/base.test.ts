@@ -25,13 +25,13 @@ const fileSuppress = path.join(autoCompPath, 'suppress.py');
 suite('Autocomplete', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
-    let isMsCodeAnalysis: boolean; // Temporary until all PTVS functionality is complete
+    let isAnalysisEngine: boolean; // Temporary until all PTVS functionality is complete
 
     suiteSetup(async () => {
         await initialize();
         initializeDI();
         isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
-        isMsCodeAnalysis = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().msCodeAnalysis.enabled;
+        isAnalysisEngine = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().jediEnabled;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -100,7 +100,7 @@ suite('Autocomplete', () => {
     // https://github.com/DonJayamanne/pythonVSCode/issues/630
     test('For "abc.decorators"', async () => {
         // Disabled for MS Python Code Analysis, see https://github.com/Microsoft/PTVS/issues/3857
-        if (isMsCodeAnalysis) {
+        if (isAnalysisEngine) {
             return;
         }
         const textDocument = await vscode.workspace.openTextDocument(fileDecorator);
@@ -201,7 +201,7 @@ suite('Autocomplete', () => {
     test('Suppress in strings/comments', async () => {
         // Excluded from MS Python Code Analysis b/c skipping of strings and comments
         // is not yet there. See https://github.com/Microsoft/PTVS/issues/3798
-        if (isMsCodeAnalysis) {
+        if (isAnalysisEngine) {
             return;
         }
         const positions = [

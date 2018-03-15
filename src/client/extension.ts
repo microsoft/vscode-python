@@ -6,11 +6,10 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 import { Container } from 'inversify';
-import { Disposable, Memento, OutputChannel, window } from 'vscode';
 import * as vscode from 'vscode';
-import { IS_MS_CODE_ANALYSIS_ENGINE_TEST } from '../test/constants';
+import { IS_ANALYSIS_ENGINE_TEST } from '../test/constants';
+import { AnalysisExtensionActivator } from './activation/analysis';
 import { ClassicExtensionActivator } from './activation/classic';
-import { MsCodeAnalysisExtensionActivator } from './activation/msCodeAnalysis';
 import { IExtensionActivator } from './activation/types';
 import { PythonSettings } from './common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
@@ -70,8 +69,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 
-    const activator: IExtensionActivator = IS_MS_CODE_ANALYSIS_ENGINE_TEST || pythonSettings.msCodeAnalysis.enabled
-        ? new MsCodeAnalysisExtensionActivator(serviceManager, pythonSettings)
+    const activator: IExtensionActivator = IS_ANALYSIS_ENGINE_TEST || pythonSettings.jediEnabled
+        ? new AnalysisExtensionActivator(serviceManager, pythonSettings)
         : new ClassicExtensionActivator(serviceManager, pythonSettings);
 
     await activator.activate(context);
@@ -120,14 +119,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
 function registerServices(context: vscode.ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
     serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
-    serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, context.subscriptions);
-    serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
-    serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
+    serviceManager.addSingletonInstance<vscode.Disposable[]>(IDisposableRegistry, context.subscriptions);
+    serviceManager.addSingletonInstance<vscode.Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
+    serviceManager.addSingletonInstance<vscode.Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
 
-    const standardOutputChannel = window.createOutputChannel('Python');
-    const unitTestOutChannel = window.createOutputChannel('Python Test Log');
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
+    const standardOutputChannel = vscode.window.createOutputChannel('Python');
+    const unitTestOutChannel = vscode.window.createOutputChannel('Python Test Log');
+    serviceManager.addSingletonInstance<vscode.OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
+    serviceManager.addSingletonInstance<vscode.OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
 
     commonRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);

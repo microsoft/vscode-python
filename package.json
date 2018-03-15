@@ -822,7 +822,7 @@
                             },
                             "console": {
                                 "enum": [
-                                    "none", 
+                                    "none",
                                     "integratedTerminal",
                                     "externalTerminal"
                                 ],
@@ -907,12 +907,6 @@
             "type": "object",
             "title": "Python Configuration",
             "properties": {
-                "python.msCodeAnalysis.enabled": {
-                    "type": "boolean",
-                    "default": "false",
-                    "description": "Activates Microsoft Python code analysis engine.",
-                    "scope": "resource"
-                },
                 "python.pythonPath": {
                     "type": "string",
                     "default": "python",
@@ -942,6 +936,12 @@
                     "type": "string",
                     "description": "Absolute path to a file containing environment variable definitions.",
                     "default": "${workspaceFolder}/.env",
+                    "scope": "resource"
+                },
+                "python.jediEnabled": {
+                    "type": "boolean",
+                    "default": "true",
+                    "description": "Use Jedi code analysis instead of Microsoft Python Analysis engine.",
                     "scope": "resource"
                 },
                 "python.jediPath": {

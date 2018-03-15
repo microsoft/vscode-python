@@ -95,28 +95,24 @@ export interface ICurrentProcess {
 }
 
 export interface IPythonSettings {
-    readonly msCodeAnalysis: IMsCodeAnalysisSettings;
     readonly pythonPath: string;
     readonly venvPath: string;
     readonly venvFolders: string[];
+    readonly jediEnabled: boolean;
     readonly jediPath: string;
     readonly jediMemoryLimit: number;
     readonly devOptions: string[];
-    readonly linting: ILintingSettings;
-    readonly formatting: IFormattingSettings;
-    readonly unitTest: IUnitTestSettings;
-    readonly autoComplete: IAutoCompeteSettings;
-    readonly terminal: ITerminalSettings;
-    readonly sortImports: ISortImportSettings;
-    readonly workspaceSymbols: IWorkspaceSymbolSettings;
+    readonly linting: ILintingSettings | undefined;
+    readonly formatting: IFormattingSettings | undefined;
+    readonly unitTest: IUnitTestSettings | undefined;
+    readonly autoComplete: IAutoCompeteSettings | undefined;
+    readonly terminal: ITerminalSettings | undefined;
+    readonly sortImports: ISortImportSettings | undefined;
+    readonly workspaceSymbols: IWorkspaceSymbolSettings | undefined;
     readonly envFile: string;
     readonly disablePromptForFeatures: string[];
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
-}
-
-export interface IMsCodeAnalysisSettings {
-    readonly enabled: boolean;
 }
 
 export interface ISortImportSettings {
@@ -229,5 +225,6 @@ export interface IConfigurationService {
 export const ISocketServer = Symbol('ISocketServer');
 export interface ISocketServer extends Disposable {
     readonly client: Promise<Socket>;
+    // tslint:disable-next-line:type-literal-delimiter
     Start(options?: { port?: number, host?: string }): Promise<number>;
 }

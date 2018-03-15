@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { rootWorkspaceUri } from '../common';
-import { IS_MS_CODE_ANALYSIS_ENGINE_TEST } from '../constants';
+import { IS_ANALYSIS_ENGINE_TEST } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -21,11 +21,11 @@ class SignatureHelpResult {
 }
 
 // tslint:disable-next-line:max-func-body-length
-suite('Signatures (MS Python Code Analysis)', () => {
+suite('Signatures (Analysis Engine)', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
     suiteSetup(async function () {
-        if (!IS_MS_CODE_ANALYSIS_ENGINE_TEST) {
+        if (!IS_ANALYSIS_ENGINE_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }

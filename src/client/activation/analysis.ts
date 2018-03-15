@@ -13,14 +13,14 @@ import { StopWatch } from '../telemetry/stopWatch';
 import { IExtensionActivator } from './types';
 
 const PYTHON = 'python';
-const msCodeAnalysisFolder = 'msCodeAnalysis';
-const msCodeAnalysisBinaryName = 'Microsoft.PythonTools.VsCode.dll';
+const analysisEngineFolder = 'analysis';
+const analysisEngineBinaryName = 'Microsoft.PythonTools.VsCode.dll';
 const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 const defaultPythonVersion = '2.7';
 
-export class MsCodeAnalysisExtensionActivator implements IExtensionActivator {
-  private languageClent: languageClient.LanguageClient;
+export class AnalysisExtensionActivator implements IExtensionActivator {
+  private languageClent: languageClient.LanguageClient | undefined;
 
   constructor(private services: IServiceContainer, private pythonSettings: IPythonSettings) {
   }
@@ -31,7 +31,7 @@ export class MsCodeAnalysisExtensionActivator implements IExtensionActivator {
 
     // The server is implemented in C#
     const commandOptions = { stdio: 'pipe' };
-    const serverModule = path.join(context.extensionPath, msCodeAnalysisFolder, msCodeAnalysisBinaryName);
+    const serverModule = path.join(context.extensionPath, analysisEngineFolder, analysisEngineBinaryName);
 
     // If the extension is launched in debug mode then the debug server options are used
     // Otherwise the run options are used
@@ -40,7 +40,7 @@ export class MsCodeAnalysisExtensionActivator implements IExtensionActivator {
       debug: { command: dotNetCommand, args: [serverModule, '--debug'], options: commandOptions }
     };
 
-    const clientOptions = await this.getMsCodeAnalysisOptions();
+    const clientOptions = await this.getAnalysisOptions();
     // tslint:disable-next-line:no-console
     console.log(`Options determined: ${sw.elapsedTime} ms`);
     try {
@@ -68,7 +68,7 @@ export class MsCodeAnalysisExtensionActivator implements IExtensionActivator {
     }
   }
 
-  private async getMsCodeAnalysisOptions(): Promise<languageClient.LanguageClientOptions> {
+  private async getAnalysisOptions(): Promise<languageClient.LanguageClientOptions> {
     // tslint:disable-next-line:no-any
     const properties = new Map<string, any>();
 
