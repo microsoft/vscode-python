@@ -12,6 +12,8 @@ import { IInterpreterService, InterpreterType } from '../../interpreter/contract
 import { IServiceContainer } from '../../ioc/types';
 import { PythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { noop } from '../core.utils';
+import { IFileSystem } from '../platform/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IOutputChannel } from '../types';
 
@@ -54,7 +56,7 @@ export abstract class ModuleInstaller {
             fs.open(filePath, fs.constants.O_CREAT | fs.constants.O_RDWR, (error, fd) => {
                 if (!error) {
                     fs.close(fd, (e) => {
-                        fs.unlink(filePath);
+                        fs.unlink(filePath, noop);
                     });
                 }
                 return resolve(!error);

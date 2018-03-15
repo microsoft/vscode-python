@@ -9,63 +9,65 @@
     "tasks": [
         {
             "label": "Compile",
-            "type": "npm",
-            "script": "compile",
-            "isBackground": true,
-            "problemMatcher": [
-                "$tsc-watch",
-                {
-                    "base": "$tslint5",
-                    "fileLocation": "relative"
-                }
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "Hygiene",
-            "type": "gulp",
-            "task": "hygiene-watch",
-            "isBackground": true,
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": [
-                "$tsc-watch",
-                {
-                    "base": "$tslint5",
-                    "fileLocation": "relative"
-                }
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            // Task that will replace 'Compile' and 'Hygiene', after being battle-tested.
-            "label": "Watch",
             "type": "gulp",
             "task": "watch",
             "isBackground": true,
             "presentation": {
                 "echo": true,
-                "reveal": "always",
+                "reveal": "never",
                 "focus": false,
-                "panel": "shared"
+                "panel": "dedicated"
             },
             "problemMatcher": [
-                "$tsc-watch",
                 {
-                    "base": "$tslint5",
-                    "fileLocation": "relative"
+                    "applyTo": "allDocuments",
+                    "fileLocation": "relative",
+                    "background": {
+                        "beginsPattern": {
+                            "regexp": "^Hygiene started"
+                        },
+                        "endsPattern": {
+                            "regexp": "^(Hygiene failed with errors|Hygiene passed with 0 errors)"
+                        }
+                    },
+                    "pattern": [
+                        {
+                            "regexp": "^([^\\s].*)\\((\\d+|\\d+,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                            "file": 1,
+                            "location": 2,
+                            "severity": 3,
+                            "code": 4,
+                            "message": 5
+                        }
+                    ]
+                },
+                {
+                    "applyTo": "allDocuments",
+                    "fileLocation": "relative",
+                    "background": {
+                        "beginsPattern": {
+                            "regexp": "^Hygiene started"
+                        },
+                        "endsPattern": {
+                            "regexp": "^(Hygiene failed with errors|Hygiene passed with 0 errors)"
+                        }
+                    },
+                    "pattern": [
+                        {
+                            "regexp": "^(WARNING|ERROR):(\\s+\\(\\S*\\))?\\s+(\\S.*)\\[(\\d+), (\\d+)\\]:\\s+(.*)$",
+                            "severity": 1,
+                            "file": 3,
+                            "line": 4,
+                            "column": 5,
+                            "message": 6
+                        }
+                    ]
                 }
-            ]
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }

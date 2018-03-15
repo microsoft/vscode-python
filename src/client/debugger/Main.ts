@@ -9,7 +9,7 @@ if ((Reflect as any).metadata === undefined) {
 }
 import * as fs from "fs";
 import * as path from "path";
-import { Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable, LoggingDebugSession, logger } from "vscode-debugadapter";
+import { Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable, LoggingDebugSession, logger, BreakpointEvent, Breakpoint } from "vscode-debugadapter";
 import { ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DEBUGGER } from '../../client/telemetry/constants';
@@ -126,6 +126,7 @@ export class PythonDebugger extends LoggingDebugSession {
         pythonProcess.on("output", (pyThread, output) => this.onDebuggerOutput(pyThread, output, 'stdout'));
         pythonProcess.on("exceptionRaised", (pyThread, ex) => this.onPythonException(pyThread, ex));
         pythonProcess.on("breakpointHit", (pyThread, breakpointId) => this.onBreakpointHit(pyThread, breakpointId));
+        pythonProcess.on("breakpointChanged", (breakpointId: number, verified: boolean) => this.onBreakpointChanged(breakpointId, verified));
         pythonProcess.on("stepCompleted", (pyThread) => this.onStepCompleted(pyThread));
         pythonProcess.on("detach", () => this.onDetachDebugger());
         pythonProcess.on("error", ex => this.onDebuggerOutput(undefined, ex, 'stderr'));
@@ -326,6 +327,16 @@ export class PythonDebugger extends LoggingDebugSession {
             this.pythonProcess!.SendResumeThread(pyThread.Id);
         }
     }
+    private onBreakpointChanged(breakpointId: number, verified: boolean) {
+        if (!this.registeredBreakpoints.has(breakpointId)) {
+            return;
+        }
+        const pythonBkpoint = this.registeredBreakpoints.get(breakpointId)!;
+        const breakpoint = new Breakpoint(verified, pythonBkpoint.LineNo, undefined, new Source(path.basename(pythonBkpoint.Filename), pythonBkpoint.Filename));
+        // VSC needs `id` to uniquely identify each breakpoint (part of the protocol spec).
+        (breakpoint as any).id = pythonBkpoint.Id;
+        this.sendEvent(new BreakpointEvent('changed', breakpoint));
+    }
     private buildBreakpointDetails(filePath: string, line: number, condition: string): IPythonBreakpoint {
         let isDjangoFile = false;
         if (this.launchArgs &&
@@ -360,7 +371,8 @@ export class PythonDebugger extends LoggingDebugSession {
                 this.registeredBreakpointsByFileName.set(args.source.path!, []);
             }
 
-            const breakpoints: { verified: boolean, line: number }[] = [];
+            // VSC needs `id` to uniquely identify each breakpoint (part of the protocol spec).
+            const breakpoints: { verified: boolean, line: number, id: number }[] = [];
             const linesToAdd = args.breakpoints!.map(b => b.line);
             const registeredBks = this.registeredBreakpointsByFileName.get(args.source.path!)!;
             const linesToRemove = registeredBks.map(b => b.LineNo).filter(oldLine => linesToAdd.indexOf(oldLine) === -1);
@@ -385,12 +397,12 @@ export class PythonDebugger extends LoggingDebugSession {
 
                     this.pythonProcess!.BindBreakpoint(breakpoint).then(() => {
                         this.registeredBreakpoints.set(breakpoint.Id, breakpoint);
-                        breakpoints.push({ verified: true, line: bk.line });
+                        breakpoints.push({ verified: true, line: bk.line, id: breakpoint.Id });
                         registeredBks.push(breakpoint);
                         resolve();
                     }).catch(reason => {
                         this.registeredBreakpoints.set(breakpoint.Id, breakpoint);
-                        breakpoints.push({ verified: false, line: bk.line });
+                        breakpoints.push({ verified: false, line: bk.line, id: breakpoint.Id });
                         registeredBks.push(breakpoint);
                         resolve();
                     });

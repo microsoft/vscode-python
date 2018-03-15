@@ -19,6 +19,8 @@ const path = require('path');
 const debounce = require('debounce');
 const jeditor = require("gulp-json-editor");
 const del = require('del');
+const sourcemaps = require('gulp-sourcemaps');
+const fs = require('fs');
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -32,6 +34,11 @@ const del = require('del');
 const all = [
     'src/**/*',
     'src/client/**/*',
+];
+
+const tsFilter = [
+    'src/**/*.ts',
+    'src/client/**/*.ts',
 ];
 
 const indentationFilter = [
@@ -53,13 +60,20 @@ const tslintFilter = [
     '!**/typings/**/*',
 ];
 
+const copyrightHeader = [
+    '// Copyright (c) Microsoft Corporation. All rights reserved.',
+    '// Licensed under the MIT License.',
+    '',
+    '\'use strict\';'
+].join('\n');
+
 gulp.task('hygiene', () => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }));
 
 gulp.task('compile', () => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }));
 
 gulp.task('watch', ['hygiene-modified', 'hygiene-watch']);
 
-gulp.task('hygiene-watch', () => gulp.watch(all, debounce(() => run({ mode: 'changes' }), 1000)));
+gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes' }), 1000)));
 
 gulp.task('hygiene-all', () => run({ mode: 'all' }));
 
@@ -105,6 +119,18 @@ gulp.task('cover:disable', () => {
 const hygiene = (options) => {
     options = options || {};
     let errorCount = 0;
+    const addedFiles = getAddedFilesSync();
+    console.log(colors.blue('Hygiene started.'));
+
+    const copyrights = es.through(function (file) {
+        if (addedFiles.indexOf(file.path) !== -1 && file.contents.toString('utf8').indexOf(copyrightHeader) !== 0) {
+            // Use tslint format.
+            console.error(`ERROR: (copyright) ${file.relative}[1,1]: Missing or bad copyright statement`);
+            errorCount++;
+        }
+
+        this.emit('data', file);
+    });
 
     const indentation = es.through(function (file) {
         file.contents
@@ -245,7 +271,8 @@ const hygiene = (options) => {
     }
 
     result = result
-        .pipe(filter(tslintFilter));
+        .pipe(filter(tslintFilter))
+        .pipe(copyrights);
 
     if (!options.skipFormatCheck) {
         // result = result
@@ -259,8 +286,18 @@ const hygiene = (options) => {
 
     result = result
         .pipe(tscFilesTracker)
+        .pipe(sourcemaps.init())
         .pipe(tsc())
-        .js.pipe(gulp.dest(dest))
+        .pipe(sourcemaps.mapSources(function (sourcePath, file) {
+            const tsFileName = path.basename(file.path).replace(/js$/, 'ts');
+            const qualifiedSourcePath = path.dirname(file.path).replace('out/', 'src/').replace('out\\', 'src\\');
+            if (!fs.existsSync(path.join(qualifiedSourcePath, tsFileName))) {
+                console.error(`ERROR: (source-maps) ${file.path}[1,1]: Source file not found`);
+            }
+            return path.join(path.relative(path.dirname(file.path), qualifiedSourcePath), tsFileName);
+        }))
+        .pipe(sourcemaps.write('.', { includeContent: false }))
+        .pipe(gulp.dest(dest))
         .pipe(es.through(null, function () {
             if (errorCount > 0) {
                 const errorMessage = `Hygiene failed with errors 👎 . Check 'gulpfile.js'.`;
@@ -275,6 +312,8 @@ const hygiene = (options) => {
             this.emit('end');
         }))
         .on('error', exitHandler.bind(this, options));
+
+    return result;
 };
 
 /**
@@ -320,10 +359,17 @@ function run(options) {
 }
 function getStagedFilesSync() {
     const out = cp.execSync('git diff --cached --name-only', { encoding: 'utf8' });
-    const some = out
+    return out
         .split(/\r?\n/)
         .filter(l => !!l);
-    return some;
+}
+function getAddedFilesSync() {
+    const out = cp.execSync('git status -u -s', { encoding: 'utf8' });
+    return out
+        .split(/\r?\n/)
+        .filter(l => !!l)
+        .filter(l => l.startsWith('A') || l.startsWith('??'))
+        .map(l => path.join(__dirname, l.substring(2).trim()));
 }
 
 /**

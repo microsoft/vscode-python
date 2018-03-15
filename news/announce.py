@@ -12,7 +12,7 @@ import click
 
 FILENAME_RE = re.compile(r"(?P<issue>\d+)(?P<nonce>-\S+)?\.md")
 ISSUE_URL = "https://github.com/Microsoft/vscode-python/issues/{issue}"
-ENTRY_TEMPLATE = "- {entry} ([#{issue}]({issue_url}))"
+ENTRY_TEMPLATE = "1. {entry} ([#{issue}]({issue_url}))"
 SECTION_DEPTH = "###"
 
 

@@ -6,33 +6,39 @@ Windows - https://stackoverflow.com/questions/4750806/how-do-i-install-pip-on-wi
 Linux - https://www.cyberciti.biz/faq/debian-ubuntu-centos-rhel-linux-install-pipclient/ , https://www.tecmint.com/install-pip-in-linux/
 
 Python configuration issues? Please check https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites
+
+Otherwise **please** fill in the requested details below. "XXX" markers should not be present in the final bug report.
 -->
 
 ## Environment data
 
-- VS Code version: <fill in>
-- Python Extension version: <fill in>
-- OS and version: <fill in>
-- Python Version: <fill in>
-- Relevant/affected Python packages and their versions: <fill in>
+- VS Code version: XXX
+- Extension version (available under the Extensions sidebar): XXX
+- OS and version: XXX
+- Python version (& distribution if applicable, e.g. Anaconda): XXX
+- Type of virtual environment used (N/A | venv | virtualenv | conda | ...): XXX 
+- Relevant/affected Python packages and their versions: XXX
 
 ## Actual behavior
 
+XXX
+
 ## Expected  behavior
 
-## Steps to reproduce:  
-- <fill in>
-- <fill in>
+XXX
+
+## Steps to reproduce:
+1. XXX
 
 ## Logs
 Output for `Python` in the `Output` panel (`View`→`Output`, change the drop-down the upper-right of the `Output` panel to `Python`)
 
 ```
-<fill in>
+XXX
 ```   
 
 Output from `Console` under the `Developer Tools` panel (toggle Developer Tools on under `Help`)
 
 ```
-<fill in>
+XXX
 ```

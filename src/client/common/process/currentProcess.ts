@@ -1,3 +1,5 @@
+// tslint:disable:no-any
+
 import { injectable } from 'inversify';
 import { ICurrentProcess } from '../types';
 import { EnvironmentVariables } from '../variables/types';
@@ -5,12 +7,11 @@ import { EnvironmentVariables } from '../variables/types';
 @injectable()
 export class CurrentProcess implements ICurrentProcess {
     public on = (event: string | symbol, listener: Function): this => {
-        process.on(event, listener);
-        // tslint:disable-next-line:no-any
+        process.on(event as any, listener as any);
         return process as any;
     }
     public get env(): EnvironmentVariables {
-        return process.env;
+        return process.env as any as EnvironmentVariables;
     }
     public get argv(): string[] {
         return process.argv;

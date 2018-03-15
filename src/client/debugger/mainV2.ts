@@ -12,7 +12,7 @@ if ((Reflect as any).metadata === undefined) {
 import { Socket } from 'net';
 import { EOL } from 'os';
 import * as path from 'path';
-import { PassThrough } from 'stream';
+import { PassThrough, Writable } from 'stream';
 import { Disposable } from 'vscode';
 import { DebugSession, ErrorDestination, logger, OutputEvent, TerminatedEvent } from 'vscode-debugadapter';
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
@@ -21,7 +21,6 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import '../../client/common/extensions';
 import { noop, sleep } from '../common/core.utils';
 import { createDeferred, Deferred, isNotInstalledError } from '../common/helpers';
-import { IPlatformService } from '../common/platform/types';
 import { ICurrentProcess } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from './Common/Contracts';
@@ -47,7 +46,7 @@ export class PythonDebugger extends DebugSession {
     public debugServer?: BaseDebugServer;
     public debugClient?: DebugClient<{}>;
     public client = createDeferred<Socket>();
-    private supportsRunInTerminalRequest: boolean;
+    private supportsRunInTerminalRequest: boolean = false;
     constructor(private readonly serviceContainer: IServiceContainer) {
         super(false);
     }
@@ -151,8 +150,8 @@ export class PythonDebugger extends DebugSession {
  */
 class DebugManager implements Disposable {
     // #region VS Code debug Streams.
-    private inputStream: NodeJS.ReadStream | Socket;
-    private outputStream: NodeJS.WriteStream | Socket;
+    private inputStream!: NodeJS.ReadStream | Socket;
+    private outputStream!: NodeJS.WriteStream | Socket;
     // #endregion
     // #region Proxy Streams (used to listen in on the communications).
     private readonly throughOutputStream: PassThrough;
@@ -163,19 +162,19 @@ class DebugManager implements Disposable {
     private readonly debugSessionInputStream: PassThrough;
     // #endregion
     // #region Streams used to communicate with PTVSD.
-    private ptvsdSocket: Socket;
+    private ptvsdSocket!: Socket;
     // #endregion
     private readonly inputProtocolParser: IProtocolParser;
     private readonly outputProtocolParser: IProtocolParser;
     private readonly protocolLogger: IProtocolLogger;
     private readonly protocolMessageWriter: IProtocolMessageWriter;
-    private isServerMode: boolean;
+    private isServerMode: boolean = false;
     private readonly disposables: Disposable[] = [];
-    private hasShutdown: boolean;
+    private hasShutdown: boolean = false;
     private debugSession?: PythonDebugger;
     private ptvsdProcessId?: number;
-    private killPTVSDProcess: boolean;
-    private terminatedEventSent: boolean;
+    private killPTVSDProcess: boolean = false;
+    private terminatedEventSent: boolean = false;
     private readonly initializeRequestDeferred: Deferred<DebugProtocol.InitializeRequest>;
     private get initializeRequest(): Promise<DebugProtocol.InitializeRequest> {
         return this.initializeRequestDeferred.promise;
@@ -332,11 +331,9 @@ class DebugManager implements Disposable {
         const debugSoketProtocolParser = this.serviceContainer.get<IProtocolParser>(IProtocolParser);
         debugSoketProtocolParser.connect(this.ptvsdSocket);
 
-        // Send PTVSD a bogus launch request, and wait for it to respond.
-        // This needs to be done, so PTVSD can keep track of how it was launched (whether it as for attach or launch).
-        const launchRequest = await this.launchRequest;
-        (launchRequest.arguments as any).fixFilePathCase = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
-        this.sendMessage(launchRequest, this.ptvsdSocket);
+        // Send PTVSD the launch request (PTVSD needs to do its own initialization using launch arguments).
+        // E.g. redirectOutput & fixFilePathCase found in launch request are used to initialize the debugger.
+        this.sendMessage(await this.launchRequest, this.ptvsdSocket);
         await new Promise(resolve => debugSoketProtocolParser.once('response_launch', resolve));
 
         // The PTVSD process has launched, now send the initialize request to it (required by PTVSD).
@@ -350,7 +347,7 @@ class DebugManager implements Disposable {
         // Wait for PTVSD to reply back with initialized event.
         debugSoketProtocolParser.once('event_initialized', (initialized: DebugProtocol.InitializedEvent) => {
             // Get ready for PTVSD to communicate directly with VS Code.
-            this.inputStream.unpipe(this.debugSessionInputStream);
+            (this.inputStream as any as NodeJS.ReadStream).unpipe<Writable>(this.debugSessionInputStream);
             this.debugSessionOutputStream.unpipe(this.outputStream);
 
             this.inputStream.pipe(this.ptvsdSocket!);

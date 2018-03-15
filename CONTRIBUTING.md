@@ -28,14 +28,11 @@ You may see warnings that ```The engine "vscode" appears to be invalid.```, you 
 
 ### Incremental Build
 
-Run the `Compile` and `Hygiene` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
+Run the `Compile` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
 
 ### Errors and Warnings
 
-TypeScript errors and warnings will be displayed in VS Code in the following areas:
-* Problems Panel (`CTRL+SHIFT+M` or `⇧⌘M`)
-* Terminal running the `Compile` task
-* Terminal running the `Hygiene` task
+TypeScript errors and warnings will be displayed in the `Problems` window of Visual Studio Code:
 
 ### Validate your changes
 
@@ -44,13 +41,9 @@ Use the `Launch Extension` launch option.
 
 ### Unit Tests
 
-Run the Unit Tests via the `Launch Test` and `Launch Multiroot Tests`  launch option.
-Currently unit tests only run on [Travis](https://travis-ci.org/Microsoft/vscode-python)
-
-#### Requirements
-
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
+1. Run the Unit Tests via the `Launch Test` and `Launch Multiroot Tests`  launch options.
 
 ### Standard Debugging
 
@@ -153,6 +146,7 @@ it should have an appropriate `closed-` label.
    * The pull request must pass its CI run before merging will be
      considered
    * Code coverage is expected to (at minimum) not worsen
+   * A [news entry file](https://github.com/Microsoft/vscode-python/tree/master/news) (as appropriate)
 1. Make sure all status checks are green (e.g. CLA check, CI, etc.)
 1. Address any review comments
 1. [Maintainers only] Merge the pull request
@@ -175,7 +169,7 @@ the release made when we reach feature freeze in July 2018
 would be `2018.7.0`, and if a second release was necessary to fix a
 critical bug it would be `2018.7.1`.
 
-## Insiders Build
+## Development Build
 
 We publish the latest development
 build of the extension onto a cloud storage provider.
@@ -190,11 +184,11 @@ file, please follow the instructions on
 [this page](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix)
 to install the extension.
 
-The insiders build of the extension:
+The development build of the extension:
 
 * Will be replaced with new releases published onto the
   [VS Code Marketplace](https://marketplace.visualstudio.com/VSCode).
-* Does not get updated with new insider build releases (if you want to
-  test a newer insiders build, uninstall the old version of the
+* Does not get updated with new development builds of the extension (if you want to
+  test a newer development build, uninstall the old version of the
   extension and then install the new version)
 * Is built everytime a PR is commited into the [`master` branch](https://github.com/Microsoft/vscode-python).

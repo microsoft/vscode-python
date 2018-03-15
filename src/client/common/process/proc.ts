@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable:no-any
+
 import { spawn } from 'child_process';
 import { inject, injectable } from 'inversify';
 import { Observable } from 'rxjs/Observable';
@@ -33,8 +35,8 @@ export class ProcessService implements IProcessService {
             const disposables: Disposable[] = [];
 
             const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
-                ee.on(name, fn);
-                disposables.push({ dispose: () => ee.removeListener(name, fn) });
+                ee.on(name, fn as any);
+                disposables.push({ dispose: () => ee.removeListener(name, fn as any) });
             };
 
             if (options.token) {
@@ -90,8 +92,8 @@ export class ProcessService implements IProcessService {
         const disposables: Disposable[] = [];
 
         const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
-            ee.on(name, fn);
-            disposables.push({ dispose: () => ee.removeListener(name, fn) });
+            ee.on(name, fn as any);
+            disposables.push({ dispose: () => ee.removeListener(name, fn as any) });
         };
 
         if (options.token) {
