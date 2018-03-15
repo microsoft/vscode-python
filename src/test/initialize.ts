@@ -55,5 +55,5 @@ function getPythonPath(): string {
         // tslint:disable-next-line:no-unsafe-any
         return process.env.TRAVIS_PYTHON_PATH;
     }
-    return 'python';
+    return '/usr/local/bin/python3';
 }

@@ -35,6 +35,7 @@ import { IServiceContainer } from './ioc/types';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ILintingEngine } from './linters/types';
+import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { LinterProvider } from './providers/linterProvider';
 import { ReplProvider } from './providers/replProvider';
 import { TerminalProvider } from './providers/terminalProvider';
@@ -49,6 +50,7 @@ import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import { OnEnterFormatter } from './typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
+import { WorkspaceSymbols } from './workspaceSymbols/main';
 
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
@@ -97,6 +99,33 @@ export async function activate(context: vscode.ExtensionContext) {
     const linterProvider = new LinterProvider(context, serviceManager);
     context.subscriptions.push(linterProvider);
 
+    // Enable indentAction
+    // tslint:disable-next-line:no-non-null-assertion
+    vscode.languages.setLanguageConfiguration(PYTHON.language!, {
+        onEnterRules: [
+            {
+                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*/,
+                action: { indentAction: vscode.IndentAction.Indent }
+            },
+            {
+                beforeText: /^\s*#.*/,
+                afterText: /.+$/,
+                action: { indentAction: vscode.IndentAction.None, appendText: '# ' }
+            },
+            {
+                beforeText: /^\s+(continue|break|return)\b.*/,
+                afterText: /\s+$/,
+                action: { indentAction: vscode.IndentAction.Outdent }
+            }
+        ]
+    });
+
+    if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'none') {
+        const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
+        context.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
+        context.subscriptions.push(vscode.languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
+    }
+
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
     context.subscriptions.push(vscode.languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
 
@@ -110,6 +139,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
     context.subscriptions.push(new TerminalProvider(serviceContainer));
+    context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
 
     serviceContainer.getAll<BaseConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
         context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));

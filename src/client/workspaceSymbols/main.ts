@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { OutputChannel, workspace } from 'vscode';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
 import { IProcessService } from '../common/process/types';
@@ -14,11 +13,10 @@ const MAX_NUMBER_OF_ATTEMPTS_TO_INSTALL_AND_BUILD = 2;
 export class WorkspaceSymbols implements vscode.Disposable {
     private disposables: vscode.Disposable[];
     private generators: Generator[] = [];
-    private readonly outputChannel: OutputChannel;
-    // tslint:disable-next-line:no-any
-    private timeout: any;
+    private readonly outputChannel: vscode.OutputChannel;
+
     constructor(private serviceContainer: IServiceContainer) {
-        this.outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.outputChannel = this.serviceContainer.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.disposables = [];
         this.disposables.push(this.outputChannel);
         this.registerCommands();
@@ -88,7 +86,7 @@ export class WorkspaceSymbols implements vscode.Disposable {
                     continue;
                 } else {
                     const installer = this.serviceContainer.get<IInstaller>(IInstaller);
-                    promptPromise = installer.promptToInstall(Product.ctags, workspace.workspaceFolders![0]!.uri);
+                    promptPromise = installer.promptToInstall(Product.ctags, vscode.workspace.workspaceFolders![0]!.uri);
                     promptResponse = await promptPromise;
                 }
                 if (promptResponse !== InstallerResponse.Installed || (!token || token.isCancellationRequested)) {
