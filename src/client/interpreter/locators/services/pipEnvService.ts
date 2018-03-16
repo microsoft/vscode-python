@@ -7,12 +7,14 @@ import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessService } from '../../../common/process/types';
+import { ICurrentProcess } from '../../../common/types';
 import { getPythonExecutable } from '../../../debugger/Common/Utils';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 const execName = 'pipenv';
+const pipEnvFileNameVariable = 'PIPENV_PIPFILE';
 
 @injectable()
 export class PipEnvService extends CacheableLocatorService {
@@ -69,11 +71,22 @@ export class PipEnvService extends CacheableLocatorService {
 
     private async getInterpreterPathFromPipenv(cwd: string): Promise<string | undefined> {
         // Quick check before actually running pipenv
-        if (!await this.fs.fileExistsAsync(path.join(cwd, 'Pipfile'))) {
+        if (!await this.checkIfPipFileExists(cwd)) {
             return;
         }
         const venvFolder = await this.invokePipenv('--venv', cwd);
         return venvFolder && await this.fs.directoryExistsAsync(venvFolder) ? venvFolder : undefined;
+    }
+    private async checkIfPipFileExists(cwd: string): Promise<boolean> {
+        const currentProcess = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
+        const pipFileName = currentProcess.env[pipEnvFileNameVariable];
+        if (typeof pipFileName === 'string' && await this.fs.fileExistsAsync(path.join(cwd, pipFileName))) {
+            return true;
+        }
+        if (await this.fs.fileExistsAsync(path.join(cwd, 'Pipfile'))) {
+            return true;
+        }
+        return false;
     }
 
     private async invokePipenv(arg: string, rootPath: string): Promise<string | undefined> {
