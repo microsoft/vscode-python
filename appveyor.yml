@@ -24,13 +24,14 @@ install:
   - "%PYTHON%/Scripts/pip.exe install --upgrade -r requirements.txt"
 
 build_script:
-  - ps: git clone https://github.com/Microsoft/PTVS.git c:/Projects/PTVS
-  - ps: c:\Projects\PTVS
-  - ps: git checkout origin/master
-  - ps: cd c:\Projects\PTVS\Python\Product\VSCode\AnalysisVsc
-  - ps: dotnet --info
-  - ps: dotnet build
-  - ps: xcopy /S /D C:\Projects\PTVS\BuildOutput\VsCode\raw c:\Projects\vscode-python\analysis
+  - git clone https://github.com/MikhailArkhipov/PTVS.git ./PTVS
+  - "cd PTVS"
+  - git checkout origin/vsc
+  - "cd Python\Product\VSCode\AnalysisVsc"
+  - "dotnet --info"
+  - "dotnet build"
+  - "cd ..\..\..\..\.."
+  - "xcopy /S /D PTVS\BuildOutput\VsCode\raw analysis"
 
 test_script:
   - yarn run clean
