@@ -225,6 +225,7 @@ class DebugManager implements Disposable {
         if (!this.isServerMode) {
             const currentProcess = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
             currentProcess.on('SIGTERM', this.shutdown);
+            currentProcess.on('SIGINT', this.shutdown);
         }
         this.interceptProtocolMessages();
         this.startDebugSession();

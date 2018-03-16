@@ -9,12 +9,15 @@ import * as path from 'path';
 import { ThreadEvent } from 'vscode-debugadapter';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { noop } from '../../client/common/core.utils';
+import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
+import { DebugClientEx } from './debugClient';
 
 const isProcessRunning = require('is-running') as (number) => boolean;
 
@@ -27,6 +30,7 @@ const MAX_SIGNED_INT32 = Math.pow(2, 31) - 1;
 const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'mainV2.js');
 const THREAD_TIMEOUT = 10000;
 
+let testCounter = 0;
 [DEBUG_ADAPTER, EXPERIMENTAL_DEBUG_ADAPTER].forEach(testAdapterFilePath => {
     const debugAdapterFileName = path.basename(testAdapterFilePath);
     const debuggerType = debugAdapterFileName === 'Main.js' ? 'python' : 'pythonExperimental';
@@ -38,7 +42,7 @@ const THREAD_TIMEOUT = 10000;
                 this.skip();
             }
             await new Promise(resolve => setTimeout(resolve, 1000));
-            debugClient = new DebugClient('node', testAdapterFilePath, debuggerType);
+            debugClient = createDebugAdapter();
             await debugClient.start();
         });
         teardown(async () => {
@@ -50,7 +54,25 @@ const THREAD_TIMEOUT = 10000;
             } catch (ex) { }
             await sleep(1000);
         });
+        /**
+         * Creates the debug adapter.
+         * We do not need to support code coverage on AppVeyor, lets use the standard test adapter.
+         * @returns {DebugClient}
+         */
+        function createDebugAdapter(): DebugClient {
+            if (IS_WINDOWS) {
+                return new DebugClient('node', testAdapterFilePath, debuggerType);
+            } else {
+                const coverageDirectory = path.join(EXTENSION_ROOT_DIR, `debug_coverage${testCounter += 1}`);
+                return new DebugClientEx(testAdapterFilePath, debuggerType, coverageDirectory, { cwd: EXTENSION_ROOT_DIR });
+            }
+        }
         function buildLauncArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
+            const env = {};
+            if (debuggerType === 'pythonExperimental') {
+                // tslint:disable-next-line:no-string-literal
+                env['PYTHONPATH'] = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd');
+            }
             const options: LaunchRequestArguments = {
                 program: path.join(debugFilesPath, pythonFile),
                 cwd: debugFilesPath,
@@ -58,7 +80,7 @@ const THREAD_TIMEOUT = 10000;
                 debugOptions: ['RedirectOutput'],
                 pythonPath: 'python',
                 args: [],
-                env: {},
+                env,
                 envFile: '',
                 logToFile: false,
                 type: debuggerType

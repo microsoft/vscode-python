@@ -36,3 +36,5 @@ CODE_OF_CONDUCT.md
 CODING_STANDARDS.md
 CONTRIBUTING.md
 analysis/**
+news/**
+debug_coverage*/**

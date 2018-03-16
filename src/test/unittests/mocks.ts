@@ -6,7 +6,7 @@ import { Product } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../client/unittests/common/constants';
 import { BaseTestManager } from '../../client/unittests/common/managers/baseTestManager';
-import { ITestDebugLauncher, ITestDiscoveryService, IUnitTestSocketServer, launchOptions, TestDiscoveryOptions, TestProvider, Tests, TestsToRun } from '../../client/unittests/common/types';
+import { ITestDebugLauncher, ITestDiscoveryService, IUnitTestSocketServer, LaunchOptions, TestDiscoveryOptions, TestProvider, Tests, TestsToRun } from '../../client/unittests/common/types';
 
 @injectable()
 export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
@@ -32,7 +32,7 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     public async getLaunchOptions(resource?: Uri): Promise<{ port: number, host: string }> {
         return { port: 0, host: 'localhost' };
     }
-    public async launchDebugger(options: launchOptions): Promise<void> {
+    public async launchDebugger(options: LaunchOptions): Promise<void> {
         this._launched.resolve(true);
         // tslint:disable-next-line:no-non-null-assertion
         this._token = options.token!;

@@ -133,6 +133,7 @@ export interface IUnitTestSettings {
     readonly unittestEnabled: boolean;
     unittestArgs: string[];
     cwd?: string;
+    readonly useExperimentalDebugger?: boolean;
 }
 export interface IPylintCategorySeverity {
     readonly convention: DiagnosticSeverity;
