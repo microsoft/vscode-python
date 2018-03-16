@@ -787,6 +787,21 @@
                             "envFile": "^\"\\${workspaceFolder}/.env\"",
                             "debugOptions": []
                         }
+                    },
+                    {
+                        "label": "Python Experimental: Watson",
+                        "description": "%python.snippet.launch.watson.description%",
+                        "body": {
+                            "name": "Watson",
+                            "type": "pythonExperimental",
+                            "request": "launch",
+                            "program": "^\"\\${workspaceFolder}/console.py\"",
+                            "args": [
+                                "dev",
+                                "runserver",
+                                "--noreload=True"
+                            ]
+                        }
                     }
                 ],
                 "configurationAttributes": {
