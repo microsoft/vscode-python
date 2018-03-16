@@ -60,6 +60,7 @@
     ],
     "activationEvents": [
         "onLanguage:python",
+        "onDebugResolve:python",
         "onCommand:python.execInTerminal",
         "onCommand:python.sortImports",
         "onCommand:python.runtests",
