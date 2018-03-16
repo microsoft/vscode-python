@@ -40,4 +40,4 @@ test_script:
   - yarn run testSingleWorkspace --silent
   - yarn run testMultiWorkspace --silent
 
-build: off
+
