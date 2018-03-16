@@ -27,11 +27,11 @@ build_script:
   - git clone https://github.com/MikhailArkhipov/PTVS.git ./PTVS
   - "cd PTVS"
   - git checkout origin/vsc
-  - "cd Python\Product\VSCode\AnalysisVsc"
+  - "cd Python\\Product\\VSCode\\AnalysisVsc"
   - "dotnet --info"
   - "dotnet build"
-  - "cd ..\..\..\..\.."
-  - "xcopy /S /D PTVS\BuildOutput\VsCode\raw analysis"
+  - "cd ..\\..\\..\\..\\.."
+  - "xcopy /S /D PTVS\\BuildOutput\\VsCode\\raw analysis"
 
 test_script:
   - yarn run clean
