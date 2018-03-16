@@ -899,7 +899,8 @@
                                 "items": {
                                     "type": "string",
                                     "enum": [
-                                        "Sudo"
+                                        "Sudo",
+                                        "Pyramid"
                                     ]
                                 },
                                 "default": []
