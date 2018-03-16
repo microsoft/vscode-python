@@ -26,7 +26,7 @@ install:
 
 build: off
 # build_script:
-#   - git clone https://github.com/MicrosoftArkhipov/PTVS.git c:/projects/PTVS
+#   - git clone https://github.com/MikhailArkhipov/PTVS.git c:/projects/PTVS
 #   - "cd c:\\projects\\PTVS"
 #   - git checkout origin/vsc
 #   - "cd Python\\Product\\VSCode\\AnalysisVsc"
