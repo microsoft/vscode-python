@@ -20,6 +20,9 @@ export class WorkspaceService implements IWorkspaceService {
     public get onDidChangeWorkspaceFolders(): vscode.Event<vscode.WorkspaceFoldersChangeEvent> {
         return vscode.workspace.onDidChangeWorkspaceFolders;
     }
+    public get hasWorkspaceFolders() {
+        return Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0;
+    }
     public getConfiguration(section?: string, resource?: vscode.Uri): vscode.WorkspaceConfiguration {
         return vscode.workspace.getConfiguration(section, resource);
     }

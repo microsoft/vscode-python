@@ -14,3 +14,4 @@ coverage/
 .vscode-test/**
 .venv
 pythonFiles/experimental/ptvsd/**
+debug_coverage*/**

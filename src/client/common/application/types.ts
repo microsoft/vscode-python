@@ -434,6 +434,12 @@ export interface IWorkspaceService {
      * An event that is emitted when the [configuration](#WorkspaceConfiguration) changed.
      */
     readonly onDidChangeConfiguration: Event<ConfigurationChangeEvent>;
+    /**
+     * Whether a workspace folder exists
+     * @type {boolean}
+     * @memberof IWorkspaceService
+     */
+    readonly hasWorkspaceFolders: boolean;
 
     /**
      * Returns the [workspace folder](#WorkspaceFolder) that contains a given uri.
@@ -523,4 +529,20 @@ export interface ITerminalManager {
      * @return A new Terminal.
      */
     createTerminal(options: TerminalOptions): Terminal;
+}
+
+export const IDebugService = Symbol('IDebugManager');
+
+export interface IDebugService {
+    /**
+     * Start debugging by using either a named launch or named compound configuration,
+     * or by directly passing a [DebugConfiguration](#DebugConfiguration).
+     * The named configurations are looked up in '.vscode/launch.json' found in the given folder.
+     * Before debugging starts, all unsaved files are saved and the launch configurations are brought up-to-date.
+     * Folder specific variables used in the configuration (e.g. '${workspaceFolder}') are resolved against the given folder.
+     * @param folder The [workspace folder](#WorkspaceFolder) for looking up named configurations and resolving variables or `undefined` for a non-folder setup.
+     * @param nameOrConfiguration Either the name of a debug or compound configuration or a [DebugConfiguration](#DebugConfiguration) object.
+     * @return A thenable that resolves when debugging could be successfully started.
+     */
+    startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | vscode.DebugConfiguration): Thenable<boolean>;
 }

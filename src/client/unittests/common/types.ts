@@ -185,9 +185,10 @@ export interface ITestResultsService {
     updateResults(tests: Tests): void;
 }
 
-export type launchOptions = {
+export type LaunchOptions = {
     cwd: string;
     args: string[];
+    testProvider: TestProvider;
     token?: CancellationToken;
     outChannel?: OutputChannel;
 };
@@ -195,7 +196,7 @@ export type launchOptions = {
 export const ITestDebugLauncher = Symbol('ITestDebugLauncher');
 
 export interface ITestDebugLauncher {
-    launchDebugger(options: launchOptions): Promise<void>;
+    launchDebugger(options: LaunchOptions): Promise<void>;
 }
 
 export const ITestManagerFactory = Symbol('ITestManagerFactory');

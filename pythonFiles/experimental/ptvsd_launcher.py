@@ -80,7 +80,7 @@ except:
     traceback.print_exc()
     print('''
 Internal error detected. Please copy the above traceback and report at
-https://go.microsoft.com/fwlink/?LinkId=293415
+https://github.com/Microsoft/vscode-python/issues/new
 
 Press Enter to close. . .''')
     try:
