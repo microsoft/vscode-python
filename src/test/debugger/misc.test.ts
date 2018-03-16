@@ -43,6 +43,7 @@ let testCounter = 0;
             }
             await new Promise(resolve => setTimeout(resolve, 1000));
             debugClient = createDebugAdapter();
+            debugClient.defaultTimeout = THREAD_TIMEOUT;
             await debugClient.start();
         });
         teardown(async () => {
@@ -137,7 +138,7 @@ let testCounter = 0;
             if (debuggerType !== 'python') {
                 return this.skip();
             }
-            const threadIdPromise = debugClient.waitForEvent('thread', THREAD_TIMEOUT);
+            const threadIdPromise = debugClient.waitForEvent('thread');
 
             await Promise.all([
                 debugClient.configurationSequence(),
@@ -156,7 +157,7 @@ let testCounter = 0;
             if (debuggerType !== 'python') {
                 return this.skip();
             }
-            const threadIdPromise = debugClient.waitForEvent('thread', THREAD_TIMEOUT);
+            const threadIdPromise = debugClient.waitForEvent('thread');
 
             await Promise.all([
                 debugClient.configurationSequence(),
@@ -183,7 +184,7 @@ let testCounter = 0;
             }
             const launchArgs = buildLauncArgs('sample2.py', false);
             const breakpointLocation = { path: path.join(debugFilesPath, 'sample2.py'), column: 1, line: 5 };
-            const processPromise = debugClient.waitForEvent('process', THREAD_TIMEOUT) as Promise<DebugProtocol.ProcessEvent>;
+            const processPromise = debugClient.waitForEvent('process') as Promise<DebugProtocol.ProcessEvent>;
             await debugClient.hitBreakpoint(launchArgs, breakpointLocation);
             const processInfo = await processPromise;
             const processId = processInfo.body.systemProcessId;
@@ -196,7 +197,7 @@ let testCounter = 0;
             expect(isProcessRunning(processId)).to.be.equal(false, 'Python (debugee) Process is still alive');
         });
         test('Test conditional breakpoints', async () => {
-            const threadIdPromise = debugClient.waitForEvent('thread', THREAD_TIMEOUT);
+            const threadIdPromise = debugClient.waitForEvent('thread');
 
             await Promise.all([
                 debugClient.configurationSequence(),
@@ -227,7 +228,7 @@ let testCounter = 0;
             expect(vari.value).to.be.equal('3');
         });
         test('Test variables', async () => {
-            const threadIdPromise = debugClient.waitForEvent('thread', THREAD_TIMEOUT);
+            const threadIdPromise = debugClient.waitForEvent('thread');
             await Promise.all([
                 debugClient.configurationSequence(),
                 debugClient.launch(buildLauncArgs('sample2.py', false)),
@@ -297,7 +298,7 @@ let testCounter = 0;
             expect(response.body.value).to.be.equal('1234');
         });
         test('Test evaluating expressions', async () => {
-            const threadIdPromise = debugClient.waitForEvent('thread', THREAD_TIMEOUT);
+            const threadIdPromise = debugClient.waitForEvent('thread');
 
             await Promise.all([
                 debugClient.configurationSequence(),
@@ -323,7 +324,7 @@ let testCounter = 0;
             expect(response.body.result).to.be.equal('6', 'expression value is incorrect');
         });
         test('Test stepover', async () => {
-            const threadIdPromise = debugClient.waitForEvent('thread', THREAD_TIMEOUT);
+            const threadIdPromise = debugClient.waitForEvent('thread');
 
             await Promise.all([
                 debugClient.configurationSequence(),
@@ -361,7 +362,7 @@ let testCounter = 0;
             ]);
         });
         test('Test stepin and stepout', async () => {
-            const threadIdPromise = debugClient.waitForEvent('thread', THREAD_TIMEOUT);
+            const threadIdPromise = debugClient.waitForEvent('thread');
 
             await Promise.all([
                 debugClient.configurationSequence(),
@@ -418,7 +419,7 @@ let testCounter = 0;
                 debugClient.configurationSequence(),
                 debugClient.launch(buildLauncArgs('forever.py', false)),
                 debugClient.waitForEvent('initialized'),
-                debugClient.waitForEvent('process', THREAD_TIMEOUT)
+                debugClient.waitForEvent('process')
             ]);
 
             await sleep(3);
