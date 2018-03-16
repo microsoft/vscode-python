@@ -787,6 +787,22 @@
                             "envFile": "^\"\\${workspaceFolder}/.env\"",
                             "debugOptions": []
                         }
+                    },
+                    {
+                        "label": "Python Experimental: Scrapy",
+                        "description": "%python.snippet.launch.scrapy.description%",
+                        "body": {
+                            "name": "Scrapy",
+                            "type": "pythonExperimental",
+                            "request": "launch",
+                            "module": "scrapy",
+                            "args": [
+                                "crawl",
+                                "specs",
+                                "-o",
+                                "bikes.json"
+                            ]
+                        }
                     }
                 ],
                 "configurationAttributes": {
@@ -822,7 +838,7 @@
                             },
                             "console": {
                                 "enum": [
-                                    "none", 
+                                    "none",
                                     "integratedTerminal",
                                     "externalTerminal"
                                 ],
