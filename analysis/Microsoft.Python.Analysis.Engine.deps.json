@@ -1,0 +1,56 @@
+{
+  "runtimeTarget": {
+    "name": ".NETStandard,Version=v2.0/",
+    "signature": "709eca306a6925846dee077744207b56f003dc1d"
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETStandard,Version=v2.0": {},
+    ".NETStandard,Version=v2.0/": {
+      "Microsoft.Python.Analysis.Engine/1.0.0": {
+        "dependencies": {
+          "MicroBuild.Core": "0.2.0",
+          "NETStandard.Library": "2.0.1"
+        },
+        "runtime": {
+          "Microsoft.Python.Analysis.Engine.dll": {}
+        }
+      },
+      "MicroBuild.Core/0.2.0": {},
+      "Microsoft.NETCore.Platforms/1.1.0": {},
+      "NETStandard.Library/2.0.1": {
+        "dependencies": {
+          "Microsoft.NETCore.Platforms": "1.1.0"
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Microsoft.Python.Analysis.Engine/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "MicroBuild.Core/0.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-7AwhhKIApmsf7He0m9t49i/0s42YYIu9sf4kHsl3zbzhWyUUwS27cmUKo+Zp6wZ7iGDGoGInDrupUqJI1kaMEw==",
+      "path": "microbuild.core/0.2.0",
+      "hashPath": "microbuild.core.0.2.0.nupkg.sha512"
+    },
+    "Microsoft.NETCore.Platforms/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-kz0PEW2lhqygehI/d6XsPCQzD7ff7gUJaVGPVETX611eadGsA3A877GdSlU0LRVMCTH/+P3o2iDTak+S08V2+A==",
+      "path": "microsoft.netcore.platforms/1.1.0",
+      "hashPath": "microsoft.netcore.platforms.1.1.0.nupkg.sha512"
+    },
+    "NETStandard.Library/2.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-oA6nwv9MhEKYvLpjZ0ggSpb1g4CQViDVQjLUcDWg598jtvJbpfeP2reqwI1GLW2TbxC/Ml7xL6BBR1HmKPXlTg==",
+      "path": "netstandard.library/2.0.1",
+      "hashPath": "netstandard.library.2.0.1.nupkg.sha512"
+    }
+  }
+}

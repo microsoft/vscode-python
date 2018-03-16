@@ -23,6 +23,15 @@ export function fixInterpreterDisplayName(item: PythonInterpreter) {
     return item;
 }
 
+export function versionFromPythonVersionString(displayName: string): string {
+    // Typically 'Python 2.7.14' or 'Anaconda 5.0'
+    const array = displayName.split(' ');
+    if (array.length > 1) {
+        return array[1];
+    }
+    return displayName;
+}
+
 export function isMacDefaultPythonPath(p: string) {
     return p === 'python' || p === '/usr/bin/python';
 }

@@ -10,12 +10,13 @@ import {
     InterpreterType,
     PythonInterpreter
 } from '../../contracts';
+import { versionFromPythonVersionString } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName } from './conda';
 
 @injectable()
 export class CondaEnvFileService extends CacheableLocatorService {
-    constructor( @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService,
+    constructor(@inject(IInterpreterVersionService) private versionService: IInterpreterVersionService,
         @inject(ICondaService) private condaService: ICondaService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
@@ -76,7 +77,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
             displayName: `${AnacondaDisplayName} ${versionWithoutCompanyName}`,
             path: interpreter,
             companyDisplayName: AnacondaCompanyName,
-            version: version,
+            version: versionFromPythonVersionString(version),
             type: InterpreterType.Conda,
             envPath: environmentPath
         };

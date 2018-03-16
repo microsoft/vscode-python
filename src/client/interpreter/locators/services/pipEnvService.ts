@@ -10,6 +10,7 @@ import { IProcessService } from '../../../common/process/types';
 import { getPythonExecutable } from '../../../debugger/Common/Utils';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { versionFromPythonVersionString } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 const execName = 'pipenv';
@@ -53,7 +54,7 @@ export class PipEnvService extends CacheableLocatorService {
             path: pythonExecutablePath,
             displayName: `${ver} (${execName})`,
             type: InterpreterType.VirtualEnv,
-            version: ver
+            version: versionFromPythonVersionString(ver)
         };
     }
 

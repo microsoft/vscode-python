@@ -6,7 +6,7 @@ import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterVersionService, InterpreterType, IVirtualEnvironmentsSearchPathProvider, PythonInterpreter } from '../../contracts';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
-import { lookForInterpretersInDirectory } from '../helpers';
+import { lookForInterpretersInDirectory, versionFromPythonVersionString } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 @injectable()
@@ -74,7 +74,8 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
                 return {
                     displayName: `${displayName} (${virtualEnvSuffix})`.trim(),
                     path: interpreter,
-                    type: virtualEnvName.length > 0 ? InterpreterType.VirtualEnv : InterpreterType.Unknown
+                    type: virtualEnvName.length > 0 ? InterpreterType.VirtualEnv : InterpreterType.Unknown,
+                    version: versionFromPythonVersionString(displayName)
                 };
             });
     }

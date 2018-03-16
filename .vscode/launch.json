@@ -70,6 +70,26 @@
             "preLaunchTask": "Compile"
         },
         {
+            "name": "Launch Python Analysis Tests",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/test",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "env": {
+                "VSC_PYTHON_ANALYSIS": "1"
+            },
+            "preLaunchTask": "Compile"
+        },
+        {
             "name": "Launch Multiroot Tests",
             "type": "extensionHost",
             "request": "launch",

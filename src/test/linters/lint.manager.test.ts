@@ -8,6 +8,7 @@ import { EnumEx } from '../../client/common/enumUtils';
 import { IConfigurationService, ILintingSettings, IPythonSettings, Product } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
+import { IServiceContainer } from '../../client/ioc/types';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager, LinterId } from '../../client/linters/types';
 import { initialize } from '../initialize';
@@ -23,6 +24,7 @@ suite('Linting - Manager', () => {
         const cont = new Container();
         const serviceManager = new ServiceManager(cont);
         const serviceContainer = new ServiceContainer(cont);
+        serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
 
         serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
         configService = serviceManager.get<IConfigurationService>(IConfigurationService);

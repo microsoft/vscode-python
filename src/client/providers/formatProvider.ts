@@ -36,7 +36,7 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.config = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.disposables.push(this.documentManager.onDidSaveTextDocument(async document => await this.onSaveDocument(document)));
+        this.disposables.push(this.documentManager.onDidSaveTextDocument(async document => this.onSaveDocument(document)));
     }
 
     public dispose() {
@@ -66,12 +66,14 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
             this.documentVersionBeforeFormatting = document.version;
         }
 
-        const settings = this.config.getSettings(document.uri);
-        const formatter = this.formatters.get(settings.formatting.provider)!;
-        const edits = await formatter.formatDocument(document, options, token, range);
-
-        this.formatterMadeChanges = edits.length > 0;
-        return edits;
+        const formattingSettings = this.config.getSettings(document.uri).formatting;
+        if (formattingSettings) {
+            const formatter = this.formatters.get(formattingSettings.provider)!;
+            const edits = await formatter.formatDocument(document, options, token, range);
+            this.formatterMadeChanges = edits.length > 0;
+            return edits;
+        }
+        return [];
     }
 
     private async onSaveDocument(document: vscode.TextDocument): Promise<void> {

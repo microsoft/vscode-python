@@ -13,7 +13,7 @@ const untildify = require('untildify');
 
 @injectable()
 export class KnownPathsService extends CacheableLocatorService {
-    public constructor( @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: string[],
+    public constructor(@inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: string[],
         @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('KnownPathsService', serviceContainer);

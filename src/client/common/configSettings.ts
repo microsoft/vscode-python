@@ -4,7 +4,6 @@ import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ConfigurationTarget, Uri } from 'vscode';
 import { isTestExecution } from './constants';
 import {
     IAutoCompeteSettings,
@@ -26,29 +25,30 @@ export const IS_WINDOWS = /^win/.test(process.platform);
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
-
-    public jediPath: string;
-    public jediMemoryLimit: number;
-    public envFile: string;
-    public disablePromptForFeatures: string[];
-    public venvPath: string;
-    public venvFolders: string[];
-    public devOptions: string[];
-    public linting: ILintingSettings;
-    public formatting: IFormattingSettings;
-    public autoComplete: IAutoCompeteSettings;
-    public unitTest: IUnitTestSettings;
-    public terminal: ITerminalSettings;
-    public sortImports: ISortImportSettings;
-    public workspaceSymbols: IWorkspaceSymbolSettings;
-    public disableInstallationChecks: boolean;
-    public globalModuleInstallation: boolean;
+    public jediEnabled = true;
+    public jediPath = '';
+    public jediMemoryLimit = 1024;
+    public envFile = '';
+    public disablePromptForFeatures: string[] = [];
+    public venvPath = '';
+    public venvFolders: string[] = [];
+    public devOptions: string[] = [];
+    public linting: ILintingSettings | undefined;
+    public formatting: IFormattingSettings | undefined;
+    public autoComplete: IAutoCompeteSettings | undefined;
+    public unitTest: IUnitTestSettings | undefined;
+    public terminal: ITerminalSettings | undefined;
+    public sortImports: ISortImportSettings | undefined;
+    public workspaceSymbols: IWorkspaceSymbolSettings | undefined;
+    public disableInstallationChecks = false;
+    public globalModuleInstallation = false;
 
     private workspaceRoot: vscode.Uri;
     private disposables: vscode.Disposable[] = [];
     // tslint:disable-next-line:variable-name
-    private _pythonPath: string;
-    constructor(workspaceFolder?: Uri) {
+    private _pythonPath = '';
+
+    constructor(workspaceFolder?: vscode.Uri) {
         super();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : vscode.Uri.file(__dirname);
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(() => {
@@ -62,7 +62,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.initializeSettings();
     }
     // tslint:disable-next-line:function-name
-    public static getInstance(resource?: Uri): PythonSettings {
+    public static getInstance(resource?: vscode.Uri): PythonSettings {
         const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource).uri;
         const workspaceFolderKey = workspaceFolderUri ? workspaceFolderUri.fsPath : '';
 
@@ -74,15 +74,16 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         return PythonSettings.pythonSettings.get(workspaceFolderKey)!;
     }
 
-    public static getSettingsUriAndTarget(resource?: Uri): { uri: Uri | undefined, target: ConfigurationTarget } {
+    // tslint:disable-next-line:type-literal-delimiter
+    public static getSettingsUriAndTarget(resource?: vscode.Uri): { uri: vscode.Uri | undefined, target: vscode.ConfigurationTarget } {
         const workspaceFolder = resource ? vscode.workspace.getWorkspaceFolder(resource) : undefined;
-        let workspaceFolderUri: Uri | undefined = workspaceFolder ? workspaceFolder.uri : undefined;
+        let workspaceFolderUri: vscode.Uri | undefined = workspaceFolder ? workspaceFolder.uri : undefined;
 
         if (!workspaceFolderUri && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
             workspaceFolderUri = vscode.workspace.workspaceFolders[0].uri;
         }
 
-        const target = workspaceFolderUri ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Global;
+        const target = workspaceFolderUri ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Global;
         return { uri: workspaceFolderUri, target };
     }
 
@@ -106,20 +107,25 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         const workspaceRoot = this.workspaceRoot.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(this.workspaceRoot ? this.workspaceRoot.fsPath : undefined);
         const pythonSettings = vscode.workspace.getConfiguration('python', this.workspaceRoot);
+
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
         this.pythonPath = getAbsolutePath(this.pythonPath, workspaceRoot);
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
-        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
-        if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
-            this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), workspaceRoot);
-        } else {
-            this.jediPath = '';
+
+        this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled'))!;
+        if (this.jediEnabled) {
+            // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+            this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
+            if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
+                this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), workspaceRoot);
+            } else {
+                this.jediPath = '';
+            }
+            this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
         }
-        this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.envFile = systemVariables.resolveAny(pythonSettings.get<string>('envFile'))!;
@@ -127,6 +133,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion no-any
         this.devOptions = systemVariables.resolveAny(pythonSettings.get<any[]>('devOptions'))!;
         this.devOptions = Array.isArray(this.devOptions) ? this.devOptions : [];
+
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const lintingSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('linting'))!;
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
@@ -251,6 +258,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             this.unitTest = unitTestSettings;
             if (isTestExecution() && !this.unitTest) {
                 // tslint:disable-next-line:prefer-type-cast
+                // tslint:disable-next-line:no-object-literal-type-assertion
                 this.unitTest = {
                     nosetestArgs: [], pyTestArgs: [], unittestArgs: [],
                     promptToConfigure: true, debugPort: 3000,
@@ -287,6 +295,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             this.terminal = terminalSettings;
             if (isTestExecution() && !this.terminal) {
                 // tslint:disable-next-line:prefer-type-cast
+                // tslint:disable-next-line:no-object-literal-type-assertion
                 this.terminal = {} as ITerminalSettings;
             }
         }

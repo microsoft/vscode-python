@@ -822,7 +822,7 @@
                             },
                             "console": {
                                 "enum": [
-                                    "none", 
+                                    "none",
                                     "integratedTerminal",
                                     "externalTerminal"
                                 ],
@@ -936,6 +936,12 @@
                     "type": "string",
                     "description": "Absolute path to a file containing environment variable definitions.",
                     "default": "${workspaceFolder}/.env",
+                    "scope": "resource"
+                },
+                "python.jediEnabled": {
+                    "type": "boolean",
+                    "default": "true",
+                    "description": "Use Jedi code analysis instead of Microsoft Python Analysis engine.",
                     "scope": "resource"
                 },
                 "python.jediPath": {

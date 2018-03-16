@@ -10,6 +10,7 @@ init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
 
 install:
+  - choco install dotnetcore-runtime.install
   - ps: Install-Product node $env:nodejs_version
   - npm i -g yarn
   - yarn

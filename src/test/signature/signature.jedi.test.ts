@@ -5,6 +5,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { rootWorkspaceUri } from '../common';
+import { IS_ANALYSIS_ENGINE_TEST } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -20,10 +21,14 @@ class SignatureHelpResult {
 }
 
 // tslint:disable-next-line:max-func-body-length
-suite('Signatures', () => {
+suite('Signatures (Jedi)', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
-    suiteSetup(async () => {
+    suiteSetup(async function () {
+        if (IS_ANALYSIS_ENGINE_TEST) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
         await initialize();
         initializeDI();
         isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
