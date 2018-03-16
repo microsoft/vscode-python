@@ -1,3 +1,6 @@
+image: Visual Studio 2017
+shallow_clone: true
+
 environment:
   matrix:
     - PYTHON: "C:\\Python36"
@@ -19,6 +22,15 @@ install:
   - python --version
   - python -m easy_install -U setuptools
   - "%PYTHON%/Scripts/pip.exe install --upgrade -r requirements.txt"
+
+build_script:
+  - ps: git clone https://github.com/Microsoft/PTVS.git c:/Projects/PTVS
+  - ps: c:\Projects\PTVS
+  - ps: git checkout origin/master
+  - ps: cd c:\Projects\PTVS\Python\Product\VSCode\AnalysisVsc
+  - ps: dotnet --info
+  - ps: dotnet build
+  - ps: xcopy /S /D C:\Projects\PTVS\BuildOutput\VsCode\raw c:\Projects\vscode-python\analysis
 
 test_script:
   - yarn run clean
