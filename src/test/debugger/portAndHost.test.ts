@@ -10,6 +10,7 @@ import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { noop } from '../../client/common/core.utils';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
+import { DEBUGGER_TIMEOUT } from './common/constants';
 
 use(chaiAsPromised);
 
@@ -31,6 +32,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
             }
             await new Promise(resolve => setTimeout(resolve, 1000));
             debugClient = new DebugClient('node', testAdapterFilePath, debuggerType);
+            debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
             await debugClient.start();
         });
         teardown(async () => {

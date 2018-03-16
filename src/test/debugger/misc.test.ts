@@ -17,6 +17,7 @@ import { PlatformService } from '../../client/common/platform/platformService';
 import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
+import { DEBUGGER_TIMEOUT } from './common/constants';
 import { DebugClientEx } from './debugClient';
 
 const isProcessRunning = require('is-running') as (number) => boolean;
@@ -28,7 +29,6 @@ const debugFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'py
 const DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'Main.js');
 const MAX_SIGNED_INT32 = Math.pow(2, 31) - 1;
 const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'mainV2.js');
-const THREAD_TIMEOUT = 10000;
 
 let testCounter = 0;
 [DEBUG_ADAPTER, EXPERIMENTAL_DEBUG_ADAPTER].forEach(testAdapterFilePath => {
@@ -43,7 +43,7 @@ let testCounter = 0;
             }
             await new Promise(resolve => setTimeout(resolve, 1000));
             debugClient = createDebugAdapter();
-            debugClient.defaultTimeout = THREAD_TIMEOUT;
+            debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
             await debugClient.start();
         });
         teardown(async () => {
