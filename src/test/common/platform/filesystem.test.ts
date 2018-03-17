@@ -67,6 +67,9 @@ suite('FileSystem', () => {
     test('Case sensitivity is not ignored when comparing file names on linux', async () => {
         caseSensitivityFileCheck(false, false, true);
     });
+    test('Check existence of files synchronously', async () => {
+        expect(fileSystem.fileExistsSync(__filename)).to.be.equal(true, 'file not found');
+    });
 
     test('Test appending to file', async () => {
         const dataToAppend = `Some Data\n${new Date().toString()}\nAnd another line`;

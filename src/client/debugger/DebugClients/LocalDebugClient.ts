@@ -1,5 +1,4 @@
-import * as child_process from 'child_process';
-import { ChildProcess } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -31,8 +30,8 @@ enum DebugServerStatus {
 }
 
 export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
-    protected pyProc: child_process.ChildProcess | undefined;
-    protected pythonProcess: IPythonProcess;
+    protected pyProc: ChildProcess | undefined;
+    protected pythonProcess!: IPythonProcess;
     protected debugServer: BaseDebugServer | undefined;
     private get debugServerStatus(): DebugServerStatus {
         if (this.debugServer && this.debugServer!.IsRunning) {
@@ -114,7 +113,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                     break;
                 }
                 default: {
-                    this.pyProc = child_process.spawn(pythonPath, args, { cwd: processCwd, env: environmentVariables });
+                    this.pyProc = spawn(pythonPath, args, { cwd: processCwd, env: environmentVariables });
                     this.handleProcessOutput(this.pyProc!, reject);
 
                     // Here we wait for the application to connect to the socket server.
@@ -174,7 +173,11 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         if (typeof this.args.module === 'string' && this.args.module.length > 0) {
             return [vsDebugOptions.join(','), '-m', this.args.module].concat(programArgs);
         }
-        return [vsDebugOptions.join(','), this.args.program].concat(programArgs);
+        const args = [vsDebugOptions.join(',')];
+        if (this.args.program.length > 0) {
+            args.push(this.args.program);
+        }
+        return args.concat(programArgs);
     }
     private launchExternalTerminal(sudo: boolean, cwd: string, pythonPath: string, args: string[], env: {}) {
         return new Promise((resolve, reject) => {

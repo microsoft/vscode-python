@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-invalid-template-strings no-any
+// tslint:disable:max-func-body-length no-invalid-template-strings no-any no-object-literal-type-assertion
 
 import { expect } from 'chai';
 import * as path from 'path';
@@ -11,7 +11,7 @@ import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { PythonLanguage } from '../../../client/common/constants';
-import { IPlatformService } from '../../../client/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { PythonDebugConfigurationProvider, PythonV2DebugConfigurationProvider } from '../../../client/debugger';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -24,6 +24,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let debugProvider: DebugConfigurationProvider;
         let platformService: TypeMoq.IMock<IPlatformService>;
+        let fileSystem: TypeMoq.IMock<IFileSystem>;
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             debugProvider = new provider.class(serviceContainer.object);
@@ -36,8 +37,10 @@ import { IServiceContainer } from '../../../client/ioc/types';
         function setupIoc(pythonPath: string, isWindows: boolean = false, isMac: boolean = false, isLinux: boolean = false) {
             const confgService = TypeMoq.Mock.ofType<IConfigurationService>();
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
+            fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => confgService.object);
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
             const settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup(s => s.pythonPath).returns(() => pythonPath);
             confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
@@ -304,6 +307,53 @@ import { IServiceContainer } from '../../../client/ioc/types';
                 return;
             }
             await testFixFilePathCase(false, true, false);
+        });
+        async function testPyramidConfiguration(isWindows: boolean, isLinux: boolean, isMac: boolean, addPyramidDebugOption: boolean = true, pythonPathExists = true, shouldWork = true) {
+            const workspacePath = path.join('usr', 'development', 'wksp1');
+            const pythonPath = path.join(workspacePath, 'env', 'bin', 'python');
+            const pserveExecutableName = isWindows ? 'pserve.exe' : 'pserve';
+            const pservePath = pythonPathExists ? path.join(path.dirname(pythonPath), pserveExecutableName) : pserveExecutableName;
+            const workspaceFolder = createMoqWorkspaceFolder(workspacePath);
+            const pythonFile = 'xyz.py';
+            setupIoc(pythonPath, isWindows, isMac, isLinux);
+            setupActiveEditor(pythonFile, PythonLanguage.language);
+
+            const options = addPyramidDebugOption ? { debugOptions: ['Pyramid'] } : {};
+            fileSystem.setup(fs => fs.fileExistsSync(TypeMoq.It.isValue(pythonPath))).returns(() => pythonPathExists);
+
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, options as any as DebugConfiguration);
+            if (shouldWork) {
+                expect(debugConfig).to.have.property('program', pservePath);
+            } else {
+                expect(debugConfig!.program).to.be.not.equal(pservePath);
+            }
+        }
+        test('Program is set for Pyramid (windows)', async () => {
+            await testPyramidConfiguration(true, false, false);
+        });
+        test('Program is set for Pyramid (Linux)', async () => {
+            await testPyramidConfiguration(false, true, false);
+        });
+        test('Program is set for Pyramid (Mac)', async () => {
+            await testPyramidConfiguration(false, false, true);
+        });
+        test('Program is not set for Pyramid when DebugOption is not set (windows)', async () => {
+            await testPyramidConfiguration(true, false, false, false, false, false);
+        });
+        test('Program is not set for Pyramid when DebugOption is not set (Linux)', async () => {
+            await testPyramidConfiguration(false, true, false, false, false, false);
+        });
+        test('Program is not set for Pyramid when DebugOption is not set (Mac)', async () => {
+            await testPyramidConfiguration(false, false, true, false, false, false);
+        });
+        test('Program is set to executable name for Pyramid when python exec does not exist (windows)', async () => {
+            await testPyramidConfiguration(true, false, false, true, false, true);
+        });
+        test('Program is set to executable name for Pyramid when python exec does not exist (Linux)', async () => {
+            await testPyramidConfiguration(false, true, false, true, false, true);
+        });
+        test('Program is set to executable name for Pyramid when python exec does not exist (Mac)', async () => {
+            await testPyramidConfiguration(false, false, true, true, false, true);
         });
     });
 });

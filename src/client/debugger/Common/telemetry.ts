@@ -10,7 +10,7 @@ import { DebuggerPerformanceTelemetry } from '../../telemetry/types';
 import { TelemetryEvent } from './Contracts';
 
 type DebugAction = 'stepIn' | 'stepOut' | 'continue' | 'next' | 'launch';
-type DebugPerformanceInformation = { action: DebugAction, timer: StopWatch };
+type DebugPerformanceInformation = { action: DebugAction; timer: StopWatch };
 
 const executionStack: DebugPerformanceInformation[] = [];
 

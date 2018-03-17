@@ -33,14 +33,15 @@ export interface IFileSystem {
     directorySeparatorChar: string;
     objectExistsAsync(path: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean>;
     fileExistsAsync(path: string): Promise<boolean>;
+    fileExistsSync(path: string): boolean;
     directoryExistsAsync(path: string): Promise<boolean>;
     createDirectoryAsync(path: string): Promise<void>;
     getSubDirectoriesAsync(rootDir: string): Promise<string[]>;
     arePathsSame(path1: string, path2: string): boolean;
     readFile(filePath: string): Promise<string>;
     appendFileSync(filename: string, data: {}, encoding: string): void;
-    appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string; }): void;
+    appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
     // tslint:disable-next-line:unified-signatures
-    appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string; }): void;
+    appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string }): void;
     getRealPathAsync(path: string): Promise<string>;
 }

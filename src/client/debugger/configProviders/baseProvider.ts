@@ -8,6 +8,7 @@ import * as path from 'path';
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { PythonLanguage } from '../../common/constants';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { DebuggerType, LaunchRequestArguments } from '../Common/Contracts';
@@ -15,7 +16,7 @@ import { DebuggerType, LaunchRequestArguments } from '../Common/Contracts';
 // tslint:disable:no-invalid-template-strings
 
 export type PythonDebugConfiguration = DebugConfiguration & LaunchRequestArguments;
-export type PTVSDDebugConfiguration = PythonDebugConfiguration & { redirectOutput: boolean, fixFilePathCase: boolean };
+export type PTVSDDebugConfiguration = PythonDebugConfiguration & { redirectOutput: boolean; fixFilePathCase: boolean };
 
 @injectable()
 export abstract class BaseConfigurationProvider implements DebugConfigurationProvider {
@@ -63,6 +64,16 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
         // Always redirect output.
         if (debugConfiguration.debugOptions.indexOf('RedirectOutput') === -1) {
             debugConfiguration.debugOptions.push('RedirectOutput');
+        }
+        if (debugConfiguration.debugOptions.indexOf('Pyramid') >= 0) {
+            const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
+            const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+            const pserve = platformService.isWindows ? 'pserve.exe' : 'pserve';
+            if (fs.fileExistsSync(debugConfiguration.pythonPath)) {
+                debugConfiguration.program = path.join(path.dirname(debugConfiguration.pythonPath), pserve);
+            } else {
+                debugConfiguration.program = pserve;
+            }
         }
     }
     private getWorkspaceFolder(folder: WorkspaceFolder | undefined, config: PythonDebugConfiguration): Uri | undefined {

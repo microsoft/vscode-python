@@ -831,6 +831,21 @@
                                 "bikes.json"
                             ]
                         }
+                    },
+                    {
+                        "label": "Python Experimental: Pyramid",
+                        "description": "%python.snippet.launch.pyramid.description%",
+                        "body": {
+                            "name": "Pyramid",
+                            "type": "pythonExperimental",
+                            "request": "launch",
+                            "args": [
+                                "^\"\\${workspaceFolder}/development.ini\""
+                            ],
+                            "debugOptions": [
+                                "Pyramid"
+                            ]
+                        }
                     }
                 ],
                 "configurationAttributes": {

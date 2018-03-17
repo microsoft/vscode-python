@@ -29,6 +29,9 @@ export class FileSystem implements IFileSystem {
     public fileExistsAsync(filePath: string): Promise<boolean> {
         return this.objectExistsAsync(filePath, (stats) => stats.isFile());
     }
+    public fileExistsSync(filePath: string): boolean {
+        return fs.existsSync(filePath);
+    }
     /**
      * Reads the contents of the file using utf8 and returns the string contents.
      * @param {string} filePath
@@ -79,9 +82,9 @@ export class FileSystem implements IFileSystem {
     }
 
     public appendFileSync(filename: string, data: {}, encoding: string): void;
-    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string; }): void;
+    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
     // tslint:disable-next-line:unified-signatures
-    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string; }): void;
+    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string }): void;
     public appendFileSync(filename: string, data: {}, optionsOrEncoding: {}): void {
         return fs.appendFileSync(filename, data, optionsOrEncoding);
     }

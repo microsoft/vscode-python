@@ -1,4 +1,4 @@
-// tslint:disable:quotemark ordered-imports promise-must-complete member-ordering no-any prefer-template cyclomatic-complexity no-empty no-multiline-string one-line no-invalid-template-strings no-suspicious-comment no-var-self
+// tslint:disable:quotemark ordered-imports promise-must-complete member-ordering no-any prefer-template cyclomatic-complexity no-empty no-multiline-string one-line no-invalid-template-strings no-suspicious-comment no-var-self no-duplicate-imports
 "use strict";
 
 // This line should always be right on top.
@@ -9,8 +9,7 @@ if ((Reflect as any).metadata === undefined) {
 }
 import * as fs from "fs";
 import * as path from "path";
-import { Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable, LoggingDebugSession, logger, BreakpointEvent, Breakpoint } from "vscode-debugadapter";
-import { ThreadEvent } from "vscode-debugadapter";
+import { Handles, InitializedEvent, OutputEvent, Scope, Source, StackFrame, StoppedEvent, TerminatedEvent, Thread, Variable, LoggingDebugSession, logger, BreakpointEvent, Breakpoint, ThreadEvent } from "vscode-debugadapter";
 import { DebugProtocol } from "vscode-debugprotocol";
 import { DEBUGGER } from '../../client/telemetry/constants';
 import { DebuggerTelemetry } from '../../client/telemetry/types';
@@ -23,7 +22,6 @@ import { DebugClient } from "./DebugClients/DebugClient";
 import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients/DebugFactory";
 import { BaseDebugServer } from "./DebugServers/BaseDebugServer";
 import { PythonProcess } from "./PythonProcess";
-import { IS_WINDOWS } from './Common/Utils';
 import { sendPerformanceTelemetry, capturePerformanceTelemetry, PerformanceTelemetryCondition } from "./Common/telemetry";
 import { LogLevel } from "vscode-debugadapter/lib/logger";
 
@@ -41,13 +39,13 @@ export class PythonDebugger extends LoggingDebugSession {
     private registeredBreakpoints: Map<number, IPythonBreakpoint>;
     private registeredBreakpointsByFileName: Map<string, IPythonBreakpoint[]>;
     private debuggerLoaded: Promise<any>;
-    private debuggerLoadedPromiseResolve: () => void;
+    private debuggerLoadedPromiseResolve!: () => void;
     private debugClient?: DebugClient<{}>;
-    private configurationDone: Promise<any>;
+    private configurationDone!: Promise<any>;
     private configurationDonePromiseResolve?: () => void;
     private lastException?: IPythonException;
-    private _supportsRunInTerminalRequest: boolean;
-    private terminateEventSent: boolean;
+    private _supportsRunInTerminalRequest: boolean = false;
+    private terminateEventSent: boolean = false;
     public constructor(debuggerLinesStartAt1: boolean, isServer: boolean) {
         super(path.join(__dirname, '..', '..', '..', 'debug.log'), debuggerLinesStartAt1, isServer === true);
         this._variableHandles = new Handles<IDebugVariable>();
@@ -92,7 +90,7 @@ export class PythonDebugger extends LoggingDebugSession {
     }
 
     private pythonProcess?: PythonProcess;
-    private debugServer: BaseDebugServer;
+    private debugServer!: BaseDebugServer;
 
     private startDebugServer(): Promise<IDebugServer> {
         let programDirectory = '';
@@ -208,8 +206,8 @@ export class PythonDebugger extends LoggingDebugSession {
         this.sendEvent(new OutputEvent(output, outputChannel));
     }
     private entryResponse?: DebugProtocol.LaunchResponse;
-    private launchArgs: LaunchRequestArguments;
-    private attachArgs: AttachRequestArguments;
+    private launchArgs!: LaunchRequestArguments;
+    private attachArgs!: AttachRequestArguments;
     private canStartDebugger(): Promise<boolean> {
         return Promise.resolve(true);
     }
@@ -229,15 +227,6 @@ export class PythonDebugger extends LoggingDebugSession {
             args.pythonPath = getPythonExecutable(args.pythonPath);
         }
         catch (ex) {
-        }
-        if (Array.isArray(args.debugOptions) && args.debugOptions.indexOf("Pyramid") >= 0) {
-            const pserve = IS_WINDOWS ? "pserve.exe" : "pserve";
-            if (fs.existsSync(args.pythonPath)) {
-                args.program = path.join(path.dirname(args.pythonPath), pserve);
-            }
-            else {
-                args.program = pserve;
-            }
         }
         // Confirm the file exists
         if (typeof args.module !== 'string' || args.module.length === 0) {
@@ -279,6 +268,7 @@ export class PythonDebugger extends LoggingDebugSession {
         });
 
         this.entryResponse = response;
+        // tslint:disable-next-line:no-this-assignment
         const that = this;
 
         this.startDebugServer().then(dbgServer => {
@@ -302,6 +292,7 @@ export class PythonDebugger extends LoggingDebugSession {
         this.attachArgs = args;
         this.debugClient = CreateAttachDebugClient(args, this);
         this.entryResponse = response;
+        // tslint:disable-next-line:no-this-assignment
         const that = this;
 
         this.canStartDebugger().then(() => {
@@ -375,7 +366,7 @@ export class PythonDebugger extends LoggingDebugSession {
             }
 
             // VSC needs `id` to uniquely identify each breakpoint (part of the protocol spec).
-            const breakpoints: { verified: boolean, line: number, id: number }[] = [];
+            const breakpoints: { verified: boolean; line: number; id: number }[] = [];
             const linesToAdd = args.breakpoints!.map(b => b.line);
             const registeredBks = this.registeredBreakpointsByFileName.get(args.source.path!)!;
             const linesToRemove = registeredBks.map(b => b.LineNo).filter(oldLine => linesToAdd.indexOf(oldLine) === -1);
