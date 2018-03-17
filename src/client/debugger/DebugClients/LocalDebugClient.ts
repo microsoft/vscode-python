@@ -174,7 +174,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
             return [vsDebugOptions.join(','), '-m', this.args.module].concat(programArgs);
         }
         const args = [vsDebugOptions.join(',')];
-        if (this.args.program.length > 0) {
+        if (this.args.program && this.args.program.length > 0) {
             args.push(this.args.program);
         }
         return args.concat(programArgs);
