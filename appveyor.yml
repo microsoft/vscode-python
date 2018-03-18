@@ -31,7 +31,7 @@ build_script:
   - "dotnet --info"
   - "dotnet build"
   - "cd c:\\projects\\vscode-python"
-  - "xcopy /S /D c:\\projects\\PTVS\\BuildOutput\\VsCode\\raw analysis"
+  - "xcopy /S /I c:\\projects\\PTVS\\BuildOutput\\VsCode\\raw analysis"
 
 test_script:
   - yarn run clean
