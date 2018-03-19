@@ -28,7 +28,7 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Interpreters servicex', () => {
+suite('Interpreters service', () => {
     let serviceManager: ServiceManager;
     let serviceContainer: ServiceContainer;
     let updater: TypeMoq.IMock<IPythonPathUpdaterServiceManager>;
