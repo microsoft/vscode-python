@@ -1,5 +1,73 @@
 # Changelog
 
+## 2018.3.0-beta (19 Mar 2018)
+
+### Enhancements
+
+1. Add a PySpark debug configuration for the experimental debugger.
+ ([#1029](https://github.com/Microsoft/vscode-python/issues/1029))
+1. Add a Pyramid debug configuration for the experimental debugger.
+ ([#1030](https://github.com/Microsoft/vscode-python/issues/1030))
+1. Add a Watson debug configuration for the experimental debugger.
+ ([#1031](https://github.com/Microsoft/vscode-python/issues/1031))
+1. Add a Scrapy debug configuration for the experimental debugger.
+ ([#1032](https://github.com/Microsoft/vscode-python/issues/1032))
+1. When debugging, use `Integrated Terminal` as the default console.
+ ([#526](https://github.com/Microsoft/vscode-python/issues/526))
+1. Bundle python depedencies (PTVSD package) in the extension for the experimental debugger.
+ ([#741](https://github.com/Microsoft/vscode-python/issues/741))
+1. Add support for expermental debugger when debugging Python Unit Tests.
+ ([#906](https://github.com/Microsoft/vscode-python/issues/906))
+1. Support `Debug Console` as a `console` option for the Experimental Debugger.
+ ([#950](https://github.com/Microsoft/vscode-python/issues/950))
+1. Enable syntax highlighting for `requirements.in` files as used by
+e.g. [pip-tools](https://github.com/jazzband/pip-tools).
+ ([#961](https://github.com/Microsoft/vscode-python/issues/961))
+1. Add support to read name of Pipfile from environment variable.
+ ([#999](https://github.com/Microsoft/vscode-python/issues/999))
+
+### Fixes
+
+1. Ignore test results when debugging unit tests.
+ ([#1043](https://github.com/Microsoft/vscode-python/issues/1043))
+1. Resolve debug configuration information in `launch.json` when debugging without opening a python file.
+ ([#1098](https://github.com/Microsoft/vscode-python/issues/1098))
+1. Fix occasionally having unverified breakpoints
+ ([#87](https://github.com/Microsoft/vscode-python/issues/87))
+1. Ensure conda installer is not used for non-conda environments.
+ ([#969](https://github.com/Microsoft/vscode-python/issues/969))
+1. Fixes issue that display incorrect interpreter briefly before updating it to the right value.
+ ([#981](https://github.com/Microsoft/vscode-python/issues/981))
+
+### Code Health
+
+1. Exclude 'news' folder from getting packaged into the extension.
+ ([#1020](https://github.com/Microsoft/vscode-python/issues/1020))
+1. Remove Jupyter commands.
+ ([#1034](https://github.com/Microsoft/vscode-python/issues/1034))
+1. Trigger incremental build compilation only when typescript files are modified.
+ ([#1040](https://github.com/Microsoft/vscode-python/issues/1040))
+1. Updated npm dependencies in devDependencies and fix TypeScript compilation issues.
+ ([#1042](https://github.com/Microsoft/vscode-python/issues/1042))
+1. Enable unit testing of stdout and stderr redirection for the experimental debugger.
+ ([#1048](https://github.com/Microsoft/vscode-python/issues/1048))
+1. Update npm package `vscode-extension-telemetry` to fix the warning 'os.tmpDir() deprecation'.
+ ([#1066](https://github.com/Microsoft/vscode-python/issues/1066))
+1. Prevent debugger stepping into js code, when debugging async TypeScript code.
+ ([#1090](https://github.com/Microsoft/vscode-python/issues/1090))
+1. Increase timeouts for the debugger unit tests.
+ ([#1094](https://github.com/Microsoft/vscode-python/issues/1094))
+1. Change the command used to install pip on AppVeyor to avoid installation errors.
+ ([#1107](https://github.com/Microsoft/vscode-python/issues/1107))
+1. Enable unit testing of the experimental debugger on CI servers
+ ([#742](https://github.com/Microsoft/vscode-python/issues/742))
+1. Generate code coverage for debug adapter unit tests.
+ ([#778](https://github.com/Microsoft/vscode-python/issues/778))
+1. Execute prospector as a module (using -m).
+ ([#982](https://github.com/Microsoft/vscode-python/issues/982))
+1. Launch the unit tests in debug mode as opposed to running and attaching the debugger.
+ ([#983](https://github.com/Microsoft/vscode-python/issues/983))
+
 ## 2018.2.1 (09 Mar 2018)
 
 ### Fixes
