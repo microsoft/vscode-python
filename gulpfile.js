@@ -24,6 +24,8 @@ const fs = require('fs');
 const remapIstanbul = require('remap-istanbul');
 const istanbul = require('istanbul');
 const glob = require('glob');
+const watch = require('gulp-watch');
+const _ = require('lodash');
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -41,7 +43,6 @@ const all = [
 
 const tsFilter = [
     'src/**/*.ts',
-    'src/client/**/*.ts',
 ];
 
 const indentationFilter = [
@@ -60,7 +61,7 @@ const tslintFilter = [
     '!resources/**/*',
     '!snippets/**/*',
     '!syntaxes/**/*',
-    '!**/typings/**/*',
+    '!**/typings/**/*'
 ];
 
 const copyrightHeader = [
@@ -78,7 +79,7 @@ gulp.task('watch', ['hygiene-modified', 'hygiene-watch']);
 
 gulp.task('debugger-coverage', () => buildDebugAdapterCoverage());
 
-gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes' }), 1000)));
+gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
 
 gulp.task('hygiene-all', () => run({ mode: 'all' }));
 
@@ -131,20 +132,50 @@ function buildDebugAdapterCoverage() {
 * @property {'changes'|'staged'|'all'|'compile'} [mode=] - Mode.
 * @property {boolean=} skipIndentationCheck - Skip indentation checks.
 * @property {boolean=} skipFormatCheck - Skip format checks.
+* @property {boolean=} skipCopyrightCheck - Skip copyright checks.
 * @property {boolean=} skipLinter - Skip linter.
 */
 
+const tsProjectMap = {};
+/**
+ *
+ * @param {hygieneOptions} options
+ */
+function getTsProject(options) {
+    const tsOptions = options.mode === 'compile' ? undefined : { strict: true, noImplicitAny: false, noImplicitThis: false };
+    const mode = tsOptions && tsOptions.mode ? tsOptions.mode : '';
+    return tsProjectMap[mode] ? tsProjectMap[mode] : tsProjectMap[mode] = ts.createProject('tsconfig.json', tsOptions);
+}
+
+let configuration;
+let program;
+/**
+ *
+ * @param {hygieneOptions} options
+ */
+function getLinter(options) {
+    configuration = configuration ? configuration : tslint.Configuration.findConfiguration(null, '.');
+    program = program ? program : tslint.Linter.createProgram('./tsconfig.json');
+    const linter = new tslint.Linter({ formatter: 'json' }, program);
+    return { linter, configuration };
+}
+let compilationInProgress = false;
+let reRunCompilation = false;
 /**
  *
  * @param {hygieneOptions} options
  * @returns {NodeJS.ReadWriteStream}
  */
 const hygiene = (options) => {
+    if (compilationInProgress) {
+        reRunCompilation = true;
+        return;
+    }
+    compilationInProgress = true;
     options = options || {};
     let errorCount = 0;
-    const addedFiles = getAddedFilesSync();
+    const addedFiles = options.skipCopyrightCheck ? [] : getAddedFilesSync();
     console.log(colors.blue('Hygiene started.'));
-
     const copyrights = es.through(function (file) {
         if (addedFiles.indexOf(file.path) !== -1 && file.contents.toString('utf8').indexOf(copyrightHeader) !== 0) {
             // Use tslint format.
@@ -228,9 +259,11 @@ const hygiene = (options) => {
             .filter(reported => reported === true)
             .length > 0;
     }
-    const configuration = tslint.Configuration.findConfiguration(null, '.');
-    const program = tslint.Linter.createProgram('./tsconfig.json');
-    const linter = new tslint.Linter({ formatter: 'json' }, program);
+
+    const { linter, configuration } = getLinter(options);
+    // const configuration = tslint.Configuration.findConfiguration(null, '.');
+    // const program = tslint.Linter.createProgram('./tsconfig.json');
+    // const linter = new tslint.Linter({ formatter: 'json' }, program);
     const tsl = es.through(function (file) {
         const contents = file.contents.toString('utf8');
         // Don't print anything to the console, we'll do that.
@@ -259,8 +292,7 @@ const hygiene = (options) => {
         this.emit('data', file);
     });
 
-    const tsOptions = options.mode === 'compile' ? undefined : { strict: true, noImplicitAny: false, noImplicitThis: false };
-    const tsProject = ts.createProject('tsconfig.json', tsOptions);
+    const tsProject = getTsProject(options);
 
     const tsc = function () {
         function customReporter() {
@@ -294,8 +326,11 @@ const hygiene = (options) => {
     }
 
     result = result
-        .pipe(filter(tslintFilter))
-        .pipe(copyrights);
+        .pipe(filter(tslintFilter));
+
+    if (!options.skipCopyrightCheck) {
+        result = result.pipe(copyrights);
+    }
 
     if (!options.skipFormatCheck) {
         // result = result
@@ -332,6 +367,13 @@ const hygiene = (options) => {
             // Reset error counter.
             errorCount = 0;
             reportedLinterFailures = [];
+            compilationInProgress = false;
+            if (reRunCompilation) {
+                reRunCompilation = false;
+                setTimeout(() => {
+                    hygiene(options);
+                }, 10);
+            }
             this.emit('end');
         }))
         .on('error', exitHandler.bind(this, options));
@@ -346,6 +388,7 @@ const hygiene = (options) => {
 * @property {string[]=} files - Optional list of files to be modified.
 * @property {boolean=} skipIndentationCheck - Skip indentation checks.
 * @property {boolean=} skipFormatCheck - Skip format checks.
+* @property {boolean=} skipCopyrightCheck - Skip copyright checks.
 * @property {boolean=} skipLinter - Skip linter.
  * @property {boolean=} watch - Watch mode.
 */
@@ -391,7 +434,15 @@ function getAddedFilesSync() {
     return out
         .split(/\r?\n/)
         .filter(l => !!l)
-        .filter(l => l.startsWith('A') || l.startsWith('??'))
+        .filter(l => _.intersection(['A', '?'], l.substring(0, 2).trim().split()).length > 0)
+        .map(l => path.join(__dirname, l.substring(2).trim()));
+}
+function getModifiedFilesSync() {
+    const out = cp.execSync('git status -u -s', { encoding: 'utf8' });
+    return out
+        .split(/\r?\n/)
+        .filter(l => !!l)
+        .filter(l => _.intersection(['M', 'A', 'R', 'C'], l.substring(0, 2).trim().split()).length > 0)
         .map(l => path.join(__dirname, l.substring(2).trim()));
 }
 
@@ -404,8 +455,7 @@ function getFilesToProcess(options) {
 
     // If we need only modified files, then filter the glob.
     if (options && options.mode === 'changes') {
-        return gulp.src(all, gulpSrcOptions)
-            .pipe(gitmodified(['M', 'A', 'AM', 'D', 'R', 'C', 'U', '??']));
+        return gulp.src(getModifiedFilesSync(), gulpSrcOptions);
     }
 
     if (options && options.mode === 'staged') {
