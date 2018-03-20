@@ -46,11 +46,11 @@ def sections(directory):
     """Yield the sections in their appropriate order."""
     found = []
     for path in directory.iterdir():
-        if not path.is_dir():
+        if not path.is_dir() or path.name.startswith('.'):
             continue
         position, sep, title = path.name.partition(' ')
         if not sep:
-            raise ValueError('directory is missing position part')
+            raise ValueError(f'directory is missing position part: {path.name!r}')
         found.append(SectionTitle(int(position), title, path))
     return sorted(found, key=operator.attrgetter('index'))
 
@@ -114,6 +114,7 @@ class RunType(enum.Enum):
 @click.argument('directory', default=pathlib.Path(__file__).parent,
                 type=click.Path(exists=True, file_okay=False))
 def main(run_type, directory):
+    directory = pathlib.Path(directory)
     data = gather(directory)
     markdown = changelog_markdown(data)
     if run_type != RunType.dry_run:
