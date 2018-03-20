@@ -12,7 +12,7 @@ const filePep484 = path.join(autoCompPath, 'pep484.py');
 suite('Autocomplete PEP 484', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
-    suiteSetup(async () => {
+    suiteSetup(async function () {
         // https://github.com/Microsoft/PTVS/issues/3917
         if (IS_ANALYSIS_ENGINE_TEST) {
             // tslint:disable-next-line:no-invalid-this
