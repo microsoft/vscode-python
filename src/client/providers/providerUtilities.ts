@@ -24,11 +24,7 @@ export function isPositionInsideStringOrComment(document: vscode.TextDocument, p
         index = tokens.getItemContaining(offset - 1);
         if (index >= 0) {
             const token = tokens.getItemAt(index);
-            if (token.end === offset) {
-                if (token.type === TokenType.Comment) {
-                    return true;
-                }
-            }
+            return token.end === offset && token.type === TokenType.Comment;
         }
     }
     return false;
