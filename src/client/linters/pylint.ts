@@ -39,10 +39,31 @@ export class Pylint extends BaseLinter {
             && !await Pylint.hasConfigrationFileInWorkspace(this.fileSystem, path.dirname(uri.fsPath), workspaceRoot)
             // Check for pylintrc at the root and above
             && !await Pylint.hasConfigurationFile(this.fileSystem, this.getWorkspaceRootPath(document), this.platformService)) {
+            // Disable all checkers up front and then selectively add back in:
+            // - All F checkers
+            // - Select W checkers
+            // - All E checkers _manually_
+            //   (see https://github.com/Microsoft/vscode-python/issues/722 for
+            //    why; see
+            //    https://gist.github.com/brettcannon/eff7f38a60af48d39814cbb2f33b3d1d
+            //    for a script to regenerate the list of E checkers)
             minArgs = [
                 '--disable=all',
-                '--enable=F,E,unreachable,duplicate-key,unnecessary-semicolon,global-variable-not-assigned,unused-variable,unused-wildcard-import,binary-op-exception,bad-format-string,anomalous-backslash-in-string,bad-open-mode',
-                '–-disable=print-statement'
+                '--enable=F'
+                + ',unreachable,duplicate-key,unnecessary-semicolon'
+                + ',global-variable-not-assigned,unused-variable'
+                + ',unused-wildcard-import,binary-op-exception'
+                + ',bad-format-string,anomalous-backslash-in-string'
+                + ',bad-open-mode'
+                + ',E0001,E0011,E0012,E0100,E0101,E0102,E0103,E0104,E0105,E0107'
+                + ',E0108,E0110,E0111,E0112,E0113,E0114,E0115,E0116,E0117,E0118'
+                + ',E0202,E0203,E0211,E0213,E0236,E0237,E0238,E0239,E0240,E0241'
+                + ',E0301,E0302,E0303,E0401,E0402,E0601,E0602,E0603,E0604,E0611'
+                + ',E0632,E0633,E0701,E0702,E0703,E0704,E0710,E0711,E0712,E1003'
+                + ',E1101,E1102,E1111,E1120,E1121,E1123,E1124,E1125,E1126,E1127'
+                + ',E1128,E1129,E1130,E1131,E1132,E1133,E1134,E1135,E1136,E1137'
+                + ',E1138,E1139,E1200,E1201,E1205,E1206,E1300,E1301,E1302,E1303'
+                + ',E1304,E1305,E1306,E1310,E1700,E1701'
             ];
         }
         const args = [

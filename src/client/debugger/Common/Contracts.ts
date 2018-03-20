@@ -1,4 +1,4 @@
-// tslint:disable:interface-name member-access no-single-line-block-comment no-any no-stateless-class member-ordering prefer-method-signature
+// tslint:disable:interface-name member-access no-single-line-block-comment no-any no-stateless-class member-ordering prefer-method-signature no-unnecessary-class
 
 'use strict';
 import { ChildProcess } from 'child_process';
@@ -8,7 +8,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { DebuggerPerformanceTelemetry, DebuggerTelemetry } from '../../telemetry/types';
 
 export class TelemetryEvent extends OutputEvent {
-    body: {
+    body!: {
         /** The category of output (such as: 'console', 'stdout', 'stderr', 'telemetry'). If not specified, 'console' is assumed. */
         category: string;
         /** The output to report. */

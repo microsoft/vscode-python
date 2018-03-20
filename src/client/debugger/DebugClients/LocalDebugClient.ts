@@ -1,8 +1,8 @@
-import * as child_process from 'child_process';
-import { ChildProcess } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { open } from '../../common/open';
 import { PathUtils } from '../../common/platform/pathUtils';
 import { CurrentProcess } from '../../common/process/currentProcess';
@@ -30,8 +30,8 @@ enum DebugServerStatus {
 }
 
 export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
-    protected pyProc: child_process.ChildProcess | undefined;
-    protected pythonProcess: IPythonProcess;
+    protected pyProc: ChildProcess | undefined;
+    protected pythonProcess!: IPythonProcess;
     protected debugServer: BaseDebugServer | undefined;
     private get debugServerStatus(): DebugServerStatus {
         if (this.debugServer && this.debugServer!.IsRunning) {
@@ -82,8 +82,14 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     public async LaunchApplicationToDebug(dbgServer: IDebugServer): Promise<any> {
         const pathUtils = new PathUtils(IS_WINDOWS);
         const currentProcess = new CurrentProcess();
-        const helper = new DebugClientHelper(new EnvironmentVariablesService(pathUtils), pathUtils, currentProcess);
+        const environmentVariablesService = new EnvironmentVariablesService(pathUtils);
+        const helper = new DebugClientHelper(environmentVariablesService, pathUtils, currentProcess);
         const environmentVariables = await helper.getEnvironmentVariables(this.args);
+        if (this.args.type === 'pythonExperimental') {
+            // Import the PTVSD debugger, allowing users to use their own latest copies.
+            const experimentalPTVSDPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd');
+            environmentVariablesService.appendPythonPath(environmentVariables, experimentalPTVSDPath);
+        }
         // tslint:disable-next-line:max-func-body-length cyclomatic-complexity no-any
         return new Promise<any>((resolve, reject) => {
             const fileDir = this.args && this.args.program ? path.dirname(this.args.program) : '';
@@ -107,7 +113,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                     break;
                 }
                 default: {
-                    this.pyProc = child_process.spawn(pythonPath, args, { cwd: processCwd, env: environmentVariables });
+                    this.pyProc = spawn(pythonPath, args, { cwd: processCwd, env: environmentVariables });
                     this.handleProcessOutput(this.pyProc!, reject);
 
                     // Here we wait for the application to connect to the socket server.
@@ -167,7 +173,11 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         if (typeof this.args.module === 'string' && this.args.module.length > 0) {
             return [vsDebugOptions.join(','), '-m', this.args.module].concat(programArgs);
         }
-        return [vsDebugOptions.join(','), this.args.program].concat(programArgs);
+        const args = [vsDebugOptions.join(',')];
+        if (this.args.program && this.args.program.length > 0) {
+            args.push(this.args.program);
+        }
+        return args.concat(programArgs);
     }
     private launchExternalTerminal(sudo: boolean, cwd: string, pythonPath: string, args: string[], env: {}) {
         return new Promise((resolve, reject) => {

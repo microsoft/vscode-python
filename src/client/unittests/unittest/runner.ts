@@ -3,7 +3,7 @@ import * as path from 'path';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseTestManager } from '../common/managers/baseTestManager';
 import { Options, run } from '../common/runner';
-import { ITestDebugLauncher, ITestResultsService, IUnitTestSocketServer, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
+import { ITestDebugLauncher, ITestResultsService, IUnitTestSocketServer, LaunchOptions, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
 
 type TestStatusMap = {
     status: TestStatus;
@@ -93,13 +93,10 @@ export async function runTest(serviceContainer: IServiceContainer, testManager: 
             }
             if (options.debug === true) {
                 const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
-                return debugLauncher.getLaunchOptions(options.workspaceFolder)
-                    .then(debugPortAndHost => {
-                        testArgs.push(...['--secret=my_secret', `--port=${debugPortAndHost.port}`]);
-                        const launchOptions = { cwd: options.cwd, args: [testLauncherFile].concat(testArgs), token: options.token, outChannel: options.outChannel, port: debugPortAndHost.port, host: debugPortAndHost.host };
-                        // tslint:disable-next-line:prefer-type-cast no-any
-                        return debugLauncher.launchDebugger(launchOptions);
-                    });
+                testArgs.push(...['--debug']);
+                const launchOptions: LaunchOptions = { cwd: options.cwd, args: testArgs, token: options.token, outChannel: options.outChannel, testProvider: 'unittest' };
+                // tslint:disable-next-line:prefer-type-cast no-any
+                return debugLauncher.launchDebugger(launchOptions);
             } else {
                 // tslint:disable-next-line:prefer-type-cast no-any
                 const runOptions: Options = {

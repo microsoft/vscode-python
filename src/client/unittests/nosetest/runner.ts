@@ -1,9 +1,8 @@
 'use strict';
-import * as path from 'path';
 import { createTemporaryFile } from '../../common/helpers';
 import { IServiceContainer } from '../../ioc/types';
 import { Options, run } from '../common/runner';
-import { ITestDebugLauncher, ITestResultsService, TestRunOptions, Tests } from '../common/types';
+import { ITestDebugLauncher, ITestResultsService, LaunchOptions, TestRunOptions, Tests } from '../common/types';
 import { PassCalculationFormulae, updateResultsFromXmlLogFile } from '../common/xUnitParser';
 
 const WITH_XUNIT = '--with-xunit';
@@ -59,15 +58,11 @@ export function runTest(serviceContainer: IServiceContainer, testResultsService:
     return promiseToGetXmlLogFile.then(() => {
         if (options.debug === true) {
             const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
-            return debugLauncher.getLaunchOptions(options.workspaceFolder)
-                .then(debugPortAndHost => {
-                    const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');
-                    const nosetestlauncherargs = [options.cwd, 'my_secret', debugPortAndHost.port.toString(), 'nose'];
-                    const debuggerArgs = [testLauncherFile].concat(nosetestlauncherargs).concat(noseTestArgs.concat(testPaths));
-                    const launchOptions = { cwd: options.cwd, args: debuggerArgs, token: options.token, outChannel: options.outChannel, port: debugPortAndHost.port, host: debugPortAndHost.host };
-                    // tslint:disable-next-line:prefer-type-cast no-any
-                    return debugLauncher.launchDebugger(launchOptions) as Promise<any>;
-                });
+            const nosetestlauncherargs = [options.cwd, 'nose'];
+            const debuggerArgs = nosetestlauncherargs.concat(noseTestArgs.concat(testPaths));
+            const launchOptions: LaunchOptions = { cwd: options.cwd, args: debuggerArgs, token: options.token, outChannel: options.outChannel, testProvider: 'nosetest' };
+            // tslint:disable-next-line:prefer-type-cast no-any
+            return debugLauncher.launchDebugger(launchOptions) as Promise<any>;
         } else {
             // tslint:disable-next-line:prefer-type-cast no-any
             const runOptions: Options = {
@@ -80,7 +75,7 @@ export function runTest(serviceContainer: IServiceContainer, testResultsService:
             return run(serviceContainer, 'nosetest', runOptions);
         }
     }).then(() => {
-        return updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
+        return options.debug ? options.tests : updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
     }).then(result => {
         xmlLogFileCleanup();
         return result;

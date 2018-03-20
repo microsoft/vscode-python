@@ -4,9 +4,10 @@
 import { IServiceManager } from '../ioc/types';
 import { ApplicationShell } from './application/applicationShell';
 import { CommandManager } from './application/commandManager';
+import { DebugService } from './application/debugService';
 import { DocumentManager } from './application/documentManager';
 import { TerminalManager } from './application/terminalManager';
-import { IApplicationShell, ICommandManager, IDocumentManager, ITerminalManager, IWorkspaceService } from './application/types';
+import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager, ITerminalManager, IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { ConfigurationService } from './configuration/service';
 import { ProductInstaller } from './installer/productInstaller';
@@ -38,6 +39,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
+    serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Bash, 'bashCShellFish');

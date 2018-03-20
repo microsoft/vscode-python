@@ -1,9 +1,8 @@
 'use strict';
-import * as path from 'path';
 import { createTemporaryFile } from '../../common/helpers';
 import { IServiceContainer } from '../../ioc/types';
 import { Options, run } from '../common/runner';
-import { ITestDebugLauncher, ITestResultsService, TestRunOptions, Tests } from '../common/types';
+import { ITestDebugLauncher, ITestResultsService, LaunchOptions, TestRunOptions, Tests } from '../common/types';
 import { PassCalculationFormulae, updateResultsFromXmlLogFile } from '../common/xUnitParser';
 
 export function runTest(serviceContainer: IServiceContainer, testResultsService: ITestResultsService, options: TestRunOptions): Promise<Tests> {
@@ -35,15 +34,11 @@ export function runTest(serviceContainer: IServiceContainer, testResultsService:
         const testArgs = testPaths.concat(args, [`--junitxml=${xmlLogFile}`]);
         if (options.debug) {
             const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
-            return debugLauncher.getLaunchOptions(options.workspaceFolder)
-                .then(debugPortAndHost => {
-                    const testLauncherFile = path.join(__dirname, '..', '..', '..', '..', 'pythonFiles', 'PythonTools', 'testlauncher.py');
-                    const pytestlauncherargs = [options.cwd, 'my_secret', debugPortAndHost.port.toString(), 'pytest'];
-                    const debuggerArgs = [testLauncherFile].concat(pytestlauncherargs).concat(testArgs);
-                    const launchOptions = { cwd: options.cwd, args: debuggerArgs, token: options.token, outChannel: options.outChannel, port: debugPortAndHost.port, host: debugPortAndHost.host };
-                    // tslint:disable-next-line:prefer-type-cast no-any
-                    return debugLauncher.launchDebugger(launchOptions) as Promise<any>;
-                });
+            const pytestlauncherargs = [options.cwd, 'pytest'];
+            const debuggerArgs = pytestlauncherargs.concat(testArgs);
+            const launchOptions: LaunchOptions = { cwd: options.cwd, args: debuggerArgs, token: options.token, outChannel: options.outChannel, testProvider: 'pytest' };
+            // tslint:disable-next-line:prefer-type-cast no-any
+            return debugLauncher.launchDebugger(launchOptions) as Promise<any>;
         } else {
             const runOptions: Options = {
                 args: testArgs,
@@ -55,7 +50,7 @@ export function runTest(serviceContainer: IServiceContainer, testResultsService:
             return run(serviceContainer, 'pytest', runOptions);
         }
     }).then(() => {
-        return updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
+        return options.debug ? options.tests : updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
     }).then(result => {
         xmlLogFileCleanup();
         return result;

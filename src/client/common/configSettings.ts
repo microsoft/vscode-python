@@ -53,6 +53,10 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.workspaceRoot = workspaceFolder ? workspaceFolder : vscode.Uri.file(__dirname);
         this.disposables.push(vscode.workspace.onDidChangeConfiguration(() => {
             this.initializeSettings();
+
+            // If workspace config changes, then we could have a cascading effect of on change events.
+            // Let's defer the change notification.
+            setTimeout(() => this.emit('change'), 1);
         }));
 
         this.initializeSettings();
@@ -292,10 +296,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             launchArgs: [],
             activateEnvironment: true
         };
-
-        // If workspace config changes, then we could have a cascading effect of on change events.
-        // Let's defer the change notification.
-        setTimeout(() => this.emit('change'), 1);
     }
 
     public get pythonPath(): string {

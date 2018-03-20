@@ -186,10 +186,9 @@ suite('Linting', () => {
     test('Disable Prospector and test linter', async () => {
         await testEnablingDisablingOfLinter(Product.prospector, false);
     });
-    // test('Enable Prospector and test linter', async () => {
-    //     Fails on Travis. Can be run locally though.
-    //     await testEnablingDisablingOfLinter(Product.prospector, true);
-    // });
+    test('Enable Prospector and test linter', async () => {
+        await testEnablingDisablingOfLinter(Product.prospector, true);
+    });
     test('Disable Pydocstyle and test linter', async () => {
         await testEnablingDisablingOfLinter(Product.pydocstyle, false);
     });

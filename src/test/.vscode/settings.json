@@ -11,10 +11,8 @@
         "-p",
         "*test*.py"
     ],
-    "python.formatting.formatOnSave": false,
     "python.sortImports.args": [],
     "python.linting.lintOnSave": false,
-    "python.linting.lintOnTextChange": false,
     "python.linting.enabled": true,
     "python.linting.pep8Enabled": false,
     "python.linting.prospectorEnabled": false,

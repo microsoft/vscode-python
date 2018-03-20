@@ -2,14 +2,18 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
+import { EventEmitter } from 'events';
 import { Container } from 'inversify';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
-import { IWorkspaceService } from '../../client/common/application/types';
+import { ConfigurationTarget, Disposable, TextDocument, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
+import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import { noop } from '../../client/common/core.utils';
 import { IFileSystem } from '../../client/common/platform/types';
+import { IConfigurationService, IDisposableRegistry } from '../../client/common/types';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
+    IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterLocatorService,
     INTERPRETER_LOCATOR_SERVICE,
@@ -35,6 +39,7 @@ suite('Interpreters service', () => {
     let pipenvLocator: TypeMoq.IMock<IInterpreterLocatorService>;
     let wksLocator: TypeMoq.IMock<IInterpreterLocatorService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let interpreterDisplay: TypeMoq.IMock<IInterpreterDisplay>;
 
     setup(async () => {
         const cont = new Container();
@@ -47,13 +52,16 @@ suite('Interpreters service', () => {
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
 
         workspace.setup(x => x.getConfiguration('python', TypeMoq.It.isAny())).returns(() => config.object);
+        serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, []);
         serviceManager.addSingletonInstance<IInterpreterHelper>(IInterpreterHelper, helper.object);
         serviceManager.addSingletonInstance<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager, updater.object);
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
         serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, locator.object, INTERPRETER_LOCATOR_SERVICE);
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
+        serviceManager.addSingletonInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
 
         pipenvLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         wksLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
@@ -183,4 +191,51 @@ suite('Interpreters service', () => {
         serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, wksLocator.object, WORKSPACE_VIRTUAL_ENV_SERVICE);
 
     }
+
+    test('Changes to active document should invoke intrepreter.refresh method', async () => {
+        const service = new InterpreterService(serviceContainer);
+        const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
+
+        let activeTextEditorChangeHandler: Function | undefined;
+        documentManager.setup(d => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(handler => {
+            activeTextEditorChangeHandler = handler;
+            return { dispose: noop };
+        });
+        serviceManager.addSingletonInstance(IConfigurationService, configService.object);
+        serviceManager.addSingletonInstance(IDocumentManager, documentManager.object);
+
+        // tslint:disable-next-line:no-any
+        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => new EventEmitter() as any);
+        service.initialize();
+        const textEditor = TypeMoq.Mock.ofType<TextEditor>();
+        const uri = Uri.file(path.join('usr', 'file.py'));
+        const document = TypeMoq.Mock.ofType<TextDocument>();
+        textEditor.setup(t => t.document).returns(() => document.object);
+        document.setup(d => d.uri).returns(() => uri);
+        activeTextEditorChangeHandler!(textEditor.object);
+
+        interpreterDisplay.verify(i => i.refresh(TypeMoq.It.isValue(uri)), TypeMoq.Times.once());
+    });
+
+    test('If there is no active document then intrepreter.refresh should not be invoked', async () => {
+        const service = new InterpreterService(serviceContainer);
+        const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
+
+        let activeTextEditorChangeHandler: Function | undefined;
+        documentManager.setup(d => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(handler => {
+            activeTextEditorChangeHandler = handler;
+            return { dispose: noop };
+        });
+        serviceManager.addSingletonInstance(IConfigurationService, configService.object);
+        serviceManager.addSingletonInstance(IDocumentManager, documentManager.object);
+
+        // tslint:disable-next-line:no-any
+        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => new EventEmitter() as any);
+        service.initialize();
+        activeTextEditorChangeHandler!();
+
+        interpreterDisplay.verify(i => i.refresh(TypeMoq.It.isValue(undefined)), TypeMoq.Times.never());
+    });
 });

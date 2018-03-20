@@ -131,6 +131,7 @@ export interface IUnitTestSettings {
     readonly unittestEnabled: boolean;
     unittestArgs: string[];
     cwd?: string;
+    readonly useExperimentalDebugger?: boolean;
 }
 export interface IPylintCategorySeverity {
     readonly convention: DiagnosticSeverity;
@@ -222,5 +223,5 @@ export interface IConfigurationService {
 export const ISocketServer = Symbol('ISocketServer');
 export interface ISocketServer extends Disposable {
     readonly client: Promise<Socket>;
-    Start(options?: { port?: number, host?: string }): Promise<number>;
+    Start(options?: { port?: number; host?: string }): Promise<number>;
 }

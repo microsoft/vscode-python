@@ -60,7 +60,6 @@ export class LinterInfo implements ILinterInfo {
         let moduleName: string | undefined;
 
         // If path information is not available, then treat it as a module,
-        // Except for prospector as that needs to be run as an executable (its a python package).
         if (path.basename(execPath) === execPath) {
             moduleName = execPath;
         }
