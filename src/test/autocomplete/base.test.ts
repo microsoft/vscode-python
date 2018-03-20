@@ -196,7 +196,7 @@ suite('Autocomplete', () => {
             new vscode.Position(4, 2),  // false
             new vscode.Position(4, 8),  // false
             new vscode.Position(5, 4),  // false
-            new vscode.Position(6, 10)  // false
+            new vscode.Position(5, 10)  // false
         ];
         const expected = [
             false, true, false, false, false, false, false, false, false, false, false

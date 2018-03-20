@@ -61,7 +61,7 @@ export class CompletionSource {
         const sourceText = `${document.getText(leadingRange)}${itemString}`;
         const range = new vscode.Range(leadingRange.end, leadingRange.end.translate(0, itemString.length));
 
-        return await this.itemInfoSource.getItemInfoFromText(document.uri, document.fileName, range, sourceText, token);
+        return this.itemInfoSource.getItemInfoFromText(document.uri, document.fileName, range, sourceText, token);
     }
 
     private async getCompletionResult(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken)
@@ -90,7 +90,7 @@ export class CompletionSource {
             source: source
         };
 
-        return await this.jediFactory.getJediProxyHandler<proxy.ICompletionResult>(document.uri).sendCommand(cmd, token);
+        return this.jediFactory.getJediProxyHandler<proxy.ICompletionResult>(document.uri).sendCommand(cmd, token);
     }
 
     private toVsCodeCompletions(documentPosition: DocumentPosition, data: proxy.ICompletionResult, resource: vscode.Uri): vscode.CompletionItem[] {
