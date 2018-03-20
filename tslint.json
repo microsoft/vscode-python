@@ -59,6 +59,7 @@
         ],
         "no-unnecessary-type-assertion": false,
         "no-submodule-imports": false,
-        "no-redundant-jsdoc": false
+        "no-redundant-jsdoc": false,
+        "binary-expression-operand-order": false
     }
 }

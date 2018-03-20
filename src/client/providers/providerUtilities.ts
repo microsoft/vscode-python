@@ -13,10 +13,23 @@ export function getDocumentTokens(document: vscode.TextDocument, tokenizeTo: vsc
 export function isPositionInsideStringOrComment(document: vscode.TextDocument, position: vscode.Position): boolean {
     const tokenizeTo = position.translate(1, 0);
     const tokens = getDocumentTokens(document, tokenizeTo, TokenizerMode.CommentsAndStrings);
-    const index = tokens.getItemContaining(document.offsetAt(position));
+    const offset = document.offsetAt(position);
+    let index = tokens.getItemContaining(offset);
     if (index >= 0) {
         const token = tokens.getItemAt(index);
         return token.type === TokenType.String || token.type === TokenType.Comment;
+    }
+    if (offset > 0) {
+        // In case position is at the every end of the comment or unterminated string
+        index = tokens.getItemContaining(offset - 1);
+        if (index >= 0) {
+            const token = tokens.getItemAt(index);
+            if (token.end === offset) {
+                if (token.type === TokenType.Comment) {
+                    return true;
+                }
+            }
+        }
     }
     return false;
 }

@@ -34,10 +34,10 @@ export class Tokenizer implements ITokenizer {
     //     'not', 'or', 'pass', 'print', 'raise', 'return', 'True', 'try',
     //     'while', 'with', 'yield'
     // ];
-    private cs: ICharacterStream;
+    private cs: ICharacterStream = new CharacterStream('');
     private tokens: IToken[] = [];
     private floatRegex = /[-+]?(?:(?:\d*\.\d+)|(?:\d+\.?))(?:[Ee][+-]?\d+)?/;
-    private mode: TokenizerMode;
+    private mode = TokenizerMode.Full;
 
     constructor() {
         //this.floatRegex.compile();
@@ -287,7 +287,7 @@ export class Tokenizer implements ITokenizer {
                 } else if (nextChar === Char.Less) {
                     length = this.cs.lookAhead(2) === Char.Equal ? 3 : 2;
                 } else {
-                    length = 1;
+                    length = nextChar === Char.Equal ? 2 : 1;
                 }
                 break;
 
@@ -295,7 +295,7 @@ export class Tokenizer implements ITokenizer {
                 if (nextChar === Char.Greater) {
                     length = this.cs.lookAhead(2) === Char.Equal ? 3 : 2;
                 } else {
-                    length = 1;
+                    length = nextChar === Char.Equal ? 2 : 1;
                 }
                 break;
 
