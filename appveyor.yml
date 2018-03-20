@@ -36,9 +36,9 @@ build_script:
 test_script:
   - yarn run clean
   - yarn run vscode:prepublish
-  - yarn run testDebugger --silent
-  - yarn run testSingleWorkspace --silent
-  - yarn run testMultiWorkspace --silent
+  # - yarn run testDebugger --silent
+  # - yarn run testSingleWorkspace --silent
+  # - yarn run testMultiWorkspace --silent
   - yarn run testAnalysisEngine --silent
 
 
