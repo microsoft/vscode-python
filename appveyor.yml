@@ -23,22 +23,22 @@ install:
   - python -m easy_install -U setuptools
   - "%PYTHON%/Scripts/pip.exe install --upgrade -r requirements.txt"
 
-build_script:
-  - git clone https://github.com/MikhailArkhipov/PTVS.git c:/projects/PTVS
-  - "cd c:\\projects\\PTVS"
-  - git checkout origin/vsc
-  - "cd Python\\Product\\VSCode\\AnalysisVsc"
-  - "dotnet --info"
-  - "dotnet build"
-  - "cd c:\\projects\\vscode-python"
-  - "xcopy /S /I c:\\projects\\PTVS\\BuildOutput\\VsCode\\raw analysis"
+# build_script:
+#   - git clone https://github.com/MikhailArkhipov/PTVS.git c:/projects/PTVS
+#   - "cd c:\\projects\\PTVS"
+#   - git checkout origin/vsc
+#   - "cd Python\\Product\\VSCode\\AnalysisVsc"
+#   - "dotnet --info"
+#   - "dotnet build"
+#   - "cd c:\\projects\\vscode-python"
+#   - "xcopy /S /I c:\\projects\\PTVS\\BuildOutput\\VsCode\\raw analysis"
 
 test_script:
   - yarn run clean
   - yarn run vscode:prepublish
-  # - yarn run testDebugger --silent
-  # - yarn run testSingleWorkspace --silent
-  # - yarn run testMultiWorkspace --silent
-  - yarn run testAnalysisEngine --silent
+  - yarn run testDebugger --silent
+  - yarn run testSingleWorkspace --silent
+  - yarn run testMultiWorkspace --silent
+  # - yarn run testAnalysisEngine --silent
 
 
