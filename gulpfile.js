@@ -24,7 +24,6 @@ const fs = require('fs');
 const remapIstanbul = require('remap-istanbul');
 const istanbul = require('istanbul');
 const glob = require('glob');
-const watch = require('gulp-watch');
 const _ = require('lodash');
 
 /**
@@ -149,14 +148,15 @@ function getTsProject(options) {
 
 let configuration;
 let program;
+let linter;
 /**
  *
  * @param {hygieneOptions} options
  */
 function getLinter(options) {
-    configuration = configuration ? configuration : tslint.Configuration.findConfiguration(null, '.');
+    configuration = configuration ? configuration : tslint.Configuration.findConfiguration(path.join(__dirname, 'tslint_dev.json'), '.');
     program = program ? program : tslint.Linter.createProgram('./tsconfig.json');
-    const linter = new tslint.Linter({ formatter: 'json' }, program);
+    linter = linter ? linter : new tslint.Linter({ formatter: 'json' }, program);
     return { linter, configuration };
 }
 let compilationInProgress = false;
@@ -171,6 +171,7 @@ const hygiene = (options) => {
         reRunCompilation = true;
         return;
     }
+    const started = new Date().getTime();
     compilationInProgress = true;
     options = options || {};
     let errorCount = 0;
@@ -261,15 +262,14 @@ const hygiene = (options) => {
     }
 
     const { linter, configuration } = getLinter(options);
-    // const configuration = tslint.Configuration.findConfiguration(null, '.');
-    // const program = tslint.Linter.createProgram('./tsconfig.json');
-    // const linter = new tslint.Linter({ formatter: 'json' }, program);
     const tsl = es.through(function (file) {
         const contents = file.contents.toString('utf8');
         // Don't print anything to the console, we'll do that.
         // Yes this is a hack, but tslinter doesn't provide an option to prevent this.
         const oldWarn = console.warn;
         console.warn = () => { };
+        linter.failures = [];
+        linter.fixes = [];
         linter.lint(file.relative, contents, configuration.results);
         console.warn = oldWarn;
         const result = linter.getResult();
@@ -341,7 +341,7 @@ const hygiene = (options) => {
         result = result
             .pipe(tsl);
     }
-
+    let totalTime = 0;
     result = result
         .pipe(tscFilesTracker)
         .pipe(sourcemaps.init())
@@ -358,11 +358,11 @@ const hygiene = (options) => {
         .pipe(gulp.dest(dest))
         .pipe(es.through(null, function () {
             if (errorCount > 0) {
-                const errorMessage = `Hygiene failed with errors 👎 . Check 'gulpfile.js'.`;
+                const errorMessage = `Hygiene failed with errors 👎 . Check 'gulpfile.js' (completed in ${new Date().getTime() - started}ms).`;
                 console.error(colors.red(errorMessage));
                 exitHandler(options);
             } else {
-                console.log(colors.green('Hygiene passed with 0 errors 👍.'));
+                console.log(colors.green(`Hygiene passed with 0 errors 👍 (completed in ${new Date().getTime() - started}ms).`));
             }
             // Reset error counter.
             errorCount = 0;
