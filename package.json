@@ -16,6 +16,7 @@
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-python/issues"
     },
+    "qna": "https://stackoverflow.com/questions/tagged/visual-studio-code+python",
     "badges": [
         {
             "url": "https://travis-ci.org/Microsoft/vscode-python.svg?branch=master",
