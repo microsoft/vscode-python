@@ -154,7 +154,7 @@ let linter;
  * @param {hygieneOptions} options
  */
 function getLinter(options) {
-    configuration = configuration ? configuration : tslint.Configuration.findConfiguration(path.join(__dirname, 'tslint_dev.json'), '.');
+    configuration = configuration ? configuration : tslint.Configuration.findConfiguration(null, '.');
     program = program ? program : tslint.Linter.createProgram('./tsconfig.json');
     linter = linter ? linter : new tslint.Linter({ formatter: 'json' }, program);
     return { linter, configuration };
