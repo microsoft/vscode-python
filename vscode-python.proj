@@ -1,0 +1,16 @@
+<Project>
+  <ItemGroup>
+    <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VsixName>$(OutputPath)\python-$(Branch).vsix</VsixName>
+  </PropertyGroup>
+  <Target Name="Build">
+    <Exec Command="vsce package --out &quot;$(VsixName)\&quot;" />
+  </Target>
+  <ItemGroup>
+    <FilesToSign Include="$(VsixName)">
+      <Authenticode>VsixSHA2</Authenticode>
+    </FilesToSign>
+  </ItemGroup>
+</Project>
