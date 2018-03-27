@@ -41,4 +41,5 @@ analysis/publish*.*
 vscode-python.proj
 bin/**
 obj/**
+BuildOutput/**
 
