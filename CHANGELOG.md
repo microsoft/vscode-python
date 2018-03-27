@@ -1,6 +1,6 @@
 # Changelog
 
-## 2018.3.0-beta (19 Mar 2018)
+## 2018.3.0-rc (27 Mar 2018)
 
 ### Enhancements
 
@@ -12,8 +12,19 @@
  ([#1031](https://github.com/Microsoft/vscode-python/issues/1031))
 1. Add a Scrapy debug configuration for the experimental debugger.
  ([#1032](https://github.com/Microsoft/vscode-python/issues/1032))
+1. When using pipenv, install packages (such as linters, test frameworks) in dev-packages.
+ ([#1110](https://github.com/Microsoft/vscode-python/issues/1110))
+1. Added commands translation for italian locale.
+(thanks [Dotpys](https://github.com/Dotpys/)) ([#1152](https://github.com/Microsoft/vscode-python/issues/1152))
+1. Add support for Django Template debugging in experimental debugger.
+ ([#1189](https://github.com/Microsoft/vscode-python/issues/1189))
+1. Add support for Flask Template debugging in experimental debugger.
+ ([#1190](https://github.com/Microsoft/vscode-python/issues/1190))
+1. Add support for Jinja template debugging. ([#1210](https://github.com/Microsoft/vscode-python/issues/1210))
 1. When debugging, use `Integrated Terminal` as the default console.
  ([#526](https://github.com/Microsoft/vscode-python/issues/526))
+1. Disable the display of errors messages when rediscovering of tests fail in response to changes to files, e.g. don't show a message if there's a syntax error in the test code.
+ ([#704](https://github.com/Microsoft/vscode-python/issues/704))
 1. Bundle python depedencies (PTVSD package) in the extension for the experimental debugger.
  ([#741](https://github.com/Microsoft/vscode-python/issues/741))
 1. Add support for expermental debugger when debugging Python Unit Tests.
@@ -21,17 +32,28 @@
 1. Support `Debug Console` as a `console` option for the Experimental Debugger.
  ([#950](https://github.com/Microsoft/vscode-python/issues/950))
 1. Enable syntax highlighting for `requirements.in` files as used by
-e.g. [pip-tools](https://github.com/jazzband/pip-tools).
+e.g. [pip-tools](https://github.com/jazzband/pip-tools)
+(thanks [Lorenzo Villani](https://github.com/lvillani))
  ([#961](https://github.com/Microsoft/vscode-python/issues/961))
 1. Add support to read name of Pipfile from environment variable.
  ([#999](https://github.com/Microsoft/vscode-python/issues/999))
 
 ### Fixes
 
+1. Fixes issue that causes debugging of unit tests to hang indefinitely. ([#1009](https://github.com/Microsoft/vscode-python/issues/1009))
+1. Add ability to disable the check on memory usage of language server (Jedi) process.
+To turn off this check, add `"python.jediMemoryLimit": -1` to your user or workspace settings (`settings.json`) file.
+ ([#1036](https://github.com/Microsoft/vscode-python/issues/1036))
 1. Ignore test results when debugging unit tests.
  ([#1043](https://github.com/Microsoft/vscode-python/issues/1043))
+1. Fixes auto formatting of conditional statements containing expressions with `<=` symbols.
+ ([#1096](https://github.com/Microsoft/vscode-python/issues/1096))
 1. Resolve debug configuration information in `launch.json` when debugging without opening a python file.
  ([#1098](https://github.com/Microsoft/vscode-python/issues/1098))
+1. Disables auto completion when editing text at the end of a comment string.
+ ([#1123](https://github.com/Microsoft/vscode-python/issues/1123))
+1. Ensures file paths are properly encoded when passing them as arguments to linters.
+ ([#199](https://github.com/Microsoft/vscode-python/issues/199))
 1. Fix occasionally having unverified breakpoints
  ([#87](https://github.com/Microsoft/vscode-python/issues/87))
 1. Ensure conda installer is not used for non-conda environments.
@@ -44,6 +66,7 @@ e.g. [pip-tools](https://github.com/jazzband/pip-tools).
 1. Exclude 'news' folder from getting packaged into the extension.
  ([#1020](https://github.com/Microsoft/vscode-python/issues/1020))
 1. Remove Jupyter commands.
+(thanks [Yu Zhang](https://github.com/neilsustc))
  ([#1034](https://github.com/Microsoft/vscode-python/issues/1034))
 1. Trigger incremental build compilation only when typescript files are modified.
  ([#1040](https://github.com/Microsoft/vscode-python/issues/1040))
@@ -52,21 +75,36 @@ e.g. [pip-tools](https://github.com/jazzband/pip-tools).
 1. Enable unit testing of stdout and stderr redirection for the experimental debugger.
  ([#1048](https://github.com/Microsoft/vscode-python/issues/1048))
 1. Update npm package `vscode-extension-telemetry` to fix the warning 'os.tmpDir() deprecation'.
+(thanks [osya](https://github.com/osya))
  ([#1066](https://github.com/Microsoft/vscode-python/issues/1066))
-1. Prevent debugger stepping into js code, when debugging async TypeScript code.
+1. Prevent the debugger stepping into JS code while developing the extension when debugging async TypeScript code.
  ([#1090](https://github.com/Microsoft/vscode-python/issues/1090))
 1. Increase timeouts for the debugger unit tests.
  ([#1094](https://github.com/Microsoft/vscode-python/issues/1094))
 1. Change the command used to install pip on AppVeyor to avoid installation errors.
  ([#1107](https://github.com/Microsoft/vscode-python/issues/1107))
+1. Check whether a document is active when detecthing changes in the active document.
+ ([#1114](https://github.com/Microsoft/vscode-python/issues/1114))
+1. Remove SIGINT handler in debugger adapter, thereby preventing it from shutting down the debugger.
+ ([#1122](https://github.com/Microsoft/vscode-python/issues/1122))
+1. Improve compilation speed of the extension's TypeScript code.
+ ([#1146](https://github.com/Microsoft/vscode-python/issues/1146))
+1. Changes to how debug options are passed into the experimental version of PTVSD (debugger).
+ ([#1168](https://github.com/Microsoft/vscode-python/issues/1168))
+1. Ensure file paths are not sent in telemetry when running unit tests.
+ ([#1180](https://github.com/Microsoft/vscode-python/issues/1180))
+1. Change `DjangoDebugging` to `Django` in `debugOptions` of launch.json.
+ ([#1198](https://github.com/Microsoft/vscode-python/issues/1198))
+1. Changed property name used to capture the trigger source of Unit Tests. ([#1213](https://github.com/Microsoft/vscode-python/issues/1213))
 1. Enable unit testing of the experimental debugger on CI servers
  ([#742](https://github.com/Microsoft/vscode-python/issues/742))
 1. Generate code coverage for debug adapter unit tests.
  ([#778](https://github.com/Microsoft/vscode-python/issues/778))
 1. Execute prospector as a module (using -m).
  ([#982](https://github.com/Microsoft/vscode-python/issues/982))
-1. Launch the unit tests in debug mode as opposed to running and attaching the debugger.
+1. Launch unit tests in debug mode as opposed to running and attaching the debugger to the already-running interpreter.
  ([#983](https://github.com/Microsoft/vscode-python/issues/983))
+
 
 ## 2018.2.1 (09 Mar 2018)
 
