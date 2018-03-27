@@ -7,7 +7,7 @@
     <VscePath>$(UserProfile)\AppData\Roaming\npm\vsce</VscePath>
   </PropertyGroup>
   <Target Name="Build">
-   <Exec Command="$(VscePath) --out $(VsixOutPath)" />
+   <Exec Command="$(VscePath) package --out $(VsixOutPath)" />
   </Target>
   <ItemGroup>
     <FilesToSign Include="$(VsixOutPath)">
