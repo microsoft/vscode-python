@@ -7,4 +7,6 @@ x+1 #
 @x
 x.y
 if x<=1:
+def __init__(self, age = 23)
+while(1)  
 x+"""

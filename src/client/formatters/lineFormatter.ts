@@ -73,7 +73,7 @@ export class LineFormatter {
                     break;
 
                 default:
-                    this.handleOther(t);
+                    this.handleOther(t, i);
                     break;
             }
         }
@@ -109,10 +109,7 @@ export class LineFormatter {
         if (this.braceCounter.isOpened(TokenType.OpenBrace)) {
             // Check if this is = in function arguments. If so, do not
             // add spaces around it.
-            const prev = this.tokens.getItemAt(index - 1);
-            const prevPrev = this.tokens.getItemAt(index - 2);
-            if (prev.type === TokenType.Identifier &&
-                (prevPrev.type === TokenType.Comma || prevPrev.type === TokenType.OpenBrace)) {
+            if (this.isEqualsInsideArguments(index)) {
                 this.builder.append('=');
                 return true;
             }
@@ -120,12 +117,44 @@ export class LineFormatter {
         return false;
     }
 
-    private handleOther(t: IToken): void {
+    private handleOther(t: IToken, index: number): void {
         if (this.isBraceType(t.type)) {
             this.braceCounter.countBrace(t);
+            this.builder.append(this.text.substring(t.start, t.end));
+            return;
         }
+
+        if (this.isEqualsInsideArguments(index - 1)) {
+            // Don't add space around = inside function arguments
+            this.builder.append(this.text.substring(t.start, t.end));
+            return;
+        }
+
+        if (index > 0) {
+            const prev = this.tokens.getItemAt(index - 1);
+            if (this.isOpenBraceType(prev.type)) {
+                // Don't insert space after (, [ or {
+                this.builder.append(this.text.substring(t.start, t.end));
+                return;
+            }
+        }
+
+        // In general, keep tokes separated
         this.builder.softAppendSpace();
         this.builder.append(this.text.substring(t.start, t.end));
+    }
+
+    private isEqualsInsideArguments(index: number): boolean {
+        if (index < 2) {
+            return false;
+        }
+        const prev = this.tokens.getItemAt(index - 1);
+        const prevPrev = this.tokens.getItemAt(index - 2);
+        if (prev.type === TokenType.Identifier &&
+            (prevPrev.type === TokenType.Comma || prevPrev.type === TokenType.OpenBrace)) {
+            return true;
+        }
+        return false;
     }
 
     private isOpenBraceType(type: TokenType): boolean {
