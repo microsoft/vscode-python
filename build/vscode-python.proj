@@ -4,9 +4,10 @@
   </ItemGroup>
   <PropertyGroup>
     <VsixOutPath>$(OutputPath)\python-$(Branch).vsix</VsixOutPath>
+    <VscePath>$(UserProfile)\Roaming\npm\vsce</VscePath>
   </PropertyGroup>
   <Target Name="Build">
-   <Exec Command="run-vsce.cmd $(SourcesPath) $(VsixOutPath)" />
+   <Exec Command="$(VscePath) --out $(VsixOutPath)" />
   </Target>
   <ItemGroup>
     <FilesToSign Include="$(VsixOutPath)">
