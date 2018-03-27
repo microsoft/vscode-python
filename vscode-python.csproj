@@ -9,7 +9,7 @@
     <VsixOutPath>$(OutputPath)\python-$(Branch).vsix</VsixOutPath>
     <VscePath>$(UserProfile)\AppData\Roaming\npm\vsce</VscePath>
   </PropertyGroup>
-  <Target Name="Build">
+  <Target Name="BeforeBuild">
     <Exec Command="$(VscePath) package --out $(VsixOutPath)" />
   </Target>
   <ItemGroup>
