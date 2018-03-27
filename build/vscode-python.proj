@@ -4,7 +4,7 @@
   </ItemGroup>
   <PropertyGroup>
     <VsixOutPath>$(OutputPath)\python-$(Branch).vsix</VsixOutPath>
-    <VscePath>$(UserProfile)\Roaming\npm\vsce</VscePath>
+    <VscePath>$(UserProfile)\AppData\Roaming\npm\vsce</VscePath>
   </PropertyGroup>
   <Target Name="Build">
    <Exec Command="$(VscePath) --out $(VsixOutPath)" />
