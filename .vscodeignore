@@ -39,4 +39,6 @@ news/**
 debug_coverage*/**
 analysis/publish*.*
 vscode-python.proj
+bin/**
+obj/**
 
