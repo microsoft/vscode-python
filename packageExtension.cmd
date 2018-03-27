@@ -1,1 +1,1 @@
-%1\vsce" package --out %2
+%1\vsce package --out %2
