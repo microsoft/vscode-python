@@ -5,14 +5,15 @@
 import Char from 'typescript-char';
 import { BraceCounter } from '../language/braceCounter';
 import { TextBuilder } from '../language/textBuilder';
+import { TextRangeCollection } from '../language/textRangeCollection';
 import { Tokenizer } from '../language/tokenizer';
 import { ITextRangeCollection, IToken, TokenType } from '../language/types';
 
 export class LineFormatter {
-    private builder: TextBuilder;
-    private tokens: ITextRangeCollection<IToken>;
-    private braceCounter: BraceCounter;
-    private text: string;
+    private builder = new TextBuilder();
+    private tokens: ITextRangeCollection<IToken> = new TextRangeCollection<IToken>([]);
+    private braceCounter = new BraceCounter();
+    private text = '';
 
     // tslint:disable-next-line:cyclomatic-complexity
     public formatLine(text: string): string {
@@ -123,6 +124,7 @@ export class LineFormatter {
         if (this.isBraceType(t.type)) {
             this.braceCounter.countBrace(t);
         }
+        this.builder.softAppendSpace();
         this.builder.append(this.text.substring(t.start, t.end));
     }
 

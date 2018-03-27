@@ -59,8 +59,13 @@ suite('Formatting - OnEnter provider', () => {
         assert.equal(text, 'x.y', 'Line ending with period was reformatted');
     });
 
-    test('Formatting line ending in string', async () => {
+    test('Formatting line with unknown neighboring tokens', async () => {
         const text = await formatAtPosition(9, 0);
+        assert.equal(text, 'if x <= 1:', 'Line with unknown neighboring tokens was not formatted');
+    });
+
+    test('Formatting line ending in string', async () => {
+        const text = await formatAtPosition(10, 0);
         assert.equal(text, 'x + """', 'Line ending in multiline string was not formatted');
     });
 
