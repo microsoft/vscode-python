@@ -1,0 +1,17 @@
+<Project>
+  <ItemGroup>
+    <PackageReference Include="MicroBuild.Core" Version="0.2.0" />
+  </ItemGroup>
+  <PropertyGroup>
+     <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>
+    <VsixOutPath>$(OutputPath)\python-$(Branch).vsix</VsixOutPath>
+  </PropertyGroup>
+  <Target Name="Build">
+   <Exec Command="run-vsce.cmd $(VsixOutPath)" />
+  </Target>
+  <ItemGroup>
+    <FilesToSign Include="$(VsixOutPath)">
+      <Authenticode>VsixSHA2</Authenticode>
+    </FilesToSign>
+  </ItemGroup>
+</Project>
