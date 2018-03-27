@@ -6,8 +6,8 @@
     <VsixOutPath>$(OutputPath)\python-$(Branch).vsix</VsixOutPath>
     <VscePath>$(UserProfile)\AppData\Roaming\npm\vsce</VscePath>
   </PropertyGroup>
-  <Target Name="Build">
-   <Exec Command="$(VscePath) package --out $(VsixOutPath)" />
+  <Target Name="AfterBuild">
+    <Exec Command="$(VscePath) package --out $(VsixOutPath)" />
   </Target>
   <ItemGroup>
     <FilesToSign Include="$(VsixOutPath)">
