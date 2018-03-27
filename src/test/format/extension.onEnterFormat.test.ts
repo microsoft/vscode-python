@@ -76,7 +76,7 @@ suite('Formatting - OnEnter provider', () => {
 
     test('Formatting space after open brace', async () => {
         const text = await formatAtPosition(12, 0);
-        assert.equal(text, 'while(1)', 'Method definition with arguments was not formatted');
+        assert.equal(text, 'while(1)', 'Space after open brace was not formatted');
     });
 
     test('Formatting line ending in string', async () => {

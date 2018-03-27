@@ -139,7 +139,7 @@ export class LineFormatter {
             }
         }
 
-        // In general, keep tokes separated
+        // In general, keep tokens separated
         this.builder.softAppendSpace();
         this.builder.append(this.text.substring(t.start, t.end));
     }
