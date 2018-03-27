@@ -5,6 +5,7 @@ import os
 import pathlib
 import re
 import subprocess
+import sys
 import types
 
 import click
@@ -50,7 +51,9 @@ def sections(directory):
             continue
         position, sep, title = path.name.partition(' ')
         if not sep:
-            raise ValueError(f'directory is missing position part: {path.name!r}')
+            print(f'directory name {path.name!r} is missing ranking; skipping',
+                  file=sys.stderr)
+            continue
         found.append(SectionTitle(int(position), title, path))
     return sorted(found, key=operator.attrgetter('index'))
 
