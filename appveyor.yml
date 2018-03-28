@@ -23,6 +23,7 @@ install:
   - python -m easy_install -U setuptools
   - "%PYTHON%/Scripts/pip.exe install --upgrade -r requirements.txt"
 
+build: off
 # build_script:
 #   - git clone https://github.com/MikhailArkhipov/PTVS.git c:/projects/PTVS
 #   - "cd c:\\projects\\PTVS"
