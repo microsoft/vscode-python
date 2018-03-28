@@ -1727,6 +1727,7 @@
         "testDebugger": "node ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/standardTest.js",
         "testMultiWorkspace": "node ./out/test/multiRootTest.js",
+        "testAnalysisEngine": "node ./out/test/analysisEngineTest.js",
         "precommit": "node gulpfile.js",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",

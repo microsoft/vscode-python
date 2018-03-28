@@ -37,3 +37,10 @@ CODING_STANDARDS.md
 CONTRIBUTING.md
 news/**
 debug_coverage*/**
+analysis/publish*.*
+vscode-python-signing.*
+packageExtension.cmd
+bin/**
+obj/**
+BuildOutput/**
+

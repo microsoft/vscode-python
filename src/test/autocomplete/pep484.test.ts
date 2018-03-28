@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { rootWorkspaceUri } from '../common';
+import { IS_ANALYSIS_ENGINE_TEST } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -11,10 +12,20 @@ const filePep484 = path.join(autoCompPath, 'pep484.py');
 suite('Autocomplete PEP 484', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
-    suiteSetup(async () => {
+    suiteSetup(async function () {
+        // https://github.com/Microsoft/PTVS/issues/3917
+        if (IS_ANALYSIS_ENGINE_TEST) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
         await initialize();
         initializeDI();
         isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
+        if (isPython2) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+            return;
+        }
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -29,12 +40,7 @@ suite('Autocomplete PEP 484', () => {
         ioc.registerProcessTypes();
     }
 
-    test('argument', async function () {
-        if (isPython2) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-            return;
-        }
+    test('argument', async () => {
         const textDocument = await vscode.workspace.openTextDocument(filePep484);
         await vscode.window.showTextDocument(textDocument);
         assert(vscode.window.activeTextEditor, 'No active editor');
@@ -46,9 +52,6 @@ suite('Autocomplete PEP 484', () => {
     });
 
     test('return value', async () => {
-        if (isPython2) {
-            return;
-        }
         const textDocument = await vscode.workspace.openTextDocument(filePep484);
         await vscode.window.showTextDocument(textDocument);
         assert(vscode.window.activeTextEditor, 'No active editor');

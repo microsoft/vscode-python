@@ -1,0 +1,28 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import { createHash } from 'crypto';
+import * as fs from 'fs';
+import { createDeferred } from '../common/helpers';
+
+export class HashVerifier {
+    public async verifyHash(filePath: string, expectedDigest: string): Promise<boolean> {
+        const readStream = fs.createReadStream(filePath);
+        const deferred = createDeferred();
+        const hash = createHash('sha512');
+        hash.setEncoding('hex');
+        readStream
+            .on('end', () => {
+                hash.end();
+                deferred.resolve();
+            })
+            .on('error', (err) => {
+                throw new Error(`Unable to calculate file hash. Error ${err}`);
+            });
+
+        readStream.pipe(hash);
+        await deferred.promise;
+        const actual = hash.read();
+        return expectedDigest === '' ? true : actual === expectedDigest;
+    }
+}

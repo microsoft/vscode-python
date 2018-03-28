@@ -2,19 +2,30 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { rootWorkspaceUri } from '../common';
-import { closeActiveWindows, initialize, initializeTest } from '../initialize';
+import { closeActiveWindows, initialize, initializeTest, IS_ANALYSIS_ENGINE_TEST } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
 const filePep526 = path.join(autoCompPath, 'pep526.py');
 
+// tslint:disable-next-line:max-func-body-length
 suite('Autocomplete PEP 526', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
-    suiteSetup(async () => {
+    suiteSetup(async function () {
+        // https://github.com/Microsoft/PTVS/issues/3917
+        if (IS_ANALYSIS_ENGINE_TEST) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
         await initialize();
         initializeDI();
         isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
+        if (isPython2) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+            return;
+        }
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -29,12 +40,7 @@ suite('Autocomplete PEP 526', () => {
         ioc.registerProcessTypes();
     }
 
-    test('variable (abc:str)', async function () {
-        if (isPython2) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-            return;
-        }
+    test('variable (abc:str)', async () => {
         const textDocument = await vscode.workspace.openTextDocument(filePep526);
         await vscode.window.showTextDocument(textDocument);
         assert(vscode.window.activeTextEditor, 'No active editor');
@@ -45,11 +51,7 @@ suite('Autocomplete PEP 526', () => {
         assert.notEqual(list!.items.filter(item => item.label === 'lower').length, 0, 'lower not found');
     });
 
-    test('variable (abc: str = "")', async function () {
-        if (isPython2) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-        }
+    test('variable (abc: str = "")', async () => {
         const textDocument = await vscode.workspace.openTextDocument(filePep526);
         await vscode.window.showTextDocument(textDocument);
         assert(vscode.window.activeTextEditor, 'No active editor');
@@ -60,12 +62,7 @@ suite('Autocomplete PEP 526', () => {
         assert.notEqual(list!.items.filter(item => item.label === 'lower').length, 0, 'lower not found');
     });
 
-    test('variable (abc = UNKNOWN # type: str)', async function () {
-        if (isPython2) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-            return;
-        }
+    test('variable (abc = UNKNOWN # type: str)', async () => {
         const textDocument = await vscode.workspace.openTextDocument(filePep526);
         await vscode.window.showTextDocument(textDocument);
         assert(vscode.window.activeTextEditor, 'No active editor');
@@ -76,12 +73,7 @@ suite('Autocomplete PEP 526', () => {
         assert.notEqual(list!.items.filter(item => item.label === 'lower').length, 0, 'lower not found');
     });
 
-    test('class methods', async function () {
-        if (isPython2) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-            return;
-        }
+    test('class methods', async () => {
         const textDocument = await vscode.workspace.openTextDocument(filePep526);
         await vscode.window.showTextDocument(textDocument);
         assert(vscode.window.activeTextEditor, 'No active editor');
@@ -94,12 +86,7 @@ suite('Autocomplete PEP 526', () => {
         assert.notEqual(list!.items.filter(item => item.label === 'b').length, 0, 'method b not found');
     });
 
-    test('class method types', async function () {
-        if (isPython2) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-            return;
-        }
+    test('class method types', async () => {
         const textDocument = await vscode.workspace.openTextDocument(filePep526);
         await vscode.window.showTextDocument(textDocument);
         assert(vscode.window.activeTextEditor, 'No active editor');
