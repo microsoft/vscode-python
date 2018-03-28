@@ -55,6 +55,11 @@ export class PythonDebugger extends DebugSession {
         }
         super.shutdown();
     }
+    public async createAttachDebugServer(attachRequest: DebugProtocol.AttachRequest) {
+        const launcher = CreateAttachDebugClient(attachRequest.arguments as AttachRequestArguments, this);
+        this.debugServer = launcher.CreateDebugServer(undefined, this.serviceContainer);
+        await this.debugServer!.Start();
+    }
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
         const body = response.body!;
 
