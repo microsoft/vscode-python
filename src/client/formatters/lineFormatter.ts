@@ -90,7 +90,7 @@ export class LineFormatter {
             const opCode = this.text.charCodeAt(t.start);
             switch (opCode) {
                 case Char.Equal:
-                    if (index >= 2 && this.handleEqual(t, index)) {
+                    if (this.handleEqual(t, index)) {
                         return;
                     }
                     break;
@@ -110,13 +110,13 @@ export class LineFormatter {
     }
 
     private handleEqual(t: IToken, index: number): boolean {
-        if (this.braceCounter.isOpened(TokenType.OpenBrace)) {
-            // Check if this is = in function arguments. If so, do not
-            // add spaces around it.
-            if (this.isEqualsInsideArguments(index)) {
-                this.builder.append('=');
-                return true;
-            }
+        if (this.isMultipleStatements(index) && !this.braceCounter.isOpened(TokenType.OpenBrace)) {
+            return false; // x = 1; x, y = y, x
+        }
+        // Check if this is = in function arguments. If so, do not add spaces around it.
+        if (this.isEqualsInsideArguments(index)) {
+            this.builder.append('=');
+            return true;
         }
         return false;
     }
@@ -149,14 +149,23 @@ export class LineFormatter {
     }
 
     private isEqualsInsideArguments(index: number): boolean {
-        if (index < 2) {
+        if (index < 1) {
             return false;
         }
         const prev = this.tokens.getItemAt(index - 1);
-        const prevPrev = this.tokens.getItemAt(index - 2);
-        if (prev.type === TokenType.Identifier &&
-            (prevPrev.type === TokenType.Comma || prevPrev.type === TokenType.OpenBrace)) {
-            return true;
+        if (prev.type === TokenType.Identifier) {
+            if (index >= 2) {
+                // (x=1 or ,x=1
+                const prevPrev = this.tokens.getItemAt(index - 2);
+                return prevPrev.type === TokenType.Comma || prevPrev.type === TokenType.OpenBrace;
+            } else if (index < this.tokens.count - 2) {
+                const next = this.tokens.getItemAt(index + 1);
+                const nextNext = this.tokens.getItemAt(index + 2);
+                // x=1, or x=1)
+                if (this.isValueType(next.type)) {
+                    return nextNext.type === TokenType.Comma || nextNext.type === TokenType.CloseBrace;
+                }
+            }
         }
         return false;
     }
@@ -169,5 +178,17 @@ export class LineFormatter {
     }
     private isBraceType(type: TokenType): boolean {
         return this.isOpenBraceType(type) || this.isCloseBraceType(type);
+    }
+    private isValueType(type: TokenType): boolean {
+        return type === TokenType.Identifier || type === TokenType.Unknown ||
+            type === TokenType.Number || type === TokenType.String;
+    }
+    private isMultipleStatements(index: number): boolean {
+        for (let i = index; i >= 0; i -= 1) {
+            if (this.tokens.getItemAt(i).type === TokenType.Semicolon) {
+                return true;
+            }
+        }
+        return false;
     }
 }
