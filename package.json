@@ -1052,6 +1052,12 @@
                     "default": "${workspaceFolder}/.env",
                     "scope": "resource"
                 },
+                "python.jediEnabled": {
+                    "type": "string",
+                    "default": "true",
+                    "description": "Enables Jedi as IntelliSense engine instead of Microsoft Python Analysis Engine.",
+                    "scope": "resource"
+                },
                 "python.jediPath": {
                     "type": "string",
                     "default": "",
