@@ -65,4 +65,20 @@ suite('Formatting - line formatter', () => {
         const actual = formatter.formatLine('   # comment');
         assert.equal(actual, '   # comment');
     });
+    test('Equals in first argument', () => {
+        const actual = formatter.formatLine('foo(x =0)');
+        assert.equal(actual, 'foo(x=0)');
+    });
+    test('Equals in second argument', () => {
+        const actual = formatter.formatLine('foo(x,y= \"a\",');
+        assert.equal(actual, 'foo(x, y=\"a\",');
+    });
+   test('Equals in multiline arguments', () => {
+        const actual = formatter.formatLine('x = 1,y =-2)');
+        assert.equal(actual, 'x=1, y=-2)');
+    });
+    test('Equals in multiline arguments starting comma', () => {
+        const actual = formatter.formatLine(',x = 1,y =m)');
+        assert.equal(actual, ', x=1, y=m)');
+    });
 });

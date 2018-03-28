@@ -5,14 +5,15 @@
 import Char from 'typescript-char';
 import { BraceCounter } from '../language/braceCounter';
 import { TextBuilder } from '../language/textBuilder';
+import { TextRangeCollection } from '../language/textRangeCollection';
 import { Tokenizer } from '../language/tokenizer';
 import { ITextRangeCollection, IToken, TokenType } from '../language/types';
 
 export class LineFormatter {
-    private builder: TextBuilder;
-    private tokens: ITextRangeCollection<IToken>;
-    private braceCounter: BraceCounter;
-    private text: string;
+    private builder = new TextBuilder();
+    private tokens: ITextRangeCollection<IToken> = new TextRangeCollection<IToken>([]);
+    private braceCounter = new BraceCounter();
+    private text = '';
 
     // tslint:disable-next-line:cyclomatic-complexity
     public formatLine(text: string): string {
@@ -71,8 +72,12 @@ export class LineFormatter {
                     this.builder.append(this.text.substring(t.start, t.end));
                     break;
 
+                case TokenType.Semicolon:
+                    this.builder.append(';');
+                    break;
+
                 default:
-                    this.handleOther(t);
+                    this.handleOther(t, i);
                     break;
             }
         }
@@ -85,7 +90,7 @@ export class LineFormatter {
             const opCode = this.text.charCodeAt(t.start);
             switch (opCode) {
                 case Char.Equal:
-                    if (index >= 2 && this.handleEqual(t, index)) {
+                    if (this.handleEqual(t, index)) {
                         return;
                     }
                     break;
@@ -105,25 +110,64 @@ export class LineFormatter {
     }
 
     private handleEqual(t: IToken, index: number): boolean {
-        if (this.braceCounter.isOpened(TokenType.OpenBrace)) {
-            // Check if this is = in function arguments. If so, do not
-            // add spaces around it.
-            const prev = this.tokens.getItemAt(index - 1);
-            const prevPrev = this.tokens.getItemAt(index - 2);
-            if (prev.type === TokenType.Identifier &&
-                (prevPrev.type === TokenType.Comma || prevPrev.type === TokenType.OpenBrace)) {
-                this.builder.append('=');
-                return true;
-            }
+        if (this.isMultipleStatements(index) && !this.braceCounter.isOpened(TokenType.OpenBrace)) {
+            return false; // x = 1; x, y = y, x
+        }
+        // Check if this is = in function arguments. If so, do not add spaces around it.
+        if (this.isEqualsInsideArguments(index)) {
+            this.builder.append('=');
+            return true;
         }
         return false;
     }
 
-    private handleOther(t: IToken): void {
+    private handleOther(t: IToken, index: number): void {
         if (this.isBraceType(t.type)) {
             this.braceCounter.countBrace(t);
+            this.builder.append(this.text.substring(t.start, t.end));
+            return;
         }
+
+        if (this.isEqualsInsideArguments(index - 1)) {
+            // Don't add space around = inside function arguments
+            this.builder.append(this.text.substring(t.start, t.end));
+            return;
+        }
+
+        if (index > 0) {
+            const prev = this.tokens.getItemAt(index - 1);
+            if (this.isOpenBraceType(prev.type) || prev.type === TokenType.Colon) {
+                // Don't insert space after (, [ or {
+                this.builder.append(this.text.substring(t.start, t.end));
+                return;
+            }
+        }
+
+        // In general, keep tokens separated
+        this.builder.softAppendSpace();
         this.builder.append(this.text.substring(t.start, t.end));
+    }
+
+    private isEqualsInsideArguments(index: number): boolean {
+        if (index < 1) {
+            return false;
+        }
+        const prev = this.tokens.getItemAt(index - 1);
+        if (prev.type === TokenType.Identifier) {
+            if (index >= 2) {
+                // (x=1 or ,x=1
+                const prevPrev = this.tokens.getItemAt(index - 2);
+                return prevPrev.type === TokenType.Comma || prevPrev.type === TokenType.OpenBrace;
+            } else if (index < this.tokens.count - 2) {
+                const next = this.tokens.getItemAt(index + 1);
+                const nextNext = this.tokens.getItemAt(index + 2);
+                // x=1, or x=1)
+                if (this.isValueType(next.type)) {
+                    return nextNext.type === TokenType.Comma || nextNext.type === TokenType.CloseBrace;
+                }
+            }
+        }
+        return false;
     }
 
     private isOpenBraceType(type: TokenType): boolean {
@@ -134,5 +178,17 @@ export class LineFormatter {
     }
     private isBraceType(type: TokenType): boolean {
         return this.isOpenBraceType(type) || this.isCloseBraceType(type);
+    }
+    private isValueType(type: TokenType): boolean {
+        return type === TokenType.Identifier || type === TokenType.Unknown ||
+            type === TokenType.Number || type === TokenType.String;
+    }
+    private isMultipleStatements(index: number): boolean {
+        for (let i = index; i >= 0; i -= 1) {
+            if (this.tokens.getItemAt(i).type === TokenType.Semicolon) {
+                return true;
+            }
+        }
+        return false;
     }
 }

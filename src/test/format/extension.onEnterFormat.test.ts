@@ -59,8 +59,28 @@ suite('Formatting - OnEnter provider', () => {
         assert.equal(text, 'x.y', 'Line ending with period was reformatted');
     });
 
-    test('Formatting line ending in string', async () => {
+    test('Formatting line with unknown neighboring tokens', async () => {
         const text = await formatAtPosition(9, 0);
+        assert.equal(text, 'if x <= 1:', 'Line with unknown neighboring tokens was not formatted');
+    });
+
+    test('Formatting line with unknown neighboring tokens', async () => {
+        const text = await formatAtPosition(10, 0);
+        assert.equal(text, 'if 1 <= x:', 'Line with unknown neighboring tokens was not formatted');
+    });
+
+    test('Formatting method definition with arguments', async () => {
+        const text = await formatAtPosition(11, 0);
+        assert.equal(text, 'def __init__(self, age=23)', 'Method definition with arguments was not formatted');
+    });
+
+    test('Formatting space after open brace', async () => {
+        const text = await formatAtPosition(12, 0);
+        assert.equal(text, 'while(1)', 'Space after open brace was not formatted');
+    });
+
+    test('Formatting line ending in string', async () => {
+        const text = await formatAtPosition(13, 0);
         assert.equal(text, 'x + """', 'Line ending in multiline string was not formatted');
     });
 
