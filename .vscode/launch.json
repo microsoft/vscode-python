@@ -88,6 +88,26 @@
             "preLaunchTask": "Compile"
         },
         {
+            "name": "Launch Analysis Engine Tests",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/test",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "Compile",
+            "env": {
+                "VSC_PYTHON_ANALYSIS": "1"
+            }
+        },
+        {
             "name": "Launch Tests (with code coverage)",
             "type": "extensionHost",
             "request": "launch",
