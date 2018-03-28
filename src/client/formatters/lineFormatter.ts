@@ -72,6 +72,10 @@ export class LineFormatter {
                     this.builder.append(this.text.substring(t.start, t.end));
                     break;
 
+                case TokenType.Semicolon:
+                    this.builder.append(';');
+                    break;
+
                 default:
                     this.handleOther(t, i);
                     break;
@@ -132,7 +136,7 @@ export class LineFormatter {
 
         if (index > 0) {
             const prev = this.tokens.getItemAt(index - 1);
-            if (this.isOpenBraceType(prev.type)) {
+            if (this.isOpenBraceType(prev.type) || prev.type === TokenType.Colon) {
                 // Don't insert space after (, [ or {
                 this.builder.append(this.text.substring(t.start, t.end));
                 return;
