@@ -1766,6 +1766,7 @@
         "uint64be": "^1.0.1",
         "unicode": "^10.0.0",
         "untildify": "^3.0.2",
+        "unzip": "^0.1.11",
         "vscode-debugadapter": "^1.0.1",
         "vscode-debugprotocol": "^1.0.1",
         "vscode-extension-telemetry": "^0.0.14",
