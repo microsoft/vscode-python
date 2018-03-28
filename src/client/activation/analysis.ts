@@ -8,10 +8,10 @@ import { IApplicationShell } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
 import { IProcessService, IPythonExecutionFactory } from '../common/process/types';
+import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
-import { StopWatch } from '../telemetry/stopWatch';
 import { AnalysisEngineDownloader } from './downloader';
 import { IExtensionActivator } from './types';
 
@@ -48,13 +48,13 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         }
         this.output.appendLine(`Options determined: ${sw.elapsedTime} ms`);
 
-        //if (!await this.tryStartLanguageServer(context, clientOptions, true)) {
+        if (!await this.tryStartLanguageServer(context, clientOptions, true)) {
             const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
             await downloader.downloadAnalysisEngine(context);
             if (!await this.tryStartLanguageServer(context, clientOptions, false)) {
                 return false;
             }
-        //}
+        }
 
         // tslint:disable-next-line:no-console
         this.output.appendLine(`Language server started: ${sw.elapsedTime} ms`);

@@ -45,11 +45,9 @@ suite('PythonExecutableService', () => {
             this.skip();
         }
         await clearPythonPathInWorkspaceFolder(workspace4Path);
-
-        await (new ConfigurationService()).updateSettingAsync('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         await initialize();
     });
-    setup(() => {
+    setup(async () => {
         cont = new Container();
         serviceContainer = new ServiceContainer(cont);
         const serviceManager = new ServiceManager(cont);
@@ -69,6 +67,7 @@ suite('PythonExecutableService', () => {
         configService = serviceManager.get<IConfigurationService>(IConfigurationService);
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
 
+        await configService.updateSettingAsync('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         return initializeTest();
     });
     suiteTeardown(closeActiveWindows);

@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import '../../client/common/extensions';
 import { IS_ANALYSIS_ENGINE_TEST } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { normalizeMarkedString } from '../textUtils';
@@ -21,7 +21,7 @@ const fileStringFormat = path.join(hoverPath, 'stringFormat.py');
 let textDocument: vscode.TextDocument;
 
 // tslint:disable-next-line:max-func-body-length
-suite('Hover Definition (MS Python Code Analysis)', () => {
+suite('Hover Definition (Analysis Engine)', () => {
     suiteSetup(async function () {
         if (!IS_ANALYSIS_ENGINE_TEST) {
             // tslint:disable-next-line:no-invalid-this
@@ -48,9 +48,11 @@ suite('Hover Definition (MS Python Code Analysis)', () => {
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '30,0', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '30,11', 'End position is incorrect');
         assert.equal(def[0].contents.length, 1, 'Invalid content items');
-        // tslint:disable-next-line:prefer-template
-        const expectedContent = 'method method1 of one.Class1 objects ' + EOL + EOL + '```html ' + EOL + '        This is method1   ' + EOL + '```';
-        assert.equal(normalizeMarkedString(def[0].contents[0]), expectedContent, 'function signature incorrect');
+
+        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
+        assert.equal(lines.length, 2, 'incorrect number of lines');
+        assert.equal(lines[0].trim(), 'obj.method1: method method1 of one.Class1 objects', 'function signature line #1 is incorrect');
+        assert.equal(lines[1].trim(), 'This is method1', 'function signature line #2 is incorrect');
     });
 
     test('Across files', async () => {
@@ -58,9 +60,11 @@ suite('Hover Definition (MS Python Code Analysis)', () => {
         assert.equal(def.length, 1, 'Definition length is incorrect');
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '1,0', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '1,12', 'End position is incorrect');
-        // tslint:disable-next-line:prefer-template
-        const expectedContent = 'method fun of two.ct objects ' + EOL + EOL + '```html ' + EOL + '        This is fun   ' + EOL + '```';
-        assert.equal(normalizeMarkedString(def[0].contents[0]), expectedContent, 'Invalid conents');
+
+        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
+        assert.equal(lines.length, 2, 'incorrect number of lines');
+        assert.equal(lines[0].trim(), 'two.ct().fun: method fun of two.ct objects', 'function signature line #1 is incorrect');
+        assert.equal(lines[1].trim(), 'This is fun', 'function signature line #2 is incorrect');
     });
 
     test('With Unicode Characters', async () => {
@@ -68,14 +72,14 @@ suite('Hover Definition (MS Python Code Analysis)', () => {
         assert.equal(def.length, 1, 'Definition length is incorrect');
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '25,0', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '25,7', 'End position is incorrect');
-        // tslint:disable-next-line:prefer-template
-        const expectedContent = 'def four.Foo.bar()' + EOL + EOL +
-            '```html ' + EOL +
-            '        说明 - keep this line, it works   ' + EOL +
-            '        delete following line, it works   ' + EOL +
-            '        如果存在需要等待审批或正在执行的任务，将不刷新页面   ' + EOL +
-            '```';
-        assert.equal(normalizeMarkedString(def[0].contents[0]), expectedContent, 'Invalid contents');
+
+        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
+        assert.equal(lines.length, 5, 'incorrect number of lines');
+        assert.equal(lines[0].trim(), 'Foo.bar: def four.Foo.bar()', 'function signature line #1 is incorrect');
+        assert.equal(lines[1].trim(), '说明 - keep this line, it works', 'function signature line #2 is incorrect');
+        assert.equal(lines[2].trim(), 'delete following line, it works', 'function signature line #3 is incorrect');
+        assert.equal(lines[3].trim(), '如果存在需要等待审批或正在执行的任务，将不刷新页面', 'function signature line #4 is incorrect');
+        assert.equal(lines[4].trim(), 'declared in Foo', 'function signature line #5 is incorrect');
     });
 
     test('Across files with Unicode Characters', async () => {
@@ -83,14 +87,12 @@ suite('Hover Definition (MS Python Code Analysis)', () => {
         assert.equal(def.length, 1, 'Definition length is incorrect');
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '1,0', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '1,16', 'End position is incorrect');
-        // tslint:disable-next-line:prefer-template
-        const expectedContent = 'def four.showMessage()' + EOL + EOL +
-            '```html ' + EOL +
-            '    Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи.    ' + EOL +
-            '    Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.   ' + EOL +
-            '```';
-        // tslint:disable-next-line:prefer-template
-        assert.equal(normalizeMarkedString(def[0].contents[0]), expectedContent, 'Invalid contents');
+
+        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
+        assert.equal(lines.length, 3, 'incorrect number of lines');
+        assert.equal(lines[0].trim(), 'four.showMessage: def four.showMessage()', 'function signature line #1 is incorrect');
+        assert.equal(lines[1].trim(), 'Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи.', 'function signature line #2 is incorrect');
+        assert.equal(lines[2].trim(), 'Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.', 'function signature line #3 is incorrect');
     });
 
     test('Nothing for keywords (class)', async () => {
@@ -108,20 +110,11 @@ suite('Hover Definition (MS Python Code Analysis)', () => {
         assert.equal(def.length, 1, 'Definition length is incorrect');
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '11,7', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '11,18', 'End position is incorrect');
-        // tslint:disable-next-line:prefer-template
-        const documentation = 'Random' + EOL + EOL +
-            'Random number generator base class used by bound module functions. ' + EOL +
-            '```html ' + EOL +
-            '    Used to instantiate instances of Random to get generators that don\'t   ' + EOL +
-            '    share state.   ' + EOL +
-            '   ' + EOL +
-            '    Class Random can also be subclassed if you want to use a different basic   ' + EOL +
-            '    generator of your own devising: in that case, override the following   ' + EOL +
-            '    methods: random(), seed(), getstate(), and setstate().   ' + EOL +
-            '    Optionally, implement a getrandbits() method so that randrange()   ' + EOL +
-            '    can cover arbitrarily large ranges.   ' + EOL +
-            '```';
-        assert.equal(normalizeMarkedString(def[0].contents[0]), documentation, 'Invalid conents');
+
+        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
+        assert.equal(lines.length, 9, 'incorrect number of lines');
+        assert.equal(lines[0].trim(), 'misc.Random: class misc.Random(_random.Random)', 'function signature line #1 is incorrect');
+        assert.equal(lines[1].trim(), 'Random number generator base class used by bound module functions.', 'function signature line #2 is incorrect');
     });
 
     test('Highlight Method', async () => {
@@ -129,10 +122,11 @@ suite('Hover Definition (MS Python Code Analysis)', () => {
         assert.equal(def.length, 1, 'Definition length is incorrect');
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '12,0', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '12,12', 'End position is incorrect');
-        assert.equal(normalizeMarkedString(def[0].contents[0]),
-            // tslint:disable-next-line:prefer-template
-            'method randint of misc.Random objects  -> int' + EOL + EOL +
-            'Return random integer in range [a, b], including both end points.', 'Invalid conents');
+
+        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
+        assert.equal(lines.length, 2, 'incorrect number of lines');
+        assert.equal(lines[0].trim(), 'rnd2.randint: method randint of misc.Random objects  -> int', 'function signature line #1 is incorrect');
+        assert.equal(lines[1].trim(), 'Return random integer in range [a, b], including both end points.', 'function signature line #2 is incorrect');
     });
 
     test('Highlight Function', async () => {
@@ -140,13 +134,12 @@ suite('Hover Definition (MS Python Code Analysis)', () => {
         assert.equal(def.length, 1, 'Definition length is incorrect');
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '8,6', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '8,15', 'End position is incorrect');
-        // tslint:disable-next-line:prefer-template
-        assert.equal(normalizeMarkedString(def[0].contents[0]),
-            // tslint:disable-next-line:prefer-template
-            'built-in function acos(x)' + EOL + EOL +
-            'acos(x) ' + EOL +
-            ' ' + EOL +
-            'Return the arc cosine (measured in radians) of x.', 'Invalid conents');
+
+        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
+        assert.equal(lines.length, 3, 'incorrect number of lines');
+        assert.equal(lines[0].trim(), 'math.acos: built-in function acos(x)', 'function signature line #1 is incorrect');
+        assert.equal(lines[1].trim(), 'acos(x)', 'function signature line #2 is incorrect');
+        assert.equal(lines[2].trim(), 'Return the arc cosine (measured in radians) of x.', 'function signature line #3 is incorrect');
     });
 
     test('Highlight Multiline Method Signature', async () => {
@@ -154,14 +147,12 @@ suite('Hover Definition (MS Python Code Analysis)', () => {
         assert.equal(def.length, 1, 'Definition length is incorrect');
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '14,4', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '14,15', 'End position is incorrect');
-        // tslint:disable-next-line:prefer-template
-        assert.equal(normalizeMarkedString(def[0].contents[0]),
-            // tslint:disable-next-line:prefer-template
-            'Thread' + EOL + EOL +
-            'A class that represents a thread of control. ' + EOL +
-            '```html ' + EOL +
-            '    This class can be safely subclassed in a limited fashion.   ' + EOL +
-            '```', 'Invalid content items');
+
+        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
+        assert.equal(lines.length, 3, 'incorrect number of lines');
+        assert.equal(lines[0].trim(), 'misc.Thread: class misc.Thread(_Verbose)', 'function signature line #1 is incorrect');
+        assert.equal(lines[1].trim(), 'A class that represents a thread of control.', 'function signature line #2 is incorrect');
+
     });
 
     test('Variable', async () => {
