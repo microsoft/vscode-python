@@ -28,7 +28,7 @@ export class LineFormatter {
 
         const ws = this.text.substr(0, this.tokens.getItemAt(0).start);
         if (ws.length > 0) {
-            this.builder.append(ws); // Preserve leading indentation
+            this.builder.append(ws); // Preserve leading indentation.
         }
 
         for (let i = 0; i < this.tokens.count; i += 1) {
@@ -56,16 +56,16 @@ export class LineFormatter {
                     break;
 
                 case TokenType.Colon:
-                    // x: 1 if not in slice, x[1:y] if inside the slice
+                    // x: 1 if not in slice, x[1:y] if inside the slice.
                     this.builder.append(':');
                     if (!this.braceCounter.isOpened(TokenType.OpenBracket) && (next && next.type !== TokenType.Colon)) {
-                        // Not inside opened [[ ... ] sequence
+                        // Not inside opened [[ ... ] sequence.
                         this.builder.softAppendSpace();
                     }
                     break;
 
                 case TokenType.Comment:
-                    // add space before in-line comment
+                    // Add space before in-line comment.
                     if (prev) {
                         this.builder.softAppendSpace();
                     }
@@ -129,7 +129,7 @@ export class LineFormatter {
         }
 
         if (this.isEqualsInsideArguments(index - 1)) {
-            // Don't add space around = inside function arguments
+            // Don't add space around = inside function arguments.
             this.builder.append(this.text.substring(t.start, t.end));
             return;
         }
@@ -137,13 +137,13 @@ export class LineFormatter {
         if (index > 0) {
             const prev = this.tokens.getItemAt(index - 1);
             if (this.isOpenBraceType(prev.type) || prev.type === TokenType.Colon) {
-                // Don't insert space after (, [ or {
+                // Don't insert space after (, [ or { .
                 this.builder.append(this.text.substring(t.start, t.end));
                 return;
             }
         }
 
-        // In general, keep tokens separated
+        // In general, keep tokens separated.
         this.builder.softAppendSpace();
         this.builder.append(this.text.substring(t.start, t.end));
     }
