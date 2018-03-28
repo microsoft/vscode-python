@@ -1,6 +1,6 @@
 # Changelog
 
-## 2018.3.0-rc (27 Mar 2018)
+## 2018.3.0 (28 Mar 2018)
 
 ### Enhancements
 
@@ -104,7 +104,6 @@ To turn off this check, add `"python.jediMemoryLimit": -1` to your user or works
  ([#982](https://github.com/Microsoft/vscode-python/issues/982))
 1. Launch unit tests in debug mode as opposed to running and attaching the debugger to the already-running interpreter.
  ([#983](https://github.com/Microsoft/vscode-python/issues/983))
-
 
 ## 2018.2.1 (09 Mar 2018)
 
