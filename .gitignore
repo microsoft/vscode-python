@@ -16,3 +16,5 @@ coverage/
 pythonFiles/experimental/ptvsd/**
 debug_coverage*/**
 analysis/**
+bin/**
+obj/**
