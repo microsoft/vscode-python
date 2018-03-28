@@ -8,7 +8,10 @@
 
 ### Prerequisites
 
-1. [.NET Core 2.0+ SDK](https://www.microsoft.com/net/learn/get-started/windows)
+1. .NET Core 2.0+ SDK
+   - [Windows](https://www.microsoft.com/net/learn/get-started/windows)
+   - [Mac OS](https://www.microsoft.com/net/learn/get-started/macos)
+   - [Linux](https://www.microsoft.com/net/learn/get-started/linux/rhel)
 2. C# Extension to VS Code (all platforms)
 3. Python 2.7
 4. Python 3.6
