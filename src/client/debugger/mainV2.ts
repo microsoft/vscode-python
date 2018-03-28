@@ -25,7 +25,7 @@ import { ICurrentProcess } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from './Common/Contracts';
 import { DebugClient } from './DebugClients/DebugClient';
-import { CreateLaunchDebugClient } from './DebugClients/DebugFactory';
+import { CreateAttachDebugClient, CreateLaunchDebugClient } from './DebugClients/DebugFactory';
 import { BaseDebugServer } from './DebugServers/BaseDebugServer';
 import { initializeIoc } from './serviceRegistry';
 import { IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
@@ -61,6 +61,11 @@ export class PythonDebugger extends DebugSession {
         }
         super.shutdown();
     }
+    public async createAttachDebugServer(attachRequest: DebugProtocol.AttachRequest) {
+        const launcher = CreateAttachDebugClient(attachRequest.arguments as AttachRequestArguments, this);
+        this.debugServer = launcher.CreateDebugServer(undefined, this.serviceContainer);
+        await this.debugServer!.Start();
+    }
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
         const body = response.body!;
 
@@ -87,7 +92,7 @@ export class PythonDebugger extends DebugSession {
         this.sendResponse(response);
     }
     protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments): void {
-        this.sendResponse(response);
+        // We will let PTVSD send the response
     }
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
         this.launchPTVSD(args)
@@ -173,7 +178,7 @@ class DebugManager implements Disposable {
     private hasShutdown: boolean = false;
     private debugSession?: PythonDebugger;
     private ptvsdProcessId?: number;
-    private killPTVSDProcess: boolean = false;
+    private launchOrAttach?: 'launch'|'attach';
     private terminatedEventSent: boolean = false;
     private readonly initializeRequestDeferred: Deferred<DebugProtocol.InitializeRequest>;
     private get initializeRequest(): Promise<DebugProtocol.InitializeRequest> {
@@ -263,7 +268,7 @@ class DebugManager implements Disposable {
             this.terminatedEventSent = true;
         }
 
-        if (this.killPTVSDProcess && this.ptvsdProcessId) {
+        if (this.launchOrAttach === 'launch' && this.ptvsdProcessId) {
             logger.verbose('killing process');
             try {
                 // 1. Wait for some time, its possible the program has run to completion.
@@ -273,7 +278,6 @@ class DebugManager implements Disposable {
                 await sleep(100);
                 killProcessTree(this.ptvsdProcessId!);
             } catch { }
-            this.killPTVSDProcess = false;
             this.ptvsdProcessId = undefined;
         }
 
@@ -309,18 +313,37 @@ class DebugManager implements Disposable {
         // Keep track of the initialize and launch requests, we'll need to re-send these to ptvsd, for bootstrapping.
         this.inputProtocolParser.once('request_initialize', this.onRequestInitialize);
         this.inputProtocolParser.once('request_launch', this.onRequestLaunch);
+        this.inputProtocolParser.once('request_attach', this.onRequestAttach);
 
         this.outputProtocolParser.once('event_terminated', this.onEventTerminated);
         this.outputProtocolParser.once('response_disconnect', this.onResponseDisconnect);
-        this.outputProtocolParser.once('response_launch', this.connectVSCodeToPTVSD);
+        this.outputProtocolParser.once('response_launch', this.connectVSCodeToPTVSDForLaunch);
+    }
+    /**
+     * Connect PTVSD socket to VS Code.
+     * @private
+     * @memberof DebugManager
+     */
+    private connectVSCodeToPTVSDForAttach = async (attachRequest: DebugProtocol.AttachRequest) => {
+        await this.debugSession!.createAttachDebugServer(attachRequest);
+
+        await this.connectVSCodeToPTVSD(attachRequest, 'attach');
     }
     /**
      * Once PTVSD process has been started (done by DebugSession), we need to connect PTVSD socket to VS Code.
+     * @private
+     * @memberof DebugManager
+     */
+    private connectVSCodeToPTVSDForLaunch = async () => {
+        await this.connectVSCodeToPTVSD(await this.launchRequest, 'launch');
+    }
+    /**
+     * Connect PTVSD socket to VS Code.
      * This allows PTVSD to communicate directly with VS Code.
      * @private
      * @memberof DebugManager
      */
-    private connectVSCodeToPTVSD = async () => {
+    private connectVSCodeToPTVSD = async (attachOrLaunchRequest: DebugProtocol.AttachRequest | DebugProtocol.LaunchRequest, requestType: 'attach' | 'launch') => {
         // By now we're connected to the client.
         this.ptvsdSocket = await this.debugSession!.debugServer!.client;
 
@@ -330,42 +353,49 @@ class DebugManager implements Disposable {
         this.ptvsdSocket.on('error', this.shutdown);
         const debugSoketProtocolParser = this.serviceContainer.get<IProtocolParser>(IProtocolParser);
         debugSoketProtocolParser.connect(this.ptvsdSocket);
-
-        // Send PTVSD the launch request (PTVSD needs to do its own initialization using launch arguments).
-        // E.g. redirectOutput & fixFilePathCase found in launch request are used to initialize the debugger.
-        this.sendMessage(await this.launchRequest, this.ptvsdSocket);
-        await new Promise(resolve => debugSoketProtocolParser.once('response_launch', resolve));
-
-        // The PTVSD process has launched, now send the initialize request to it (required by PTVSD).
-        this.sendMessage(await this.initializeRequest, this.ptvsdSocket);
+        const initializedEventPromise = new Promise<DebugProtocol.InitializedEvent>(resolve => debugSoketProtocolParser.once('event_initialized', resolve));
+        const attachedOrLaunchedPromise = new Promise(resolve => debugSoketProtocolParser.once(`response_${requestType}`, resolve));
 
         // Keep track of processid for killing it.
-        debugSoketProtocolParser.once('event_process', (proc: DebugProtocol.ProcessEvent) => {
-            this.ptvsdProcessId = proc.body.systemProcessId;
-        });
+        if (requestType === 'launch') {
+            debugSoketProtocolParser.once('event_process', (proc: DebugProtocol.ProcessEvent) => {
+                this.ptvsdProcessId = proc.body.systemProcessId;
+            });
+        }
 
-        // Wait for PTVSD to reply back with initialized event.
-        debugSoketProtocolParser.once('event_initialized', (initialized: DebugProtocol.InitializedEvent) => {
-            // Get ready for PTVSD to communicate directly with VS Code.
-            (this.inputStream as any as NodeJS.ReadStream).unpipe<Writable>(this.debugSessionInputStream);
-            this.debugSessionOutputStream.unpipe(this.outputStream);
+        // Send the launch/attach request to PTVSD and wait for it to reply back.
+        this.sendMessage(attachOrLaunchRequest, this.ptvsdSocket);
+        await attachedOrLaunchedPromise;
 
-            this.inputStream.pipe(this.ptvsdSocket!);
-            this.ptvsdSocket!.pipe(this.throughOutputStream);
-            this.ptvsdSocket!.pipe(this.outputStream);
+        // Send the initialize request and wait for it to reply back with the initialized event
+        this.sendMessage(await this.initializeRequest, this.ptvsdSocket);
 
-            // Forward the initialized event sent by PTVSD onto VSCode.
-            // This is what will cause PTVSD to start the actualy work.
-            this.sendMessage(initialized, this.outputStream);
-        });
+        const initializedEvent = await initializedEventPromise;
+
+        // Get ready for PTVSD to communicate directly with VS Code.
+        (this.inputStream as any as NodeJS.ReadStream).unpipe<Writable>(this.debugSessionInputStream);
+        this.debugSessionOutputStream.unpipe(this.outputStream);
+
+        this.inputStream.pipe(this.ptvsdSocket!);
+        this.ptvsdSocket!.pipe(this.throughOutputStream);
+        this.ptvsdSocket!.pipe(this.outputStream);
+
+        // Forward the initialized event sent by PTVSD onto VSCode.
+        // This is what will cause PTVSD to start the actualy work.
+        this.sendMessage(initializedEvent, this.outputStream);
     }
     private onRequestInitialize = (request: DebugProtocol.InitializeRequest) => {
         this.initializeRequestDeferred.resolve(request);
     }
     private onRequestLaunch = (request: DebugProtocol.LaunchRequest) => {
-        this.killPTVSDProcess = true;
+        this.launchOrAttach = 'launch';
         this.loggingEnabled = (request.arguments as LaunchRequestArguments).logToFile === true;
         this.launchRequestDeferred.resolve(request);
+    }
+    private onRequestAttach = (request: DebugProtocol.AttachRequest) => {
+        this.launchOrAttach = 'attach';
+        this.loggingEnabled = (request.arguments as AttachRequestArguments).logToFile === true;
+        this.connectVSCodeToPTVSDForAttach(request).ignoreErrors();
     }
     private onEventTerminated = async () => {
         logger.verbose('onEventTerminated');
