@@ -16,7 +16,7 @@
 3. Python 2.7
 4. Python 3.6
 
-*Alternative:* Visual Studio 2017 (Windows only) with .NET Core and C# Workloads
+*Alternative:* [Visual Studio 2017](https://www.visualstudio.com/downloads/) (Windows only) with .NET Core and C# Workloads. Community Edition is free and is fully functional.
 
 ### Setup
 
@@ -27,11 +27,11 @@ dotnet build
 ```
 
 Visual Studio 2017:
-Open solution in Python/Product/VsCode
-
-Binaries arrive in *Python/BuildOutput/VsCode/raw*
-Delete contents of the *analysis* folder in the Python Extension folder
-Copy *.dll, *.pdb, *.json fron *Python/BuildOutput/VsCode/raw* to *analysis*
+1. Open solution in Python/Product/VsCode
+2. Build AnalysisVsc project
+3. Binaries arrive in *Python/BuildOutput/VsCode/raw*
+4. Delete contents of the *analysis* folder in the Python Extension folder
+5. Copy *.dll, *.pdb, *.json fron *Python/BuildOutput/VsCode/raw* to *analysis*
 
 ### Debugging code in Python Extension to VS Code
 Folow regular TypeScript debugging steps
