@@ -1515,7 +1515,8 @@
                     "enum": [
                         "autopep8",
                         "yapf",
-                        "none"
+                        "none",
+                        "black"
                     ],
                     "scope": "resource"
                 },
@@ -1531,6 +1532,12 @@
                     "description": "Path to yapf, you can use a custom version of yapf by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
+                "python.formatting.blackPath": {
+                    "type": "string",
+                    "default": "black",
+                    "description": "Path to black, you can use a custom version of black by modifying this setting to include the full path.",
+                    "scope": "resource"
+                },
                 "python.formatting.autopep8Args": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
@@ -1541,6 +1548,15 @@
                     "scope": "resource"
                 },
                 "python.formatting.yapfArgs": {
+                    "type": "array",
+                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "scope": "resource"
+                },
+                "python.formatting.blackArgs": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "default": [],
