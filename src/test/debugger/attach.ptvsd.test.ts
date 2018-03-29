@@ -61,7 +61,8 @@ suite('Attach Debugger -Experimental', () => {
             return new DebugClientEx(DEBUG_ADAPTER, 'pythonExperimental', coverageDirectory, { cwd: EXTENSION_ROOT_DIR });
         }
     }
-    test('Confirm we are able to attach to a running program', async () => {
+    test('Confirm we are able to attach to a running program', async function () {
+        this.timeout(20000);
         // Lets skip this test on AppVeyor (very flaky on AppVeyor).
         if (IS_APPVEYOR) {
             return;
