@@ -24,7 +24,6 @@ import { createDeferred, Deferred, isNotInstalledError } from '../common/helpers
 import { ICurrentProcess } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from './Common/Contracts';
-import { DebugClient } from './DebugClients/DebugClient';
 import { CreateAttachDebugClient, CreateLaunchDebugClient } from './DebugClients/DebugFactory';
 import { BaseDebugServer } from './DebugServers/BaseDebugServer';
 import { initializeIoc } from './serviceRegistry';
@@ -44,7 +43,6 @@ const MIN_DEBUGGER_CONNECT_TIMEOUT = 5000;
  */
 export class PythonDebugger extends DebugSession {
     public debugServer?: BaseDebugServer;
-    public debugClient?: DebugClient<{}>;
     public client = createDeferred<Socket>();
     private supportsRunInTerminalRequest: boolean = false;
     constructor(private readonly serviceContainer: IServiceContainer) {
@@ -55,16 +53,7 @@ export class PythonDebugger extends DebugSession {
             this.debugServer.Stop();
             this.debugServer = undefined;
         }
-        if (this.debugClient) {
-            this.debugClient.Stop();
-            this.debugClient = undefined;
-        }
         super.shutdown();
-    }
-    public async createAttachDebugServer(attachRequest: DebugProtocol.AttachRequest) {
-        const launcher = CreateAttachDebugClient(attachRequest.arguments as AttachRequestArguments, this);
-        this.debugServer = launcher.CreateDebugServer(undefined, this.serviceContainer);
-        await this.debugServer!.Start();
     }
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
         const body = response.body!;
@@ -92,14 +81,24 @@ export class PythonDebugger extends DebugSession {
         this.sendResponse(response);
     }
     protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments): void {
-        // We will let PTVSD send the response
+        const launcher = CreateAttachDebugClient(args as AttachRequestArguments, this);
+        this.debugServer = launcher.CreateDebugServer(undefined, this.serviceContainer);
+        this.debugServer!.Start()
+            .then(() => this.sendResponse(response))
+            .catch(ex => {
+                logger.error('Attach failed');
+                logger.error(`${ex}, ${ex.name}, ${ex.message}, ${ex.stack}`);
+                const message = this.getUserFriendlyAttachErrorMessage(ex) || 'Attach Failed';
+                this.sendErrorResponse(response, { format: message, id: 1 }, undefined, undefined, ErrorDestination.User);
+            });
+
     }
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
         this.launchPTVSD(args)
             .then(() => this.waitForPTVSDToConnect(args))
             .then(() => this.sendResponse(response))
             .catch(ex => {
-                const message = this.getErrorUserFriendlyMessage(args, ex) || 'Debug Error';
+                const message = this.getUserFriendlyLaunchErrorMessage(args, ex) || 'Debug Error';
                 this.sendErrorResponse(response, { format: message, id: 1 }, undefined, undefined, ErrorDestination.User);
             });
     }
@@ -135,7 +134,7 @@ export class PythonDebugger extends DebugSession {
         const connectionTimeout = typeof (args as any).timeout === 'number' ? (args as any).timeout as number : DEBUGGER_CONNECT_TIMEOUT;
         return Math.max(connectionTimeout, MIN_DEBUGGER_CONNECT_TIMEOUT);
     }
-    private getErrorUserFriendlyMessage(launchArgs: LaunchRequestArguments, error: any): string | undefined {
+    private getUserFriendlyLaunchErrorMessage(launchArgs: LaunchRequestArguments, error: any): string | undefined {
         if (!error) {
             return;
         }
@@ -144,6 +143,16 @@ export class PythonDebugger extends DebugSession {
             return `Failed to launch the Python Process, please validate the path '${launchArgs.pythonPath}'`;
         } else {
             return errorMsg;
+        }
+    }
+    private getUserFriendlyAttachErrorMessage(error: any): string | undefined {
+        if (!error) {
+            return;
+        }
+        if (error.code === 'ECONNREFUSED' || error.errno === 'ECONNREFUSED') {
+            return `Failed to attach (${error.message})`;
+        } else {
+            return typeof error === 'string' ? error : ((error.message && error.message.length > 0) ? error.message : '');
         }
     }
 }
@@ -178,7 +187,7 @@ class DebugManager implements Disposable {
     private hasShutdown: boolean = false;
     private debugSession?: PythonDebugger;
     private ptvsdProcessId?: number;
-    private launchOrAttach?: 'launch'|'attach';
+    private launchOrAttach?: 'launch' | 'attach';
     private terminatedEventSent: boolean = false;
     private readonly initializeRequestDeferred: Deferred<DebugProtocol.InitializeRequest>;
     private get initializeRequest(): Promise<DebugProtocol.InitializeRequest> {
@@ -187,6 +196,11 @@ class DebugManager implements Disposable {
     private readonly launchRequestDeferred: Deferred<DebugProtocol.LaunchRequest>;
     private get launchRequest(): Promise<DebugProtocol.LaunchRequest> {
         return this.launchRequestDeferred.promise;
+    }
+
+    private readonly attachRequestDeferred: Deferred<DebugProtocol.AttachRequest>;
+    private get attachRequest(): Promise<DebugProtocol.AttachRequest> {
+        return this.attachRequestDeferred.promise;
     }
 
     private set loggingEnabled(value: boolean) {
@@ -216,6 +230,7 @@ class DebugManager implements Disposable {
 
         this.initializeRequestDeferred = createDeferred<DebugProtocol.InitializeRequest>();
         this.launchRequestDeferred = createDeferred<DebugProtocol.LaunchRequest>();
+        this.attachRequestDeferred = createDeferred<DebugProtocol.LaunchRequest>();
     }
     public dispose() {
         this.shutdown().ignoreErrors();
@@ -317,25 +332,8 @@ class DebugManager implements Disposable {
 
         this.outputProtocolParser.once('event_terminated', this.onEventTerminated);
         this.outputProtocolParser.once('response_disconnect', this.onResponseDisconnect);
-        this.outputProtocolParser.once('response_launch', this.connectVSCodeToPTVSDForLaunch);
-    }
-    /**
-     * Connect PTVSD socket to VS Code.
-     * @private
-     * @memberof DebugManager
-     */
-    private connectVSCodeToPTVSDForAttach = async (attachRequest: DebugProtocol.AttachRequest) => {
-        await this.debugSession!.createAttachDebugServer(attachRequest);
-
-        await this.connectVSCodeToPTVSD(attachRequest, 'attach');
-    }
-    /**
-     * Once PTVSD process has been started (done by DebugSession), we need to connect PTVSD socket to VS Code.
-     * @private
-     * @memberof DebugManager
-     */
-    private connectVSCodeToPTVSDForLaunch = async () => {
-        await this.connectVSCodeToPTVSD(await this.launchRequest, 'launch');
+        this.outputProtocolParser.once('response_launch', this.connectVSCodeToPTVSD);
+        this.outputProtocolParser.once('response_attach', this.connectVSCodeToPTVSD);
     }
     /**
      * Connect PTVSD socket to VS Code.
@@ -343,7 +341,11 @@ class DebugManager implements Disposable {
      * @private
      * @memberof DebugManager
      */
-    private connectVSCodeToPTVSD = async (attachOrLaunchRequest: DebugProtocol.AttachRequest | DebugProtocol.LaunchRequest, requestType: 'attach' | 'launch') => {
+    private connectVSCodeToPTVSD = async (response: DebugProtocol.AttachResponse | DebugProtocol.LaunchResponse) => {
+        if (!response || !response.success) {
+            return;
+        }
+        const attachOrLaunchRequest = await (this.launchOrAttach === 'attach' ? this.attachRequest : this.launchRequest);
         // By now we're connected to the client.
         this.ptvsdSocket = await this.debugSession!.debugServer!.client;
 
@@ -354,10 +356,10 @@ class DebugManager implements Disposable {
         const debugSoketProtocolParser = this.serviceContainer.get<IProtocolParser>(IProtocolParser);
         debugSoketProtocolParser.connect(this.ptvsdSocket);
         const initializedEventPromise = new Promise<DebugProtocol.InitializedEvent>(resolve => debugSoketProtocolParser.once('event_initialized', resolve));
-        const attachedOrLaunchedPromise = new Promise(resolve => debugSoketProtocolParser.once(`response_${requestType}`, resolve));
+        const attachedOrLaunchedPromise = new Promise<DebugProtocol.Response>(resolve => debugSoketProtocolParser.once(`response_${this.launchOrAttach}`, resolve));
 
         // Keep track of processid for killing it.
-        if (requestType === 'launch') {
+        if (this.launchOrAttach === 'launch') {
             debugSoketProtocolParser.once('event_process', (proc: DebugProtocol.ProcessEvent) => {
                 this.ptvsdProcessId = proc.body.systemProcessId;
             });
@@ -395,7 +397,7 @@ class DebugManager implements Disposable {
     private onRequestAttach = (request: DebugProtocol.AttachRequest) => {
         this.launchOrAttach = 'attach';
         this.loggingEnabled = (request.arguments as AttachRequestArguments).logToFile === true;
-        this.connectVSCodeToPTVSDForAttach(request).ignoreErrors();
+        this.attachRequestDeferred.resolve(request);
     }
     private onEventTerminated = async () => {
         logger.verbose('onEventTerminated');

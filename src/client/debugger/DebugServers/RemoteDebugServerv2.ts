@@ -31,10 +31,18 @@ export class RemoteDebugServerV2 extends BaseDebugServer {
                 (<any>options).host = this.args.host;
             }
             try {
+                let connected = false;
                 const socket = connect(options, () => {
+                    connected = true;
                     this.socket = socket;
                     this.clientSocket.resolve(socket);
                     resolve(options);
+                });
+                socket.on('error', ex => {
+                    if (connected) {
+                        return;
+                    }
+                    reject(ex);
                 });
             } catch (ex) {
                 reject(ex);
