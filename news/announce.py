@@ -88,8 +88,13 @@ def changelog_markdown(data):
 def git_rm(path):
     """Run git-rm on the path."""
     status = subprocess.run(['git', 'rm', os.fspath(path.resolve())],
-                            shell=True)
-    status.check_returncode()
+                            shell=True, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    try:
+        status.check_returncode()
+    except Exception:
+        print(status.stdout, file=sys.stderr)
+        raise
 
 
 def cleanup(data):
