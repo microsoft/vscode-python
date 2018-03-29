@@ -1,5 +1,12 @@
 # Changelog
 
+## 2018.3.1 (29 Mar 2018)
+
+### Fixes
+
+1. Fixes issue that causes linter to fail when file path contains spaces.
+([#1239](https://github.com/Microsoft/vscode-python/issues/1239))
+
 ## 2018.3.0 (28 Mar 2018)
 
 ### Enhancements
@@ -829,4 +836,3 @@ the following people who contributed code:
 
 ## Version 0.0.3
 * Added support for debugging using PDB
-

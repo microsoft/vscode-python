@@ -70,7 +70,7 @@ export class Pylint extends BaseLinter {
             '--msg-template=\'{line},{column},{category},{msg_id}:{msg}\'',
             '--reports=n',
             '--output-format=text',
-            uri.fsPath.fileToCommandArgument()
+            uri.fsPath
         ];
         const messages = await this.run(minArgs.concat(args), document, cancellation);
         messages.forEach(msg => {

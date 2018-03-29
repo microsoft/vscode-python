@@ -13,7 +13,7 @@ export class PyDocStyle extends BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        const messages = await this.run([document.uri.fsPath.fileToCommandArgument()], document, cancellation);
+        const messages = await this.run([document.uri.fsPath], document, cancellation);
         // All messages in pep8 are treated as warnings for now.
         messages.forEach(msg => {
             msg.severity = LintMessageSeverity.Warning;
