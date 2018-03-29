@@ -445,7 +445,9 @@ let testCounter = 0;
             const pauseLocation = { path: path.join(debugFilesPath, 'sample3WithEx.py'), line: 5 };
             await debugClient.assertStoppedLocation('exception', pauseLocation);
         });
-        test('Test multi-threaded debugging', async () => {
+        test('Test multi-threaded debugging', async function () {
+            this.timeout(20000);
+
             await Promise.all([
                 debugClient.configurationSequence(),
                 debugClient.launch(buildLauncArgs('multiThread.py', false)),
