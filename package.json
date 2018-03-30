@@ -1035,7 +1035,7 @@
                     },
                     {
                         "name": "Python Experimental: Attach",
-                        "type": "python",
+                        "type": "pythonExperimental",
                         "request": "pythonExperimental",
                         "localRoot": "${workspaceFolder}",
                         "remoteRoot": "${workspaceFolder}",
