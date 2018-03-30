@@ -41,6 +41,7 @@ let testCounter = 0;
             if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
                 this.skip();
             }
+            this.timeout(30000);
             await new Promise(resolve => setTimeout(resolve, 1000));
             debugClient = createDebugAdapter();
             debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
@@ -446,27 +447,34 @@ let testCounter = 0;
             await debugClient.assertStoppedLocation('exception', pauseLocation);
         });
         test('Test multi-threaded debugging', async () => {
+            console.log('step1');
             await Promise.all([
                 debugClient.configurationSequence(),
                 debugClient.launch(buildLauncArgs('multiThread.py', false)),
                 debugClient.waitForEvent('initialized')
             ]);
+            debugClient.addListener('output', output => {
+                console.log(JSON.stringify(output));
+            });
+            console.log('step2');
             const pythonFile = path.join(debugFilesPath, 'multiThread.py');
-            const breakpointLocation = { path: pythonFile, column: 1, line: 11 };
+            const breakpointLocation = { path: pythonFile, column: 1, line: 16 };
             await debugClient.setBreakpointsRequest({
                 lines: [breakpointLocation.line],
                 breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
                 source: { path: breakpointLocation.path }
             });
-
+            console.log('step3');
             // hit breakpoint.
             await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
-
+            console.log('step4');
             const threads = await debugClient.threadsRequest();
+            console.log('step5');
             expect(threads.body.threads).of.lengthOf(2, 'incorrect number of threads');
             for (const thread of threads.body.threads) {
                 expect(thread.id).to.be.lessThan(MAX_SIGNED_INT32 + 1, 'ThreadId is not an integer');
             }
+            console.log('step6');
         });
         test('Test stack frames', async () => {
             await Promise.all([
