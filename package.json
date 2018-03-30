@@ -874,6 +874,19 @@
                                 "Pyramid"
                             ]
                         }
+                    },
+                    {
+                        "label": "%python.snippet.launch.attach.label%",
+                        "description": "%python.snippet.launch.attach.description%",
+                        "body": {
+                            "name": "Attach (Remote Debug)",
+                            "type": "pythonExperimental",
+                            "request": "attach",
+                            "localRoot": "^\"\\${workspaceFolder}\"",
+                            "remoteRoot": "^\"\\${workspaceFolder}\"",
+                            "port": 3000,
+                            "host": "localhost"
+                        }
                     }
                 ],
                 "configurationAttributes": {
@@ -1019,6 +1032,15 @@
                         "request": "launch",
                         "program": "${file}",
                         "console": "integratedTerminal"
+                    },
+                    {
+                        "name": "Python Experimental: Attach",
+                        "type": "python",
+                        "request": "pythonExperimental",
+                        "localRoot": "${workspaceFolder}",
+                        "remoteRoot": "${workspaceFolder}",
+                        "port": 3000,
+                        "host": "localhost"
                     },
                     {
                         "name": "Python Experimental: Django",
