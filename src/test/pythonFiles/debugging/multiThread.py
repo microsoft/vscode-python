@@ -4,7 +4,7 @@ import time
 
 def bar():
     time.sleep(2)
-    print("abcdef")
+    print('bar')
 
 def foo(x):
     while True:
