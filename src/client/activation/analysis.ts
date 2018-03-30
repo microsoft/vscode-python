@@ -3,20 +3,21 @@
 
 import * as path from 'path';
 import { ExtensionContext, OutputChannel } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
+import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 import { IApplicationShell } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
+import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IProcessService, IPythonExecutionFactory } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { AnalysisEngineDownloader } from './downloader';
+import { PlatformData } from './platformData';
 import { IExtensionActivator } from './types';
 
 const PYTHON = 'python';
-const analysisEngineBinaryName = 'Microsoft.PythonTools.VsCode.dll';
 const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 const analysisEngineFolder = 'analysis';
@@ -30,6 +31,9 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly configuration: IConfigurationService;
     private readonly appShell: IApplicationShell;
     private readonly output: OutputChannel;
+    private readonly fs: IFileSystem;
+    private readonly sw = new StopWatch();
+    private readonly platformData: PlatformData;
     private languageClient: LanguageClient | undefined;
 
     constructor(private readonly services: IServiceContainer, pythonSettings: IPythonSettings) {
@@ -37,30 +41,17 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         this.configuration = this.services.get<IConfigurationService>(IConfigurationService);
         this.appShell = this.services.get<IApplicationShell>(IApplicationShell);
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.fs = this.services.get<IFileSystem>(IFileSystem);
+        this.platformData = new PlatformData(services.get<IPlatformService>(IPlatformService));
     }
 
     public async activate(context: ExtensionContext): Promise<boolean> {
-        const sw = new StopWatch();
-
         const clientOptions = await this.getAnalysisOptions(context);
         if (!clientOptions) {
             return false;
         }
-        this.output.appendLine(`Options determined: ${sw.elapsedTime} ms`);
-
-        if (!await this.tryStartLanguageServer(context, clientOptions, true)) {
-            const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
-            await downloader.downloadAnalysisEngine(context);
-            if (!await this.tryStartLanguageServer(context, clientOptions, false)) {
-                return false;
-            }
-        }
-
-        // tslint:disable-next-line:no-console
-        this.output.appendLine(`Language server started: ${sw.elapsedTime} ms`);
-        await this.languageClient!.onReady();
-        this.output.appendLine(`Language server ready: ${sw.elapsedTime} ms`);
-        return true;
+        this.output.appendLine(`Options determined: ${this.sw.elapsedTime} ms`);
+        return this.startLanguageServer(context, clientOptions);
     }
 
     public async deactivate(): Promise<void> {
@@ -69,27 +60,74 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         }
     }
 
-    private async tryStartLanguageServer(context: ExtensionContext, clientOptions: LanguageClientOptions, checkRuntime: boolean): Promise<boolean> {
+    private async startLanguageServer(context: ExtensionContext, clientOptions: LanguageClientOptions): Promise<boolean> {
+        // Determine if we are running MSIL/Universal via dotnet or self-contained app.
+        const mscorlib = path.join(context.extensionPath, analysisEngineFolder, 'mscorlib.dll');
+        let downloadPackage = false;
+
+        if (!await this.fs.fileExistsAsync(mscorlib)) {
+            // Depends on .NET Runtime or SDK
+            this.languageClient = this.createSimpleLanguageClient(context, clientOptions);
+            const e = await this.tryStartLanguageClient(context, this.languageClient);
+            if (!e) {
+                return true;
+            }
+            if (await this.isDotNetInstalled()) {
+                this.appShell.showErrorMessage(`.NET Runtime appears to be installed but the language server did not start. Error ${e}`);
+                return false;
+            }
+            // No .NET Runtime, no mscorlib - need to download self-contained package.
+            downloadPackage = true;
+        }
+
+        if (downloadPackage) {
+            const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
+            await downloader.downloadAnalysisEngine(context);
+        }
+
+        const serverModule = path.join(context.extensionPath, analysisEngineFolder, this.platformData.getEngineExecutableName());
+        // Now try to start self-contained app
+        this.languageClient = this.createSelfContainedLanguageClient(context, serverModule, clientOptions);
+        const error = await this.tryStartLanguageClient(context, this.languageClient);
+        if (!error) {
+            return true;
+        }
+        this.appShell.showErrorMessage(`Language server failed to start. Error ${error}`);
+        return false;
+    }
+
+    private async tryStartLanguageClient(context: ExtensionContext, lc: LanguageClient): Promise<Error> {
+        let disposable: Disposable | undefined;
+        try {
+            disposable = lc.start();
+            await lc.onReady();
+            this.output.appendLine(`Language server ready: ${this.sw.elapsedTime} ms`);
+            context.subscriptions.push(disposable);
+        } catch (ex) {
+            if (disposable) {
+                disposable.dispose();
+                return ex;
+            }
+        }
+    }
+
+    private createSimpleLanguageClient(context: ExtensionContext, clientOptions: LanguageClientOptions): LanguageClient {
         const commandOptions = { stdio: 'pipe' };
-        const serverModule = path.join(context.extensionPath, analysisEngineFolder, analysisEngineBinaryName);
+        const serverModule = path.join(context.extensionPath, analysisEngineFolder, this.platformData.getEngineDllName());
         const serverOptions: ServerOptions = {
             run: { command: dotNetCommand, args: [serverModule], options: commandOptions },
             debug: { command: dotNetCommand, args: [serverModule, '--debug'], options: commandOptions }
         };
+        return new LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
+    }
 
-        try {
-            // Create the language client and start the client.
-            this.languageClient = new LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
-            context.subscriptions.push(this.languageClient.start());
-            return true;
-        } catch (ex) {
-            if (checkRuntime && !await this.checkRuntime()) {
-                this.appShell.showErrorMessage(`.NET Runtime appears to be installed but the language server did not start. Error ${ex}`);
-            } else {
-                this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
-            }
-        }
-        return false;
+    private createSelfContainedLanguageClient(context: ExtensionContext, serverModule: string, clientOptions: LanguageClientOptions): LanguageClient {
+        const options = { stdio: 'pipe' };
+        const serverOptions: ServerOptions = {
+            run: { command: serverModule, rgs: [], options: options },
+            debug: { command: serverModule, args: ['--debug'], options }
+        };
+        return new LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
     }
 
     private async getAnalysisOptions(context: ExtensionContext): Promise<LanguageClientOptions | undefined> {
@@ -212,22 +250,21 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         return s.length > 0 && s[0] !== '[';
     }
 
-    private async checkRuntime(): Promise<boolean> {
-        if (!await this.isDotNetInstalled()) {
-            const appShell = this.services.get<IApplicationShell>(IApplicationShell);
-            if (await appShell.showErrorMessage('Python Tools require .NET Core Runtime. Would you like to install it now?', 'Yes', 'No') === 'Yes') {
-                appShell.openUrl('https://www.microsoft.com/net/download/core#/runtime');
-                appShell.showWarningMessage('Please restart VS Code after .NET Runtime installation is complete.');
-            }
-            return false;
-        }
-        return true;
-    }
+    // private async checkNetCoreRuntime(): Promise<boolean> {
+    //     if (!await this.isDotNetInstalled()) {
+    //         const appShell = this.services.get<IApplicationShell>(IApplicationShell);
+    //         if (await appShell.showErrorMessage('Python Tools require .NET Core Runtime. Would you like to install it now?', 'Yes', 'No') === 'Yes') {
+    //             appShell.openUrl('https://www.microsoft.com/net/download/core#/runtime');
+    //             appShell.showWarningMessage('Please restart VS Code after .NET Runtime installation is complete.');
+    //         }
+    //         return false;
+    //     }
+    //     return true;
+    // }
 
     private async isDotNetInstalled(): Promise<boolean> {
         const ps = this.services.get<IProcessService>(IProcessService);
         const result = await ps.exec('dotnet', ['--version']).catch(() => { return { stdout: '' }; });
         return result.stdout.trim().startsWith('2.');
     }
-
 }

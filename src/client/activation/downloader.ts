@@ -23,12 +23,13 @@ const downloadFileExtension = '.nupkg';
 
 export class AnalysisEngineDownloader {
     private readonly output: OutputChannel;
+    private readonly platform: IPlatformService;
     private readonly platformData: PlatformData;
 
     constructor(private readonly services: IServiceContainer, private engineFolder: string) {
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const platform = this.services.get<IPlatformService>(IPlatformService);
-        this.platformData = new PlatformData(platform);
+        this.platform = this.services.get<IPlatformService>(IPlatformService);
+        this.platformData = new PlatformData(this.platform);
     }
 
     public async downloadAnalysisEngine(context: ExtensionContext): Promise<void> {
@@ -100,6 +101,12 @@ export class AnalysisEngineDownloader {
             });
         await deferred.promise;
         this.output.append('done.');
+
+        // Set file to executable
+        if (!this.platform.isWindows) {
+            const executablePath = path.join(installFolder, this.platformData.getEngineExecutableName());
+            fs.chmodSync(executablePath, '0764'); // -rwxrw-r--
+        }
     }
 
     private handleError(message: string) {

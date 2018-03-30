@@ -24,6 +24,16 @@ export class PlatformData {
         throw new Error('Python Analysis Engine does not support 32-bit Linux.');
     }
 
+    public getEngineDllName(): string {
+        return 'Microsoft.PythonTools.VsCode.dll';
+    }
+
+    public getEngineExecutableName(): string {
+        return this.platform.isWindows
+            ? 'Microsoft.PythonTools.VsCode.exe'
+            : 'Microsoft.PythonTools.VsCode';
+    }
+
     public getExpectedHash(): string {
         if (this.platform.isWindows) {
             return this.platform.is64bit ? analysis_engine_win_x64_sha512 : analysis_engine_win_x86_sha512;
