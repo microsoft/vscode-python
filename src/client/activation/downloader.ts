@@ -61,9 +61,10 @@ export class AnalysisEngineDownloader {
             deferred.reject(err);
         });
 
+        const title = 'Downloading Python Analysis Engine... ';
         await window.withProgress({
             location: ProgressLocation.Window,
-            title: 'Downloading Python Analysis Engine... '
+            title
         }, (progress) => {
 
             requestProgress(request(uri))
@@ -73,7 +74,7 @@ export class AnalysisEngineDownloader {
                     const total = Math.round(state.size.total / 1024);
                     const percentage = Math.round(100 * state.percent);
                     progress.report({
-                        message: `${received} of ${total} KB (${percentage}%)`
+                        message: `${title}${received} of ${total} KB (${percentage}%)`
                     });
                 })
                 .on('error', (err) => {
