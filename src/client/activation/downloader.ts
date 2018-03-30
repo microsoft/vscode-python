@@ -36,6 +36,10 @@ export class AnalysisEngineDownloader {
         try {
             await this.verifyDownload(localTempFilePath);
             await this.unpackArchive(context.extensionPath, localTempFilePath);
+        } catch (err) {
+            this.output.appendLine('failed.');
+            this.output.appendLine(err);
+            throw new Error(err);
         } finally {
             fs.unlink(localTempFilePath, noop);
         }
@@ -54,7 +58,7 @@ export class AnalysisEngineDownloader {
             fileStream.close();
         }).on('error', (err) => {
             tempFile.cleanupCallback();
-            this.handleError(`Unable to download Python Analysis Engine. Error ${err}`);
+            deferred.reject(err);
         });
 
         await window.withProgress({
@@ -73,7 +77,6 @@ export class AnalysisEngineDownloader {
                     });
                 })
                 .on('error', (err) => {
-                    this.handleError(err);
                     deferred.reject(err);
                 })
                 .on('end', () => {
@@ -92,7 +95,7 @@ export class AnalysisEngineDownloader {
         this.output.append('Verifying download... ');
         const verifier = new HashVerifier();
         if (!await verifier.verifyHash(filePath, this.platformData.getExpectedHash())) {
-            this.handleError('Hash of the downloaded file does not match.');
+            throw new Error('Hash of the downloaded file does not match.');
         }
         this.output.append('valid.');
     }
@@ -110,15 +113,9 @@ export class AnalysisEngineDownloader {
                 deferred.resolve();
             })
             .on('error', (err) => {
-                this.handleError(`Unable to unpack downloaded file. Error ${err}.`);
+                deferred.reject(err);
             });
         await deferred.promise;
         this.output.appendLine('done.');
-    }
-
-    private handleError(message: string) {
-        this.output.appendLine('failed.');
-        this.output.appendLine(message);
-        throw new Error(message);
     }
 }
