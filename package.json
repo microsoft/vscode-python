@@ -1036,7 +1036,7 @@
                     {
                         "name": "Python Experimental: Attach",
                         "type": "pythonExperimental",
-                        "request": "pythonExperimental",
+                        "request": "attach",
                         "localRoot": "${workspaceFolder}",
                         "remoteRoot": "${workspaceFolder}",
                         "port": 3000,
