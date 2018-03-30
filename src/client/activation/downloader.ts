@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
-import { IncomingMessage } from 'http';
-import * as https from 'https';
 import * as path from 'path';
+import * as request from 'request';
+import * as requestProgress from 'request-progress';
 import * as unzip from 'unzip';
-import { ExtensionContext, OutputChannel } from 'vscode';
+import { ExtensionContext, OutputChannel, ProgressLocation, window } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { noop } from '../common/core.utils';
 import { createDeferred, createTemporaryFile } from '../common/helpers';
@@ -37,6 +37,10 @@ export class AnalysisEngineDownloader {
         try {
             await this.verifyDownload(localTempFilePath);
             await this.unpackArchive(context.extensionPath, localTempFilePath);
+        } catch (err) {
+            this.output.appendLine('failed.');
+            this.output.appendLine(err);
+            throw new Error(err);
         } finally {
             fs.unlink(localTempFilePath, noop);
         }
@@ -53,24 +57,37 @@ export class AnalysisEngineDownloader {
         const fileStream = fs.createWriteStream(tempFile.filePath);
         fileStream.on('finish', () => {
             fileStream.close();
-            deferred.resolve();
         }).on('error', (err) => {
             tempFile.cleanupCallback();
-            this.handleError(`Unable to download Python Analysis Engine. Error ${err}`);
+            deferred.reject(err);
         });
 
-        let firstResponse = true;
-        https.get(uri, (response) => {
-            this.checkHttpResponse(response);
-            if (firstResponse) {
-                this.reportDownloadSize(response);
-                firstResponse = false;
-            }
-            response.pipe(fileStream);
+        await window.withProgress({
+            location: ProgressLocation.Window,
+            title: 'Downloading Python Analysis Engine... '
+        }, (progress) => {
+
+            requestProgress(request(uri))
+                .on('progress', (state) => {
+                    // https://www.npmjs.com/package/request-progress
+                    const received = Math.round(state.size.transferred / 1024);
+                    const total = Math.round(state.size.total / 1024);
+                    const percentage = Math.round(100 * state.percent);
+                    progress.report({
+                        message: `${received} of ${total} KB (${percentage}%)`
+                    });
+                })
+                .on('error', (err) => {
+                    deferred.reject(err);
+                })
+                .on('end', () => {
+                    this.output.append('complete.');
+                    deferred.resolve();
+                })
+                .pipe(fileStream);
+            return deferred.promise;
         });
 
-        await deferred.promise;
-        this.output.append('complete.');
         return tempFile.filePath;
     }
 
@@ -79,7 +96,7 @@ export class AnalysisEngineDownloader {
         this.output.append('Verifying download... ');
         const verifier = new HashVerifier();
         if (!await verifier.verifyHash(filePath, this.platformData.getExpectedHash())) {
-            this.handleError('Hash of the downloaded file does not match.');
+            throw new Error('Hash of the downloaded file does not match.');
         }
         this.output.append('valid.');
     }
@@ -97,7 +114,7 @@ export class AnalysisEngineDownloader {
                 deferred.resolve();
             })
             .on('error', (err) => {
-                this.handleError(`Unable to unpack downloaded file. Error ${err}.`);
+                deferred.reject(err);
             });
         await deferred.promise;
         this.output.append('done.');
@@ -107,29 +124,5 @@ export class AnalysisEngineDownloader {
             const executablePath = path.join(installFolder, this.platformData.getEngineExecutableName());
             fs.chmodSync(executablePath, '0764'); // -rwxrw-r--
         }
-    }
-
-    private handleError(message: string) {
-        this.output.appendLine('failed.');
-        this.output.appendLine(message);
-        throw new Error(message);
-    }
-
-    private checkHttpResponse(response: IncomingMessage): boolean {
-        if (response.statusCode && response.statusCode !== 0 && response.statusCode !== 200) {
-            this.handleError(`HTTPS request failed: ${response.statusCode} : ${(response.statusMessage ? response.statusMessage : '')}`);
-            return false;
-        }
-        return true;
-    }
-
-    private reportDownloadSize(response: IncomingMessage): number {
-        if (response.rawHeaders.length >= 2 && response.rawHeaders[0] === 'Content-Length') {
-            const size = parseInt(response.rawHeaders[1], 10);
-            if (size > 0) {
-                this.output.append(` ${Math.round(size / 1024)} KB...`);
-            }
-        }
-        return 0;
     }
 }

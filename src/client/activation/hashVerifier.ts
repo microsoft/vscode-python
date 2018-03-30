@@ -17,7 +17,7 @@ export class HashVerifier {
                 deferred.resolve();
             })
             .on('error', (err) => {
-                throw new Error(`Unable to calculate file hash. Error ${err}`);
+                deferred.reject(`Unable to calculate file hash. Error ${err}`);
             });
 
         readStream.pipe(hash);
