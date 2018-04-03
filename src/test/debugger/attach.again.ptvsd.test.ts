@@ -49,7 +49,6 @@ suite('Attach Debugger - detach and again again - Experimental', () => {
         await sleep(1000);
         debugClient = createDebugAdapter();
         debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
-        debugClient.defaultTimeout = 1000000;
         await debugClient.start();
     }
     /**
@@ -74,6 +73,8 @@ suite('Attach Debugger - detach and again again - Experimental', () => {
         customEnv['PYTHONPATH'] = ptvsdPath;
         const pythonArgs = ['-m', 'ptvsd', '--server', '--port', `${port}`, '--file', fileToDebug.fileToCommandArgument()];
         procToKill = spawn('python', pythonArgs, { env: customEnv, cwd: path.dirname(fileToDebug) });
+        // wait for socket server to start.
+        await sleep(1000);
         return port;
     }
 

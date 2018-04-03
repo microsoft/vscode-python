@@ -4,6 +4,6 @@ import time
 time.sleep(5)
 for i in range(10000):
     time.sleep(0.5)
-    print(i)
+    pass
 
 print('bye')
