@@ -11,17 +11,18 @@ import { PythonLanguage } from '../../common/constants';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { DebuggerType, DebugOptions, LaunchRequestArguments } from '../Common/Contracts';
+import { AttachRequestArguments, DebuggerType, DebugOptions, LaunchRequestArguments } from '../Common/Contracts';
 
 // tslint:disable:no-invalid-template-strings
 
-export type PythonDebugConfiguration = DebugConfiguration & LaunchRequestArguments;
+export type PythonLaunchDebugConfiguration = DebugConfiguration & LaunchRequestArguments;
+export type PythonAttachDebugConfiguration = DebugConfiguration & AttachRequestArguments;
 
 @injectable()
 export abstract class BaseConfigurationProvider implements DebugConfigurationProvider {
     constructor(@unmanaged() public debugType: DebuggerType, protected serviceContainer: IServiceContainer) { }
     public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
-        const config = debugConfiguration as PythonDebugConfiguration;
+        const config = debugConfiguration as PythonLaunchDebugConfiguration;
         const numberOfSettings = Object.keys(config);
         const workspaceFolder = this.getWorkspaceFolder(folder, config);
 
@@ -35,10 +36,30 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
             config.env = {};
         }
 
-        this.provideDefaults(workspaceFolder, config);
+        if (config.request === 'attach') {
+            // tslint:disable-next-line:no-any
+            this.provideAttachDefaults(workspaceFolder, config as any as PythonAttachDebugConfiguration);
+        } else {
+            this.provideLaunchDefaults(workspaceFolder, config);
+        }
         return config;
     }
-    protected provideDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonDebugConfiguration): void {
+    protected provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonAttachDebugConfiguration): void {
+        if (!Array.isArray(debugConfiguration.debugOptions)) {
+            debugConfiguration.debugOptions = [];
+        }
+        // Always redirect output.
+        if (debugConfiguration.debugOptions.indexOf(DebugOptions.RedirectOutput) === -1) {
+            debugConfiguration.debugOptions.push(DebugOptions.RedirectOutput);
+        }
+        if (!debugConfiguration.host) {
+            debugConfiguration.host = 'localhost';
+        }
+        if (!debugConfiguration.localRoot && workspaceFolder) {
+            debugConfiguration.localRoot = workspaceFolder.fsPath;
+        }
+    }
+    protected provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration): void {
         this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
         if (typeof debugConfiguration.cwd !== 'string' && workspaceFolder) {
             debugConfiguration.cwd = workspaceFolder.fsPath;
@@ -75,7 +96,7 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
             }
         }
     }
-    private getWorkspaceFolder(folder: WorkspaceFolder | undefined, config: PythonDebugConfiguration): Uri | undefined {
+    private getWorkspaceFolder(folder: WorkspaceFolder | undefined, config: PythonLaunchDebugConfiguration): Uri | undefined {
         if (folder) {
             return folder.uri;
         }
@@ -94,14 +115,14 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
             }
         }
     }
-    private getProgram(config: PythonDebugConfiguration): string | undefined {
+    private getProgram(config: PythonLaunchDebugConfiguration): string | undefined {
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         const editor = documentManager.activeTextEditor;
         if (editor && editor.document.languageId === PythonLanguage.language) {
             return editor.document.fileName;
         }
     }
-    private resolveAndUpdatePythonPath(workspaceFolder: Uri | undefined, debugConfiguration: PythonDebugConfiguration): void {
+    private resolveAndUpdatePythonPath(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration): void {
         if (!debugConfiguration) {
             return;
         }
