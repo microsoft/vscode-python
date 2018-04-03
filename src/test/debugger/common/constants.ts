@@ -4,4 +4,4 @@
 'use strict';
 
 // Sometimes PTVSD can take a while for thread & other events to be reported.
-export const DEBUGGER_TIMEOUT = 10000;
+export const DEBUGGER_TIMEOUT = 20000;
