@@ -1,4 +1,5 @@
 **/*.map
+.appveyor.yml
 .editorconfig
 .eslintrc
 .gitattributes
