@@ -4,7 +4,7 @@
         "out": true, // set this to true to hide the "out" folder with the compiled JS files
         "**/*.pyc": true,
         "**/__pycache__": true,
-        "node_modules": false,
+        "node_modules": true,
         ".vscode-test": true,
         "**/.mypy_cache/**": true,
         "**/.ropeproject/**": true
