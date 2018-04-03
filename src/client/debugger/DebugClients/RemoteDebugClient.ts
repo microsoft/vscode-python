@@ -2,19 +2,25 @@ import { DebugSession } from 'vscode-debugadapter';
 import { AttachRequestArguments, IPythonProcess } from '../Common/Contracts';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { RemoteDebugServer } from '../DebugServers/RemoteDebugServer';
+import { RemoteDebugServerV2 } from '../DebugServers/RemoteDebugServerv2';
 import { DebugClient, DebugType } from './DebugClient';
 
 export class RemoteDebugClient extends DebugClient<AttachRequestArguments> {
-    private pythonProcess: IPythonProcess;
+    private pythonProcess?: IPythonProcess;
     private debugServer?: BaseDebugServer;
     // tslint:disable-next-line:no-any
-    constructor(args: any, debugSession: DebugSession) {
+    constructor(args: AttachRequestArguments, debugSession: DebugSession) {
         super(args, debugSession);
     }
 
     public CreateDebugServer(pythonProcess?: IPythonProcess): BaseDebugServer {
-        this.pythonProcess = pythonProcess!;
-        this.debugServer = new RemoteDebugServer(this.debugSession, this.pythonProcess!, this.args);
+        if (this.args.type === 'pythonExperimental') {
+            // tslint:disable-next-line:no-any
+            this.debugServer = new RemoteDebugServerV2(this.debugSession, undefined as any, this.args);
+        } else {
+            this.pythonProcess = pythonProcess!;
+            this.debugServer = new RemoteDebugServer(this.debugSession, this.pythonProcess!, this.args);
+        }
         return this.debugServer!;
     }
     public get DebugType(): DebugType {

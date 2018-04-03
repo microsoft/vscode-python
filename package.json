@@ -874,6 +874,19 @@
                                 "Pyramid"
                             ]
                         }
+                    },
+                    {
+                        "label": "Python Experimental: Attach",
+                        "description": "%python.snippet.launch.attach.description%",
+                        "body": {
+                            "name": "Attach (Remote Debug)",
+                            "type": "pythonExperimental",
+                            "request": "attach",
+                            "localRoot": "^\"\\${workspaceFolder}\"",
+                            "remoteRoot": "^\"\\${workspaceFolder}\"",
+                            "port": 3000,
+                            "host": "localhost"
+                        }
                     }
                 ],
                 "configurationAttributes": {
@@ -963,6 +976,53 @@
                                 "default": false
                             }
                         }
+                    },
+                    "attach": {
+                        "required": [
+                            "port",
+                            "remoteRoot"
+                        ],
+                        "properties": {
+                            "localRoot": {
+                                "type": "string",
+                                "description": "Local source root that corrresponds to the 'remoteRoot'.",
+                                "default": "${workspaceFolder}"
+                            },
+                            "remoteRoot": {
+                                "type": "string",
+                                "description": "The source root of the remote host.",
+                                "default": ""
+                            },
+                            "port": {
+                                "type": "number",
+                                "description": "Debug port to attach",
+                                "default": 0
+                            },
+                            "host": {
+                                "type": "string",
+                                "description": "IP Address of the of remote server (default is localhost or use 127.0.0.1).",
+                                "default": "localhost"
+                            },
+                            "debugOptions": {
+                                "type": "array",
+                                "description": "Advanced options, view read me for further details.",
+                                "items": {
+                                    "type": "string",
+                                    "enum": [
+                                        "RedirectOutput",
+                                        "DebugStdLib",
+                                        "Django",
+                                        "Jinja"
+                                    ]
+                                },
+                                "default": []
+                            },
+                            "logToFile": {
+                                "type": "boolean",
+                                "description": "Enable logging of debugger events to a log file.",
+                                "default": false
+                            }
+                        }
                     }
                 },
                 "initialConfigurations": [
@@ -972,6 +1032,15 @@
                         "request": "launch",
                         "program": "${file}",
                         "console": "integratedTerminal"
+                    },
+                    {
+                        "name": "Python Experimental: Attach",
+                        "type": "pythonExperimental",
+                        "request": "pythonExperimental",
+                        "localRoot": "${workspaceFolder}",
+                        "remoteRoot": "${workspaceFolder}",
+                        "port": 3000,
+                        "host": "localhost"
                     },
                     {
                         "name": "Python Experimental: Django",
