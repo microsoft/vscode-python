@@ -71,6 +71,7 @@ let testCounter = 0;
                 // tslint:disable-next-line:no-string-literal
                 env['PYTHONPATH'] = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd');
             }
+            // tslint:disable-next-line:no-unnecessary-local-variable
             const options: LaunchRequestArguments = {
                 program: path.join(debugFilesPath, pythonFile),
                 cwd: debugFilesPath,
@@ -83,11 +84,6 @@ let testCounter = 0;
                 logToFile: false,
                 type: debuggerType
             };
-
-            // Custom experimental debugger options (filled in by DebugConfigurationProvider).
-            if (debuggerType === 'pythonExperimental') {
-                (options as any).redirectOutput = true;
-            }
 
             return options;
         }
