@@ -10,3 +10,5 @@ pytest
 fabric
 numba
 rope
+django
+flask
