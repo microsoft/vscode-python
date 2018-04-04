@@ -14,7 +14,7 @@
         "coverage": true
     },
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
-    "tslint.enable": true,
+    "tslint.enable": true, // We will run our own linting in gulp (& git commit hooks), else tslint extension just complains about unmodified files
     "python.linting.enabled": false,
     "python.unitTest.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
