@@ -5,6 +5,8 @@ import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ExtensionContext, Uri } from 'vscode';
+import { IApplicationShell } from '../common/application/types';
+import '../common/extensions';
 import { createDeferred } from '../common/helpers';
 import { IPlatformService } from '../common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
@@ -19,6 +21,7 @@ export class InterpreterData {
     public readonly path: string,
     public readonly version: string,
     public readonly prefix: string,
+    public readonly searchPaths: string,
     public readonly hash: string
   ) { }
 }
@@ -53,6 +56,10 @@ export class InterpreterDataService {
       interpreterData = await this.getInterpreterDataFromPython(execService, interpreterPath);
       this.context.globalState.update(interpreterPath, interpreterData);
     }
+
+    // Make sure we verify that search paths did not change. This must be done
+    // completely async so we don't delay Python language server startup.
+    this.verifySearchPathsAsync(interpreterData.searchPaths, interpreterPath, execService);
     return interpreterData;
   }
 
@@ -75,7 +82,8 @@ export class InterpreterDataService {
     }
     const prefix = output[output.length - 1];
     const hash = await this.getInterpreterHash(interpreterPath);
-    return new InterpreterData(DataVersion, interpreterPath, `${majorMatches[1]}.${minorMatches[1]}`, prefix, hash);
+    const searchPaths = await this.getSearchPaths(execService);
+    return new InterpreterData(DataVersion, interpreterPath, `${majorMatches[1]}.${minorMatches[1]}`, prefix, searchPaths, hash);
   }
 
   private getInterpreterHash(interpreterPath: string): Promise<string> {
@@ -92,5 +100,46 @@ export class InterpreterDataService {
       }
     });
     return deferred.promise;
+  }
+
+  private async getSearchPaths(execService: IPythonExecutionService): Promise<string> {
+    const result = await execService.exec(['-c', 'import sys; print(sys.path);'], {});
+    if (!result.stdout) {
+      throw Error('Unable to determine Python interpreter search paths.');
+    }
+    // tslint:disable-next-line:no-unnecessary-local-variable
+    const paths = result.stdout.split(',')
+      .filter(p => this.isValidPath(p))
+      .map(p => this.pathCleanup(p));
+    return paths.join(';'); // PTVS uses ; on all platforms
+  }
+
+  private pathCleanup(s: string): string {
+    s = s.trim();
+    if (s[0] === '\'') {
+      s = s.substr(1);
+    }
+    if (s[s.length - 1] === ']') {
+      s = s.substr(0, s.length - 1);
+    }
+    if (s[s.length - 1] === '\'') {
+      s = s.substr(0, s.length - 1);
+    }
+    return s;
+  }
+
+  private isValidPath(s: string): boolean {
+    return s.length > 0 && s[0] !== '[';
+  }
+
+  private verifySearchPathsAsync(currentPaths: string, interpreterPath: string, execService: IPythonExecutionService): void {
+    this.getSearchPaths(execService)
+      .then(async paths => {
+        if (paths !== currentPaths) {
+          this.context.globalState.update(interpreterPath, undefined);
+          const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+          await appShell.showWarningMessage('Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly.');
+        }
+      }).ignoreErrors();
   }
 }

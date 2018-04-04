@@ -2,16 +2,14 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { ExtensionContext, OutputChannel, Uri } from 'vscode';
+import { ExtensionContext, OutputChannel } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 import { IApplicationShell } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import '../common/extensions';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IProcessService } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
-import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import { AnalysisEngineDownloader } from './downloader';
 import { InterpreterDataService } from './interpreterDataService';
@@ -146,7 +144,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         // tslint:disable-next-line:no-string-literal
         properties['DatabasePath'] = path.join(context.extensionPath, analysisEngineFolder);
 
-        let searchPaths = await this.getSearchPaths();
+        let searchPaths = interpreterData.searchPaths;
         const settings = this.configuration.getSettings();
         if (settings.autoComplete) {
             const extraPaths = settings.autoComplete.extraPaths;
@@ -183,24 +181,6 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                 }
             }
         };
-    }
-
-    private async getSearchPaths(resource?: Uri): Promise<string> {
-        const envProvider = this.services.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
-        const platform = this.services.get<IPlatformService>(IPlatformService);
-        const vars = await envProvider.getEnvironmentVariables(resource);
-        if (!vars) {
-            return '';
-        }
-        // tslint:disable-next-line:no-string-literal
-        const pythonPath = vars['PYTHONPATH'];
-        // tslint:disable-next-line:no-string-literal
-        let systemPath = vars[platform.isWindows ? 'PATH' : 'path'];
-        if (pythonPath && pythonPath.length > 0) {
-            // PTVS engine always uses ;
-            systemPath = `${systemPath};${pythonPath}`;
-        }
-        return systemPath;
     }
 
     private async isDotNetInstalled(): Promise<boolean> {
