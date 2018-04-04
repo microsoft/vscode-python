@@ -22,27 +22,27 @@ export type PythonAttachDebugConfiguration = DebugConfiguration & AttachRequestA
 export abstract class BaseConfigurationProvider implements DebugConfigurationProvider {
     constructor(@unmanaged() public debugType: DebuggerType, protected serviceContainer: IServiceContainer) { }
     public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
-        const config = debugConfiguration as PythonLaunchDebugConfiguration | PythonAttachDebugConfiguration;
-        const numberOfSettings = Object.keys(config);
         const workspaceFolder = this.getWorkspaceFolder(folder);
 
-        if ((config.noDebug === true && numberOfSettings.length === 1) || numberOfSettings.length === 0) {
-            const defaultProgram = this.getProgram();
-
-            config.name = 'Launch';
-            config.type = this.debugType;
-            config.request = 'launch';
-            config.program = defaultProgram ? defaultProgram : '';
-            config.env = {};
-        }
-
-        if (config.request === 'attach') {
-            // tslint:disable-next-line:no-any
-            this.provideAttachDefaults(workspaceFolder, config as PythonAttachDebugConfiguration);
+        if (debugConfiguration.request === 'attach') {
+            this.provideAttachDefaults(workspaceFolder, debugConfiguration as PythonAttachDebugConfiguration);
         } else {
-            this.provideLaunchDefaults(workspaceFolder, config as PythonLaunchDebugConfiguration);
+            const config = debugConfiguration as PythonLaunchDebugConfiguration;
+            const numberOfSettings = Object.keys(config);
+
+            if ((config.noDebug === true && numberOfSettings.length === 1) || numberOfSettings.length === 0) {
+                const defaultProgram = this.getProgram();
+
+                config.name = 'Launch';
+                config.type = this.debugType;
+                config.request = 'launch';
+                config.program = defaultProgram ? defaultProgram : '';
+                config.env = {};
+            }
+
+            this.provideLaunchDefaults(workspaceFolder, config);
         }
-        return config;
+        return debugConfiguration;
     }
     protected provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonAttachDebugConfiguration): void {
         if (!Array.isArray(debugConfiguration.debugOptions)) {
