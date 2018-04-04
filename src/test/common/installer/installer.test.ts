@@ -14,7 +14,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 use(chaiAsPromised);
 
 // tslint:disable-next-line:max-func-body-length
-suite('Module Installerx', () => {
+suite('Module Installer', () => {
     [undefined, Uri.file('resource')].forEach(resource => {
         EnumEx.getNamesAndValues<Product>(Product).forEach(product => {
             let disposables: Disposable[] = [];

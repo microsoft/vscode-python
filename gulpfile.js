@@ -78,6 +78,9 @@ gulp.task('compile', () => run({ mode: 'compile', skipFormatCheck: true, skipInd
 
 gulp.task('watch', ['hygiene-modified', 'hygiene-watch']);
 
+// Duplicate to allow duplicate task in tasks.json (one ith problem matching, and one without)
+gulp.task('watchProblems', ['hygiene-modified', 'hygiene-watch']);
+
 gulp.task('debugger-coverage', () => buildDebugAdapterCoverage());
 
 gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
@@ -149,16 +152,14 @@ function getTsProject(options) {
 }
 
 let configuration;
-let program;
-let linter;
 /**
  *
  * @param {hygieneOptions} options
  */
 function getLinter(options) {
     configuration = configuration ? configuration : tslint.Configuration.findConfiguration(null, '.');
-    program = program ? program : tslint.Linter.createProgram('./tsconfig.json');
-    linter = linter ? linter : new tslint.Linter({ formatter: 'json' }, program);
+    const program = tslint.Linter.createProgram('./tsconfig.json');
+    const linter = new tslint.Linter({ formatter: 'json' }, program);
     return { linter, configuration };
 }
 let compilationInProgress = false;
@@ -439,7 +440,7 @@ function getAddedFilesSync() {
     return out
         .split(/\r?\n/)
         .filter(l => !!l)
-        .filter(l => _.intersection(['A', '?'], l.substring(0, 2).trim().split()).length > 0)
+        .filter(l => _.intersection(['A', '?', 'U'], l.substring(0, 2).trim().split('')).length > 0)
         .map(l => path.join(__dirname, l.substring(2).trim()));
 }
 function getModifiedFilesSync() {
@@ -447,7 +448,7 @@ function getModifiedFilesSync() {
     return out
         .split(/\r?\n/)
         .filter(l => !!l)
-        .filter(l => _.intersection(['M', 'A', 'R', 'C'], l.substring(0, 2).trim().split()).length > 0)
+        .filter(l => _.intersection(['M', 'A', 'R', 'C', 'U', '?'], l.substring(0, 2).trim().split('')).length > 0)
         .map(l => path.join(__dirname, l.substring(2).trim()));
 }
 

@@ -9,8 +9,43 @@
     "tasks": [
         {
             "label": "Compile",
+            "type": "npm",
+            "script": "compile",
+            "isBackground": true,
+            "problemMatcher": [
+                "$tsc-watch",
+                {
+                    "base": "$tslint5",
+                    "fileLocation": "relative"
+                }
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Hygiene",
             "type": "gulp",
             "task": "watch",
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "dedicated"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            // Use this to run hygiene and display errors in problems window (very slow on Windows)
+            "label": "Hygiene (Problems Window)",
+            "type": "gulp",
+            "task": "watchProblems",
             "isBackground": true,
             "presentation": {
                 "echo": true,

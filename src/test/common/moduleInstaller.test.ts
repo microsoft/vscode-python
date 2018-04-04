@@ -210,6 +210,8 @@ suite('Module Installer', () => {
         mockTerminalService
             .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
             .returns((cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
+        // tslint:disable-next-line:no-any
+        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve({ type: InterpreterType.Unknown } as any));
         await pipInstaller.installModule(moduleName);
 
         expect(argsSent.join(' ')).equal(`-m pip install -U ${moduleName} --user`, 'Invalid command sent to terminal for installation.');
@@ -233,7 +235,6 @@ suite('Module Installer', () => {
         mockTerminalService
             .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
             .returns((cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
-
         await pipInstaller.installModule(moduleName);
 
         expect(argsSent.join(' ')).equal(`-m pip install -U ${moduleName}`, 'Invalid command sent to terminal for installation.');

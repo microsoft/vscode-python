@@ -28,7 +28,7 @@ export class Prospector extends BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        return this.run(['--absolute-paths', '--output-format=json', document.uri.fsPath.fileToCommandArgument()], document, cancellation);
+        return this.run(['--absolute-paths', '--output-format=json', document.uri.fsPath], document, cancellation);
     }
     protected async parseMessages(output: string, document: TextDocument, token: CancellationToken, regEx: string) {
         let parsedData: IProspectorResponse;

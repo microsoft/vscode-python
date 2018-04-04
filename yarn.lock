@@ -1826,7 +1826,7 @@ gulp-untar@^0.0.6:
     tar "^2.2.1"
     through2 "~2.0.3"
 
-gulp-util@^3.0.0, gulp-util@^3.0.7, gulp-util@~3.0.0, gulp-util@~3.0.7, gulp-util@~3.0.8:
+gulp-util@^3.0.0, gulp-util@^3.0.7, gulp-util@~3.0.8:
   version "3.0.8"
   resolved "https://registry.yarnpkg.com/gulp-util/-/gulp-util-3.0.8.tgz#0054e1e744502e27c04c187c3ecc505dd54bbb4f"
   dependencies:
@@ -3904,7 +3904,7 @@ ret@~0.1.10:
   version "0.1.15"
   resolved "https://registry.yarnpkg.com/ret/-/ret-0.1.15.tgz#b8a4825d5bdb1fc3f6f53c2bc33f81388681c7bc"
 
-retyped-diff-match-patch-tsd-ambient@^1.0.0-1:
+retyped-diff-match-patch-tsd-ambient@^1.0.0-0:
   version "1.0.0-1"
   resolved "https://registry.yarnpkg.com/retyped-diff-match-patch-tsd-ambient/-/retyped-diff-match-patch-tsd-ambient-1.0.0-1.tgz#26482bf4915c7ed9f8300bb5cbec48fd4ff5bc62"
 
@@ -4835,15 +4835,20 @@ vscode-debugadapter-testsupport@^1.27.0:
   dependencies:
     vscode-debugprotocol "1.27.0"
 
-vscode-debugadapter@^1.0.1:
-  version "1.27.0"
-  resolved "https://registry.yarnpkg.com/vscode-debugadapter/-/vscode-debugadapter-1.27.0.tgz#0688f7d03d7568efd653003ecdb402b7ba37231e"
+vscode-debugadapter@^1.28.0:
+  version "1.28.0"
+  resolved "https://registry.yarnpkg.com/vscode-debugadapter/-/vscode-debugadapter-1.28.0.tgz#ebd6653e3f41db324d9547595375571a8732e966"
   dependencies:
-    vscode-debugprotocol "1.27.0"
+    vscode-debugprotocol "1.28.0"
+    vscode-uri "1.0.1"
 
-vscode-debugprotocol@1.27.0, vscode-debugprotocol@^1.0.1:
+vscode-debugprotocol@1.27.0:
   version "1.27.0"
   resolved "https://registry.yarnpkg.com/vscode-debugprotocol/-/vscode-debugprotocol-1.27.0.tgz#735a43a3cc1235fe587c0ef93fe4e328def7b17c"
+
+vscode-debugprotocol@1.28.0, vscode-debugprotocol@^1.28.0:
+  version "1.28.0"
+  resolved "https://registry.yarnpkg.com/vscode-debugprotocol/-/vscode-debugprotocol-1.28.0.tgz#b9fb97c3fb2dadbec78e5c1619ff12bf741ce406"
 
 vscode-extension-telemetry@^0.0.14:
   version "0.0.14"
@@ -4878,6 +4883,10 @@ vscode-languageserver@^3.1.0:
   dependencies:
     vscode-languageserver-protocol "3.5.1"
     vscode-uri "^1.0.1"
+
+vscode-uri@1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/vscode-uri/-/vscode-uri-1.0.1.tgz#11a86befeac3c4aa3ec08623651a3c81a6d0bbc8"
 
 vscode-uri@^1.0.1:
   version "1.0.3"

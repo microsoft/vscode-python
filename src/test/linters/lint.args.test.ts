@@ -110,32 +110,32 @@ suite('Linting - Arguments', () => {
     [Uri.file(path.join('users', 'development path to', 'one.py')), Uri.file(path.join('users', 'development', 'one.py'))].forEach(fileUri => {
         test(`Flake8 (${fileUri.fsPath.indexOf(' ') > 0 ? 'with spaces' : 'without spaces'})`, async () => {
             const linter = new Flake8(outputChannel.object, serviceContainer);
-            const expectedArgs = ['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath.fileToCommandArgument()];
+            const expectedArgs = ['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath];
             await testLinter(linter, fileUri, expectedArgs);
         });
         test(`Pep8 (${fileUri.fsPath.indexOf(' ') > 0 ? 'with spaces' : 'without spaces'})`, async () => {
             const linter = new Pep8(outputChannel.object, serviceContainer);
-            const expectedArgs = ['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath.fileToCommandArgument()];
+            const expectedArgs = ['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath];
             await testLinter(linter, fileUri, expectedArgs);
         });
         test(`Prospector (${fileUri.fsPath.indexOf(' ') > 0 ? 'with spaces' : 'without spaces'})`, async () => {
             const linter = new Prospector(outputChannel.object, serviceContainer);
-            const expectedArgs = ['--absolute-paths', '--output-format=json', fileUri.fsPath.fileToCommandArgument()];
+            const expectedArgs = ['--absolute-paths', '--output-format=json', fileUri.fsPath];
             await testLinter(linter, fileUri, expectedArgs);
         });
         test(`Pylama (${fileUri.fsPath.indexOf(' ') > 0 ? 'with spaces' : 'without spaces'})`, async () => {
             const linter = new PyLama(outputChannel.object, serviceContainer);
-            const expectedArgs = ['--format=parsable', fileUri.fsPath.fileToCommandArgument()];
+            const expectedArgs = ['--format=parsable', fileUri.fsPath];
             await testLinter(linter, fileUri, expectedArgs);
         });
         test(`MyPy (${fileUri.fsPath.indexOf(' ') > 0 ? 'with spaces' : 'without spaces'})`, async () => {
             const linter = new MyPy(outputChannel.object, serviceContainer);
-            const expectedArgs = [fileUri.fsPath.fileToCommandArgument()];
+            const expectedArgs = [fileUri.fsPath];
             await testLinter(linter, fileUri, expectedArgs);
         });
         test(`Pydocstyle (${fileUri.fsPath.indexOf(' ') > 0 ? 'with spaces' : 'without spaces'})`, async () => {
             const linter = new PyDocStyle(outputChannel.object, serviceContainer);
-            const expectedArgs = [fileUri.fsPath.fileToCommandArgument()];
+            const expectedArgs = [fileUri.fsPath];
             await testLinter(linter, fileUri, expectedArgs);
         });
         test(`Pylint (${fileUri.fsPath.indexOf(' ') > 0 ? 'with spaces' : 'without spaces'})`, async () => {
@@ -144,7 +144,7 @@ suite('Linting - Arguments', () => {
 
             let invoked = false;
             (linter as any).run = (args, doc, token) => {
-                expect(args[args.length - 1]).to.equal(fileUri.fsPath.fileToCommandArgument());
+                expect(args[args.length - 1]).to.equal(fileUri.fsPath);
                 invoked = true;
                 return Promise.resolve([]);
             };

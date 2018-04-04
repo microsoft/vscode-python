@@ -29,7 +29,7 @@ You may see warnings that ```The engine "vscode" appears to be invalid.```, you 
 
 ### Incremental Build
 
-Run the `Compile` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
+Run the `Compile` and `Hygiene` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
 
 ### Errors and Warnings
 
@@ -113,25 +113,23 @@ To help actively track what stage issues are at, various labels are
 used. Which labels are expected to be set vary from when an issue is
 open to when an issue is closed.
 
-#### Open issues
-
 When an
 [issue is first opened](https://github.com/Microsoft/vscode-python/issues),
-it is triaged to contain at least three types of labels:
+it is triaged to contain at least two types of labels:
 
 1. `needs`
-1. `feature`
 1. `type`
 
-These labels cover what is blocking the issue from closing, what
-feature(s) of the extension are related to the issue, and what type of
-issue it is, respectively.
+These labels cover what is blocking the issue from closing and what kind of
+issue it is. We also add a `feature` label when appropriate for what the issue
+relates to.
 
 #### Closed issues
 
-When an
-[issue is closed](https://github.com/Microsoft/vscode-python/issues?q=is%3Aissue+is%3Aclosed),
-it should have an appropriate `closed-` label.
+When an issue is closed  by a pull request we add a
+[`validate fix`](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22+is%3Aclosed)
+label in order to request people help us test the fix to validate the issue was
+resolved successfully.
 
 ### Pull request workflow
 
@@ -151,8 +149,9 @@ it should have an appropriate `closed-` label.
 1. Make sure all status checks are green (e.g. CLA check, CI, etc.)
 1. Address any review comments
 1. [Maintainers only] Merge the pull request
-1. [Maintainers only] Update affected issues to be:
-   1. Closed (with an appropriate `closed-` label)
+1. [Maintainers only] Update affected issues:
+   1. Add the [`validate fix`](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22+is%3Aclosed)
+      label
    1. The issue(s) are attached to the current milestone
    1. Register OSS usage
    1. Email CELA about any 3rd-party usage changes

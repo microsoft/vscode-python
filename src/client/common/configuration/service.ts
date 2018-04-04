@@ -3,6 +3,7 @@
 
 import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from 'vscode';
 import { PythonSettings } from '../configSettings';
+import { IProcessService } from '../process/types';
 import { IConfigurationService, IPythonSettings } from '../types';
 
 export class ConfigurationService implements IConfigurationService {

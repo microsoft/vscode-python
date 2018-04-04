@@ -45,10 +45,10 @@ export interface ICondaService {
     isCondaAvailable(): Promise<boolean>;
     getCondaVersion(): Promise<string | undefined>;
     getCondaInfo(): Promise<CondaInfo | undefined>;
-    getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string, path: string }[]) | undefined>;
+    getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string; path: string }[]) | undefined>;
     getInterpreterPath(condaEnvironmentPath: string): string;
     isCondaEnvironment(interpreterPath: string): Promise<boolean>;
-    getCondaEnvironment(interpreterPath: string): Promise<{ name: string, path: string } | undefined>;
+    getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined>;
 }
 
 export enum InterpreterType {
