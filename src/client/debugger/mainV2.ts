@@ -230,7 +230,7 @@ class DebugManager implements Disposable {
 
         this.initializeRequestDeferred = createDeferred<DebugProtocol.InitializeRequest>();
         this.launchRequestDeferred = createDeferred<DebugProtocol.LaunchRequest>();
-        this.attachRequestDeferred = createDeferred<DebugProtocol.LaunchRequest>();
+        this.attachRequestDeferred = createDeferred<DebugProtocol.AttachRequest>();
     }
     public dispose() {
         this.shutdown().ignoreErrors();
