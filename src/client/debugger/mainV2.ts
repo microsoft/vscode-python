@@ -176,7 +176,7 @@ class DebugManager implements Disposable {
     private readonly debugSessionInputStream: PassThrough;
     // #endregion
     // #region Streams used to communicate with PTVSD.
-    private ptvsdSocket!: Socket;
+    private socket!: Socket;
     // #endregion
     private readonly inputProtocolParser: IProtocolParser;
     private readonly outputProtocolParser: IProtocolParser;
@@ -265,9 +265,9 @@ class DebugManager implements Disposable {
         this.hasShutdown = true;
         logger.verbose('shutdown');
 
-        if (this.ptvsdSocket) {
-            this.throughInputStream.unpipe(this.ptvsdSocket);
-            this.ptvsdSocket.unpipe(this.throughOutputStream);
+        if (this.socket) {
+            this.throughInputStream.unpipe(this.socket);
+            this.socket.unpipe(this.throughOutputStream);
         }
 
         if (!this.terminatedEventSent) {
@@ -345,17 +345,17 @@ class DebugManager implements Disposable {
     private connectVSCodeToPTVSD = async (response: DebugProtocol.AttachResponse | DebugProtocol.LaunchResponse) => {
         const attachOrLaunchRequest = await (this.launchOrAttach === 'attach' ? this.attachRequest : this.launchRequest);
         // By now we're connected to the client.
-        this.ptvsdSocket = await this.debugSession!.debugServer!.client;
+        this.socket = await this.debugSession!.debugServer!.client;
 
         // We need to handle both end and error, sometimes the socket will error out without ending (if debugee is killed).
         // Note, we need a handler for the error event, else nodejs complains when socket gets closed and there are no error handlers.
-        this.ptvsdSocket.on('end', this.shutdown);
-        this.ptvsdSocket.on('error', this.shutdown);
+        this.socket.on('end', this.shutdown);
+        this.socket.on('error', this.shutdown);
 
         // Keep track of processid for killing it.
         if (this.launchOrAttach === 'launch') {
             const debugSoketProtocolParser = this.serviceContainer.get<IProtocolParser>(IProtocolParser);
-            debugSoketProtocolParser.connect(this.ptvsdSocket);
+            debugSoketProtocolParser.connect(this.socket);
             debugSoketProtocolParser.once('event_process', (proc: DebugProtocol.ProcessEvent) => {
                 this.ptvsdProcessId = proc.body.systemProcessId;
             });
@@ -365,15 +365,15 @@ class DebugManager implements Disposable {
         (this.inputStream as any as NodeJS.ReadStream).unpipe<Writable>(this.debugSessionInputStream);
         this.debugSessionOutputStream.unpipe(this.outputStream);
 
-        this.inputStream.pipe(this.ptvsdSocket!);
-        this.ptvsdSocket!.pipe(this.throughOutputStream);
-        this.ptvsdSocket!.pipe(this.outputStream);
+        this.inputStream.pipe(this.socket!);
+        this.socket!.pipe(this.throughOutputStream);
+        this.socket!.pipe(this.outputStream);
 
         // Send the launch/attach request to PTVSD and wait for it to reply back.
-        this.sendMessage(attachOrLaunchRequest, this.ptvsdSocket);
+        this.sendMessage(attachOrLaunchRequest, this.socket);
 
         // Send the initialize request and wait for it to reply back with the initialized event
-        this.sendMessage(await this.initializeRequest, this.ptvsdSocket);
+        this.sendMessage(await this.initializeRequest, this.socket);
     }
     private onRequestInitialize = (request: DebugProtocol.InitializeRequest) => {
         this.initializeRequestDeferred.resolve(request);
