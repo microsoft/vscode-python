@@ -60,7 +60,7 @@ const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
 
 const PYTHON_LANGUAGE = 'python';
-const PYTHON: DocumentFilter = [
+const PYTHON: DocumentFilter[] = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE }
 ];
@@ -110,7 +110,7 @@ export async function activate(context: ExtensionContext) {
 
     // Enable indentAction
     // tslint:disable-next-line:no-non-null-assertion
-    languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
+    languages.setLanguageConfiguration(PYTHON_LANGUAGE!, {
         onEnterRules: [
             {
                 beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*/,
