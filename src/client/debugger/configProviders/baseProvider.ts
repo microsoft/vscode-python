@@ -24,10 +24,10 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
     public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
         const config = debugConfiguration as PythonLaunchDebugConfiguration | PythonAttachDebugConfiguration;
         const numberOfSettings = Object.keys(config);
-        const workspaceFolder = this.getWorkspaceFolder(folder, config as PythonLaunchDebugConfiguration);
+        const workspaceFolder = this.getWorkspaceFolder(folder);
 
         if ((config.noDebug === true && numberOfSettings.length === 1) || numberOfSettings.length === 0) {
-            const defaultProgram = this.getProgram(config as PythonLaunchDebugConfiguration);
+            const defaultProgram = this.getProgram();
 
             config.name = 'Launch';
             config.type = this.debugType;
@@ -96,11 +96,11 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
             }
         }
     }
-    private getWorkspaceFolder(folder: WorkspaceFolder | undefined, config: PythonLaunchDebugConfiguration): Uri | undefined {
+    private getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
         if (folder) {
             return folder.uri;
         }
-        const program = this.getProgram(config);
+        const program = this.getProgram();
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         if (!Array.isArray(workspaceService.workspaceFolders) || workspaceService.workspaceFolders.length === 0) {
             return program ? Uri.file(path.dirname(program)) : undefined;
@@ -115,7 +115,7 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
             }
         }
     }
-    private getProgram(config: PythonLaunchDebugConfiguration): string | undefined {
+    private getProgram(): string | undefined {
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         const editor = documentManager.activeTextEditor;
         if (editor && editor.document.languageId === PythonLanguage.language) {
