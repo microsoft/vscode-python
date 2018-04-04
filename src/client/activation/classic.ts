@@ -20,10 +20,8 @@ import { TEST_OUTPUT_CHANNEL } from '../unittests/common/constants';
 import * as tests from '../unittests/main';
 import { IExtensionActivator } from './types';
 
-const PYTHON: DocumentFilter = { language: 'python' };
-
 export class ClassicExtensionActivator implements IExtensionActivator {
-    constructor(private serviceManager: IServiceManager, private pythonSettings: IPythonSettings) {
+    constructor(private serviceManager: IServiceManager, private pythonSettings: IPythonSettings, private documentSelector: DocumentFilter[]) {
     }
 
     public async activate(context: ExtensionContext): Promise<boolean> {
@@ -35,20 +33,20 @@ export class ClassicExtensionActivator implements IExtensionActivator {
         context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
         context.subscriptions.push(jediFactory);
-        context.subscriptions.push(languages.registerRenameProvider(PYTHON, new PythonRenameProvider(this.serviceManager)));
+        context.subscriptions.push(languages.registerRenameProvider(this.documentSelector, new PythonRenameProvider(this.serviceManager)));
         const definitionProvider = new PythonDefinitionProvider(jediFactory);
 
-        context.subscriptions.push(languages.registerDefinitionProvider(PYTHON, definitionProvider));
-        context.subscriptions.push(languages.registerHoverProvider(PYTHON, new PythonHoverProvider(jediFactory)));
-        context.subscriptions.push(languages.registerReferenceProvider(PYTHON, new PythonReferenceProvider(jediFactory)));
-        context.subscriptions.push(languages.registerCompletionItemProvider(PYTHON, new PythonCompletionItemProvider(jediFactory, this.serviceManager), '.'));
-        context.subscriptions.push(languages.registerCodeLensProvider(PYTHON, this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)));
+        context.subscriptions.push(languages.registerDefinitionProvider(this.documentSelector, definitionProvider));
+        context.subscriptions.push(languages.registerHoverProvider(this.documentSelector, new PythonHoverProvider(jediFactory)));
+        context.subscriptions.push(languages.registerReferenceProvider(this.documentSelector, new PythonReferenceProvider(jediFactory)));
+        context.subscriptions.push(languages.registerCompletionItemProvider(this.documentSelector, new PythonCompletionItemProvider(jediFactory, this.serviceManager), '.'));
+        context.subscriptions.push(languages.registerCodeLensProvider(this.documentSelector, this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)));
 
         const symbolProvider = new PythonSymbolProvider(jediFactory);
-        context.subscriptions.push(languages.registerDocumentSymbolProvider(PYTHON, symbolProvider));
+        context.subscriptions.push(languages.registerDocumentSymbolProvider(this.documentSelector, symbolProvider));
 
         if (this.pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
-            context.subscriptions.push(languages.registerSignatureHelpProvider(PYTHON, new PythonSignatureProvider(jediFactory), '(', ','));
+            context.subscriptions.push(languages.registerSignatureHelpProvider(this.documentSelector, new PythonSignatureProvider(jediFactory), '(', ','));
         }
 
         const unitTestOutChannel = this.serviceManager.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);

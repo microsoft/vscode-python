@@ -58,7 +58,12 @@ import { WorkspaceSymbols } from './workspaceSymbols/main';
 
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
-const PYTHON: DocumentFilter = { language: 'python' };
+
+const PYTHON_LANGUAGE = 'python';
+const PYTHON: DocumentFilter = [
+    { scheme: 'file', language: PYTHON_LANGUAGE },
+    { scheme: 'untitled', language: PYTHON_LANGUAGE }
+];
 
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: ExtensionContext) {
@@ -77,7 +82,7 @@ export async function activate(context: ExtensionContext) {
 
     const activator: IExtensionActivator = IS_ANALYSIS_ENGINE_TEST || !pythonSettings.jediEnabled
         ? new AnalysisExtensionActivator(serviceManager, pythonSettings)
-        : new ClassicExtensionActivator(serviceManager, pythonSettings);
+        : new ClassicExtensionActivator(serviceManager, pythonSettings, PYTHON);
 
     await activator.activate(context);
 
@@ -105,7 +110,7 @@ export async function activate(context: ExtensionContext) {
 
     // Enable indentAction
     // tslint:disable-next-line:no-non-null-assertion
-    languages.setLanguageConfiguration(PYTHON.language!, {
+    languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
         onEnterRules: [
             {
                 beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*/,
