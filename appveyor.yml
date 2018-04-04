@@ -56,11 +56,11 @@ build: off
 test_script:
   - yarn run clean
   - yarn run vscode:prepublish
-  - if [%DEBUGGER_TEST%]==[true] (	+  - yarn run testDebugger --silent
-      yarn run testDebugger --silent)	+  - yarn run testSingleWorkspace --silent
-  - if [%SINGLE_WORKSPACE_TEST%]==[true] (	+  - yarn run testMultiWorkspace --silent
-      yarn run testSingleWorkspace --silent)	+  # - yarn run testAnalysisEngine --silent
-  - if [%MULTIROOT_WORKSPACE_TEST%]==[true] (	+
-      yarn run testMultiWorkspace --silent)	+
-  # - if [%ANALYSIS_TEST%]==[true] (	
+  - if [%DEBUGGER_TEST%]==[true] (
+      yarn run testDebugger --silent)
+  - if [%SINGLE_WORKSPACE_TEST%]==[true] (
+      yarn run testSingleWorkspace --silent)
+  - if [%MULTIROOT_WORKSPACE_TEST%]==[true] (
+      yarn run testMultiWorkspace --silent)
+  # - if [%ANALYSIS_TEST%]==[true] (
   #     yarn run testAnalysisEngine --silent)
