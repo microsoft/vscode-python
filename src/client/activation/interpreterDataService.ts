@@ -55,11 +55,11 @@ export class InterpreterDataService {
     if (interpreterChanged || !interpreterData) {
       interpreterData = await this.getInterpreterDataFromPython(execService, interpreterPath);
       this.context.globalState.update(interpreterPath, interpreterData);
+    } else {
+      // Make sure we verify that search paths did not change. This must be done
+      // completely async so we don't delay Python language server startup.
+      this.verifySearchPathsAsync(interpreterData.searchPaths, interpreterPath, execService);
     }
-
-    // Make sure we verify that search paths did not change. This must be done
-    // completely async so we don't delay Python language server startup.
-    this.verifySearchPathsAsync(interpreterData.searchPaths, interpreterPath, execService);
     return interpreterData;
   }
 
