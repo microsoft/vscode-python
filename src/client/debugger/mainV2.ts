@@ -81,7 +81,7 @@ export class PythonDebugger extends DebugSession {
         this.sendResponse(response);
     }
     protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments): void {
-        const launcher = CreateAttachDebugClient(args as AttachRequestArguments, this);
+        const launcher = CreateAttachDebugClient(args, this);
         this.debugServer = launcher.CreateDebugServer(undefined, this.serviceContainer);
         this.debugServer!.Start()
             .then(() => this.emit('debugger_attached'))
