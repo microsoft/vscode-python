@@ -447,7 +447,7 @@
                         }
                     },
                     {
-                        "label": "%python.snippet.launch.attach.label%",
+                        "label": "Python Experimental: Attach",
                         "description": "%python.snippet.launch.attach.description%",
                         "body": {
                             "name": "Attach (Remote Debug)",
@@ -1036,7 +1036,7 @@
                     {
                         "name": "Python Experimental: Attach",
                         "type": "pythonExperimental",
-                        "request": "pythonExperimental",
+                        "request": "attach",
                         "localRoot": "${workspaceFolder}",
                         "remoteRoot": "${workspaceFolder}",
                         "port": 3000,
