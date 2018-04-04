@@ -22,12 +22,12 @@ export type PythonAttachDebugConfiguration = DebugConfiguration & AttachRequestA
 export abstract class BaseConfigurationProvider implements DebugConfigurationProvider {
     constructor(@unmanaged() public debugType: DebuggerType, protected serviceContainer: IServiceContainer) { }
     public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
-        const config = debugConfiguration as PythonLaunchDebugConfiguration;
+        const config = debugConfiguration as PythonLaunchDebugConfiguration | PythonAttachDebugConfiguration;
         const numberOfSettings = Object.keys(config);
-        const workspaceFolder = this.getWorkspaceFolder(folder, config);
+        const workspaceFolder = this.getWorkspaceFolder(folder, config as PythonLaunchDebugConfiguration);
 
         if ((config.noDebug === true && numberOfSettings.length === 1) || numberOfSettings.length === 0) {
-            const defaultProgram = this.getProgram(config);
+            const defaultProgram = this.getProgram(config as PythonLaunchDebugConfiguration);
 
             config.name = 'Launch';
             config.type = this.debugType;
@@ -38,9 +38,9 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
 
         if (config.request === 'attach') {
             // tslint:disable-next-line:no-any
-            this.provideAttachDefaults(workspaceFolder, config as any as PythonAttachDebugConfiguration);
+            this.provideAttachDefaults(workspaceFolder, config as PythonAttachDebugConfiguration);
         } else {
-            this.provideLaunchDefaults(workspaceFolder, config);
+            this.provideLaunchDefaults(workspaceFolder, config as PythonLaunchDebugConfiguration);
         }
         return config;
     }

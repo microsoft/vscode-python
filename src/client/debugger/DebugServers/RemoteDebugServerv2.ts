@@ -3,12 +3,10 @@
 
 'use strict';
 
-// tslint:disable:quotemark ordered-imports no-any no-empty curly member-ordering one-line max-func-body-length no-var-self prefer-const cyclomatic-complexity prefer-template
-
-import { DebugSession } from "vscode-debugadapter";
-import { IPythonProcess, IDebugServer, AttachRequestArguments } from "../Common/Contracts";
-import { connect, Socket } from "net";
-import { BaseDebugServer } from "./BaseDebugServer";
+import { connect, Socket } from 'net';
+import { DebugSession } from 'vscode-debugadapter';
+import { AttachRequestArguments, IDebugServer, IPythonProcess } from '../Common/Contracts';
+import { BaseDebugServer } from './BaseDebugServer';
 
 export class RemoteDebugServerV2 extends BaseDebugServer {
     private args: AttachRequestArguments;
@@ -25,9 +23,10 @@ export class RemoteDebugServerV2 extends BaseDebugServer {
     }
     public Start(): Promise<IDebugServer> {
         return new Promise<IDebugServer>((resolve, reject) => {
-            let portNumber = this.args.port;
-            let options = { port: portNumber! };
-            if (typeof this.args.host === "string" && this.args.host.length > 0) {
+            const port = this.args.port!;
+            const options = { port };
+            if (typeof this.args.host === 'string' && this.args.host.length > 0) {
+                // tslint:disable-next-line:no-any
                 (<any>options).host = this.args.host;
             }
             try {
