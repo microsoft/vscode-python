@@ -95,13 +95,20 @@ export class LineFormatter {
                     }
                     break;
                 case Char.Period:
-                    this.builder.append('.');
-                    return;
                 case Char.At:
-                    this.builder.append('@');
+                case Char.ExclamationMark:
+                    this.builder.append(this.text[t.start]);
                     return;
                 default:
                     break;
+            }
+        }
+        // Do not append space if operator is preceded by '(' or ',' as in foo(**kwarg)
+        if (index > 0) {
+            const prev = this.tokens.getItemAt(index - 1);
+            if (this.isOpenBraceType(prev.type) || prev.type === TokenType.Comma) {
+                this.builder.append(this.text.substring(t.start, t.end));
+                return;
             }
         }
         this.builder.softAppendSpace();
