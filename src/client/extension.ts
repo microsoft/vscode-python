@@ -11,7 +11,6 @@ import {
     extensions, IndentAction, languages, Memento,
     OutputChannel, window
 } from 'vscode';
-import { IS_ANALYSIS_ENGINE_TEST } from '../test/constants';
 import { AnalysisExtensionActivator } from './activation/analysis';
 import { ClassicExtensionActivator } from './activation/classic';
 import { IExtensionActivator } from './activation/types';
@@ -75,7 +74,8 @@ export async function activate(context: ExtensionContext) {
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 
-    const activator: IExtensionActivator = IS_ANALYSIS_ENGINE_TEST || !pythonSettings.jediEnabled
+    const analysisEngineTest = process.env.VSC_PYTHON_ANALYSIS === '1';
+    const activator: IExtensionActivator = analysisEngineTest || !pythonSettings.jediEnabled
         ? new AnalysisExtensionActivator(serviceManager, pythonSettings)
         : new ClassicExtensionActivator(serviceManager, pythonSettings);
 
