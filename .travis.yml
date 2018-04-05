@@ -3,24 +3,24 @@ cache: pip
 
 matrix:
     include:
+        # - os: linux
+        #   python: "2.7"
+        #   env: DEBUGGER_TEST=true
+        # - os: linux
+        #   python: "2.7"
+        #   env: SINGLE_WORKSPACE_TEST=true
+        # - os: linux
+        #   python: "2.7"
+        #   env: MULTIROOT_WORKSPACE_TEST=true
         - os: linux
-          python: "2.7"
+          python: "3.6-dev"
           env: DEBUGGER_TEST=true
-        - os: linux
-          python: "2.7"
-          env: SINGLE_WORKSPACE_TEST=true
-        - os: linux
-          python: "2.7"
-          env: MULTIROOT_WORKSPACE_TEST=true
-        - os: linux
-          python: "3.6-dev"
-          env: DEBUGGER_TEST=true
-        - os: linux
-          python: "3.6-dev"
-          env: SINGLE_WORKSPACE_TEST=true
-        - os: linux
-          python: "3.6-dev"
-          env: MULTIROOT_WORKSPACE_TEST=true
+        # - os: linux
+        #   python: "3.6-dev"
+        #   env: SINGLE_WORKSPACE_TEST=true
+        # - os: linux
+        #   python: "3.6-dev"
+        #   env: MULTIROOT_WORKSPACE_TEST=true
 before_install: |
   if [ $TRAVIS_OS_NAME == "linux" ]; then
     export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
@@ -37,7 +37,7 @@ before_install: |
   export TRAVIS_PYTHON_PATH=`which python`
 install:
   - pip install --upgrade -r requirements.txt
-  - pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
+#   - pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
   - yarn
 
 script:

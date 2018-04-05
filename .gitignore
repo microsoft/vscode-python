@@ -13,7 +13,7 @@ npm-debug.log
 coverage/
 .vscode-test/**
 .venv
-pythonFiles/experimental/ptvsd/**
+pythonFiles/experimental/ptvsdx/**
 debug_coverage*/**
 analysis/**
 bin/**

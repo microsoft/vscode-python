@@ -1,0 +1,16 @@
+Metadata-Version: 1.1
+Name: ptvsd
+Version: 4.0.0a5
+Summary: Remote debugging server for Python support in Visual Studio and Visual Studio Code
+Home-page: https://aka.ms/ptvs
+Author: Microsoft Corporation
+Author-email: ptvshelp@microsoft.com
+License: MIT
+Description-Content-Type: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
