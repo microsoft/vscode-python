@@ -178,7 +178,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                     maxDocumentationLineLength: 0,
                     trimDocumentationText: false,
                     maxDocumentationTextLength: 0
-                }
+                },
+                asyncStartup: true
             }
         };
     }
