@@ -15,7 +15,7 @@ import { AnalysisExtensionActivator } from './activation/analysis';
 import { ClassicExtensionActivator } from './activation/classic';
 import { IExtensionActivator } from './activation/types';
 import { PythonSettings } from './common/configSettings';
-import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { isPythonAnalysisEngineTest, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { PythonInstaller } from './common/installer/pythonInstallation';
@@ -74,8 +74,7 @@ export async function activate(context: ExtensionContext) {
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 
-    const analysisEngineTest = process.env.VSC_PYTHON_ANALYSIS === '1';
-    const activator: IExtensionActivator = analysisEngineTest || !pythonSettings.jediEnabled
+    const activator: IExtensionActivator = isPythonAnalysisEngineTest() || !pythonSettings.jediEnabled
         ? new AnalysisExtensionActivator(serviceManager, pythonSettings)
         : new ClassicExtensionActivator(serviceManager, pythonSettings);
 

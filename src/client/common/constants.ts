@@ -69,5 +69,8 @@ export function isTestExecution(): boolean {
     // tslint:disable-next-line:interface-name no-string-literal
     return process.env['VSC_PYTHON_CI_TEST'] === '1';
 }
+export function isPythonAnalysisEngineTest(): boolean {
+    return process.env.VSC_PYTHON_ANALYSIS === '1';
+}
 
 export const EXTENSION_ROOT_DIR = path.join(__dirname, '..', '..', '..');
