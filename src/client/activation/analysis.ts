@@ -60,16 +60,17 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         if (!await this.fs.fileExistsAsync(mscorlib)) {
             // Depends on .NET Runtime or SDK
             this.languageClient = this.createSimpleLanguageClient(context, clientOptions);
-            const e = await this.tryStartLanguageClient(context, this.languageClient);
-            if (!e) {
+            try {
+                await this.tryStartLanguageClient(context, this.languageClient);
                 return true;
+            } catch (ex) {
+                if (await this.isDotNetInstalled()) {
+                    this.appShell.showErrorMessage(`.NET Runtime appears to be installed but the language server did not start. Error ${ex}`);
+                    return false;
+                }
+                // No .NET Runtime, no mscorlib - need to download self-contained package.
+                downloadPackage = true;
             }
-            if (await this.isDotNetInstalled()) {
-                this.appShell.showErrorMessage(`.NET Runtime appears to be installed but the language server did not start. Error ${e}`);
-                return false;
-            }
-            // No .NET Runtime, no mscorlib - need to download self-contained package.
-            downloadPackage = true;
         }
 
         if (downloadPackage) {
@@ -80,15 +81,16 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         const serverModule = path.join(context.extensionPath, analysisEngineFolder, this.platformData.getEngineExecutableName());
         // Now try to start self-contained app
         this.languageClient = this.createSelfContainedLanguageClient(context, serverModule, clientOptions);
-        const error = await this.tryStartLanguageClient(context, this.languageClient);
-        if (!error) {
+        try {
+            await this.tryStartLanguageClient(context, this.languageClient);
             return true;
+        } catch (ex) {
+            this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
+            return false;
         }
-        this.appShell.showErrorMessage(`Language server failed to start. Error ${error}`);
-        return false;
     }
 
-    private async tryStartLanguageClient(context: ExtensionContext, lc: LanguageClient): Promise<Error | undefined> {
+    private async tryStartLanguageClient(context: ExtensionContext, lc: LanguageClient): Promise<void> {
         let disposable: Disposable | undefined;
         try {
             disposable = lc.start();
@@ -98,7 +100,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         } catch (ex) {
             if (disposable) {
                 disposable.dispose();
-                return ex;
+                throw ex;
             }
         }
     }

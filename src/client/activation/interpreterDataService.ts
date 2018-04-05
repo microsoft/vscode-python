@@ -40,7 +40,8 @@ export class InterpreterDataService {
       return;
     }
 
-    let interpreterData = this.context.globalState.get(interpreterPath) as InterpreterData;
+    const cacheKey = `InterpreterData-${interpreterPath}`;
+    let interpreterData = this.context.globalState.get(cacheKey) as InterpreterData;
     let interpreterChanged = false;
     if (interpreterData) {
       // Check if interpreter executable changed
@@ -58,7 +59,7 @@ export class InterpreterDataService {
     } else {
       // Make sure we verify that search paths did not change. This must be done
       // completely async so we don't delay Python language server startup.
-      this.verifySearchPathsAsync(interpreterData.searchPaths, interpreterPath, execService);
+      this.verifySearchPaths(interpreterData.searchPaths, interpreterPath, execService);
     }
     return interpreterData;
   }
@@ -132,7 +133,7 @@ export class InterpreterDataService {
     return s.length > 0 && s[0] !== '[';
   }
 
-  private verifySearchPathsAsync(currentPaths: string, interpreterPath: string, execService: IPythonExecutionService): void {
+  private verifySearchPaths(currentPaths: string, interpreterPath: string, execService: IPythonExecutionService): void {
     this.getSearchPaths(execService)
       .then(async paths => {
         if (paths !== currentPaths) {
