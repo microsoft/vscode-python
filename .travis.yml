@@ -5,8 +5,22 @@ matrix:
     include:
         - os: linux
           python: "2.7"
+          env: DEBUGGER_TEST=true
+        - os: linux
+          python: "2.7"
+          env: SINGLE_WORKSPACE_TEST=true
+        - os: linux
+          python: "2.7"
+          env: MULTIROOT_WORKSPACE_TEST=true
         - os: linux
           python: "3.6-dev"
+          env: DEBUGGER_TEST=true
+        - os: linux
+          python: "3.6-dev"
+          env: SINGLE_WORKSPACE_TEST=true
+        - os: linux
+          python: "3.6-dev"
+          env: MULTIROOT_WORKSPACE_TEST=true
 before_install: |
   if [ $TRAVIS_OS_NAME == "linux" ]; then
     export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
@@ -30,7 +44,9 @@ script:
   - yarn run clean
   - yarn run vscode:prepublish
   - yarn run cover:enable
-  - yarn run testDebugger --silent
+  - if [ $DEBUGGER_TEST == "true" ]; then
+        yarn run testDebugger --silent;
+    fi
   - yarn run debugger-coverage
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
@@ -44,14 +60,18 @@ script:
   - yarn run clean
   - yarn run vscode:prepublish
   - yarn run cover:enable
-  - yarn run testSingleWorkspace --silent
+  - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then
+        yarn run testSingleWorkspace --silent;
+    fi
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
     fi
   - yarn run clean
   - yarn run vscode:prepublish
   - yarn run cover:enable
-  - yarn run testMultiWorkspace --silent
+  - if [ $MULTIROOT_WORKSPACE_TEST == "true" ]; then
+        yarn run testMultiWorkspace --silent;
+    fi
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
     fi

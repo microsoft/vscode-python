@@ -6,14 +6,13 @@ import { ExtensionContext, OutputChannel } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 import { IApplicationShell } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import '../common/extensions';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
-import { IProcessService, IPythonExecutionFactory } from '../common/process/types';
+import { IProcessService } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
-import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { AnalysisEngineDownloader } from './downloader';
+import { InterpreterDataService } from './interpreterDataService';
 import { PlatformData } from './platformData';
 import { IExtensionActivator } from './types';
 
@@ -22,12 +21,7 @@ const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 const analysisEngineFolder = 'analysis';
 
-class InterpreterData {
-    constructor(public readonly version: string, public readonly prefix: string) { }
-}
-
 export class AnalysisExtensionActivator implements IExtensionActivator {
-    private readonly executionFactory: IPythonExecutionFactory;
     private readonly configuration: IConfigurationService;
     private readonly appShell: IApplicationShell;
     private readonly output: OutputChannel;
@@ -37,7 +31,6 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private languageClient: LanguageClient | undefined;
 
     constructor(private readonly services: IServiceContainer, pythonSettings: IPythonSettings) {
-        this.executionFactory = this.services.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         this.configuration = this.services.get<IConfigurationService>(IConfigurationService);
         this.appShell = this.services.get<IApplicationShell>(IApplicationShell);
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
@@ -50,7 +43,6 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         if (!clientOptions) {
             return false;
         }
-        this.output.appendLine(`Options determined: ${this.sw.elapsedTime} ms`);
         return this.startLanguageServer(context, clientOptions);
     }
 
@@ -68,16 +60,17 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         if (!await this.fs.fileExistsAsync(mscorlib)) {
             // Depends on .NET Runtime or SDK
             this.languageClient = this.createSimpleLanguageClient(context, clientOptions);
-            const e = await this.tryStartLanguageClient(context, this.languageClient);
-            if (!e) {
+            try {
+                await this.tryStartLanguageClient(context, this.languageClient);
                 return true;
+            } catch (ex) {
+                if (await this.isDotNetInstalled()) {
+                    this.appShell.showErrorMessage(`.NET Runtime appears to be installed but the language server did not start. Error ${ex}`);
+                    return false;
+                }
+                // No .NET Runtime, no mscorlib - need to download self-contained package.
+                downloadPackage = true;
             }
-            if (await this.isDotNetInstalled()) {
-                this.appShell.showErrorMessage(`.NET Runtime appears to be installed but the language server did not start. Error ${e}`);
-                return false;
-            }
-            // No .NET Runtime, no mscorlib - need to download self-contained package.
-            downloadPackage = true;
         }
 
         if (downloadPackage) {
@@ -88,15 +81,16 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         const serverModule = path.join(context.extensionPath, analysisEngineFolder, this.platformData.getEngineExecutableName());
         // Now try to start self-contained app
         this.languageClient = this.createSelfContainedLanguageClient(context, serverModule, clientOptions);
-        const error = await this.tryStartLanguageClient(context, this.languageClient);
-        if (!error) {
+        try {
+            await this.tryStartLanguageClient(context, this.languageClient);
             return true;
+        } catch (ex) {
+            this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
+            return false;
         }
-        this.appShell.showErrorMessage(`Language server failed to start. Error ${error}`);
-        return false;
     }
 
-    private async tryStartLanguageClient(context: ExtensionContext, lc: LanguageClient): Promise<Error> {
+    private async tryStartLanguageClient(context: ExtensionContext, lc: LanguageClient): Promise<void> {
         let disposable: Disposable | undefined;
         try {
             disposable = lc.start();
@@ -106,7 +100,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         } catch (ex) {
             if (disposable) {
                 disposable.dispose();
-                return ex;
+                throw ex;
             }
         }
     }
@@ -135,45 +129,37 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         const properties = new Map<string, any>();
 
         // Microsoft Python code analysis engine needs full path to the interpreter
-        const interpreterService = this.services.get<IInterpreterService>(IInterpreterService);
-        const interpreter = await interpreterService.getActiveInterpreter();
-
-        if (interpreter) {
-            // tslint:disable-next-line:no-string-literal
-            properties['InterpreterPath'] = interpreter.path;
-            if (interpreter.displayName) {
-                // tslint:disable-next-line:no-string-literal
-                properties['Description'] = interpreter.displayName;
-            }
-            const interpreterData = await this.getInterpreterData();
-
-            // tslint:disable-next-line:no-string-literal
-            properties['Version'] = interpreterData.version;
-            // tslint:disable-next-line:no-string-literal
-            properties['PrefixPath'] = interpreterData.prefix;
-            // tslint:disable-next-line:no-string-literal
-            properties['DatabasePath'] = path.join(context.extensionPath, analysisEngineFolder);
-
-            let searchPaths = await this.getSearchPaths();
-            const settings = this.configuration.getSettings();
-            if (settings.autoComplete) {
-                const extraPaths = settings.autoComplete.extraPaths;
-                if (extraPaths && extraPaths.length > 0) {
-                    searchPaths = `${searchPaths};${extraPaths.join(';')}`;
-                }
-            }
-            // tslint:disable-next-line:no-string-literal
-            properties['SearchPaths'] = searchPaths;
-
-            if (isTestExecution()) {
-                // tslint:disable-next-line:no-string-literal
-                properties['TestEnvironment'] = true;
-            }
-        } else {
+        const interpreterDataService = new InterpreterDataService(context, this.services);
+        const interpreterData = await interpreterDataService.getInterpreterData();
+        if (!interpreterData) {
             const appShell = this.services.get<IApplicationShell>(IApplicationShell);
-            const pythonPath = this.configuration.getSettings().pythonPath;
-            appShell.showErrorMessage(`Interpreter ${pythonPath} does not exist.`);
+            appShell.showErrorMessage('Unable to determine path to Python interpreter.');
             return;
+        }
+
+        // tslint:disable-next-line:no-string-literal
+        properties['InterpreterPath'] = interpreterData.path;
+        // tslint:disable-next-line:no-string-literal
+        properties['Version'] = interpreterData.version;
+        // tslint:disable-next-line:no-string-literal
+        properties['PrefixPath'] = interpreterData.prefix;
+        // tslint:disable-next-line:no-string-literal
+        properties['DatabasePath'] = path.join(context.extensionPath, analysisEngineFolder);
+
+        let searchPaths = interpreterData.searchPaths;
+        const settings = this.configuration.getSettings();
+        if (settings.autoComplete) {
+            const extraPaths = settings.autoComplete.extraPaths;
+            if (extraPaths && extraPaths.length > 0) {
+                searchPaths = `${searchPaths};${extraPaths.join(';')}`;
+            }
+        }
+        // tslint:disable-next-line:no-string-literal
+        properties['SearchPaths'] = searchPaths;
+
+        if (isTestExecution()) {
+            // tslint:disable-next-line:no-string-literal
+            properties['TestEnvironment'] = true;
         }
 
         const selector: string[] = [PYTHON];
@@ -188,79 +174,17 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
             initializationOptions: {
                 interpreter: {
                     properties
-                }
+                },
+                displayOptions: {
+                    trimDocumentationLines: false,
+                    maxDocumentationLineLength: 0,
+                    trimDocumentationText: false,
+                    maxDocumentationTextLength: 0
+                },
+                asyncStartup: true
             }
         };
     }
-
-    private async getInterpreterData(): Promise<InterpreterData> {
-        // Not appropriate for multiroot workspaces.
-        // See https://github.com/Microsoft/vscode-python/issues/1149
-        const execService = await this.executionFactory.create();
-        const result = await execService.exec(['-c', 'import sys; print(sys.version_info); print(sys.prefix)'], {});
-        // 2.7.14 (v2.7.14:84471935ed, Sep 16 2017, 20:19:30) <<SOMETIMES NEW LINE HERE>>
-        // [MSC v.1500 32 bit (Intel)]
-        // C:\Python27
-        if (!result.stdout) {
-            throw Error('Unable to determine Python interpreter version and system prefix.');
-        }
-        const output = result.stdout.splitLines({ removeEmptyEntries: true, trim: true });
-        if (!output || output.length < 2) {
-            throw Error('Unable to parse version and and system prefix from the Python interpreter output.');
-        }
-        const majorMatches = output[0].match(/major=(\d*?),/);
-        const minorMatches = output[0].match(/minor=(\d*?),/);
-        if (!majorMatches || majorMatches.length < 2 || !minorMatches || minorMatches.length < 2) {
-            throw Error('Unable to parse interpreter version.');
-        }
-        const prefix = output[output.length - 1];
-        return new InterpreterData(`${majorMatches[1]}.${minorMatches[1]}`, prefix);
-    }
-
-    private async getSearchPaths(): Promise<string> {
-        // Not appropriate for multiroot workspaces.
-        // See https://github.com/Microsoft/vscode-python/issues/1149
-        const execService = await this.executionFactory.create();
-        const result = await execService.exec(['-c', 'import sys; print(sys.path);'], {});
-        if (!result.stdout) {
-            throw Error('Unable to determine Python interpreter search paths.');
-        }
-        // tslint:disable-next-line:no-unnecessary-local-variable
-        const paths = result.stdout.split(',')
-            .filter(p => this.isValidPath(p))
-            .map(p => this.pathCleanup(p));
-        return paths.join(';');
-    }
-
-    private pathCleanup(s: string): string {
-        s = s.trim();
-        if (s[0] === '\'') {
-            s = s.substr(1);
-        }
-        if (s[s.length - 1] === ']') {
-            s = s.substr(0, s.length - 1);
-        }
-        if (s[s.length - 1] === '\'') {
-            s = s.substr(0, s.length - 1);
-        }
-        return s;
-    }
-
-    private isValidPath(s: string): boolean {
-        return s.length > 0 && s[0] !== '[';
-    }
-
-    // private async checkNetCoreRuntime(): Promise<boolean> {
-    //     if (!await this.isDotNetInstalled()) {
-    //         const appShell = this.services.get<IApplicationShell>(IApplicationShell);
-    //         if (await appShell.showErrorMessage('Python Tools require .NET Core Runtime. Would you like to install it now?', 'Yes', 'No') === 'Yes') {
-    //             appShell.openUrl('https://www.microsoft.com/net/download/core#/runtime');
-    //             appShell.showWarningMessage('Please restart VS Code after .NET Runtime installation is complete.');
-    //         }
-    //         return false;
-    //     }
-    //     return true;
-    // }
 
     private async isDotNetInstalled(): Promise<boolean> {
         const ps = this.services.get<IProcessService>(IProcessService);

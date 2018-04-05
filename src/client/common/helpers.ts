@@ -29,9 +29,9 @@ export interface Deferred<T> {
 }
 
 class DeferredImpl<T> implements Deferred<T> {
-    private _resolve: (value?: T | PromiseLike<T>) => void;
+    private _resolve!: (value?: T | PromiseLike<T>) => void;
     // tslint:disable-next-line:no-any
-    private _reject: (reason?: any) => void;
+    private _reject!: (reason?: any) => void;
     private _resolved: boolean = false;
     private _rejected: boolean = false;
     private _promise: Promise<T>;
@@ -70,14 +70,14 @@ export function createDeferred<T>(scope: any = null): Deferred<T> {
     return new DeferredImpl<T>(scope);
 }
 
-export function createTemporaryFile(extension: string, temporaryDirectory?: string): Promise<{ filePath: string, cleanupCallback: Function }> {
+export function createTemporaryFile(extension: string, temporaryDirectory?: string): Promise<{ filePath: string; cleanupCallback: Function }> {
     // tslint:disable-next-line:no-any
     const options: any = { postfix: extension };
     if (temporaryDirectory) {
         options.dir = temporaryDirectory;
     }
 
-    return new Promise<{ filePath: string, cleanupCallback: Function }>((resolve, reject) => {
+    return new Promise<{ filePath: string; cleanupCallback: Function }>((resolve, reject) => {
         tmp.file(options, (err, tmpFile, fd, cleanupCallback) => {
             if (err) {
                 return reject(err);

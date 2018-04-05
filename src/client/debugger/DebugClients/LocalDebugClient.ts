@@ -2,12 +2,12 @@ import { ChildProcess, spawn } from 'child_process';
 import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { open } from '../../common/open';
 import { PathUtils } from '../../common/platform/pathUtils';
 import { CurrentProcess } from '../../common/process/currentProcess';
 import { EnvironmentVariablesService } from '../../common/variables/environment';
 import { IServiceContainer } from '../../ioc/types';
+import { PTVSD_PATH } from '../Common/constants';
 import { DebugOptions, IDebugServer, IPythonProcess, LaunchRequestArguments } from '../Common/Contracts';
 import { IS_WINDOWS } from '../Common/Utils';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
@@ -88,8 +88,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         const environmentVariables = await helper.getEnvironmentVariables(this.args);
         if (this.args.type === 'pythonExperimental') {
             // Import the PTVSD debugger, allowing users to use their own latest copies.
-            const experimentalPTVSDPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd');
-            environmentVariablesService.appendPythonPath(environmentVariables, experimentalPTVSDPath);
+            environmentVariablesService.appendPythonPath(environmentVariables, PTVSD_PATH);
         }
         // tslint:disable-next-line:max-func-body-length cyclomatic-complexity no-any
         return new Promise<any>((resolve, reject) => {

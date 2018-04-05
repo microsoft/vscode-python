@@ -11,34 +11,55 @@ import { PythonLanguage } from '../../common/constants';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { DebuggerType, DebugOptions, LaunchRequestArguments } from '../Common/Contracts';
+import { AttachRequestArguments, DebuggerType, DebugOptions, LaunchRequestArguments } from '../Common/Contracts';
 
 // tslint:disable:no-invalid-template-strings
 
-export type PythonDebugConfiguration = DebugConfiguration & LaunchRequestArguments;
+export type PythonLaunchDebugConfiguration = DebugConfiguration & LaunchRequestArguments;
+export type PythonAttachDebugConfiguration = DebugConfiguration & AttachRequestArguments;
 
 @injectable()
 export abstract class BaseConfigurationProvider implements DebugConfigurationProvider {
     constructor(@unmanaged() public debugType: DebuggerType, protected serviceContainer: IServiceContainer) { }
     public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
-        const config = debugConfiguration as PythonDebugConfiguration;
-        const numberOfSettings = Object.keys(config);
-        const workspaceFolder = this.getWorkspaceFolder(folder, config);
+        const workspaceFolder = this.getWorkspaceFolder(folder);
 
-        if ((config.noDebug === true && numberOfSettings.length === 1) || numberOfSettings.length === 0) {
-            const defaultProgram = this.getProgram(config);
+        if (debugConfiguration.request === 'attach') {
+            this.provideAttachDefaults(workspaceFolder, debugConfiguration as PythonAttachDebugConfiguration);
+        } else {
+            const config = debugConfiguration as PythonLaunchDebugConfiguration;
+            const numberOfSettings = Object.keys(config);
 
-            config.name = 'Launch';
-            config.type = this.debugType;
-            config.request = 'launch';
-            config.program = defaultProgram ? defaultProgram : '';
-            config.env = {};
+            if ((config.noDebug === true && numberOfSettings.length === 1) || numberOfSettings.length === 0) {
+                const defaultProgram = this.getProgram();
+
+                config.name = 'Launch';
+                config.type = this.debugType;
+                config.request = 'launch';
+                config.program = defaultProgram ? defaultProgram : '';
+                config.env = {};
+            }
+
+            this.provideLaunchDefaults(workspaceFolder, config);
         }
-
-        this.provideDefaults(workspaceFolder, config);
-        return config;
+        return debugConfiguration;
     }
-    protected provideDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonDebugConfiguration): void {
+    protected provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonAttachDebugConfiguration): void {
+        if (!Array.isArray(debugConfiguration.debugOptions)) {
+            debugConfiguration.debugOptions = [];
+        }
+        // Always redirect output.
+        if (debugConfiguration.debugOptions.indexOf(DebugOptions.RedirectOutput) === -1) {
+            debugConfiguration.debugOptions.push(DebugOptions.RedirectOutput);
+        }
+        if (!debugConfiguration.host) {
+            debugConfiguration.host = 'localhost';
+        }
+        if (!debugConfiguration.localRoot && workspaceFolder) {
+            debugConfiguration.localRoot = workspaceFolder.fsPath;
+        }
+    }
+    protected provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration): void {
         this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
         if (typeof debugConfiguration.cwd !== 'string' && workspaceFolder) {
             debugConfiguration.cwd = workspaceFolder.fsPath;
@@ -75,11 +96,11 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
             }
         }
     }
-    private getWorkspaceFolder(folder: WorkspaceFolder | undefined, config: PythonDebugConfiguration): Uri | undefined {
+    private getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
         if (folder) {
             return folder.uri;
         }
-        const program = this.getProgram(config);
+        const program = this.getProgram();
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         if (!Array.isArray(workspaceService.workspaceFolders) || workspaceService.workspaceFolders.length === 0) {
             return program ? Uri.file(path.dirname(program)) : undefined;
@@ -94,14 +115,14 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
             }
         }
     }
-    private getProgram(config: PythonDebugConfiguration): string | undefined {
+    private getProgram(): string | undefined {
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         const editor = documentManager.activeTextEditor;
         if (editor && editor.document.languageId === PythonLanguage.language) {
             return editor.document.fileName;
         }
     }
-    private resolveAndUpdatePythonPath(workspaceFolder: Uri | undefined, debugConfiguration: PythonDebugConfiguration): void {
+    private resolveAndUpdatePythonPath(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration): void {
         if (!debugConfiguration) {
             return;
         }
