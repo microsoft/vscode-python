@@ -85,10 +85,16 @@ export class Tokenizer implements ITokenizer {
         }
     }
 
+    // tslint:disable-next-line:cyclomatic-complexity
     private handleCharacter(): boolean {
+        // f-strings
+        const fString = this.cs.currentChar === Char.f && (this.cs.nextChar === Char.SingleQuote || this.cs.nextChar === Char.DoubleQuote);
+        if (fString) {
+            this.cs.moveNext();
+        }
         const quoteType = this.getQuoteType();
         if (quoteType !== QuoteType.None) {
-            this.handleString(quoteType);
+            this.handleString(quoteType, fString);
             return true;
         }
         if (this.cs.currentChar === Char.Hash) {
@@ -342,8 +348,8 @@ export class Tokenizer implements ITokenizer {
         return QuoteType.None;
     }
 
-    private handleString(quoteType: QuoteType): void {
-        const start = this.cs.position;
+    private handleString(quoteType: QuoteType, fString: boolean): void {
+        const start = fString ? this.cs.position - 1 : this.cs.position;
         if (quoteType === QuoteType.Single || quoteType === QuoteType.Double) {
             this.cs.moveNext();
             this.skipToSingleEndQuote(quoteType === QuoteType.Single

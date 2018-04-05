@@ -73,12 +73,16 @@ suite('Formatting - line formatter', () => {
         const actual = formatter.formatLine('foo(x,y= \"a\",');
         assert.equal(actual, 'foo(x, y=\"a\",');
     });
-   test('Equals in multiline arguments', () => {
+    test('Equals in multiline arguments', () => {
         const actual = formatter.formatLine('x = 1,y =-2)');
         assert.equal(actual, 'x=1, y=-2)');
     });
     test('Equals in multiline arguments starting comma', () => {
         const actual = formatter.formatLine(',x = 1,y =m)');
         assert.equal(actual, ', x=1, y=m)');
+    });
+    test('Operators without following space', () => {
+        const actual = formatter.formatLine('foo( *a, ** b, ! c)');
+        assert.equal(actual, 'foo(*a, **b, !c)');
     });
 });

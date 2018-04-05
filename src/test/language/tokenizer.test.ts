@@ -79,6 +79,43 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.getItemAt(0).type, TokenType.String);
         assert.equal(tokens.getItemAt(0).length, 12);
     });
+    test('Strings: single quoted f-string ', async () => {
+        const t = new Tokenizer();
+        // tslint:disable-next-line:quotemark
+        const tokens = t.tokenize("a+f'quoted'");
+        assert.equal(tokens.count, 3);
+        assert.equal(tokens.getItemAt(0).type, TokenType.Identifier);
+        assert.equal(tokens.getItemAt(1).type, TokenType.Operator);
+        assert.equal(tokens.getItemAt(2).type, TokenType.String);
+        assert.equal(tokens.getItemAt(2).length, 9);
+    });
+    test('Strings: double quoted f-string ', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('x(1,f"quoted")');
+        assert.equal(tokens.count, 6);
+        assert.equal(tokens.getItemAt(0).type, TokenType.Identifier);
+        assert.equal(tokens.getItemAt(1).type, TokenType.OpenBrace);
+        assert.equal(tokens.getItemAt(2).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(3).type, TokenType.Comma);
+        assert.equal(tokens.getItemAt(4).type, TokenType.String);
+        assert.equal(tokens.getItemAt(4).length, 9);
+        assert.equal(tokens.getItemAt(5).type, TokenType.CloseBrace);
+    });
+    test('Strings: single quoted multiline f-string ', async () => {
+        const t = new Tokenizer();
+        // tslint:disable-next-line:quotemark
+        const tokens = t.tokenize("f'''quoted'''");
+        assert.equal(tokens.count, 1);
+        assert.equal(tokens.getItemAt(0).type, TokenType.String);
+        assert.equal(tokens.getItemAt(0).length, 13);
+    });
+    test('Strings: double quoted multiline f-string ', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('f"""quoted """');
+        assert.equal(tokens.count, 1);
+        assert.equal(tokens.getItemAt(0).type, TokenType.String);
+        assert.equal(tokens.getItemAt(0).length, 14);
+    });
     test('Comments', async () => {
         const t = new Tokenizer();
         const tokens = t.tokenize(' #co"""mment1\n\t\n#comm\'ent2 ');
