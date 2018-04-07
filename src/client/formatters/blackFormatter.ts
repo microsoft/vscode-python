@@ -22,16 +22,17 @@ export class BlackFormatter extends BaseFormatter {
         const hasCustomArgs = Array.isArray(settings.formatting.blackArgs) && settings.formatting.blackArgs.length > 0;
         const formatSelection = false; // range ? !range.isEmpty : false;
 
-        const args = [];
+        const args = ['--diff'];
         // if (formatSelection) {
+        // black does not support partial formatting, throw an error?
         //     // tslint:disable-next-line:no-non-null-assertion
         //     args.push(...['--lines', `${range!.start.line + 1}-${range!.end.line + 1}`]);
         // }
         // Yapf starts looking for config file starting from the file path.
-        const fallbarFolder = this.getWorkspaceUri(document).fsPath;
-        const cwd = this.getDocumentPath(document, fallbarFolder);
+        const fallbackFolder = this.getWorkspaceUri(document).fsPath;
+        const cwd = this.getDocumentPath(document, fallbackFolder);
         const promise = super.provideDocumentFormattingEdits(document, options, token, args, cwd);
-        sendTelemetryWhenDone(FORMAT, promise, stopWatch, { tool: 'black', hasCustomArgs, formatSelection });
+        //sendTelemetryWhenDone(FORMAT, promise, stopWatch, { tool: 'black', hasCustomArgs, formatSelection });
         return promise;
     }
 }
