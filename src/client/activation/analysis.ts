@@ -3,9 +3,11 @@
 
 import * as path from 'path';
 import { ExtensionContext, OutputChannel } from 'vscode';
-import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
+import { Message } from 'vscode-jsonrpc';
+import { CloseAction, Disposable, ErrorAction, ErrorHandler, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 import { IApplicationShell } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IProcessService } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
@@ -20,6 +22,18 @@ const PYTHON = 'python';
 const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 const analysisEngineFolder = 'analysis';
+
+class LanguageServerStartupErrorHandler implements ErrorHandler {
+    constructor(private readonly deferred: Deferred<void>) { }
+    public error(error: Error, message: Message, count: number): ErrorAction {
+        this.deferred.reject();
+        return ErrorAction.Shutdown;
+    }
+    public closed(): CloseAction {
+        this.deferred.reject();
+        return CloseAction.DoNotRestart;
+    }
+}
 
 export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly configuration: IConfigurationService;
@@ -92,16 +106,23 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
 
     private async tryStartLanguageClient(context: ExtensionContext, lc: LanguageClient): Promise<void> {
         let disposable: Disposable | undefined;
+        const deferred = createDeferred<void>();
         try {
+            lc.clientOptions.errorHandler = new LanguageServerStartupErrorHandler(deferred);
+
             disposable = lc.start();
-            await lc.onReady();
+            lc.onReady()
+                .then(() => deferred.resolve())
+                .catch(ex => deferred.reject());
+            await deferred.promise;
+
             this.output.appendLine(`Language server ready: ${this.sw.elapsedTime} ms`);
             context.subscriptions.push(disposable);
         } catch (ex) {
             if (disposable) {
                 disposable.dispose();
-                throw ex;
             }
+            throw ex;
         }
     }
 
@@ -157,12 +178,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         // tslint:disable-next-line:no-string-literal
         properties['SearchPaths'] = searchPaths;
 
-        if (isTestExecution()) {
-            // tslint:disable-next-line:no-string-literal
-            properties['TestEnvironment'] = true;
-        }
-
         const selector: string[] = [PYTHON];
+
         // Options to control the language client
         return {
             // Register the server for Python documents
@@ -181,7 +198,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                     trimDocumentationText: false,
                     maxDocumentationTextLength: 0
                 },
-                asyncStartup: true
+                asyncStartup: true,
+                testEnvironment: isTestExecution()
             }
         };
     }
