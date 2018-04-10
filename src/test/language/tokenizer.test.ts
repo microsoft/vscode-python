@@ -116,6 +116,23 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.getItemAt(0).type, TokenType.String);
         assert.equal(tokens.getItemAt(0).length, 14);
     });
+    test('Strings: escape at the end of single quoted string ', async () => {
+        const t = new Tokenizer();
+        // tslint:disable-next-line:quotemark
+        const tokens = t.tokenize("'quoted\\'\nx");
+        assert.equal(tokens.count, 2);
+        assert.equal(tokens.getItemAt(0).type, TokenType.String);
+        assert.equal(tokens.getItemAt(0).length, 9);
+        assert.equal(tokens.getItemAt(1).type, TokenType.Identifier);
+    });
+    test('Strings: escape at the end of double quoted string ', async () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('"quoted\\"\nx');
+        assert.equal(tokens.count, 2);
+        assert.equal(tokens.getItemAt(0).type, TokenType.String);
+        assert.equal(tokens.getItemAt(0).length, 9);
+        assert.equal(tokens.getItemAt(1).type, TokenType.Identifier);
+    });
     test('Comments', async () => {
         const t = new Tokenizer();
         const tokens = t.tokenize(' #co"""mment1\n\t\n#comm\'ent2 ');

@@ -366,6 +366,9 @@ export class Tokenizer implements ITokenizer {
 
     private skipToSingleEndQuote(quote: number): void {
         while (!this.cs.isEndOfStream()) {
+            if (this.cs.currentChar === Char.LineFeed || this.cs.currentChar === Char.CarriageReturn) {
+                return; // Unterminated single-line string
+            }
             if (this.cs.currentChar === Char.Backslash && this.cs.nextChar === quote) {
                 this.cs.advance(2);
                 continue;
