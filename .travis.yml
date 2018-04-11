@@ -38,7 +38,7 @@ before_install: |
 install:
   - python -m pip install --upgrade -r requirements.txt
   - python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
-  - yarn
+  - yarn --frozen-lockfile
 
 script:
   - yarn run clean
