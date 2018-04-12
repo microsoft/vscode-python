@@ -13,6 +13,13 @@ import { IProcessService } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import {
+    PYTHON_ANALYSIS_ENGINE_DOWNLOADED,
+    PYTHON_ANALYSIS_ENGINE_ENABLED,
+    PYTHON_ANALYSIS_ENGINE_ERROR,
+    PYTHON_ANALYSIS_ENGINE_STARTUP
+} from '../telemetry/constants';
+import { getTelemetryReporter } from '../telemetry/telemetry';
 import { AnalysisEngineDownloader } from './downloader';
 import { InterpreterDataService } from './interpreterDataService';
 import { PlatformData } from './platformData';
@@ -26,7 +33,7 @@ const analysisEngineFolder = 'analysis';
 class LanguageServerStartupErrorHandler implements ErrorHandler {
     constructor(private readonly deferred: Deferred<void>) { }
     public error(error: Error, message: Message, count: number): ErrorAction {
-        this.deferred.reject();
+        this.deferred.reject(error);
         return ErrorAction.Shutdown;
     }
     public closed(): CloseAction {
@@ -71,6 +78,9 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         const mscorlib = path.join(context.extensionPath, analysisEngineFolder, 'mscorlib.dll');
         let downloadPackage = false;
 
+        const reporter = getTelemetryReporter();
+        reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ENABLED);
+
         if (!await this.fs.fileExistsAsync(mscorlib)) {
             // Depends on .NET Runtime or SDK
             this.languageClient = this.createSimpleLanguageClient(context, clientOptions);
@@ -80,6 +90,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
             } catch (ex) {
                 if (await this.isDotNetInstalled()) {
                     this.appShell.showErrorMessage(`.NET Runtime appears to be installed but the language server did not start. Error ${ex}`);
+                    reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ERROR, { error: 'Failed to start (MSIL)' });
                     return false;
                 }
                 // No .NET Runtime, no mscorlib - need to download self-contained package.
@@ -90,6 +101,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         if (downloadPackage) {
             const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
             await downloader.downloadAnalysisEngine(context);
+            reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_DOWNLOADED);
         }
 
         const serverModule = path.join(context.extensionPath, analysisEngineFolder, this.platformData.getEngineExecutableName());
@@ -100,6 +112,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
             return true;
         } catch (ex) {
             this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
+            reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ERROR, { error: 'Failed to start (platform)' });
             return false;
         }
     }
@@ -108,6 +121,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         let disposable: Disposable | undefined;
         const deferred = createDeferred<void>();
         try {
+            const sw = new StopWatch();
             lc.clientOptions.errorHandler = new LanguageServerStartupErrorHandler(deferred);
 
             disposable = lc.start();
@@ -118,6 +132,9 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
 
             this.output.appendLine(`Language server ready: ${this.sw.elapsedTime} ms`);
             context.subscriptions.push(disposable);
+
+            const reporter = getTelemetryReporter();
+            reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_STARTUP, {}, { startup_time: sw.elapsedTime });
         } catch (ex) {
             if (disposable) {
                 disposable.dispose();
