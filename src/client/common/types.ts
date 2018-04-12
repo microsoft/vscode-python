@@ -62,7 +62,8 @@ export enum Product {
     unittest = 12,
     ctags = 13,
     rope = 14,
-    isort = 15
+    isort = 15,
+    black = 16
 }
 
 export enum ModuleNamePurpose {
@@ -193,6 +194,8 @@ export interface IFormattingSettings {
     readonly autopep8Args: string[];
     yapfPath: string;
     readonly yapfArgs: string[];
+    blackPath: string;
+    readonly blackArgs: string[];
 }
 export interface IAutoCompeteSettings {
     readonly addBrackets: boolean;

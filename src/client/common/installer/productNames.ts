@@ -16,4 +16,5 @@ ProductNames.set(Product.pydocstyle, 'pydocstyle');
 ProductNames.set(Product.pylint, 'pylint');
 ProductNames.set(Product.pytest, 'pytest');
 ProductNames.set(Product.yapf, 'yapf');
+ProductNames.set(Product.black, 'black');
 ProductNames.set(Product.rope, 'rope');

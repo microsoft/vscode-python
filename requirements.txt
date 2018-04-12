@@ -3,6 +3,7 @@
 flake8
 autopep8
 yapf
+black
 pylint
 pep8
 prospector

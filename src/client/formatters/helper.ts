@@ -16,6 +16,7 @@ export class FormatterHelper implements IFormatterHelper {
         switch (formatter) {
             case Product.autopep8: return 'autopep8';
             case Product.yapf: return 'yapf';
+            case Product.black: return 'black';
             default: {
                 throw new Error(`Unrecognized Formatter '${formatter}'`);
             }

@@ -128,6 +128,7 @@ class FormatterInstaller extends BaseInstaller {
         const productName = ProductNames.get(product)!;
 
         const installThis = `Install ${productName}`;
+        // TODO(Josh): Wat
         const alternateFormatter = product === Product.autopep8 ? 'yapf' : 'autopep8';
         const useOtherFormatter = `Use '${alternateFormatter}' formatter`;
         const item = await this.appShell.showErrorMessage(`Formatter ${productName} is not installed.`, installThis, useOtherFormatter);
@@ -231,6 +232,7 @@ export class ProductInstaller implements IInstaller {
         this.ProductTypes.set(Product.unittest, ProductType.TestFramework);
         this.ProductTypes.set(Product.autopep8, ProductType.Formatter);
         this.ProductTypes.set(Product.yapf, ProductType.Formatter);
+        this.ProductTypes.set(Product.black, ProductType.Formatter);
         this.ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
     }
 
