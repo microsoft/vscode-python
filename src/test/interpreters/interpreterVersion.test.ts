@@ -7,6 +7,7 @@ import '../../client/common/extensions';
 import { IProcessService } from '../../client/common/process/types';
 import { IInterpreterVersionService } from '../../client/interpreter/contracts';
 import { PIP_VERSION_REGEX } from '../../client/interpreter/interpreterVersion';
+import { PYTHON_PATH } from '../common';
 import { initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -31,10 +32,10 @@ suite('Interpreters display version', () => {
 
     test('Must return the Python Version', async () => {
         const pythonProcess = ioc.serviceContainer.get<IProcessService>(IProcessService);
-        const output = await pythonProcess.exec('python', ['--version'], { cwd: __dirname, mergeStdOutErr: true });
+        const output = await pythonProcess.exec(PYTHON_PATH, ['--version'], { cwd: __dirname, mergeStdOutErr: true });
         const version = output.stdout.splitLines()[0];
         const interpreterVersion = ioc.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-        const pyVersion = await interpreterVersion.getVersion('python', 'DEFAULT_TEST_VALUE');
+        const pyVersion = await interpreterVersion.getVersion(PYTHON_PATH, 'DEFAULT_TEST_VALUE');
         assert.equal(pyVersion, version, 'Incorrect version');
     });
     test('Must return the default value when Python path is invalid', async () => {
@@ -44,7 +45,7 @@ suite('Interpreters display version', () => {
     });
     test('Must return the pip Version', async () => {
         const pythonProcess = ioc.serviceContainer.get<IProcessService>(IProcessService);
-        const result = await pythonProcess.exec('python', ['-m', 'pip', '--version'], { cwd: __dirname, mergeStdOutErr: true });
+        const result = await pythonProcess.exec(PYTHON_PATH, ['-m', 'pip', '--version'], { cwd: __dirname, mergeStdOutErr: true });
         const output = result.stdout.splitLines()[0];
         // Take the second part, see below example.
         // pip 9.0.1 from /Users/donjayamanne/anaconda3/lib/python3.6/site-packages (python 3.6).
@@ -55,7 +56,7 @@ suite('Interpreters display version', () => {
         assert.isAtLeast(matches!.length, 1, 'Version number not found');
 
         const interpreterVersion = ioc.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-        const pipVersionPromise = interpreterVersion.getPipVersion('python');
+        const pipVersionPromise = interpreterVersion.getPipVersion(PYTHON_PATH);
         // tslint:disable-next-line:no-non-null-assertion
         await expect(pipVersionPromise).to.eventually.equal(matches![0].trim());
     });

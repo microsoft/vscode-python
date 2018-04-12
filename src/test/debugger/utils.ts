@@ -69,6 +69,9 @@ export async function validateVariablesInFrame(debugClient: DebugClient,
 export function makeHttpRequest(uri: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
         request.get(uri, (error: any, response: request.Response, body: any) => {
+            if (error) {
+                return reject(error);
+            }
             if (response.statusCode !== 200) {
                 reject(new Error(`Status code = ${response.statusCode}`));
             } else {

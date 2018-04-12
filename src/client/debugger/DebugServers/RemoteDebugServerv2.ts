@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { connect, Socket } from 'net';
+import { Socket } from 'net';
 import { DebugSession } from 'vscode-debugadapter';
 import { AttachRequestArguments, IDebugServer, IPythonProcess } from '../Common/Contracts';
 import { BaseDebugServer } from './BaseDebugServer';
@@ -31,17 +31,18 @@ export class RemoteDebugServerV2 extends BaseDebugServer {
             }
             try {
                 let connected = false;
-                const socket = connect(options, () => {
-                    connected = true;
-                    this.socket = socket;
-                    this.clientSocket.resolve(socket);
-                    resolve(options);
-                });
+                const socket = new Socket();
                 socket.on('error', ex => {
                     if (connected) {
                         return;
                     }
                     reject(ex);
+                });
+                socket.connect(options, () => {
+                    connected = true;
+                    this.socket = socket;
+                    this.clientSocket.resolve(socket);
+                    resolve(options);
                 });
             } catch (ex) {
                 reject(ex);

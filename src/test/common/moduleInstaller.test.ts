@@ -21,7 +21,7 @@ import { ITerminalService, ITerminalServiceFactory } from '../../client/common/t
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IPythonSettings, IsWindows } from '../../client/common/types';
 import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PIPENV_SERVICE, PythonInterpreter } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { rootWorkspaceUri } from '../common';
+import { PYTHON_PATH, rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -195,7 +195,7 @@ suite('Module Installer', () => {
 
         const interpreter: PythonInterpreter = {
             type: InterpreterType.Unknown,
-            path: 'python'
+            path: PYTHON_PATH
         };
         interpreterService.setup(x => x.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(interpreter));
 

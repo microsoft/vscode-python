@@ -9,6 +9,7 @@ import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { noop } from '../../client/common/core.utils';
 import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
+import { PYTHON_PATH } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { DEBUGGER_TIMEOUT } from './common/constants';
 
@@ -50,7 +51,7 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
                 cwd: debugFilesPath,
                 stopOnEntry,
                 debugOptions: [DebugOptions.RedirectOutput],
-                pythonPath: 'python',
+                pythonPath: PYTHON_PATH,
                 args: [],
                 envFile: '',
                 host, port,

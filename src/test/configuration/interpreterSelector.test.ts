@@ -15,7 +15,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
     public path: string;
     public label: string;
-    public description: string;
+    public description!: string;
     public detail?: string;
     constructor(l: string, p: string) {
         this.path = p;
@@ -24,7 +24,7 @@ class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
 }
 
 // tslint:disable-next-line:max-func-body-length
-suite('Intepreters - selector', () => {
+suite('Interpreters - selector', () => {
     let serviceContainer: IServiceContainer;
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -65,14 +65,14 @@ suite('Intepreters - selector', () => {
 
     test('Suggestions', async () => {
         const initial: PythonInterpreter[] = [
-            { displayName: '1', path: 'path1', type: InterpreterType.Unknown },
-            { displayName: '2', path: 'path1', type: InterpreterType.Unknown },
-            { displayName: '1', path: 'path1', type: InterpreterType.Unknown },
-            { displayName: '2', path: 'path2', type: InterpreterType.Unknown },
-            { displayName: '2', path: 'path2', type: InterpreterType.Unknown },
-            { displayName: '2 (virtualenv)', path: 'path2', type: InterpreterType.VirtualEnv },
-            { displayName: '3', path: 'path2', type: InterpreterType.Unknown },
-            { displayName: '4', path: 'path4', type: InterpreterType.Conda }
+            { displayName: '1', path: 'c:/path1/path1', type: InterpreterType.Unknown },
+            { displayName: '2', path: 'c:/path1/path1', type: InterpreterType.Unknown },
+            { displayName: '1', path: 'c:/path1/path1', type: InterpreterType.Unknown },
+            { displayName: '2', path: 'c:/path2/path2', type: InterpreterType.Unknown },
+            { displayName: '2', path: 'c:/path2/path2', type: InterpreterType.Unknown },
+            { displayName: '2 (virtualenv)', path: 'c:/path2/path2', type: InterpreterType.VirtualEnv },
+            { displayName: '3', path: 'c:/path2/path2', type: InterpreterType.Unknown },
+            { displayName: '4', path: 'c:/path4/path4', type: InterpreterType.Conda }
         ];
         interpreterService
             .setup(x => x.getInterpreters(TypeMoq.It.isAny()))
@@ -82,12 +82,12 @@ suite('Intepreters - selector', () => {
         const actual = await selector.getSuggestions();
 
         const expected: InterpreterQuickPickItem[] = [
-            new InterpreterQuickPickItem('1', 'path1'),
-            new InterpreterQuickPickItem('2', 'path1'),
-            new InterpreterQuickPickItem('2', 'path2'),
-            new InterpreterQuickPickItem('2 (virtualenv)', 'path2'),
-            new InterpreterQuickPickItem('3', 'path2'),
-            new InterpreterQuickPickItem('4', 'path4')
+            new InterpreterQuickPickItem('1', 'c:/path1/path1'),
+            new InterpreterQuickPickItem('2', 'c:/path1/path1'),
+            new InterpreterQuickPickItem('2', 'c:/path2/path2'),
+            new InterpreterQuickPickItem('2 (virtualenv)', 'c:/path2/path2'),
+            new InterpreterQuickPickItem('3', 'c:/path2/path2'),
+            new InterpreterQuickPickItem('4', 'c:/path4/path4')
         ];
 
         assert.equal(actual.length, expected.length, 'Suggestion lengths are different.');

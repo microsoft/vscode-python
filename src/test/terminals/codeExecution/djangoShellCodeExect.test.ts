@@ -13,6 +13,7 @@ import { ITerminalService, ITerminalServiceFactory } from '../../../client/commo
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
 import { ICodeExecutionService } from '../../../client/terminals/types';
+import { PYTHON_PATH } from '../../common';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal - Django Shell Code Execution', () => {
@@ -86,7 +87,7 @@ suite('Terminal - Django Shell Code Execution', () => {
     });
 
     test('Ensure python path is returned as is, when building repl args on Windows', async () => {
-        const pythonPath = 'python';
+        const pythonPath = PYTHON_PATH;
         const terminalArgs = ['-a', 'b', 'c'];
         const expectedTerminalArgs = terminalArgs.concat('manage.py', 'shell');
 
@@ -102,7 +103,7 @@ suite('Terminal - Django Shell Code Execution', () => {
     });
 
     test('Ensure python path is returned as is, on non Windows', async () => {
-        const pythonPath = 'python';
+        const pythonPath = PYTHON_PATH;
         const terminalArgs = ['-a', 'b', 'c'];
         const expectedTerminalArgs = terminalArgs.concat('manage.py', 'shell');
 

@@ -1,12 +1,16 @@
+# Install flake8 first, as both flake8 and autopep8 require pycodestyle,
+# but flake8 has a tighter pinning.
+flake8
 autopep8
 yapf
 pylint
 pep8
 prospector
-flake8
 pydocstyle
 nose
 pytest
 fabric
 numba
 rope
+flask
+django

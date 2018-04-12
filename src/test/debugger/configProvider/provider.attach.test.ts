@@ -35,6 +35,7 @@ enum OS {
             const debugOptionsAvailable = [DebugOptions.RedirectOutput];
             if (os.value === OS.Windows && provider.debugType === 'pythonExperimental') {
                 debugOptionsAvailable.push(DebugOptions.FixFilePathCase);
+                debugOptionsAvailable.push(DebugOptions.WindowsClient);
             }
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();

@@ -15,7 +15,7 @@ import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { PTVSD_PATH } from '../../client/debugger/Common/constants';
 import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
-import { sleep } from '../common';
+import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { DEBUGGER_TIMEOUT } from './common/constants';
 import { DebugClientEx } from './debugClient';
@@ -78,7 +78,7 @@ let testCounter = 0;
                 cwd: debugFilesPath,
                 stopOnEntry,
                 debugOptions: [DebugOptions.RedirectOutput],
-                pythonPath: 'python',
+                pythonPath: PYTHON_PATH,
                 args: [],
                 env,
                 envFile: '',

@@ -36,8 +36,8 @@ before_install: |
   yarn global add azure-cli
   export TRAVIS_PYTHON_PATH=`which python`
 install:
-  - pip install --upgrade -r requirements.txt
-  - pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
+  - python -m pip install --upgrade -r requirements.txt
+  - python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
   - yarn
 
 script:

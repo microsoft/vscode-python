@@ -7,6 +7,8 @@ import { IS_MULTI_ROOT_TEST } from './initialize';
 const fileInNonRootWorkspace = path.join(__dirname, '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
 export const rootWorkspaceUri = getWorkspaceRoot();
 
+export const PYTHON_PATH = getPythonPath();
+
 export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'linting.lintOnSave' |
     'linting.enabled' | 'linting.pylintEnabled' |
@@ -118,3 +120,12 @@ const globalPythonPathSetting = workspace.getConfiguration('python').inspect('py
 export const clearPythonPathInWorkspaceFolder = async (resource: string | Uri) => retryAsync(setPythonPathInWorkspace)(resource, ConfigurationTarget.WorkspaceFolder);
 export const setPythonPathInWorkspaceRoot = async (pythonPath: string) => retryAsync(setPythonPathInWorkspace)(undefined, ConfigurationTarget.Workspace, pythonPath);
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
+
+function getPythonPath(): string {
+    // tslint:disable-next-line:no-unsafe-any
+    if (process.env.TRAVIS_PYTHON_PATH && fs.existsSync(process.env.TRAVIS_PYTHON_PATH)) {
+        // tslint:disable-next-line:no-unsafe-any
+        return process.env.TRAVIS_PYTHON_PATH;
+    }
+    return 'python';
+}

@@ -39,7 +39,8 @@ export enum DebugOptions {
     BreakOnSystemExitZero = 'BreakOnSystemExitZero',
     Sudo = 'Sudo',
     Pyramid = 'Pyramid',
-    FixFilePathCase = 'FixFilePathCase'
+    FixFilePathCase = 'FixFilePathCase',
+    WindowsClient = 'WindowsClient'
 }
 
 export interface ExceptionHandling {
@@ -80,6 +81,8 @@ export interface AttachRequestArguments extends DebugProtocol.AttachRequestArgum
     host?: string;
     secret?: string;
     logToFile?: boolean;
+    pathMappings?: { localRoot: string; remoteRoot: string }[];
+    debugOptions?: DebugOptions[];
 }
 
 export interface IDebugServer {

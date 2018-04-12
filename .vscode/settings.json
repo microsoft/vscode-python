@@ -3,6 +3,8 @@
     "files.exclude": {
         "out": true, // set this to true to hide the "out" folder with the compiled JS files
         "**/*.pyc": true,
+        "obj": true,
+        "bin": true,
         "**/__pycache__": true,
         "node_modules": true,
         ".vscode-test": true,

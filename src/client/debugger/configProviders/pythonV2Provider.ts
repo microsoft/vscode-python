@@ -35,9 +35,22 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
 
         debugConfiguration.debugOptions = Array.isArray(debugConfiguration.debugOptions) ? debugConfiguration.debugOptions : [];
 
-        // Add PTVSD specific flags.
-        if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
+        // We'll need paths to be fixed only in the case where local and remote hosts are the same
+        // I.e. only if hostName === 'localhost' or '127.0.0.1' or ''
+        const isLocalHost = !debugConfiguration.host || debugConfiguration.host === 'localhost' || debugConfiguration.host === '127.0.0.1';
+        if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows && isLocalHost) {
             debugConfiguration.debugOptions.push(DebugOptions.FixFilePathCase);
         }
+        if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
+            debugConfiguration.debugOptions.push(DebugOptions.WindowsClient);
+        }
+
+        if (!debugConfiguration.pathMappings) {
+            debugConfiguration.pathMappings = [];
+        }
+        debugConfiguration.pathMappings!.push({
+            localRoot: debugConfiguration.localRoot,
+            remoteRoot: debugConfiguration.remoteRoot
+        });
     }
 }

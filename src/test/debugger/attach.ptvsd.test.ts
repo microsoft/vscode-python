@@ -8,26 +8,33 @@
 import { ChildProcess, spawn } from 'child_process';
 import * as getFreePort from 'get-port';
 import * as path from 'path';
+import * as TypeMoq from 'typemoq';
+import { DebugConfiguration, Uri } from 'vscode';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import '../../client/common/extensions';
+import { IS_WINDOWS } from '../../client/common/platform/constants';
+import { IPlatformService } from '../../client/common/platform/types';
+import { PythonV2DebugConfigurationProvider } from '../../client/debugger';
 import { PTVSD_PATH } from '../../client/debugger/Common/constants';
-import { DebugOptions } from '../../client/debugger/Common/Contracts';
-import { sleep } from '../common';
-import { initialize, IS_APPVEYOR, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
+import { AttachRequestArguments, DebugOptions } from '../../client/debugger/Common/Contracts';
+import { IServiceContainer } from '../../client/ioc/types';
+import { PYTHON_PATH, sleep } from '../common';
+import { initialize, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { continueDebugging, createDebugAdapter } from './utils';
 
 const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd.py');
 
 suite('Attach Debugger - Experimental', () => {
     let debugClient: DebugClient;
-    let procToKill: ChildProcess;
+    let proc: ChildProcess;
     suiteSetup(initialize);
 
     setup(async function () {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
+        this.timeout(30000);
         const coverageDirectory = path.join(EXTENSION_ROOT_DIR, 'debug_coverage_attach_ptvsd');
         debugClient = await createDebugAdapter(coverageDirectory);
     });
@@ -37,27 +44,23 @@ suite('Attach Debugger - Experimental', () => {
         try {
             await debugClient.stop().catch(() => { });
         } catch (ex) { }
-        if (procToKill) {
+        if (proc) {
             try {
-                procToKill.kill();
+                proc.kill();
             } catch { }
         }
     });
-    test('Confirm we are able to attach to a running program', async function () {
-        this.timeout(20000);
-        // Lets skip this test on AppVeyor (very flaky on AppVeyor).
-        if (IS_APPVEYOR) {
-            return;
-        }
-
+    async function testAttachingToRemoteProcess(localRoot: string, remoteRoot: string, isLocalHostWindows: boolean) {
+        const localHostPathSeparator = isLocalHostWindows ? '\\' : '/';
         const port = await getFreePort({ host: 'localhost', port: 3000 });
-        const customEnv = { ...process.env };
+        const env = { ...process.env };
 
         // Set the path for PTVSD to be picked up.
         // tslint:disable-next-line:no-string-literal
-        customEnv['PYTHONPATH'] = PTVSD_PATH;
+        env['PYTHONPATH'] = PTVSD_PATH;
         const pythonArgs = ['-m', 'ptvsd', '--server', '--port', `${port}`, '--file', fileToDebug.fileToCommandArgument()];
-        procToKill = spawn('python', pythonArgs, { env: customEnv, cwd: path.dirname(fileToDebug) });
+        proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });
+        await sleep(3000);
 
         // Send initialize, attach
         const initializePromise = debugClient.initializeRequest({
@@ -69,15 +72,25 @@ suite('Attach Debugger - Experimental', () => {
             supportsVariableType: true,
             supportsVariablePaging: true
         });
-        const attachPromise = debugClient.attachRequest({
-            localRoot: path.dirname(fileToDebug),
-            remoteRoot: path.dirname(fileToDebug),
+        const options: AttachRequestArguments & DebugConfiguration = {
+            name: 'attach',
+            request: 'attach',
+            localRoot,
+            remoteRoot,
             type: 'pythonExperimental',
             port: port,
             host: 'localhost',
-            logToFile: false,
+            logToFile: true,
             debugOptions: [DebugOptions.RedirectOutput]
-        });
+        };
+        const platformService = TypeMoq.Mock.ofType<IPlatformService>();
+        platformService.setup(p => p.isWindows).returns(() => isLocalHostWindows);
+        const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        serviceContainer.setup(c => c.get(IPlatformService, TypeMoq.It.isAny())).returns(() => platformService.object);
+        const configProvider = new PythonV2DebugConfigurationProvider(serviceContainer.object);
+
+        await configProvider.resolveDebugConfiguration({ index: 0, name: 'root', uri: Uri.file(localRoot) }, options);
+        const attachPromise = debugClient.attachRequest(options);
 
         await Promise.all([
             initializePromise,
@@ -90,7 +103,9 @@ suite('Attach Debugger - Experimental', () => {
         const stdOutPromise = debugClient.assertOutput('stdout', 'this is stdout');
         const stdErrPromise = debugClient.assertOutput('stderr', 'this is stderr');
 
-        const breakpointLocation = { path: fileToDebug, column: 1, line: 12 };
+        // Don't use path utils, as we're building the paths manually (mimic windows paths on unix test servers and vice versa).
+        const localFileName = `${localRoot}${localHostPathSeparator}${path.basename(fileToDebug)}`;
+        const breakpointLocation = { path: localFileName, column: 1, line: 12 };
         const breakpointPromise = debugClient.setBreakpointsRequest({
             lines: [breakpointLocation.line],
             breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
@@ -111,5 +126,14 @@ suite('Attach Debugger - Experimental', () => {
             debugClient.waitForEvent('exited'),
             debugClient.waitForEvent('terminated')
         ]);
+    }
+    test('Confirm we are able to attach to a running program', async () => {
+        await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
+    });
+    test('Confirm local and remote paths are translated', async () => {
+        // If tests are running on windows, then treat debug client as a unix client and remote process as current OS.
+        const isLocalHostWindows = !IS_WINDOWS;
+        const localWorkspace = isLocalHostWindows ? 'C:\\Project\\src' : '/home/user/Desktop/project/src';
+        await testAttachingToRemoteProcess(localWorkspace, path.dirname(fileToDebug), isLocalHostWindows);
     });
 });

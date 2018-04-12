@@ -10,6 +10,7 @@ import { IBufferDecoder, IProcessService } from '../../client/common/process/typ
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
+import { PYTHON_PATH } from '../common';
 
 suite('Virtual environment manager', () => {
   let serviceManager: ServiceManager;
@@ -22,15 +23,15 @@ suite('Virtual environment manager', () => {
     serviceContainer = new ServiceContainer(cont);
   });
 
-  test('Plain Python environment suffix', async () => await testSuffix(''));
-  test('Venv environment suffix', async () => await testSuffix('venv'));
-  test('Virtualenv Python environment suffix', async () => await testSuffix('virtualenv'));
+  test('Plain Python environment suffix', async () => testSuffix(''));
+  test('Venv environment suffix', async () => testSuffix('venv'));
+  test('Virtualenv Python environment suffix', async () => testSuffix('virtualenv'));
 
   test('Run actual virtual env detection code', async () => {
     serviceManager.addSingleton<IProcessService>(IProcessService, ProcessService);
     serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
     const venvManager = new VirtualEnvironmentManager(serviceContainer);
-    const name = await venvManager.getEnvironmentName('python');
+    const name = await venvManager.getEnvironmentName(PYTHON_PATH);
     const result = name === '' || name === 'venv' || name === 'virtualenv';
     expect(result).to.be.equal(true, 'Running venv detection code failed.');
   });
@@ -41,13 +42,13 @@ suite('Virtual environment manager', () => {
 
     const venvManager = new VirtualEnvironmentManager(serviceContainer);
     process
-      .setup(x => x.exec('python', TypeMoq.It.isAny()))
+      .setup(x => x.exec(PYTHON_PATH, TypeMoq.It.isAny()))
       .returns(() => Promise.resolve({
         stdout: expectedName,
         stderr: ''
       }));
 
-    const name = await venvManager.getEnvironmentName('python');
+    const name = await venvManager.getEnvironmentName(PYTHON_PATH);
     expect(name).to.be.equal(expectedName, 'Virtual envrironment name suffix is incorrect.');
   }
 });

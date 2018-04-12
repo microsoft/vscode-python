@@ -1,8 +1,7 @@
 import * as assert from 'assert';
 import * as child_process from 'child_process';
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationTokenSource, TextDocument, workspace } from 'vscode';
 import { IS_WINDOWS, PythonSettings } from '../../client/common/configSettings';
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { getFirstNonEmptyLineFromMultilineString } from '../../client/interpreter/helpers';
@@ -91,7 +90,7 @@ suite('Shebang detection', () => {
     });
 
     async function openFile(fileName: string) {
-        return vscode.workspace.openTextDocument(fileName);
+        return workspace.openTextDocument(fileName);
     }
     async function getFullyQualifiedPathToInterpreter(pythonPath: string) {
         return new Promise<string>(resolve => {
@@ -101,8 +100,8 @@ suite('Shebang detection', () => {
         }).catch(() => undefined);
     }
 
-    async function setupCodeLens(document: vscode.TextDocument) {
+    async function setupCodeLens(document: TextDocument) {
         const codeLensProvider = new ShebangCodeLensProvider(ioc.serviceContainer);
-        return await codeLensProvider.provideCodeLenses(document, new CancellationTokenSource().token);
+        return codeLensProvider.provideCodeLenses(document, new CancellationTokenSource().token);
     }
 });

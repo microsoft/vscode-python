@@ -11,7 +11,7 @@ import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { noop } from '../../client/common/core.utils';
 import { PTVSD_PATH } from '../../client/debugger/Common/constants';
 import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
-import { sleep } from '../common';
+import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { createDebugAdapter } from './utils';
 
@@ -46,7 +46,7 @@ suite(`Module Debugging - Misc tests: ${debuggerType}`, () => {
             program: '',
             cwd: workspaceDirectory,
             debugOptions: [DebugOptions.RedirectOutput],
-            pythonPath: 'python',
+            pythonPath: PYTHON_PATH,
             args: [],
             env,
             envFile: '',

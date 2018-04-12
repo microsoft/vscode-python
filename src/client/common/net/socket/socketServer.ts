@@ -28,22 +28,22 @@ export class SocketServer extends EventEmitter implements ISocketServer {
         this.socketServer = undefined;
     }
 
-    public Start(options: { port?: number, host?: string } = {}): Promise<number> {
+    public Start(options: { port?: number; host?: string } = {}): Promise<number> {
         const def = createDeferred<number>();
         this.socketServer = net.createServer(this.connectionListener.bind(this));
 
         const port = typeof options.port === 'number' ? options.port! : 0;
         const host = typeof options.host === 'string' ? options.host! : 'localhost';
-        this.socketServer!.listen({ port, host }, () => {
-            def.resolve(this.socketServer!.address().port);
-        });
-
         this.socketServer!.on('error', ex => {
             console.error('Error in Socket Server', ex);
             const msg = `Failed to start the socket server. (Error: ${ex.message})`;
 
             def.reject(msg);
         });
+        this.socketServer!.listen({ port, host }, () => {
+            def.resolve(this.socketServer!.address().port);
+        });
+
         return def.promise;
     }
 

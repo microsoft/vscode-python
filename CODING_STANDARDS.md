@@ -1,5 +1,5 @@
 ## Coding guidelines for TypeScript
-* The following standards are inspired from [Coding guidelines for TypeScript](https://github.com/Microsoft/TypeScript/wiki/Coding-guidelines).
+* The following standards are inspired from [Coding guidelines for TypeScript](https://github.com/Microsoft/TypeScript/wiki/Coding-guidelines) (which you should follow when something is not specified in this document, although any pre-existing practices in a file being edited trump either style guide).
 
 ### Names
 
@@ -30,6 +30,11 @@ Use undefined. Do not use null.
 ### Strings
 
 Use single quotes for strings.
+
+### Imports
+
+* Use ES6 module imports.
+* Do not use bare `import *`; all imports should either explicitly pull in an object or import an entire module, otherwise you're implicitly polluting the global namespace and making it difficult to figure out from code examination where a name originates from.
 
 ### Style
 

@@ -12,7 +12,7 @@ import { createDeferred } from '../../client/common/helpers';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { AttachRequestArguments } from '../../client/debugger/Common/Contracts';
-import { sleep } from '../common';
+import { PYTHON_PATH, sleep } from '../common';
 import { initialize, IS_APPVEYOR, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { DEBUGGER_TIMEOUT } from './common/constants';
 
@@ -67,7 +67,7 @@ suite('Attach Debugger', () => {
         // tslint:disable-next-line:no-string-literal
         customEnv['PYTHONPATH'] = ptvsdPath;
         const procService = new ProcessService(new BufferDecoder());
-        const result = procService.execObservable('python', [fileToDebug, port.toString()], { env: customEnv, cwd: path.dirname(fileToDebug) });
+        const result = procService.execObservable(PYTHON_PATH, [fileToDebug, port.toString()], { env: customEnv, cwd: path.dirname(fileToDebug) });
         procToKill = result.proc;
 
         const expectedOutputs = [

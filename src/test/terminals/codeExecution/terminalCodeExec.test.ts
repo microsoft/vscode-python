@@ -15,6 +15,7 @@ import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/code
 import { ReplProvider } from '../../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExecution/terminalCodeExecution';
 import { ICodeExecutionService } from '../../../client/terminals/types';
+import { PYTHON_PATH } from '../../common';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Code Execution', () => {
@@ -99,7 +100,7 @@ suite('Terminal Code Execution', () => {
                 platform.setup(p => p.isWindows).returns(() => isWindows);
                 platform.setup(p => p.isMac).returns(() => isOsx);
                 platform.setup(p => p.isLinux).returns(() => isLinux);
-                settings.setup(s => s.pythonPath).returns(() => 'python');
+                settings.setup(s => s.pythonPath).returns(() => PYTHON_PATH);
                 terminalSettings.setup(t => t.launchArgs).returns(() => []);
 
                 await executor.initializeRepl();
@@ -130,12 +131,12 @@ suite('Terminal Code Execution', () => {
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
                 workspaceFolder.setup(w => w.uri).returns(() => Uri.file(path.join('c', 'path', 'to')));
                 platform.setup(p => p.isWindows).returns(() => false);
-                settings.setup(s => s.pythonPath).returns(() => 'python');
+                settings.setup(s => s.pythonPath).returns(() => PYTHON_PATH);
                 terminalSettings.setup(t => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
 
-                terminalService.verify(async t => await t.sendText(TypeMoq.It.isValue(`cd ${path.dirname(file.fsPath).fileToCommandArgument()}`)), TypeMoq.Times.once());
+                terminalService.verify(async t => t.sendText(TypeMoq.It.isValue(`cd ${path.dirname(file.fsPath).fileToCommandArgument()}`)), TypeMoq.Times.once());
             }
             test('Ensure we set current directory before executing file (non windows)', async () => {
                 await ensureWeSetCurrentDirectoryBeforeExecutingAFile(false);
@@ -150,12 +151,12 @@ suite('Terminal Code Execution', () => {
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
                 workspaceFolder.setup(w => w.uri).returns(() => Uri.file(path.join('c', 'path', 'to')));
                 platform.setup(p => p.isWindows).returns(() => isWindows);
-                settings.setup(s => s.pythonPath).returns(() => 'python');
+                settings.setup(s => s.pythonPath).returns(() => PYTHON_PATH);
                 terminalSettings.setup(t => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
                 const dir = path.dirname(file.fsPath).fileToCommandArgument();
-                terminalService.verify(async t => await t.sendText(TypeMoq.It.isValue(`cd ${dir}`)), TypeMoq.Times.once());
+                terminalService.verify(async t => t.sendText(TypeMoq.It.isValue(`cd ${dir}`)), TypeMoq.Times.once());
             }
 
             test('Ensure we set current directory (and quote it when containing spaces) before executing file (non windows)', async () => {
@@ -172,12 +173,12 @@ suite('Terminal Code Execution', () => {
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
                 workspaceFolder.setup(w => w.uri).returns(() => Uri.file(path.join('c', 'path', 'to', 'file with spaces in path')));
                 platform.setup(p => p.isWindows).returns(() => isWindows);
-                settings.setup(s => s.pythonPath).returns(() => 'python');
+                settings.setup(s => s.pythonPath).returns(() => PYTHON_PATH);
                 terminalSettings.setup(t => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
 
-                terminalService.verify(async t => await t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+                terminalService.verify(async t => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
             }
             test('Ensure we do not set current directory before executing file if in the same directory (non windows)', async () => {
                 await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(false);
@@ -191,12 +192,12 @@ suite('Terminal Code Execution', () => {
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
                 platform.setup(p => p.isWindows).returns(() => isWindows);
-                settings.setup(s => s.pythonPath).returns(() => 'python');
+                settings.setup(s => s.pythonPath).returns(() => PYTHON_PATH);
                 terminalSettings.setup(t => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
 
-                terminalService.verify(async t => await t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+                terminalService.verify(async t => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
             }
             test('Ensure we do not set current directory before executing file if file is not in a workspace (non windows)', async () => {
                 await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(false);
@@ -215,12 +216,12 @@ suite('Terminal Code Execution', () => {
                 await executor.executeFile(file);
                 const expectedPythonPath = isWindows ? pythonPath.replace(/\\/g, '/') : pythonPath;
                 const expectedArgs = terminalArgs.concat(file.fsPath.fileToCommandArgument());
-                terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
+                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
             }
 
             test('Ensure python file execution script is sent to terminal on windows', async () => {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
-                await testFileExecution(true, 'python', [], file);
+                await testFileExecution(true, PYTHON_PATH, [], file);
             });
 
             test('Ensure python file execution script is sent to terminal on windows with fully qualified python path', async () => {
@@ -230,12 +231,12 @@ suite('Terminal Code Execution', () => {
 
             test('Ensure python file execution script is not quoted when no spaces in file path', async () => {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file', 'one.py'));
-                await testFileExecution(true, 'python', [], file);
+                await testFileExecution(true, PYTHON_PATH, [], file);
             });
 
             test('Ensure python file execution script supports custom python arguments', async () => {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file', 'one.py'));
-                await testFileExecution(false, 'python', ['-a', '-b', '-c'], file);
+                await testFileExecution(false, PYTHON_PATH, ['-a', '-b', '-c'], file);
             });
 
             function testReplCommandArguments(isWindows: boolean, pythonPath: string, expectedPythonPath: string, terminalArgs: string[]) {
@@ -265,7 +266,7 @@ suite('Terminal Code Execution', () => {
             });
 
             test('Ensure python path is returned as is, when building repl args on Windows', () => {
-                const pythonPath = 'python';
+                const pythonPath = PYTHON_PATH;
                 const terminalArgs = ['-a', 'b', 'c'];
 
                 testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs);
@@ -279,7 +280,7 @@ suite('Terminal Code Execution', () => {
             });
 
             test('Ensure python path is returned as is, on non Windows', () => {
-                const pythonPath = 'python';
+                const pythonPath = PYTHON_PATH;
                 const terminalArgs = ['-a', 'b', 'c'];
 
                 testReplCommandArguments(false, pythonPath, pythonPath, terminalArgs);
@@ -291,8 +292,8 @@ suite('Terminal Code Execution', () => {
                 // tslint:disable-next-line:no-any
                 await executor.execute(undefined as any as string);
 
-                terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
-                terminalService.verify(async t => await t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+                terminalService.verify(async t => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
             });
 
             test('Ensure repl is initialized once before sending text to the repl', async () => {
@@ -308,7 +309,7 @@ suite('Terminal Code Execution', () => {
                 await executor.execute('cmd3');
 
                 const expectedTerminalArgs = isDjangoRepl ? terminalArgs.concat(['manage.py', 'shell']) : terminalArgs;
-                terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.once());
+                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.once());
             });
 
             test('Ensure repl is re-initialized when temrinal is closed', async () => {
@@ -334,15 +335,15 @@ suite('Terminal Code Execution', () => {
                 const expectedTerminalArgs = isDjangoRepl ? terminalArgs.concat(['manage.py', 'shell']) : terminalArgs;
 
                 expect(closeTerminalCallback).not.to.be.an('undefined', 'Callback not initialized');
-                terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.once());
+                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.once());
 
                 closeTerminalCallback!.call(terminalService.object);
                 await executor.execute('cmd4');
-                terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.exactly(2));
+                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.exactly(2));
 
                 closeTerminalCallback!.call(terminalService.object);
                 await executor.execute('cmd5');
-                terminalService.verify(async t => await t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.exactly(3));
+                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.exactly(3));
             });
 
             test('Ensure code is sent to terminal', async () => {
@@ -353,10 +354,10 @@ suite('Terminal Code Execution', () => {
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
 
                 await executor.execute('cmd1');
-                terminalService.verify(async t => await t.sendText('cmd1'), TypeMoq.Times.once());
+                terminalService.verify(async t => t.sendText('cmd1'), TypeMoq.Times.once());
 
                 await executor.execute('cmd2');
-                terminalService.verify(async t => await t.sendText('cmd2'), TypeMoq.Times.once());
+                terminalService.verify(async t => t.sendText('cmd2'), TypeMoq.Times.once());
             });
         });
     });
