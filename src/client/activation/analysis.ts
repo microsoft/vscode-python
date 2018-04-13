@@ -127,7 +127,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
             disposable = lc.start();
             lc.onReady()
                 .then(() => deferred.resolve())
-                .catch(ex => deferred.reject());
+                .catch(deferred.reject);
             await deferred.promise;
 
             this.output.appendLine(`Language server ready: ${this.sw.elapsedTime} ms`);
