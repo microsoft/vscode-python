@@ -570,7 +570,7 @@ class JediCompletion(object):
         if lookup == 'definitions':
             defs = []
             try:
-                defs = self._get_definitionsx(script.goto_assignments(follow_imports=False), request['id'])
+                defs = self._get_definitionsx(script.goto_definitions(follow_imports=False), request['id'])
             except:
                 pass
             try:
