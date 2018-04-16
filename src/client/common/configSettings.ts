@@ -6,7 +6,7 @@ import * as path from 'path';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, Uri, workspace } from 'vscode';
 import { isTestExecution } from './constants';
 import {
-    IAutoCompeteSettings,
+    IAutoCompleteSettings,
     IFormattingSettings,
     ILintingSettings,
     IPythonSettings,
@@ -35,7 +35,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     public devOptions: string[] = [];
     public linting?: ILintingSettings;
     public formatting?: IFormattingSettings;
-    public autoComplete?: IAutoCompeteSettings;
+    public autoComplete?: IAutoCompleteSettings;
     public unitTest?: IUnitTestSettings;
     public terminal?: ITerminalSettings;
     public sortImports?: ISortImportSettings;
@@ -219,9 +219,9 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.formatting.yapfPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.yapfPath), workspaceRoot);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        const autoCompleteSettings = systemVariables.resolveAny(pythonSettings.get<IAutoCompeteSettings>('autoComplete'))!;
+        const autoCompleteSettings = systemVariables.resolveAny(pythonSettings.get<IAutoCompleteSettings>('autoComplete'))!;
         if (this.autoComplete) {
-            Object.assign<IAutoCompeteSettings, IAutoCompeteSettings>(this.autoComplete, autoCompleteSettings);
+            Object.assign<IAutoCompleteSettings, IAutoCompleteSettings>(this.autoComplete, autoCompleteSettings);
         } else {
             this.autoComplete = autoCompleteSettings;
         }
@@ -229,7 +229,8 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.autoComplete = this.autoComplete ? this.autoComplete : {
             extraPaths: [],
             addBrackets: false,
-            preloadModules: []
+            preloadModules: [],
+            showAdvancedMembers: false
         };
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion

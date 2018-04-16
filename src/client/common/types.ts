@@ -105,7 +105,7 @@ export interface IPythonSettings {
     readonly linting?: ILintingSettings;
     readonly formatting?: IFormattingSettings;
     readonly unitTest?: IUnitTestSettings;
-    readonly autoComplete?: IAutoCompeteSettings;
+    readonly autoComplete?: IAutoCompleteSettings;
     readonly terminal?: ITerminalSettings;
     readonly sortImports?: ISortImportSettings;
     readonly workspaceSymbols?: IWorkspaceSymbolSettings;
@@ -194,10 +194,11 @@ export interface IFormattingSettings {
     yapfPath: string;
     readonly yapfArgs: string[];
 }
-export interface IAutoCompeteSettings {
+export interface IAutoCompleteSettings {
     readonly addBrackets: boolean;
     readonly extraPaths: string[];
     readonly preloadModules: string[];
+    readonly showAdvancedMembers: boolean;
 }
 export interface IWorkspaceSymbolSettings {
     readonly enabled: boolean;
@@ -211,6 +212,9 @@ export interface ITerminalSettings {
     readonly executeInFileDir: boolean;
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
+}
+export interface IPythonAnalysisEngineSettings {
+    readonly showAdvancedMembers: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
