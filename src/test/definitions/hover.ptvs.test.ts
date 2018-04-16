@@ -49,10 +49,15 @@ suite('Hover Definition (Analysis Engine)', () => {
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '30,11', 'End position is incorrect');
         assert.equal(def[0].contents.length, 1, 'Invalid content items');
 
-        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
-        assert.equal(lines.length, 2, 'incorrect number of lines');
-        assert.equal(lines[0].trim(), 'obj.method1: method method1 of one.Class1 objects', 'function signature line #1 is incorrect');
-        assert.equal(lines[1].trim(), 'This is method1', 'function signature line #2 is incorrect');
+        const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
+        const expected = [
+            'obj.method1:',
+            'method method1 of one.Class1 objects',
+            '```html',
+            'This is method1',
+            '```'
+        ];
+        verifySignatureLines(actual, expected);
     });
 
     test('Across files', async () => {
@@ -61,10 +66,15 @@ suite('Hover Definition (Analysis Engine)', () => {
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '1,0', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '1,12', 'End position is incorrect');
 
-        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
-        assert.equal(lines.length, 2, 'incorrect number of lines');
-        assert.equal(lines[0].trim(), 'two.ct().fun: method fun of two.ct objects', 'function signature line #1 is incorrect');
-        assert.equal(lines[1].trim(), 'This is fun', 'function signature line #2 is incorrect');
+        const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
+        const expected = [
+            'two.ct().fun:',
+            'method fun of two.ct objects',
+            '```html',
+            'This is fun',
+            '```'
+        ];
+        verifySignatureLines(actual, expected);
     });
 
     test('With Unicode Characters', async () => {
@@ -73,13 +83,18 @@ suite('Hover Definition (Analysis Engine)', () => {
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '25,0', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '25,7', 'End position is incorrect');
 
-        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
-        assert.equal(lines.length, 5, 'incorrect number of lines');
-        assert.equal(lines[0].trim(), 'Foo.bar: def four.Foo.bar()', 'function signature line #1 is incorrect');
-        assert.equal(lines[1].trim(), '说明 - keep this line, it works', 'function signature line #2 is incorrect');
-        assert.equal(lines[2].trim(), 'delete following line, it works', 'function signature line #3 is incorrect');
-        assert.equal(lines[3].trim(), '如果存在需要等待审批或正在执行的任务，将不刷新页面', 'function signature line #4 is incorrect');
-        assert.equal(lines[4].trim(), 'declared in Foo', 'function signature line #5 is incorrect');
+        const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
+        const expected = [
+            'Foo.bar:',
+            'four.Foo.bar() -> bool',
+            '```html',
+            '说明 - keep this line, it works',
+            'delete following line, it works',
+            '如果存在需要等待审批或正在执行的任务，将不刷新页面',
+            '```',
+            'declared in Foo'
+        ];
+        verifySignatureLines(actual, expected);
     });
 
     test('Across files with Unicode Characters', async () => {
@@ -88,11 +103,16 @@ suite('Hover Definition (Analysis Engine)', () => {
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '1,0', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '1,16', 'End position is incorrect');
 
-        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
-        assert.equal(lines.length, 3, 'incorrect number of lines');
-        assert.equal(lines[0].trim(), 'four.showMessage: def four.showMessage()', 'function signature line #1 is incorrect');
-        assert.equal(lines[1].trim(), 'Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи.', 'function signature line #2 is incorrect');
-        assert.equal(lines[2].trim(), 'Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.', 'function signature line #3 is incorrect');
+        const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
+        const expected = [
+            'four.showMessage:',
+            'four.showMessage()',
+            '```html',
+            'Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи.',
+            'Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.',
+            '```'
+        ];
+        verifySignatureLines(actual, expected);
     });
 
     test('Nothing for keywords (class)', async () => {
@@ -111,10 +131,22 @@ suite('Hover Definition (Analysis Engine)', () => {
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '11,7', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '11,18', 'End position is incorrect');
 
-        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
-        assert.equal(lines.length, 9, 'incorrect number of lines');
-        assert.equal(lines[0].trim(), 'misc.Random: class misc.Random(_random.Random)', 'function signature line #1 is incorrect');
-        assert.equal(lines[1].trim(), 'Random number generator base class used by bound module functions.', 'function signature line #2 is incorrect');
+        const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
+        const expected = [
+            'misc.Random:',
+            'class misc.Random(_random.Random)',
+            'Random number generator base class used by bound module functions.',
+            '```html',
+            'Used to instantiate instances of Random to get generators that don\'t',
+            'share state.',
+            'Class Random can also be subclassed if you want to use a different basic',
+            'generator of your own devising: in that case, override the following',
+            'methods: random(), seed(), getstate(), and setstate().',
+            'Optionally, implement a getrandbits() method so that randrange()',
+            'can cover arbitrarily large ranges.',
+            '```'
+        ];
+        verifySignatureLines(actual, expected);
     });
 
     test('Highlight Method', async () => {
@@ -123,10 +155,13 @@ suite('Hover Definition (Analysis Engine)', () => {
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '12,0', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '12,12', 'End position is incorrect');
 
-        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
-        assert.equal(lines.length, 2, 'incorrect number of lines');
-        assert.equal(lines[0].trim(), 'rnd2.randint: method randint of misc.Random objects  -> int', 'function signature line #1 is incorrect');
-        assert.equal(lines[1].trim(), 'Return random integer in range [a, b], including both end points.', 'function signature line #2 is incorrect');
+        const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
+        const expected = [
+            'rnd2.randint:',
+            'method randint of misc.Random objects  -> int',
+            'Return random integer in range [a, b], including both end points.'
+        ];
+        verifySignatureLines(actual, expected);
     });
 
     test('Highlight Function', async () => {
@@ -135,11 +170,14 @@ suite('Hover Definition (Analysis Engine)', () => {
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '8,6', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '8,15', 'End position is incorrect');
 
-        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
-        assert.equal(lines.length, 3, 'incorrect number of lines');
-        assert.equal(lines[0].trim(), 'math.acos: built-in function acos(x)', 'function signature line #1 is incorrect');
-        assert.equal(lines[1].trim(), 'acos(x)', 'function signature line #2 is incorrect');
-        assert.equal(lines[2].trim(), 'Return the arc cosine (measured in radians) of x.', 'function signature line #3 is incorrect');
+        const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
+        const expected = [
+            'math.acos:',
+            'built-in function acos(x)',
+            'acos(x)',
+            'Return the arc cosine (measured in radians) of x.'
+        ];
+        verifySignatureLines(actual, expected);
     });
 
     test('Highlight Multiline Method Signature', async () => {
@@ -148,11 +186,16 @@ suite('Hover Definition (Analysis Engine)', () => {
         assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '14,4', 'Start position is incorrect');
         assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '14,15', 'End position is incorrect');
 
-        const lines = normalizeMarkedString(def[0].contents[0]).splitLines();
-        assert.equal(lines.length, 3, 'incorrect number of lines');
-        assert.equal(lines[0].trim(), 'misc.Thread: class misc.Thread(_Verbose)', 'function signature line #1 is incorrect');
-        assert.equal(lines[1].trim(), 'A class that represents a thread of control.', 'function signature line #2 is incorrect');
-
+        const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
+        const expected = [
+            'misc.Thread:',
+            'class misc.Thread(_Verbose)',
+            'A class that represents a thread of control.',
+            '```html',
+            'This class can be safely subclassed in a limited fashion.',
+            '```'
+        ];
+        verifySignatureLines(actual, expected);
     });
 
     test('Variable', async () => {
@@ -181,4 +224,11 @@ suite('Hover Definition (Analysis Engine)', () => {
             assert.fail(contents, '', '\'Return a capitalized version of S/Return a copy of the string S with only its first character\' message missing', 'compare');
         }
     });
+
+    function verifySignatureLines(actual: string[], expected: string[]) {
+        assert.equal(actual.length, expected.length, 'incorrect number of lines');
+        for (let i = 0; i < actual.length; i += 1) {
+            assert.equal(actual[i].trim(), expected[i], `signature line ${i + 1} is incorrect`);
+        }
+    }
 });
