@@ -5,16 +5,13 @@ the interesting information about completion and goto operations.
 """
 import re
 
-from parso.cache import parser_cache
 from parso.python.tree import search_ancestor
 
-from jedi._compatibility import u
 from jedi import settings
 from jedi.evaluate.utils import ignored, unite
 from jedi.cache import memoize_method
 from jedi.evaluate import imports
 from jedi.evaluate import compiled
-from jedi.evaluate.filters import ParamName
 from jedi.evaluate.imports import ImportName
 from jedi.evaluate.context import instance
 from jedi.evaluate.context import ClassContext, FunctionContext, FunctionExecutionContext
@@ -125,13 +122,14 @@ class BaseDefinition(object):
 
         Finally, here is what you can get from :attr:`type`:
 
-        >>> defs[0].type
+        >>> defs = [str(d.type) for d in defs]  # It's unicode and in Py2 has u before it.
+        >>> defs[0]
         'module'
-        >>> defs[1].type
+        >>> defs[1]
         'class'
-        >>> defs[2].type
+        >>> defs[2]
         'instance'
-        >>> defs[3].type
+        >>> defs[3]
         'function'
 
         """
@@ -159,7 +157,7 @@ class BaseDefinition(object):
                 except IndexError:
                     pass
 
-            if name.api_type == 'module':
+            if name.api_type in 'module':
                 module_contexts = name.infer()
                 if module_contexts:
                     module_context, = module_contexts
@@ -259,7 +257,7 @@ class BaseDefinition(object):
     @property
     def description(self):
         """A textual description of the object."""
-        return u(self._name.string_name)
+        return self._name.string_name
 
     @property
     def full_name(self):
@@ -324,9 +322,9 @@ class BaseDefinition(object):
                     param_names = param_names[1:]
             elif isinstance(context, (instance.AbstractInstanceContext, ClassContext)):
                 if isinstance(context, ClassContext):
-                    search = '__init__'
+                    search = u'__init__'
                 else:
-                    search = '__call__'
+                    search = u'__call__'
                 names = context.get_function_slot_names(search)
                 if not names:
                     return []
@@ -377,8 +375,7 @@ class BaseDefinition(object):
         if self.in_builtin_module():
             return ''
 
-        path = self._name.get_root_context().py__file__()
-        lines = parser_cache[self._evaluator.grammar._hashed][path].lines
+        lines = self._name.get_root_context().code_lines
 
         index = self._name.start_pos[0] - 1
         start_index = max(index - before, 0)
@@ -406,7 +403,7 @@ class Completion(BaseDefinition):
                 and self.type == 'Function':
             append = '('
 
-        if isinstance(self._name, ParamName) and self._stack is not None:
+        if self._name.api_type == 'param' and self._stack is not None:
             node_names = list(self._stack.get_node_names(self._evaluator.grammar._pgen_grammar))
             if 'trailer' in node_names and 'argument' not in node_names:
                 append += '='
@@ -525,14 +522,13 @@ class Definition(BaseDefinition):
             if typ == 'function':
                 # For the description we want a short and a pythonic way.
                 typ = 'def'
-            return typ + ' ' + u(self._name.string_name)
+            return typ + ' ' + self._name.string_name
         elif typ == 'param':
             code = search_ancestor(tree_name, 'param').get_code(
                 include_prefix=False,
                 include_comma=False
             )
             return typ + ' ' + code
-
 
         definition = tree_name.get_definition() or tree_name
         # Remove the prefix, because that's not what we want for get_code
@@ -555,7 +551,7 @@ class Definition(BaseDefinition):
         .. todo:: Add full path. This function is should return a
             `module.class.function` path.
         """
-        position = '' if self.in_builtin_module else '@%s' % (self.line)
+        position = '' if self.in_builtin_module else '@%s' % self.line
         return "%s:%s%s" % (self.module_name, self.description, position)
 
     @memoize_method

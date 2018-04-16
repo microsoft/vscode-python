@@ -1,11 +1,10 @@
 import os
 from itertools import chain
 
-from jedi._compatibility import use_metaclass
-from jedi.evaluate.cache import evaluator_method_cache, CachedMetaClass
+from jedi.evaluate.cache import evaluator_method_cache
 from jedi.evaluate import imports
 from jedi.evaluate.filters import DictFilter, AbstractNameDefinition
-from jedi.evaluate.base_context import NO_CONTEXTS, TreeContext
+from jedi.evaluate.base_context import TreeContext, ContextSet
 
 
 class ImplicitNSName(AbstractNameDefinition):
@@ -14,27 +13,31 @@ class ImplicitNSName(AbstractNameDefinition):
     This object will prevent Jedi from raising exceptions
     """
     def __init__(self, implicit_ns_context, string_name):
-        self.implicit_ns_context = implicit_ns_context
+        self.parent_context = implicit_ns_context
         self.string_name = string_name
 
     def infer(self):
-        return NO_CONTEXTS
+        return ContextSet(self.parent_context)
 
     def get_root_context(self):
-        return self.implicit_ns_context
+        return self.parent_context
 
 
-class ImplicitNamespaceContext(use_metaclass(CachedMetaClass, TreeContext)):
+class ImplicitNamespaceContext(TreeContext):
     """
     Provides support for implicit namespace packages
     """
-    api_type = 'module'
+    # Is a module like every other module, because if you import an empty
+    # folder foobar it will be available as an object:
+    # <module 'foobar' (namespace)>.
+    api_type = u'module'
     parent_context = None
 
-    def __init__(self, evaluator, fullname):
+    def __init__(self, evaluator, fullname, paths):
         super(ImplicitNamespaceContext, self).__init__(evaluator, parent_context=None)
         self.evaluator = evaluator
-        self.fullname = fullname
+        self._fullname = fullname
+        self.paths = paths
 
     def get_filters(self, search_global, until_position=None, origin_scope=None):
         yield DictFilter(self._sub_modules_dict())
@@ -51,7 +54,7 @@ class ImplicitNamespaceContext(use_metaclass(CachedMetaClass, TreeContext)):
     def py__package__(self):
         """Return the fullname
         """
-        return self.fullname
+        return self._fullname
 
     @property
     def py__path__(self):
@@ -61,8 +64,7 @@ class ImplicitNamespaceContext(use_metaclass(CachedMetaClass, TreeContext)):
     def _sub_modules_dict(self):
         names = {}
 
-        paths = self.paths
-        file_names = chain.from_iterable(os.listdir(path) for path in paths)
+        file_names = chain.from_iterable(os.listdir(path) for path in self.paths)
         mods = [
             file_name.rpartition('.')[0] if '.' in file_name else file_name
             for file_name in file_names

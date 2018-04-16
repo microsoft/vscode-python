@@ -56,7 +56,10 @@ class NameFinder(object):
         names = self.filter_name(filters)
         if self._found_predefined_types is not None and names:
             check = flow_analysis.reachability_check(
-                self._context, self._context.tree_node, self._name)
+                context=self._context,
+                context_scope=self._context.tree_node,
+                node=self._name,
+            )
             if check is flow_analysis.UNREACHABLE:
                 return ContextSet()
             return self._found_predefined_types
@@ -92,7 +95,26 @@ class NameFinder(object):
     def get_filters(self, search_global=False):
         origin_scope = self._get_origin_scope()
         if search_global:
-            return get_global_filters(self._evaluator, self._context, self._position, origin_scope)
+            position = self._position
+
+            # For functions and classes the defaults don't belong to the
+            # function and get evaluated in the context before the function. So
+            # make sure to exclude the function/class name.
+            if origin_scope is not None:
+                ancestor = search_ancestor(origin_scope, 'funcdef', 'classdef', 'lambdef')
+                lambdef = None
+                if ancestor == 'lambdef':
+                    # For lambdas it's even more complicated since parts will
+                    # be evaluated later.
+                    lambdef = ancestor
+                    ancestor = search_ancestor(origin_scope, 'funcdef', 'classdef')
+                if ancestor is not None:
+                    colon = ancestor.children[-2]
+                    if position < colon.start_pos:
+                        if lambdef is None or position < lambdef.children[-2].start_pos:
+                            position = ancestor.start_pos
+
+            return get_global_filters(self._evaluator, self._context, position, origin_scope)
         else:
             return self._context.get_filters(search_global, self._position, origin_scope=origin_scope)
 
@@ -102,8 +124,7 @@ class NameFinder(object):
         ``filters``), until a name fits.
         """
         names = []
-        if self._context.predefined_names:
-            # TODO is this ok? node might not always be a tree.Name
+        if self._context.predefined_names and isinstance(self._name, tree.Name):
             node = self._name
             while node is not None and not is_scope(node):
                 node = node.parent
@@ -133,14 +154,14 @@ class NameFinder(object):
                                 continue
                 break
 
-        debug.dbg('finder.filter_name "%s" in (%s): %s@%s', self._string_name,
-                  self._context, names, self._position)
+        debug.dbg('finder.filter_name %s in (%s): %s@%s',
+                  self._string_name, self._context, names, self._position)
         return list(names)
 
     def _check_getattr(self, inst):
         """Checks for both __getattr__ and __getattribute__ methods"""
         # str is important, because it shouldn't be `Name`!
-        name = compiled.create(self._evaluator, self._string_name)
+        name = compiled.create_simple_object(self._evaluator, self._string_name)
 
         # This is a little bit special. `__getattribute__` is in Python
         # executed before `__getattr__`. But: I know no use case, where
@@ -149,8 +170,8 @@ class NameFinder(object):
         # We are inversing this, because a hand-crafted `__getattribute__`
         # could still call another hand-crafted `__getattr__`, but not the
         # other way around.
-        names = (inst.get_function_slot_names('__getattr__') or
-                 inst.get_function_slot_names('__getattribute__'))
+        names = (inst.get_function_slot_names(u'__getattr__') or
+                 inst.get_function_slot_names(u'__getattribute__'))
         return inst.execute_function_slots(names, name)
 
     def _names_to_types(self, names, attribute_lookup):
@@ -248,8 +269,7 @@ def _check_isinstance_type(context, element, search_name):
 
     context_set = ContextSet()
     for cls_or_tup in lazy_context_cls.infer():
-        if isinstance(cls_or_tup, iterable.AbstractIterable) and \
-                cls_or_tup.array_type == 'tuple':
+        if isinstance(cls_or_tup, iterable.Sequence) and cls_or_tup.array_type == 'tuple':
             for lazy_context in cls_or_tup.py__iter__():
                 for context in lazy_context.infer():
                     context_set |= context.execute_evaluated()

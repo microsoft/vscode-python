@@ -1,3 +1,11 @@
+"""
+Contexts are the "values" that Python would return. However Contexts are at the
+same time also the "contexts" that a user is currently sitting in.
+
+A ContextSet is typically used to specify the return of a function or any other
+static analysis operation. In jedi there are always multiple returns and not
+just one.
+"""
 from parso.python.tree import ExprStmt, CompFor
 
 from jedi import debug
@@ -63,10 +71,13 @@ class Context(BaseContext):
         arguments = ValuesArguments([ContextSet(value) for value in value_list])
         return self.execute(arguments)
 
-    def iterate(self, contextualized_node=None):
-        debug.dbg('iterate')
+    def iterate(self, contextualized_node=None, is_async=False):
+        debug.dbg('iterate %s', self)
         try:
-            iter_method = self.py__iter__
+            if is_async:
+                iter_method = self.py__aiter__
+            else:
+                iter_method = self.py__iter__
         except AttributeError:
             if contextualized_node is not None:
                 from jedi.evaluate import analysis
@@ -81,17 +92,22 @@ class Context(BaseContext):
 
     def get_item(self, index_contexts, contextualized_node):
         from jedi.evaluate.compiled import CompiledObject
-        from jedi.evaluate.context.iterable import Slice, AbstractIterable
+        from jedi.evaluate.context.iterable import Slice, Sequence
         result = ContextSet()
 
         for index in index_contexts:
-            if isinstance(index, (CompiledObject, Slice)):
+            if isinstance(index, Slice):
                 index = index.obj
+            if isinstance(index, CompiledObject):
+                try:
+                    index = index.get_safe_value()
+                except ValueError:
+                    pass
 
-            if type(index) not in (float, int, str, unicode, slice, type(Ellipsis)):
+            if type(index) not in (float, int, str, unicode, slice, bytes):
                 # If the index is not clearly defined, we have to get all the
                 # possiblities.
-                if isinstance(self, AbstractIterable) and self.array_type == 'dict':
+                if isinstance(self, Sequence) and self.array_type == 'dict':
                     result |= self.dict_values()
                 else:
                     result |= iterate_contexts(ContextSet(self))
@@ -139,10 +155,6 @@ class Context(BaseContext):
             return f.filter_name(filters)
         return f.find(filters, attribute_lookup=not search_global)
 
-        return self.evaluator.find_types(
-            self, name_or_str, name_context, position, search_global, is_goto,
-            analysis_errors)
-
     def create_context(self, node, node_is_context=False, node_is_object=False):
         return self.evaluator.create_context(self, node, node_is_context, node_is_object)
 
@@ -169,14 +181,14 @@ class Context(BaseContext):
         return None
 
 
-def iterate_contexts(contexts, contextualized_node=None):
+def iterate_contexts(contexts, contextualized_node=None, is_async=False):
     """
     Calls `iterate`, on all contexts but ignores the ordering and just returns
     all contexts that the iterate functions yield.
     """
     return ContextSet.from_sets(
         lazy_context.infer()
-        for lazy_context in contexts.iterate(contextualized_node)
+        for lazy_context in contexts.iterate(contextualized_node, is_async=is_async)
     )
 
 
@@ -241,9 +253,9 @@ class ContextSet(BaseContextSet):
     def py__class__(self):
         return ContextSet.from_iterable(c.py__class__() for c in self._set)
 
-    def iterate(self, contextualized_node=None):
+    def iterate(self, contextualized_node=None, is_async=False):
         from jedi.evaluate.lazy_context import get_merged_lazy_context
-        type_iters = [c.iterate(contextualized_node) for c in self._set]
+        type_iters = [c.iterate(contextualized_node, is_async=is_async) for c in self._set]
         for lazy_contexts in zip_longest(*type_iters):
             yield get_merged_lazy_context(
                 [l for l in lazy_contexts if l is not None]

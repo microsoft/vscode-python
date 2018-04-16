@@ -14,9 +14,9 @@ import sys
 
 import parso
 from parso.python import tree
-from parso import python_bytes_to_unicode, split_lines
 
-from jedi.parser_utils import get_executable_nodes, get_statement_of_position
+from jedi._compatibility import force_unicode, is_py3
+from jedi.parser_utils import get_executable_nodes
 from jedi import debug
 from jedi import settings
 from jedi import cache
@@ -24,17 +24,17 @@ from jedi.api import classes
 from jedi.api import interpreter
 from jedi.api import helpers
 from jedi.api.completion import Completion
+from jedi.api.environment import InterpreterEnvironment
+from jedi.api.project import get_default_project
 from jedi.evaluate import Evaluator
 from jedi.evaluate import imports
 from jedi.evaluate import usages
-from jedi.evaluate.project import Project
 from jedi.evaluate.arguments import try_iter_content
 from jedi.evaluate.helpers import get_module_names, evaluate_call_of_leaf
 from jedi.evaluate.sys_path import dotted_path_in_sys_path
-from jedi.evaluate.filters import TreeNameDefinition
+from jedi.evaluate.filters import TreeNameDefinition, ParamName
 from jedi.evaluate.syntax_tree import tree_name_to_contexts
 from jedi.evaluate.context import ModuleContext
-from jedi.evaluate.context.module import ModuleName
 from jedi.evaluate.context.iterable import unpack_tuple_to_dict
 
 # Jedi uses lots and lots of recursion. By setting this a little bit higher, we
@@ -79,10 +79,11 @@ class Script(object):
     :type encoding: str
     :param sys_path: ``sys.path`` to use during analysis of the script
     :type sys_path: list
-
+    :param environment: TODO
+    :type sys_path: Environment
     """
     def __init__(self, source=None, line=None, column=None, path=None,
-                 encoding='utf-8', sys_path=None):
+                 encoding='utf-8', sys_path=None, environment=None):
         self._orig_path = path
         # An empty path (also empty string) should always result in no path.
         self.path = os.path.abspath(path) if path else None
@@ -92,14 +93,45 @@ class Script(object):
             with open(path, 'rb') as f:
                 source = f.read()
 
-        # TODO do we really want that?
-        self._source = python_bytes_to_unicode(source, encoding, errors='replace')
-        self._code_lines = split_lines(self._source)
+        # Load the Python grammar of the current interpreter.
+        self._grammar = parso.load_grammar()
+
+        if sys_path is not None and not is_py3:
+            sys_path = list(map(force_unicode, sys_path))
+
+        # Load the Python grammar of the current interpreter.
+        project = get_default_project(
+            os.path.dirname(self.path)if path else os.getcwd()
+        )
+        # TODO deprecate and remove sys_path from the Script API.
+        if sys_path is not None:
+            project._sys_path = sys_path
+        self._evaluator = Evaluator(
+            project, environment=environment, script_path=self.path
+        )
+        self._project = project
+        debug.speed('init')
+        self._module_node, source = self._evaluator.parse_and_get_code(
+            code=source,
+            path=self.path,
+            cache=False,  # No disk cache, because the current script often changes.
+            diff_cache=True,
+            cache_path=settings.cache_directory
+        )
+        debug.speed('parsed')
+        self._code_lines = parso.split_lines(source, keepends=True)
+        self._code = source
         line = max(len(self._code_lines), 1) if line is None else line
         if not (0 < line <= len(self._code_lines)):
             raise ValueError('`line` parameter is not in a valid range.')
 
-        line_len = len(self._code_lines[line - 1])
+        line_string = self._code_lines[line - 1]
+        line_len = len(line_string)
+        if line_string.endswith('\r\n'):
+            line_len -= 1
+        if line_string.endswith('\n'):
+            line_len -= 1
+
         column = line_len if column is None else column
         if not (0 <= column <= line_len):
             raise ValueError('`column` parameter is not in a valid range.')
@@ -109,34 +141,18 @@ class Script(object):
         cache.clear_time_caches()
         debug.reset_time()
 
-        # Load the Python grammar of the current interpreter.
-        self._grammar = parso.load_grammar()
-        project = Project(sys_path=sys_path)
-        self._evaluator = Evaluator(self._grammar, project)
-        project.add_script_path(self.path)
-        debug.speed('init')
-
-    @cache.memoize_method
-    def _get_module_node(self):
-        return self._grammar.parse(
-            code=self._source,
-            path=self.path,
-            cache=False,  # No disk cache, because the current script often changes.
-            diff_cache=True,
-            cache_path=settings.cache_directory
-        )
-
-    @cache.memoize_method
     def _get_module(self):
-        module = ModuleContext(
-            self._evaluator,
-            self._get_module_node(),
-            self.path
-        )
+        name = '__main__'
         if self.path is not None:
-            name = dotted_path_in_sys_path(self._evaluator.project.sys_path, self.path)
-            if name is not None:
-                imports.add_module(self._evaluator, name, module)
+            n = dotted_path_in_sys_path(self._evaluator.get_sys_path(), self.path)
+            if n is not None:
+                name = n
+
+        module = ModuleContext(
+            self._evaluator, self._module_node, self.path,
+            code_lines=self._code_lines
+        )
+        imports.add_module_to_cache(self._evaluator, name, module)
         return module
 
     def __repr__(self):
@@ -171,10 +187,9 @@ class Script(object):
 
         :rtype: list of :class:`classes.Definition`
         """
-        module_node = self._get_module_node()
-        leaf = module_node.get_name_of_position(self._pos)
+        leaf = self._module_node.get_name_of_position(self._pos)
         if leaf is None:
-            leaf = module_node.get_leaf_for_position(self._pos)
+            leaf = self._module_node.get_leaf_for_position(self._pos)
             if leaf is None:
                 return []
 
@@ -205,7 +220,7 @@ class Script(object):
                 else:
                     yield name
 
-        tree_name = self._get_module_node().get_name_of_position(self._pos)
+        tree_name = self._module_node.get_name_of_position(self._pos)
         if tree_name is None:
             return []
         context = self._evaluator.create_context(self._get_module(), tree_name)
@@ -213,9 +228,7 @@ class Script(object):
 
         if follow_imports:
             def check(name):
-                if isinstance(name, ModuleName):
-                    return False
-                return name.api_type == 'module'
+                return name.is_import()
         else:
             def check(name):
                 return isinstance(name, imports.SubModuleName)
@@ -236,7 +249,7 @@ class Script(object):
 
         :rtype: list of :class:`classes.Definition`
         """
-        tree_name = self._get_module_node().get_name_of_position(self._pos)
+        tree_name = self._module_node.get_name_of_position(self._pos)
         if tree_name is None:
             # Must be syntax
             return []
@@ -263,7 +276,7 @@ class Script(object):
         :rtype: list of :class:`classes.CallSignature`
         """
         call_signature_details = \
-            helpers.get_call_signature_details(self._get_module_node(), self._pos)
+            helpers.get_call_signature_details(self._module_node, self._pos)
         if call_signature_details is None:
             return []
 
@@ -288,11 +301,11 @@ class Script(object):
 
     def _analysis(self):
         self._evaluator.is_analysis = True
-        module_node = self._get_module_node()
-        self._evaluator.analysis_modules = [module_node]
+        self._evaluator.analysis_modules = [self._module_node]
+        module = self._get_module()
         try:
-            for node in get_executable_nodes(module_node):
-                context = self._get_module().create_context(node)
+            for node in get_executable_nodes(self._module_node):
+                context = module.create_context(node)
                 if node.type in ('funcdef', 'classdef'):
                     # Resolve the decorators.
                     tree_name_to_contexts(self._evaluator, context, node.children[1])
@@ -356,21 +369,28 @@ class Interpreter(Script):
         except Exception:
             raise TypeError("namespaces must be a non-empty list of dicts.")
 
-        super(Interpreter, self).__init__(source, **kwds)
+        environment = kwds.get('environment', None)
+        if environment is None:
+            environment = InterpreterEnvironment()
+        else:
+            if not isinstance(environment, InterpreterEnvironment):
+                raise TypeError("The environment needs to be an InterpreterEnvironment subclass.")
+
+        super(Interpreter, self).__init__(source, environment=environment, **kwds)
         self.namespaces = namespaces
 
     def _get_module(self):
-        parser_module = super(Interpreter, self)._get_module_node()
         return interpreter.MixedModuleContext(
             self._evaluator,
-            parser_module,
+            self._module_node,
             self.namespaces,
-            path=self.path
+            path=self.path,
+            code_lines=self._code_lines,
         )
 
 
 def names(source=None, path=None, encoding='utf-8', all_scopes=False,
-          definitions=True, references=False):
+          definitions=True, references=False, environment=None):
     """
     Returns a list of `Definition` objects, containing name parts.
     This means you can call ``Definition.goto_assignments()`` and get the
@@ -389,17 +409,25 @@ def names(source=None, path=None, encoding='utf-8', all_scopes=False,
         is_def = _def._name.tree_name.is_definition()
         return definitions and is_def or references and not is_def
 
+    def create_name(name):
+        if name.parent.type == 'param':
+            cls = ParamName
+        else:
+            cls = TreeNameDefinition
+        is_module = name.parent.type == 'file_input'
+        return cls(
+            module_context.create_context(name if is_module else name.parent),
+            name
+        )
+
     # Set line/column to a random position, because they don't matter.
-    script = Script(source, line=1, column=0, path=path, encoding=encoding)
+    script = Script(source, line=1, column=0, path=path, encoding=encoding, environment=environment)
     module_context = script._get_module()
     defs = [
         classes.Definition(
             script._evaluator,
-            TreeNameDefinition(
-                module_context.create_context(name if name.parent.type == 'file_input' else name.parent),
-                name
-            )
-        ) for name in get_module_names(script._get_module_node(), all_scopes)
+            create_name(name)
+        ) for name in get_module_names(script._module_node, all_scopes)
     ]
     return sorted(filter(def_ref_filter, defs), key=lambda x: (x.line, x.column))
 

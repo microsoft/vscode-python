@@ -89,7 +89,7 @@ class ClassContext(use_metaclass(CachedMetaClass, TreeContext)):
     This class is not only important to extend `tree.Class`, it is also a
     important for descriptors (if the descriptor methods are evaluated or not).
     """
-    api_type = 'class'
+    api_type = u'class'
 
     def __init__(self, evaluator, parent_context, classdef):
         super(ClassContext, self).__init__(evaluator, parent_context=parent_context)
@@ -136,17 +136,17 @@ class ClassContext(use_metaclass(CachedMetaClass, TreeContext)):
         arglist = self.tree_node.get_super_arglist()
         if arglist:
             from jedi.evaluate import arguments
-            args = arguments.TreeArguments(self.evaluator, self, arglist)
+            args = arguments.TreeArguments(self.evaluator, self.parent_context, arglist)
             return [value for key, value in args.unpack() if key is None]
         else:
-            return [LazyKnownContext(compiled.create(self.evaluator, object))]
+            return [LazyKnownContext(compiled.builtin_from_name(self.evaluator, u'object'))]
 
     def py__call__(self, params):
         from jedi.evaluate.context import TreeInstance
         return ContextSet(TreeInstance(self.evaluator, self.parent_context, self, params))
 
     def py__class__(self):
-        return compiled.create(self.evaluator, type)
+        return compiled.builtin_from_name(self.evaluator, u'type')
 
     def get_params(self):
         from jedi.evaluate.context import AnonymousInstance
@@ -182,7 +182,7 @@ class ClassContext(use_metaclass(CachedMetaClass, TreeContext)):
         return []
 
     def get_param_names(self):
-        for name in self.get_function_slot_names('__init__'):
+        for name in self.get_function_slot_names(u'__init__'):
             for context_ in name.infer():
                 try:
                     method = context_.get_param_names

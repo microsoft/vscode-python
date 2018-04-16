@@ -1,14 +1,15 @@
 import textwrap
 from inspect import cleandoc
 
-from jedi._compatibility import literal_eval, is_py3
 from parso.python import tree
+from parso.cache import parser_cache
 
-_EXECUTE_NODES = set([
-    'funcdef', 'classdef', 'import_from', 'import_name', 'test', 'or_test',
-    'and_test', 'not_test', 'comparison', 'expr', 'xor_expr', 'and_expr',
-    'shift_expr', 'arith_expr', 'atom_expr', 'term', 'factor', 'power', 'atom'
-])
+from jedi._compatibility import literal_eval, force_unicode
+
+_EXECUTE_NODES = {'funcdef', 'classdef', 'import_from', 'import_name', 'test',
+                  'or_test', 'and_test', 'not_test', 'comparison', 'expr',
+                  'xor_expr', 'and_expr', 'shift_expr', 'arith_expr',
+                  'atom_expr', 'term', 'factor', 'power', 'atom'}
 
 _FLOW_KEYWORDS = (
     'try', 'except', 'finally', 'else', 'if', 'elif', 'with', 'for', 'while'
@@ -112,10 +113,7 @@ def clean_scope_docstring(scope_node):
         cleaned = cleandoc(safe_literal_eval(node.value))
         # Since we want the docstr output to be always unicode, just
         # force it.
-        if is_py3 or isinstance(cleaned, unicode):
-            return cleaned
-        else:
-            return unicode(cleaned, 'UTF-8', 'replace')
+        return force_unicode(cleaned)
     return ''
 
 
@@ -205,6 +203,9 @@ def get_following_comment_same_line(node):
             whitespace = node.children[5].get_first_leaf().prefix
         elif node.type == 'with_stmt':
             whitespace = node.children[3].get_first_leaf().prefix
+        elif node.type == 'funcdef':
+            # actually on the next line
+            whitespace = node.children[4].get_first_leaf().get_next_leaf().prefix
         else:
             whitespace = node.get_last_leaf().get_next_leaf().prefix
     except AttributeError:
@@ -239,3 +240,11 @@ def get_parent_scope(node, include_flows=False):
             break
         scope = scope.parent
     return scope
+
+
+def get_cached_code_lines(grammar, path):
+    """
+    Basically access the cached code lines in parso. This is not the nicest way
+    to do this, but we avoid splitting all the lines again.
+    """
+    return parser_cache[grammar._hashed][path].lines

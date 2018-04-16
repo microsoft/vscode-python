@@ -176,8 +176,6 @@ def get_module_names(module, all_scopes):
 @contextmanager
 def predefine_names(context, flow_scope, dct):
     predefined = context.predefined_names
-    if flow_scope in predefined:
-        raise NotImplementedError('Why does this happen?')
     predefined[flow_scope] = dct
     try:
         yield
@@ -190,12 +188,27 @@ def is_compiled(context):
 
 
 def is_string(context):
-    return is_compiled(context) and isinstance(context.obj, (str, unicode))
+    if context.evaluator.environment.version_info.major == 2:
+        str_classes = (unicode, bytes)
+    else:
+        str_classes = (unicode,)
+    return is_compiled(context) and isinstance(context.get_safe_value(default=None), str_classes)
 
 
 def is_literal(context):
     return is_number(context) or is_string(context)
 
 
+def _get_safe_value_or_none(context, accept):
+    if is_compiled(context):
+        value = context.get_safe_value(default=None)
+        if isinstance(value, accept):
+            return value
+
+
+def get_int_or_none(context):
+    return _get_safe_value_or_none(context, int)
+
+
 def is_number(context):
-    return is_compiled(context) and isinstance(context.obj, (int, float))
+    return _get_safe_value_or_none(context, (int, float)) is not None

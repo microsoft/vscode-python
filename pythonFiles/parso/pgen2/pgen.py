@@ -28,6 +28,7 @@ class ParserGenerator(object):
         c = grammar.Grammar(self._bnf_text)
         names = list(self.dfas.keys())
         names.sort()
+        # TODO do we still need this?
         names.remove(self.startsymbol)
         names.insert(0, self.startsymbol)
         for name in names:
@@ -316,8 +317,8 @@ class ParserGenerator(object):
 
     def _expect(self, type):
         if self.type != type:
-            self._raise_error("expected %s, got %s(%s)",
-                              type, self.type, self.value)
+            self._raise_error("expected %s(%s), got %s(%s)",
+                              type, token.tok_name[type], self.type, self.value)
         value = self.value
         self._gettoken()
         return value

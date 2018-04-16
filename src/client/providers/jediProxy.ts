@@ -7,8 +7,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as pidusage from 'pidusage';
 import { setInterval } from 'timers';
-import { Uri } from 'vscode';
-import * as vscode from 'vscode';
+import { CancellationToken, CancellationTokenSource, CompletionItemKind, Disposable, SymbolKind, Uri } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { debounce, swallowExceptions } from '../common/decorators';
 import '../common/extensions';
@@ -22,96 +21,96 @@ import * as logger from './../common/logger';
 
 const IS_WINDOWS = /^win/.test(process.platform);
 
-const pythonVSCodeTypeMappings = new Map<string, vscode.CompletionItemKind>();
-pythonVSCodeTypeMappings.set('none', vscode.CompletionItemKind.Value);
-pythonVSCodeTypeMappings.set('type', vscode.CompletionItemKind.Class);
-pythonVSCodeTypeMappings.set('tuple', vscode.CompletionItemKind.Class);
-pythonVSCodeTypeMappings.set('dict', vscode.CompletionItemKind.Class);
-pythonVSCodeTypeMappings.set('dictionary', vscode.CompletionItemKind.Class);
-pythonVSCodeTypeMappings.set('function', vscode.CompletionItemKind.Function);
-pythonVSCodeTypeMappings.set('lambda', vscode.CompletionItemKind.Function);
-pythonVSCodeTypeMappings.set('generator', vscode.CompletionItemKind.Function);
-pythonVSCodeTypeMappings.set('class', vscode.CompletionItemKind.Class);
-pythonVSCodeTypeMappings.set('instance', vscode.CompletionItemKind.Reference);
-pythonVSCodeTypeMappings.set('method', vscode.CompletionItemKind.Method);
-pythonVSCodeTypeMappings.set('builtin', vscode.CompletionItemKind.Class);
-pythonVSCodeTypeMappings.set('builtinfunction', vscode.CompletionItemKind.Function);
-pythonVSCodeTypeMappings.set('module', vscode.CompletionItemKind.Module);
-pythonVSCodeTypeMappings.set('file', vscode.CompletionItemKind.File);
-pythonVSCodeTypeMappings.set('xrange', vscode.CompletionItemKind.Class);
-pythonVSCodeTypeMappings.set('slice', vscode.CompletionItemKind.Class);
-pythonVSCodeTypeMappings.set('traceback', vscode.CompletionItemKind.Class);
-pythonVSCodeTypeMappings.set('frame', vscode.CompletionItemKind.Class);
-pythonVSCodeTypeMappings.set('buffer', vscode.CompletionItemKind.Class);
-pythonVSCodeTypeMappings.set('dictproxy', vscode.CompletionItemKind.Class);
-pythonVSCodeTypeMappings.set('funcdef', vscode.CompletionItemKind.Function);
-pythonVSCodeTypeMappings.set('property', vscode.CompletionItemKind.Property);
-pythonVSCodeTypeMappings.set('import', vscode.CompletionItemKind.Module);
-pythonVSCodeTypeMappings.set('keyword', vscode.CompletionItemKind.Keyword);
-pythonVSCodeTypeMappings.set('constant', vscode.CompletionItemKind.Variable);
-pythonVSCodeTypeMappings.set('variable', vscode.CompletionItemKind.Variable);
-pythonVSCodeTypeMappings.set('value', vscode.CompletionItemKind.Value);
-pythonVSCodeTypeMappings.set('param', vscode.CompletionItemKind.Variable);
-pythonVSCodeTypeMappings.set('statement', vscode.CompletionItemKind.Keyword);
+const pythonVSCodeTypeMappings = new Map<string, CompletionItemKind>();
+pythonVSCodeTypeMappings.set('none', CompletionItemKind.Value);
+pythonVSCodeTypeMappings.set('type', CompletionItemKind.Class);
+pythonVSCodeTypeMappings.set('tuple', CompletionItemKind.Class);
+pythonVSCodeTypeMappings.set('dict', CompletionItemKind.Class);
+pythonVSCodeTypeMappings.set('dictionary', CompletionItemKind.Class);
+pythonVSCodeTypeMappings.set('function', CompletionItemKind.Function);
+pythonVSCodeTypeMappings.set('lambda', CompletionItemKind.Function);
+pythonVSCodeTypeMappings.set('generator', CompletionItemKind.Function);
+pythonVSCodeTypeMappings.set('class', CompletionItemKind.Class);
+pythonVSCodeTypeMappings.set('instance', CompletionItemKind.Reference);
+pythonVSCodeTypeMappings.set('method', CompletionItemKind.Method);
+pythonVSCodeTypeMappings.set('builtin', CompletionItemKind.Class);
+pythonVSCodeTypeMappings.set('builtinfunction', CompletionItemKind.Function);
+pythonVSCodeTypeMappings.set('module', CompletionItemKind.Module);
+pythonVSCodeTypeMappings.set('file', CompletionItemKind.File);
+pythonVSCodeTypeMappings.set('xrange', CompletionItemKind.Class);
+pythonVSCodeTypeMappings.set('slice', CompletionItemKind.Class);
+pythonVSCodeTypeMappings.set('traceback', CompletionItemKind.Class);
+pythonVSCodeTypeMappings.set('frame', CompletionItemKind.Class);
+pythonVSCodeTypeMappings.set('buffer', CompletionItemKind.Class);
+pythonVSCodeTypeMappings.set('dictproxy', CompletionItemKind.Class);
+pythonVSCodeTypeMappings.set('funcdef', CompletionItemKind.Function);
+pythonVSCodeTypeMappings.set('property', CompletionItemKind.Property);
+pythonVSCodeTypeMappings.set('import', CompletionItemKind.Module);
+pythonVSCodeTypeMappings.set('keyword', CompletionItemKind.Keyword);
+pythonVSCodeTypeMappings.set('constant', CompletionItemKind.Variable);
+pythonVSCodeTypeMappings.set('variable', CompletionItemKind.Variable);
+pythonVSCodeTypeMappings.set('value', CompletionItemKind.Value);
+pythonVSCodeTypeMappings.set('param', CompletionItemKind.Variable);
+pythonVSCodeTypeMappings.set('statement', CompletionItemKind.Keyword);
 
-const pythonVSCodeSymbolMappings = new Map<string, vscode.SymbolKind>();
-pythonVSCodeSymbolMappings.set('none', vscode.SymbolKind.Variable);
-pythonVSCodeSymbolMappings.set('type', vscode.SymbolKind.Class);
-pythonVSCodeSymbolMappings.set('tuple', vscode.SymbolKind.Class);
-pythonVSCodeSymbolMappings.set('dict', vscode.SymbolKind.Class);
-pythonVSCodeSymbolMappings.set('dictionary', vscode.SymbolKind.Class);
-pythonVSCodeSymbolMappings.set('function', vscode.SymbolKind.Function);
-pythonVSCodeSymbolMappings.set('lambda', vscode.SymbolKind.Function);
-pythonVSCodeSymbolMappings.set('generator', vscode.SymbolKind.Function);
-pythonVSCodeSymbolMappings.set('class', vscode.SymbolKind.Class);
-pythonVSCodeSymbolMappings.set('instance', vscode.SymbolKind.Class);
-pythonVSCodeSymbolMappings.set('method', vscode.SymbolKind.Method);
-pythonVSCodeSymbolMappings.set('builtin', vscode.SymbolKind.Class);
-pythonVSCodeSymbolMappings.set('builtinfunction', vscode.SymbolKind.Function);
-pythonVSCodeSymbolMappings.set('module', vscode.SymbolKind.Module);
-pythonVSCodeSymbolMappings.set('file', vscode.SymbolKind.File);
-pythonVSCodeSymbolMappings.set('xrange', vscode.SymbolKind.Array);
-pythonVSCodeSymbolMappings.set('slice', vscode.SymbolKind.Class);
-pythonVSCodeSymbolMappings.set('traceback', vscode.SymbolKind.Class);
-pythonVSCodeSymbolMappings.set('frame', vscode.SymbolKind.Class);
-pythonVSCodeSymbolMappings.set('buffer', vscode.SymbolKind.Array);
-pythonVSCodeSymbolMappings.set('dictproxy', vscode.SymbolKind.Class);
-pythonVSCodeSymbolMappings.set('funcdef', vscode.SymbolKind.Function);
-pythonVSCodeSymbolMappings.set('property', vscode.SymbolKind.Property);
-pythonVSCodeSymbolMappings.set('import', vscode.SymbolKind.Module);
-pythonVSCodeSymbolMappings.set('keyword', vscode.SymbolKind.Variable);
-pythonVSCodeSymbolMappings.set('constant', vscode.SymbolKind.Constant);
-pythonVSCodeSymbolMappings.set('variable', vscode.SymbolKind.Variable);
-pythonVSCodeSymbolMappings.set('value', vscode.SymbolKind.Variable);
-pythonVSCodeSymbolMappings.set('param', vscode.SymbolKind.Variable);
-pythonVSCodeSymbolMappings.set('statement', vscode.SymbolKind.Variable);
-pythonVSCodeSymbolMappings.set('boolean', vscode.SymbolKind.Boolean);
-pythonVSCodeSymbolMappings.set('int', vscode.SymbolKind.Number);
-pythonVSCodeSymbolMappings.set('longlean', vscode.SymbolKind.Number);
-pythonVSCodeSymbolMappings.set('float', vscode.SymbolKind.Number);
-pythonVSCodeSymbolMappings.set('complex', vscode.SymbolKind.Number);
-pythonVSCodeSymbolMappings.set('string', vscode.SymbolKind.String);
-pythonVSCodeSymbolMappings.set('unicode', vscode.SymbolKind.String);
-pythonVSCodeSymbolMappings.set('list', vscode.SymbolKind.Array);
+const pythonVSCodeSymbolMappings = new Map<string, SymbolKind>();
+pythonVSCodeSymbolMappings.set('none', SymbolKind.Variable);
+pythonVSCodeSymbolMappings.set('type', SymbolKind.Class);
+pythonVSCodeSymbolMappings.set('tuple', SymbolKind.Class);
+pythonVSCodeSymbolMappings.set('dict', SymbolKind.Class);
+pythonVSCodeSymbolMappings.set('dictionary', SymbolKind.Class);
+pythonVSCodeSymbolMappings.set('function', SymbolKind.Function);
+pythonVSCodeSymbolMappings.set('lambda', SymbolKind.Function);
+pythonVSCodeSymbolMappings.set('generator', SymbolKind.Function);
+pythonVSCodeSymbolMappings.set('class', SymbolKind.Class);
+pythonVSCodeSymbolMappings.set('instance', SymbolKind.Class);
+pythonVSCodeSymbolMappings.set('method', SymbolKind.Method);
+pythonVSCodeSymbolMappings.set('builtin', SymbolKind.Class);
+pythonVSCodeSymbolMappings.set('builtinfunction', SymbolKind.Function);
+pythonVSCodeSymbolMappings.set('module', SymbolKind.Module);
+pythonVSCodeSymbolMappings.set('file', SymbolKind.File);
+pythonVSCodeSymbolMappings.set('xrange', SymbolKind.Array);
+pythonVSCodeSymbolMappings.set('slice', SymbolKind.Class);
+pythonVSCodeSymbolMappings.set('traceback', SymbolKind.Class);
+pythonVSCodeSymbolMappings.set('frame', SymbolKind.Class);
+pythonVSCodeSymbolMappings.set('buffer', SymbolKind.Array);
+pythonVSCodeSymbolMappings.set('dictproxy', SymbolKind.Class);
+pythonVSCodeSymbolMappings.set('funcdef', SymbolKind.Function);
+pythonVSCodeSymbolMappings.set('property', SymbolKind.Property);
+pythonVSCodeSymbolMappings.set('import', SymbolKind.Module);
+pythonVSCodeSymbolMappings.set('keyword', SymbolKind.Variable);
+pythonVSCodeSymbolMappings.set('constant', SymbolKind.Constant);
+pythonVSCodeSymbolMappings.set('variable', SymbolKind.Variable);
+pythonVSCodeSymbolMappings.set('value', SymbolKind.Variable);
+pythonVSCodeSymbolMappings.set('param', SymbolKind.Variable);
+pythonVSCodeSymbolMappings.set('statement', SymbolKind.Variable);
+pythonVSCodeSymbolMappings.set('boolean', SymbolKind.Boolean);
+pythonVSCodeSymbolMappings.set('int', SymbolKind.Number);
+pythonVSCodeSymbolMappings.set('longlean', SymbolKind.Number);
+pythonVSCodeSymbolMappings.set('float', SymbolKind.Number);
+pythonVSCodeSymbolMappings.set('complex', SymbolKind.Number);
+pythonVSCodeSymbolMappings.set('string', SymbolKind.String);
+pythonVSCodeSymbolMappings.set('unicode', SymbolKind.String);
+pythonVSCodeSymbolMappings.set('list', SymbolKind.Array);
 
-function getMappedVSCodeType(pythonType: string): vscode.CompletionItemKind {
+function getMappedVSCodeType(pythonType: string): CompletionItemKind {
     if (pythonVSCodeTypeMappings.has(pythonType)) {
         const value = pythonVSCodeTypeMappings.get(pythonType);
         if (value) {
             return value;
         }
     }
-    return vscode.CompletionItemKind.Keyword;
+    return CompletionItemKind.Keyword;
 }
 
-function getMappedVSCodeSymbol(pythonType: string): vscode.SymbolKind {
+function getMappedVSCodeSymbol(pythonType: string): SymbolKind {
     if (pythonVSCodeSymbolMappings.has(pythonType)) {
         const value = pythonVSCodeSymbolMappings.get(pythonType);
         if (value) {
             return value;
         }
     }
-    return vscode.SymbolKind.Variable;
+    return SymbolKind.Variable;
 }
 
 export enum CommandType {
@@ -131,7 +130,7 @@ commandNames.set(CommandType.Hover, 'tooltip');
 commandNames.set(CommandType.Usages, 'usages');
 commandNames.set(CommandType.Symbols, 'names');
 
-export class JediProxy implements vscode.Disposable {
+export class JediProxy implements Disposable {
     private proc?: ChildProcess;
     private pythonSettings: PythonSettings;
     private cmdId: number = 0;
@@ -151,7 +150,7 @@ export class JediProxy implements vscode.Disposable {
 
     public constructor(private extensionRootDir: string, workspacePath: string, private serviceContainer: IServiceContainer) {
         this.workspacePath = workspacePath;
-        this.pythonSettings = PythonSettings.getInstance(vscode.Uri.file(workspacePath));
+        this.pythonSettings = PythonSettings.getInstance(Uri.file(workspacePath));
         this.lastKnownPythonInterpreter = this.pythonSettings.pythonPath;
         this.logger = serviceContainer.get<ILogger>(ILogger);
         this.pythonSettings.on('change', () => this.pythonSettingsChangeHandler());
@@ -315,7 +314,8 @@ export class JediProxy implements vscode.Disposable {
             args.push('custom');
             args.push(this.pythonSettings.jediPath);
         }
-        if (Array.isArray(this.pythonSettings.autoComplete.preloadModules) &&
+        if (this.pythonSettings.autoComplete &&
+            Array.isArray(this.pythonSettings.autoComplete.preloadModules) &&
             this.pythonSettings.autoComplete.preloadModules.length > 0) {
             const modules = this.pythonSettings.autoComplete.preloadModules.filter(m => m.trim().length > 0).join(',');
             args.push(modules);
@@ -636,7 +636,8 @@ export class JediProxy implements vscode.Disposable {
     }
     private getConfig() {
         // Add support for paths relative to workspace.
-        const extraPaths = this.pythonSettings.autoComplete.extraPaths.map(extraPath => {
+        const extraPaths = this.pythonSettings.autoComplete ?
+            this.pythonSettings.autoComplete.extraPaths.map(extraPath => {
             if (path.isAbsolute(extraPath)) {
                 return extraPath;
             }
@@ -644,7 +645,7 @@ export class JediProxy implements vscode.Disposable {
                 return '';
             }
             return path.join(this.workspacePath, extraPath);
-        });
+        }) : [];
 
         // Always add workspace path into extra paths.
         if (typeof this.workspacePath === 'string') {
@@ -686,7 +687,7 @@ export interface ICommand<T extends ICommandResult> {
 interface IExecutionCommand<T extends ICommandResult> extends ICommand<T> {
     id: number;
     deferred?: Deferred<T>;
-    token: vscode.CancellationToken;
+    token: CancellationToken;
     delay?: number;
 }
 
@@ -739,9 +740,9 @@ export interface IReference {
 }
 
 export interface IAutoCompleteItem {
-    type: vscode.CompletionItemKind;
-    rawType: vscode.CompletionItemKind;
-    kind: vscode.SymbolKind;
+    type: CompletionItemKind;
+    rawType: CompletionItemKind;
+    kind: SymbolKind;
     text: string;
     description: string;
     raw_docstring: string;
@@ -755,8 +756,8 @@ export interface IDefinitionRange {
 }
 export interface IDefinition {
     rawType: string;
-    type: vscode.CompletionItemKind;
-    kind: vscode.SymbolKind;
+    type: CompletionItemKind;
+    kind: SymbolKind;
     text: string;
     fileName: string;
     container: string;
@@ -764,22 +765,22 @@ export interface IDefinition {
 }
 
 export interface IHoverItem {
-    kind: vscode.SymbolKind;
+    kind: SymbolKind;
     text: string;
     description: string;
     docstring: string;
     signature: string;
 }
 
-export class JediProxyHandler<R extends ICommandResult> implements vscode.Disposable {
-    private commandCancellationTokenSources: Map<CommandType, vscode.CancellationTokenSource>;
+export class JediProxyHandler<R extends ICommandResult> implements Disposable {
+    private commandCancellationTokenSources: Map<CommandType, CancellationTokenSource>;
 
     public get JediProxy(): JediProxy {
         return this.jediProxy;
     }
 
     public constructor(private jediProxy: JediProxy) {
-        this.commandCancellationTokenSources = new Map<CommandType, vscode.CancellationTokenSource>();
+        this.commandCancellationTokenSources = new Map<CommandType, CancellationTokenSource>();
     }
 
     public dispose() {
@@ -788,7 +789,7 @@ export class JediProxyHandler<R extends ICommandResult> implements vscode.Dispos
         }
     }
 
-    public sendCommand(cmd: ICommand<R>, token?: vscode.CancellationToken): Promise<R | undefined> {
+    public sendCommand(cmd: ICommand<R>, token?: CancellationToken): Promise<R | undefined> {
         const executionCmd = <IExecutionCommand<R>>cmd;
         executionCmd.id = executionCmd.id || this.jediProxy.getNextCommandId();
 
@@ -799,7 +800,7 @@ export class JediProxyHandler<R extends ICommandResult> implements vscode.Dispos
             }
         }
 
-        const cancellation = new vscode.CancellationTokenSource();
+        const cancellation = new CancellationTokenSource();
         this.commandCancellationTokenSources.set(cmd.command, cancellation);
         executionCmd.token = cancellation.token;
 
@@ -810,7 +811,7 @@ export class JediProxyHandler<R extends ICommandResult> implements vscode.Dispos
             });
     }
 
-    public sendCommandNonCancellableCommand(cmd: ICommand<R>, token?: vscode.CancellationToken): Promise<R | undefined> {
+    public sendCommandNonCancellableCommand(cmd: ICommand<R>, token?: CancellationToken): Promise<R | undefined> {
         const executionCmd = <IExecutionCommand<R>>cmd;
         executionCmd.id = executionCmd.id || this.jediProxy.getNextCommandId();
         if (token) {

@@ -36,7 +36,7 @@ except AttributeError:
 def u(string):
     """Cast to unicode DAMMIT!
     Written because Python2 repr always implicitly casts to a string, so we
-    have to cast back to a unicode (and we now that we always deal with valid
+    have to cast back to a unicode (and we know that we always deal with valid
     unicode, because we check that in the beginning).
     """
     if py_version >= 30:
