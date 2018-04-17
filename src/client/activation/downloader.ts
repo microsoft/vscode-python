@@ -5,7 +5,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as request from 'request';
 import * as requestProgress from 'request-progress';
-import * as unzip from 'unzip';
 import { ExtensionContext, OutputChannel, ProgressLocation, window } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { noop } from '../common/core.utils';
@@ -15,6 +14,9 @@ import { IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { HashVerifier } from './hashVerifier';
 import { PlatformData } from './platformData';
+
+// tslint:disable-next-line:no-require-imports no-var-requires
+const StreamZip = require('node-stream-zip');
 
 const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-analysis';
 const downloadBaseFileName = 'python-analysis-vscode';
@@ -109,15 +111,37 @@ export class AnalysisEngineDownloader {
         const installFolder = path.join(extensionPath, this.engineFolder);
         const deferred = createDeferred();
 
-        fs.createReadStream(tempFilePath)
-            .pipe(unzip.Extract({ path: installFolder }))
-            .on('finish', () => {
-                deferred.resolve();
-            })
-            .on('error', (err) => {
-                deferred.reject(err);
+        const title = 'Extracting files... ';
+        await window.withProgress({
+            location: ProgressLocation.Window,
+            title
+        }, (progress) => {
+            const zip = new StreamZip({
+                file: tempFilePath,
+                storeEntries: true
             });
-        await deferred.promise;
+
+            let totalFiles = 0;
+            let extractedFiles = 0;
+            zip.on('ready', () => {
+                totalFiles = zip.entriesCount;
+                if (!fs.existsSync(installFolder)) {
+                    fs.mkdirSync(installFolder);
+                }
+                zip.extract(null, installFolder, (err, count) => {
+                    if (err) {
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve();
+                    }
+                    zip.close();
+                });
+            }).on('extract', (entry, file) => {
+                extractedFiles += 1;
+                progress.report({ message: `${title}${Math.round(100 * extractedFiles / totalFiles)}%` });
+            });
+            return deferred.promise;
+        });
         this.output.append('done.');
 
         // Set file to executable
