@@ -67,6 +67,7 @@ export class PythonDebugger extends DebugSession {
         body.supportsEvaluateForHovers = true;
         body.supportsModulesRequest = true;
         body.supportsValueFormattingOptions = true;
+        body.supportsHitConditionalBreakpoints = true;
         body.supportsSetExpression = true;
         body.exceptionBreakpointFilters = [
             {
