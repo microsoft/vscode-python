@@ -21,6 +21,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import '../../client/common/extensions';
 import { noop, sleep } from '../common/core.utils';
 import { createDeferred, Deferred, isNotInstalledError } from '../common/helpers';
+import { IFileSystem } from '../common/platform/types';
 import { ICurrentProcess } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from './Common/Contracts';
@@ -98,6 +99,10 @@ export class PythonDebugger extends DebugSession {
 
     }
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        if ((typeof args.module !== 'string' || args.module.length === 0) && args.program && !fs.fileExistsSync(args.program)) {
+            return this.sendErrorResponse(response, { format: `File does not exist. "${args.program}"`, id: 1 }, undefined, undefined, ErrorDestination.User);
+        }
         this.launchPTVSD(args)
             .then(() => this.waitForPTVSDToConnect(args))
             .then(() => this.emit('debugger_launched'))

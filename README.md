@@ -37,7 +37,7 @@ To see all available Python commands, open the Command Palette and type ```Pytho
 
 The extension is available in multiple languages thanks to external
 contributors (if you would like to contribute a translation, see the
-[pull request which added simplified Chinese](https://github.com/Microsoft/vscode-python/pull/240)):
+[pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)):
 
 * `en`
 * `it`

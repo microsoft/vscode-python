@@ -12,6 +12,7 @@ import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IProcessService } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
+import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import {
     PYTHON_ANALYSIS_ENGINE_DOWNLOADED,
@@ -192,8 +193,12 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                 searchPaths = `${searchPaths};${extraPaths.join(';')}`;
             }
         }
+
+        const envProvider = this.services.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+        const pythonPath = (await envProvider.getEnvironmentVariables()).PYTHONPATH;
+
         // tslint:disable-next-line:no-string-literal
-        properties['SearchPaths'] = searchPaths;
+        properties['SearchPaths'] = `${searchPaths};${pythonPath ? pythonPath : ''}`;
 
         const selector: string[] = [PYTHON];
 

@@ -38,13 +38,13 @@ before_install: |
 install:
   - python -m pip install --upgrade -r requirements.txt
   - python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
-  - yarn
+  - yarn --frozen-lockfile
 
 script:
-  - yarn run clean
-  - yarn run vscode:prepublish
-  - yarn run cover:enable
   - if [ $DEBUGGER_TEST == "true" ]; then
+        yarn run clean;
+        yarn run vscode:prepublish;
+        yarn run cover:enable;
         yarn run testDebugger --silent;
     fi
   - yarn run debugger-coverage
@@ -57,19 +57,19 @@ script:
   # - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
   #       bash <(curl -s https://codecov.io/bash);
   #   fi
-  - yarn run clean
-  - yarn run vscode:prepublish
-  - yarn run cover:enable
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then
+        yarn run clean;
+        yarn run vscode:prepublish;
+        yarn run cover:enable;
         yarn run testSingleWorkspace --silent;
     fi
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
     fi
-  - yarn run clean
-  - yarn run vscode:prepublish
-  - yarn run cover:enable
   - if [ $MULTIROOT_WORKSPACE_TEST == "true" ]; then
+        yarn run clean;
+        yarn run vscode:prepublish;
+        yarn run cover:enable;
         yarn run testMultiWorkspace --silent;
     fi
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
