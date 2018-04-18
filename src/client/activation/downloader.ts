@@ -9,7 +9,7 @@ import { ExtensionContext, OutputChannel, ProgressLocation, window } from 'vscod
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { noop } from '../common/core.utils';
 import { createDeferred, createTemporaryFile } from '../common/helpers';
-import { IPlatformService } from '../common/platform/types';
+import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { HashVerifier } from './hashVerifier';
@@ -31,7 +31,7 @@ export class AnalysisEngineDownloader {
     constructor(private readonly services: IServiceContainer, private engineFolder: string) {
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.platform = this.services.get<IPlatformService>(IPlatformService);
-        this.platformData = new PlatformData(this.platform);
+        this.platformData = new PlatformData(this.platform, this.services.get<IFileSystem>(IFileSystem));
     }
 
     public async downloadAnalysisEngine(context: ExtensionContext): Promise<void> {
@@ -49,7 +49,7 @@ export class AnalysisEngineDownloader {
     }
 
     private async downloadFile(): Promise<string> {
-        const platformString = this.platformData.getPlatformDesignator();
+        const platformString = await this.platformData.getPlatformName();
         const remoteFileName = `${downloadBaseFileName}-${platformString}.${downloadVersion}${downloadFileExtension}`;
         const uri = `${downloadUriPrefix}/${remoteFileName}`;
         this.output.append(`Downloading ${uri}... `);
@@ -98,7 +98,7 @@ export class AnalysisEngineDownloader {
         this.output.appendLine('');
         this.output.append('Verifying download... ');
         const verifier = new HashVerifier();
-        if (!await verifier.verifyHash(filePath, this.platformData.getExpectedHash())) {
+        if (!await verifier.verifyHash(filePath, await this.platformData.getExpectedHash())) {
             throw new Error('Hash of the downloaded file does not match.');
         }
         this.output.append('valid.');

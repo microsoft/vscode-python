@@ -57,7 +57,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         this.appShell = this.services.get<IApplicationShell>(IApplicationShell);
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.fs = this.services.get<IFileSystem>(IFileSystem);
-        this.platformData = new PlatformData(services.get<IPlatformService>(IPlatformService));
+        this.platformData = new PlatformData(services.get<IPlatformService>(IPlatformService), this.fs);
     }
 
     public async activate(context: ExtensionContext): Promise<boolean> {
