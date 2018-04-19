@@ -6,7 +6,7 @@ import Char from 'typescript-char';
 import { BraceCounter } from '../language/braceCounter';
 import { TextBuilder } from '../language/textBuilder';
 import { TextRangeCollection } from '../language/textRangeCollection';
-import { Tokenizer } from '../language/tokenizer';
+import { isPythonKeyword, Tokenizer } from '../language/tokenizer';
 import { ITextRangeCollection, IToken, TokenType } from '../language/types';
 
 export class LineFormatter {
@@ -52,7 +52,12 @@ export class LineFormatter {
                     if (prev && !this.isOpenBraceType(prev.type) && prev.type !== TokenType.Colon && prev.type !== TokenType.Operator) {
                         this.builder.softAppendSpace();
                     }
-                    this.builder.append(this.text.substring(t.start, t.end));
+                    const id = this.text.substring(t.start, t.end);
+                    this.builder.append(id);
+                    if (isPythonKeyword(id) && next && this.isOpenBraceType(next.type)) {
+                        // for x in ()
+                        this.builder.softAppendSpace();
+                    }
                     break;
 
                 case TokenType.Colon:
@@ -150,11 +155,27 @@ export class LineFormatter {
             }
         }
 
-        // In general, keep tokens separated.
-        this.builder.softAppendSpace();
-        this.builder.append(this.text.substring(t.start, t.end));
+        if (t.type === TokenType.Unknown) {
+            this.handleUnknown(t);
+        } else {
+            // In general, keep tokens separated.
+            this.builder.softAppendSpace();
+            this.builder.append(this.text.substring(t.start, t.end));
+        }
     }
 
+    private handleUnknown(t: IToken): void {
+        const prevChar = t.start > 0 ? this.text.charCodeAt(t.start - 1) : 0;
+        if (prevChar === Char.Space || prevChar === Char.Tab) {
+            this.builder.softAppendSpace();
+        }
+        this.builder.append(this.text.substring(t.start, t.end));
+
+        const nextChar = t.end < this.text.length - 1 ? this.text.charCodeAt(t.end) : 0;
+        if (nextChar === Char.Space || nextChar === Char.Tab) {
+            this.builder.softAppendSpace();
+        }
+    }
     private isEqualsInsideArguments(index: number): boolean {
         if (index < 1) {
             return false;

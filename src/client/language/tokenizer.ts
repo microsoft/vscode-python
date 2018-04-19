@@ -26,14 +26,19 @@ class Token extends TextRange implements IToken {
     }
 }
 
+const pythonKeywords = [
+    'and', 'assert', 'break', 'class', 'continue', 'def', 'del',
+    'elif', 'else', 'except', 'exec', 'False', 'finally', 'for', 'from',
+    'global', 'if', 'import', 'in', 'is', 'lambda', 'None', 'nonlocal',
+    'not', 'or', 'pass', 'print', 'raise', 'return', 'True', 'try',
+    'while', 'with', 'yield'
+];
+
+export function isPythonKeyword(s: string): boolean {
+    return pythonKeywords.find((value, index) => value === s) ? true : false;
+}
+
 export class Tokenizer implements ITokenizer {
-    // private keywords = [
-    //     'and', 'assert', 'break', 'class', 'continue', 'def', 'del',
-    //     'elif', 'else', 'except', 'exec', 'False', 'finally', 'for', 'from',
-    //     'global', 'if', 'import', 'in', 'is', 'lambda', 'None', 'nonlocal',
-    //     'not', 'or', 'pass', 'print', 'raise', 'return', 'True', 'try',
-    //     'while', 'with', 'yield'
-    // ];
     private cs: ICharacterStream = new CharacterStream('');
     private tokens: IToken[] = [];
     private floatRegex = /[-+]?(?:(?:\d*\.\d+)|(?:\d+\.?))(?:[Ee][+-]?\d+)?/;
@@ -134,7 +139,6 @@ export class Tokenizer implements ITokenizer {
                 this.tokens.push(new Token(TokenType.Colon, this.cs.position, 1));
                 break;
             case Char.At:
-            case Char.Period:
                 this.tokens.push(new Token(TokenType.Operator, this.cs.position, 1));
                 break;
             default:
@@ -142,6 +146,10 @@ export class Tokenizer implements ITokenizer {
                     if (this.tryNumber()) {
                         return true;
                     }
+                }
+                if (this.cs.currentChar === Char.Period) {
+                    this.tokens.push(new Token(TokenType.Operator, this.cs.position, 1));
+                    break;
                 }
                 if (!this.tryIdentifier()) {
                     if (!this.tryOperator()) {
@@ -170,29 +178,8 @@ export class Tokenizer implements ITokenizer {
         return false;
     }
 
+    // tslint:disable-next-line:cyclomatic-complexity
     private isPossibleNumber(): boolean {
-        if (this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus) {
-            // Next character must be decimal or a dot otherwise
-            // it is not a number. No whitespace is allowed.
-            if (isDecimal(this.cs.nextChar) || this.cs.nextChar === Char.Period) {
-                // Check what previous token is, if any
-                if (this.tokens.length === 0) {
-                    // At the start of the file this can only be a number
-                    return true;
-                }
-
-                const prev = this.tokens[this.tokens.length - 1];
-                if (prev.type === TokenType.OpenBrace
-                    || prev.type === TokenType.OpenBracket
-                    || prev.type === TokenType.Comma
-                    || prev.type === TokenType.Semicolon
-                    || prev.type === TokenType.Operator) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         if (isDecimal(this.cs.currentChar)) {
             return true;
         }
@@ -201,12 +188,51 @@ export class Tokenizer implements ITokenizer {
             return true;
         }
 
+        const next = (this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus) ? 1 : 0;
+        // Next character must be decimal or a dot otherwise
+        // it is not a number. No whitespace is allowed.
+        if (isDecimal(this.cs.lookAhead(next)) || this.cs.lookAhead(next) === Char.Period) {
+            // Check what previous token is, if any
+            if (this.tokens.length === 0) {
+                // At the start of the file this can only be a number
+                return true;
+            }
+
+            const prev = this.tokens[this.tokens.length - 1];
+            if (prev.type === TokenType.OpenBrace
+                || prev.type === TokenType.OpenBracket
+                || prev.type === TokenType.Comma
+                || prev.type === TokenType.Semicolon
+                || prev.type === TokenType.Operator) {
+                return true;
+            }
+        }
+
+        if (this.cs.lookAhead(next) === Char._0) {
+            const nextNext = this.cs.lookAhead(next + 1);
+            if (nextNext === Char.x || nextNext === Char.X) {
+                return true;
+            }
+            if (nextNext === Char.b || nextNext === Char.B) {
+                return true;
+            }
+            if (nextNext === Char.o || nextNext === Char.O) {
+                return true;
+            }
+        }
+
         return false;
     }
 
     // tslint:disable-next-line:cyclomatic-complexity
     private tryNumber(): boolean {
         const start = this.cs.position;
+        let leadingSign = 0;
+
+        if (this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus) {
+            this.cs.moveNext(); // Skip leading +/-
+            leadingSign = 1;
+        }
 
         if (this.cs.currentChar === Char._0) {
             let radix = 0;
@@ -234,20 +260,19 @@ export class Tokenizer implements ITokenizer {
                 }
                 radix = 8;
             }
-            const text = this.cs.getText().substr(start, this.cs.position - start);
+            const text = this.cs.getText().substr(start + leadingSign, this.cs.position - start - leadingSign);
             if (radix > 0 && parseInt(text.substr(2), radix)) {
-                this.tokens.push(new Token(TokenType.Number, start, text.length));
+                this.tokens.push(new Token(TokenType.Number, start, text.length + leadingSign));
                 return true;
             }
         }
 
-        if (isDecimal(this.cs.currentChar) ||
-            this.cs.currentChar === Char.Plus || this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Period) {
+        if (isDecimal(this.cs.currentChar) || this.cs.currentChar === Char.Period) {
             const candidate = this.cs.getText().substr(this.cs.position);
             const re = this.floatRegex.exec(candidate);
             if (re && re.length > 0 && re[0] && candidate.startsWith(re[0])) {
-                this.tokens.push(new Token(TokenType.Number, start, re[0].length));
-                this.cs.position = start + re[0].length;
+                this.tokens.push(new Token(TokenType.Number, start, re[0].length + leadingSign));
+                this.cs.position = start + re[0].length + leadingSign;
                 return true;
             }
         }
