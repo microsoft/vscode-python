@@ -262,7 +262,6 @@ export class Tokenizer implements ITokenizer {
         const nextChar = this.cs.nextChar;
         switch (this.cs.currentChar) {
             case Char.Plus:
-            case Char.Hyphen:
             case Char.Ampersand:
             case Char.Bar:
             case Char.Caret:
@@ -271,6 +270,9 @@ export class Tokenizer implements ITokenizer {
                 length = nextChar === Char.Equal ? 2 : 1;
                 break;
 
+            case Char.Hyphen:
+                length = nextChar === Char.Greater ? 2 : 1;
+                break;
             case Char.Asterisk:
                 if (nextChar === Char.Asterisk) {
                     length = this.cs.lookAhead(2) === Char.Equal ? 3 : 2;

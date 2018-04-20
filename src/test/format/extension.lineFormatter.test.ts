@@ -85,4 +85,20 @@ suite('Formatting - line formatter', () => {
         const actual = formatter.formatLine('foo( *a, ** b, ! c)');
         assert.equal(actual, 'foo(*a, **b, !c)');
     });
+    test('Negative Operator', () => {
+        const actual = formatter.formatLine('return 1-2');
+        assert.equal(actual, 'return 1 - 2');
+    });
+    test('Negative Operator as args', () => {
+        const actual = formatter.formatLine('foo(1-2)');
+        assert.equal(actual, 'foo(1 - 2)');
+    });
+    test('Return annotation', () => {
+        const actual = formatter.formatLine('def foo(a: int) -> bool:');
+        assert.equal(actual, 'def foo(a: int) -> bool:');
+    });
+    test('Return annotation (and some parts are formatted)', () => {
+        const actual = formatter.formatLine('def foo(a:int)->bool:');
+        assert.equal(actual, 'def foo(a: int) -> bool:');
+    });
 });
