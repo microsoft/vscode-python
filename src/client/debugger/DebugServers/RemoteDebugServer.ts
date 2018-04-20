@@ -1,8 +1,8 @@
-// tslint:disable:quotemark ordered-imports no-any no-empty curly member-ordering one-line max-func-body-length no-var-self prefer-const cyclomatic-complexity prefer-template
+// tslint:disable:quotemark ordered-imports no-any no-empty curly member-ordering one-line max-func-body-length no-var-self prefer-const cyclomatic-complexity prefer-template no-this-assignment
 "use strict";
 
 import { DebugSession, OutputEvent } from "vscode-debugadapter";
-import { IPythonProcess, IDebugServer, AttachRequestArguments } from "../Common/Contracts";
+import { IPythonProcess, IDebugServer, AttachRequestArgumentsV1 } from "../Common/Contracts";
 import * as net from "net";
 import { BaseDebugServer } from "./BaseDebugServer";
 import { SocketStream } from "../../common/net/socket/SocketStream";
@@ -15,8 +15,8 @@ const AttachCommandBytes: Buffer = new Buffer("ATCH", "ascii");
 
 export class RemoteDebugServer extends BaseDebugServer {
     private socket?: net.Socket;
-    private args: AttachRequestArguments;
-    constructor(debugSession: DebugSession, pythonProcess: IPythonProcess, args: AttachRequestArguments) {
+    private args: AttachRequestArgumentsV1;
+    constructor(debugSession: DebugSession, pythonProcess: IPythonProcess, args: AttachRequestArgumentsV1) {
         super(debugSession, pythonProcess);
         this.args = args;
     }
@@ -29,7 +29,7 @@ export class RemoteDebugServer extends BaseDebugServer {
         catch (ex) { }
         this.socket = undefined;
     }
-    private stream: SocketStream;
+    private stream!: SocketStream;
     public Start(): Promise<IDebugServer> {
         return new Promise<IDebugServer>((resolve, reject) => {
             let that = this;

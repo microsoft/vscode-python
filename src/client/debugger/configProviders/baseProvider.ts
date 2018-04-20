@@ -3,6 +3,8 @@
 
 'use strict';
 
+// tslint:disable:no-invalid-template-strings
+
 import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, WorkspaceFolder } from 'vscode';
@@ -11,23 +13,21 @@ import { PythonLanguage } from '../../common/constants';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { AttachRequestArguments, DebuggerType, DebugOptions, LaunchRequestArguments } from '../Common/Contracts';
+import { BaseAttachRequestArguments, BaseLaunchRequestArguments, DebuggerType, DebugOptions } from '../Common/Contracts';
 
-// tslint:disable:no-invalid-template-strings
-
-export type PythonLaunchDebugConfiguration = DebugConfiguration & LaunchRequestArguments;
-export type PythonAttachDebugConfiguration = DebugConfiguration & AttachRequestArguments;
+export type PythonLaunchDebugConfiguration<T extends BaseLaunchRequestArguments> = DebugConfiguration & T;
+export type PythonAttachDebugConfiguration<T extends BaseAttachRequestArguments> = DebugConfiguration & T;
 
 @injectable()
-export abstract class BaseConfigurationProvider implements DebugConfigurationProvider {
+export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArguments, A extends BaseAttachRequestArguments> implements DebugConfigurationProvider {
     constructor(@unmanaged() public debugType: DebuggerType, protected serviceContainer: IServiceContainer) { }
     public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
 
         if (debugConfiguration.request === 'attach') {
-            this.provideAttachDefaults(workspaceFolder, debugConfiguration as PythonAttachDebugConfiguration);
+            this.provideAttachDefaults(workspaceFolder, debugConfiguration as PythonAttachDebugConfiguration<A>);
         } else {
-            const config = debugConfiguration as PythonLaunchDebugConfiguration;
+            const config = debugConfiguration as PythonLaunchDebugConfiguration<L>;
             const numberOfSettings = Object.keys(config);
 
             if ((config.noDebug === true && numberOfSettings.length === 1) || numberOfSettings.length === 0) {
@@ -42,24 +42,22 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
 
             this.provideLaunchDefaults(workspaceFolder, config);
         }
+
+        const dbgConfig = (debugConfiguration as (BaseLaunchRequestArguments | BaseAttachRequestArguments));
+        if (Array.isArray(dbgConfig.debugOptions)) {
+            dbgConfig.debugOptions = dbgConfig.debugOptions!.filter((item, pos) => dbgConfig.debugOptions!.indexOf(item) === pos);
+        }
         return debugConfiguration;
     }
-    protected provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonAttachDebugConfiguration): void {
+    protected provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonAttachDebugConfiguration<A>): void {
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
-        }
-        // Always redirect output.
-        if (debugConfiguration.debugOptions.indexOf(DebugOptions.RedirectOutput) === -1) {
-            debugConfiguration.debugOptions.push(DebugOptions.RedirectOutput);
         }
         if (!debugConfiguration.host) {
             debugConfiguration.host = 'localhost';
         }
-        if (!debugConfiguration.localRoot && workspaceFolder) {
-            debugConfiguration.localRoot = workspaceFolder.fsPath;
-        }
     }
-    protected provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration): void {
+    protected provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration<L>): void {
         this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
         if (typeof debugConfiguration.cwd !== 'string' && workspaceFolder) {
             debugConfiguration.cwd = workspaceFolder.fsPath;
@@ -122,7 +120,7 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
             return editor.document.fileName;
         }
     }
-    private resolveAndUpdatePythonPath(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration): void {
+    private resolveAndUpdatePythonPath(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration<L>): void {
         if (!debugConfiguration) {
             return;
         }

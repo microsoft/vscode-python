@@ -22,7 +22,7 @@ export class LocalDebugClientV2 extends LocalDebugClient {
             return ['-m', this.args.module, ...programArgs];
         }
         if (this.args.program && this.args.program.length > 0) {
-            return ['--file', this.args.program, ...programArgs];
+            return [this.args.program, ...programArgs];
         }
         return programArgs;
     }

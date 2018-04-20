@@ -69,6 +69,7 @@ export class PythonDebugger extends DebugSession {
         body.supportsValueFormattingOptions = true;
         body.supportsHitConditionalBreakpoints = true;
         body.supportsSetExpression = true;
+        body.supportsLogPoints = true;
         body.exceptionBreakpointFilters = [
             {
                 filter: 'raised',

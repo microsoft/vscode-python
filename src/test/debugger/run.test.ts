@@ -52,7 +52,7 @@ suite('Run without Debugging', () => {
             args: [],
             env: { PYTHONPATH: PTVSD_PATH },
             envFile: '',
-            logToFile: true,
+            logToFile: false,
             type: debuggerType
         };
 

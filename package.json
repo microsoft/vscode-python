@@ -934,22 +934,6 @@
                                 "description": "Absolute path to the working directory of the program being debugged. Default is the root directory of the file (leave empty).",
                                 "default": "${workspaceFolder}"
                             },
-                            "debugOptions": {
-                                "type": "array",
-                                "description": "Advanced options, view read me for further details.",
-                                "items": {
-                                    "type": "string",
-                                    "enum": [
-                                        "RedirectOutput",
-                                        "DebugStdLib",
-                                        "Django",
-                                        "Jinja",
-                                        "Sudo",
-                                        "Pyramid"
-                                    ]
-                                },
-                                "default": []
-                            },
                             "env": {
                                 "type": "object",
                                 "description": "Environment variables defined as a key value pair. Property ends up being the Environment Variable and the value of the property ends up being the value of the Env Variable.",
@@ -974,25 +958,48 @@
                                 "type": "boolean",
                                 "description": "Enable logging of debugger events to a log file.",
                                 "default": false
+                            },
+                            "redirectOutput": {
+                                "type": "boolean",
+                                "description": "Redirect output.",
+                                "default": true
+                            },
+                            "debugStdLib": {
+                                "type": "boolean",
+                                "description": "Debug standard library code.",
+                                "default": false
+                            },
+                            "django": {
+                                "type": "boolean",
+                                "description": "Django debugging.",
+                                "default": false
+                            },
+                            "jinja": {
+                                "enum": [
+                                    true,
+                                    false,
+                                    null
+                                ],
+                                "description": "Jinja template debugging (e.g. Flask).",
+                                "default": null
+                            },
+                            "sudo": {
+                                "type": "boolean",
+                                "description": "Running debug program under elevated permissions (on Unix).",
+                                "default": false
+                            },
+                            "pyramid": {
+                                "type": "boolean",
+                                "description": "Whether debugging Pyramid applications",
+                                "default": false
                             }
                         }
                     },
                     "attach": {
                         "required": [
-                            "port",
-                            "remoteRoot"
+                            "port"
                         ],
                         "properties": {
-                            "localRoot": {
-                                "type": "string",
-                                "description": "Local source root that corrresponds to the 'remoteRoot'.",
-                                "default": "${workspaceFolder}"
-                            },
-                            "remoteRoot": {
-                                "type": "string",
-                                "description": "The source root of the remote host.",
-                                "default": ""
-                            },
                             "port": {
                                 "type": "number",
                                 "description": "Debug port to attach",
@@ -1003,23 +1010,9 @@
                                 "description": "IP Address of the of remote server (default is localhost or use 127.0.0.1).",
                                 "default": "localhost"
                             },
-                            "debugOptions": {
-                                "type": "array",
-                                "description": "Advanced options, view read me for further details.",
-                                "items": {
-                                    "type": "string",
-                                    "enum": [
-                                        "RedirectOutput",
-                                        "DebugStdLib",
-                                        "Django",
-                                        "Jinja"
-                                    ]
-                                },
-                                "default": []
-                            },
                             "pathMappings": {
                                 "type": "array",
-                                "label": "Additional path mappings.",
+                                "label": "Path mappings.",
                                 "items": {
                                     "type": "object",
                                     "label": "Path mapping",
@@ -1031,7 +1024,7 @@
                                         "localRoot": {
                                             "type": "string",
                                             "label": "Local source root.",
-                                            "default": ""
+                                            "default": "${workspaceFolder}"
                                         },
                                         "remoteRoot": {
                                             "type": "string",
@@ -1046,6 +1039,30 @@
                                 "type": "boolean",
                                 "description": "Enable logging of debugger events to a log file.",
                                 "default": false
+                            },
+                            "redirectOutput": {
+                                "type": "boolean",
+                                "description": "Redirect output.",
+                                "default": true
+                            },
+                            "debugStdLib": {
+                                "type": "boolean",
+                                "description": "Debug standard library code.",
+                                "default": false
+                            },
+                            "django": {
+                                "type": "boolean",
+                                "description": "Django debugging.",
+                                "default": false
+                            },
+                            "jinja": {
+                                "enum": [
+                                    true,
+                                    false,
+                                    null
+                                ],
+                                "description": "Jinja template debugging (e.g. Flask).",
+                                "default": null
                             }
                         }
                     }
@@ -1144,12 +1161,6 @@
                     "type": "string",
                     "description": "Absolute path to a file containing environment variable definitions.",
                     "default": "${workspaceFolder}/.env",
-                    "scope": "resource"
-                },
-                "python.jediEnabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables Jedi as IntelliSense engine instead of Microsoft Python Analysis Engine.",
                     "scope": "resource"
                 },
                 "python.jediPath": {
@@ -1838,6 +1849,7 @@
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",
+        "clean:ptvsd": "gulp clean:ptvsd",
         "cover:enable": "gulp cover:enable",
         "debugger-coverage": "gulp debugger-coverage"
     },

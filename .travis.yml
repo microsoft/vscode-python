@@ -8,6 +8,9 @@ matrix:
           env: DEBUGGER_TEST=true
         - os: linux
           python: "2.7"
+          env: DEBUGGER_TEST_RELEASE=true
+        - os: linux
+          python: "2.7"
           env: SINGLE_WORKSPACE_TEST=true
         - os: linux
           python: "2.7"
@@ -17,10 +20,20 @@ matrix:
           env: DEBUGGER_TEST=true
         - os: linux
           python: "3.6-dev"
+          env: DEBUGGER_TEST_RELEASE=true
+        - os: linux
+          python: "3.6-dev"
           env: SINGLE_WORKSPACE_TEST=true
         - os: linux
           python: "3.6-dev"
           env: MULTIROOT_WORKSPACE_TEST=true
+    allow_failures:
+        - os: linux
+          python: "2.7"
+          env: DEBUGGER_TEST=true
+        - os: linux
+          python: "3.6-dev"
+          env: DEBUGGER_TEST=true
 before_install: |
   if [ $TRAVIS_OS_NAME == "linux" ]; then
     export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
@@ -51,12 +64,18 @@ script:
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
     fi
-  # - rm -rf ./pythonFiles/experimental/ptvsd
-  # - pip install -t ./pythonFiles/experimental/ptvsd ptvsd
-  # - yarn run testDebugger --silent
-  # - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-  #       bash <(curl -s https://codecov.io/bash);
-  #   fi
+  - yarn run clean:ptvsd
+  - pip install -t ./pythonFiles/experimental/ptvsd ptvsd --pre --no-cache-dir;
+  - if [ $DEBUGGER_TEST_RELEASE == "true" ]; then
+        yarn run clean;
+        yarn run vscode:prepublish;
+        yarn run cover:enable;
+        yarn run testDebugger --silent;
+    fi
+  - yarn run debugger-coverage
+  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
+        bash <(curl -s https://codecov.io/bash);
+    fi
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then
         yarn run clean;
         yarn run vscode:prepublish;

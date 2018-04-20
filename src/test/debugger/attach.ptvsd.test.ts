@@ -80,7 +80,7 @@ suite('Attach Debugger - Experimental', () => {
             type: 'pythonExperimental',
             port: port,
             host: 'localhost',
-            logToFile: true,
+            logToFile: false,
             debugOptions: [DebugOptions.RedirectOutput]
         };
         const platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -98,8 +98,6 @@ suite('Attach Debugger - Experimental', () => {
             debugClient.waitForEvent('initialized')
         ]);
 
-        await debugClient.configurationDoneRequest();
-
         const stdOutPromise = debugClient.assertOutput('stdout', 'this is stdout');
         const stdErrPromise = debugClient.assertOutput('stderr', 'this is stderr');
 
@@ -112,13 +110,13 @@ suite('Attach Debugger - Experimental', () => {
             source: { path: breakpointLocation.path }
         });
         const exceptionBreakpointPromise = debugClient.setExceptionBreakpointsRequest({ filters: [] });
+        const breakpointStoppedPromise = debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
         await Promise.all([
-            breakpointPromise,
-            exceptionBreakpointPromise,
-            stdOutPromise, stdErrPromise
+            breakpointPromise, exceptionBreakpointPromise,
+            debugClient.configurationDoneRequest(), debugClient.threadsRequest(),
+            stdOutPromise, stdErrPromise,
+            breakpointStoppedPromise
         ]);
-
-        await debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
 
         await Promise.all([
             continueDebugging(debugClient),
@@ -127,7 +125,8 @@ suite('Attach Debugger - Experimental', () => {
             debugClient.waitForEvent('terminated')
         ]);
     }
-    test('Confirm we are able to attach to a running program', async () => {
+    test('Confirm we are able to attach to a running program', async function () {
+        this.retries(0);
         await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
     });
     test('Confirm local and remote paths are translated', async () => {

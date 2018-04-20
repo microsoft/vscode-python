@@ -26,6 +26,7 @@ import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { StopWatch } from './common/stopWatch';
 import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
+import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
 import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
 import { IDebugConfigurationProvider } from './debugger/types';
@@ -153,7 +154,8 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(new TerminalProvider(serviceContainer));
     context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
 
-    serviceContainer.getAll<BaseConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
+    type ConfigurationProvider = BaseConfigurationProvider<LaunchRequestArguments, AttachRequestArguments>;
+    serviceContainer.getAll<ConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
         context.subscriptions.push(debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));
     });
     activationDeferred.resolve();

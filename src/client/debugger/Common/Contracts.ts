@@ -51,7 +51,23 @@ export interface ExceptionHandling {
 
 export type DebuggerType = 'python' | 'pythonExperimental';
 
-export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
+export interface AdditionalLaunchDebugOptions {
+    redirectOutput?: boolean;
+    django?: boolean;
+    jinja?: boolean;
+    debugStdLib?: boolean;
+    sudo?: boolean;
+    pyramid?: boolean;
+}
+
+export interface AdditionalAttachDebugOptions {
+    redirectOutput?: boolean;
+    django?: boolean;
+    jinja?: boolean;
+    debugStdLib?: boolean;
+}
+
+export interface BaseLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
     type?: DebuggerType;
     /** An absolute path to the program to debug. */
     module?: string;
@@ -60,31 +76,42 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
     /** Automatically stop target after launch. If not specified, target does not stop. */
     stopOnEntry?: boolean;
     args: string[];
-    applicationType?: string;
     cwd?: string;
     debugOptions?: DebugOptions[];
     env?: Object;
     envFile: string;
-    exceptionHandling?: ExceptionHandling;
     console?: 'none' | 'integratedTerminal' | 'externalTerminal';
     port?: number;
     host?: string;
     logToFile?: boolean;
 }
 
-export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments {
-    type?: DebuggerType;
-    /** An absolute path to local directory with source. */
-    localRoot: string;
-    remoteRoot: string;
-    port?: number;
-    host?: string;
-    secret?: string;
-    logToFile?: boolean;
-    pathMappings?: { localRoot: string; remoteRoot: string }[];
-    debugOptions?: DebugOptions[];
+export interface LaunchRequestArgumentsV1 extends BaseLaunchRequestArguments {
+    exceptionHandling?: ExceptionHandling;
 }
 
+export interface LaunchRequestArguments extends BaseLaunchRequestArguments, AdditionalLaunchDebugOptions {
+}
+
+export interface BaseAttachRequestArguments extends DebugProtocol.AttachRequestArguments {
+    type?: DebuggerType;
+    /** An absolute path to local directory with source. */
+    port?: number;
+    host?: string;
+    logToFile?: boolean;
+    debugOptions?: DebugOptions[];
+}
+export interface AttachRequestArgumentsV1 extends BaseAttachRequestArguments {
+    secret?: string;
+    localRoot: string;
+    remoteRoot: string;
+}
+
+export interface AttachRequestArguments extends BaseAttachRequestArguments, AdditionalAttachDebugOptions {
+    localRoot?: string;
+    remoteRoot?: string;
+    pathMappings?: { localRoot: string; remoteRoot: string }[];
+}
 export interface IDebugServer {
     port: number;
     host?: string;
