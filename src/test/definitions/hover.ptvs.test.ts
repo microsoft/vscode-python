@@ -53,9 +53,7 @@ suite('Hover Definition (Analysis Engine)', () => {
         const expected = [
             'obj.method1:',
             'method method1 of one.Class1 objects',
-            '```html',
-            'This is method1',
-            '```'
+            'This is method1'
         ];
         verifySignatureLines(actual, expected);
     });
@@ -70,9 +68,7 @@ suite('Hover Definition (Analysis Engine)', () => {
         const expected = [
             'two.ct().fun:',
             'method fun of two.ct objects',
-            '```html',
-            'This is fun',
-            '```'
+            'This is fun'
         ];
         verifySignatureLines(actual, expected);
     });
@@ -87,11 +83,9 @@ suite('Hover Definition (Analysis Engine)', () => {
         const expected = [
             'Foo.bar:',
             'four.Foo.bar() -> bool',
-            '```html',
             '说明 - keep this line, it works',
             'delete following line, it works',
             '如果存在需要等待审批或正在执行的任务，将不刷新页面',
-            '```',
             'declared in Foo'
         ];
         verifySignatureLines(actual, expected);
@@ -107,22 +101,26 @@ suite('Hover Definition (Analysis Engine)', () => {
         const expected = [
             'four.showMessage:',
             'four.showMessage()',
-            '```html',
             'Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи.',
-            'Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.',
-            '```'
+            'Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.'
         ];
         verifySignatureLines(actual, expected);
     });
 
     test('Nothing for keywords (class)', async () => {
         const def = await openAndHover(fileOne, 5, 1);
-        assert.equal(def.length, 0, 'Definition length is incorrect');
+        if (def.length > 0) {
+            const actual = normalizeMarkedString(def[0].contents[0]);
+            assert.equal(actual, '', 'Definition length is incorrect');
+        }
     });
 
     test('Nothing for keywords (for)', async () => {
         const def = await openAndHover(fileHover, 3, 1);
-        assert.equal(def!.length, 0, 'Definition length is incorrect');
+        if (def.length > 0) {
+            const actual = normalizeMarkedString(def[0].contents[0]);
+            assert.equal(actual, '', 'Definition length is incorrect');
+        }
     });
 
     test('Highlighting Class', async () => {
@@ -136,15 +134,13 @@ suite('Hover Definition (Analysis Engine)', () => {
             'misc.Random:',
             'class misc.Random(_random.Random)',
             'Random number generator base class used by bound module functions.',
-            '```html',
             'Used to instantiate instances of Random to get generators that don\'t',
             'share state.',
             'Class Random can also be subclassed if you want to use a different basic',
             'generator of your own devising: in that case, override the following',
             'methods: random(), seed(), getstate(), and setstate().',
             'Optionally, implement a getrandbits() method so that randrange()',
-            'can cover arbitrarily large ranges.',
-            '```'
+            'can cover arbitrarily large ranges.'
         ];
         verifySignatureLines(actual, expected);
     });
@@ -191,9 +187,7 @@ suite('Hover Definition (Analysis Engine)', () => {
             'misc.Thread:',
             'class misc.Thread(_Verbose)',
             'A class that represents a thread of control.',
-            '```html',
-            'This class can be safely subclassed in a limited fashion.',
-            '```'
+            'This class can be safely subclassed in a limited fashion.'
         ];
         verifySignatureLines(actual, expected);
     });

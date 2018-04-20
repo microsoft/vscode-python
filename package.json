@@ -1570,6 +1570,12 @@
                     "description": "Automatically add brackets for functions.",
                     "scope": "resource"
                 },
+                "python.autoComplete.showAdvancedMembers": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Controls appearance of methods with double underscores in the completion list.",
+                    "scope": "resource"
+                },
                 "python.workspaceSymbols.tagFilePath": {
                     "type": "string",
                     "default": "${workspaceFolder}/.vscode/tags",

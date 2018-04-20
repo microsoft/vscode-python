@@ -268,11 +268,4 @@ export class LineFormatter {
             s === 'import' || s === 'except' || s === 'for' ||
             s === 'as' || s === 'is';
     }
-    private operatorWithoutSpaceAfter(t: IToken): boolean {
-        if (t.length === 2) {
-            const text = this.text.substr(t.start, t.length);
-            return text === '**';
-        }
-        return false;
-    }
 }
