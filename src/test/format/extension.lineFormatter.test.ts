@@ -88,6 +88,10 @@ suite('Formatting - line formatter', () => {
         const actual = formatter.formatLine(',x = 1,y =m)');
         assert.equal(actual, ', x=1, y=m)');
     });
+    test('Equals in multiline arguments ending comma', () => {
+        const actual = formatter.formatLine('x = 1,y =m,');
+        assert.equal(actual, 'x=1, y=m,');
+    });
     test('Operators without following space', () => {
         const actual = formatter.formatLine('foo( *a, ** b, ! c)');
         assert.equal(actual, 'foo(*a, **b, !c)');
@@ -107,6 +111,22 @@ suite('Formatting - line formatter', () => {
     test('Unknown tokens with space', () => {
         const actual = formatter.formatLine('abc \\n \\');
         assert.equal(actual, 'abc \\n \\');
+    });
+    test('Double asterisk', () => {
+        const actual = formatter.formatLine('a**2, ** k');
+        assert.equal(actual, 'a ** 2, **k');
+    });
+    test('Lambda', () => {
+        const actual = formatter.formatLine('lambda * args, :0');
+        assert.equal(actual, 'lambda *args,: 0');
+    });
+    test('Comma expression', () => {
+        const actual = formatter.formatLine('x=1,2,3');
+        assert.equal(actual, 'x = 1, 2, 3');
+    });
+    test('is exression', () => {
+        const actual = formatter.formatLine('a( (False is  2)  is 3)');
+        assert.equal(actual, 'a((False is 2) is 3)');
     });
     test('Grammar file', () => {
         const content = fs.readFileSync(grammarFile).toString('utf8');

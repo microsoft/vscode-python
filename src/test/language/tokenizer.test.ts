@@ -133,6 +133,27 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.getItemAt(0).length, 9);
         assert.equal(tokens.getItemAt(1).type, TokenType.Identifier);
     });
+    test('Strings: b/u/r-string', () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('b"b" u"u" br"br" ur"ur"');
+        assert.equal(tokens.count, 4);
+        assert.equal(tokens.getItemAt(0).type, TokenType.String);
+        assert.equal(tokens.getItemAt(0).length, 4);
+        assert.equal(tokens.getItemAt(1).type, TokenType.String);
+        assert.equal(tokens.getItemAt(1).length, 4);
+        assert.equal(tokens.getItemAt(2).type, TokenType.String);
+        assert.equal(tokens.getItemAt(2).length, 6);
+        assert.equal(tokens.getItemAt(3).type, TokenType.String);
+        assert.equal(tokens.getItemAt(3).length, 6);
+    });
+    test('Strings: escape at the end of double quoted string ', () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('"quoted\\"\nx');
+        assert.equal(tokens.count, 2);
+        assert.equal(tokens.getItemAt(0).type, TokenType.String);
+        assert.equal(tokens.getItemAt(0).length, 9);
+        assert.equal(tokens.getItemAt(1).type, TokenType.Identifier);
+    });
     test('Comments', () => {
         const t = new Tokenizer();
         const tokens = t.tokenize(' #co"""mment1\n\t\n#comm\'ent2 ');
@@ -249,6 +270,14 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.getItemAt(2).type, TokenType.Number);
         assert.equal(tokens.getItemAt(2).length, 11);
     });
+    test('Decimal number operator', () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('a[: -1]');
+        assert.equal(tokens.count, 5);
+
+        assert.equal(tokens.getItemAt(3).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(3).length, 2);
+    });
     test('Floating point number', () => {
         const t = new Tokenizer();
         const tokens = t.tokenize('3.0 .2 ++.3e+12 --.4e1');
@@ -278,7 +307,7 @@ suite('Language.Tokenizer', () => {
             '+ -' +
             '* ** / /= //=' +
             '*= += -= **= ' +
-            '& &= | |= ^ ^=';
+            '& &= | |= ^ ^= ->';
         const tokens = new Tokenizer().tokenize(text);
         const lengths = [
             1, 2, 2, 3,
@@ -286,7 +315,7 @@ suite('Language.Tokenizer', () => {
             1, 1,
             1, 2, 1, 2, 3,
             2, 2, 2, 3,
-            1, 2, 1, 2, 1, 2];
+            1, 2, 1, 2, 1, 2, 2];
         assert.equal(tokens.count, lengths.length);
         for (let i = 0; i < tokens.count; i += 1) {
             const t = tokens.getItemAt(i);
