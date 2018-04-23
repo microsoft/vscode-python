@@ -11,14 +11,14 @@ import { ITerminalHelper, ITerminalService, TerminalShellType } from './types';
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
     private terminal?: Terminal;
-    private terminalShellType: TerminalShellType;
+    private terminalShellType!: TerminalShellType;
     private terminalClosed = new EventEmitter<void>();
     private terminalManager: ITerminalManager;
     private terminalHelper: ITerminalHelper;
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event;
     }
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         private resource?: Uri,
         private title: string = 'Python') {
 
@@ -44,11 +44,11 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminal!.show(true);
         this.terminal!.sendText(text);
     }
-    public async show(): Promise<void> {
-        await this.ensureTerminal();
-        this.terminal!.show(true);
+    public async show(preserveFocus: boolean = true): Promise<void> {
+        await this.ensureTerminal(preserveFocus);
+        this.terminal!.show(preserveFocus);
     }
-    private async ensureTerminal(): Promise<void> {
+    private async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
         if (this.terminal) {
             return;
         }
@@ -62,7 +62,7 @@ export class TerminalService implements ITerminalService, Disposable {
         const activationCommamnds = await this.terminalHelper.getEnvironmentActivationCommands(this.terminalShellType, this.resource);
         if (activationCommamnds) {
             for (const command of activationCommamnds!) {
-                this.terminal!.show(true);
+                this.terminal!.show(preserveFocus);
                 this.terminal!.sendText(command);
 
                 // Give the command some time to complete.
@@ -71,7 +71,7 @@ export class TerminalService implements ITerminalService, Disposable {
             }
         }
 
-        this.terminal!.show(true);
+        this.terminal!.show(preserveFocus);
     }
     private terminalCloseHandler(terminal: Terminal) {
         if (terminal === this.terminal) {

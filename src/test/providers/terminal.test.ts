@@ -68,7 +68,7 @@ suite('Terminal Provider', () => {
         terminalServiceFactory.setup(t => t.createTerminalService(TypeMoq.It.isValue(undefined), TypeMoq.It.isValue('Python'))).returns(() => terminalService.object);
 
         commandHandler!.call(terminalProvider);
-        terminalService.verify(t => t.show(), TypeMoq.Times.once());
+        terminalService.verify(t => t.show(false), TypeMoq.Times.once());
     });
 
     test('Ensure terminal creation does not use uri of the active documents which is untitled', () => {
@@ -94,7 +94,7 @@ suite('Terminal Provider', () => {
         terminalServiceFactory.setup(t => t.createTerminalService(TypeMoq.It.isValue(undefined), TypeMoq.It.isValue('Python'))).returns(() => terminalService.object);
 
         commandHandler!.call(terminalProvider);
-        terminalService.verify(t => t.show(), TypeMoq.Times.once());
+        terminalService.verify(t => t.show(false), TypeMoq.Times.once());
     });
 
     test('Ensure terminal creation uses uri of active document', () => {
@@ -122,7 +122,7 @@ suite('Terminal Provider', () => {
         terminalServiceFactory.setup(t => t.createTerminalService(TypeMoq.It.isValue(documentUri), TypeMoq.It.isValue('Python'))).returns(() => terminalService.object);
 
         commandHandler!.call(terminalProvider);
-        terminalService.verify(t => t.show(), TypeMoq.Times.once());
+        terminalService.verify(t => t.show(false), TypeMoq.Times.once());
     });
 
     test('Ensure terminal creation uses uri of active workspace', () => {
@@ -147,6 +147,6 @@ suite('Terminal Provider', () => {
         terminalServiceFactory.setup(t => t.createTerminalService(TypeMoq.It.isValue(workspaceUri), TypeMoq.It.isValue('Python'))).returns(() => terminalService.object);
 
         commandHandler!.call(terminalProvider);
-        terminalService.verify(t => t.show(), TypeMoq.Times.once());
+        terminalService.verify(t => t.show(false), TypeMoq.Times.once());
     });
 });

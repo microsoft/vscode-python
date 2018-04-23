@@ -125,8 +125,7 @@ suite('Attach Debugger - Experimental', () => {
             debugClient.waitForEvent('terminated')
         ]);
     }
-    test('Confirm we are able to attach to a running program', async function () {
-        this.retries(0);
+    test('Confirm we are able to attach to a running program', async () => {
         await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
     });
     test('Confirm local and remote paths are translated', async () => {
