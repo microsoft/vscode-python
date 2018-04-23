@@ -1,5 +1,93 @@
 # Changelog
 
+## 2018.4.0-beta (23 Mar 2018)
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
+  and [parso 0.2.0](https://pypi.org/project/parso/0.2.0/)
+- [isort 4.2.15](https://pypi.org/project/isort/4.2.15/)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+
+And a special thanks to [Patryk Zawadzki](https://github.com/patrys) for all of
+his help on [our issue tracker](https://github.com/Microsoft/vscode-python)!
+
+### Enhancements
+
+1. Add prelimnary support for remote debugging using the experimental debugger.
+Attach to a Python program started using the command `python -m ptvsd --server --port 9091 --file pythonFile.py` ([#1229](https://github.com/Microsoft/vscode-python/issues/1229))
+1. Add support for [logpoints](https://code.visualstudio.com/docs/editor/debugging#_logpoints) in the experimental debugger.
+ ([#1306](https://github.com/Microsoft/vscode-python/issues/1306))
+1. Set focus to the terminal upon creation of a terminal using the `Python: Create Terminal` command.
+ ([#1315](https://github.com/Microsoft/vscode-python/issues/1315))
+1. Added support for source references (remote debugging without having the source code locally) in the experimental debugger.
+ ([#1333](https://github.com/Microsoft/vscode-python/issues/1333))
+1. Settings configured within the `debugOptions` property of `launch.json` for the old debugger are now defined as individual (boolean) properties in the new experimental debugger (e.g. `"debugOptions": ["RedirectOutput"]` becomes `"redirectOutput": true`).
+ ([#1395](https://github.com/Microsoft/vscode-python/issues/1395))
+1. Intergrate Jedi 0.12. See https://github.com/davidhalter/jedi/issues/1063#issuecomment-381417297 for details. ([#1400](https://github.com/Microsoft/vscode-python/issues/1400))
+1. Add prelimnary support for remote debugging using the experimental debugger. ([#907](https://github.com/Microsoft/vscode-python/issues/907))
+   Attach to a Python program after having imported `ptvsd` and enabling the debugger to attach as follows:
+   ```python
+   import ptvsd
+   ptvsd.enable_attach(('0.0.0.0', 5678))
+   ```
+   Additional capabilities:
+   * `ptvsd.break_into_debugger()` to break into the attached debugger.
+   * `ptvsd.wait_for_attach(timeout)` to cause the program to wait untill a debugger attaches.
+   * `ptvsd.is_attached()` to determine whether a debugger is attached to the program.
+
+### Fixes
+
+1. Use an existing method to identify the active interpreter. ([#1015](https://github.com/Microsoft/vscode-python/issues/1015))
+1. Fix go to definition functionality across files. ([#1033](https://github.com/Microsoft/vscode-python/issues/1033))
+1. IntelliSense under Python 2 for inherited attributes works again (thanks to an upgraded Jedi).
+ ([#1072](https://github.com/Microsoft/vscode-python/issues/1072))
+1. Reverted change that ended up considering symlinked interpreters as duplicate interpreter.
+ ([#1192](https://github.com/Microsoft/vscode-python/issues/1192))
+1. Display errors returned by the PipEnv command when identifying the corresonding environment.
+ ([#1254](https://github.com/Microsoft/vscode-python/issues/1254))
+1. When `editor.formatOnType` is on, don't add a space for `*args` or `**kwargs`
+ ([#1257](https://github.com/Microsoft/vscode-python/issues/1257))
+1. When `editor.formatOnType` is on, don't add a space between a string type specifier and the string literal
+ ([#1257](https://github.com/Microsoft/vscode-python/issues/1257))
+1. Ensure interpreter file exists on the file system before including into list of interpreters.
+ ([#1305](https://github.com/Microsoft/vscode-python/issues/1305))
+1. Do not have the formatter consider single-quoted string multiline even if it is not terminated.
+ ([#1364](https://github.com/Microsoft/vscode-python/issues/1364))
+1. IntelliSense works in module-level `if` statements (thanks to Jedi 0.12.0 upgrade).
+ ([#142](https://github.com/Microsoft/vscode-python/issues/142))
+1. IntelliSense works appropriately when a project contains multiple files with the same name (thanks to Jedi 0.12.0 update).
+ ([#178](https://github.com/Microsoft/vscode-python/issues/178))
+1. Provide type details appropriate for the iterable in a `for` loop when the line has a `# type` comment.
+ ([#338](https://github.com/Microsoft/vscode-python/issues/338))
+1. Parameter hints following an f-string work again.
+ ([#344](https://github.com/Microsoft/vscode-python/issues/344))
+1. When `editor.formatOnType` is on, don't indent after a single-line statement block
+ ([#726](https://github.com/Microsoft/vscode-python/issues/726))
+
+### Code Health
+
+1. Improved developer experience of the Python Extension on Windows. ([#1216](https://github.com/Microsoft/vscode-python/issues/1216))
+1. Parallelize jobs (unit tests) on CI server.
+ ([#1247](https://github.com/Microsoft/vscode-python/issues/1247))
+1. Run CI tests against the release version and master branch of PTVSD (experimental debugger), allowing tests to fail against the mastre branch of PTVSD.
+ ([#1253](https://github.com/Microsoft/vscode-python/issues/1253))
+1. Only trigger the extension for `file` and `untitled` in preparation for
+[Visual Studio Live Share](https://aka.ms/vsls)
+(thanks to [Jonathan Carter](https://github.com/lostintangent))
+ ([#1298](https://github.com/Microsoft/vscode-python/issues/1298))
+1. Ensure all unit tests run on Travis use the right Python interpreter.
+ ([#1318](https://github.com/Microsoft/vscode-python/issues/1318))
+1. Pin all production dependencies.
+ ([#1374](https://github.com/Microsoft/vscode-python/issues/1374))
+1. Add support for [hit count breakpoints](https://code.visualstudio.com/docs/editor/debugging#_advanced-breakpoint-topics) in the experimental debugger.
+ ([#1409](https://github.com/Microsoft/vscode-python/issues/1409))
+1. Ensure custom environment variables defined in `.env` file are passed onto the `pipenv` command.
+ ([#1428](https://github.com/Microsoft/vscode-python/issues/1428))
+
+
+
 ## 2018.3.1 (29 Mar 2018)
 
 ### Fixes
