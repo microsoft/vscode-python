@@ -298,7 +298,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
         async function testPyramidConfiguration(isWindows: boolean, isLinux: boolean, isMac: boolean, addPyramidDebugOption: boolean = true, pythonPathExists = true, shouldWork = true) {
             const workspacePath = path.join('usr', 'development', 'wksp1');
             const pythonPath = path.join(workspacePath, 'env', 'bin', 'python');
-            const pserveExecutableName = isWindows ? 'pserve.exe' : 'pserve';
+            const pserveExecutableName = isWindows ? 'pserve-script.py' : 'pserve';
             const pservePath = pythonPathExists ? path.join(path.dirname(pythonPath), pserveExecutableName) : pserveExecutableName;
             const workspaceFolder = createMoqWorkspaceFolder(workspacePath);
             const pythonFile = 'xyz.py';

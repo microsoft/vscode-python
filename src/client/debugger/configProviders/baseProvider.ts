@@ -86,7 +86,7 @@ export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArgum
         if (debugConfiguration.debugOptions.indexOf(DebugOptions.Pyramid) >= 0) {
             const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
             const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-            const pserve = platformService.isWindows ? 'pserve.exe' : 'pserve';
+            const pserve = platformService.isWindows ? 'pserve-script.py' : 'pserve';
             if (fs.fileExistsSync(debugConfiguration.pythonPath)) {
                 debugConfiguration.program = path.join(path.dirname(debugConfiguration.pythonPath), pserve);
             } else {
