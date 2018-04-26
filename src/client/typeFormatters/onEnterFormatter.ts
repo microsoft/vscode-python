@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as vscode from 'vscode';
+import { CancellationToken, FormattingOptions, OnTypeFormattingEditProvider, Position, TextDocument, TextEdit } from 'vscode';
 import { LineFormatter } from '../formatters/lineFormatter';
 import { TokenizerMode, TokenType } from '../language/types';
 import { getDocumentTokens } from '../providers/providerUtilities';
 
-export class OnEnterFormatter implements vscode.OnTypeFormattingEditProvider {
+export class OnEnterFormatter implements OnTypeFormattingEditProvider {
     private readonly formatter = new LineFormatter();
 
     public provideOnTypeFormattingEdits(
-        document: vscode.TextDocument,
-        position: vscode.Position,
+        document: TextDocument,
+        position: Position,
         ch: string,
-        options: vscode.FormattingOptions,
-        cancellationToken: vscode.CancellationToken): vscode.TextEdit[] {
+        options: FormattingOptions,
+        cancellationToken: CancellationToken): TextEdit[] {
         if (position.line === 0) {
             return [];
         }
@@ -30,10 +30,10 @@ export class OnEnterFormatter implements vscode.OnTypeFormattingEditProvider {
                 return [];
             }
         }
-        const formatted = this.formatter.formatLine(prevLine.text);
+        const formatted = this.formatter.formatLine(document, prevLine.lineNumber);
         if (formatted === prevLine.text) {
             return [];
         }
-        return [new vscode.TextEdit(prevLine.range, formatted)];
+        return [new TextEdit(prevLine.range, formatted)];
     }
 }

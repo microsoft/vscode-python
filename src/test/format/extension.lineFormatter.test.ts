@@ -5,6 +5,8 @@
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as TypeMoq from 'typemoq';
+import { TextDocument, TextLine } from 'vscode';
 import '../../client/common/extensions';
 import { LineFormatter } from '../../client/formatters/lineFormatter';
 
@@ -17,124 +19,142 @@ suite('Formatting - line formatter', () => {
     const formatter = new LineFormatter();
 
     test('Operator spacing', () => {
-        const actual = formatter.formatLine('( x  +1 )*y/ 3');
-        assert.equal(actual, '(x + 1) * y / 3');
+        testFormatLine('( x  +1 )*y/ 3', '(x + 1) * y / 3');
     });
     test('Braces spacing', () => {
-        const actual = formatter.formatLine('foo =(0 ,)');
-        assert.equal(actual, 'foo = (0,)');
+        testFormatLine('foo =(0 ,)', 'foo = (0,)');
     });
     test('Function arguments', () => {
-        const actual = formatter.formatLine('foo (0 , x= 1, (3+7) , y , z )');
-        assert.equal(actual, 'foo(0, x=1, (3 + 7), y, z)');
+        testFormatLine('z=foo (0 , x= 1, (3+7) , y , z )',
+            'z = foo(0, x=1, (3 + 7), y, z)');
     });
     test('Colon regular', () => {
-        const actual = formatter.formatLine('if x == 4 : print x,y; x,y= y, x');
-        assert.equal(actual, 'if x == 4: print x, y; x, y = y, x');
+        testFormatLine('if x == 4 : print x,y; x,y= y, x',
+            'if x == 4: print x, y; x, y = y, x');
     });
     test('Colon slices', () => {
-        const actual = formatter.formatLine('x[1: 30]');
-        assert.equal(actual, 'x[1:30]');
+        testFormatLine('x[1: 30]', 'x[1:30]');
     });
     test('Colon slices in arguments', () => {
-        const actual = formatter.formatLine('spam ( ham[ 1 :3], {eggs : 2})');
-        assert.equal(actual, 'spam(ham[1:3], {eggs: 2})');
+        testFormatLine('spam ( ham[ 1 :3], {eggs : 2})',
+            'spam(ham[1:3], {eggs: 2})');
     });
     test('Colon slices with double colon', () => {
-        const actual = formatter.formatLine('ham [1:9 ], ham[ 1: 9:   3], ham[: 9 :3], ham[1: :3], ham [ 1: 9:]');
-        assert.equal(actual, 'ham[1:9], ham[1:9:3], ham[:9:3], ham[1::3], ham[1:9:]');
+        testFormatLine('ham [1:9 ], ham[ 1: 9:   3], ham[: 9 :3], ham[1: :3], ham [ 1: 9:]',
+            'ham[1:9], ham[1:9:3], ham[:9:3], ham[1::3], ham[1:9:]');
     });
     test('Colon slices with operators', () => {
-        const actual = formatter.formatLine('ham [lower+ offset :upper+offset]');
-        assert.equal(actual, 'ham[lower + offset:upper + offset]');
+        testFormatLine('ham [lower+ offset :upper+offset]',
+            'ham[lower + offset:upper + offset]');
     });
     test('Colon slices with functions', () => {
-        const actual = formatter.formatLine('ham[ : upper_fn ( x) : step_fn(x )], ham[ :: step_fn(x)]');
-        assert.equal(actual, 'ham[:upper_fn(x):step_fn(x)], ham[::step_fn(x)]');
+        testFormatLine('ham[ : upper_fn ( x) : step_fn(x )], ham[ :: step_fn(x)]',
+            'ham[:upper_fn(x):step_fn(x)], ham[::step_fn(x)]');
     });
     test('Colon in for loop', () => {
-        const actual = formatter.formatLine('for index in  range( len(fruits) ): ');
-        assert.equal(actual, 'for index in range(len(fruits)):');
+        testFormatLine('for index in  range( len(fruits) ): ',
+            'for index in range(len(fruits)):');
     });
     test('Nested braces', () => {
-        const actual = formatter.formatLine('[ 1 :[2: (x,),y]]{1}');
-        assert.equal(actual, '[1:[2:(x,), y]]{1}');
+        testFormatLine('[ 1 :[2: (x,),y]]{1}', '[1:[2:(x,), y]]{1}');
     });
     test('Trailing comment', () => {
-        const actual = formatter.formatLine('x=1  # comment');
-        assert.equal(actual, 'x = 1 # comment');
+        testFormatLine('x=1  # comment', 'x = 1 # comment');
     });
     test('Single comment', () => {
-        const actual = formatter.formatLine('# comment');
-        assert.equal(actual, '# comment');
+        testFormatLine('# comment', '# comment');
     });
     test('Comment with leading whitespace', () => {
-        const actual = formatter.formatLine('   # comment');
-        assert.equal(actual, '   # comment');
+        testFormatLine('   # comment', '   # comment');
     });
     test('Equals in first argument', () => {
-        const actual = formatter.formatLine('foo(x =0)');
-        assert.equal(actual, 'foo(x=0)');
+        testFormatLine('foo(x =0)', 'foo(x=0)');
     });
     test('Equals in second argument', () => {
-        const actual = formatter.formatLine('foo(x,y= \"a\",');
-        assert.equal(actual, 'foo(x, y=\"a\",');
+        testFormatLine('foo(x,y= \"a\",', 'foo(x, y=\"a\",');
     });
     test('Equals in multiline arguments', () => {
-        const actual = formatter.formatLine('x = 1,y =-2)');
-        assert.equal(actual, 'x=1, y=-2)');
+        testFormatLine2('foo(a,', 'x = 1,y =-2)', 'x=1, y=-2)');
     });
     test('Equals in multiline arguments starting comma', () => {
-        const actual = formatter.formatLine(',x = 1,y =m)');
-        assert.equal(actual, ', x=1, y=m)');
+        testFormatLine(',x = 1,y =m)', ', x=1, y=m)');
     });
     test('Equals in multiline arguments ending comma', () => {
-        const actual = formatter.formatLine('x = 1,y =m,');
-        assert.equal(actual, 'x=1, y=m,');
+        testFormatLine('x = 1,y =m,', 'x=1, y=m,');
     });
     test('Operators without following space', () => {
-        const actual = formatter.formatLine('foo( *a, ** b, ! c)');
-        assert.equal(actual, 'foo(*a, **b, !c)');
+        testFormatLine('foo( *a, ** b, ! c)', 'foo(*a, **b, !c)');
     });
     test('Brace after keyword', () => {
-        const actual = formatter.formatLine('for x in(1,2,3)');
-        assert.equal(actual, 'for x in (1, 2, 3)');
+        testFormatLine('for x in(1,2,3)', 'for x in (1, 2, 3)');
     });
     test('Dot operator', () => {
-        const actual = formatter.formatLine('x.y');
-        assert.equal(actual, 'x.y');
+        testFormatLine('x.y', 'x.y');
     });
     test('Unknown tokens no space', () => {
-        const actual = formatter.formatLine('abc\\n\\');
-        assert.equal(actual, 'abc\\n\\');
+        testFormatLine('abc\\n\\', 'abc\\n\\');
     });
     test('Unknown tokens with space', () => {
-        const actual = formatter.formatLine('abc \\n \\');
-        assert.equal(actual, 'abc \\n \\');
+        testFormatLine('abc \\n \\', 'abc \\n \\');
     });
     test('Double asterisk', () => {
-        const actual = formatter.formatLine('a**2, ** k');
-        assert.equal(actual, 'a ** 2, **k');
+        testFormatLine('a**2, ** k', 'a ** 2, **k');
     });
     test('Lambda', () => {
-        const actual = formatter.formatLine('lambda * args, :0');
-        assert.equal(actual, 'lambda *args,: 0');
+        testFormatLine('lambda * args, :0', 'lambda *args,: 0');
     });
     test('Comma expression', () => {
-        const actual = formatter.formatLine('x=1,2,3');
-        assert.equal(actual, 'x = 1, 2, 3');
+        testFormatLine('x=1,2,3', 'x = 1, 2, 3');
     });
     test('is exression', () => {
-        const actual = formatter.formatLine('a( (False is  2)  is 3)');
-        assert.equal(actual, 'a((False is 2) is 3)');
+        testFormatLine('a( (False is  2)  is 3)', 'a((False is 2) is 3)');
+    });
+    test('Function returning tuple', () => {
+        testFormatLine('x,y=f(a)', 'x, y = f(a)');
     });
     test('Grammar file', () => {
         const content = fs.readFileSync(grammarFile).toString('utf8');
         const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
+        let prevLine = '';
         for (let i = 0; i < lines.length; i += 1) {
             const line = lines[i];
-            const actual = formatter.formatLine(line);
-            assert.equal(actual, line, `Line ${i + 1} changed: '${line}' to '${actual}'`);
+            const actual = formatLine2(prevLine, line);
+            assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
+            prevLine = line;
         }
     });
+
+    function testFormatLine(text: string, expected: string): void {
+        const actual = formatLine(text);
+        assert.equal(actual, expected);
+    }
+
+    function formatLine(text: string): string {
+        const line = TypeMoq.Mock.ofType<TextLine>();
+        line.setup(x => x.text).returns(() => text);
+
+        const document = TypeMoq.Mock.ofType<TextDocument>();
+        document.setup(x => x.lineAt(TypeMoq.It.isAnyNumber())).returns(() => line.object);
+
+        return formatter.formatLine(document.object, 0);
+    }
+
+    function formatLine2(prevLineText: string, lineText: string): string {
+        const thisLine = TypeMoq.Mock.ofType<TextLine>();
+        thisLine.setup(x => x.text).returns(() => lineText);
+
+        const prevLine = TypeMoq.Mock.ofType<TextLine>();
+        prevLine.setup(x => x.text).returns(() => prevLineText);
+
+        const document = TypeMoq.Mock.ofType<TextDocument>();
+        document.setup(x => x.lineAt(0)).returns(() => prevLine.object);
+        document.setup(x => x.lineAt(1)).returns(() => thisLine.object);
+
+        return formatter.formatLine(document.object, 1);
+    }
+
+    function testFormatLine2(prevLineText: string, lineText: string, expected: string): void {
+        const actual = formatLine2(prevLineText, lineText);
+        assert.equal(actual, expected);
+    }
 });
