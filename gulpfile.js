@@ -95,6 +95,8 @@ gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
 
 gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 
+gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd*']));
+
 gulp.task('cover:enable', () => {
     return gulp.src("./coverconfig.json")
         .pipe(jeditor((json) => {

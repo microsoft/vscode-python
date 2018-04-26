@@ -22,16 +22,17 @@ x support for type hint comments for functions, `# type: (int, str) -> int`.
 import os
 import re
 
-from parso import ParserSyntaxError
+from parso import ParserSyntaxError, parse, split_lines
 from parso.python import tree
 
+from jedi._compatibility import unicode, force_unicode
 from jedi.evaluate.cache import evaluator_method_cache
 from jedi.evaluate import compiled
 from jedi.evaluate.base_context import NO_CONTEXTS, ContextSet
 from jedi.evaluate.lazy_context import LazyTreeContext
 from jedi.evaluate.context import ModuleContext
+from jedi.evaluate.helpers import is_string
 from jedi import debug
-from jedi import _compatibility
 from jedi import parser_utils
 
 
@@ -41,16 +42,22 @@ def _evaluate_for_annotation(context, annotation, index=None):
     If index is not None, the annotation is expected to be a tuple
     and we're interested in that index
     """
-    if annotation is not None:
-        context_set = context.eval_node(_fix_forward_reference(context, annotation))
-        if index is not None:
-            context_set = context_set.filter(
-                lambda context: context.array_type == 'tuple' \
-                                and len(list(context.py__iter__())) >= index
-            ).py__getitem__(index)
-        return context_set.execute_evaluated()
-    else:
+    context_set = context.eval_node(_fix_forward_reference(context, annotation))
+    return context_set.execute_evaluated()
+
+
+def _evaluate_annotation_string(context, string, index=None):
+    node = _get_forward_reference_node(context, string)
+    if node is None:
         return NO_CONTEXTS
+
+    context_set = context.eval_node(node)
+    if index is not None:
+        context_set = context_set.filter(
+            lambda context: context.array_type == u'tuple'
+                            and len(list(context.py__iter__())) >= index
+        ).py__getitem__(index)
+    return context_set.execute_evaluated()
 
 
 def _fix_forward_reference(context, node):
@@ -59,30 +66,111 @@ def _fix_forward_reference(context, node):
         debug.warning("Eval'ed typing index %s should lead to 1 object, "
                       " not %s" % (node, evaled_nodes))
         return node
-    evaled_node = list(evaled_nodes)[0]
-    if isinstance(evaled_node, compiled.CompiledObject) and \
-            isinstance(evaled_node.obj, str):
-        try:
-            new_node = context.evaluator.grammar.parse(
-                _compatibility.unicode(evaled_node.obj),
-                start_symbol='eval_input',
-                error_recovery=False
-            )
-        except ParserSyntaxError:
-            debug.warning('Annotation not parsed: %s' % evaled_node.obj)
-            return node
-        else:
-            module = node.get_root_node()
-            parser_utils.move(new_node, module.end_pos[0])
-            new_node.parent = context.tree_node
-            return new_node
+
+    evaled_context = list(evaled_nodes)[0]
+    if is_string(evaled_context):
+        result = _get_forward_reference_node(context, evaled_context.get_safe_value())
+        if result is not None:
+            return result
+
+    return node
+
+
+def _get_forward_reference_node(context, string):
+    try:
+        new_node = context.evaluator.grammar.parse(
+            force_unicode(string),
+            start_symbol='eval_input',
+            error_recovery=False
+        )
+    except ParserSyntaxError:
+        debug.warning('Annotation not parsed: %s' % string)
+        return None
     else:
-        return node
+        module = context.tree_node.get_root_node()
+        parser_utils.move(new_node, module.end_pos[0])
+        new_node.parent = context.tree_node
+        return new_node
+
+
+def _split_comment_param_declaration(decl_text):
+    """
+    Split decl_text on commas, but group generic expressions
+    together.
+
+    For example, given "foo, Bar[baz, biz]" we return
+    ['foo', 'Bar[baz, biz]'].
+
+    """
+    try:
+        node = parse(decl_text, error_recovery=False).children[0]
+    except ParserSyntaxError:
+        debug.warning('Comment annotation is not valid Python: %s' % decl_text)
+        return []
+
+    if node.type == 'name':
+        return [node.get_code().strip()]
+
+    params = []
+    try:
+        children = node.children
+    except AttributeError:
+        return []
+    else:
+        for child in children:
+            if child.type in ['name', 'atom_expr', 'power']:
+                params.append(child.get_code().strip())
+
+    return params
 
 
 @evaluator_method_cache()
 def infer_param(execution_context, param):
+    """
+    Infers the type of a function parameter, using type annotations.
+    """
     annotation = param.annotation
+    if annotation is None:
+        # If no Python 3-style annotation, look for a Python 2-style comment
+        # annotation.
+        # Identify parameters to function in the same sequence as they would
+        # appear in a type comment.
+        all_params = [child for child in param.parent.children
+                      if child.type == 'param']
+
+        node = param.parent.parent
+        comment = parser_utils.get_following_comment_same_line(node)
+        if comment is None:
+            return NO_CONTEXTS
+
+        match = re.match(r"^#\s*type:\s*\(([^#]*)\)\s*->", comment)
+        if not match:
+            return NO_CONTEXTS
+        params_comments = _split_comment_param_declaration(match.group(1))
+
+        # Find the specific param being investigated
+        index = all_params.index(param)
+        # If the number of parameters doesn't match length of type comment,
+        # ignore first parameter (assume it's self).
+        if len(params_comments) != len(all_params):
+            debug.warning(
+                "Comments length != Params length %s %s",
+                params_comments, all_params
+            )
+        from jedi.evaluate.context.instance import BaseInstanceFunctionExecution
+        if isinstance(execution_context, BaseInstanceFunctionExecution):
+            if index == 0:
+                # Assume it's self, which is already handled
+                return NO_CONTEXTS
+            index -= 1
+        if index >= len(params_comments):
+            return NO_CONTEXTS
+
+        param_comment = params_comments[index]
+        return _evaluate_annotation_string(
+            execution_context.get_root_context(),
+            param_comment
+        )
     module_context = execution_context.get_root_context()
     return _evaluate_for_annotation(module_context, annotation)
 
@@ -102,12 +190,33 @@ def py__annotations__(funcdef):
 
 @evaluator_method_cache()
 def infer_return_types(function_context):
+    """
+    Infers the type of a function's return value,
+    according to type annotations.
+    """
     annotation = py__annotations__(function_context.tree_node).get("return", None)
+    if annotation is None:
+        # If there is no Python 3-type annotation, look for a Python 2-type annotation
+        node = function_context.tree_node
+        comment = parser_utils.get_following_comment_same_line(node)
+        if comment is None:
+            return NO_CONTEXTS
+
+        match = re.match(r"^#\s*type:\s*\([^#]*\)\s*->\s*([^#]*)", comment)
+        if not match:
+            return NO_CONTEXTS
+
+        return _evaluate_annotation_string(
+            function_context.get_root_context(),
+            match.group(1).strip()
+        )
+
     module_context = function_context.get_root_context()
     return _evaluate_for_annotation(module_context, annotation)
 
 
 _typing_module = None
+_typing_module_code_lines = None
 
 
 def _get_typing_replacement_module(grammar):
@@ -115,14 +224,15 @@ def _get_typing_replacement_module(grammar):
     The idea is to return our jedi replacement for the PEP-0484 typing module
     as discussed at https://github.com/davidhalter/jedi/issues/663
     """
-    global _typing_module
+    global _typing_module, _typing_module_code_lines
     if _typing_module is None:
         typing_path = \
             os.path.abspath(os.path.join(__file__, "../jedi_typing.py"))
         with open(typing_path) as f:
-            code = _compatibility.unicode(f.read())
+            code = unicode(f.read())
         _typing_module = grammar.parse(code)
-    return _typing_module
+        _typing_module_code_lines = split_lines(code, keepends=True)
+    return _typing_module, _typing_module_code_lines
 
 
 def py__getitem__(context, typ, node):
@@ -152,10 +262,12 @@ def py__getitem__(context, typ, node):
         # check for the instance typing._Optional (Python 3.6).
         return context.eval_node(nodes[0])
 
+    module_node, code_lines = _get_typing_replacement_module(context.evaluator.latest_grammar)
     typing = ModuleContext(
         context.evaluator,
-        module_node=_get_typing_replacement_module(context.evaluator.latest_grammar),
-        path=None
+        module_node=module_node,
+        path=None,
+        code_lines=code_lines,
     )
     factories = typing.py__getattribute__("factory")
     assert len(factories) == 1
@@ -167,12 +279,12 @@ def py__getitem__(context, typ, node):
                            if isinstance(child, tree.Class))
     if type_name not in valid_classnames:
         return None
-    compiled_classname = compiled.create(context.evaluator, type_name)
+    compiled_classname = compiled.create_simple_object(context.evaluator, type_name)
 
     from jedi.evaluate.context.iterable import FakeSequence
     args = FakeSequence(
         context.evaluator,
-        "tuple",
+        u'tuple',
         [LazyTreeContext(context, n) for n in nodes]
     )
 
@@ -213,10 +325,6 @@ def _find_type_from_comment_hint(context, node, varlist, name):
     if comment is None:
         return []
     match = re.match(r"^#\s*type:\s*([^#]*)", comment)
-    if not match:
+    if match is None:
         return []
-    annotation = tree.String(
-        repr(str(match.group(1).strip())),
-        node.start_pos)
-    annotation.parent = node.parent
-    return _evaluate_for_annotation(context, annotation, index)
+    return _evaluate_annotation_string(context, match.group(1).strip(), index)

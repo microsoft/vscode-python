@@ -22,74 +22,56 @@ It is important to note that:
 """
 from jedi import debug
 from jedi import settings
+from jedi._compatibility import force_unicode, is_py3
+from jedi.cache import memoize_method
 from jedi.evaluate import compiled
 from jedi.evaluate import analysis
 from jedi.evaluate import recursion
 from jedi.evaluate.lazy_context import LazyKnownContext, LazyKnownContexts, \
     LazyTreeContext
-from jedi.evaluate.helpers import is_string, predefine_names, evaluate_call_of_leaf
+from jedi.evaluate.helpers import get_int_or_none, is_string, \
+    predefine_names, evaluate_call_of_leaf
 from jedi.evaluate.utils import safe_property
 from jedi.evaluate.utils import to_list
 from jedi.evaluate.cache import evaluator_method_cache
-from jedi.evaluate.filters import ParserTreeFilter, has_builtin_methods, \
-    register_builtin_method, SpecialMethodFilter
+from jedi.evaluate.filters import ParserTreeFilter, BuiltinOverwrite, \
+    publish_method
 from jedi.evaluate.base_context import ContextSet, NO_CONTEXTS, Context, \
     TreeContext, ContextualizedNode
 from jedi.parser_utils import get_comp_fors
 
 
-class AbstractIterable(Context):
-    builtin_methods = {}
-    api_type = 'instance'
-
-    def __init__(self, evaluator):
-        super(AbstractIterable, self).__init__(evaluator, evaluator.BUILTINS)
-
-    def get_filters(self, search_global, until_position=None, origin_scope=None):
-        raise NotImplementedError
-
-    @property
-    def name(self):
-        return compiled.CompiledContextName(self, self.array_type)
+class IterableMixin(object):
+    def py__stop_iteration_returns(self):
+        return ContextSet(compiled.builtin_from_name(self.evaluator, u'None'))
 
 
-@has_builtin_methods
-class GeneratorMixin(object):
+class GeneratorBase(BuiltinOverwrite, IterableMixin):
     array_type = None
+    special_object_identifier = u'GENERATOR_OBJECT'
 
-    @register_builtin_method('send')
-    @register_builtin_method('next', python_version_match=2)
-    @register_builtin_method('__next__', python_version_match=3)
+    @publish_method('send')
+    @publish_method('next', python_version_match=2)
+    @publish_method('__next__', python_version_match=3)
     def py__next__(self):
-        # TODO add TypeError if params are given.
         return ContextSet.from_sets(lazy_context.infer() for lazy_context in self.py__iter__())
-
-    def get_filters(self, search_global, until_position=None, origin_scope=None):
-        gen_obj = compiled.get_special_object(self.evaluator, 'GENERATOR_OBJECT')
-        yield SpecialMethodFilter(self, self.builtin_methods, gen_obj)
-        for filter in gen_obj.get_filters(search_global):
-            yield filter
-
-    def py__bool__(self):
-        return True
-
-    def py__class__(self):
-        gen_obj = compiled.get_special_object(self.evaluator, 'GENERATOR_OBJECT')
-        return gen_obj.py__class__()
 
     @property
     def name(self):
         return compiled.CompiledContextName(self, 'generator')
 
 
-class Generator(GeneratorMixin, Context):
+class Generator(GeneratorBase):
     """Handling of `yield` functions."""
     def __init__(self, evaluator, func_execution_context):
-        super(Generator, self).__init__(evaluator, parent_context=evaluator.BUILTINS)
+        super(Generator, self).__init__(evaluator)
         self._func_execution_context = func_execution_context
 
     def py__iter__(self):
-        return self._func_execution_context.get_yield_values()
+        return self._func_execution_context.get_yield_lazy_contexts()
+
+    def py__stop_iteration_returns(self):
+        return self._func_execution_context.get_return_values()
 
     def __repr__(self):
         return "<%s of %s>" % (type(self).__name__, self._func_execution_context)
@@ -111,32 +93,33 @@ class CompForContext(TreeContext):
         yield ParserTreeFilter(self.evaluator, self)
 
 
-class Comprehension(AbstractIterable):
-    @staticmethod
-    def from_atom(evaluator, context, atom):
-        bracket = atom.children[0]
-        if bracket == '{':
-            if atom.children[1].children[1] == ':':
-                cls = DictComprehension
-            else:
-                cls = SetComprehension
-        elif bracket == '(':
-            cls = GeneratorComprehension
-        elif bracket == '[':
-            cls = ListComprehension
-        return cls(evaluator, context, atom)
+def comprehension_from_atom(evaluator, context, atom):
+    bracket = atom.children[0]
+    if bracket == '{':
+        if atom.children[1].children[1] == ':':
+            cls = DictComprehension
+        else:
+            cls = SetComprehension
+    elif bracket == '(':
+        cls = GeneratorComprehension
+    elif bracket == '[':
+        cls = ListComprehension
+    return cls(evaluator, context, atom)
 
+
+class ComprehensionMixin(object):
     def __init__(self, evaluator, defining_context, atom):
-        super(Comprehension, self).__init__(evaluator)
+        super(ComprehensionMixin, self).__init__(evaluator)
         self._defining_context = defining_context
         self._atom = atom
 
     def _get_comprehension(self):
+        "return 'a for a in b'"
         # The atom contains a testlist_comp
         return self._atom.children[1]
 
     def _get_comp_for(self):
-        # The atom contains a testlist_comp
+        "return CompFor('for a in b')"
         return self._get_comprehension().children[1]
 
     def _eval_node(self, index=0):
@@ -154,13 +137,17 @@ class Comprehension(AbstractIterable):
 
     def _nested(self, comp_fors, parent_context=None):
         comp_for = comp_fors[0]
-        input_node = comp_for.children[3]
+
+        is_async = 'async' == comp_for.children[comp_for.children.index('for') - 1]
+
+        input_node = comp_for.children[comp_for.children.index('in') + 1]
         parent_context = parent_context or self._defining_context
         input_types = parent_context.eval_node(input_node)
+        # TODO: simulate await if self.is_async
 
         cn = ContextualizedNode(parent_context, input_node)
-        iterated = input_types.iterate(cn)
-        exprlist = comp_for.children[1]
+        iterated = input_types.iterate(cn, is_async=is_async)
+        exprlist = comp_for.children[comp_for.children.index('for') + 1]
         for i, lazy_context in enumerate(iterated):
             types = lazy_context.infer()
             dct = unpack_tuple_to_dict(parent_context, types, exprlist)
@@ -194,14 +181,18 @@ class Comprehension(AbstractIterable):
         return "<%s of %s>" % (type(self).__name__, self._atom)
 
 
-class ArrayMixin(object):
-    def get_filters(self, search_global, until_position=None, origin_scope=None):
-        # `array.type` is a string with the type, e.g. 'list'.
+class Sequence(BuiltinOverwrite, IterableMixin):
+    api_type = u'instance'
+
+    @property
+    def name(self):
+        return compiled.CompiledContextName(self, self.array_type)
+
+    @memoize_method
+    def get_object(self):
         compiled_obj = compiled.builtin_from_name(self.evaluator, self.array_type)
-        yield SpecialMethodFilter(self, self.builtin_methods, compiled_obj)
-        for typ in compiled_obj.execute_evaluated(self):
-            for filter in typ.get_filters():
-                yield filter
+        only_obj, = compiled_obj.execute_evaluated(self)
+        return only_obj
 
     def py__bool__(self):
         return None  # We don't know the length, because of appends.
@@ -211,7 +202,7 @@ class ArrayMixin(object):
 
     @safe_property
     def parent(self):
-        return self.evaluator.BUILTINS
+        return self.evaluator.builtins_module
 
     def dict_values(self):
         return ContextSet.from_sets(
@@ -220,8 +211,8 @@ class ArrayMixin(object):
         )
 
 
-class ListComprehension(ArrayMixin, Comprehension):
-    array_type = 'list'
+class ListComprehension(ComprehensionMixin, Sequence):
+    array_type = u'list'
 
     def py__getitem__(self, index):
         if isinstance(index, slice):
@@ -231,13 +222,12 @@ class ListComprehension(ArrayMixin, Comprehension):
         return all_types[index].infer()
 
 
-class SetComprehension(ArrayMixin, Comprehension):
-    array_type = 'set'
+class SetComprehension(ComprehensionMixin, Sequence):
+    array_type = u'set'
 
 
-@has_builtin_methods
-class DictComprehension(ArrayMixin, Comprehension):
-    array_type = 'dict'
+class DictComprehension(ComprehensionMixin, Sequence):
+    array_type = u'dict'
 
     def _get_comp_for(self):
         return self._get_comprehension().children[3]
@@ -250,38 +240,38 @@ class DictComprehension(ArrayMixin, Comprehension):
         for keys, values in self._iterate():
             for k in keys:
                 if isinstance(k, compiled.CompiledObject):
-                    if k.obj == index:
+                    if k.get_safe_value(default=object()) == index:
                         return values
         return self.dict_values()
 
     def dict_values(self):
         return ContextSet.from_sets(values for keys, values in self._iterate())
 
-    @register_builtin_method('values')
+    @publish_method('values')
     def _imitate_values(self):
         lazy_context = LazyKnownContexts(self.dict_values())
-        return ContextSet(FakeSequence(self.evaluator, 'list', [lazy_context]))
+        return ContextSet(FakeSequence(self.evaluator, u'list', [lazy_context]))
 
-    @register_builtin_method('items')
+    @publish_method('items')
     def _imitate_items(self):
         items = ContextSet.from_iterable(
             FakeSequence(
-                self.evaluator, 'tuple'
+                self.evaluator, u'tuple'
                 (LazyKnownContexts(keys), LazyKnownContexts(values))
             ) for keys, values in self._iterate()
         )
 
-        return create_evaluated_sequence_set(self.evaluator, items, sequence_type='list')
+        return create_evaluated_sequence_set(self.evaluator, items, sequence_type=u'list')
 
 
-class GeneratorComprehension(GeneratorMixin, Comprehension):
+class GeneratorComprehension(ComprehensionMixin, GeneratorBase):
     pass
 
 
-class SequenceLiteralContext(ArrayMixin, AbstractIterable):
-    mapping = {'(': 'tuple',
-               '[': 'list',
-               '{': 'set'}
+class SequenceLiteralContext(Sequence):
+    mapping = {'(': u'tuple',
+               '[': u'list',
+               '{': u'set'}
 
     def __init__(self, evaluator, defining_context, atom):
         super(SequenceLiteralContext, self).__init__(evaluator)
@@ -289,18 +279,19 @@ class SequenceLiteralContext(ArrayMixin, AbstractIterable):
         self._defining_context = defining_context
 
         if self.atom.type in ('testlist_star_expr', 'testlist'):
-            self.array_type = 'tuple'
+            self.array_type = u'tuple'
         else:
             self.array_type = SequenceLiteralContext.mapping[atom.children[0]]
             """The builtin name of the array (list, set, tuple or dict)."""
 
     def py__getitem__(self, index):
         """Here the index is an int/str. Raises IndexError/KeyError."""
-        if self.array_type == 'dict':
+        if self.array_type == u'dict':
+            compiled_obj_index = compiled.create_simple_object(self.evaluator, index)
             for key, value in self._items():
                 for k in self._defining_context.eval_node(key):
                     if isinstance(k, compiled.CompiledObject) \
-                            and index == k.obj:
+                            and k.execute_operation(compiled_obj_index, u'==').get_safe_value():
                         return self._defining_context.eval_node(value)
             raise KeyError('No key found in dictionary %s.' % self)
 
@@ -315,7 +306,7 @@ class SequenceLiteralContext(ArrayMixin, AbstractIterable):
         While values returns the possible values for any array field, this
         function returns the value for a certain index.
         """
-        if self.array_type == 'dict':
+        if self.array_type == u'dict':
             # Get keys.
             types = ContextSet()
             for k, _ in self._items():
@@ -333,7 +324,7 @@ class SequenceLiteralContext(ArrayMixin, AbstractIterable):
 
     def _values(self):
         """Returns a list of a list of node."""
-        if self.array_type == 'dict':
+        if self.array_type == u'dict':
             return ContextSet.from_sets(v for k, v in self._items())
         else:
             return self._items()
@@ -373,37 +364,36 @@ class SequenceLiteralContext(ArrayMixin, AbstractIterable):
         for key_node, value in self._items():
             for key in self._defining_context.eval_node(key_node):
                 if is_string(key):
-                    yield key.obj, LazyTreeContext(self._defining_context, value)
+                    yield key.get_safe_value(), LazyTreeContext(self._defining_context, value)
 
     def __repr__(self):
         return "<%s of %s>" % (self.__class__.__name__, self.atom)
 
 
-@has_builtin_methods
 class DictLiteralContext(SequenceLiteralContext):
-    array_type = 'dict'
+    array_type = u'dict'
 
     def __init__(self, evaluator, defining_context, atom):
         super(SequenceLiteralContext, self).__init__(evaluator)
         self._defining_context = defining_context
         self.atom = atom
 
-    @register_builtin_method('values')
+    @publish_method('values')
     def _imitate_values(self):
         lazy_context = LazyKnownContexts(self.dict_values())
-        return ContextSet(FakeSequence(self.evaluator, 'list', [lazy_context]))
+        return ContextSet(FakeSequence(self.evaluator, u'list', [lazy_context]))
 
-    @register_builtin_method('items')
+    @publish_method('items')
     def _imitate_items(self):
         lazy_contexts = [
             LazyKnownContext(FakeSequence(
-                self.evaluator, 'tuple',
+                self.evaluator, u'tuple',
                 (LazyTreeContext(self._defining_context, key_node),
                  LazyTreeContext(self._defining_context, value_node))
             )) for key_node, value_node in self._items()
         ]
 
-        return ContextSet(FakeSequence(self.evaluator, 'list', lazy_contexts))
+        return ContextSet(FakeSequence(self.evaluator, u'list', lazy_contexts))
 
 
 class _FakeArray(SequenceLiteralContext):
@@ -437,15 +427,37 @@ class FakeSequence(_FakeArray):
 
 class FakeDict(_FakeArray):
     def __init__(self, evaluator, dct):
-        super(FakeDict, self).__init__(evaluator, dct, 'dict')
+        super(FakeDict, self).__init__(evaluator, dct, u'dict')
         self._dct = dct
 
     def py__iter__(self):
         for key in self._dct:
-            yield LazyKnownContext(compiled.create(self.evaluator, key))
+            yield LazyKnownContext(compiled.create_simple_object(self.evaluator, key))
 
     def py__getitem__(self, index):
+        if is_py3 and self.evaluator.environment.version_info.major == 2:
+            # In Python 2 bytes and unicode compare.
+            if isinstance(index, bytes):
+                index_unicode = force_unicode(index)
+                try:
+                    return self._dct[index_unicode].infer()
+                except KeyError:
+                    pass
+            elif isinstance(index, str):
+                index_bytes = index.encode('utf-8')
+                try:
+                    return self._dct[index_bytes].infer()
+                except KeyError:
+                    pass
+
         return self._dct[index].infer()
+
+    @publish_method('values')
+    def _values(self):
+        return ContextSet(FakeSequence(
+            self.evaluator, u'tuple',
+            [LazyKnownContexts(self.dict_values())]
+        ))
 
     def dict_values(self):
         return ContextSet.from_sets(lazy_context.infer() for lazy_context in self._dct.values())
@@ -649,7 +661,7 @@ class _ArrayInstance(object):
             for addition in additions:
                 yield addition
 
-    def iterate(self, contextualized_node=None):
+    def iterate(self, contextualized_node=None, is_async=False):
         return self.py__iter__()
 
 
@@ -657,7 +669,7 @@ class Slice(Context):
     def __init__(self, context, start, stop, step):
         super(Slice, self).__init__(
             context.evaluator,
-            parent_context=context.evaluator.BUILTINS
+            parent_context=context.evaluator.builtins_module
         )
         self._context = context
         # all of them are either a Precedence or None.
@@ -680,10 +692,9 @@ class Slice(Context):
                 # For simplicity, we want slices to be clear defined with just
                 # one type.  Otherwise we will return an empty slice object.
                 raise IndexError
-            try:
-                return list(result)[0].obj
-            except AttributeError:
-                return None
+
+            context, = result
+            return get_int_or_none(context)
 
         try:
             return slice(get(self._start), get(self._stop), get(self._step))

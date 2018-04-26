@@ -35,6 +35,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         if (!fileToExecute) {
             return;
         }
+        await codeExecutionHelper.saveFileIfDirty(fileToExecute);
         const executionService = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'standard');
         await executionService.executeFile(fileToExecute);
     }
@@ -59,11 +60,11 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         }
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
         const codeToExecute = await codeExecutionHelper.getSelectedTextToExecute(activeEditor!);
-        const normalizedCode = codeExecutionHelper.normalizeLines(codeToExecute!);
+        const normalizedCode = await codeExecutionHelper.normalizeLines(codeToExecute!);
         if (!normalizedCode || normalizedCode.trim().length === 0) {
             return;
         }
 
-        await executionService.execute(codeToExecute!, activeEditor!.document.uri);
+        await executionService.execute(normalizedCode, activeEditor!.document.uri);
     }
 }

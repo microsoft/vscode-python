@@ -24,7 +24,7 @@ export class TerminalProvider implements Disposable {
     private async onCreateTerminal() {
         const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory);
         const activeResource = this.getActiveResource();
-        await terminalService.createTerminalService(activeResource, 'Python').show();
+        await terminalService.createTerminalService(activeResource, 'Python').show(false);
     }
     private getActiveResource(): Uri | undefined {
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);

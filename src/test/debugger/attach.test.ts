@@ -11,7 +11,7 @@ import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { createDeferred } from '../../client/common/helpers';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
-import { AttachRequestArguments } from '../../client/debugger/Common/Contracts';
+import { AttachRequestArgumentsV1 } from '../../client/debugger/Common/Contracts';
 import { PYTHON_PATH, sleep } from '../common';
 import { initialize, IS_APPVEYOR, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { DEBUGGER_TIMEOUT } from './common/constants';
@@ -53,7 +53,7 @@ suite('Attach Debugger', () => {
         }
 
         const port = await getFreePort({ host: 'localhost', port: 3000 });
-        const args: AttachRequestArguments = {
+        const args: AttachRequestArgumentsV1 = {
             localRoot: path.dirname(fileToDebug),
             remoteRoot: path.dirname(fileToDebug),
             port: port,

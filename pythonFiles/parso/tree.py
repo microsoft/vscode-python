@@ -55,7 +55,6 @@ class NodeOrLeaf(object):
         Returns the node immediately preceding this node in this parent's
         children list. If this node does not have a previous sibling, it is
         None.
-        None.
         """
         # Can't use index(); we need to test by identity
         for i, child in enumerate(self.parent.children):
@@ -339,7 +338,7 @@ class Node(BaseNode):
 
 class ErrorNode(BaseNode):
     """
-    A node that containes valid nodes/leaves that we're follow by a token that
+    A node that contains valid nodes/leaves that we're follow by a token that
     was invalid. This basically means that the leaf after this node is where
     Python would mark a syntax error.
     """

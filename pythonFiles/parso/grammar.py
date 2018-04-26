@@ -12,7 +12,6 @@ from parso.parser import BaseParser
 from parso.python.parser import Parser as PythonParser
 from parso.python.errors import ErrorFinderConfig
 from parso.python import pep8
-from parso.python import fstring
 
 _loaded_grammars = {}
 
@@ -73,7 +72,7 @@ class Grammar(object):
             :py:class:`parso.python.tree.Module`.
         """
         if 'start_pos' in kwargs:
-            raise TypeError("parse() got an unexpected keyworda argument.")
+            raise TypeError("parse() got an unexpected keyword argument.")
         return self._parse(code=code, **kwargs)
 
     def _parse(self, code=None, error_recovery=True, path=None,
@@ -186,7 +185,6 @@ class Grammar(object):
         normalizer.walk(node)
         return normalizer.issues
 
-
     def __repr__(self):
         labels = self._pgen_grammar.number2symbol.values()
         txt = ' '.join(list(labels)[:3]) + ' ...'
@@ -213,34 +211,6 @@ class PythonGrammar(Grammar):
     def _tokenize(self, code):
         # Used by Jedi.
         return tokenize(code, self.version_info)
-
-
-class PythonFStringGrammar(Grammar):
-    _token_namespace = fstring.TokenNamespace
-    _start_symbol = 'fstring'
-
-    def __init__(self):
-        super(PythonFStringGrammar, self).__init__(
-            text=fstring.GRAMMAR,
-            tokenizer=fstring.tokenize,
-            parser=fstring.Parser
-        )
-
-    def parse(self, code, **kwargs):
-        return self._parse(code, **kwargs)
-
-    def _parse(self, code, error_recovery=True, start_pos=(1, 0)):
-        tokens = self._tokenizer(code, start_pos=start_pos)
-        p = self._parser(
-            self._pgen_grammar,
-            error_recovery=error_recovery,
-            start_symbol=self._start_symbol,
-        )
-        return p.parse(tokens=tokens)
-
-    def parse_leaf(self, leaf, error_recovery=True):
-        code = leaf._get_payload()
-        return self.parse(code, error_recovery=True, start_pos=leaf.start_pos)
 
 
 def load_grammar(**kwargs):
@@ -273,10 +243,6 @@ def load_grammar(**kwargs):
                 except FileNotFoundError:
                     message = "Python version %s is currently not supported." % version
                     raise NotImplementedError(message)
-        elif language == 'python-f-string':
-            if version is not None:
-                raise NotImplementedError("Currently different versions are not supported.")
-            return PythonFStringGrammar()
         else:
             raise NotImplementedError("No support for language %s." % language)
 

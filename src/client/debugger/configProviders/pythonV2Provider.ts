@@ -7,50 +7,81 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IPlatformService } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
-import { DebugOptions } from '../Common/Contracts';
+import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../Common/Contracts';
 import { BaseConfigurationProvider, PythonAttachDebugConfiguration, PythonLaunchDebugConfiguration } from './baseProvider';
 
 @injectable()
-export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvider {
+export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvider<LaunchRequestArguments, AttachRequestArguments> {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('pythonExperimental', serviceContainer);
     }
-    protected provideLaunchDefaults(workspaceFolder: Uri, debugConfiguration: PythonLaunchDebugConfiguration): void {
+    protected provideLaunchDefaults(workspaceFolder: Uri, debugConfiguration: PythonLaunchDebugConfiguration<LaunchRequestArguments>): void {
         super.provideLaunchDefaults(workspaceFolder, debugConfiguration);
-
-        debugConfiguration.stopOnEntry = false;
-        debugConfiguration.debugOptions = Array.isArray(debugConfiguration.debugOptions) ? debugConfiguration.debugOptions : [];
-
-        // Add PTVSD specific flags.
+        const debugOptions = debugConfiguration.debugOptions!;
+        if (debugConfiguration.debugStdLib) {
+            this.debugOption(debugOptions, DebugOptions.DebugStdLib);
+        }
+        if (debugConfiguration.django) {
+            this.debugOption(debugOptions, DebugOptions.Django);
+        }
+        if (debugConfiguration.jinja) {
+            this.debugOption(debugOptions, DebugOptions.Jinja);
+        }
+        if (debugConfiguration.redirectOutput || debugConfiguration.redirectOutput === undefined) {
+            this.debugOption(debugOptions, DebugOptions.RedirectOutput);
+        }
+        if (debugConfiguration.sudo) {
+            this.debugOption(debugOptions, DebugOptions.Sudo);
+        }
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
-            debugConfiguration.debugOptions.push(DebugOptions.FixFilePathCase);
+            this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
         if (debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK'
-            && debugConfiguration.debugOptions.indexOf(DebugOptions.Jinja) === -1) {
-            debugConfiguration.debugOptions.push(DebugOptions.Jinja);
+            && debugOptions.indexOf(DebugOptions.Jinja) === -1
+            && debugConfiguration.jinja !== false) {
+            this.debugOption(debugOptions, DebugOptions.Jinja);
         }
     }
-    protected provideAttachDefaults(workspaceFolder: Uri, debugConfiguration: PythonAttachDebugConfiguration): void {
+    protected provideAttachDefaults(workspaceFolder: Uri, debugConfiguration: PythonAttachDebugConfiguration<AttachRequestArguments>): void {
         super.provideAttachDefaults(workspaceFolder, debugConfiguration);
-
-        debugConfiguration.debugOptions = Array.isArray(debugConfiguration.debugOptions) ? debugConfiguration.debugOptions : [];
+        const debugOptions = debugConfiguration.debugOptions!;
+        if (debugConfiguration.debugStdLib) {
+            this.debugOption(debugOptions, DebugOptions.DebugStdLib);
+        }
+        if (debugConfiguration.django) {
+            this.debugOption(debugOptions, DebugOptions.Django);
+        }
+        if (debugConfiguration.jinja) {
+            this.debugOption(debugOptions, DebugOptions.Jinja);
+        }
+        if (debugConfiguration.redirectOutput || debugConfiguration.redirectOutput === undefined) {
+            this.debugOption(debugOptions, DebugOptions.RedirectOutput);
+        }
 
         // We'll need paths to be fixed only in the case where local and remote hosts are the same
         // I.e. only if hostName === 'localhost' or '127.0.0.1' or ''
         const isLocalHost = !debugConfiguration.host || debugConfiguration.host === 'localhost' || debugConfiguration.host === '127.0.0.1';
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows && isLocalHost) {
-            debugConfiguration.debugOptions.push(DebugOptions.FixFilePathCase);
+            this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
-            debugConfiguration.debugOptions.push(DebugOptions.WindowsClient);
+            this.debugOption(debugOptions, DebugOptions.WindowsClient);
         }
 
         if (!debugConfiguration.pathMappings) {
             debugConfiguration.pathMappings = [];
         }
-        debugConfiguration.pathMappings!.push({
-            localRoot: debugConfiguration.localRoot,
-            remoteRoot: debugConfiguration.remoteRoot
-        });
+        if (debugConfiguration.localRoot && debugConfiguration.remoteRoot) {
+            debugConfiguration.pathMappings!.push({
+                localRoot: debugConfiguration.localRoot,
+                remoteRoot: debugConfiguration.remoteRoot
+            });
+        }
+    }
+    private debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions) {
+        if (debugOptions.indexOf(debugOption) >= 0) {
+            return;
+        }
+        debugOptions.push(debugOption);
     }
 }

@@ -133,7 +133,7 @@ class DiffParser(object):
         LOG.debug('diff: line_lengths old: %s, new: %s' % (len(old_lines), line_length))
 
         for operation, i1, i2, j1, j2 in opcodes:
-            LOG.debug('diff %s old[%s:%s] new[%s:%s]',
+            LOG.debug('diff code[%s] old[%s:%s] new[%s:%s]',
                       operation, i1 + 1, i2, j1 + 1, j2)
 
             if j2 == line_length and new_lines[-1] == '':
@@ -454,7 +454,7 @@ class _NodesStack(object):
         self._last_prefix = ''
         if is_endmarker:
             try:
-                separation = last_leaf.prefix.rindex('\n')
+                separation = last_leaf.prefix.rindex('\n') + 1
             except ValueError:
                 pass
             else:
@@ -462,7 +462,7 @@ class _NodesStack(object):
                 # That is not relevant if parentheses were opened. Always parse
                 # until the end of a line.
                 last_leaf.prefix, self._last_prefix = \
-                    last_leaf.prefix[:separation + 1], last_leaf.prefix[separation + 1:]
+                    last_leaf.prefix[:separation], last_leaf.prefix[separation:]
 
         first_leaf = tree_nodes[0].get_first_leaf()
         first_leaf.prefix = self.prefix + first_leaf.prefix
@@ -472,7 +472,6 @@ class _NodesStack(object):
             self.prefix = last_leaf.prefix
 
             tree_nodes = tree_nodes[:-1]
-
         return tree_nodes
 
     def copy_nodes(self, tree_nodes, until_line, line_offset):
@@ -492,6 +491,13 @@ class _NodesStack(object):
         new_tos = tos
         for node in nodes:
             if node.type == 'endmarker':
+                # We basically removed the endmarker, but we are not allowed to
+                # remove the newline at the end of the line, otherwise it's
+                # going to be missing.
+                try:
+                    self.prefix = node.prefix[:node.prefix.rindex('\n') + 1]
+                except ValueError:
+                    pass
                 # Endmarkers just distort all the checks below. Remove them.
                 break
 

@@ -551,7 +551,7 @@ class JediCompletion(object):
 
         self._normalize_request_path(request)
         path = self._get_top_level_module(request.get('path', ''))
-        if path not in sys.path:
+        if len(path) > 0 and path not in sys.path:
             sys.path.insert(0, path)
         lookup = request.get('lookup', 'completions')
 
@@ -563,14 +563,15 @@ class JediCompletion(object):
                     all_scopes=True),
                 request['id'])
 
-        script = jedi.api.Script(
+        script = jedi.Script(
             source=request.get('source', None), line=request['line'] + 1,
-            column=request['column'], path=request.get('path', ''))
+            column=request['column'], path=request.get('path', ''),
+            sys_path=sys.path)
         
         if lookup == 'definitions':
             defs = []
             try:
-                defs = self._get_definitionsx(script.goto_assignments(follow_imports=False), request['id'])
+                defs = self._get_definitionsx(script.goto_definitions(follow_imports=False), request['id'])
             except:
                 pass
             try:

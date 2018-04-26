@@ -52,7 +52,7 @@ suite(`Django and Flask Debugging: ${debuggerType}`, () => {
             args: [],
             env,
             envFile: '',
-            logToFile: true,
+            logToFile: false,
             type: debuggerType
         };
 

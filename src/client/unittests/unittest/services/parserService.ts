@@ -9,7 +9,7 @@ type UnitTestParserOptions = TestDiscoveryOptions & { startDirectory: string };
 
 @injectable()
 export class TestsParser implements ITestsParser {
-    constructor( @inject(ITestsHelper) private testsHelper: ITestsHelper) { }
+    constructor(@inject(ITestsHelper) private testsHelper: ITestsHelper) { }
     public parse(content: string, options: UnitTestParserOptions): Tests {
         const testIds = this.getTestIds(content);
         let testsDirectory = options.cwd;
@@ -83,7 +83,7 @@ export class TestsParser implements ITestsParser {
                 suites: [] as TestSuite[],
                 isUnitTest: true,
                 isInstance: false,
-                nameToRun: classNameToRun,
+                nameToRun: `${path.parse(filePath).name}.${classNameToRun}`,
                 xmlName: '',
                 status: TestStatus.Idle,
                 time: 0

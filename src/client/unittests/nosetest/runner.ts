@@ -72,6 +72,11 @@ export function runTest(serviceContainer: IServiceContainer, testResultsService:
                 token: options.token,
                 workspaceFolder: options.workspaceFolder
             };
+
+            // Remove the directory argument, as we'll provide tests to be run.
+            if (testPaths.length > 0 && runOptions.args.length > 0 && !runOptions.args[0].trim().startsWith('-')) {
+                runOptions.args.shift();
+            }
             return run(serviceContainer, 'nosetest', runOptions);
         }
     }).then(() => {

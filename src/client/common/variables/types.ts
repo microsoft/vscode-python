@@ -39,5 +39,5 @@ export const IEnvironmentVariablesProvider = Symbol('IEnvironmentVariablesProvid
 
 export interface IEnvironmentVariablesProvider {
     onDidEnvironmentVariablesChange: Event<Uri | undefined>;
-    getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined>;
+    getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables>;
 }

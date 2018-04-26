@@ -1,9 +1,12 @@
 """
 Module for statical analysis.
 """
-from jedi import debug
 from parso.python import tree
+
+from jedi._compatibility import force_unicode
+from jedi import debug
 from jedi.evaluate.compiled import CompiledObject
+from jedi.evaluate.helpers import is_string
 
 
 CODES = {
@@ -114,9 +117,10 @@ def add_attribute_error(name_context, lookup_context, name):
     # instead of an error, if that happens.
     typ = Error
     if isinstance(lookup_context, AbstractInstanceContext):
-        slot_names = lookup_context.get_function_slot_names('__getattr__') + \
-            lookup_context.get_function_slot_names('__getattribute__')
+        slot_names = lookup_context.get_function_slot_names(u'__getattr__') + \
+            lookup_context.get_function_slot_names(u'__getattribute__')
         for n in slot_names:
+            # TODO do we even get here?
             if isinstance(name, CompiledInstanceName) and \
                     n.parent_context.obj == object:
                 typ = Warning
@@ -139,7 +143,7 @@ def _check_for_exception_catch(node_context, jedi_name, exception, payload=None)
     """
     def check_match(cls, exception):
         try:
-            return isinstance(cls, CompiledObject) and issubclass(exception, cls.obj)
+            return isinstance(cls, CompiledObject) and cls.is_super_class(exception)
         except TypeError:
             return False
 
@@ -160,7 +164,7 @@ def _check_for_exception_catch(node_context, jedi_name, exception, payload=None)
                 except_classes = node_context.eval_node(node)
                 for cls in except_classes:
                     from jedi.evaluate.context import iterable
-                    if isinstance(cls, iterable.AbstractIterable) and \
+                    if isinstance(cls, iterable.Sequence) and \
                             cls.array_type == 'tuple':
                         # multiple exceptions
                         for lazy_context in cls.py__iter__():
@@ -189,8 +193,8 @@ def _check_for_exception_catch(node_context, jedi_name, exception, payload=None)
             # Check name
             key, lazy_context = args[1]
             names = list(lazy_context.infer())
-            assert len(names) == 1 and isinstance(names[0], CompiledObject)
-            assert names[0].obj == payload[1].value
+            assert len(names) == 1 and is_string(names[0])
+            assert force_unicode(names[0].get_safe_value()) == payload[1].value
 
             # Check objects
             key, lazy_context = args[0]

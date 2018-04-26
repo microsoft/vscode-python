@@ -5,16 +5,18 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as request from 'request';
 import * as requestProgress from 'request-progress';
-import * as unzip from 'unzip';
 import { ExtensionContext, OutputChannel, ProgressLocation, window } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { noop } from '../common/core.utils';
 import { createDeferred, createTemporaryFile } from '../common/helpers';
-import { IPlatformService } from '../common/platform/types';
+import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { HashVerifier } from './hashVerifier';
 import { PlatformData } from './platformData';
+
+// tslint:disable-next-line:no-require-imports no-var-requires
+const StreamZip = require('node-stream-zip');
 
 const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-analysis';
 const downloadBaseFileName = 'python-analysis-vscode';
@@ -29,7 +31,7 @@ export class AnalysisEngineDownloader {
     constructor(private readonly services: IServiceContainer, private engineFolder: string) {
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.platform = this.services.get<IPlatformService>(IPlatformService);
-        this.platformData = new PlatformData(this.platform);
+        this.platformData = new PlatformData(this.platform, this.services.get<IFileSystem>(IFileSystem));
     }
 
     public async downloadAnalysisEngine(context: ExtensionContext): Promise<void> {
@@ -47,7 +49,7 @@ export class AnalysisEngineDownloader {
     }
 
     private async downloadFile(): Promise<string> {
-        const platformString = this.platformData.getPlatformDesignator();
+        const platformString = await this.platformData.getPlatformName();
         const remoteFileName = `${downloadBaseFileName}-${platformString}.${downloadVersion}${downloadFileExtension}`;
         const uri = `${downloadUriPrefix}/${remoteFileName}`;
         this.output.append(`Downloading ${uri}... `);
@@ -96,7 +98,7 @@ export class AnalysisEngineDownloader {
         this.output.appendLine('');
         this.output.append('Verifying download... ');
         const verifier = new HashVerifier();
-        if (!await verifier.verifyHash(filePath, this.platformData.getExpectedHash())) {
+        if (!await verifier.verifyHash(filePath, await this.platformData.getExpectedHash())) {
             throw new Error('Hash of the downloaded file does not match.');
         }
         this.output.append('valid.');
@@ -109,15 +111,37 @@ export class AnalysisEngineDownloader {
         const installFolder = path.join(extensionPath, this.engineFolder);
         const deferred = createDeferred();
 
-        fs.createReadStream(tempFilePath)
-            .pipe(unzip.Extract({ path: installFolder }))
-            .on('finish', () => {
-                deferred.resolve();
-            })
-            .on('error', (err) => {
-                deferred.reject(err);
+        const title = 'Extracting files... ';
+        await window.withProgress({
+            location: ProgressLocation.Window,
+            title
+        }, (progress) => {
+            const zip = new StreamZip({
+                file: tempFilePath,
+                storeEntries: true
             });
-        await deferred.promise;
+
+            let totalFiles = 0;
+            let extractedFiles = 0;
+            zip.on('ready', () => {
+                totalFiles = zip.entriesCount;
+                if (!fs.existsSync(installFolder)) {
+                    fs.mkdirSync(installFolder);
+                }
+                zip.extract(null, installFolder, (err, count) => {
+                    if (err) {
+                        deferred.reject(err);
+                    } else {
+                        deferred.resolve();
+                    }
+                    zip.close();
+                });
+            }).on('extract', (entry, file) => {
+                extractedFiles += 1;
+                progress.report({ message: `${title}${Math.round(100 * extractedFiles / totalFiles)}%` });
+            });
+            return deferred.promise;
+        });
         this.output.append('done.');
 
         // Set file to executable

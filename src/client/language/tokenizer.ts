@@ -27,13 +27,6 @@ class Token extends TextRange implements IToken {
 }
 
 export class Tokenizer implements ITokenizer {
-    // private keywords = [
-    //     'and', 'assert', 'break', 'class', 'continue', 'def', 'del',
-    //     'elif', 'else', 'except', 'exec', 'False', 'finally', 'for', 'from',
-    //     'global', 'if', 'import', 'in', 'is', 'lambda', 'None', 'nonlocal',
-    //     'not', 'or', 'pass', 'print', 'raise', 'return', 'True', 'try',
-    //     'while', 'with', 'yield'
-    // ];
     private cs: ICharacterStream = new CharacterStream('');
     private tokens: IToken[] = [];
     private floatRegex = /[-+]?(?:(?:\d*\.\d+)|(?:\d+\.?))(?:[Ee][+-]?\d+)?/;
@@ -87,15 +80,17 @@ export class Tokenizer implements ITokenizer {
 
     // tslint:disable-next-line:cyclomatic-complexity
     private handleCharacter(): boolean {
-        // f-strings
-        const fString = this.cs.currentChar === Char.f && (this.cs.nextChar === Char.SingleQuote || this.cs.nextChar === Char.DoubleQuote);
-        if (fString) {
-            this.cs.moveNext();
-        }
-        const quoteType = this.getQuoteType();
-        if (quoteType !== QuoteType.None) {
-            this.handleString(quoteType, fString);
-            return true;
+        // f-strings, b-strings, etc
+        const stringPrefixLength = this.getStringPrefixLength();
+        if (stringPrefixLength >= 0) {
+            // Indeed a string
+            this.cs.advance(stringPrefixLength);
+
+            const quoteType = this.getQuoteType();
+            if (quoteType !== QuoteType.None) {
+                this.handleString(quoteType, stringPrefixLength);
+                return true;
+            }
         }
         if (this.cs.currentChar === Char.Hash) {
             this.handleComment();
@@ -133,15 +128,15 @@ export class Tokenizer implements ITokenizer {
             case Char.Colon:
                 this.tokens.push(new Token(TokenType.Colon, this.cs.position, 1));
                 break;
-            case Char.At:
-            case Char.Period:
-                this.tokens.push(new Token(TokenType.Operator, this.cs.position, 1));
-                break;
             default:
                 if (this.isPossibleNumber()) {
                     if (this.tryNumber()) {
                         return true;
                     }
+                }
+                if (this.cs.currentChar === Char.Period) {
+                    this.tokens.push(new Token(TokenType.Operator, this.cs.position, 1));
+                    break;
                 }
                 if (!this.tryIdentifier()) {
                     if (!this.tryOperator()) {
@@ -170,29 +165,8 @@ export class Tokenizer implements ITokenizer {
         return false;
     }
 
+    // tslint:disable-next-line:cyclomatic-complexity
     private isPossibleNumber(): boolean {
-        if (this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus) {
-            // Next character must be decimal or a dot otherwise
-            // it is not a number. No whitespace is allowed.
-            if (isDecimal(this.cs.nextChar) || this.cs.nextChar === Char.Period) {
-                // Check what previous token is, if any
-                if (this.tokens.length === 0) {
-                    // At the start of the file this can only be a number
-                    return true;
-                }
-
-                const prev = this.tokens[this.tokens.length - 1];
-                if (prev.type === TokenType.OpenBrace
-                    || prev.type === TokenType.OpenBracket
-                    || prev.type === TokenType.Comma
-                    || prev.type === TokenType.Semicolon
-                    || prev.type === TokenType.Operator) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         if (isDecimal(this.cs.currentChar)) {
             return true;
         }
@@ -201,12 +175,52 @@ export class Tokenizer implements ITokenizer {
             return true;
         }
 
+        const next = (this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus) ? 1 : 0;
+        // Next character must be decimal or a dot otherwise
+        // it is not a number. No whitespace is allowed.
+        if (isDecimal(this.cs.lookAhead(next)) || this.cs.lookAhead(next) === Char.Period) {
+            // Check what previous token is, if any
+            if (this.tokens.length === 0) {
+                // At the start of the file this can only be a number
+                return true;
+            }
+
+            const prev = this.tokens[this.tokens.length - 1];
+            if (prev.type === TokenType.OpenBrace
+                || prev.type === TokenType.OpenBracket
+                || prev.type === TokenType.Comma
+                || prev.type === TokenType.Colon
+                || prev.type === TokenType.Semicolon
+                || prev.type === TokenType.Operator) {
+                return true;
+            }
+        }
+
+        if (this.cs.lookAhead(next) === Char._0) {
+            const nextNext = this.cs.lookAhead(next + 1);
+            if (nextNext === Char.x || nextNext === Char.X) {
+                return true;
+            }
+            if (nextNext === Char.b || nextNext === Char.B) {
+                return true;
+            }
+            if (nextNext === Char.o || nextNext === Char.O) {
+                return true;
+            }
+        }
+
         return false;
     }
 
     // tslint:disable-next-line:cyclomatic-complexity
     private tryNumber(): boolean {
         const start = this.cs.position;
+        let leadingSign = 0;
+
+        if (this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus) {
+            this.cs.moveNext(); // Skip leading +/-
+            leadingSign = 1;
+        }
 
         if (this.cs.currentChar === Char._0) {
             let radix = 0;
@@ -234,20 +248,19 @@ export class Tokenizer implements ITokenizer {
                 }
                 radix = 8;
             }
-            const text = this.cs.getText().substr(start, this.cs.position - start);
+            const text = this.cs.getText().substr(start + leadingSign, this.cs.position - start - leadingSign);
             if (radix > 0 && parseInt(text.substr(2), radix)) {
-                this.tokens.push(new Token(TokenType.Number, start, text.length));
+                this.tokens.push(new Token(TokenType.Number, start, text.length + leadingSign));
                 return true;
             }
         }
 
-        if (isDecimal(this.cs.currentChar) ||
-            this.cs.currentChar === Char.Plus || this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Period) {
+        if (isDecimal(this.cs.currentChar) || this.cs.currentChar === Char.Period) {
             const candidate = this.cs.getText().substr(this.cs.position);
             const re = this.floatRegex.exec(candidate);
             if (re && re.length > 0 && re[0] && candidate.startsWith(re[0])) {
-                this.tokens.push(new Token(TokenType.Number, start, re[0].length));
-                this.cs.position = start + re[0].length;
+                this.tokens.push(new Token(TokenType.Number, start, re[0].length + leadingSign));
+                this.cs.position = start + re[0].length + leadingSign;
                 return true;
             }
         }
@@ -262,13 +275,16 @@ export class Tokenizer implements ITokenizer {
         const nextChar = this.cs.nextChar;
         switch (this.cs.currentChar) {
             case Char.Plus:
-            case Char.Hyphen:
             case Char.Ampersand:
             case Char.Bar:
             case Char.Caret:
             case Char.Equal:
             case Char.ExclamationMark:
                 length = nextChar === Char.Equal ? 2 : 1;
+                break;
+
+            case Char.Hyphen:
+                length = nextChar === Char.Equal || nextChar === Char.Greater ? 2 : 1;
                 break;
 
             case Char.Asterisk:
@@ -306,7 +322,7 @@ export class Tokenizer implements ITokenizer {
                 break;
 
             case Char.At:
-                length = nextChar === Char.Equal ? 2 : 0;
+                length = nextChar === Char.Equal ? 2 : 1;
                 break;
 
             default:
@@ -334,6 +350,25 @@ export class Tokenizer implements ITokenizer {
         this.tokens.push(new Token(TokenType.Comment, start, this.cs.position - start));
     }
 
+    private getStringPrefixLength(): number {
+        if (this.cs.currentChar === Char.f && (this.cs.nextChar === Char.SingleQuote || this.cs.nextChar === Char.DoubleQuote)) {
+            return 1; // f-string
+        }
+        if (this.cs.currentChar === Char.b || this.cs.currentChar === Char.B || this.cs.currentChar === Char.u || this.cs.currentChar === Char.U) {
+            if (this.cs.nextChar === Char.SingleQuote || this.cs.nextChar === Char.DoubleQuote) {
+                // b-string or u-string
+                return 1;
+            }
+            if (this.cs.nextChar === Char.r || this.cs.nextChar === Char.R) {
+                // b-string or u-string with 'r' suffix
+                if (this.cs.lookAhead(2) === Char.SingleQuote || this.cs.lookAhead(2) === Char.DoubleQuote) {
+                    return 2;
+                }
+            }
+        }
+        return this.cs.currentChar === Char.SingleQuote || this.cs.currentChar === Char.DoubleQuote ? 0 : -1;
+    }
+
     private getQuoteType(): QuoteType {
         if (this.cs.currentChar === Char.SingleQuote) {
             return this.cs.nextChar === Char.SingleQuote && this.cs.lookAhead(2) === Char.SingleQuote
@@ -348,8 +383,8 @@ export class Tokenizer implements ITokenizer {
         return QuoteType.None;
     }
 
-    private handleString(quoteType: QuoteType, fString: boolean): void {
-        const start = fString ? this.cs.position - 1 : this.cs.position;
+    private handleString(quoteType: QuoteType, stringPrefixLength: number): void {
+        const start = this.cs.position - stringPrefixLength;
         if (quoteType === QuoteType.Single || quoteType === QuoteType.Double) {
             this.cs.moveNext();
             this.skipToSingleEndQuote(quoteType === QuoteType.Single

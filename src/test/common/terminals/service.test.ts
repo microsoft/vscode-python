@@ -114,6 +114,18 @@ suite('Terminal Service', () => {
         terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(2));
     });
 
+    test('Ensure terminal shown and focus is set to the Terminal', async () => {
+        terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+        service = new TerminalService(mockServiceContainer.object);
+        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
+        terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
+        await service.show(false);
+
+        terminal.verify(t => t.show(TypeMoq.It.isValue(false)), TypeMoq.Times.exactly(2));
+    });
+
     test('Ensure terminal is activated once after creation', async () => {
         service = new TerminalService(mockServiceContainer.object);
         terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');

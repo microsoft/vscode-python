@@ -6,7 +6,8 @@ from abc import abstractmethod
 
 from parso.tree import search_ancestor
 
-from jedi._compatibility import is_py3
+from jedi._compatibility import use_metaclass, Parameter
+from jedi.cache import memoize_method
 from jedi.evaluate import flow_analysis
 from jedi.evaluate.base_context import ContextSet, Context
 from jedi.parser_utils import get_parent_scope
@@ -27,7 +28,7 @@ class AbstractNameDefinition(object):
     def goto(self):
         # Typically names are already definitions and therefore a goto on that
         # name will always result on itself.
-        return set([self])
+        return {self}
 
     def get_root_context(self):
         return self.parent_context.get_root_context()
@@ -43,6 +44,9 @@ class AbstractNameDefinition(object):
     def execute_evaluated(self, *args, **kwargs):
         return self.infer().execute_evaluated(*args, **kwargs)
 
+    def is_import(self):
+        return False
+
     @property
     def api_type(self):
         return self.parent_context.api_type
@@ -55,6 +59,10 @@ class AbstractTreeName(AbstractNameDefinition):
 
     def goto(self):
         return self.parent_context.evaluator.goto(self.parent_context, self.tree_name)
+
+    def is_import(self):
+        imp = search_ancestor(self.tree_name, 'import_from', 'import_name')
+        return imp is not None
 
     @property
     def string_name(self):
@@ -108,11 +116,27 @@ class TreeNameDefinition(AbstractTreeName):
 
 
 class ParamName(AbstractTreeName):
-    api_type = 'param'
+    api_type = u'param'
 
     def __init__(self, parent_context, tree_name):
         self.parent_context = parent_context
         self.tree_name = tree_name
+
+    def get_kind(self):
+        tree_param = search_ancestor(self.tree_name, 'param')
+        if tree_param.star_count == 1:  # *args
+            return Parameter.VAR_POSITIONAL
+        if tree_param.star_count == 2:  # **kwargs
+            return Parameter.VAR_KEYWORD
+
+        parent = tree_param.parent
+        for p in parent.children:
+            if p.type == 'param':
+                if p.star_count:
+                    return Parameter.KEYWORD_ONLY
+                if p == tree_param:
+                    break
+        return Parameter.POSITIONAL_OR_KEYWORD
 
     def infer(self):
         return self.get_param().infer()
@@ -163,7 +187,7 @@ class AbstractUsedNamesFilter(AbstractFilter):
 
     def get(self, name):
         try:
-            names = self._used_names[str(name)]
+            names = self._used_names[name]
         except KeyError:
             return []
 
@@ -213,7 +237,10 @@ class ParserTreeFilter(AbstractUsedNamesFilter):
     def _check_flows(self, names):
         for name in sorted(names, key=lambda name: name.start_pos, reverse=True):
             check = flow_analysis.reachability_check(
-                self._node_context, self._parser_scope, name, self._origin_scope
+                context=self._node_context,
+                context_scope=self._parser_scope,
+                node=name,
+                origin_scope=self._origin_scope
             )
             if check is not flow_analysis.UNREACHABLE:
                 yield name
@@ -266,22 +293,42 @@ class DictFilter(AbstractFilter):
 
     def get(self, name):
         try:
-            value = self._convert(name, self._dct[str(name)])
+            value = self._convert(name, self._dct[name])
         except KeyError:
             return []
-
-        return list(self._filter([value]))
+        else:
+            return list(self._filter([value]))
 
     def values(self):
-        return self._filter(self._convert(*item) for item in self._dct.items())
+        def yielder():
+            for item in self._dct.items():
+                try:
+                    yield self._convert(*item)
+                except KeyError:
+                    pass
+        return self._filter(yielder())
 
     def _convert(self, name, value):
         return value
 
 
+class MergedFilter(object):
+    def __init__(self, *filters):
+        self._filters = filters
+
+    def get(self, name):
+        return [n for filter in self._filters for n in filter.get(name)]
+
+    def values(self):
+        return [n for filter in self._filters for n in filter.values()]
+
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(str(f) for f in self._filters))
+
+
 class _BuiltinMappedMethod(Context):
     """``Generator.__next__`` ``dict.values`` methods and so on."""
-    api_type = 'function'
+    api_type = u'function'
 
     def __init__(self, builtin_context, method, builtin_func):
         super(_BuiltinMappedMethod, self).__init__(
@@ -292,6 +339,7 @@ class _BuiltinMappedMethod(Context):
         self._builtin_func = builtin_func
 
     def py__call__(self, params):
+        # TODO add TypeError if params are given/or not correct.
         return self._method(self.parent_context)
 
     def __getattr__(self, name):
@@ -304,21 +352,33 @@ class SpecialMethodFilter(DictFilter):
     classes like Generator (for __next__, etc).
     """
     class SpecialMethodName(AbstractNameDefinition):
-        api_type = 'function'
+        api_type = u'function'
 
-        def __init__(self, parent_context, string_name, callable_, builtin_context):
+        def __init__(self, parent_context, string_name, value, builtin_context):
+            callable_, python_version = value
+            if python_version is not None and \
+                    python_version != parent_context.evaluator.environment.version_info.major:
+                raise KeyError
+
             self.parent_context = parent_context
             self.string_name = string_name
             self._callable = callable_
             self._builtin_context = builtin_context
 
         def infer(self):
-            filter = next(self._builtin_context.get_filters())
-            # We can take the first index, because on builtin methods there's
-            # always only going to be one name. The same is true for the
-            # inferred values.
-            builtin_func = next(iter(filter.get(self.string_name)[0].infer()))
-            return ContextSet(_BuiltinMappedMethod(self.parent_context, self._callable, builtin_func))
+            for filter in self._builtin_context.get_filters():
+                # We can take the first index, because on builtin methods there's
+                # always only going to be one name. The same is true for the
+                # inferred values.
+                for name in filter.get(self.string_name):
+                    builtin_func = next(iter(name.infer()))
+                    break
+                else:
+                    continue
+                break
+            return ContextSet(
+                _BuiltinMappedMethod(self.parent_context, self._callable, builtin_func)
+            )
 
     def __init__(self, context, dct, builtin_context):
         super(SpecialMethodFilter, self).__init__(dct)
@@ -335,34 +395,58 @@ class SpecialMethodFilter(DictFilter):
         return self.SpecialMethodName(self.context, name, value, self._builtin_context)
 
 
-def has_builtin_methods(cls):
-    base_dct = {}
-    # Need to care properly about inheritance. Builtin Methods should not get
-    # lost, just because they are not mentioned in a class.
-    for base_cls in reversed(cls.__bases__):
-        try:
-            base_dct.update(base_cls.builtin_methods)
-        except AttributeError:
-            pass
+class _OverwriteMeta(type):
+    def __init__(cls, name, bases, dct):
+        super(_OverwriteMeta, cls).__init__(name, bases, dct)
 
-    cls.builtin_methods = base_dct
-    for func in cls.__dict__.values():
-        try:
-            cls.builtin_methods.update(func.registered_builtin_methods)
-        except AttributeError:
-            pass
-    return cls
+        base_dct = {}
+        for base_cls in reversed(cls.__bases__):
+            try:
+                base_dct.update(base_cls.overwritten_methods)
+            except AttributeError:
+                pass
+
+        for func in cls.__dict__.values():
+            try:
+                base_dct.update(func.registered_overwritten_methods)
+            except AttributeError:
+                pass
+        cls.overwritten_methods = base_dct
 
 
-def register_builtin_method(method_name, python_version_match=None):
-    def wrapper(func):
-        if python_version_match and python_version_match != 2 + int(is_py3):
-            # Some functions do only apply to certain versions.
-            return func
-        dct = func.__dict__.setdefault('registered_builtin_methods', {})
-        dct[method_name] = func
+class AbstractObjectOverwrite(use_metaclass(_OverwriteMeta, object)):
+    def get_object(self):
+        raise NotImplementedError
+
+    def get_filters(self, search_global, *args, **kwargs):
+        yield SpecialMethodFilter(self, self.overwritten_methods, self.get_object())
+
+        for filter in self.get_object().get_filters(search_global):
+            yield filter
+
+
+class BuiltinOverwrite(Context, AbstractObjectOverwrite):
+    special_object_identifier = None
+
+    def __init__(self, evaluator):
+        super(BuiltinOverwrite, self).__init__(evaluator, evaluator.builtins_module)
+
+    @memoize_method
+    def get_object(self):
+        from jedi.evaluate import compiled
+        assert self.special_object_identifier
+        return compiled.get_special_object(self.evaluator, self.special_object_identifier)
+
+    def py__class__(self):
+        return self.get_object().py__class__()
+
+
+def publish_method(method_name, python_version_match=None):
+    def decorator(func):
+        dct = func.__dict__.setdefault('registered_overwritten_methods', {})
+        dct[method_name] = func, python_version_match
         return func
-    return wrapper
+    return decorator
 
 
 def get_global_filters(evaluator, context, until_position, origin_scope):
@@ -379,40 +463,37 @@ def get_global_filters(evaluator, context, until_position, origin_scope):
     ... def func():
     ...     y = None
     ... '''))
-    >>> module_node = script._get_module_node()
+    >>> module_node = script._module_node
     >>> scope = next(module_node.iter_funcdefs())
     >>> scope
     <Function: func@3-5>
     >>> context = script._get_module().create_context(scope)
     >>> filters = list(get_global_filters(context.evaluator, context, (4, 0), None))
 
-    First we get the names names from the function scope.
+    First we get the names from the function scope.
 
-    >>> no_unicode_pprint(filters[0])
-    <ParserTreeFilter: <ModuleContext: @2-5>>
+    >>> no_unicode_pprint(filters[0])                    #doctest: +ELLIPSIS
+    MergedFilter(<ParserTreeFilter: ...>, <GlobalNameFilter: ...>)
     >>> sorted(str(n) for n in filters[0].values())
     ['<TreeNameDefinition: func@(3, 4)>', '<TreeNameDefinition: x@(2, 0)>']
-    >>> filters[0]._until_position
+    >>> filters[0]._filters[0]._until_position
     (4, 0)
+    >>> filters[0]._filters[1]._until_position
 
     Then it yields the names from one level "lower". In this example, this is
-    the module scope. As a side note, you can see, that the position in the
-    filter is now None, because typically the whole module is loaded before the
-    function is called.
+    the module scope (including globals).
+    As a side note, you can see, that the position in the filter is None on the
+    globals filter, because there the whole module is searched.
 
-    >>> filters[1].values()  # global names -> there are none in our example.
+    >>> list(filters[1].values())  # package modules -> Also empty.
     []
-    >>> list(filters[2].values())  # package modules -> Also empty.
-    []
-    >>> sorted(name.string_name for name in filters[3].values())  # Module attributes
+    >>> sorted(name.string_name for name in filters[2].values())  # Module attributes
     ['__doc__', '__file__', '__name__', '__package__']
-    >>> print(filters[1]._until_position)
-    None
 
     Finally, it yields the builtin filter, if `include_builtin` is
     true (default).
 
-    >>> filters[4].values()                              #doctest: +ELLIPSIS
+    >>> filters[3].values()                              #doctest: +ELLIPSIS
     [<CompiledName: ...>, ...]
     """
     from jedi.evaluate.context.function import FunctionExecutionContext
@@ -430,5 +511,5 @@ def get_global_filters(evaluator, context, until_position, origin_scope):
         context = context.parent_context
 
     # Add builtins to the global scope.
-    for filter in evaluator.BUILTINS.get_filters(search_global=True):
+    for filter in evaluator.builtins_module.get_filters(search_global=True):
         yield filter

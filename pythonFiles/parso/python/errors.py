@@ -563,7 +563,8 @@ class _ReturnAndYieldChecks(SyntaxRule):
                     and self._normalizer.version == (3, 5):
                 self.add_issue(self.get_node(leaf), message=self.message_async_yield)
 
-@ErrorFinder.register_rule(type='atom')
+
+@ErrorFinder.register_rule(type='strings')
 class _BytesAndStringMix(SyntaxRule):
     # e.g. 's' b''
     message = "cannot mix bytes and nonbytes literals"
@@ -744,7 +745,12 @@ class _NonlocalModuleLevelRule(SyntaxRule):
 
 @ErrorFinder.register_rule(type='arglist')
 class _ArglistRule(SyntaxRule):
-    message = "Generator expression must be parenthesized if not sole argument"
+    @property
+    def message(self):
+        if self._normalizer.version < (3, 7):
+            return "Generator expression must be parenthesized if not sole argument"
+        else:
+            return "Generator expression must be parenthesized"
 
     def is_issue(self, node):
         first_arg = node.children[0]
@@ -837,101 +843,36 @@ class _TryStmtRule(SyntaxRule):
                 self.add_issue(default_except, message=self.message)
 
 
-@ErrorFinder.register_rule(type='string')
+@ErrorFinder.register_rule(type='fstring')
 class _FStringRule(SyntaxRule):
     _fstring_grammar = None
-    message_empty = "f-string: empty expression not allowed"  # f'{}'
-    message_single_closing = "f-string: single '}' is not allowed"  # f'}'
     message_nested = "f-string: expressions nested too deeply"
-    message_backslash = "f-string expression part cannot include a backslash"  # f'{"\"}' or f'{"\\"}'
-    message_comment = "f-string expression part cannot include '#'"  # f'{#}'
-    message_unterminated_string = "f-string: unterminated string"  # f'{"}'
     message_conversion = "f-string: invalid conversion character: expected 's', 'r', or 'a'"
-    message_incomplete = "f-string: expecting '}'"  # f'{'
-    message_syntax = "invalid syntax"
 
-    @classmethod
-    def _load_grammar(cls):
-        import parso
+    def _check_format_spec(self, format_spec, depth):
+        self._check_fstring_contents(format_spec.children[1:], depth)
 
-        if cls._fstring_grammar is None:
-            cls._fstring_grammar = parso.load_grammar(language='python-f-string')
-        return cls._fstring_grammar
+    def _check_fstring_expr(self, fstring_expr, depth):
+        if depth >= 2:
+            self.add_issue(fstring_expr, message=self.message_nested)
+
+        conversion = fstring_expr.children[2]
+        if conversion.type == 'fstring_conversion':
+            name = conversion.children[1]
+            if name.value not in ('s', 'r', 'a'):
+                self.add_issue(name, message=self.message_conversion)
+
+        format_spec = fstring_expr.children[-2]
+        if format_spec.type == 'fstring_format_spec':
+            self._check_format_spec(format_spec, depth + 1)
 
     def is_issue(self, fstring):
-        if 'f' not in fstring.string_prefix.lower():
-            return
+        self._check_fstring_contents(fstring.children[1:-1])
 
-        parsed = self._load_grammar().parse_leaf(fstring)
-        for child in parsed.children:
-            if child.type == 'expression':
-                self._check_expression(child)
-            elif child.type == 'error_node':
-                next_ = child.get_next_leaf()
-                if next_.type == 'error_leaf' and next_.original_type == 'unterminated_string':
-                    self.add_issue(next_, message=self.message_unterminated_string)
-                    # At this point nothing more is comming except the error
-                    # leaf that we've already checked here.
-                    break
-                self.add_issue(child, message=self.message_incomplete)
-            elif child.type == 'error_leaf':
-                self.add_issue(child, message=self.message_single_closing)
-
-    def _check_python_expr(self, python_expr):
-        value = python_expr.value
-        if '\\' in value:
-            self.add_issue(python_expr, message=self.message_backslash)
-            return
-        if '#' in value:
-            self.add_issue(python_expr, message=self.message_comment)
-            return
-        if re.match('\s*$', value) is not None:
-            self.add_issue(python_expr, message=self.message_empty)
-            return
-
-        # This is now nested parsing. We parsed the fstring and now
-        # we're parsing Python again.
-        try:
-            # CPython has a bit of a special ways to parse Python code within
-            # f-strings. It wraps the code in brackets to make sure that
-            # whitespace doesn't make problems (indentation/newlines).
-            # Just use that algorithm as well here and adapt start positions.
-            start_pos = python_expr.start_pos
-            start_pos = start_pos[0], start_pos[1] - 1
-            eval_input = self._normalizer.grammar._parse(
-                '(%s)' % value,
-                start_symbol='eval_input',
-                start_pos=start_pos,
-                error_recovery=False
-            )
-        except ParserSyntaxError as e:
-            self.add_issue(e.error_leaf, message=self.message_syntax)
-            return
-
-        issues = self._normalizer.grammar.iter_errors(eval_input)
-        self._normalizer.issues += issues
-
-    def _check_format_spec(self, format_spec):
-        for expression in format_spec.children[1:]:
-            nested_format_spec = expression.children[-2]
-            if nested_format_spec.type == 'format_spec':
-                if len(nested_format_spec.children) > 1:
-                    self.add_issue(
-                        nested_format_spec.children[1],
-                        message=self.message_nested
-                    )
-
-            self._check_expression(expression)
-
-    def _check_expression(self, expression):
-        for c in expression.children:
-            if c.type == 'python_expr':
-                self._check_python_expr(c)
-            elif c.type == 'conversion':
-                if c.value not in ('s', 'r', 'a'):
-                    self.add_issue(c, message=self.message_conversion)
-            elif c.type == 'format_spec':
-                self._check_format_spec(c)
+    def _check_fstring_contents(self, children, depth=0):
+        for fstring_content in children:
+            if fstring_content.type == 'fstring_expr':
+                self._check_fstring_expr(fstring_content, depth)
 
 
 class _CheckAssignmentRule(SyntaxRule):
@@ -944,7 +885,7 @@ class _CheckAssignmentRule(SyntaxRule):
             first, second = node.children[:2]
             error = _get_comprehension_type(node)
             if error is None:
-                if second.type in ('dictorsetmaker', 'string'):
+                if second.type == 'dictorsetmaker':
                     error = 'literal'
                 elif first in ('(', '['):
                     if second.type == 'yield_expr':
@@ -963,7 +904,7 @@ class _CheckAssignmentRule(SyntaxRule):
                 error = 'Ellipsis'
         elif type_ == 'comparison':
             error = 'comparison'
-        elif type_ in ('string', 'number'):
+        elif type_ in ('string', 'number', 'strings'):
             error = 'literal'
         elif type_ == 'yield_expr':
             # This one seems to be a slightly different warning in Python.

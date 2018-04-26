@@ -1,6 +1,7 @@
 from parso.python import tree
 from parso.python.token import (DEDENT, INDENT, ENDMARKER, NEWLINE, NUMBER,
-                                STRING, tok_name, NAME)
+                                STRING, tok_name, NAME, FSTRING_STRING,
+                                FSTRING_START, FSTRING_END)
 from parso.parser import BaseParser
 from parso.pgen2.parse import token_to_ilabel
 
@@ -49,6 +50,17 @@ class Parser(BaseParser):
         'lambdef_nocond': tree.Lambda,
     }
     default_node = tree.PythonNode
+
+    # Names/Keywords are handled separately
+    _leaf_map = {
+        STRING: tree.String,
+        NUMBER: tree.Number,
+        NEWLINE: tree.Newline,
+        ENDMARKER: tree.EndMarker,
+        FSTRING_STRING: tree.FStringString,
+        FSTRING_START: tree.FStringStart,
+        FSTRING_END: tree.FStringEnd,
+    }
 
     def __init__(self, pgen_grammar, error_recovery=True, start_symbol='file_input'):
         super(Parser, self).__init__(pgen_grammar, start_symbol, error_recovery=error_recovery)
@@ -121,16 +133,8 @@ class Parser(BaseParser):
                 return tree.Keyword(value, start_pos, prefix)
             else:
                 return tree.Name(value, start_pos, prefix)
-        elif type == STRING:
-            return tree.String(value, start_pos, prefix)
-        elif type == NUMBER:
-            return tree.Number(value, start_pos, prefix)
-        elif type == NEWLINE:
-            return tree.Newline(value, start_pos, prefix)
-        elif type == ENDMARKER:
-            return tree.EndMarker(value, start_pos, prefix)
-        else:
-            return tree.Operator(value, start_pos, prefix)
+
+        return self._leaf_map.get(type, tree.Operator)(value, start_pos, prefix)
 
     def error_recovery(self, pgen_grammar, stack, arcs, typ, value, start_pos, prefix,
                        add_token_callback):

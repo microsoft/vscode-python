@@ -119,7 +119,8 @@ atom: ('(' [yield_expr|testlist_comp] ')' |
        '[' [listmaker] ']' |
        '{' [dictorsetmaker] '}' |
        '`' testlist1 '`' |
-       NAME | NUMBER | STRING+)
+       NAME | NUMBER | strings)
+strings: STRING+
 listmaker: test ( list_for | (',' test)* [','] )
 # Dave: Renamed testlist_gexpr to testlist_comp, because in 2.7+ this is the
 #       default. It's more consistent like this.

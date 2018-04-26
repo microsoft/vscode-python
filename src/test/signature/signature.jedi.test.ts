@@ -74,13 +74,15 @@ suite('Signatures (Jedi)', () => {
             new SignatureHelpResult(0, 3, 0, 0, null),
             new SignatureHelpResult(0, 4, 0, 0, null),
             new SignatureHelpResult(0, 5, 0, 0, null),
-            new SignatureHelpResult(0, 6, 1, 0, 'start'),
-            new SignatureHelpResult(0, 7, 1, 0, 'start'),
-            new SignatureHelpResult(0, 8, 1, 1, 'stop'),
-            new SignatureHelpResult(0, 9, 1, 1, 'stop'),
-            new SignatureHelpResult(0, 10, 1, 1, 'stop'),
-            new SignatureHelpResult(0, 11, 1, 2, 'step'),
-            new SignatureHelpResult(1, 0, 1, 2, 'step')
+            new SignatureHelpResult(0, 6, 1, 0, 'stop'),
+            new SignatureHelpResult(0, 7, 1, 0, 'stop')
+            // new SignatureHelpResult(0, 6, 1, 0, 'start'),
+            // new SignatureHelpResult(0, 7, 1, 0, 'start'),
+            // new SignatureHelpResult(0, 8, 1, 1, 'stop'),
+            // new SignatureHelpResult(0, 9, 1, 1, 'stop'),
+            // new SignatureHelpResult(0, 10, 1, 1, 'stop'),
+            // new SignatureHelpResult(0, 11, 1, 2, 'step'),
+            // new SignatureHelpResult(1, 0, 1, 2, 'step')
         ];
 
         const document = await openDocument(path.join(autoCompPath, 'basicSig.py'));

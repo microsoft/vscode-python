@@ -14,9 +14,9 @@ import { DebugProtocol } from "vscode-debugprotocol";
 import { DEBUGGER } from '../../client/telemetry/constants';
 import { DebuggerTelemetry } from '../../client/telemetry/types';
 import { isNotInstalledError } from '../common/helpers';
-import { enum_EXCEPTION_STATE, IPythonBreakpoint, IPythonException, PythonBreakpointConditionKind, PythonBreakpointPassCountKind, PythonEvaluationResultReprKind } from "./Common/Contracts";
+import { enum_EXCEPTION_STATE, IPythonBreakpoint, IPythonException, PythonBreakpointConditionKind, PythonBreakpointPassCountKind, PythonEvaluationResultReprKind, LaunchRequestArgumentsV1, AttachRequestArgumentsV1 } from "./Common/Contracts";
 import { IDebugServer, IPythonEvaluationResult, IPythonModule, IPythonStackFrame, IPythonThread } from "./Common/Contracts";
-import { AttachRequestArguments, DebugOptions, LaunchRequestArguments, PythonEvaluationResultFlags, TelemetryEvent } from "./Common/Contracts";
+import { DebugOptions, LaunchRequestArguments, PythonEvaluationResultFlags, TelemetryEvent } from "./Common/Contracts";
 import { getPythonExecutable, validatePath } from './Common/Utils';
 import { DebugClient } from "./DebugClients/DebugClient";
 import { CreateAttachDebugClient, CreateLaunchDebugClient } from "./DebugClients/DebugFactory";
@@ -203,8 +203,8 @@ export class PythonDebugger extends LoggingDebugSession {
         this.sendEvent(new OutputEvent(output, outputChannel));
     }
     private entryResponse?: DebugProtocol.LaunchResponse;
-    private launchArgs!: LaunchRequestArguments;
-    private attachArgs!: AttachRequestArguments;
+    private launchArgs!: LaunchRequestArgumentsV1;
+    private attachArgs!: AttachRequestArgumentsV1;
     private canStartDebugger(): Promise<boolean> {
         return Promise.resolve(true);
     }
@@ -280,7 +280,7 @@ export class PythonDebugger extends LoggingDebugSession {
             this.sendErrorResponse(response, 200, errorMsg);
         });
     }
-    protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments) {
+    protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArgumentsV1) {
         if (args.logToFile === true) {
             logger.setup(LogLevel.Verbose, true);
         }

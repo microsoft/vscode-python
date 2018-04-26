@@ -1,14 +1,12 @@
-import pkgutil
-import imp
 import re
 import os
 
 from parso import python_bytes_to_unicode
 
-from jedi._compatibility import use_metaclass
-from jedi.evaluate.cache import CachedMetaClass, evaluator_method_cache
+from jedi.evaluate.cache import evaluator_method_cache
+from jedi._compatibility import iter_modules, all_suffixes
 from jedi.evaluate.filters import GlobalNameFilter, ContextNameMixin, \
-    AbstractNameDefinition, ParserTreeFilter, DictFilter
+    AbstractNameDefinition, ParserTreeFilter, DictFilter, MergedFilter
 from jedi.evaluate import compiled
 from jedi.evaluate.base_context import TreeContext
 from jedi.evaluate.imports import SubModuleName, infer_import
@@ -18,14 +16,14 @@ class _ModuleAttributeName(AbstractNameDefinition):
     """
     For module attributes like __file__, __str__ and so on.
     """
-    api_type = 'instance'
+    api_type = u'instance'
 
     def __init__(self, parent_module, string_name):
         self.parent_context = parent_module
         self.string_name = string_name
 
     def infer(self):
-        return compiled.create(self.parent_context.evaluator, str).execute_evaluated()
+        return compiled.get_string_context_set(self.parent_context.evaluator)
 
 
 class ModuleName(ContextNameMixin, AbstractNameDefinition):
@@ -40,23 +38,26 @@ class ModuleName(ContextNameMixin, AbstractNameDefinition):
         return self._name
 
 
-class ModuleContext(use_metaclass(CachedMetaClass, TreeContext)):
-    api_type = 'module'
+class ModuleContext(TreeContext):
+    api_type = u'module'
     parent_context = None
 
-    def __init__(self, evaluator, module_node, path):
+    def __init__(self, evaluator, module_node, path, code_lines):
         super(ModuleContext, self).__init__(evaluator, parent_context=None)
         self.tree_node = module_node
         self._path = path
+        self.code_lines = code_lines
 
     def get_filters(self, search_global, until_position=None, origin_scope=None):
-        yield ParserTreeFilter(
-            self.evaluator,
-            context=self,
-            until_position=until_position,
-            origin_scope=origin_scope
+        yield MergedFilter(
+            ParserTreeFilter(
+                self.evaluator,
+                context=self,
+                until_position=until_position,
+                origin_scope=origin_scope
+            ),
+            GlobalNameFilter(self, self.tree_node),
         )
-        yield GlobalNameFilter(self, self.tree_node)
         yield DictFilter(self._sub_modules_dict())
         yield DictFilter(self._module_attributes_dict())
         for star_module in self.star_imports():
@@ -64,7 +65,7 @@ class ModuleContext(use_metaclass(CachedMetaClass, TreeContext)):
 
     # I'm not sure if the star import cache is really that effective anymore
     # with all the other really fast import caches. Recheck. Also we would need
-    # to push the star imports into Evaluator.modules, if we reenable this.
+    # to push the star imports into Evaluator.module_cache, if we reenable this.
     @evaluator_method_cache([])
     def star_imports(self):
         modules = []
@@ -93,7 +94,7 @@ class ModuleContext(use_metaclass(CachedMetaClass, TreeContext)):
             sep = (re.escape(os.path.sep),) * 2
             r = re.search(r'([^%s]*?)(%s__init__)?(\.py|\.so)?$' % sep, self._path)
             # Remove PEP 3149 names
-            return re.sub('\.[a-z]+-\d{2}[mud]{0,3}$', '', r.group(1))
+            return re.sub(r'\.[a-z]+-\d{2}[mud]{0,3}$', '', r.group(1))
 
     @property
     @evaluator_method_cache()
@@ -105,7 +106,7 @@ class ModuleContext(use_metaclass(CachedMetaClass, TreeContext)):
         :return: The path to the directory of a package. None in case it's not
                  a package.
         """
-        for suffix, _, _ in imp.get_suffixes():
+        for suffix in all_suffixes():
             ending = '__init__' + suffix
             py__file__ = self.py__file__()
             if py__file__ is not None and py__file__.endswith(ending):
@@ -114,7 +115,7 @@ class ModuleContext(use_metaclass(CachedMetaClass, TreeContext)):
         return None
 
     def py__name__(self):
-        for name, module in self.evaluator.modules.items():
+        for name, module in self.evaluator.module_cache.iterate_modules_with_names():
             if module == self and name != '':
                 return name
 
@@ -131,12 +132,12 @@ class ModuleContext(use_metaclass(CachedMetaClass, TreeContext)):
 
     def py__package__(self):
         if self._get_init_directory() is None:
-            return re.sub(r'\.?[^\.]+$', '', self.py__name__())
+            return re.sub(r'\.?[^.]+$', '', self.py__name__())
         else:
             return self.py__name__()
 
     def _py__path__(self):
-        search_path = self.evaluator.project.sys_path
+        search_path = self.evaluator.get_sys_path()
         init_path = self.py__file__()
         if os.path.basename(init_path) == '__init__.py':
             with open(init_path, 'rb') as f:
@@ -188,7 +189,7 @@ class ModuleContext(use_metaclass(CachedMetaClass, TreeContext)):
         path = self._path
         names = {}
         if path is not None and path.endswith(os.path.sep + '__init__.py'):
-            mods = pkgutil.iter_modules([os.path.dirname(path)])
+            mods = iter_modules([os.path.dirname(path)])
             for module_loader, name, is_pkg in mods:
                 # It's obviously a relative import to the current module.
                 names[name] = SubModuleName(self, name)
@@ -203,11 +204,9 @@ class ModuleContext(use_metaclass(CachedMetaClass, TreeContext)):
         return names
 
     def py__class__(self):
-        return compiled.get_special_object(self.evaluator, 'MODULE_CLASS')
+        return compiled.get_special_object(self.evaluator, u'MODULE_CLASS')
 
     def __repr__(self):
         return "<%s: %s@%s-%s>" % (
             self.__class__.__name__, self._string_name,
             self.tree_node.start_pos[0], self.tree_node.end_pos[0])
-
-

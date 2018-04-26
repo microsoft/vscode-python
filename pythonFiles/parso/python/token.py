@@ -32,6 +32,14 @@ if py_version < 35:
 ERROR_DEDENT = next(_counter)
 tok_name[ERROR_DEDENT] = 'ERROR_DEDENT'
 
+FSTRING_START = next(_counter)
+tok_name[FSTRING_START] = 'FSTRING_START'
+FSTRING_END = next(_counter)
+tok_name[FSTRING_END] = 'FSTRING_END'
+FSTRING_STRING = next(_counter)
+tok_name[FSTRING_STRING] = 'FSTRING_STRING'
+EXCLAMATION = next(_counter)
+tok_name[EXCLAMATION] = 'EXCLAMATION'
 
 # Map from operator to number (since tokenize doesn't do this)
 
@@ -84,6 +92,7 @@ opmap_raw = """\
 //= DOUBLESLASHEQUAL
 -> RARROW
 ... ELLIPSIS
+! EXCLAMATION
 """
 
 opmap = {}

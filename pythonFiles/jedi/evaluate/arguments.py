@@ -10,6 +10,7 @@ from jedi.evaluate.base_context import NO_CONTEXTS
 from jedi.evaluate.context import iterable
 from jedi.evaluate.param import get_params, ExecutedParam
 
+
 def try_iter_content(types, depth=0):
     """Helper method for static analysis."""
     if depth > 10:
@@ -29,6 +30,8 @@ def try_iter_content(types, depth=0):
 
 class AbstractArguments(object):
     context = None
+    argument_node = None
+    trailer = None
 
     def eval_argument_clinic(self, parameters):
         """Uses a list with argument clinic information (see PEP 436)."""
@@ -95,29 +98,30 @@ class TreeArguments(AbstractArguments):
         self.trailer = trailer  # Can be None, e.g. in a class definition.
 
     def _split(self):
-        if isinstance(self.argument_node, (tuple, list)):
-            for el in self.argument_node:
-                yield 0, el
-        else:
-            if not (self.argument_node.type == 'arglist' or (
-                    # in python 3.5 **arg is an argument, not arglist
-                    (self.argument_node.type == 'argument') and
-                     self.argument_node.children[0] in ('*', '**'))):
-                yield 0, self.argument_node
-                return
+        if self.argument_node is None:
+            return
 
-            iterator = iter(self.argument_node.children)
-            for child in iterator:
-                if child == ',':
-                    continue
-                elif child in ('*', '**'):
-                    yield len(child.value), next(iterator)
-                elif child.type == 'argument' and \
-                        child.children[0] in ('*', '**'):
-                    assert len(child.children) == 2
-                    yield len(child.children[0].value), child.children[1]
-                else:
-                    yield 0, child
+        # Allow testlist here as well for Python2's class inheritance
+        # definitions.
+        if not (self.argument_node.type in ('arglist', 'testlist') or (
+                # in python 3.5 **arg is an argument, not arglist
+                (self.argument_node.type == 'argument') and
+                 self.argument_node.children[0] in ('*', '**'))):
+            yield 0, self.argument_node
+            return
+
+        iterator = iter(self.argument_node.children)
+        for child in iterator:
+            if child == ',':
+                continue
+            elif child in ('*', '**'):
+                yield len(child.value), next(iterator)
+            elif child.type == 'argument' and \
+                    child.children[0] in ('*', '**'):
+                assert len(child.children) == 2
+                yield len(child.children[0].value), child.children[1]
+            else:
+                yield 0, child
 
     def unpack(self, funcdef=None):
         named_args = []
@@ -126,7 +130,6 @@ class TreeArguments(AbstractArguments):
                 arrays = self.context.eval_node(el)
                 iterators = [_iterate_star_args(self.context, a, el, funcdef)
                              for a in arrays]
-                iterators = list(iterators)
                 for values in list(zip_longest(*iterators)):
                     # TODO zip_longest yields None, that means this would raise
                     # an exception?
@@ -134,7 +137,7 @@ class TreeArguments(AbstractArguments):
                         [v for v in values if v is not None]
                     )
             elif star_count == 2:
-                arrays = self._evaluator.eval_element(self.context, el)
+                arrays = self.context.eval_node(el)
                 for dct in arrays:
                     for key, values in _star_star_dict(self.context, dct, el, funcdef):
                         yield key, values
@@ -197,7 +200,11 @@ class TreeArguments(AbstractArguments):
                 arguments = param.var_args
                 break
 
-        return [arguments.argument_node or arguments.trailer]
+        if arguments.argument_node is not None:
+            return [arguments.argument_node]
+        if arguments.trailer is not None:
+            return [arguments.trailer]
+        return []
 
 
 class ValuesArguments(AbstractArguments):
@@ -235,7 +242,7 @@ def _star_star_dict(context, array, input_node, funcdef):
         # For now ignore this case. In the future add proper iterators and just
         # make one call without crazy isinstance checks.
         return {}
-    elif isinstance(array, iterable.AbstractIterable) and array.array_type == 'dict':
+    elif isinstance(array, iterable.Sequence) and array.array_type == 'dict':
         return array.exact_key_items()
     else:
         if funcdef is not None:

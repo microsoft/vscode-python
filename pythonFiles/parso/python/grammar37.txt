@@ -108,7 +108,7 @@ atom_expr: ['await'] atom trailer*
 atom: ('(' [yield_expr|testlist_comp] ')' |
        '[' [testlist_comp] ']' |
        '{' [dictorsetmaker] '}' |
-       NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
+       NAME | NUMBER | strings | '...' | 'None' | 'True' | 'False')
 testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
 trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
 subscriptlist: subscript (',' subscript)* [',']
@@ -148,3 +148,10 @@ encoding_decl: NAME
 
 yield_expr: 'yield' [yield_arg]
 yield_arg: 'from' test | testlist
+
+strings: (STRING | fstring)+
+fstring: FSTRING_START fstring_content* FSTRING_END
+fstring_content: FSTRING_STRING | fstring_expr
+fstring_conversion: '!' NAME
+fstring_expr: '{' testlist [ fstring_conversion ] [ fstring_format_spec ] '}'
+fstring_format_spec: ':' fstring_content*

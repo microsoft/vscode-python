@@ -1,8 +1,15 @@
 'use strict';
 
 import { EOL } from 'os';
-import * as vscode from 'vscode';
-import { CancellationToken, Position, SignatureHelp, TextDocument } from 'vscode';
+import {
+    CancellationToken,
+    ParameterInformation,
+    Position,
+    SignatureHelp,
+    SignatureHelpProvider,
+    SignatureInformation,
+    TextDocument
+} from 'vscode';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
 import { SIGNATURE } from '../telemetry/constants';
@@ -45,9 +52,9 @@ function extractParamDocString(paramName: string, docString: string): string {
 
     return paramDocString.trim();
 }
-export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
+export class PythonSignatureProvider implements SignatureHelpProvider {
     public constructor(private jediFactory: JediFactory) { }
-    private static parseData(data: proxy.IArgumentsResult): vscode.SignatureHelp {
+    private static parseData(data: proxy.IArgumentsResult): SignatureHelp {
         if (data && Array.isArray(data.definitions) && data.definitions.length > 0) {
             const signature = new SignatureHelp();
             signature.activeSignature = 0;
@@ -60,29 +67,36 @@ export class PythonSignatureProvider implements vscode.SignatureHelpProvider {
                 // Some functions do not come with parameter docs
                 let label: string;
                 let documentation: string;
-                const validParamInfo = def.params && def.params.length > 0 && def.docstring.startsWith(`${def.name}(`);
+                const validParamInfo = def.params && def.params.length > 0 &&  def.docstring && def.docstring.startsWith(`${def.name}(`);
 
                 if (validParamInfo) {
                     const docLines = def.docstring.splitLines();
                     label = docLines.shift().trim();
                     documentation = docLines.join(EOL).trim();
                 } else {
-                    label = def.description;
-                    documentation = def.docstring;
+                    if (def.params && def.params.length > 0) {
+                        label = `${def.name}(${def.params.map(p => p.name).join(', ')})`;
+                        documentation = def.docstring;
+                    } else {
+                        label = def.description;
+                        documentation = def.docstring;
+                    }
                 }
 
-                const sig = <vscode.SignatureInformation>{
+                // tslint:disable-next-line:no-object-literal-type-assertion
+                const sig = <SignatureInformation>{
                     label,
                     documentation,
                     parameters: []
                 };
 
-                if (validParamInfo) {
+                if (def.params && def.params.length) {
                     sig.parameters = def.params.map(arg => {
                         if (arg.docstring.length === 0) {
                             arg.docstring = extractParamDocString(arg.name, def.docstring);
                         }
-                        return <vscode.ParameterInformation>{
+                        // tslint:disable-next-line:no-object-literal-type-assertion
+                        return <ParameterInformation>{
                             documentation: arg.docstring.length > 0 ? arg.docstring : arg.description,
                             label: arg.name.trim()
                         };

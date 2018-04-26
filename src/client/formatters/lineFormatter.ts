@@ -43,7 +43,7 @@ export class LineFormatter {
 
                 case TokenType.Comma:
                     this.builder.append(',');
-                    if (next && !this.isCloseBraceType(next.type)) {
+                    if (next && !this.isCloseBraceType(next.type) && next.type !== TokenType.Colon) {
                         this.builder.softAppendSpace();
                     }
                     break;
@@ -52,7 +52,12 @@ export class LineFormatter {
                     if (prev && !this.isOpenBraceType(prev.type) && prev.type !== TokenType.Colon && prev.type !== TokenType.Operator) {
                         this.builder.softAppendSpace();
                     }
-                    this.builder.append(this.text.substring(t.start, t.end));
+                    const id = this.text.substring(t.start, t.end);
+                    this.builder.append(id);
+                    if (this.keywordWithSpaceAfter(id) && next && this.isOpenBraceType(next.type)) {
+                        // for x in ()
+                        this.builder.softAppendSpace();
+                    }
                     break;
 
                 case TokenType.Colon:
@@ -84,8 +89,10 @@ export class LineFormatter {
         return this.builder.getText();
     }
 
+    // tslint:disable-next-line:cyclomatic-complexity
     private handleOperator(index: number): void {
         const t = this.tokens.getItemAt(index);
+        const prev = index > 0 ? this.tokens.getItemAt(index - 1) : undefined;
         if (t.length === 1) {
             const opCode = this.text.charCodeAt(t.start);
             switch (opCode) {
@@ -99,18 +106,36 @@ export class LineFormatter {
                 case Char.ExclamationMark:
                     this.builder.append(this.text[t.start]);
                     return;
+                case Char.Asterisk:
+                    if (prev && prev.type === TokenType.Identifier && prev.length === 6 && this.text.substr(prev.start, prev.length) === 'lambda') {
+                        this.builder.softAppendSpace();
+                        this.builder.append('*');
+                        return;
+                    }
+                    break;
                 default:
                     break;
             }
-        }
-        // Do not append space if operator is preceded by '(' or ',' as in foo(**kwarg)
-        if (index > 0) {
-            const prev = this.tokens.getItemAt(index - 1);
-            if (this.isOpenBraceType(prev.type) || prev.type === TokenType.Comma) {
-                this.builder.append(this.text.substring(t.start, t.end));
-                return;
+        } else if (t.length === 2) {
+            if (this.text.charCodeAt(t.start) === Char.Asterisk && this.text.charCodeAt(t.start + 1) === Char.Asterisk) {
+                if (!prev || (prev.type !== TokenType.Identifier && prev.type !== TokenType.Number)) {
+                    this.builder.append('**');
+                    return;
+                }
+                if (prev && prev.type === TokenType.Identifier && prev.length === 6 && this.text.substr(prev.start, prev.length) === 'lambda') {
+                    this.builder.softAppendSpace();
+                    this.builder.append('**');
+                    return;
+                }
             }
         }
+
+        // Do not append space if operator is preceded by '(' or ',' as in foo(**kwarg)
+        if (prev && (this.isOpenBraceType(prev.type) || prev.type === TokenType.Comma)) {
+            this.builder.append(this.text.substring(t.start, t.end));
+            return;
+        }
+
         this.builder.softAppendSpace();
         this.builder.append(this.text.substring(t.start, t.end));
         this.builder.softAppendSpace();
@@ -135,43 +160,82 @@ export class LineFormatter {
             return;
         }
 
-        if (this.isEqualsInsideArguments(index - 1)) {
+        const prev = index > 0 ? this.tokens.getItemAt(index - 1) : undefined;
+        if (prev && prev.length === 1 && this.text.charCodeAt(prev.start) === Char.Equal && this.isEqualsInsideArguments(index - 1)) {
             // Don't add space around = inside function arguments.
             this.builder.append(this.text.substring(t.start, t.end));
             return;
         }
 
-        if (index > 0) {
-            const prev = this.tokens.getItemAt(index - 1);
-            if (this.isOpenBraceType(prev.type) || prev.type === TokenType.Colon) {
-                // Don't insert space after (, [ or { .
-                this.builder.append(this.text.substring(t.start, t.end));
-                return;
-            }
+        if (prev && (this.isOpenBraceType(prev.type) || prev.type === TokenType.Colon)) {
+            // Don't insert space after (, [ or { .
+            this.builder.append(this.text.substring(t.start, t.end));
+            return;
         }
 
-        // In general, keep tokens separated.
-        this.builder.softAppendSpace();
-        this.builder.append(this.text.substring(t.start, t.end));
+        if (t.type === TokenType.Unknown) {
+            this.handleUnknown(t);
+        } else {
+            // In general, keep tokens separated.
+            this.builder.softAppendSpace();
+            this.builder.append(this.text.substring(t.start, t.end));
+        }
     }
 
+    private handleUnknown(t: IToken): void {
+        const prevChar = t.start > 0 ? this.text.charCodeAt(t.start - 1) : 0;
+        if (prevChar === Char.Space || prevChar === Char.Tab) {
+            this.builder.softAppendSpace();
+        }
+        this.builder.append(this.text.substring(t.start, t.end));
+
+        const nextChar = t.end < this.text.length - 1 ? this.text.charCodeAt(t.end) : 0;
+        if (nextChar === Char.Space || nextChar === Char.Tab) {
+            this.builder.softAppendSpace();
+        }
+    }
     private isEqualsInsideArguments(index: number): boolean {
+        // Since we don't have complete statement, this is mostly heuristics.
+        // Therefore the code may not be handling all possible ways of the
+        // argument list continuation.
         if (index < 1) {
             return false;
         }
+
         const prev = this.tokens.getItemAt(index - 1);
-        if (prev.type === TokenType.Identifier) {
-            if (index >= 2) {
-                // (x=1 or ,x=1
-                const prevPrev = this.tokens.getItemAt(index - 2);
-                return prevPrev.type === TokenType.Comma || prevPrev.type === TokenType.OpenBrace;
-            } else if (index < this.tokens.count - 2) {
-                const next = this.tokens.getItemAt(index + 1);
-                const nextNext = this.tokens.getItemAt(index + 2);
-                // x=1, or x=1)
-                if (this.isValueType(next.type)) {
-                    return nextNext.type === TokenType.Comma || nextNext.type === TokenType.CloseBrace;
-                }
+        if (prev.type !== TokenType.Identifier) {
+            return false;
+        }
+
+        const first = this.tokens.getItemAt(0);
+        if (first.type === TokenType.Comma) {
+            return true; // Line starts with commma
+        }
+
+        const last = this.tokens.getItemAt(this.tokens.count - 1);
+        if (last.type === TokenType.Comma) {
+            return true; // Line ends in comma
+        }
+
+        if (index >= 2) {
+            // (x=1 or ,x=1
+            const prevPrev = this.tokens.getItemAt(index - 2);
+            return prevPrev.type === TokenType.Comma || prevPrev.type === TokenType.OpenBrace;
+        }
+
+        if (index >= this.tokens.count - 2) {
+            return false;
+        }
+
+        const next = this.tokens.getItemAt(index + 1);
+        const nextNext = this.tokens.getItemAt(index + 2);
+        // x=1, or x=1)
+        if (this.isValueType(next.type)) {
+            if (nextNext.type === TokenType.CloseBrace) {
+                return true;
+            }
+            if (nextNext.type === TokenType.Comma) {
+                return last.type === TokenType.CloseBrace;
             }
         }
         return false;
@@ -197,5 +261,11 @@ export class LineFormatter {
             }
         }
         return false;
+    }
+    private keywordWithSpaceAfter(s: string): boolean {
+        return s === 'in' || s === 'return' || s === 'and' ||
+            s === 'or' || s === 'not' || s === 'from' ||
+            s === 'import' || s === 'except' || s === 'for' ||
+            s === 'as' || s === 'is';
     }
 }

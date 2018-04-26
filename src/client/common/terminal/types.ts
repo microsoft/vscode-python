@@ -3,7 +3,6 @@
 // Licensed under the MIT License.
 
 import { Event, Terminal, Uri } from 'vscode';
-import { PythonInterpreter } from '../../interpreter/contracts';
 
 export enum TerminalShellType {
     powershell = 1,
@@ -19,7 +18,7 @@ export interface ITerminalService {
     readonly onDidCloseTerminal: Event<void>;
     sendCommand(command: string, args: string[]): Promise<void>;
     sendText(text: string): Promise<void>;
-    show(): Promise<void>;
+    show(preserveFocus?: boolean): Promise<void>;
 }
 
 export const ITerminalServiceFactory = Symbol('ITerminalServiceFactory');
