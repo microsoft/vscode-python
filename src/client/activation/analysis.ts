@@ -215,6 +215,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                     properties
                 },
                 displayOptions: {
+                    preferredFormat: 1, // markdown
                     trimDocumentationLines: false,
                     maxDocumentationLineLength: 0,
                     trimDocumentationText: false,
