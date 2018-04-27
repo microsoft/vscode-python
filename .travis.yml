@@ -49,11 +49,14 @@ before_install: |
   export TRAVIS_PYTHON_PATH=`which python`
 install:
   - python -m pip install --upgrade -r requirements.txt
-  - python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
   - yarn --frozen-lockfile
 
 script:
   - if [ $DEBUGGER_TEST == "true" ]; then
+        python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/;
+        cd pythonFiles/experimental/ptvsd
+        python -c "import ptvsd;print(ptvsd.__version__)";
+        cd ../../../
         yarn run clean;
         yarn run vscode:prepublish;
         yarn run cover:enable;
@@ -65,6 +68,9 @@ script:
     fi
   - yarn run clean:ptvsd
   - pip install -t ./pythonFiles/experimental/ptvsd ptvsd --pre --no-cache-dir;
+  - cd pythonFiles/experimental/ptvsd
+  - python -c "import ptvsd;print(ptvsd.__version__)";
+  - cd ../../../
   - if [ $DEBUGGER_TEST_RELEASE == "true" ]; then
         yarn run clean;
         yarn run vscode:prepublish;
