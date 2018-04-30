@@ -109,7 +109,7 @@ if __name__ == '__main__':
     try:
         default_encoding = sys.getdefaultencoding()
         contents = contents.encode(default_encoding, 'surrogatepass').decode(default_encoding)
-    except UnicodeError, LookupError:
+    except (UnicodeError, LookupError):
         pass
     if isinstance(contents, bytes):
         contents = contents.decode('utf8')
