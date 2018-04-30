@@ -108,7 +108,7 @@ if __name__ == '__main__':
     contents = sys.argv[1]
     try:
         default_encoding = sys.getdefaultencoding()
-        contents = contents.encode(default_encoding, 'surrogatepass').decode(default_encoding)
+        contents = contents.encode(default_encoding, 'surrogateescape').decode(default_encoding, 'replace')
     except (UnicodeError, LookupError):
         pass
     if isinstance(contents, bytes):
