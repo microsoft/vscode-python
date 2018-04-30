@@ -107,9 +107,9 @@ def normalize_lines(source):
 if __name__ == '__main__':
     contents = sys.argv[1]
     try:
-        # In case content is not escaped.
-        contents = contents.encode('utf-8', 'surrogateescape').decode('utf-8', 'replace')
-    except Exception:
+        default_encoding = sys.getdefaultencoding()
+        contents = contents.encode(default_encoding, 'surrogatepass').decode(default_encoding)
+    except UnicodeError, LookupError:
         pass
     if isinstance(contents, bytes):
         contents = contents.decode('utf8')
