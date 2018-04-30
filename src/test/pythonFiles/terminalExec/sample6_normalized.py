@@ -2,7 +2,7 @@ if True:
     print(1)
 else: print(2)
 
-print('🔨')
+print('a')
 print(3)
 print(3)
 
