@@ -38,7 +38,7 @@ def _indent_size(line):
 def _get_global_statement_blocks(source, lines):
     """Return a list of all global statement blocks.
 
-    The list comprises of 3-item tuples that contain the starting line number, 
+    The list comprises of 3-item tuples that contain the starting line number,
     ending line number and whether the statement is a single line.
 
     """
@@ -106,6 +106,11 @@ def normalize_lines(source):
 
 if __name__ == '__main__':
     contents = sys.argv[1]
+    try:
+        # In case content is not escaped.
+        contents = contents.encode('utf-8', 'surrogateescape').decode('utf-8', 'replace')
+    except Exception:
+        pass
     if isinstance(contents, bytes):
         contents = contents.decode('utf8')
     normalize_lines(contents)
