@@ -18,7 +18,7 @@ import { ICodeExecutionService } from '../../../client/terminals/types';
 import { PYTHON_PATH } from '../../common';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Terminal Code Execution', () => {
+suite('Terminal - Code Execution', () => {
     // tslint:disable-next-line:max-func-body-length
     ['Terminal Execution', 'Repl Execution', 'Django Execution'].forEach(testSuiteName => {
         let terminalSettings: TypeMoq.IMock<ITerminalSettings>;

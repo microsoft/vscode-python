@@ -1,5 +1,6 @@
 import ast
 import io
+import operator
 import os
 import sys
 import token
@@ -13,7 +14,6 @@ class Visitor(ast.NodeVisitor):
         self.line_numbers_with_statements = []
 
     def generic_visit(self, node):
-        node_type = type(node).__name__
         if hasattr(node, 'col_offset') and hasattr(node, 'lineno') and node.col_offset == 0:
             self.line_numbers_with_nodes.add(node.lineno)
             if isinstance(node, ast.stmt):
@@ -23,6 +23,9 @@ class Visitor(ast.NodeVisitor):
 
 
 def _tokenize(source):
+    """Tokenize Python source code."""
+    # Using an undocumented API as the documented one in Python 2.7 does not work as needed
+    # cross-version.
     return tokenize.generate_tokens(io.StringIO(source).readline)
 
 
@@ -33,9 +36,10 @@ def _indent_size(line):
 
 
 def _get_global_statement_blocks(source, lines):
-    """Gets a list of all global statement blocks.
+    """Return a list of all global statement blocks.
 
-    The list contains the start and end line numbers of block.
+    The list comprises of 3-item tuples that contain the starting line number, 
+    ending line number and whether the statement is a single line.
 
     """
     tree = ast.parse(source)
@@ -44,7 +48,7 @@ def _get_global_statement_blocks(source, lines):
 
     statement_ranges = []
     for index, line_number in enumerate(visitor.line_numbers_with_statements):
-        remaining_line_numbers = visitor.line_numbers_with_statements[index + 1:]
+        remaining_line_numbers = visitor.line_numbers_with_statements[index+1:]
         end_line_number = len(lines) if len(remaining_line_numbers) == 0 else min(remaining_line_numbers) - 1
         current_statement_is_oneline = line_number == end_line_number
 
@@ -55,7 +59,7 @@ def _get_global_statement_blocks(source, lines):
         previous_statement = statement_ranges[-1]
         previous_statement_is_oneline = previous_statement[2]
         if previous_statement_is_oneline and current_statement_is_oneline:
-            statement_ranges[-1] = (previous_statement[0], end_line_number, True)
+            statement_ranges[-1] = previous_statement[0], end_line_number, True
         else:
             statement_ranges.append((line_number, end_line_number, current_statement_is_oneline))
 
@@ -81,11 +85,11 @@ def normalize_lines(source):
                                     if len(line.strip()) == 0 and token.tok_name[toknum] == 'NL' and spos[0] == epos[0])
 
     for line_number in reversed(list(newlines_indexes_to_remove)):
-        del lines[line_number - 1]
+        del lines[line_number-1]
 
     # Step 2: Add blank lines between each global statement block.
     # A consequtive single lines blocks of code will be treated as a single statement,
-    #   just to ensure we do not unnecessarily add too many blank lines.
+    # just to ensure we do not unnecessarily add too many blank lines.
     source = os.linesep.join(lines)
     tokens = _tokenize(source)
     dedent_indexes = (spos[0] for (toknum, tokval, spos, epos, line) in tokens
@@ -93,8 +97,8 @@ def normalize_lines(source):
 
     global_statement_ranges = _get_global_statement_blocks(source, lines)
 
-    for line_number in (start_line for start_line, _, _ in reversed(global_statement_ranges) if start_line > 1):
-        lines.insert(line_number - 1, '')
+    for line_number in filter(lambda x: x > 1, map(operator.itemgetter(0), reversed(global_statement_ranges))):
+        lines.insert(line_number-1, '')
 
     sys.stdout.write(os.linesep.join(lines) + (os.linesep if has_blank_lines else ''))
     sys.stdout.flush()
