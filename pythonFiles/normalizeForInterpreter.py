@@ -23,11 +23,9 @@ class Visitor(ast.NodeVisitor):
 
 
 def _tokenize(source):
-    """Tokenize python source using undocumented api
-
-    The documented api does not work in Python 2.7
-
-    """
+    """Tokenize Python source code."""
+    # Using an undocumented API as the documented one in Python 2.7 does not work as needed
+    # cross-version.
     return tokenize.generate_tokens(io.StringIO(source).readline)
 
 
