@@ -1,6 +1,6 @@
 # Changelog
 
-## 2018.4.0-rc (30 Apr 2018)
+## 2018.4.0 (2 May 2018)
 
 Thanks to the following projects which we fully rely on to provide some of
 our features:
