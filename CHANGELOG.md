@@ -1,6 +1,6 @@
 # Changelog
 
-## 2018.4.0-beta (23 Mar 2018)
+## 2018.4.0-rc (30 Apr 2018)
 
 Thanks to the following projects which we fully rely on to provide some of
 our features:
@@ -16,18 +16,38 @@ his help on [our issue tracker](https://github.com/Microsoft/vscode-python)!
 
 ### Enhancements
 
+1. Enable debugging of Jinja templates in the experimental debugger.
+   This is made possible with the addition of the `jinja` setting in the `launch.json` file as follows:
+   ```json
+   "request": "launch or attach",
+   ...
+   "jinja": true
+   ```
+   ([#1206](https://github.com/Microsoft/vscode-python/issues/1206))
+1. Remove empty spaces from the selected text of the active editor when executing in a terminal.
+   ([#1207](https://github.com/Microsoft/vscode-python/issues/1207))
 1. Add prelimnary support for remote debugging using the experimental debugger.
-Attach to a Python program started using the command `python -m ptvsd --server --port 9091 --file pythonFile.py` ([#1229](https://github.com/Microsoft/vscode-python/issues/1229))
+   Attach to a Python program started using the command `python -m ptvsd --server --port 9091 --file pythonFile.py`
+   ([#1229](https://github.com/Microsoft/vscode-python/issues/1229))
 1. Add support for [logpoints](https://code.visualstudio.com/docs/editor/debugging#_logpoints) in the experimental debugger.
- ([#1306](https://github.com/Microsoft/vscode-python/issues/1306))
+   ([#1306](https://github.com/Microsoft/vscode-python/issues/1306))
 1. Set focus to the terminal upon creation of a terminal using the `Python: Create Terminal` command.
- ([#1315](https://github.com/Microsoft/vscode-python/issues/1315))
+   ([#1315](https://github.com/Microsoft/vscode-python/issues/1315))
+1. Save the python file before running it in the terminal using the command/menu `Run Python File in Terminal`.
+   ([#1316](https://github.com/Microsoft/vscode-python/issues/1316))
 1. Added support for source references (remote debugging without having the source code locally) in the experimental debugger.
- ([#1333](https://github.com/Microsoft/vscode-python/issues/1333))
+   ([#1333](https://github.com/Microsoft/vscode-python/issues/1333))
+1. Add `Ctrl+Enter` keyboard shortcut for `Run Selection/Line in Python Terminal`.
+   ([#1349](https://github.com/Microsoft/vscode-python/issues/1349))
 1. Settings configured within the `debugOptions` property of `launch.json` for the old debugger are now defined as individual (boolean) properties in the new experimental debugger (e.g. `"debugOptions": ["RedirectOutput"]` becomes `"redirectOutput": true`).
- ([#1395](https://github.com/Microsoft/vscode-python/issues/1395))
-1. Intergrate Jedi 0.12. See https://github.com/davidhalter/jedi/issues/1063#issuecomment-381417297 for details. ([#1400](https://github.com/Microsoft/vscode-python/issues/1400))
-1. Add prelimnary support for remote debugging using the experimental debugger. ([#907](https://github.com/Microsoft/vscode-python/issues/907))
+   ([#1395](https://github.com/Microsoft/vscode-python/issues/1395))
+1. Intergrate Jedi 0.12. See https://github.com/davidhalter/jedi/issues/1063#issuecomment-381417297 for details.
+   ([#1400](https://github.com/Microsoft/vscode-python/issues/1400))
+1. Enable Jinja template debugging as a default behaivour when using the Watson debug configuration for debugging of Watson applications.
+   ([#1480](https://github.com/Microsoft/vscode-python/issues/1480))
+1. Enable Jinja template debugging as a default behavior when debugging Pyramid applications.
+   ([#1492](https://github.com/Microsoft/vscode-python/issues/1492))
+1. Add prelimnary support for remote debugging using the experimental debugger.
    Attach to a Python program after having imported `ptvsd` and enabling the debugger to attach as follows:
    ```python
    import ptvsd
@@ -37,56 +57,83 @@ Attach to a Python program started using the command `python -m ptvsd --server -
    * `ptvsd.break_into_debugger()` to break into the attached debugger.
    * `ptvsd.wait_for_attach(timeout)` to cause the program to wait untill a debugger attaches.
    * `ptvsd.is_attached()` to determine whether a debugger is attached to the program.
+   ([#907](https://github.com/Microsoft/vscode-python/issues/907))
 
 ### Fixes
 
-1. Use an existing method to identify the active interpreter. ([#1015](https://github.com/Microsoft/vscode-python/issues/1015))
-1. Fix go to definition functionality across files. ([#1033](https://github.com/Microsoft/vscode-python/issues/1033))
+1. Use an existing method to identify the active interpreter.
+   ([#1015](https://github.com/Microsoft/vscode-python/issues/1015))
+1. Fix `go to definition` functionality across files.
+   ([#1033](https://github.com/Microsoft/vscode-python/issues/1033))
 1. IntelliSense under Python 2 for inherited attributes works again (thanks to an upgraded Jedi).
- ([#1072](https://github.com/Microsoft/vscode-python/issues/1072))
+   ([#1072](https://github.com/Microsoft/vscode-python/issues/1072))
 1. Reverted change that ended up considering symlinked interpreters as duplicate interpreter.
- ([#1192](https://github.com/Microsoft/vscode-python/issues/1192))
+   ([#1192](https://github.com/Microsoft/vscode-python/issues/1192))
 1. Display errors returned by the PipEnv command when identifying the corresonding environment.
- ([#1254](https://github.com/Microsoft/vscode-python/issues/1254))
+   ([#1254](https://github.com/Microsoft/vscode-python/issues/1254))
 1. When `editor.formatOnType` is on, don't add a space for `*args` or `**kwargs`
- ([#1257](https://github.com/Microsoft/vscode-python/issues/1257))
+   ([#1257](https://github.com/Microsoft/vscode-python/issues/1257))
 1. When `editor.formatOnType` is on, don't add a space between a string type specifier and the string literal
- ([#1257](https://github.com/Microsoft/vscode-python/issues/1257))
+   ([#1257](https://github.com/Microsoft/vscode-python/issues/1257))
+1. Reduce the frequency within which the memory usage of the language server is checked, also ensure memory usage is not checked unless language server functionality is used.
+   ([#1277](https://github.com/Microsoft/vscode-python/issues/1277))
 1. Ensure interpreter file exists on the file system before including into list of interpreters.
- ([#1305](https://github.com/Microsoft/vscode-python/issues/1305))
+   ([#1305](https://github.com/Microsoft/vscode-python/issues/1305))
 1. Do not have the formatter consider single-quoted string multiline even if it is not terminated.
- ([#1364](https://github.com/Microsoft/vscode-python/issues/1364))
+   ([#1364](https://github.com/Microsoft/vscode-python/issues/1364))
 1. IntelliSense works in module-level `if` statements (thanks to Jedi 0.12.0 upgrade).
- ([#142](https://github.com/Microsoft/vscode-python/issues/142))
+   ([#142](https://github.com/Microsoft/vscode-python/issues/142))
+1. Clicking the codelens `Run Test` on a test class should run that specific test class instead of all tests in the file.
+   ([#1472](https://github.com/Microsoft/vscode-python/issues/1472))
+1. Clicking the codelens `Run Test` on a test class or method should run that specific test instead of all tests in the file.
+   ([#1473](https://github.com/Microsoft/vscode-python/issues/1473))
+1. Check whether the selected python interpreter is valid before starting the language server. Failing to do so could result in the extension failing to load.
+   ([#1487](https://github.com/Microsoft/vscode-python/issues/1487))
+1. Fixes the issue where Conda environments created using the latest version of Anaconda are not activated in Powershell.
+   ([#1520](https://github.com/Microsoft/vscode-python/issues/1520))
+1. Increase the delay for the activation of environments in Powershell terminals.
+   ([#1533](https://github.com/Microsoft/vscode-python/issues/1533))
+1. Fix activation of environments with spaces in the python path when using Powershell.
+   ([#1534](https://github.com/Microsoft/vscode-python/issues/1534))
+1. Ensure Flask application is launched with multi-threading disabled, when run in the CI tests.
+   ([#1535](https://github.com/Microsoft/vscode-python/issues/1535))
 1. IntelliSense works appropriately when a project contains multiple files with the same name (thanks to Jedi 0.12.0 update).
- ([#178](https://github.com/Microsoft/vscode-python/issues/178))
+   ([#178](https://github.com/Microsoft/vscode-python/issues/178))
+1. Add blank lines to separate blocks of indented code (function defs, classes, and the like) so as to ensure the code can be run within a Python interactive prompt.
+   ([#259](https://github.com/Microsoft/vscode-python/issues/259))
 1. Provide type details appropriate for the iterable in a `for` loop when the line has a `# type` comment.
- ([#338](https://github.com/Microsoft/vscode-python/issues/338))
+   ([#338](https://github.com/Microsoft/vscode-python/issues/338))
 1. Parameter hints following an f-string work again.
- ([#344](https://github.com/Microsoft/vscode-python/issues/344))
+   ([#344](https://github.com/Microsoft/vscode-python/issues/344))
 1. When `editor.formatOnType` is on, don't indent after a single-line statement block
- ([#726](https://github.com/Microsoft/vscode-python/issues/726))
+   ([#726](https://github.com/Microsoft/vscode-python/issues/726))
+1. Fix debugging of Pyramid applications on Windows.
+   ([#737](https://github.com/Microsoft/vscode-python/issues/737))
 
 ### Code Health
 
-1. Improved developer experience of the Python Extension on Windows. ([#1216](https://github.com/Microsoft/vscode-python/issues/1216))
+1. Improved developer experience of the Python Extension on Windows.
+   ([#1216](https://github.com/Microsoft/vscode-python/issues/1216))
 1. Parallelize jobs (unit tests) on CI server.
- ([#1247](https://github.com/Microsoft/vscode-python/issues/1247))
-1. Run CI tests against the release version and master branch of PTVSD (experimental debugger), allowing tests to fail against the mastre branch of PTVSD.
- ([#1253](https://github.com/Microsoft/vscode-python/issues/1253))
+   ([#1247](https://github.com/Microsoft/vscode-python/issues/1247))
+1. Run CI tests against the release version and master branch of PTVSD (experimental debugger), allowing tests to fail against the master branch of PTVSD.
+   ([#1253](https://github.com/Microsoft/vscode-python/issues/1253))
 1. Only trigger the extension for `file` and `untitled` in preparation for
-[Visual Studio Live Share](https://aka.ms/vsls)
-(thanks to [Jonathan Carter](https://github.com/lostintangent))
- ([#1298](https://github.com/Microsoft/vscode-python/issues/1298))
+   [Visual Studio Live Share](https://aka.ms/vsls)
+   (thanks to [Jonathan Carter](https://github.com/lostintangent))
+   ([#1298](https://github.com/Microsoft/vscode-python/issues/1298))
 1. Ensure all unit tests run on Travis use the right Python interpreter.
- ([#1318](https://github.com/Microsoft/vscode-python/issues/1318))
+   ([#1318](https://github.com/Microsoft/vscode-python/issues/1318))
 1. Pin all production dependencies.
- ([#1374](https://github.com/Microsoft/vscode-python/issues/1374))
+   ([#1374](https://github.com/Microsoft/vscode-python/issues/1374))
 1. Add support for [hit count breakpoints](https://code.visualstudio.com/docs/editor/debugging#_advanced-breakpoint-topics) in the experimental debugger.
- ([#1409](https://github.com/Microsoft/vscode-python/issues/1409))
+   ([#1409](https://github.com/Microsoft/vscode-python/issues/1409))
 1. Ensure custom environment variables defined in `.env` file are passed onto the `pipenv` command.
- ([#1428](https://github.com/Microsoft/vscode-python/issues/1428))
-
+   ([#1428](https://github.com/Microsoft/vscode-python/issues/1428))
+1. Remove unwanted python packages no longer used in unit tests.
+   ([#1494](https://github.com/Microsoft/vscode-python/issues/1494))
+1. Register language server functionality in the extension against specific resource types supporting the python language.
+   ([#1530](https://github.com/Microsoft/vscode-python/issues/1530))
 
 
 ## 2018.3.1 (29 Mar 2018)
