@@ -77,10 +77,13 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private async startLanguageServer(context: ExtensionContext, clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
         const mscorlib = path.join(context.extensionPath, analysisEngineFolder, 'mscorlib.dll');
+        const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
         let downloadPackage = false;
 
         const reporter = getTelemetryReporter();
         reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ENABLED);
+
+        await this.checkPythiaModel(context, downloader);
 
         if (!await this.fs.fileExistsAsync(mscorlib)) {
             // Depends on .NET Runtime or SDK
@@ -100,7 +103,6 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         }
 
         if (downloadPackage) {
-            const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
             await downloader.downloadAnalysisEngine(context);
             reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_DOWNLOADED);
         }
@@ -232,5 +234,12 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         const ps = this.services.get<IProcessService>(IProcessService);
         const result = await ps.exec('dotnet', ['--version']).catch(() => { return { stdout: '' }; });
         return result.stdout.trim().startsWith('2.');
+    }
+
+    private async checkPythiaModel(context: ExtensionContext, downloader: AnalysisEngineDownloader): Promise<void> {
+        const settings = this.configuration.getSettings();
+        if (settings.pythiaEnabled) {
+            await downloader.downloadPythiaModel(context);
+        }
     }
 }

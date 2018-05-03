@@ -44,4 +44,6 @@ export interface IFileSystem {
     // tslint:disable-next-line:unified-signatures
     appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string }): void;
     getRealPathAsync(path: string): Promise<string>;
+    copyFileAsync(src: string, dest: string): Promise<void>;
+    deleteFileAsync(filename: string): Promise<void>;
 }

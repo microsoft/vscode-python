@@ -5,6 +5,7 @@
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { createDeferred } from '../helpers';
 import { IFileSystem, IPlatformService } from './types';
 
 @injectable()
@@ -95,5 +96,25 @@ export class FileSystem implements IFileSystem {
                 resolve(err ? filePath : realPath);
             });
         });
+    }
+
+    public copyFileAsync(src: string, dest: string): Promise<void> {
+        const deferred = createDeferred<void>();
+        const rs = fs.createReadStream(src).on('error', (err) => {
+            deferred.reject(err);
+        });
+        const ws = fs.createWriteStream(dest).on('error', (err) => {
+            deferred.reject(err);
+        }).on('close', () => {
+            deferred.resolve();
+        });
+        rs.pipe(ws);
+        return deferred.promise;
+    }
+
+    public deleteFileAsync(filename: string): Promise<void> {
+        const deferred = createDeferred<void>();
+        fs.unlink(filename, err => err ? deferred.reject(err) : deferred.resolve());
+        return deferred.promise;
     }
 }
