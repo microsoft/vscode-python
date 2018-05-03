@@ -59,7 +59,7 @@ export class AnalysisEngineDownloader {
     public async downloadPythiaModel(context: ExtensionContext): Promise<void> {
         const modelFolder = path.join(context.extensionPath, 'analysis', 'Pythia', 'model');
         const localPath = path.join(modelFolder, pythiaModelName);
-        if (await this.fs.directoryExistsAsync(localPath)) {
+        if (await this.fs.fileExistsAsync(localPath)) {
             return;
         }
 
