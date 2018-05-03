@@ -2,10 +2,14 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { Range, TextEditor, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
-import { PythonLanguage } from '../../common/constants';
+import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
+import { IProcessService } from '../../common/process/types';
+import { IConfigurationService } from '../../common/types';
+import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 
@@ -13,19 +17,26 @@ import { ICodeExecutionHelper } from '../types';
 export class CodeExecutionHelper implements ICodeExecutionHelper {
     private readonly documentManager: IDocumentManager;
     private readonly applicationShell: IApplicationShell;
+    private readonly envVariablesProvider: IEnvironmentVariablesProvider;
+    private readonly processService: IProcessService;
+    private readonly configurationService: IConfigurationService;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.envVariablesProvider = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+        this.processService = serviceContainer.get<IProcessService>(IProcessService);
+        this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
     public async normalizeLines(code: string, resource?: Uri): Promise<string> {
         try {
             if (code.trim().length === 0) {
                 return '';
             }
-            const regex = /(\n)([ \t]*\r?\n)([ \t]+\S+)/gm;
-            return code.replace(regex, (_, a, b, c) => {
-                return `${a}${c}`;
-            });
+            const env = await this.envVariablesProvider.getEnvironmentVariables(resource);
+            const pythonPath = this.configurationService.getSettings(resource).pythonPath;
+            const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'normalizeForInterpreter.py'), code];
+            const proc = await this.processService.exec(pythonPath, args, { env, throwOnStdErr: true });
+            return proc.stdout;
         } catch (ex) {
             console.error(ex, 'Python: Failed to normalize code for execution in terminal');
             return code;
@@ -42,7 +53,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             this.applicationShell.showErrorMessage('The active file needs to be saved before it can be run');
             return;
         }
-        if (activeEditor.document.languageId !== PythonLanguage.language) {
+        if (activeEditor.document.languageId !== PYTHON_LANGUAGE) {
             this.applicationShell.showErrorMessage('The active file is not a Python source file');
             return;
         }

@@ -36,6 +36,7 @@
 #### Virtual environments
 
 **ALWAYS**:
+- Use the latest version of Anconda
 - Create an environment with a space in their path somewhere
 - Make sure that you do not have `python.pythonPath` specified in your `settings.json` when testing automatic detection
 - Do note that the `Select Interpreter` drop-down window scrolls

@@ -12,9 +12,6 @@ import click
 
 
 FILENAME_RE = re.compile(r"(?P<issue>\d+)(?P<nonce>-\S+)?\.md")
-ISSUE_URL = "https://github.com/Microsoft/vscode-python/issues/{issue}"
-ENTRY_TEMPLATE = "1. {entry} ([#{issue}]({issue_url}))"
-SECTION_DEPTH = "###"
 
 
 def NewsEntry(issue_number, description, path):
@@ -68,8 +65,16 @@ def gather(directory):
 
 def entry_markdown(entry):
     """Generate the Markdown for the specified entry."""
-    issue_url = ISSUE_URL.format(issue=entry.issue_number)
-    return ENTRY_TEMPLATE.format(entry=entry.description,
+    enumerated_item = "1. "
+    indent = ' ' * len(enumerated_item)
+    issue_url = f'https://github.com/Microsoft/vscode-python/issues/{entry.issue_number}'
+    issue_md = f'([#{entry.issue_number}]({issue_url}))'
+    entry_lines = entry.description.strip().splitlines()
+    formatted_lines = [f'{enumerated_item}{entry_lines[0]}']
+    formatted_lines.extend(f'{indent}{line}' for line in entry_lines[1:])
+    formatted_lines.append(f'{indent}{issue_md}')
+    return '\n'.join(formatted_lines)
+    return ENTRY_TEMPLATE.format(entry=entry.description.strip(),
                                  issue=entry.issue_number,
                                  issue_url=issue_url)
 
@@ -78,7 +83,7 @@ def changelog_markdown(data):
     """Generate the Markdown for the release."""
     changelog = []
     for section, entries in data:
-        changelog.append(f"{SECTION_DEPTH} {section.title}")
+        changelog.append(f"### {section.title}")
         changelog.append("")
         changelog.extend(map(entry_markdown, entries))
         changelog.append("")

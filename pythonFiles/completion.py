@@ -33,6 +33,7 @@ class JediCompletion(object):
 
     def __init__(self):
         self.default_sys_path = sys.path
+        self.environment = jedi.api.environment.Environment(sys.prefix, sys.executable)
         self._input = io.open(sys.stdin.fileno(), encoding='utf-8')
         if (os.path.sep == '/') and (platform.uname()[2].find('Microsoft') > -1):
             # WSL; does not support UNC paths
@@ -150,7 +151,7 @@ class JediCompletion(object):
             except Exception:
                 sig["docstring"] = ''
                 sig["raw_docstring"] = ''
-                
+
             sig["name"] = signature.name
             sig["paramindex"] = signature.index
             sig["bracketstart"].append(signature.index)
@@ -199,7 +200,7 @@ class JediCompletion(object):
             }
             _completion['description'] = ''
             _completion['raw_docstring'] = ''
-            
+
             # we pass 'text' here only for fuzzy matcher
             if value:
                 _completion['snippet'] = '%s=${1:%s}$0' % (name, value)
@@ -223,7 +224,7 @@ class JediCompletion(object):
                     'type': self._get_definition_type(completion),
                     'raw_type': completion.type,
                     'rightLabel': self._additional_info(completion)
-                }                
+                }
             except Exception:
                 continue
 
@@ -231,7 +232,7 @@ class JediCompletion(object):
                 if c['text'] == _completion['text']:
                     c['type'] = _completion['type']
                     c['raw_type'] = _completion['raw_type']
-                               
+
             if any([c['text'].split('=')[0] == _completion['text']
                     for c in _completions]):
                 # ignore function arguments we already have
@@ -361,7 +362,7 @@ class JediCompletion(object):
                     definition = self._top_definition(definition)
                 definitionRange = {
                     'start_line': 0,
-                    'start_column': 0, 
+                    'start_column': 0,
                     'end_line': 0,
                     'end_column': 0
                 }
@@ -377,7 +378,7 @@ class JediCompletion(object):
                     container = parent.name if parent.type != 'module' else ''
                 except Exception:
                     container = ''
-                
+
                 try:
                     docstring = definition.docstring()
                     rawdocstring = definition.docstring(raw=True)
@@ -424,7 +425,7 @@ class JediCompletion(object):
                         container = parent.name if parent.type != 'module' else ''
                     except Exception:
                         container = ''
-                
+
                     try:
                         docstring = definition.docstring()
                         rawdocstring = definition.docstring(raw=True)
@@ -474,7 +475,7 @@ class JediCompletion(object):
                 'type': self._get_definition_type(definition),
                 'text': definition.name,
                 'description': description,
-                'docstring': description, 
+                'docstring': description,
                 'signature': signature
             }
             _definitions.append(_definition)
@@ -566,8 +567,8 @@ class JediCompletion(object):
         script = jedi.Script(
             source=request.get('source', None), line=request['line'] + 1,
             column=request['column'], path=request.get('path', ''),
-            sys_path=sys.path)
-        
+            sys_path=sys.path, environment=self.environment)
+
         if lookup == 'definitions':
             defs = []
             try:
@@ -625,7 +626,7 @@ class JediCompletion(object):
             try:
                 rq = self._input.readline()
                 if len(rq) == 0:
-                    # Reached EOF - indication our parent process is gone. 
+                    # Reached EOF - indication our parent process is gone.
                     sys.stderr.write('Received EOF from the standard input,exiting' + '\n')
                     sys.stderr.flush()
                     return

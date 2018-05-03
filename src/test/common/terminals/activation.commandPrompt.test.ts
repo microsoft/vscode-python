@@ -97,17 +97,17 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     });
 
                     test('Ensure batch files are supported by powershell (on windows)', async () => {
-                        const bash = new CommandPromptAndPowerShell(serviceContainer.object);
+                        const batch = new CommandPromptAndPowerShell(serviceContainer.object);
 
                         platform.setup(p => p.isWindows).returns(() => true);
                         const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.bat');
                         fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
-                        const command = await bash.getActivationCommands(resource, TerminalShellType.powershell);
+                        const command = await batch.getActivationCommands(resource, TerminalShellType.powershell);
 
                         // Executing batch files from powershell requires going back to cmd, then into powershell
 
                         const activationCommand = pathToScriptFile.fileToCommandArgument();
-                        const commands = [`& cmd /k "${activationCommand} & powershell"`];
+                        const commands = [`& cmd /k "${activationCommand.replace(/"/g, '""')} & powershell"`];
                         expect(command).to.be.deep.equal(commands, 'Invalid command');
                     });
 
@@ -122,7 +122,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                         // Executing batch files from powershell requires going back to cmd, then into powershell
 
                         const activationCommand = pathToScriptFile.fileToCommandArgument();
-                        const commands = [`& cmd /k "${activationCommand} & pwsh"`];
+                        const commands = [`& cmd /k "${activationCommand.replace(/"/g, '""')} & pwsh"`];
                         expect(command).to.be.deep.equal(commands, 'Invalid command');
                     });
 

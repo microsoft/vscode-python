@@ -9,14 +9,15 @@ import { IPlatformService } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../Common/Contracts';
 import { BaseConfigurationProvider, PythonAttachDebugConfiguration, PythonLaunchDebugConfiguration } from './baseProvider';
+import { IConfigurationProviderUtils } from './types';
 
 @injectable()
 export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvider<LaunchRequestArguments, AttachRequestArguments> {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('pythonExperimental', serviceContainer);
     }
-    protected provideLaunchDefaults(workspaceFolder: Uri, debugConfiguration: PythonLaunchDebugConfiguration<LaunchRequestArguments>): void {
-        super.provideLaunchDefaults(workspaceFolder, debugConfiguration);
+    protected async provideLaunchDefaults(workspaceFolder: Uri, debugConfiguration: PythonLaunchDebugConfiguration<LaunchRequestArguments>): Promise<void> {
+        await super.provideLaunchDefaults(workspaceFolder, debugConfiguration);
         const debugOptions = debugConfiguration.debugOptions!;
         if (debugConfiguration.debugStdLib) {
             this.debugOption(debugOptions, DebugOptions.DebugStdLib);
@@ -36,14 +37,19 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
             this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
-        if (debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK'
+        const isFlask = debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK';
+        if ((debugConfiguration.pyramid || isFlask)
             && debugOptions.indexOf(DebugOptions.Jinja) === -1
             && debugConfiguration.jinja !== false) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
         }
+        if (debugConfiguration.pyramid) {
+            const utils = this.serviceContainer.get<IConfigurationProviderUtils>(IConfigurationProviderUtils);
+            debugConfiguration.program = (await utils.getPyramidStartupScriptFilePath(workspaceFolder))!;
+        }
     }
-    protected provideAttachDefaults(workspaceFolder: Uri, debugConfiguration: PythonAttachDebugConfiguration<AttachRequestArguments>): void {
-        super.provideAttachDefaults(workspaceFolder, debugConfiguration);
+    protected async provideAttachDefaults(workspaceFolder: Uri, debugConfiguration: PythonAttachDebugConfiguration<AttachRequestArguments>): Promise<void> {
+        await super.provideAttachDefaults(workspaceFolder, debugConfiguration);
         const debugOptions = debugConfiguration.debugOptions!;
         if (debugConfiguration.debugStdLib) {
             this.debugOption(debugOptions, DebugOptions.DebugStdLib);
@@ -52,6 +58,11 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
             this.debugOption(debugOptions, DebugOptions.Django);
         }
         if (debugConfiguration.jinja) {
+            this.debugOption(debugOptions, DebugOptions.Jinja);
+        }
+        if (debugConfiguration.pyramid
+            && debugOptions.indexOf(DebugOptions.Jinja) === -1
+            && debugConfiguration.jinja !== false) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
         }
         if (debugConfiguration.redirectOutput || debugConfiguration.redirectOutput === undefined) {
