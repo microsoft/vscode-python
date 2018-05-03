@@ -13,7 +13,7 @@ import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { noop } from '../../client/common/core.utils';
 import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { PYTHON_PATH, sleep } from '../common';
-import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
+import { IS_APPVEYOR, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { DEBUGGER_TIMEOUT } from './common/constants';
 import { continueDebugging, createDebugAdapter, ExpectedVariable, hitHttpBreakpoint, makeHttpRequest, validateVariablesInFrame } from './utils';
 
@@ -69,6 +69,7 @@ suite(`Django and Flask Debugging: ${debuggerType}`, () => {
             'run',
             '--no-debugger',
             '--no-reload',
+            '--without-threads',
             '--port',
             `${port}`
         ];
@@ -128,7 +129,10 @@ suite(`Django and Flask Debugging: ${debuggerType}`, () => {
         expect(htmlResult).to.contain('Hello this_is_another_value_from_server');
     }
 
-    test('Test Flask Route and Template debugging', async () => {
+    test('Test Flask Route and Template debugging', async function () {
+        if (IS_APPVEYOR) {
+            return this.skip();
+        }
         const workspaceDirectory = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'flaskApp');
         const { options, port } = await buildFlaskLaunchArgs(workspaceDirectory);
 

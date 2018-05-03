@@ -3,6 +3,7 @@
 
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
+import { TextDocument } from 'vscode';
 import { BraceCounter } from '../language/braceCounter';
 import { TextBuilder } from '../language/textBuilder';
 import { TextRangeCollection } from '../language/textRangeCollection';
@@ -14,11 +15,15 @@ export class LineFormatter {
     private tokens: ITextRangeCollection<IToken> = new TextRangeCollection<IToken>([]);
     private braceCounter = new BraceCounter();
     private text = '';
+    private document?: TextDocument;
+    private lineNumber = 0;
 
     // tslint:disable-next-line:cyclomatic-complexity
-    public formatLine(text: string): string {
-        this.tokens = new Tokenizer().tokenize(text);
-        this.text = text;
+    public formatLine(document: TextDocument, lineNumber: number): string {
+        this.document = document;
+        this.lineNumber = lineNumber;
+        this.text = document.lineAt(lineNumber).text;
+        this.tokens = new Tokenizer().tokenize(this.text);
         this.builder = new TextBuilder();
         this.braceCounter = new BraceCounter();
 
@@ -107,7 +112,7 @@ export class LineFormatter {
                     this.builder.append(this.text[t.start]);
                     return;
                 case Char.Asterisk:
-                    if (prev && prev.type === TokenType.Identifier && prev.length === 6 && this.text.substr(prev.start, prev.length) === 'lambda') {
+                    if (prev && this.isKeyword(prev, 'lambda')) {
                         this.builder.softAppendSpace();
                         this.builder.append('*');
                         return;
@@ -122,7 +127,7 @@ export class LineFormatter {
                     this.builder.append('**');
                     return;
                 }
-                if (prev && prev.type === TokenType.Identifier && prev.length === 6 && this.text.substr(prev.start, prev.length) === 'lambda') {
+                if (prev && this.isKeyword(prev, 'lambda')) {
                     this.builder.softAppendSpace();
                     this.builder.append('**');
                     return;
@@ -194,6 +199,8 @@ export class LineFormatter {
             this.builder.softAppendSpace();
         }
     }
+
+    // tslint:disable-next-line:cyclomatic-complexity
     private isEqualsInsideArguments(index: number): boolean {
         // Since we don't have complete statement, this is mostly heuristics.
         // Therefore the code may not be handling all possible ways of the
@@ -217,28 +224,31 @@ export class LineFormatter {
             return true; // Line ends in comma
         }
 
-        if (index >= 2) {
-            // (x=1 or ,x=1
-            const prevPrev = this.tokens.getItemAt(index - 2);
-            return prevPrev.type === TokenType.Comma || prevPrev.type === TokenType.OpenBrace;
+        if (last.type === TokenType.Comment && this.tokens.count > 1 && this.tokens.getItemAt(this.tokens.count - 2).type === TokenType.Comma) {
+            return true; // Line ends in comma and then comment
         }
 
-        if (index >= this.tokens.count - 2) {
-            return false;
+        if (this.document) {
+            const prevLine = this.lineNumber > 0 ? this.document.lineAt(this.lineNumber - 1).text : '';
+            const prevLineTokens = new Tokenizer().tokenize(prevLine);
+            if (prevLineTokens.count > 0) {
+                const lastOnPrevLine = prevLineTokens.getItemAt(prevLineTokens.count - 1);
+                if (lastOnPrevLine.type === TokenType.Comma) {
+                    return true; // Previous line ends in comma
+                }
+                if (lastOnPrevLine.type === TokenType.Comment && prevLineTokens.count > 1 && prevLineTokens.getItemAt(prevLineTokens.count - 2).type === TokenType.Comma) {
+                    return true; // Previous line ends in comma and then comment
+                }
+            }
         }
 
-        const next = this.tokens.getItemAt(index + 1);
-        const nextNext = this.tokens.getItemAt(index + 2);
-        // x=1, or x=1)
-        if (this.isValueType(next.type)) {
-            if (nextNext.type === TokenType.CloseBrace) {
+        for (let i = 0; i < index; i += 1) {
+            const t = this.tokens.getItemAt(i);
+            if (this.isKeyword(t, 'lambda')) {
                 return true;
             }
-            if (nextNext.type === TokenType.Comma) {
-                return last.type === TokenType.CloseBrace;
-            }
         }
-        return false;
+        return this.braceCounter.isOpened(TokenType.OpenBrace);
     }
 
     private isOpenBraceType(type: TokenType): boolean {
@@ -249,10 +259,6 @@ export class LineFormatter {
     }
     private isBraceType(type: TokenType): boolean {
         return this.isOpenBraceType(type) || this.isCloseBraceType(type);
-    }
-    private isValueType(type: TokenType): boolean {
-        return type === TokenType.Identifier || type === TokenType.Unknown ||
-            type === TokenType.Number || type === TokenType.String;
     }
     private isMultipleStatements(index: number): boolean {
         for (let i = index; i >= 0; i -= 1) {
@@ -267,5 +273,8 @@ export class LineFormatter {
             s === 'or' || s === 'not' || s === 'from' ||
             s === 'import' || s === 'except' || s === 'for' ||
             s === 'as' || s === 'is';
+    }
+    private isKeyword(t: IToken, keyword: string): boolean {
+        return t.type === TokenType.Identifier && t.length === keyword.length && this.text.substr(t.start, t.length) === keyword;
     }
 }

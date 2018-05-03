@@ -1,5 +1,10 @@
 import * as path from 'path';
-export const PythonLanguage = { language: 'python' };
+
+export const PYTHON_LANGUAGE = 'python';
+export const PYTHON = [
+    { scheme: 'file', language: PYTHON_LANGUAGE },
+    { scheme: 'untitled', language: PYTHON_LANGUAGE }
+];
 
 export namespace Commands {
     export const Set_Interpreter = 'python.setInterpreter';

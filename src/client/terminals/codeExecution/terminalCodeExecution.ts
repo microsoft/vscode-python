@@ -10,16 +10,15 @@ import { IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
-import { IConfigurationService } from '../../common/types';
-import { IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { ICodeExecutionService } from '../../terminals/types';
 
 @injectable()
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
-    protected terminalTitle: string;
-    private _terminalService: ITerminalService;
+    protected terminalTitle!: string;
+    private _terminalService!: ITerminalService;
     private replActive?: Promise<boolean>;
-    constructor( @inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
+    constructor(@inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
@@ -60,7 +59,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
         await this.replActive;
     }
-    public getReplCommandArgs(resource?: Uri): { command: string, args: string[] } {
+    public getReplCommandArgs(resource?: Uri): { command: string; args: string[] } {
         const pythonSettings = this.configurationService.getSettings(resource);
         const command = this.platformService.isWindows ? pythonSettings.pythonPath.replace(/\\/g, '/') : pythonSettings.pythonPath;
         const args = pythonSettings.terminal.launchArgs.slice();

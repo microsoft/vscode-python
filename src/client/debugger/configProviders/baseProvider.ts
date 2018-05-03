@@ -7,13 +7,12 @@
 
 import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, ProviderResult, Uri, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../common/application/types';
-import { PythonLanguage } from '../../common/constants';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { BaseAttachRequestArguments, BaseLaunchRequestArguments, DebuggerType, DebugOptions } from '../Common/Contracts';
+import { BaseAttachRequestArguments, BaseLaunchRequestArguments, DebuggerType } from '../Common/Contracts';
 
 export type PythonLaunchDebugConfiguration<T extends BaseLaunchRequestArguments> = DebugConfiguration & T;
 export type PythonAttachDebugConfiguration<T extends BaseAttachRequestArguments> = DebugConfiguration & T;
@@ -21,11 +20,11 @@ export type PythonAttachDebugConfiguration<T extends BaseAttachRequestArguments>
 @injectable()
 export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArguments, A extends BaseAttachRequestArguments> implements DebugConfigurationProvider {
     constructor(@unmanaged() public debugType: DebuggerType, protected serviceContainer: IServiceContainer) { }
-    public resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): ProviderResult<DebugConfiguration> {
+    public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
 
         if (debugConfiguration.request === 'attach') {
-            this.provideAttachDefaults(workspaceFolder, debugConfiguration as PythonAttachDebugConfiguration<A>);
+            await this.provideAttachDefaults(workspaceFolder, debugConfiguration as PythonAttachDebugConfiguration<A>);
         } else {
             const config = debugConfiguration as PythonLaunchDebugConfiguration<L>;
             const numberOfSettings = Object.keys(config);
@@ -40,7 +39,7 @@ export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArgum
                 config.env = {};
             }
 
-            this.provideLaunchDefaults(workspaceFolder, config);
+            await this.provideLaunchDefaults(workspaceFolder, config);
         }
 
         const dbgConfig = (debugConfiguration as (BaseLaunchRequestArguments | BaseAttachRequestArguments));
@@ -49,7 +48,7 @@ export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArgum
         }
         return debugConfiguration;
     }
-    protected provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonAttachDebugConfiguration<A>): void {
+    protected async provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonAttachDebugConfiguration<A>): Promise<void> {
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
@@ -57,7 +56,7 @@ export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArgum
             debugConfiguration.host = 'localhost';
         }
     }
-    protected provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration<L>): void {
+    protected async provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration<L>): Promise<void> {
         this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
         if (typeof debugConfiguration.cwd !== 'string' && workspaceFolder) {
             debugConfiguration.cwd = workspaceFolder.fsPath;
@@ -78,20 +77,6 @@ export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArgum
         }
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
-        }
-        // Always redirect output.
-        if (debugConfiguration.debugOptions.indexOf(DebugOptions.RedirectOutput) === -1) {
-            debugConfiguration.debugOptions.push(DebugOptions.RedirectOutput);
-        }
-        if (debugConfiguration.debugOptions.indexOf(DebugOptions.Pyramid) >= 0) {
-            const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
-            const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-            const pserve = platformService.isWindows ? 'pserve.exe' : 'pserve';
-            if (fs.fileExistsSync(debugConfiguration.pythonPath)) {
-                debugConfiguration.program = path.join(path.dirname(debugConfiguration.pythonPath), pserve);
-            } else {
-                debugConfiguration.program = pserve;
-            }
         }
     }
     private getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
@@ -116,7 +101,7 @@ export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArgum
     private getProgram(): string | undefined {
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         const editor = documentManager.activeTextEditor;
-        if (editor && editor.document.languageId === PythonLanguage.language) {
+        if (editor && editor.document.languageId === PYTHON_LANGUAGE) {
             return editor.document.fileName;
         }
     }

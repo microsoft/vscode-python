@@ -8,8 +8,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
 import { IPlatformService } from '../../platform/types';
 import { IConfigurationService } from '../../types';
-import { TerminalShellType } from '../types';
-import { ITerminalActivationCommandProvider } from '../types';
+import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
 @injectable()
 export class CondaActivationCommandProvider implements ITerminalActivationCommandProvider {
@@ -29,8 +28,15 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
 
         const isWindows = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
         if (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore) {
+            if (!isWindows) {
+                return;
+            }
             // https://github.com/conda/conda/issues/626
-            return;
+            // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
+            const powershellExe = targetShell === TerminalShellType.powershell ? 'powershell' : 'pwsh';
+            return [
+                `& cmd /k "activate ${envInfo.name.toCommandArgument().replace(/"/g, '""')} & ${powershellExe}"`
+            ];
         } else if (targetShell === TerminalShellType.fish) {
             // https://github.com/conda/conda/blob/be8c08c083f4d5e05b06bd2689d2cd0d410c2ffe/shell/etc/fish/conf.d/conda.fish#L18-L28
             return [`conda activate ${envInfo.name.toCommandArgument()}`];

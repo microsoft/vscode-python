@@ -25,6 +25,7 @@ export const IS_WINDOWS = /^win/.test(process.platform);
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
+    public pythiaEnabled = true;
     public jediEnabled = true;
     public jediPath = '';
     public jediMemoryLimit = 1024;
@@ -37,7 +38,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     public formatting?: IFormattingSettings;
     public autoComplete?: IAutoCompleteSettings;
     public unitTest?: IUnitTestSettings;
-    public terminal?: ITerminalSettings;
+    public terminal!: ITerminalSettings;
     public sortImports?: ISortImportSettings;
     public workspaceSymbols?: IWorkspaceSymbolSettings;
     public disableInstallationChecks = false;
@@ -125,6 +126,8 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                 this.jediPath = '';
             }
             this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
+        } else {
+            this.pythiaEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('pythiaEnabled', true))!;
         }
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion

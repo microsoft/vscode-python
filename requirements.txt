@@ -9,8 +9,6 @@ prospector
 pydocstyle
 nose
 pytest
-fabric
-numba
 rope
 flask
 django

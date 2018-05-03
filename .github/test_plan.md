@@ -6,10 +6,17 @@
 - Python
   - Distribution: XXX
   - Version: XXX
+- VS Code: XXX
 
 ## Tests
 
-**ALWAYS check the `Output` window under `Python` for logged errors!**
+**ALWAYS**:
+- Check the `Output` window under `Python` for logged errors
+- Have `Developer Tools` open to detect any errors
+- Consider running the tests in a multi-folder workspace
+
+<details>
+  <summary>Scenarios</summary>
 
 ### [Environment](https://code.visualstudio.com/docs/python/environments)
 #### Interpreters
@@ -22,34 +29,42 @@
 - [ ] [`"python.pythonPath"`](https://code.visualstudio.com/docs/python/environments#_manually-specifying-an-interpreter) triggers an update in the status bar
 - [ ] `Run Python File in Terminal`
 - [ ] `Run Selection/Line in Python Terminal`
+  - [ ] Right-click
+  - [ ] Command
+  - [ ] `Ctrl-Enter`
 
 #### Virtual environments
 
-**ALWAYS create environments with a space in their name.***
+**ALWAYS**:
+- Use the latest version of Anconda
+- Create an environment with a space in their path somewhere
+- Make sure that you do not have `python.pythonPath` specified in your `settings.json` when testing automatic detection
+- Do note that the `Select Interpreter` drop-down window scrolls
 
-- [ ] Detected a single virtual environment at the top-level of the workspace folder
-  - [ ] Appropriate suffix label specified in status bar
-  - [ ] Prompt to install Pylint uses `--user`
-  - [ ] `"python.terminal.activateEnvironments": false` deactivates detection
+- [ ] Detected a single virtual environment at the top-level of the workspace folder (if you created this _after_ opening VS Code, then run `Reload Window` to pick up the new environment)
+  - [ ] Appropriate suffix label specified in status bar (e.g. `(venv)`)
   - [ ] [`Create Terminal`](https://code.visualstudio.com/docs/python/environments#_activating-an-environment-in-the-terminal) works
+    - [ ] Steals focus
+    - [ ] `"python.terminal.activateEnvironment": false` deactivates automatically running the activation script in the terminal
 - [ ] Detect multiple virtual environments in a directory specified by `"python.venvPath"`
 - [ ] Detected all [conda environments created with an interpreter](https://code.visualstudio.com/docs/python/environments#_conda-environments)
-  - [ ] Appropriate suffix label specified in status bar
-  - [ ] Prompt to install Pylint installs into the conda environment
-  - [ ] `"python.terminal.activateEnvironments": false` deactivates detection
+  - [ ] Appropriate suffix label specified in status bar (e.g. `(condaenv)`)
+  - [ ] Prompted to install Pylint
+    - [ ] Asked whether to install using conda or pip
+    - [ ] Installs into environment
   - [ ] [`Create Terminal`](https://code.visualstudio.com/docs/python/environments#_activating-an-environment-in-the-terminal) works
+    - [ ] `"python.terminal.activateEnvironment": false` deactivates automatically running the activation script in the terminal
 - [ ] (Linux/macOS until [`-m` is supported](https://github.com/Microsoft/vscode-python/issues/978)) Detected the virtual environment created by [pipenv](https://docs.pipenv.org/)
-  - [ ] Appropriate suffix label specified in status bar
+  - [ ] Appropriate suffix label specified in status bar (e.g. `(pipenv)`)
   - [ ] Prompt to install Pylint uses `pipenv install --dev`
-  - [ ] `"python.terminal.activateEnvironments": false` deactivates detection
   - [ ] [`Create Terminal`](https://code.visualstudio.com/docs/python/environments#_activating-an-environment-in-the-terminal) works
-- [ ] (Linux/macOS) Detected virtual environments created under `{workspaceFolder}/.direnv/python-{python_version}` for [direnv](https://direnv.net/) and its [`layout python3`](https://github.com/direnv/direnv/blob/master/stdlib.sh) support
-  - [ ] Appropriate suffix label specified in status bar
-  - [ ] `"python.terminal.activateEnvironments": false` deactivates detection
+    - [ ] `"python.terminal.activateEnvironment": false` deactivates automatically running the activation script in the terminal
+- [ ] (Linux/macOS) Virtual environments created under `{workspaceFolder}/.direnv/python-{python_version}` are detected (for [direnv](https://direnv.net/) and its [`layout python3`](https://github.com/direnv/direnv/blob/master/stdlib.sh) support)
+  - [ ] Appropriate suffix label specified in status bar (e.g. `(venv)`)
 
 #### [Environment files](https://code.visualstudio.com/docs/python/environments#_environment-variable-definitions-file)
 Sample files:
-```python3
+```python
 # example.py
 import os
 print('Hello,', os.environ.get('WHO'), '!')
@@ -57,10 +72,16 @@ print('Hello,', os.environ.get('WHO'), '!')
 ```
 # .env
 WHO=world
-```
+PYTHONPATH=some/path/somewhere
+````
+
+**ALWAYS**:
+- Make sure to use `Reload Window` between tests to reset your environment
+- Note that environment files only apply under the debugger and Jedi
 
 - [ ] Environment variables in a `.env` file are exposed when running under the debugger
-- [ ] `"python.envFile"` allows for specifying an environment file manually
+- [ ] `"python.envFile"` allows for specifying an environment file manually (e.g. Jedi picks up `PYTHONPATH` changes)
+- [ ] `envFile` in a `launch.json` configuration works
 
 #### [Debugging](https://code.visualstudio.com/docs/python/environments#_python-interpreter-for-debugging)
 
@@ -68,7 +89,8 @@ WHO=world
 
 ### [Linting](https://code.visualstudio.com/docs/python/linting)
 
-**ALWAYS check under the `Problems` tab to see e.g. if a linter is raising errors!**
+**ALWAYS**:
+- Check under the `Problems` tab to see e.g. if a linter is raising errors
 
 #### Pylint/default linting
 [Prompting to install Pylint is covered under `Environments` above]
@@ -84,24 +106,35 @@ enable=bad-names
 foo = 42  # Marked as a blacklisted name.
 ```
 - [ ] Installation via the prompt installs Pylint as appropriate
+  - [ ] Uses `--user` for system-install of Python
+  - [ ] Installs into a virtual environment environment directly
 - [ ] Pylint works
 - [ ] `"python.linting.pylintUseMinimalCheckers": false` turns off the default rules w/ no `pylintrc` file present
-- [ ] The existense of a `pylintrc` file turns off the default rules
+- [ ] The existence of a `pylintrc` file turns off the default rules
 
 #### Other linters
 
+**Note**:
+- You can use the `Run Linting` command to run a newly installed linter
+- When the extension installs a new linter, it turns off all other linters
+
 - [ ] flake8 works
+  - [ ] `Select linter` lists the linter and installs it if necessary
 - [ ] mypy works
-- [ ] pydocstyle works
+  - [ ] `Select linter` lists the linter and installs it if necessary
 - [ ] pep8 works
+  - [ ] `Select linter` lists the linter and installs it if necessary
 - [ ] prospector works
+  - [ ] `Select linter` lists the linter and installs it if necessary
+- [ ] pydocstyle works
+  - [ ] `Select linter` lists the linter and installs it if necessary
 - [ ] pylama works
-- [ ] 3 or more linters work simultaneously
-  - [ ] `Run Linting` runs all linters
-  - [ ] The `Select Linter` command lists all the above linters and prompts to install a linter when missing
-  - [ ] `"python.linting.enabled"` disables all linters
+  - [ ] `Select linter` lists the linter and installs it if necessary
+- [ ] 3 or more linters work simultaneously (make sure you have turned on the linters in your `settings.json`)
+  - [ ] `Run Linting` runs all activated linters
+  - [ ] `"python.linting.enabled": false` disables all linters
   - [ ] The `Enable Linting` command changes `"python.linting.enabled"`
-  - [ ] `"python.linting.lintOnSave` works
+- [ ] `"python.linting.lintOnSave` works
 
 ### [Editing](https://code.visualstudio.com/docs/python/editing)
 
@@ -114,7 +147,15 @@ Please also test for general accuracy on the most "interesting" code you can fin
 - [ ] `"python.autocomplete.addBrackets": true` causes auto-completion of functions to append `()`
 
 #### [Formatting](https://code.visualstudio.com/docs/python/editing#_formatting)
+Sample file:
+```python
+# There should be _some_ change after running `Format Document`.
+def foo():pass
+```
 
+- [ ] Prompted to install a formatter if none installed and `Format Document` is run
+  - [ ] Installing `autopep8` works
+  - [ ] Installing `yapf` works
 - [ ] autopep8 works
 - [ ] yapf works
 - [ ] `"editor.formatOnType": true` works and has expected results
@@ -122,12 +163,16 @@ Please also test for general accuracy on the most "interesting" code you can fin
 #### [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring)
 
 - [ ] [`Extract Variable`](https://code.visualstudio.com/docs/python/editing#_extract-variable) works
+  - [ ] You are prompted to install `rope` if it is not already available
 - [ ] [`Extract method`](https://code.visualstudio.com/docs/python/editing#_extract-method) works
+  - [ ] You are prompted to install `rope` if it is not already available
 - [ ] [`Sort Imports`](https://code.visualstudio.com/docs/python/editing#_sort-imports) works
 
 ### [Debugging](https://code.visualstudio.com/docs/python/debugging)
 
-Test **both** old and new debugger (and notice if the new debugger seems _at least_ as fast as the old debugger).
+**ALWAYS**:
+- Test the current debugger
+- Text the experimental debugger (and note whether it is _at least_ as fast as the old debugger)
 
 - [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work
   - [ ] `Current File`
@@ -141,11 +186,14 @@ Test **both** old and new debugger (and notice if the new debugger seems _at lea
   - [ ] `Watson`
   - [ ] `Scrapy`
   - [ ] `PySpark`
-  - [ ] `All debug Options` with [appropriate values](https://code.visualstudio.com/docs/python/debugging#_standard-configuration-and-options) changed
+  - [ ] `All debug Options` with [appropriate values](https://code.visualstudio.com/docs/python/debugging#_standard-configuration-and-options) edited to make values valid
 - [ ] Breakpoints
   - [ ] Set
   - [ ] Hit
-  - [ ] Watch
+  - [ ] Conditional
+    - [ ] Expression
+    - [ ] Hit count
+  - [ ] Log points (experimental debugger only)
 - [ ] Stepping
   - [ ] Over
   - [ ] Into
@@ -193,7 +241,7 @@ def test_failure():
 ```
 
 - [ ] `Run All Unit Tests` triggers the prompt to configure the test runner
-  - [ ] Pytest gets installed
+  - [ ] `pytest` gets installed
 - [ ] Tests are discovered (as shown by code lenses on each test)
 
 #### [`nose`](https://code.visualstudio.com/docs/python/unit-testing#_nose-configuration-settings)
@@ -222,3 +270,5 @@ def test_failure():
   - [ ] `Run Unit Test Method ...` works
   - [ ] `View Unit Test Output` works
   - [ ] After having at least one failure, `Run Failed Tests` works
+
+</details>

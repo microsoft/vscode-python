@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Terminal, Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { ITerminalManager } from '../application/types';
+import { sleep } from '../core.utils';
 import { IDisposableRegistry } from '../types';
 import { ITerminalHelper, ITerminalService, TerminalShellType } from './types';
 
@@ -67,7 +68,8 @@ export class TerminalService implements ITerminalService, Disposable {
 
                 // Give the command some time to complete.
                 // Its been observed that sending commands too early will strip some text off.
-                await new Promise(resolve => setTimeout(resolve, 500));
+                const delay = (this.terminalShellType === TerminalShellType.powershell || TerminalShellType.powershellCore) ? 1000 : 500;
+                await sleep(delay);
             }
         }
 

@@ -222,6 +222,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                     maxDocumentationTextLength: 0
                 },
                 asyncStartup: true,
+                pythiaEnabled: settings.pythiaEnabled,
                 testEnvironment: isTestExecution()
             }
         };

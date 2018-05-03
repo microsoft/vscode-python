@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
-import { PythonLanguage } from '../../../client/common/constants';
+import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { EnumEx } from '../../../client/common/enumUtils';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { PythonDebugConfigurationProvider, PythonV2DebugConfigurationProvider } from '../../../client/debugger';
@@ -77,7 +77,7 @@ enum OS {
                 const workspaceFolder = createMoqWorkspaceFolder(__dirname);
                 const pythonFile = 'xyz.py';
 
-                setupActiveEditor(pythonFile, PythonLanguage.language);
+                setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { request: 'attach' } as DebugConfiguration);
 
@@ -92,7 +92,7 @@ enum OS {
             test('Defaults should be returned when an empty object is passed without Workspace Folder, no workspaces and active file', async () => {
                 const pythonFile = 'xyz.py';
 
-                setupActiveEditor(pythonFile, PythonLanguage.language);
+                setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
                 setupWorkspaces([]);
 
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(undefined, { request: 'attach' } as DebugConfiguration);
@@ -108,7 +108,7 @@ enum OS {
                 }
             });
             test('Defaults should be returned when an empty object is passed without Workspace Folder, no workspaces and no active file', async () => {
-                setupActiveEditor(undefined, PythonLanguage.language);
+                setupActiveEditor(undefined, PYTHON_LANGUAGE);
                 setupWorkspaces([]);
 
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(undefined, { request: 'attach' } as DebugConfiguration);
@@ -137,7 +137,7 @@ enum OS {
             });
             test('Defaults should be returned when an empty object is passed without Workspace Folder, with a workspace and an active python file', async () => {
                 const activeFile = 'xyz.py';
-                setupActiveEditor(activeFile, PythonLanguage.language);
+                setupActiveEditor(activeFile, PYTHON_LANGUAGE);
                 const defaultWorkspace = path.join('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 
@@ -156,7 +156,7 @@ enum OS {
             test('Ensure \'localRoot\' is left unaltered', async () => {
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(__dirname);
-                setupActiveEditor(activeFile, PythonLanguage.language);
+                setupActiveEditor(activeFile, PYTHON_LANGUAGE);
                 const defaultWorkspace = path.join('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 
@@ -174,7 +174,7 @@ enum OS {
                 }
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(__dirname);
-                setupActiveEditor(activeFile, PythonLanguage.language);
+                setupActiveEditor(activeFile, PYTHON_LANGUAGE);
                 const defaultWorkspace = path.join('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 
@@ -191,7 +191,7 @@ enum OS {
                 }
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(__dirname);
-                setupActiveEditor(activeFile, PythonLanguage.language);
+                setupActiveEditor(activeFile, PYTHON_LANGUAGE);
                 const defaultWorkspace = path.join('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 
@@ -205,7 +205,7 @@ enum OS {
             test('Ensure \'remoteRoot\' is left unaltered', async () => {
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(__dirname);
-                setupActiveEditor(activeFile, PythonLanguage.language);
+                setupActiveEditor(activeFile, PYTHON_LANGUAGE);
                 const defaultWorkspace = path.join('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 
@@ -217,7 +217,7 @@ enum OS {
             test('Ensure \'port\' is left unaltered', async () => {
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(__dirname);
-                setupActiveEditor(activeFile, PythonLanguage.language);
+                setupActiveEditor(activeFile, PYTHON_LANGUAGE);
                 const defaultWorkspace = path.join('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 
@@ -229,7 +229,7 @@ enum OS {
             test('Ensure \'debugOptions\' are left unaltered', async () => {
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(__dirname);
-                setupActiveEditor(activeFile, PythonLanguage.language);
+                setupActiveEditor(activeFile, PYTHON_LANGUAGE);
                 const defaultWorkspace = path.join('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 

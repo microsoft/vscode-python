@@ -4,7 +4,7 @@
 import * as TypeMoq from 'typemoq';
 import { OutputChannel, TextDocument, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
-import { PythonLanguage, STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
+import { PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import '../../client/common/extensions';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, ILintingSettings, IOutputChannel, IPythonSettings } from '../../client/common/types';
@@ -55,7 +55,7 @@ suite('Linting - LintingEngine', () => {
     });
 
     test('Ensure document.uri is passed into isLintingEnabled', () => {
-        const doc = mockTextDocument('a.py', PythonLanguage.language, true);
+        const doc = mockTextDocument('a.py', PYTHON_LANGUAGE, true);
         try {
             lintingEngine.lintDocument(doc, 'auto').ignoreErrors();
         } catch {
@@ -63,7 +63,7 @@ suite('Linting - LintingEngine', () => {
         }
     });
     test('Ensure document.uri is passed into createLinter', () => {
-        const doc = mockTextDocument('a.py', PythonLanguage.language, true);
+        const doc = mockTextDocument('a.py', PYTHON_LANGUAGE, true);
         try {
             lintingEngine.lintDocument(doc, 'auto').ignoreErrors();
         } catch {
@@ -72,7 +72,7 @@ suite('Linting - LintingEngine', () => {
     });
 
     test('Verify files that match ignore pattern are not linted', async () => {
-        const doc = mockTextDocument('a1.py', PythonLanguage.language, true, ['a*.py']);
+        const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, true, ['a*.py']);
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
     });
@@ -84,23 +84,23 @@ suite('Linting - LintingEngine', () => {
     });
 
     test('Ensure files with git scheme are not linted', async () => {
-        const doc = mockTextDocument('a1.py', PythonLanguage.language, false, [], 'git');
+        const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, false, [], 'git');
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
     });
     test('Ensure files with showModifications scheme are not linted', async () => {
-        const doc = mockTextDocument('a1.py', PythonLanguage.language, false, [], 'showModifications');
+        const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, false, [], 'showModifications');
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
     });
     test('Ensure files with svn scheme are not linted', async () => {
-        const doc = mockTextDocument('a1.py', PythonLanguage.language, false, [], 'svn');
+        const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, false, [], 'svn');
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
     });
 
     test('Ensure non-existing files are not linted', async () => {
-        const doc = mockTextDocument('file.py', PythonLanguage.language, false, []);
+        const doc = mockTextDocument('file.py', PYTHON_LANGUAGE, false, []);
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
     });

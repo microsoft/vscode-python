@@ -7,7 +7,7 @@ if ((Reflect as any).metadata === undefined) {
 }
 import { Container } from 'inversify';
 import {
-    debug, Disposable, DocumentFilter, ExtensionContext,
+    debug, Disposable, ExtensionContext,
     extensions, IndentAction, languages, Memento,
     OutputChannel, window
 } from 'vscode';
@@ -15,7 +15,7 @@ import { AnalysisExtensionActivator } from './activation/analysis';
 import { ClassicExtensionActivator } from './activation/classic';
 import { IExtensionActivator } from './activation/types';
 import { PythonSettings } from './common/configSettings';
-import { isPythonAnalysisEngineTest, STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { isPythonAnalysisEngineTest, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { PythonInstaller } from './common/installer/pythonInstallation';
@@ -58,12 +58,6 @@ import { WorkspaceSymbols } from './workspaceSymbols/main';
 
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
-
-const PYTHON_LANGUAGE = 'python';
-const PYTHON: DocumentFilter[] = [
-    { scheme: 'file', language: PYTHON_LANGUAGE },
-    { scheme: 'untitled', language: PYTHON_LANGUAGE }
-];
 
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: ExtensionContext) {
@@ -110,7 +104,7 @@ export async function activate(context: ExtensionContext) {
 
     // Enable indentAction
     // tslint:disable-next-line:no-non-null-assertion
-    languages.setLanguageConfiguration(PYTHON_LANGUAGE!, {
+    languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
         onEnterRules: [
             {
                 beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except)\b.*:\s*\S+/,

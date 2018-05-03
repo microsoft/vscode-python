@@ -32,7 +32,7 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
     public getReplCommandArgs(resource?: Uri): { command: string; args: string[] } {
         const pythonSettings = this.configurationService.getSettings(resource);
         const command = this.platformService.isWindows ? pythonSettings.pythonPath.replace(/\\/g, '/') : pythonSettings.pythonPath;
-        const args = pythonSettings.terminal!.launchArgs.slice();
+        const args = pythonSettings.terminal.launchArgs.slice();
 
         const workspaceUri = resource ? this.workspace.getWorkspaceFolder(resource) : undefined;
         const defaultWorkspace = Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders.length > 0 ? this.workspace.workspaceFolders[0].uri.fsPath : '';
