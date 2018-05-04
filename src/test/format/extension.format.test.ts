@@ -35,13 +35,21 @@ suite('Formatting', () => {
         });
         fs.ensureDirSync(path.dirname(autoPep8FileToFormat));
         const pythonProcess = await ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(vscode.Uri.file(workspaceRootPath));
+        const py2 = await ioc.getPythonMajorVersion(vscode.Uri.parse(originalUnformattedFile)) === 2;
         const yapf = pythonProcess.execModule('yapf', [originalUnformattedFile], { cwd: workspaceRootPath });
-        const black = pythonProcess.execModule('black', [originalUnformattedFile], { cwd: workspaceRootPath });
         const autoPep8 = pythonProcess.execModule('autopep8', [originalUnformattedFile], { cwd: workspaceRootPath });
-        await Promise.all([yapf, black, autoPep8]).then(formattedResults => {
+        const formatters = [yapf, autoPep8];
+        // When testing against 3.5 and older, this will break.
+        if (!py2) {
+            const black = pythonProcess.execModule('black', [originalUnformattedFile], { cwd: workspaceRootPath });
+            formatters.push(black);
+        }
+        await Promise.all(formatters).then(formattedResults => {
             formattedYapf = formattedResults[0].stdout;
-            formattedBlack = formattedResults[1].stdout;
-            formattedAutoPep8 = formattedResults[2].stdout;
+            formattedAutoPep8 = formattedResults[1].stdout;
+            if (!py2) {
+                formattedBlack = formattedResults[2].stdout;
+            }
         });
     });
     setup(async () => {
