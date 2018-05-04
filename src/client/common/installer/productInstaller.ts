@@ -124,10 +124,30 @@ class CTagsInstaller extends BaseInstaller {
 
 class FormatterInstaller extends BaseInstaller {
     public async promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
+        // Hard-coded on purpose because the UI won't necessarily work having
+        // another formatter.
+        const formatters = [Product.autopep8, Product.black, Product.yapf];
+        const formatterNames = formatters.map((formatter) => ProductNames.get(formatter)!);
         const productName = ProductNames.get(product)!;
+        formatterNames.splice(formatterNames.indexOf(productName), 1);
+        const useOptions = formatterNames.map((name) => `Use ${name}`);
+        const yesChoice = 'Yes';
 
-        const item = await this.appShell.showErrorMessage(`Formatter ${productName} is not installed. Install?`, 'Yes', 'No');
-        return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
+        const item = await this.appShell.showErrorMessage(`Formatter ${productName} is not installed. Install?`, yesChoice, ...useOptions);
+        if (item === yesChoice) {
+            return this.install(product, resource);
+        } else if (typeof item === 'string') {
+            for (const formatter of formatters) {
+                const formatterName = ProductNames.get(formatter)!;
+
+                if (item.endsWith(formatterName)) {
+                    await this.configService.updateSettingAsync('formatting.provider', formatterName, resource);
+                    return this.install(formatter, resource);
+                }
+            }
+        }
+
+        return InstallerResponse.Ignore;
     }
 
     protected getExecutableNameFromSettings(product: Product, resource?: vscode.Uri): string {
