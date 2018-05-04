@@ -64,6 +64,22 @@ export class InterpreterDataService {
     return interpreterData;
   }
 
+  public getInterpreterHash(interpreterPath: string): Promise<string> {
+    const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
+    const pythonExecutable = path.join(path.dirname(interpreterPath), platform.isWindows ? 'python.exe' : 'python');
+    // Hash mod time and creation time
+    const deferred = createDeferred<string>();
+    fs.lstat(pythonExecutable, (err, stats) => {
+      if (err) {
+        deferred.resolve('');
+      } else {
+        const actual = createHash('sha512').update(`${stats.ctime}-${stats.mtime}`).digest('hex');
+        deferred.resolve(actual);
+      }
+    });
+    return deferred.promise;
+  }
+
   private async getInterpreterDataFromPython(execService: IPythonExecutionService, interpreterPath: string): Promise<InterpreterData> {
     const result = await execService.exec(['-c', 'import sys; print(sys.version_info); print(sys.prefix)'], {});
     // 2.7.14 (v2.7.14:84471935ed, Sep 16 2017, 20:19:30) <<SOMETIMES NEW LINE HERE>>
@@ -85,22 +101,6 @@ export class InterpreterDataService {
     const hash = await this.getInterpreterHash(interpreterPath);
     const searchPaths = await this.getSearchPaths(execService);
     return new InterpreterData(DataVersion, interpreterPath, `${majorMatches[1]}.${minorMatches[1]}`, prefix, searchPaths, hash);
-  }
-
-  private getInterpreterHash(interpreterPath: string): Promise<string> {
-    const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
-    const pythonExecutable = path.join(path.dirname(interpreterPath), platform.isWindows ? 'python.exe' : 'python');
-    // Hash mod time and creation time
-    const deferred = createDeferred<string>();
-    fs.lstat(pythonExecutable, (err, stats) => {
-      if (err) {
-        deferred.resolve('');
-      } else {
-        const actual = createHash('sha512').update(`${stats.ctimeMs}-${stats.mtimeMs}`).digest('hex');
-        deferred.resolve(actual);
-      }
-    });
-    return deferred.promise;
   }
 
   private async getSearchPaths(execService: IPythonExecutionService): Promise<string> {

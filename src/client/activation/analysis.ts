@@ -13,6 +13,7 @@ import { IProcessService } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import {
     PYTHON_ANALYSIS_ENGINE_DOWNLOADED,
@@ -50,7 +51,11 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly fs: IFileSystem;
     private readonly sw = new StopWatch();
     private readonly platformData: PlatformData;
+    private readonly interpreterService: IInterpreterService;
+    private readonly disposables: Disposable[] = [];
     private languageClient: LanguageClient | undefined;
+    private context: ExtensionContext | undefined;
+    private interpreterHash: string = '';
 
     constructor(private readonly services: IServiceContainer, pythonSettings: IPythonSettings) {
         this.configuration = this.services.get<IConfigurationService>(IConfigurationService);
@@ -58,19 +63,38 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.fs = this.services.get<IFileSystem>(IFileSystem);
         this.platformData = new PlatformData(services.get<IPlatformService>(IPlatformService), this.fs);
+        this.interpreterService = this.services.get<IInterpreterService>(IInterpreterService);
     }
 
     public async activate(context: ExtensionContext): Promise<boolean> {
+        this.context = context;
         const clientOptions = await this.getAnalysisOptions(context);
         if (!clientOptions) {
             return false;
         }
+        this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.restartLanguageServer()));
         return this.startLanguageServer(context, clientOptions);
     }
 
     public async deactivate(): Promise<void> {
         if (this.languageClient) {
             await this.languageClient.stop();
+        }
+        for (const d of this.disposables) {
+            d.dispose();
+        }
+    }
+
+    private async restartLanguageServer(): Promise<void> {
+        if (!this.context) {
+            return;
+        }
+        const ids = new InterpreterDataService(this.context, this.services);
+        const idata = await ids.getInterpreterData();
+        if (!idata || idata.hash !== this.interpreterHash) {
+            this.interpreterHash = idata ? idata.hash : '';
+            await this.deactivate();
+            await this.activate(this.context);
         }
     }
 
@@ -203,10 +227,10 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
 
         const envProvider = this.services.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
         const pythonPath = (await envProvider.getEnvironmentVariables()).PYTHONPATH;
+        this.interpreterHash = interpreterData ? interpreterData.hash : '';
 
         // tslint:disable-next-line:no-string-literal
         properties['SearchPaths'] = `${searchPaths};${pythonPath ? pythonPath : ''}`;
-
         const selector: string[] = [PYTHON];
 
         // Options to control the language client
