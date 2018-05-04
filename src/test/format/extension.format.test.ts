@@ -17,6 +17,7 @@ const originalUnformattedFile = path.join(formatFilesPath, 'fileToFormat.py');
 
 const autoPep8FileToFormat = path.join(formatFilesPath, 'autoPep8FileToFormat.py');
 const blackFileToFormat = path.join(formatFilesPath, 'blackFileToFormat.py');
+const blackReferenceFile = path.join(formatFilesPath, 'blackFileReference.py');
 const yapfFileToFormat = path.join(formatFilesPath, 'yapfFileToFormat.py');
 
 let formattedYapf = '';
@@ -30,7 +31,7 @@ suite('Formatting', () => {
     suiteSetup(async () => {
         await initialize();
         initializeDI();
-        [autoPep8FileToFormat, blackFileToFormat, yapfFileToFormat].forEach(file => {
+        [autoPep8FileToFormat, blackFileToFormat, blackReferenceFile, yapfFileToFormat].forEach(file => {
             fs.copySync(originalUnformattedFile, file, { overwrite: true });
         });
         fs.ensureDirSync(path.dirname(autoPep8FileToFormat));
@@ -41,14 +42,18 @@ suite('Formatting', () => {
         const formatters = [yapf, autoPep8];
         // When testing against 3.5 and older, this will break.
         if (!py2) {
-            const black = pythonProcess.execModule('black', [originalUnformattedFile], { cwd: workspaceRootPath });
+            // Black doesn't support emitting only to stdout; it either works
+            // through a pipe, emits a diff, or rewrites the file in-place.
+            // Thus it's easier to let it do its in-place rewrite and then
+            // read the reference file from there.
+            const black = pythonProcess.execModule('black', [blackReferenceFile], { cwd: workspaceRootPath });
             formatters.push(black);
         }
         await Promise.all(formatters).then(formattedResults => {
             formattedYapf = formattedResults[0].stdout;
             formattedAutoPep8 = formattedResults[1].stdout;
             if (!py2) {
-                formattedBlack = formattedResults[2].stdout;
+                formattedBlack = fs.readFileSync(blackReferenceFile).toString();
             }
         });
     });
@@ -57,7 +62,7 @@ suite('Formatting', () => {
         initializeDI();
     });
     suiteTeardown(async () => {
-        [autoPep8FileToFormat, blackFileToFormat, yapfFileToFormat].forEach(file => {
+        [autoPep8FileToFormat, blackFileToFormat, blackReferenceFile, yapfFileToFormat].forEach(file => {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
             }
