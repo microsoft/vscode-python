@@ -67,6 +67,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     }
 
     public async activate(context: ExtensionContext): Promise<boolean> {
+        this.sw.reset();
         this.context = context;
         const clientOptions = await this.getAnalysisOptions(context);
         if (!clientOptions) {
