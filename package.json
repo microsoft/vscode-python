@@ -94,7 +94,7 @@
                 "path": "./snippets/python.json"
             }
         ],
-        "keybindings":[
+        "keybindings": [
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "ctrl+enter",
