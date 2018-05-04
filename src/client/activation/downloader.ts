@@ -43,7 +43,7 @@ export class AnalysisEngineDownloader {
         let localTempFilePath = '';
         try {
             localTempFilePath = await this.downloadFile(downloadUriPrefix, enginePackageFileName, 'Downloading Python Analysis Engine... ');
-            await this.verifyDownload(localTempFilePath);
+            await this.verifyDownload(localTempFilePath, platformString);
             await this.unpackArchive(context.extensionPath, localTempFilePath);
         } catch (err) {
             this.output.appendLine('failed.');
@@ -122,11 +122,11 @@ export class AnalysisEngineDownloader {
         return tempFile.filePath;
     }
 
-    private async verifyDownload(filePath: string): Promise<void> {
+    private async verifyDownload(filePath: string, platformString: string): Promise<void> {
         this.output.appendLine('');
         this.output.append('Verifying download... ');
         const verifier = new HashVerifier();
-        if (!await verifier.verifyHash(filePath, await this.platformData.getExpectedHash())) {
+        if (!await verifier.verifyHash(filePath, platformString, await this.platformData.getExpectedHash())) {
             throw new Error('Hash of the downloaded file does not match.');
         }
         this.output.append('valid.');

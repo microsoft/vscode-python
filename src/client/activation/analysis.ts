@@ -35,11 +35,11 @@ class LanguageServerStartupErrorHandler implements ErrorHandler {
     constructor(private readonly deferred: Deferred<void>) { }
     public error(error: Error, message: Message, count: number): ErrorAction {
         this.deferred.reject(error);
-        return ErrorAction.Shutdown;
+        return ErrorAction.Continue;
     }
     public closed(): CloseAction {
         this.deferred.reject();
-        return CloseAction.DoNotRestart;
+        return CloseAction.Restart;
     }
 }
 
@@ -103,6 +103,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         }
 
         if (downloadPackage) {
+            this.appShell.showWarningMessage('.NET Runtime is not found, platform-specific Python Analysis Engine will be downloaded.');
             await downloader.downloadAnalysisEngine(context);
             reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_DOWNLOADED);
         }
@@ -130,7 +131,9 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
             disposable = lc.start();
             lc.onReady()
                 .then(() => deferred.resolve())
-                .catch(deferred.reject);
+                .catch((reason) => {
+                    deferred.reject(reason);
+                });
             await deferred.promise;
 
             this.output.appendLine(`Language server ready: ${this.sw.elapsedTime} ms`);
