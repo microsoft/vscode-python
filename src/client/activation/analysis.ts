@@ -177,20 +177,19 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         const interpreterData = await interpreterDataService.getInterpreterData();
         if (!interpreterData) {
             const appShell = this.services.get<IApplicationShell>(IApplicationShell);
-            appShell.showErrorMessage('Unable to determine path to Python interpreter.');
-            return;
+            appShell.showWarningMessage('Unable to determine path to Python interpreter. IntelliSense will be limited.');
         }
 
-        // tslint:disable-next-line:no-string-literal
-        properties['InterpreterPath'] = interpreterData.path;
-        // tslint:disable-next-line:no-string-literal
-        properties['Version'] = interpreterData.version;
-        // tslint:disable-next-line:no-string-literal
-        properties['PrefixPath'] = interpreterData.prefix;
-        // tslint:disable-next-line:no-string-literal
-        properties['DatabasePath'] = path.join(context.extensionPath, analysisEngineFolder);
+        if (interpreterData) {
+            // tslint:disable-next-line:no-string-literal
+            properties['InterpreterPath'] = interpreterData.path;
+            // tslint:disable-next-line:no-string-literal
+            properties['Version'] = interpreterData.version;
+            // tslint:disable-next-line:no-string-literal
+            properties['PrefixPath'] = interpreterData.prefix;
+        }
 
-        let searchPaths = interpreterData.searchPaths;
+        let searchPaths = interpreterData ? interpreterData.searchPaths : '';
         const settings = this.configuration.getSettings();
         if (settings.autoComplete) {
             const extraPaths = settings.autoComplete.extraPaths;
@@ -198,6 +197,9 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                 searchPaths = `${searchPaths};${extraPaths.join(';')}`;
             }
         }
+
+        // tslint:disable-next-line:no-string-literal
+        properties['DatabasePath'] = path.join(context.extensionPath, analysisEngineFolder);
 
         const envProvider = this.services.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
         const pythonPath = (await envProvider.getEnvironmentVariables()).PYTHONPATH;
