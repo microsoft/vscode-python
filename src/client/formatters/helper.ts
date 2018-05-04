@@ -4,17 +4,17 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IConfigurationService, IFormattingSettings } from '../common/types';
-import { ExecutionInfo, Product } from '../common/types';
+import { ExecutionInfo, IConfigurationService, IFormattingSettings, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { FormatterId, FormatterSettingsPropertyNames, IFormatterHelper } from './types';
 
 @injectable()
 export class FormatterHelper implements IFormatterHelper {
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
     public translateToId(formatter: Product): FormatterId {
         switch (formatter) {
             case Product.autopep8: return 'autopep8';
+            case Product.black: return 'black';
             case Product.yapf: return 'yapf';
             default: {
                 throw new Error(`Unrecognized Formatter '${formatter}'`);

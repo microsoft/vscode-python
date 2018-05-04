@@ -1200,12 +1200,28 @@
                 "python.formatting.provider": {
                     "type": "string",
                     "default": "autopep8",
-                    "description": "Provider for formatting. Possible options include 'autopep8' and 'yapf'.",
+                    "description": "Provider for formatting. Possible options include 'autopep8', 'black', and 'yapf'.",
                     "enum": [
                         "autopep8",
+                        "black",
                         "yapf",
                         "none"
                     ],
+                    "scope": "resource"
+                },
+                "python.formatting.blackArgs": {
+                    "type": "array",
+                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "scope": "resource"
+                },
+                "python.formatting.blackPath": {
+                    "type": "string",
+                    "default": "black",
+                    "description": "Path to Black, you can use a custom version of Black by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
                 "python.formatting.yapfArgs": {

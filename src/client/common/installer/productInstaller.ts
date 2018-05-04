@@ -1,7 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
-import { OutputChannel, Uri } from 'vscode';
 import * as vscode from 'vscode';
 import { IFormatterHelper } from '../../formatters/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -33,14 +32,14 @@ abstract class BaseInstaller {
     protected appShell: IApplicationShell;
     protected configService: IConfigurationService;
 
-    constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
+    constructor(protected serviceContainer: IServiceContainer, protected outputChannel: vscode.OutputChannel) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
-    public abstract promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse>;
+    public abstract promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse>;
 
-    public async install(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async install(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         if (product === Product.unittest) {
             return InstallerResponse.Installed;
         }
@@ -60,7 +59,7 @@ abstract class BaseInstaller {
             .then(isInstalled => isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore);
     }
 
-    public async isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined> {
+    public async isInstalled(product: Product, resource?: vscode.Uri): Promise<boolean | undefined> {
         if (product === Product.unittest) {
             return true;
         }
@@ -85,22 +84,22 @@ abstract class BaseInstaller {
         }
     }
 
-    protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
+    protected getExecutableNameFromSettings(product: Product, resource?: vscode.Uri): string {
         throw new Error('getExecutableNameFromSettings is not supported on this object');
     }
 }
 
 class CTagsInstaller extends BaseInstaller {
-    constructor(serviceContainer: IServiceContainer, outputChannel: OutputChannel) {
+    constructor(serviceContainer: IServiceContainer, outputChannel: vscode.OutputChannel) {
         super(serviceContainer, outputChannel);
     }
 
-    public async promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         const item = await this.appShell.showErrorMessage('Install CTags to enable Python workspace symbols?', 'Yes', 'No');
         return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
 
-    public async install(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async install(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
             this.outputChannel.appendLine('Install Universal Ctags Win32 to enable support for Workspace Symbols');
             this.outputChannel.appendLine('Download the CTags binary from the Universal CTags site.');
@@ -117,32 +116,21 @@ class CTagsInstaller extends BaseInstaller {
         return InstallerResponse.Ignore;
     }
 
-    protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
+    protected getExecutableNameFromSettings(product: Product, resource?: vscode.Uri): string {
         const settings = this.configService.getSettings(resource);
         return settings.workspaceSymbols.ctagsPath;
     }
 }
 
 class FormatterInstaller extends BaseInstaller {
-    public async promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
 
-        const installThis = `Install ${productName}`;
-        const alternateFormatter = product === Product.autopep8 ? 'yapf' : 'autopep8';
-        const useOtherFormatter = `Use '${alternateFormatter}' formatter`;
-        const item = await this.appShell.showErrorMessage(`Formatter ${productName} is not installed.`, installThis, useOtherFormatter);
-
-        if (item === installThis) {
-            return this.install(product, resource);
-        }
-        if (item === useOtherFormatter) {
-            await this.configService.updateSettingAsync('formatting.provider', alternateFormatter, resource);
-            return InstallerResponse.Installed;
-        }
-        return InstallerResponse.Ignore;
+        const item = await this.appShell.showErrorMessage(`Formatter ${productName} is not installed. Install?`, 'Yes', 'No');
+        return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
 
-    protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
+    protected getExecutableNameFromSettings(product: Product, resource?: vscode.Uri): string {
         const settings = this.configService.getSettings(resource);
         const formatHelper = this.serviceContainer.get<IFormatterHelper>(IFormatterHelper);
         const settingsPropNames = formatHelper.getSettingsPropertyNames(product);
@@ -152,7 +140,7 @@ class FormatterInstaller extends BaseInstaller {
 
 // tslint:disable-next-line:max-classes-per-file
 class LinterInstaller extends BaseInstaller {
-    public async promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const install = 'Install';
         const disableAllLinting = 'Disable linting';
@@ -173,7 +161,7 @@ class LinterInstaller extends BaseInstaller {
         }
         return InstallerResponse.Ignore;
     }
-    protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
+    protected getExecutableNameFromSettings(product: Product, resource?: vscode.Uri): string {
         const linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
         return linterManager.getLinterInfo(product).pathName(resource);
     }
@@ -181,13 +169,13 @@ class LinterInstaller extends BaseInstaller {
 
 // tslint:disable-next-line:max-classes-per-file
 class TestFrameworkInstaller extends BaseInstaller {
-    public async promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(`Test framework ${productName} is not installed. Install?`, 'Yes', 'No');
         return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
 
-    protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
+    protected getExecutableNameFromSettings(product: Product, resource?: vscode.Uri): string {
         const testHelper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
         const settingsPropNames = testHelper.getSettingsPropertyNames(product);
         if (!settingsPropNames.pathName) {
@@ -201,12 +189,12 @@ class TestFrameworkInstaller extends BaseInstaller {
 
 // tslint:disable-next-line:max-classes-per-file
 class RefactoringLibraryInstaller extends BaseInstaller {
-    public async promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(`Refactoring library ${productName} is not installed. Install?`, 'Yes', 'No');
         return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
-    protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
+    protected getExecutableNameFromSettings(product: Product, resource?: vscode.Uri): string {
         return translateProductToModule(product, ModuleNamePurpose.run);
     }
 }
@@ -230,19 +218,20 @@ export class ProductInstaller implements IInstaller {
         this.ProductTypes.set(Product.pytest, ProductType.TestFramework);
         this.ProductTypes.set(Product.unittest, ProductType.TestFramework);
         this.ProductTypes.set(Product.autopep8, ProductType.Formatter);
+        this.ProductTypes.set(Product.black, ProductType.Formatter);
         this.ProductTypes.set(Product.yapf, ProductType.Formatter);
         this.ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
     }
 
     // tslint:disable-next-line:no-empty
     public dispose() { }
-    public async promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         return this.createInstaller(product).promptToInstall(product, resource);
     }
-    public async install(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async install(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         return this.createInstaller(product).install(product, resource);
     }
-    public async isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined> {
+    public async isInstalled(product: Product, resource?: vscode.Uri): Promise<boolean | undefined> {
         return this.createInstaller(product).isInstalled(product, resource);
     }
     public translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string {
@@ -280,6 +269,7 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
         case Product.pylint: return 'pylint';
         case Product.pytest: return 'pytest';
         case Product.autopep8: return 'autopep8';
+        case Product.black: return 'black';
         case Product.pep8: return 'pep8';
         case Product.pydocstyle: return 'pydocstyle';
         case Product.yapf: return 'yapf';

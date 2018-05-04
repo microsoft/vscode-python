@@ -34,12 +34,12 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     public venvFolders: string[] = [];
     public devOptions: string[] = [];
     public linting?: ILintingSettings;
-    public formatting?: IFormattingSettings;
+    public formatting!: IFormattingSettings;
     public autoComplete?: IAutoCompleteSettings;
-    public unitTest?: IUnitTestSettings;
+    public unitTest!: IUnitTestSettings;
     public terminal!: ITerminalSettings;
     public sortImports?: ISortImportSettings;
-    public workspaceSymbols?: IWorkspaceSymbolSettings;
+    public workspaceSymbols!: IWorkspaceSymbolSettings;
     public disableInstallationChecks = false;
     public globalModuleInstallation = false;
 
@@ -213,6 +213,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.formatting = this.formatting ? this.formatting : {
             autopep8Args: [], autopep8Path: 'autopep8',
             provider: 'autopep8',
+            blackArgs: [], blackPath: 'black',
             yapfArgs: [], yapfPath: 'yapf'
         };
         this.formatting.autopep8Path = getAbsolutePath(systemVariables.resolveAny(this.formatting.autopep8Path), workspaceRoot);
