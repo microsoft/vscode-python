@@ -1,7 +1,7 @@
 import { inject, injectable, named, optional } from 'inversify';
 import * as path from 'path';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import { IProcessService } from '../../../common/process/types';
+import { IProcessServiceFactory } from '../../../common/process/types';
 import { ILogger, IPersistentStateFactory } from '../../../common/types';
 import { VersionUtils } from '../../../common/versionUtils';
 import { IServiceContainer } from '../../../ioc/types';
@@ -17,9 +17,9 @@ export const KNOWN_CONDA_LOCATIONS = ['~/anaconda/bin/conda', '~/miniconda/bin/c
 
 @injectable()
 export class CondaService implements ICondaService {
-    private condaFile: Promise<string | undefined>;
+    private condaFile!: Promise<string | undefined>;
     private isAvailable: boolean | undefined;
-    private readonly processService: IProcessService;
+    private readonly processServiceFactory: IProcessServiceFactory;
     private readonly platform: IPlatformService;
     private readonly logger: ILogger;
     private readonly fileSystem: IFileSystem;
@@ -30,7 +30,7 @@ export class CondaService implements ICondaService {
     }
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IInterpreterLocatorService) @named(WINDOWS_REGISTRY_SERVICE) @optional() private registryLookupForConda?: IInterpreterLocatorService) {
-        this.processService = this.serviceContainer.get<IProcessService>(IProcessService);
+        this.processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         this.logger = this.serviceContainer.get<ILogger>(ILogger);
         this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
@@ -54,20 +54,23 @@ export class CondaService implements ICondaService {
             .catch(() => this.isAvailable = false);
     }
     public async getCondaVersion(): Promise<string | undefined> {
+        const processService = await this.processServiceFactory.create();
         return this.getCondaFile()
-            .then(condaFile => this.processService.exec(condaFile, ['--version'], {}))
+            .then(condaFile => processService.exec(condaFile, ['--version'], {}))
             .then(result => result.stdout.trim())
             .catch(() => undefined);
     }
     public async isCondaInCurrentPath() {
-        return this.processService.exec('conda', ['--version'])
+        const processService = await this.processServiceFactory.create();
+        return processService.exec('conda', ['--version'])
             .then(output => output.stdout.length > 0)
             .catch(() => false);
     }
     public async getCondaInfo(): Promise<CondaInfo | undefined> {
         try {
             const condaFile = await this.getCondaFile();
-            const condaInfo = await this.processService.exec(condaFile, ['info', '--json']).then(output => output.stdout);
+            const processService = await this.processServiceFactory.create();
+            const condaInfo = await processService.exec(condaFile, ['info', '--json']).then(output => output.stdout);
 
             return JSON.parse(condaInfo) as CondaInfo;
         } catch (ex) {
@@ -129,7 +132,8 @@ export class CondaService implements ICondaService {
 
         try {
             const condaFile = await this.getCondaFile();
-            const envInfo = await this.processService.exec(condaFile, ['env', 'list']).then(output => output.stdout);
+            const processService = await this.processServiceFactory.create();
+            const envInfo = await processService.exec(condaFile, ['env', 'list']).then(output => output.stdout);
             const environments = this.condaHelper.parseCondaEnvironmentNames(envInfo);
             await globalPersistence.updateValue({ data: environments });
             return environments;

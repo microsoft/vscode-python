@@ -40,6 +40,7 @@ import { IServiceContainer } from './ioc/types';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ILintingEngine } from './linters/types';
+import { DocStringFoldingProvider } from './providers/docStringFoldingProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { LinterProvider } from './providers/linterProvider';
 import { ReplProvider } from './providers/replProvider';
@@ -135,6 +136,7 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
     context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
+    context.subscriptions.push(languages.registerFoldingRangeProvider(PYTHON, new DocStringFoldingProvider()));
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtension);

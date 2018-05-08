@@ -259,7 +259,7 @@ export class PythonProcessCallbackHandler extends EventEmitter {
             return;
         }
 
-        if (typeName && desc) {
+        if (typeName || desc) {
             let ex: IPythonException = {
                 TypeName: typeName,
                 Description: desc

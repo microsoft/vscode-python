@@ -2,8 +2,7 @@
 
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { Uri } from 'vscode';
+import { Disposable, Position, Range, TextDocument, TextEditorOptions, Uri, window } from 'vscode';
 import '../common/extensions';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IPythonExecutionFactory } from '../common/process/types';
@@ -11,15 +10,15 @@ import { IPythonSettings } from '../common/types';
 import { getWindowsLineEndingCount, IS_WINDOWS } from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
 
-export class RefactorProxy extends vscode.Disposable {
+export class RefactorProxy extends Disposable {
     private _process?: ChildProcess;
     private _extensionDir: string;
     private _previousOutData: string = '';
     private _previousStdErrData: string = '';
     private _startedSuccessfully: boolean = false;
     private _commandResolve?: (value?: any | PromiseLike<any>) => void;
-    private _commandReject: (reason?: any) => void;
-    private initialized: Deferred<void>;
+    private _commandReject!: (reason?: any) => void;
+    private initialized!: Deferred<void>;
     constructor(extensionDir: string, private pythonSettings: IPythonSettings, private workspaceRoot: string,
         private serviceContainer: IServiceContainer) {
         super(() => { });
@@ -33,7 +32,7 @@ export class RefactorProxy extends vscode.Disposable {
         }
         this._process = undefined;
     }
-    private getOffsetAt(document: vscode.TextDocument, position: vscode.Position): number {
+    private getOffsetAt(document: TextDocument, position: Position): number {
         if (!IS_WINDOWS) {
             return document.offsetAt(position);
         }
@@ -47,9 +46,9 @@ export class RefactorProxy extends vscode.Disposable {
 
         return offset - winEols;
     }
-    public rename<T>(document: vscode.TextDocument, name: string, filePath: string, range: vscode.Range, options?: vscode.TextEditorOptions): Promise<T> {
+    public rename<T>(document: TextDocument, name: string, filePath: string, range: Range, options?: TextEditorOptions): Promise<T> {
         if (!options) {
-            options = vscode.window.activeTextEditor!.options;
+            options = window.activeTextEditor!.options;
         }
         const command = {
             lookup: 'rename',
@@ -62,9 +61,9 @@ export class RefactorProxy extends vscode.Disposable {
 
         return this.sendCommand<T>(JSON.stringify(command));
     }
-    public extractVariable<T>(document: vscode.TextDocument, name: string, filePath: string, range: vscode.Range, options?: vscode.TextEditorOptions): Promise<T> {
+    public extractVariable<T>(document: TextDocument, name: string, filePath: string, range: Range, options?: TextEditorOptions): Promise<T> {
         if (!options) {
-            options = vscode.window.activeTextEditor!.options;
+            options = window.activeTextEditor!.options;
         }
         const command = {
             lookup: 'extract_variable',
@@ -77,9 +76,9 @@ export class RefactorProxy extends vscode.Disposable {
         };
         return this.sendCommand<T>(JSON.stringify(command));
     }
-    public extractMethod<T>(document: vscode.TextDocument, name: string, filePath: string, range: vscode.Range, options?: vscode.TextEditorOptions): Promise<T> {
+    public extractMethod<T>(document: TextDocument, name: string, filePath: string, range: Range, options?: TextEditorOptions): Promise<T> {
         if (!options) {
-            options = vscode.window.activeTextEditor!.options;
+            options = window.activeTextEditor!.options;
         }
         // Ensure last line is an empty line
         if (!document.lineAt(document.lineCount - 1).isEmptyOrWhitespace && range.start.line === document.lineCount - 1) {
@@ -131,7 +130,7 @@ export class RefactorProxy extends vscode.Disposable {
         // Possible there was an exception in parsing the data returned
         // So append the data then parse it
         let dataStr = this._previousStdErrData = this._previousStdErrData + data + '';
-        let errorResponse: { message: string, traceback: string, type: string }[];
+        let errorResponse: { message: string; traceback: string; type: string }[];
         try {
             errorResponse = dataStr.split(/\r?\n/g).filter(line => line.length > 0).map(resp => JSON.parse(resp));
             this._previousStdErrData = '';

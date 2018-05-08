@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable:no-any
+
 import { expect } from 'chai';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
-import { IBufferDecoder, IProcessService } from '../../client/common/process/types';
+import { IBufferDecoder, IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -15,7 +17,6 @@ import { PYTHON_PATH } from '../common';
 suite('Virtual environment manager', () => {
   let serviceManager: ServiceManager;
   let serviceContainer: ServiceContainer;
-  let process: TypeMoq.IMock<IProcessService>;
 
   setup(async () => {
     const cont = new Container();
@@ -28,7 +29,9 @@ suite('Virtual environment manager', () => {
   test('Virtualenv Python environment suffix', async () => testSuffix('virtualenv'));
 
   test('Run actual virtual env detection code', async () => {
-    serviceManager.addSingleton<IProcessService>(IProcessService, ProcessService);
+    const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+    processServiceFactory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(new ProcessService(new BufferDecoder(), process.env as any)));
+    serviceManager.addSingletonInstance<IProcessServiceFactory>(IProcessServiceFactory, processServiceFactory.object);
     serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
     const venvManager = new VirtualEnvironmentManager(serviceContainer);
     const name = await venvManager.getEnvironmentName(PYTHON_PATH);
@@ -37,11 +40,14 @@ suite('Virtual environment manager', () => {
   });
 
   async function testSuffix(expectedName: string) {
-    process = TypeMoq.Mock.ofType<IProcessService>();
-    serviceManager.addSingletonInstance<IProcessService>(IProcessService, process.object);
+    const processService = TypeMoq.Mock.ofType<IProcessService>();
+    const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+    processService.setup((x: any) => x.then).returns(() => undefined);
+    processServiceFactory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
+    serviceManager.addSingletonInstance<IProcessServiceFactory>(IProcessServiceFactory, processServiceFactory.object);
 
     const venvManager = new VirtualEnvironmentManager(serviceContainer);
-    process
+    processService
       .setup(x => x.exec(PYTHON_PATH, TypeMoq.It.isAny()))
       .returns(() => Promise.resolve({
         stdout: expectedName,

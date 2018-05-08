@@ -62,7 +62,8 @@ export enum Product {
     unittest = 12,
     ctags = 13,
     rope = 14,
-    isort = 15
+    isort = 15,
+    black = 16
 }
 
 export enum ModuleNamePurpose {
@@ -103,15 +104,14 @@ export interface IPythonSettings {
     readonly jediPath: string;
     readonly jediMemoryLimit: number;
     readonly devOptions: string[];
-    readonly linting?: ILintingSettings;
-    readonly formatting?: IFormattingSettings;
-    readonly unitTest?: IUnitTestSettings;
-    readonly autoComplete?: IAutoCompleteSettings;
+    readonly linting: ILintingSettings;
+    readonly formatting: IFormattingSettings;
+    readonly unitTest: IUnitTestSettings;
+    readonly autoComplete: IAutoCompleteSettings;
     readonly terminal: ITerminalSettings;
-    readonly sortImports?: ISortImportSettings;
-    readonly workspaceSymbols?: IWorkspaceSymbolSettings;
+    readonly sortImports: ISortImportSettings;
+    readonly workspaceSymbols: IWorkspaceSymbolSettings;
     readonly envFile: string;
-    readonly disablePromptForFeatures: string[];
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
 }
@@ -123,7 +123,6 @@ export interface ISortImportSettings {
 export interface IUnitTestSettings {
     readonly promptToConfigure: boolean;
     readonly debugPort: number;
-    readonly debugHost?: string;
     readonly nosetestsEnabled: boolean;
     nosetestPath: string;
     nosetestArgs: string[];
@@ -192,6 +191,8 @@ export interface IFormattingSettings {
     readonly provider: string;
     autopep8Path: string;
     readonly autopep8Args: string[];
+    blackPath: string;
+    readonly blackArgs: string[];
     yapfPath: string;
     readonly yapfArgs: string[];
 }

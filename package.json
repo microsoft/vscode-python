@@ -40,7 +40,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.18.0"
+        "vscode": "^1.23.0"
     },
     "recommendations": [
         "donjayamanne.jupyter"
@@ -84,7 +84,8 @@
         "onCommand:python.goToPythonObject",
         "onCommand:python.setLinter",
         "onCommand:python.enableLinting",
-        "onCommand:python.createTerminal"
+        "onCommand:python.createTerminal",
+        "onCommand:python.discoverTests"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -185,6 +186,11 @@
             {
                 "command": "python.runFailedTests",
                 "title": "%python.command.python.runFailedTests.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.discoverTests",
+                "title": "%python.command.python.discoverTests.title%",
                 "category": "Python"
             },
             {
@@ -747,7 +753,8 @@
                 "enableBreakpointsFor": {
                     "languageIds": [
                         "python",
-                        "html"
+                        "html",
+                        "jinja"
                     ]
                 },
                 "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
@@ -1156,26 +1163,6 @@
                     "description": "Whether to check if Python is installed (also warn when using the macOS-installed Python).",
                     "scope": "resource"
                 },
-                "python.disablePromptForFeatures": {
-                    "type": "array",
-                    "default": [],
-                    "description": "Do not display a prompt to install these features",
-                    "items": {
-                        "type": "string",
-                        "default": "pylint",
-                        "description": "Feature",
-                        "enum": [
-                            "flake8",
-                            "mypy",
-                            "pep8",
-                            "pylama",
-                            "prospector",
-                            "pydocstyle",
-                            "pylint"
-                        ]
-                    },
-                    "scope": "resource"
-                },
                 "python.envFile": {
                     "type": "string",
                     "description": "Absolute path to a file containing environment variable definitions.",
@@ -1200,12 +1187,28 @@
                 "python.formatting.provider": {
                     "type": "string",
                     "default": "autopep8",
-                    "description": "Provider for formatting. Possible options include 'autopep8' and 'yapf'.",
+                    "description": "Provider for formatting. Possible options include 'autopep8', 'black', and 'yapf'.",
                     "enum": [
                         "autopep8",
+                        "black",
                         "yapf",
                         "none"
                     ],
+                    "scope": "resource"
+                },
+                "python.formatting.blackArgs": {
+                    "type": "array",
+                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "scope": "resource"
+                },
+                "python.formatting.blackPath": {
+                    "type": "string",
+                    "default": "black",
+                    "description": "Path to Black, you can use a custom version of Black by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
                 "python.formatting.yapfArgs": {
@@ -1628,12 +1631,6 @@
                     "description": "Optional working directory for unit tests.",
                     "scope": "resource"
                 },
-                "python.unitTest.debugHost": {
-                    "type": "number",
-                    "default": "localhost",
-                    "description": "IP Address of the of the local unit test server (default is localhost or use 127.0.0.1).",
-                    "scope": "resource"
-                },
                 "python.unitTest.debugPort": {
                     "type": "number",
                     "default": 3000,
@@ -1769,7 +1766,6 @@
                     "description": "Whether to re-build the tags file on start (defaults to true).",
                     "scope": "resource"
                 },
-
                 "python.workspaceSymbols.tagFilePath": {
                     "type": "string",
                     "default": "${workspaceFolder}/.vscode/tags",
@@ -1801,6 +1797,16 @@
                 "id": "yaml",
                 "filenames": [
                     ".condarc"
+                ]
+            },
+            {
+                "id": "jinja",
+                "extensions": [
+                    ".jinja2",
+                    ".j2"
+                ],
+                "aliases": [
+                    "Jinja"
                 ]
             }
         ],

@@ -4,7 +4,7 @@
 import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import '../../client/common/extensions';
-import { IProcessService } from '../../client/common/process/types';
+import { IProcessServiceFactory } from '../../client/common/process/types';
 import { IInterpreterVersionService } from '../../client/interpreter/contracts';
 import { PIP_VERSION_REGEX } from '../../client/interpreter/interpreterVersion';
 import { PYTHON_PATH } from '../common';
@@ -31,7 +31,7 @@ suite('Interpreters display version', () => {
     }
 
     test('Must return the Python Version', async () => {
-        const pythonProcess = ioc.serviceContainer.get<IProcessService>(IProcessService);
+        const pythonProcess = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
         const output = await pythonProcess.exec(PYTHON_PATH, ['--version'], { cwd: __dirname, mergeStdOutErr: true });
         const version = output.stdout.splitLines()[0];
         const interpreterVersion = ioc.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
@@ -44,7 +44,7 @@ suite('Interpreters display version', () => {
         assert.equal(pyVersion, 'DEFAULT_TEST_VALUE', 'Incorrect version');
     });
     test('Must return the pip Version', async () => {
-        const pythonProcess = ioc.serviceContainer.get<IProcessService>(IProcessService);
+        const pythonProcess = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
         const result = await pythonProcess.exec(PYTHON_PATH, ['-m', 'pip', '--version'], { cwd: __dirname, mergeStdOutErr: true });
         const output = result.stdout.splitLines()[0];
         // Take the second part, see below example.

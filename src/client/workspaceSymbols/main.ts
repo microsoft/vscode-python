@@ -1,8 +1,7 @@
-import * as vscode from 'vscode';
-import { OutputChannel, workspace } from 'vscode';
+import { CancellationToken, commands, Disposable, languages, OutputChannel, workspace } from 'vscode';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
-import { IProcessService } from '../common/process/types';
+import { IProcessServiceFactory } from '../common/process/types';
 import { IInstaller, InstallerResponse, IOutputChannel, Product } from '../common/types';
 import { fsExistsAsync } from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
@@ -11,20 +10,18 @@ import { WorkspaceSymbolProvider } from './provider';
 
 const MAX_NUMBER_OF_ATTEMPTS_TO_INSTALL_AND_BUILD = 2;
 
-export class WorkspaceSymbols implements vscode.Disposable {
-    private disposables: vscode.Disposable[];
+export class WorkspaceSymbols implements Disposable {
+    private disposables: Disposable[];
     private generators: Generator[] = [];
     private readonly outputChannel: OutputChannel;
-    // tslint:disable-next-line:no-any
-    private timeout: any;
     constructor(private serviceContainer: IServiceContainer) {
         this.outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.disposables = [];
         this.disposables.push(this.outputChannel);
         this.registerCommands();
         this.initializeGenerators();
-        vscode.languages.registerWorkspaceSymbolProvider(new WorkspaceSymbolProvider(this.generators, this.outputChannel));
-        this.disposables.push(vscode.workspace.onDidChangeWorkspaceFolders(() => this.initializeGenerators()));
+        languages.registerWorkspaceSymbolProvider(new WorkspaceSymbolProvider(this.generators, this.outputChannel));
+        this.disposables.push(workspace.onDidChangeWorkspaceFolders(() => this.initializeGenerators()));
     }
     public dispose() {
         this.disposables.forEach(d => d.dispose());
@@ -35,21 +32,21 @@ export class WorkspaceSymbols implements vscode.Disposable {
             generator.dispose();
         }
 
-        if (Array.isArray(vscode.workspace.workspaceFolders)) {
-            vscode.workspace.workspaceFolders.forEach(wkSpc => {
-                const processService = this.serviceContainer.get<IProcessService>(IProcessService);
-                this.generators.push(new Generator(wkSpc.uri, this.outputChannel, processService));
+        if (Array.isArray(workspace.workspaceFolders)) {
+            workspace.workspaceFolders.forEach(wkSpc => {
+                const processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+                this.generators.push(new Generator(wkSpc.uri, this.outputChannel, processServiceFactory));
             });
         }
     }
     private registerCommands() {
-        this.disposables.push(vscode.commands.registerCommand(Commands.Build_Workspace_Symbols, async (rebuild: boolean = true, token?: vscode.CancellationToken) => {
+        this.disposables.push(commands.registerCommand(Commands.Build_Workspace_Symbols, async (rebuild: boolean = true, token?: CancellationToken) => {
             const promises = this.buildWorkspaceSymbols(rebuild, token);
             return Promise.all(promises);
         }));
     }
     // tslint:disable-next-line:no-any
-    private buildWorkspaceSymbols(rebuild: boolean = true, token?: vscode.CancellationToken): Promise<any>[] {
+    private buildWorkspaceSymbols(rebuild: boolean = true, token?: CancellationToken): Promise<any>[] {
         if (token && token.isCancellationRequested) {
             return [];
         }

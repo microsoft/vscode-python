@@ -16,7 +16,7 @@ import { PathUtils } from '../../client/common/platform/pathUtils';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { Architecture, IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
-import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
+import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../client/common/terminal/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IPythonSettings, IsWindows } from '../../client/common/types';
 import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PIPENV_SERVICE, PythonInterpreter } from '../../client/interpreter/contracts';
@@ -104,7 +104,7 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
 
-        const processService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         processService.onExec((file, args, options, callback) => {
             if (args.length > 1 && args[0] === '-c' && args[1] === 'import pip') {
                 callback({ stdout: '' });
@@ -137,7 +137,7 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
 
-        const processService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         processService.onExec((file, args, options, callback) => {
             if (args.length > 1 && args[0] === '-c' && args[1] === 'import pip') {
                 callback({ stdout: '' });

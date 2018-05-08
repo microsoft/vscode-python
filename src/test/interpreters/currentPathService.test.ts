@@ -3,17 +3,18 @@
 
 'use strict';
 
+// tslint:disable:max-func-body-length no-any
+
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IProcessService } from '../../client/common/process/types';
+import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { IConfigurationService, IPersistentState, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
 import { IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CurrentPathService } from '../../client/interpreter/locators/services/currentPathService';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Interpreters CurrentPath Service', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
@@ -32,21 +33,22 @@ suite('Interpreters CurrentPath Service', () => {
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         const persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
         persistentState = TypeMoq.Mock.ofType<IPersistentState<PythonInterpreter[]>>();
-        // tslint:disable-next-line:no-any
+        processService.setup((x: any) => x.then).returns(() => undefined);
         persistentState.setup(p => p.value).returns(() => undefined as any);
         persistentState.setup(p => p.updateValue(TypeMoq.It.isAny())).returns(() => Promise.resolve());
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         persistentStateFactory.setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => persistentState.object);
+        const procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+        procServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
 
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessService), TypeMoq.It.isAny())).returns(() => processService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IVirtualEnvironmentManager), TypeMoq.It.isAny())).returns(() => virtualEnvironmentManager.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterVersionService), TypeMoq.It.isAny())).returns(() => interpreterVersionService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny())).returns(() => persistentStateFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configurationService.object);
 
-        currentPathService = new CurrentPathService(virtualEnvironmentManager.object, interpreterVersionService.object, processService.object, serviceContainer.object);
+        currentPathService = new CurrentPathService(virtualEnvironmentManager.object, interpreterVersionService.object, procServiceFactory.object, serviceContainer.object);
     });
 
     test('Interpreters that do not exist on the file system are not excluded from the list', async () => {

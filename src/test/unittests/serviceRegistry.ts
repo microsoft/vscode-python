@@ -13,6 +13,7 @@ import { TestFlatteningVisitor } from '../../client/unittests/common/testVisitor
 import { TestFolderGenerationVisitor } from '../../client/unittests/common/testVisitors/folderGenerationVisitor';
 import { TestResultResetVisitor } from '../../client/unittests/common/testVisitors/resultResetVisitor';
 import { ITestResultsService, ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, TestProvider } from '../../client/unittests/common/types';
+// tslint:disable-next-line:no-duplicate-imports
 import { ITestCollectionStorageService, ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory } from '../../client/unittests/common/types';
 import { TestManager as NoseTestManager } from '../../client/unittests/nosetest/main';
 import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/unittests/nosetest/services/discoveryService';

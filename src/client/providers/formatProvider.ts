@@ -8,6 +8,7 @@ import { IConfigurationService } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { AutoPep8Formatter } from './../formatters/autoPep8Formatter';
 import { BaseFormatter } from './../formatters/baseFormatter';
+import { BlackFormatter } from './../formatters/blackFormatter';
 import { DummyFormatter } from './../formatters/dummyFormatter';
 import { YapfFormatter } from './../formatters/yapfFormatter';
 
@@ -27,8 +28,10 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
     public constructor(context: vscode.ExtensionContext, serviceContainer: IServiceContainer) {
         const yapfFormatter = new YapfFormatter(serviceContainer);
         const autoPep8 = new AutoPep8Formatter(serviceContainer);
+        const black = new BlackFormatter(serviceContainer);
         const dummy = new DummyFormatter(serviceContainer);
         this.formatters.set(yapfFormatter.Id, yapfFormatter);
+        this.formatters.set(black.Id, black);
         this.formatters.set(autoPep8.Id, autoPep8);
         this.formatters.set(dummy.Id, dummy);
 
@@ -36,7 +39,7 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.config = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.disposables.push(this.documentManager.onDidSaveTextDocument(async document => await this.onSaveDocument(document)));
+        this.disposables.push(this.documentManager.onDidSaveTextDocument(async document => this.onSaveDocument(document)));
     }
 
     public dispose() {

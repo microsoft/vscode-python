@@ -7,7 +7,7 @@ export type EditorLoadTelemetry = {
     condaVersion: string;
 };
 export type FormatTelemetry = {
-    tool: 'autopep8' | 'yapf';
+    tool: 'autopep8' | 'black' | 'yapf';
     hasCustomArgs: boolean;
     formatSelection: boolean;
 };

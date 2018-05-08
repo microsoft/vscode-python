@@ -6,7 +6,7 @@ import { Container } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, OutputChannel, TextDocument, Uri, WorkspaceFolder } from 'vscode';
+import { CancellationTokenSource, DiagnosticSeverity, OutputChannel, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IPythonToolExecutionService } from '../../client/common/process/types';
@@ -19,7 +19,7 @@ import { ILinterManager } from '../../client/linters/types';
 import { MockLintingSettings } from '../mockClasses';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Linting - Pylintrc search', () => {
+suite('Linting - Pylint', () => {
     const basePath = '/user/a/b/c/d';
     const pylintrc = 'pylintrc';
     const dotPylintrc = '.pylintrc';
@@ -199,4 +199,47 @@ suite('Linting - Pylintrc search', () => {
         expect(execInfo!.args.findIndex(x => x.indexOf('--disable=all') >= 0),
             'Minimal args passed to pylint while pylintrc exists.').to.be.eq(expectedMinArgs ? 0 : -1);
     }
+    test('Negative column numbers should be treated 0', async () => {
+        const fileFolder = '/user/a/b/c';
+        const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
+        const pylinter = new Pylint(outputChannel.object, serviceContainer);
+
+        const document = TypeMoq.Mock.ofType<TextDocument>();
+        document.setup(x => x.uri).returns(() => Uri.file(path.join(fileFolder, 'test.py')));
+
+        const wsf = TypeMoq.Mock.ofType<WorkspaceFolder>();
+        wsf.setup(x => x.uri).returns(() => Uri.file(fileFolder));
+
+        workspace.setup(x => x.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => wsf.object);
+
+        const linterOutput = ['No config file found, using default configuration',
+            '************* Module test',
+            '1,1,convention,C0111:Missing module docstring',
+            '3,-1,error,E1305:Too many arguments for format string'].join(os.EOL);
+        execService
+            .setup(x => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: linterOutput, stderr: '' }));
+
+        const lintSettings = new MockLintingSettings();
+        lintSettings.pylintUseMinimalCheckers = false;
+        lintSettings.maxNumberOfProblems = 1000;
+        lintSettings.pylintPath = 'pyLint';
+        lintSettings.pylintEnabled = true;
+        lintSettings.pylintCategorySeverity = {
+            convention: DiagnosticSeverity.Hint,
+            error: DiagnosticSeverity.Error,
+            fatal: DiagnosticSeverity.Error,
+            refactor: DiagnosticSeverity.Hint,
+            warning: DiagnosticSeverity.Warning
+        };
+
+        const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+        settings.setup(x => x.linting).returns(() => lintSettings);
+        config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+
+        const messages = await pylinter.lint(document.object, new CancellationTokenSource().token);
+        expect(messages).to.be.lengthOf(2);
+        expect(messages[0].column).to.be.equal(1);
+        expect(messages[1].column).to.be.equal(0);
+    });
 });

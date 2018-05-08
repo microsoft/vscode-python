@@ -3,14 +3,19 @@ import * as path from 'path';
 import { TextDocument, TextEdit } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { getTempFileWithDocumentContents, getTextEditsFromPatch } from '../common/editor';
-import { ExecutionResult, IProcessService, IPythonExecutionFactory } from '../common/process/types';
+import { ExecutionResult, IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
+import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
 import { FORMAT_SORT_IMPORTS } from '../telemetry/constants';
 
 // tslint:disable-next-line:completed-docs
 export class PythonImportSortProvider {
-    constructor(private pythonExecutionFactory: IPythonExecutionFactory,
-        private processService: IProcessService) { }
+    private readonly processServiceFactory: IProcessServiceFactory;
+    private readonly pythonExecutionFactory: IPythonExecutionFactory;
+    constructor(serviceContainer: IServiceContainer) {
+        this.pythonExecutionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+    }
     @captureTelemetry(FORMAT_SORT_IMPORTS)
     public async sortImports(extensionDir: string, document: TextDocument): Promise<TextEdit[]> {
         if (document.lineCount === 1) {
@@ -30,7 +35,8 @@ export class PythonImportSortProvider {
 
         if (typeof isort === 'string' && isort.length > 0) {
             // Lets just treat this as a standard tool.
-            promise = this.processService.exec(isort, args, { throwOnStdErr: true });
+            const processService = await this.processServiceFactory.create(document.uri);
+            promise = processService.exec(isort, args, { throwOnStdErr: true });
         } else {
             promise = this.pythonExecutionFactory.create(document.uri)
                 .then(executionService => executionService.exec([importScript].concat(args), { throwOnStdErr: true }));

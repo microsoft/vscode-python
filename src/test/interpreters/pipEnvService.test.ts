@@ -12,7 +12,7 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { EnumEx } from '../../client/common/enumUtils';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IProcessService } from '../../client/common/process/types';
+import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { ICurrentProcess, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterLocatorService, IInterpreterVersionService } from '../../client/interpreter/contracts';
@@ -38,6 +38,7 @@ suite('Interpreters - PipEnv', () => {
             let appShell: TypeMoq.IMock<IApplicationShell>;
             let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
             let envVarsProvider: TypeMoq.IMock<IEnvironmentVariablesProvider>;
+            let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -48,6 +49,9 @@ suite('Interpreters - PipEnv', () => {
                 currentProcess = TypeMoq.Mock.ofType<ICurrentProcess>();
                 persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
                 envVarsProvider = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>();
+                procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+                processService.setup((x: any) => x.then).returns(() => undefined);
+                procServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
 
                 // tslint:disable-next-line:no-any
                 const persistentState = TypeMoq.Mock.ofType<IPersistentState<any>>();
@@ -61,9 +65,9 @@ suite('Interpreters - PipEnv', () => {
                 workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
                 workspaceService.setup(w => w.rootPath).returns(() => rootWorkspace);
 
+                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory), TypeMoq.It.isAny())).returns(() => procServiceFactory.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterVersionService))).returns(() => interpreterVersionService.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessService))).returns(() => processService.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => currentProcess.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
@@ -101,7 +105,6 @@ suite('Interpreters - PipEnv', () => {
             });
             test(`Should display warning message if there is a \'PipFile\' but \'pipenv --venv\' failes with stderr ${testSuffix}`, async () => {
                 const env = {};
-                envVarsProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({})).verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
                 processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stderr: 'PipEnv Failed', stdout: '' }));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
@@ -109,13 +112,11 @@ suite('Interpreters - PipEnv', () => {
                 const environments = await pipEnvService.getInterpreters(resource);
 
                 expect(environments).to.be.deep.equal([]);
-                envVarsProvider.verifyAll();
                 appShell.verifyAll();
             });
             test(`Should return interpreter information${testSuffix}`, async () => {
                 const env = {};
                 const venvDir = 'one';
-                envVarsProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({})).verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
                 processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: venvDir }));
                 interpreterVersionService.setup(v => v.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('xyz'));
@@ -125,7 +126,6 @@ suite('Interpreters - PipEnv', () => {
 
                 expect(environments).to.be.lengthOf(1);
                 fileSystem.verifyAll();
-                envVarsProvider.verifyAll();
             });
             test(`Should return interpreter information using PipFile defined in Env variable${testSuffix}`, async () => {
                 const envPipFile = 'XYZ';
@@ -133,7 +133,6 @@ suite('Interpreters - PipEnv', () => {
                     PIPENV_PIPFILE: envPipFile
                 };
                 const venvDir = 'one';
-                envVarsProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({})).verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
                 processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: venvDir }));
                 interpreterVersionService.setup(v => v.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('xyz'));
@@ -144,7 +143,6 @@ suite('Interpreters - PipEnv', () => {
 
                 expect(environments).to.be.lengthOf(1);
                 fileSystem.verifyAll();
-                envVarsProvider.verifyAll();
             });
         });
     });

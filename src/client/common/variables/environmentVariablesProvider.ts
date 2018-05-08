@@ -14,7 +14,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     private fileWatchers = new Map<string, FileSystemWatcher>();
     private disposables: Disposable[] = [];
     private changeEventEmitter: EventEmitter<Uri | undefined>;
-    constructor( @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
+    constructor(@inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[], @inject(IsWindows) private isWidows: boolean,
         @inject(ICurrentProcess) private process: ICurrentProcess) {
         disposableRegistry.push(this);

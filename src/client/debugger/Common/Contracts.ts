@@ -71,7 +71,7 @@ export interface BaseLaunchRequestArguments extends DebugProtocol.LaunchRequestA
     type?: DebuggerType;
     /** An absolute path to the program to debug. */
     module?: string;
-    program: string;
+    program?: string;
     pythonPath: string;
     /** Automatically stop target after launch. If not specified, target does not stop. */
     stopOnEntry?: boolean;

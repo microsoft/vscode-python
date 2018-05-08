@@ -4,7 +4,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IProcessService } from '../../client/common/process/types';
+import { IProcessServiceFactory } from '../../client/common/process/types';
 import { CommandSource } from '../../client/unittests/common/constants';
 import { ITestManagerFactory } from '../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
@@ -44,8 +44,8 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         ioc.registerMockProcessTypes();
     }
 
-    function injectTestDiscoveryOutput(output: string) {
-        const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+    async function injectTestDiscoveryOutput(output: string) {
+        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         procService.onExecObservable((file, args, options, callback) => {
             if (args.indexOf('--collect-only') >= 0) {
                 callback({
@@ -58,7 +58,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
 
     test('Discover Tests (single test file)', async () => {
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`
+        await injectTestDiscoveryOutput(`
         ============================= test session starts ==============================
         platform darwin -- Python 3.6.2, pytest-3.3.0, py-1.5.2, pluggy-0.6.0
         rootdir: /Users/donjayamanne/.vscode/extensions/pythonVSCode/src/test/pythonFiles/testFiles/single, inifile:
@@ -89,7 +89,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
 
     test('Discover Tests (pattern = test_)', async () => {
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`
+        await injectTestDiscoveryOutput(`
         ============================= test session starts ==============================
         platform darwin -- Python 3.6.2, pytest-3.3.0, py-1.5.2, pluggy-0.6.0
         rootdir: /Users/donjayamanne/.vscode/extensions/pythonVSCode/src/test/pythonFiles/testFiles/standard, inifile:
@@ -172,7 +172,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
 
     test('Discover Tests (pattern = _test)', async () => {
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`
+        await injectTestDiscoveryOutput(`
         ============================= test session starts ==============================
         platform darwin -- Python 3.6.2, pytest-3.3.0, py-1.5.2, pluggy-0.6.0
         rootdir: /Users/donjayamanne/.vscode/extensions/pythonVSCode/src/test/pythonFiles/testFiles/standard, inifile:
@@ -198,7 +198,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
 
     test('Discover Tests (with config)', async () => {
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`
+        await injectTestDiscoveryOutput(`
         ============================= test session starts ==============================
         platform darwin -- Python 3.6.2, pytest-3.3.0, py-1.5.2, pluggy-0.6.0
         rootdir: /Users/donjayamanne/.vscode/extensions/pythonVSCode/src/test/pythonFiles/testFiles/unitestsWithConfigs, inifile: pytest.ini
@@ -243,7 +243,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
 
     test('Setting cwd should return tests', async () => {
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`
+        await injectTestDiscoveryOutput(`
         ============================= test session starts ==============================
         platform darwin -- Python 3.6.2, pytest-3.3.0, py-1.5.2, pluggy-0.6.0
         rootdir: /Users/donjayamanne/.vscode/extensions/pythonVSCode/src/test/pythonFiles/testFiles/cwd/src, inifile:

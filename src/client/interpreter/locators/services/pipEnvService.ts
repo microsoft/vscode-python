@@ -6,7 +6,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IProcessService } from '../../../common/process/types';
+import { IProcessServiceFactory } from '../../../common/process/types';
 import { ICurrentProcess } from '../../../common/types';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 import { getPythonExecutable } from '../../../debugger/Common/Utils';
@@ -20,7 +20,7 @@ const pipEnvFileNameVariable = 'PIPENV_PIPFILE';
 @injectable()
 export class PipEnvService extends CacheableLocatorService {
     private readonly versionService: IInterpreterVersionService;
-    private readonly process: IProcessService;
+    private readonly processServiceFactory: IProcessServiceFactory;
     private readonly workspace: IWorkspaceService;
     private readonly fs: IFileSystem;
     private readonly envVarsProvider: IEnvironmentVariablesProvider;
@@ -28,7 +28,7 @@ export class PipEnvService extends CacheableLocatorService {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('PipEnvService', serviceContainer);
         this.versionService = this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-        this.process = this.serviceContainer.get<IProcessService>(IProcessService);
+        this.processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.envVarsProvider = this.serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
@@ -94,8 +94,8 @@ export class PipEnvService extends CacheableLocatorService {
 
     private async invokePipenv(arg: string, rootPath: string): Promise<string | undefined> {
         try {
-            const env = await this.envVarsProvider.getEnvironmentVariables(Uri.file(rootPath));
-            const result = await this.process.exec(execName, [arg], { cwd: rootPath, env });
+            const processService = await this.processServiceFactory.create(Uri.file(rootPath));
+            const result = await processService.exec(execName, [arg], { cwd: rootPath });
             if (result) {
                 const stdout = result.stdout ? result.stdout.trim() : '';
                 const stderr = result.stderr ? result.stderr.trim() : '';
@@ -109,7 +109,7 @@ export class PipEnvService extends CacheableLocatorService {
             console.error(error);
             const errorMessage = error.message || error;
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            appShell.showWarningMessage(`Workspace contains pipfile but attempt to run 'pipenv --venv' failed with ${errorMessage}. Make sure pipenv is on the PATH.`);
+            appShell.showWarningMessage(`Workspace contains pipfile but attempt to run 'pipenv --venv' failed with '${errorMessage}'. Make sure pipenv is on the PATH.`);
         }
     }
 }

@@ -9,17 +9,14 @@ import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 import { IFileSystem } from '../platform/types';
 import { IConfigurationService } from '../types';
-import { EnvironmentVariables } from '../variables/types';
 import { ExecutionResult, IProcessService, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from './types';
 
 @injectable()
 export class PythonExecutionService implements IPythonExecutionService {
-    private readonly procService: IProcessService;
     private readonly configService: IConfigurationService;
     private readonly fileSystem: IFileSystem;
 
-    constructor(private serviceContainer: IServiceContainer, private envVars: EnvironmentVariables | undefined, private resource?: Uri) {
-        this.procService = serviceContainer.get<IProcessService>(IProcessService);
+    constructor(private serviceContainer: IServiceContainer, private readonly procService: IProcessService, private resource?: Uri) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
     }
@@ -34,40 +31,28 @@ export class PythonExecutionService implements IPythonExecutionService {
         if (await this.fileSystem.fileExists(this.pythonPath)) {
             return this.pythonPath;
         }
-        return this.procService.exec(this.pythonPath, ['-c', 'import sys;print(sys.executable)'], { env: this.envVars, throwOnStdErr: true })
+        return this.procService.exec(this.pythonPath, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true })
             .then(output => output.stdout.trim());
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
-        return this.procService.exec(this.pythonPath, ['-c', `import ${moduleName}`], { env: this.envVars, throwOnStdErr: true })
+        return this.procService.exec(this.pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true })
             .then(() => true).catch(() => false);
     }
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
-        if (this.envVars) {
-            opts.env = this.envVars;
-        }
         return this.procService.execObservable(this.pythonPath, args, opts);
     }
     public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
-        if (this.envVars) {
-            opts.env = this.envVars;
-        }
         return this.procService.execObservable(this.pythonPath, ['-m', moduleName, ...args], opts);
     }
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const opts: SpawnOptions = { ...options };
-        if (this.envVars) {
-            opts.env = this.envVars;
-        }
         return this.procService.exec(this.pythonPath, args, opts);
     }
     public async execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const opts: SpawnOptions = { ...options };
-        if (this.envVars) {
-            opts.env = this.envVars;
-        }
         const result = await this.procService.exec(this.pythonPath, ['-m', moduleName, ...args], opts);
 
         // If a module is not installed we'll have something in stderr.

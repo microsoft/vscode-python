@@ -12,10 +12,9 @@ import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
-import { IProcessService } from '../../client/common/process/types';
+import { IProcessServiceFactory } from '../../client/common/process/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product } from '../../client/common/types';
-import { rootWorkspaceUri } from '../common';
-import { updateSetting } from '../common';
+import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -68,7 +67,7 @@ suite('Installer', () => {
 
     async function testCheckingIfProductIsInstalled(product: Product) {
         const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
-        const processService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         const checkInstalledDef = createDeferred<boolean>();
         processService.onExec((file, args, options, callback) => {
             const moduleName = installer.translateProductToModuleName(product, ModuleNamePurpose.run);

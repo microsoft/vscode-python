@@ -9,7 +9,7 @@ import { IApplicationShell } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
-import { IProcessService } from '../common/process/types';
+import { IProcessServiceFactory } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
@@ -261,7 +261,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     }
 
     private async isDotNetInstalled(): Promise<boolean> {
-        const ps = this.services.get<IProcessService>(IProcessService);
+        const ps = await this.services.get<IProcessServiceFactory>(IProcessServiceFactory).create();
         const result = await ps.exec('dotnet', ['--version']).catch(() => { return { stdout: '' }; });
         return result.stdout.trim().startsWith('2.');
     }

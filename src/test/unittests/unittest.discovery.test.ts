@@ -6,7 +6,7 @@ import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
-import { IProcessService } from '../../client/common/process/types';
+import { IProcessServiceFactory } from '../../client/common/process/types';
 import { CommandSource } from '../../client/unittests/common/constants';
 import { ITestManagerFactory } from '../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
@@ -59,8 +59,8 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         ioc.registerMockProcessTypes();
     }
 
-    function injectTestDiscoveryOutput(output: string) {
-        const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+    async function injectTestDiscoveryOutput(output: string) {
+        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         procService.onExecObservable((file, args, options, callback) => {
             if (args.length > 1 && args[0] === '-c' && args[1].includes('import unittest') && args[1].includes('loader = unittest.TestLoader()')) {
                 callback({
@@ -75,7 +75,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     test('Discover Tests (single test file)', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`start
+        await injectTestDiscoveryOutput(`start
     test_one.Test_test1.test_A
     test_one.Test_test1.test_B
     test_one.Test_test1.test_c
@@ -92,7 +92,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     test('Discover Tests', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`start
+        await injectTestDiscoveryOutput(`start
     test_unittest_one.Test_test1.test_A
     test_unittest_one.Test_test1.test_B
     test_unittest_one.Test_test1.test_c
@@ -116,7 +116,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     test('Discover Tests (pattern = *_test_*.py)', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=*_test*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`start
+        await injectTestDiscoveryOutput(`start
     unittest_three_test.Test_test3.test_A
     unittest_three_test.Test_test3.test_B
     `);
@@ -132,7 +132,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
     test('Setting cwd should return tests', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`start
+        await injectTestDiscoveryOutput(`start
     test_cwd.Test_Current_Working_Directory.test_cwd
     `);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);

@@ -1,7 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { OutputChannel, TextEdit, Uri } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
@@ -13,12 +12,12 @@ import { getTempFileWithDocumentContents, getTextEditsFromPatch } from './../com
 import { IFormatterHelper } from './types';
 
 export abstract class BaseFormatter {
-    protected readonly outputChannel: OutputChannel;
+    protected readonly outputChannel: vscode.OutputChannel;
     protected readonly workspace: IWorkspaceService;
     private readonly helper: IFormatterHelper;
 
     constructor(public Id: string, private product: Product, protected serviceContainer: IServiceContainer) {
-        this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.outputChannel = serviceContainer.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.helper = serviceContainer.get<IFormatterHelper>(IFormatterHelper);
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
@@ -49,8 +48,8 @@ export abstract class BaseFormatter {
 
         // autopep8 and yapf have the ability to read from the process input stream and return the formatted code out of the output stream.
         // However they don't support returning the diff of the formatted text when reading data from the input stream.
-        // Yes getting text formatted that way avoids having to create a temporary file, however the diffing will have
-        // to be done here in node (extension), i.e. extension cpu, i.e. les responsive solution.
+        // Yet getting text formatted that way avoids having to create a temporary file, however the diffing will have
+        // to be done here in node (extension), i.e. extension CPU, i.e. less responsive solution.
         const tempFile = await this.createTempFile(document);
         if (this.checkCancellation(document.fileName, tempFile, token)) {
             return [];
@@ -63,17 +62,17 @@ export abstract class BaseFormatter {
             .then(output => output.stdout)
             .then(data => {
                 if (this.checkCancellation(document.fileName, tempFile, token)) {
-                    return [] as TextEdit[];
+                    return [] as vscode.TextEdit[];
                 }
                 return getTextEditsFromPatch(document.getText(), data);
             })
             .catch(error => {
                 if (this.checkCancellation(document.fileName, tempFile, token)) {
-                    return [] as TextEdit[];
+                    return [] as vscode.TextEdit[];
                 }
                 // tslint:disable-next-line:no-empty
                 this.handleError(this.Id, error, document.uri).catch(() => { });
-                return [] as TextEdit[];
+                return [] as vscode.TextEdit[];
             })
             .then(edits => {
                 this.deleteTempFile(document.fileName, tempFile).ignoreErrors();
@@ -83,7 +82,7 @@ export abstract class BaseFormatter {
         return promise;
     }
 
-    protected async handleError(expectedFileName: string, error: Error, resource?: Uri) {
+    protected async handleError(expectedFileName: string, error: Error, resource?: vscode.Uri) {
         let customError = `Formatting with ${this.Id} failed.`;
 
         if (isNotInstalledError(error)) {
@@ -100,7 +99,7 @@ export abstract class BaseFormatter {
 
     private async createTempFile(document: vscode.TextDocument): Promise<string> {
         return document.isDirty
-            ? await getTempFileWithDocumentContents(document)
+            ? getTempFileWithDocumentContents(document)
             : document.fileName;
     }
 

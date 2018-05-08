@@ -1,5 +1,4 @@
 import { EventEmitter } from 'events';
-import { inject, injectable } from 'inversify';
 import 'rxjs/add/observable/of';
 import { Observable } from 'rxjs/Observable';
 import { ExecutionResult, IProcessService, ObservableExecutionResult, Output, SpawnOptions } from '../../client/common/process/types';
@@ -9,9 +8,8 @@ type ExecCallback = (result: ExecutionResult<string>) => void;
 
 export const IOriginalProcessService = Symbol('IProcessService');
 
-@injectable()
 export class MockProcessService extends EventEmitter implements IProcessService {
-    constructor( @inject(IOriginalProcessService) private procService: IProcessService) {
+    constructor(private procService: IProcessService) {
         super();
     }
     public onExecObservable(handler: (file: string, args: string[], options: SpawnOptions, callback: ExecObservableCallback) => void) {
