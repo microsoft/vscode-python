@@ -51,7 +51,7 @@ export class AnalysisEngineDownloader {
             throw new Error(err);
         } finally {
             if (localTempFilePath.length > 0) {
-                await this.fs.deleteFileAsync(localTempFilePath);
+                await this.fs.deleteFile(localTempFilePath);
             }
         }
     }
@@ -59,22 +59,22 @@ export class AnalysisEngineDownloader {
     public async downloadPythiaModel(context: ExtensionContext): Promise<void> {
         const modelFolder = path.join(context.extensionPath, 'analysis', 'Pythia', 'model');
         const localPath = path.join(modelFolder, pythiaModelName);
-        if (await this.fs.fileExistsAsync(localPath)) {
+        if (await this.fs.fileExists(localPath)) {
             return;
         }
 
         let localTempFilePath = '';
         try {
             localTempFilePath = await this.downloadFile(downloadUriPrefix, pythiaModelName, 'Downloading IntelliSense Model File... ');
-            await this.fs.createDirectoryAsync(modelFolder);
-            await this.fs.copyFileAsync(localTempFilePath, localPath);
+            await this.fs.createDirectory(modelFolder);
+            await this.fs.copyFile(localTempFilePath, localPath);
         } catch (err) {
             this.output.appendLine('failed.');
             this.output.appendLine(err);
             throw new Error(err);
         } finally {
             if (localTempFilePath.length > 0) {
-                await this.fs.deleteFileAsync(localTempFilePath);
+                await this.fs.deleteFile(localTempFilePath);
             }
         }
     }
@@ -153,8 +153,8 @@ export class AnalysisEngineDownloader {
             let extractedFiles = 0;
             zip.on('ready', async () => {
                 totalFiles = zip.entriesCount;
-                if (!await this.fs.directoryExistsAsync(installFolder)) {
-                    await this.fs.createDirectoryAsync(installFolder);
+                if (!await this.fs.directoryExists(installFolder)) {
+                    await this.fs.createDirectory(installFolder);
                 }
                 zip.extract(null, installFolder, (err, count) => {
                     if (err) {

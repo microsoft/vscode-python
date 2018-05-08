@@ -31,7 +31,7 @@ export class PythonExecutionService implements IPythonExecutionService {
     public async getExecutablePath(): Promise<string> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
-        if (await this.fileSystem.fileExistsAsync(this.pythonPath)) {
+        if (await this.fileSystem.fileExists(this.pythonPath)) {
             return this.pythonPath;
         }
         return this.procService.exec(this.pythonPath, ['-c', 'import sys;print(sys.executable)'], { env: this.envVars, throwOnStdErr: true })

@@ -65,7 +65,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         } else {
             const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
             await Promise.all([
-                this.fileSystem.fileExistsAsync(pythonPath),
+                this.fileSystem.fileExists(pythonPath),
                 this.versionProvider.getVersion(pythonPath, defaultDisplayName),
                 this.getVirtualEnvironmentName(pythonPath).catch(() => '')
             ])

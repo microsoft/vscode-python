@@ -63,11 +63,11 @@ suite('Linting - Pylintrc search', () => {
     });
 
     test('pylintrc in the file folder', async () => {
-        fileSystem.setup(x => x.fileExistsAsync(path.join(basePath, pylintrc))).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(path.join(basePath, pylintrc))).returns(() => Promise.resolve(true));
         let result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the file folder.`);
 
-        fileSystem.setup(x => x.fileExistsAsync(path.join(basePath, dotPylintrc))).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(path.join(basePath, dotPylintrc))).returns(() => Promise.resolve(true));
         result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the file folder.`);
     });
@@ -77,10 +77,10 @@ suite('Linting - Pylintrc search', () => {
         const module3 = path.join('/user/a/b', '__init__.py');
         const rc = path.join('/user/a/b/c', pylintrc);
 
-        fileSystem.setup(x => x.fileExistsAsync(module1)).returns(() => Promise.resolve(true));
-        fileSystem.setup(x => x.fileExistsAsync(module2)).returns(() => Promise.resolve(true));
-        fileSystem.setup(x => x.fileExistsAsync(module3)).returns(() => Promise.resolve(true));
-        fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(module1)).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(module2)).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(module3)).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(rc)).returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the module tree.`);
@@ -92,10 +92,10 @@ suite('Linting - Pylintrc search', () => {
         const module3 = path.join('/user/a/b', '__init__.py');
         const rc = path.join('/user/a/b/c', pylintrc);
 
-        fileSystem.setup(x => x.fileExistsAsync(module1)).returns(() => Promise.resolve(true));
-        fileSystem.setup(x => x.fileExistsAsync(module2)).returns(() => Promise.resolve(true));
-        fileSystem.setup(x => x.fileExistsAsync(module3)).returns(() => Promise.resolve(true));
-        fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(module1)).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(module2)).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(module3)).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(rc)).returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the module tree.`);
@@ -103,7 +103,7 @@ suite('Linting - Pylintrc search', () => {
     test('.pylintrc up the ~ folder', async () => {
         const home = os.homedir();
         const rc = path.join(home, dotPylintrc);
-        fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(rc)).returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the ~ folder.`);
@@ -111,14 +111,14 @@ suite('Linting - Pylintrc search', () => {
     test('pylintrc up the ~/.config folder', async () => {
         const home = os.homedir();
         const rc = path.join(home, '.config', pylintrc);
-        fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(rc)).returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the  ~/.config folder.`);
     });
     test('pylintrc in the /etc folder', async () => {
         const rc = path.join('/etc', pylintrc);
-        fileSystem.setup(x => x.fileExistsAsync(rc)).returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(rc)).returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the /etc folder.`);
@@ -127,7 +127,7 @@ suite('Linting - Pylintrc search', () => {
         const root = '/user/a';
         const midFolder = '/user/a/b';
         fileSystem
-            .setup(x => x.fileExistsAsync(path.join(midFolder, pylintrc)))
+            .setup(x => x.fileExists(path.join(midFolder, pylintrc)))
             .returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigrationFileInWorkspace(fileSystem.object, basePath, root);
@@ -136,7 +136,7 @@ suite('Linting - Pylintrc search', () => {
 
     test('minArgs - pylintrc between the file and the workspace root', async () => {
         fileSystem
-            .setup(x => x.fileExistsAsync(path.join('/user/a/b', pylintrc)))
+            .setup(x => x.fileExists(path.join('/user/a/b', pylintrc)))
             .returns(() => Promise.resolve(true));
 
         await testPylintArguments('/user/a/b/c', '/user/a', false);
@@ -149,7 +149,7 @@ suite('Linting - Pylintrc search', () => {
     test('minArgs - pylintrc next to the file', async () => {
         const fileFolder = '/user/a/b/c';
         fileSystem
-            .setup(x => x.fileExistsAsync(path.join(fileFolder, pylintrc)))
+            .setup(x => x.fileExists(path.join(fileFolder, pylintrc)))
             .returns(() => Promise.resolve(true));
 
         await testPylintArguments(fileFolder, '/user/a', false);
@@ -158,7 +158,7 @@ suite('Linting - Pylintrc search', () => {
     test('minArgs - pylintrc at the workspace root', async () => {
         const root = '/user/a';
         fileSystem
-            .setup(x => x.fileExistsAsync(path.join(root, pylintrc)))
+            .setup(x => x.fileExists(path.join(root, pylintrc)))
             .returns(() => Promise.resolve(true));
 
         await testPylintArguments('/user/a/b/c', root, false);

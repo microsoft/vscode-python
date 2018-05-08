@@ -149,7 +149,7 @@ suite('Interpreters Display', () => {
         interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(undefined));
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
-        fileSystem.setup(f => f.fileExistsAsync(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
+        fileSystem.setup(f => f.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
         const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
         versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(defaultDisplayName));
         virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
@@ -169,7 +169,7 @@ suite('Interpreters Display', () => {
         interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(undefined));
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
-        fileSystem.setup(f => f.fileExistsAsync(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
+        fileSystem.setup(f => f.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
         versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(defaultDisplayName));
         // tslint:disable-next-line:no-any
@@ -190,7 +190,7 @@ suite('Interpreters Display', () => {
         interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(undefined));
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
-        fileSystem.setup(f => f.fileExistsAsync(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
+        fileSystem.setup(f => f.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         const displayName = 'Version from Interperter';
         versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(displayName));
         // tslint:disable-next-line:no-any

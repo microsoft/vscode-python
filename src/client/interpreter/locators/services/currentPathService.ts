@@ -56,7 +56,7 @@ export class CurrentPathService extends CacheableLocatorService {
         try {
             const output = await this.processService.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], {});
             const executablePath = output.stdout.trim();
-            if (executablePath.length > 0 && await this.fs.fileExistsAsync(executablePath)) {
+            if (executablePath.length > 0 && await this.fs.fileExists(executablePath)) {
                 return executablePath;
             }
             return defaultValue;

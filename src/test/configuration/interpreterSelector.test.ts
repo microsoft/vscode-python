@@ -54,7 +54,7 @@ suite('Interpreters - selector', () => {
             .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .returns((a: string, b: string) => a === b);
         fileSystem
-            .setup(x => x.getRealPathAsync(TypeMoq.It.isAnyString()))
+            .setup(x => x.getRealPath(TypeMoq.It.isAnyString()))
             .returns((a: string) => new Promise(resolve => resolve(a)));
 
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);

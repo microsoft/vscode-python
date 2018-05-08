@@ -147,19 +147,19 @@ suite('Terminal Environment Activation conda', () => {
 
     test('If environment is a conda environment, ensure conda activation command is sent (windows)', async () => {
         const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
-        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
+        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
         await expectCondaActivationCommand(true, false, false, pythonPath);
     });
 
     test('If environment is a conda environment, ensure conda activation command is sent (linux)', async () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
         await expectCondaActivationCommand(false, false, true, pythonPath);
     });
 
     test('If environment is a conda environment, ensure conda activation command is sent (osx)', async () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
         await expectCondaActivationCommand(false, true, false, pythonPath);
     });
 
@@ -200,21 +200,21 @@ suite('Terminal Environment Activation conda', () => {
     test('If environment is a conda environment and environment detection fails, ensure activatino of script is sent (windows)', async () => {
         const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
         const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
-        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
+        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
         await expectActivationCommandIfCondaDetectionFails(true, false, false, pythonPath, condaEnvDir);
     });
 
     test('If environment is a conda environment and environment detection fails, ensure activatino of script is sent (osx)', async () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'python');
         const condaEnvDir = path.join('users', 'xyz', '.conda', 'envs');
-        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
         await expectActivationCommandIfCondaDetectionFails(false, true, false, pythonPath, condaEnvDir);
     });
 
     test('If environment is a conda environment and environment detection fails, ensure activatino of script is sent (linux)', async () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'python');
         const condaEnvDir = path.join('users', 'xyz', '.conda', 'envs');
-        fileSystem.setup(f => f.directoryExistsAsync(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
         await expectActivationCommandIfCondaDetectionFails(false, false, true, pythonPath, condaEnvDir);
     });
 

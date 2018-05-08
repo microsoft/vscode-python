@@ -81,7 +81,7 @@ suite('Interpreters - PipEnv', () => {
                 const env = {};
                 envVarsProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({})).verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
-                fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
+                fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
                 const environments = await pipEnvService.getInterpreters(resource);
 
                 expect(environments).to.be.deep.equal([]);
@@ -91,7 +91,7 @@ suite('Interpreters - PipEnv', () => {
                 const env = {};
                 currentProcess.setup(c => c.env).returns(() => env);
                 processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.reject(''));
-                fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
+                fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
                 appShell.setup(a => a.showWarningMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('')).verifiable(TypeMoq.Times.once());
                 const environments = await pipEnvService.getInterpreters(resource);
 
@@ -104,7 +104,7 @@ suite('Interpreters - PipEnv', () => {
                 envVarsProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({})).verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
                 processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stderr: 'PipEnv Failed', stdout: '' }));
-                fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
+                fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
                 appShell.setup(a => a.showWarningMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('')).verifiable(TypeMoq.Times.once());
                 const environments = await pipEnvService.getInterpreters(resource);
 
@@ -119,8 +119,8 @@ suite('Interpreters - PipEnv', () => {
                 currentProcess.setup(c => c.env).returns(() => env);
                 processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: venvDir }));
                 interpreterVersionService.setup(v => v.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('xyz'));
-                fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true)).verifiable();
-                fileSystem.setup(fs => fs.directoryExistsAsync(TypeMoq.It.isValue(venvDir))).returns(() => Promise.resolve(true)).verifiable();
+                fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true)).verifiable();
+                fileSystem.setup(fs => fs.directoryExists(TypeMoq.It.isValue(venvDir))).returns(() => Promise.resolve(true)).verifiable();
                 const environments = await pipEnvService.getInterpreters(resource);
 
                 expect(environments).to.be.lengthOf(1);
@@ -137,9 +137,9 @@ suite('Interpreters - PipEnv', () => {
                 currentProcess.setup(c => c.env).returns(() => env);
                 processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: venvDir }));
                 interpreterVersionService.setup(v => v.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('xyz'));
-                fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.never());
-                fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(path.join(rootWorkspace, envPipFile)))).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
-                fileSystem.setup(fs => fs.directoryExistsAsync(TypeMoq.It.isValue(venvDir))).returns(() => Promise.resolve(true)).verifiable();
+                fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.never());
+                fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, envPipFile)))).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+                fileSystem.setup(fs => fs.directoryExists(TypeMoq.It.isValue(venvDir))).returns(() => Promise.resolve(true)).verifiable();
                 const environments = await pipEnvService.getInterpreters(resource);
 
                 expect(environments).to.be.lengthOf(1);

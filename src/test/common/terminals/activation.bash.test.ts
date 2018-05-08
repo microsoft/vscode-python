@@ -75,7 +75,7 @@ suite('Terminal Environment Activation (bash)', () => {
                             }
 
                             const pathToScriptFile = path.join(path.dirname(pythonPath), scriptFileName);
-                            fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
+                            fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
                             const command = await bash.getActivationCommands(undefined, shellType.value);
 
                             if (isScriptFileSupported) {

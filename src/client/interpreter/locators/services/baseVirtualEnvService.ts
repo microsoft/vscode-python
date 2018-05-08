@@ -34,7 +34,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             .then(listOfInterpreters => _.flatten(listOfInterpreters));
     }
     private async lookForInterpretersInVenvs(pathToCheck: string) {
-        return this.fileSystem.getSubDirectoriesAsync(pathToCheck)
+        return this.fileSystem.getSubDirectories(pathToCheck)
             .then(subDirs => Promise.all(this.getProspectiveDirectoriesForLookup(subDirs)))
             .then(dirs => dirs.filter(dir => dir.length > 0))
             .then(dirs => Promise.all(dirs.map(lookForInterpretersInDirectory)))
@@ -50,7 +50,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
         const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         const dirToLookFor = platform.virtualEnvBinName;
         return subDirs.map(subDir =>
-            this.fileSystem.getSubDirectoriesAsync(subDir)
+            this.fileSystem.getSubDirectories(subDir)
                 .then(dirs => {
                     const scriptOrBinDirs = dirs.filter(dir => {
                         const folderName = path.basename(dir);

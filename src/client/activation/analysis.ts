@@ -110,7 +110,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
 
         await this.checkPythiaModel(context, downloader);
 
-        if (!await this.fs.fileExistsAsync(mscorlib)) {
+        if (!await this.fs.fileExists(mscorlib)) {
             // Depends on .NET Runtime or SDK
             this.languageClient = this.createSimpleLanguageClient(context, clientOptions);
             try {

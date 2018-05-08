@@ -106,7 +106,7 @@ suite('Linting - LintingEngine', () => {
     });
 
     function mockTextDocument(fileName: string, language: string, exists: boolean, ignorePattern: string[] = [], scheme?: string): TextDocument {
-        fileSystem.setup(x => x.fileExistsAsync(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(exists));
+        fileSystem.setup(x => x.fileExists(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(exists));
 
         lintSettings.setup(l => l.ignorePatterns).returns(() => ignorePattern);
         settings.setup(x => x.linting).returns(() => lintSettings.object);

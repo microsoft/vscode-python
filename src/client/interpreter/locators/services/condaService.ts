@@ -88,9 +88,9 @@ export class CondaService implements ICondaService {
         const dir = path.dirname(interpreterPath);
         const isWindows = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
         const condaMetaDirectory = isWindows ? path.join(dir, 'conda-meta') : path.join(dir, '..', 'conda-meta');
-        return fs.directoryExistsAsync(condaMetaDirectory);
+        return fs.directoryExists(condaMetaDirectory);
     }
-    public async getCondaEnvironment(interpreterPath: string): Promise<{ name: string, path: string } | undefined> {
+    public async getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined> {
         const isCondaEnv = await this.isCondaEnvironment(interpreterPath);
         if (!isCondaEnv) {
             return;
@@ -118,11 +118,11 @@ export class CondaService implements ICondaService {
         // If still not available, then the user created the env after starting vs code.
         // The only solution is to get the user to re-start vscode.
     }
-    public async getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string, path: string }[]) | undefined> {
+    public async getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string; path: string }[]) | undefined> {
         // Global cache.
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         // tslint:disable-next-line:no-any
-        const globalPersistence = persistentFactory.createGlobalPersistentState<{ data: { name: string, path: string }[] | undefined }>('CONDA_ENVIRONMENTS', undefined as any);
+        const globalPersistence = persistentFactory.createGlobalPersistentState<{ data: { name: string; path: string }[] | undefined }>('CONDA_ENVIRONMENTS', undefined as any);
         if (!ignoreCache && globalPersistence.value) {
             return globalPersistence.value.data;
         }
@@ -171,7 +171,7 @@ export class CondaService implements ICondaService {
                     return condaInterpreter ? path.join(path.dirname(condaInterpreter.path), 'conda.exe') : 'conda';
                 })
                 .then(async condaPath => {
-                    return this.fileSystem.fileExistsAsync(condaPath).then(exists => exists ? condaPath : 'conda');
+                    return this.fileSystem.fileExists(condaPath).then(exists => exists ? condaPath : 'conda');
                 });
         }
         return this.getCondaFileFromKnownLocations();
@@ -179,7 +179,7 @@ export class CondaService implements ICondaService {
     private async getCondaFileFromKnownLocations(): Promise<string> {
         const condaFiles = await Promise.all(KNOWN_CONDA_LOCATIONS
             .map(untildify)
-            .map(async (condaPath: string) => this.fileSystem.fileExistsAsync(condaPath).then(exists => exists ? condaPath : '')));
+            .map(async (condaPath: string) => this.fileSystem.fileExists(condaPath).then(exists => exists ? condaPath : '')));
 
         const validCondaFiles = condaFiles.filter(condaPath => condaPath.length > 0);
         return validCondaFiles.length === 0 ? 'conda' : validCondaFiles[0];

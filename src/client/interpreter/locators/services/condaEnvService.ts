@@ -14,7 +14,7 @@ import { CondaHelper } from './condaHelper';
 @injectable()
 export class CondaEnvService extends CacheableLocatorService {
     private readonly condaHelper = new CondaHelper();
-    constructor( @inject(ICondaService) private condaService: ICondaService,
+    constructor(@inject(ICondaService) private condaService: ICondaService,
         @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService,
         @inject(ILogger) private logger: ILogger,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
@@ -37,7 +37,7 @@ export class CondaEnvService extends CacheableLocatorService {
             .map(async envPath => {
                 const pythonPath = this.condaService.getInterpreterPath(envPath);
 
-                const existsPromise = pythonPath ? this.fileSystem.fileExistsAsync(pythonPath) : Promise.resolve(false);
+                const existsPromise = pythonPath ? this.fileSystem.fileExists(pythonPath) : Promise.resolve(false);
                 const versionPromise = this.versionService.getVersion(pythonPath, '');
 
                 const [exists, version] = await Promise.all([existsPromise, versionPromise]);

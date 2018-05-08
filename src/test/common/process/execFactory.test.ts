@@ -22,7 +22,7 @@ suite('PythonExecutableService', () => {
         procService = TypeMoq.Mock.ofType<IProcessService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        fileSystem.setup(f => f.fileExistsAsync(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
+        fileSystem.setup(f => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider))).returns(() => envVarsProvider.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessService))).returns(() => procService.object);

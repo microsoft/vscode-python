@@ -16,7 +16,7 @@ export class FileSystem implements IFileSystem {
         return path.sep;
     }
 
-    public objectExistsAsync(filePath: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean> {
+    public objectExists(filePath: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean> {
         return new Promise<boolean>(resolve => {
             fs.stat(filePath, (error, stats) => {
                 if (error) {
@@ -27,8 +27,8 @@ export class FileSystem implements IFileSystem {
         });
     }
 
-    public fileExistsAsync(filePath: string): Promise<boolean> {
-        return this.objectExistsAsync(filePath, (stats) => stats.isFile());
+    public fileExists(filePath: string): Promise<boolean> {
+        return this.objectExists(filePath, (stats) => stats.isFile());
     }
     public fileExistsSync(filePath: string): boolean {
         return fs.existsSync(filePath);
@@ -43,15 +43,15 @@ export class FileSystem implements IFileSystem {
         return fs.readFile(filePath).then(buffer => buffer.toString());
     }
 
-    public directoryExistsAsync(filePath: string): Promise<boolean> {
-        return this.objectExistsAsync(filePath, (stats) => stats.isDirectory());
+    public directoryExists(filePath: string): Promise<boolean> {
+        return this.objectExists(filePath, (stats) => stats.isDirectory());
     }
 
-    public createDirectoryAsync(directoryPath: string): Promise<void> {
+    public createDirectory(directoryPath: string): Promise<void> {
         return fs.mkdirp(directoryPath);
     }
 
-    public getSubDirectoriesAsync(rootDir: string): Promise<string[]> {
+    public getSubDirectories(rootDir: string): Promise<string[]> {
         return new Promise<string[]>(resolve => {
             fs.readdir(rootDir, (error, files) => {
                 if (error) {
@@ -90,7 +90,7 @@ export class FileSystem implements IFileSystem {
         return fs.appendFileSync(filename, data, optionsOrEncoding);
     }
 
-    public getRealPathAsync(filePath: string): Promise<string> {
+    public getRealPath(filePath: string): Promise<string> {
         return new Promise<string>(resolve => {
             fs.realpath(filePath, (err, realPath) => {
                 resolve(err ? filePath : realPath);
@@ -98,7 +98,7 @@ export class FileSystem implements IFileSystem {
         });
     }
 
-    public copyFileAsync(src: string, dest: string): Promise<void> {
+    public copyFile(src: string, dest: string): Promise<void> {
         const deferred = createDeferred<void>();
         const rs = fs.createReadStream(src).on('error', (err) => {
             deferred.reject(err);
@@ -112,7 +112,7 @@ export class FileSystem implements IFileSystem {
         return deferred.promise;
     }
 
-    public deleteFileAsync(filename: string): Promise<void> {
+    public deleteFile(filename: string): Promise<void> {
         const deferred = createDeferred<void>();
         fs.unlink(filename, err => err ? deferred.reject(err) : deferred.resolve());
         return deferred.promise;

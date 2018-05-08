@@ -78,15 +78,15 @@ export class PipEnvService extends CacheableLocatorService {
             return;
         }
         const venvFolder = await this.invokePipenv('--venv', cwd);
-        return venvFolder && await this.fs.directoryExistsAsync(venvFolder) ? venvFolder : undefined;
+        return venvFolder && await this.fs.directoryExists(venvFolder) ? venvFolder : undefined;
     }
     private async checkIfPipFileExists(cwd: string): Promise<boolean> {
         const currentProcess = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
         const pipFileName = currentProcess.env[pipEnvFileNameVariable];
-        if (typeof pipFileName === 'string' && await this.fs.fileExistsAsync(path.join(cwd, pipFileName))) {
+        if (typeof pipFileName === 'string' && await this.fs.fileExists(path.join(cwd, pipFileName))) {
             return true;
         }
-        if (await this.fs.fileExistsAsync(path.join(cwd, 'Pipfile'))) {
+        if (await this.fs.fileExists(path.join(cwd, 'Pipfile'))) {
             return true;
         }
         return false;
