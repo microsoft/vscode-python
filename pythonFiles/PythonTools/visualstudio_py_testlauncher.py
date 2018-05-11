@@ -102,12 +102,20 @@ class _IpcChannel(object):
         self.seq = 0
         self.callback = callback
         self.lock = thread.allocate_lock()
+        self._closed = False
         # start the testing reader thread loop
         self.test_thread_id = thread.start_new_thread(self.readSocket, ())
 
+    def close(self):
+        self._closed = True
+
     def readSocket(self):
-        data = self.socket.recv(1024)
-        self.callback()
+        try:
+            data = self.socket.recv(1024)
+            self.callback()
+        except OSError:
+            if not self._closed:
+                raise
 
     def receive(self):
         pass
@@ -312,6 +320,8 @@ def main():
         else:
             runner = unittest.TextTestRunner(verbosity=opts.uvInt, resultclass=VsTestResult)
         result = runner.run(tests)
+        if _channel is not None:
+            _channel.close()
         sys.exit(not result.wasSuccessful())
     finally:
         if cov is not None:

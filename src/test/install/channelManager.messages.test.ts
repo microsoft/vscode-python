@@ -6,12 +6,25 @@ import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell } from '../../client/common/application/types';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
-import { IPlatformService } from '../../client/common/platform/types';
+import { Architecture, IPlatformService } from '../../client/common/platform/types';
 import { Product } from '../../client/common/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
+
+const info: PythonInterpreter = {
+    architecture: Architecture.Unknown,
+    companyDisplayName: '',
+    displayName: '',
+    envName: '',
+    path: '',
+    type: InterpreterType.Unknown,
+    version: '',
+    version_info: [0, 0, 0, 'alpha'],
+    sysPrefix: '',
+    sysVersion: ''
+};
 
 // tslint:disable-next-line:max-func-body-length
 suite('Installation - channel messages', () => {
@@ -132,6 +145,7 @@ suite('Installation - channel messages', () => {
         verify: (c: InstallationChannelManager, m: string, u: string) => void): Promise<void> {
 
         const activeInterpreter: PythonInterpreter = {
+            ...info,
             type: interpreterType,
             path: ''
         };

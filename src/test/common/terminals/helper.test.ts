@@ -48,11 +48,11 @@ suite('Terminal Service helpers', () => {
         shellPathsAndIdentification.set('c:\\windows\\system32\\cmd.exe', TerminalShellType.commandPrompt);
 
         shellPathsAndIdentification.set('c:\\windows\\system32\\bash.exe', TerminalShellType.bash);
-        shellPathsAndIdentification.set('c:\\windows\\system32\\wsl.exe', TerminalShellType.bash);
-        shellPathsAndIdentification.set('c:\\windows\\system32\\gitbash.exe', TerminalShellType.bash);
+        shellPathsAndIdentification.set('c:\\windows\\system32\\wsl.exe', TerminalShellType.wsl);
+        shellPathsAndIdentification.set('c:\\windows\\system32\\gitbash.exe', TerminalShellType.gitbash);
         shellPathsAndIdentification.set('/usr/bin/bash', TerminalShellType.bash);
-        shellPathsAndIdentification.set('/usr/bin/zsh', TerminalShellType.bash);
-        shellPathsAndIdentification.set('/usr/bin/ksh', TerminalShellType.bash);
+        shellPathsAndIdentification.set('/usr/bin/zsh', TerminalShellType.zsh);
+        shellPathsAndIdentification.set('/usr/bin/ksh', TerminalShellType.ksh);
 
         shellPathsAndIdentification.set('c:\\windows\\system32\\powershell.exe', TerminalShellType.powershell);
         shellPathsAndIdentification.set('c:\\windows\\system32\\pwsh.exe', TerminalShellType.powershellCore);
@@ -65,6 +65,7 @@ suite('Terminal Service helpers', () => {
         shellPathsAndIdentification.set('/usr/bin/shell', TerminalShellType.other);
 
         shellPathsAndIdentification.set('/usr/bin/csh', TerminalShellType.cshell);
+        shellPathsAndIdentification.set('/usr/bin/tcsh', TerminalShellType.tcshell);
 
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             expect(helper.identifyTerminalShell(shellPath)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);

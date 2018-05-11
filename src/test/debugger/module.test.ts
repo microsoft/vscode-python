@@ -35,11 +35,7 @@ suite(`Module Debugging - Misc tests: ${debuggerType}`, () => {
         } catch (ex) { }
         await sleep(1000);
     });
-    function buildLauncArgs(): LaunchRequestArguments {
-        const env = {};
-        // tslint:disable-next-line:no-string-literal
-        env['PYTHONPATH'] = `.${path.delimiter}${PTVSD_PATH}`;
-
+    function buildLaunchArgs(): LaunchRequestArguments {
         // tslint:disable-next-line:no-unnecessary-local-variable
         const options: LaunchRequestArguments = {
             module: 'mymod',
@@ -48,7 +44,7 @@ suite(`Module Debugging - Misc tests: ${debuggerType}`, () => {
             debugOptions: [DebugOptions.RedirectOutput],
             pythonPath: PYTHON_PATH,
             args: [],
-            env,
+            env: { PYTHONPATH: `${PTVSD_PATH}` },
             envFile: '',
             logToFile: false,
             type: debuggerType
@@ -60,7 +56,7 @@ suite(`Module Debugging - Misc tests: ${debuggerType}`, () => {
     test('Test stdout output', async () => {
         await Promise.all([
             debugClient.configurationSequence(),
-            debugClient.launch(buildLauncArgs()),
+            debugClient.launch(buildLaunchArgs()),
             debugClient.waitForEvent('initialized'),
             debugClient.assertOutput('stdout', 'Hello world!'),
             debugClient.waitForEvent('exited'),

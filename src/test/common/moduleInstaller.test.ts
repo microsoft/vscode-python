@@ -16,7 +16,7 @@ import { PathUtils } from '../../client/common/platform/pathUtils';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { Architecture, IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
-import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
+import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../client/common/terminal/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IPythonSettings, IsWindows } from '../../client/common/types';
 import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PIPENV_SERVICE, PythonInterpreter } from '../../client/interpreter/contracts';
@@ -26,6 +26,19 @@ import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { closeActiveWindows, initializeTest } from './../initialize';
+
+const info: PythonInterpreter = {
+    architecture: Architecture.Unknown,
+    companyDisplayName: '',
+    displayName: '',
+    envName: '',
+    path: '',
+    type: InterpreterType.Unknown,
+    version: '',
+    version_info: [0, 0, 0, 'alpha'],
+    sysPrefix: '',
+    sysVersion: ''
+};
 
 // tslint:disable-next-line:max-func-body-length
 suite('Module Installer', () => {
@@ -91,7 +104,7 @@ suite('Module Installer', () => {
     async function getCurrentPythonPath(): Promise<string> {
         const pythonPath = PythonSettings.getInstance(workspaceUri).pythonPath;
         if (path.basename(pythonPath) === pythonPath) {
-            const pythonProc = await ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(workspaceUri);
+            const pythonProc = await ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: workspaceUri });
             return pythonProc.getExecutablePath().catch(() => pythonPath);
         } else {
             return pythonPath;
@@ -104,7 +117,7 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
 
-        const processService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         processService.onExec((file, args, options, callback) => {
             if (args.length > 1 && args[0] === '-c' && args[1] === 'import pip') {
                 callback({ stdout: '' });
@@ -133,11 +146,11 @@ suite('Module Installer', () => {
         ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('mock', true));
         const pythonPath = await getCurrentPythonPath();
         const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-        mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ architecture: Architecture.Unknown, companyDisplayName: '', displayName: '', envName: '', path: pythonPath, type: InterpreterType.Conda, version: '' }]));
+        mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ ...info, architecture: Architecture.Unknown, companyDisplayName: '', displayName: '', envName: '', path: pythonPath, type: InterpreterType.Conda, version: '' }]));
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
 
-        const processService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         processService.onExec((file, args, options, callback) => {
             if (args.length > 1 && args[0] === '-c' && args[1] === 'import pip') {
                 callback({ stdout: '' });
@@ -189,11 +202,12 @@ suite('Module Installer', () => {
     test('Validate pip install arguments', async () => {
         const interpreterPath = await getCurrentPythonPath();
         const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-        mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ path: interpreterPath, type: InterpreterType.Unknown }]));
+        mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ ...info, path: interpreterPath, type: InterpreterType.Unknown }]));
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
 
         const interpreter: PythonInterpreter = {
+            ...info,
             type: InterpreterType.Unknown,
             path: PYTHON_PATH
         };
@@ -220,7 +234,7 @@ suite('Module Installer', () => {
     test('Validate Conda install arguments', async () => {
         const interpreterPath = await getCurrentPythonPath();
         const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-        mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ path: interpreterPath, type: InterpreterType.Conda }]));
+        mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ ...info, path: interpreterPath, type: InterpreterType.Conda }]));
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, INTERPRETER_LOCATOR_SERVICE);
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, TypeMoq.Mock.ofType<IInterpreterLocatorService>().object, PIPENV_SERVICE);
 
@@ -242,7 +256,7 @@ suite('Module Installer', () => {
 
     test('Validate pipenv install arguments', async () => {
         const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-        mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ path: 'interpreterPath', type: InterpreterType.VirtualEnv }]));
+        mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([{ ...info, path: 'interpreterPath', type: InterpreterType.VirtualEnv }]));
         ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, mockInterpreterLocator.object, PIPENV_SERVICE);
 
         const moduleName = 'xyz';

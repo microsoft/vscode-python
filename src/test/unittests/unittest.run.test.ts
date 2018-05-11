@@ -6,7 +6,7 @@ import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
-import { IProcessService } from '../../client/common/process/types';
+import { IProcessServiceFactory } from '../../client/common/process/types';
 import { CommandSource } from '../../client/unittests/common/constants';
 import { ITestManagerFactory, IUnitTestSocketServer, TestsToRun } from '../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
@@ -43,7 +43,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         }
         await initializeTest();
         initializeDI();
-        ignoreTestLauncher();
+        await ignoreTestLauncher();
     });
     teardown(async () => {
         ioc.dispose();
@@ -70,8 +70,8 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         ioc.registerTestVisitors();
     }
 
-    function ignoreTestLauncher() {
-        const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+    async function ignoreTestLauncher() {
+        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         // When running the python test launcher, just return.
         procService.onExecObservable((file, args, options, callback) => {
             if (args.length > 1 && args[0].endsWith('visualstudio_py_testlauncher.py')) {
@@ -79,8 +79,8 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             }
         });
     }
-    function injectTestDiscoveryOutput(output: string) {
-        const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+    async function injectTestDiscoveryOutput(output: string) {
+        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         procService.onExecObservable((file, args, options, callback) => {
             if (args.length > 1 && args[0] === '-c' && args[1].includes('import unittest') && args[1].includes('loader = unittest.TestLoader()')) {
                 callback({
@@ -101,7 +101,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     test('Run Tests', async () => {
         await updateSetting('unitTest.unittestArgs', ['-v', '-s', './tests', '-p', 'test_unittest*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`start
+        await injectTestDiscoveryOutput(`start
         test_unittest_one.Test_test1.test_A
         test_unittest_one.Test_test1.test_B
         test_unittest_one.Test_test1.test_c
@@ -138,7 +138,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     test('Run Failed Tests', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`start
+        await injectTestDiscoveryOutput(`start
             test_unittest_one.Test_test1.test_A
             test_unittest_one.Test_test1.test_B
             test_unittest_one.Test_test1.test_c
@@ -191,7 +191,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
 
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`start
+        await injectTestDiscoveryOutput(`start
         test_unittest_one.Test_test_one_1.test_1_1_1
         test_unittest_one.Test_test_one_1.test_1_1_2
         test_unittest_one.Test_test_one_1.test_1_1_3
@@ -228,7 +228,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     test('Run Specific Test Suite', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`start
+        await injectTestDiscoveryOutput(`start
         test_unittest_one.Test_test_one_1.test_1_1_1
         test_unittest_one.Test_test_one_1.test_1_1_2
         test_unittest_one.Test_test_one_1.test_1_1_3
@@ -265,7 +265,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     test('Run Specific Test Function', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
         // tslint:disable-next-line:no-multiline-string
-        injectTestDiscoveryOutput(`start
+        await injectTestDiscoveryOutput(`start
         test_unittest_one.Test_test1.test_A
         test_unittest_one.Test_test1.test_B
         test_unittest_one.Test_test1.test_c

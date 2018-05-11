@@ -10,8 +10,8 @@ import { IServiceContainer } from '../ioc/types';
 import { IPythonPathUpdaterServiceManager } from './configuration/types';
 import {
     IInterpreterDisplay, IInterpreterHelper, IInterpreterLocatorService,
-    IInterpreterService, IInterpreterVersionService, INTERPRETER_LOCATOR_SERVICE,
-    InterpreterType, PIPENV_SERVICE, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE
+    IInterpreterService, INTERPRETER_LOCATOR_SERVICE,
+    PIPENV_SERVICE, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE
 } from './contracts';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
@@ -93,29 +93,40 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const pythonExecutionService = await pythonExecutionFactory.create(resource);
+        const pythonExecutionService = await pythonExecutionFactory.create({ resource });
         const fullyQualifiedPath = await pythonExecutionService.getExecutablePath().catch(() => undefined);
         // Python path is invalid or python isn't installed.
         if (!fullyQualifiedPath) {
             return;
         }
+
+        return this.getInterpreterDetails(fullyQualifiedPath, resource);
+    }
+    public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<PythonInterpreter> {
         const interpreters = await this.getInterpreters(resource);
-        const interpreter = interpreters.find(i => utils.arePathsSame(i.path, fullyQualifiedPath));
+        const interpreter = interpreters.find(i => utils.arePathsSame(i.path, pythonPath));
 
         if (interpreter) {
             return interpreter;
         }
-        const pythonExecutableName = path.basename(fullyQualifiedPath);
-        const versionInfo = await this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService).getVersion(fullyQualifiedPath, pythonExecutableName);
+        const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         const virtualEnvManager = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
-        const virtualEnvName = await virtualEnvManager.getEnvironmentName(fullyQualifiedPath);
+        const [details, virtualEnvName, type] = await Promise.all([
+            interpreterHelper.getInterpreterInformation(pythonPath),
+            virtualEnvManager.getEnvironmentName(pythonPath),
+            virtualEnvManager.getEnvironmentType(pythonPath)
+        ]);
+        if (details) {
+            return;
+        }
         const dislayNameSuffix = virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
-        const displayName = `${versionInfo}${dislayNameSuffix}`;
+        const displayName = `${details.version!}${dislayNameSuffix}`;
         return {
+            ...(details as PythonInterpreter),
             displayName,
-            path: fullyQualifiedPath,
-            type: virtualEnvName.length > 0 ? InterpreterType.VirtualEnv : InterpreterType.Unknown,
-            version: versionInfo
+            path: pythonPath,
+            envName: virtualEnvName,
+            type: type
         };
     }
     private async shouldAutoSetInterpreter(): Promise<boolean> {

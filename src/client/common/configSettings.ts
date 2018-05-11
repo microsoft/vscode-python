@@ -25,21 +25,21 @@ export const IS_WINDOWS = /^win/.test(process.platform);
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
+    public pythiaEnabled = true;
     public jediEnabled = true;
     public jediPath = '';
     public jediMemoryLimit = 1024;
     public envFile = '';
-    public disablePromptForFeatures: string[] = [];
     public venvPath = '';
     public venvFolders: string[] = [];
     public devOptions: string[] = [];
-    public linting?: ILintingSettings;
-    public formatting?: IFormattingSettings;
-    public autoComplete?: IAutoCompleteSettings;
-    public unitTest?: IUnitTestSettings;
+    public linting!: ILintingSettings;
+    public formatting!: IFormattingSettings;
+    public autoComplete!: IAutoCompleteSettings;
+    public unitTest!: IUnitTestSettings;
     public terminal!: ITerminalSettings;
-    public sortImports?: ISortImportSettings;
-    public workspaceSymbols?: IWorkspaceSymbolSettings;
+    public sortImports!: ISortImportSettings;
+    public workspaceSymbols!: IWorkspaceSymbolSettings;
     public disableInstallationChecks = false;
     public globalModuleInstallation = false;
 
@@ -125,6 +125,8 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                 this.jediPath = '';
             }
             this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
+        } else {
+            this.pythiaEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('pythiaEnabled', true))!;
         }
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
@@ -136,9 +138,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const lintingSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('linting'))!;
-        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        this.disablePromptForFeatures = pythonSettings.get<string[]>('disablePromptForFeatures')!;
-        this.disablePromptForFeatures = Array.isArray(this.disablePromptForFeatures) ? this.disablePromptForFeatures : [];
         if (this.linting) {
             Object.assign<ILintingSettings, ILintingSettings>(this.linting, lintingSettings);
         } else {
@@ -213,6 +212,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.formatting = this.formatting ? this.formatting : {
             autopep8Args: [], autopep8Path: 'autopep8',
             provider: 'autopep8',
+            blackArgs: [], blackPath: 'black',
             yapfArgs: [], yapfPath: 'yapf'
         };
         this.formatting.autopep8Path = getAbsolutePath(systemVariables.resolveAny(this.formatting.autopep8Path), workspaceRoot);

@@ -6,7 +6,7 @@ import { ExecutionInfo, IFormattingSettings, Product } from '../common/types';
 
 export const IFormatterHelper = Symbol('IFormatterHelper');
 
-export type FormatterId = 'autopep8' | 'yapf';
+export type FormatterId = 'autopep8' | 'black' | 'yapf';
 
 export type FormatterSettingsPropertyNames = {
     argsName: keyof IFormattingSettings;

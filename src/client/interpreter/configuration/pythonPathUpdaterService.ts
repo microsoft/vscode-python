@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, window } from 'vscode';
+import { InterpreterInfomation, IPythonExecutionFactory } from '../../common/process/types';
 import { StopWatch } from '../../common/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -13,9 +14,11 @@ import { IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } fr
 export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManager {
     private readonly pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory;
     private readonly interpreterVersionService: IInterpreterVersionService;
+    private readonly executionFactory: IPythonExecutionFactory;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.pythonPathSettingsUpdaterFactory = serviceContainer.get<IPythonPathUpdaterServiceFactory>(IPythonPathUpdaterServiceFactory);
         this.interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
+        this.executionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
     }
     public async updatePythonPath(pythonPath: string, configTarget: ConfigurationTarget, trigger: 'ui' | 'shebang' | 'load', wkspace?: Uri): Promise<void> {
         const stopWatch = new StopWatch();
@@ -39,17 +42,17 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             failed, trigger
         };
         if (!failed) {
-            const pyVersionPromise = this.interpreterVersionService.getVersion(pythonPath, '')
-                .then(pyVersion => pyVersion.length === 0 ? undefined : pyVersion);
+            const processService = await this.executionFactory.create({ pythonPath });
+            const infoPromise = processService.getInterpreterInformation().catch<InterpreterInfomation>(() => undefined);
             const pipVersionPromise = this.interpreterVersionService.getPipVersion(pythonPath)
                 .then(value => value.length === 0 ? undefined : value)
-                .catch(() => undefined);
-            const versions = await Promise.all([pyVersionPromise, pipVersionPromise]);
-            if (versions[0]) {
-                telemtryProperties.version = versions[0] as string;
+                .catch<string>(() => undefined);
+            const [info, pipVersion] = await Promise.all([infoPromise, pipVersionPromise]);
+            if (info) {
+                telemtryProperties.version = info.version;
             }
-            if (versions[1]) {
-                telemtryProperties.pipVersion = versions[1] as string;
+            if (pipVersion) {
+                telemtryProperties.pipVersion = pipVersion;
             }
         }
         sendTelemetryEvent(PYTHON_INTERPRETER, duration, telemtryProperties);

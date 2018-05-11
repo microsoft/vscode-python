@@ -24,10 +24,10 @@ export class ConfigurationProviderUtils implements IConfigurationProviderUtils {
     }
     public async getPyramidStartupScriptFilePath(resource?: Uri): Promise<string | undefined> {
         try {
-            const executionService = await this.executionFactory.create(resource);
+            const executionService = await this.executionFactory.create({ resource });
             const output = await executionService.exec(['-c', 'import pyramid;print(pyramid.__file__)'], { throwOnStdErr: true });
             const pserveFilePath = path.join(path.dirname(output.stdout.trim()), 'scripts', PSERVE_SCRIPT_FILE_NAME);
-            return await this.fs.fileExistsAsync(pserveFilePath) ? pserveFilePath : undefined;
+            return await this.fs.fileExists(pserveFilePath) ? pserveFilePath : undefined;
         } catch (ex) {
             const message = 'Unable to locate \'pserve.py\' required for debugging of Pyramid applications.';
             console.error(message, ex);

@@ -2,6 +2,7 @@
 # but flake8 has a tighter pinning.
 flake8
 autopep8
+black ; python_version>='3.6'
 yapf
 pylint
 pep8

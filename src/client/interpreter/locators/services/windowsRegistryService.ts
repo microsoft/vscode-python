@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 import { Architecture, IRegistry, RegistryHive } from '../../../common/platform/types';
 import { Is64Bit } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../contracts';
+import { IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
 
@@ -20,14 +20,14 @@ const PythonCoreCompanyDisplayName = 'Python Software Foundation';
 const PythonCoreComany = 'PYTHONCORE';
 
 type CompanyInterpreter = {
-    companyKey: string,
-    hive: RegistryHive,
-    arch?: Architecture
+    companyKey: string;
+    hive: RegistryHive;
+    arch?: Architecture;
 };
 
 @injectable()
 export class WindowsRegistryService extends CacheableLocatorService {
-    constructor( @inject(IRegistry) private registry: IRegistry,
+    constructor(@inject(IRegistry) private registry: IRegistry,
         @inject(Is64Bit) private is64Bit: boolean,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('WindowsRegistryService', serviceContainer);
@@ -84,11 +84,11 @@ export class WindowsRegistryService extends CacheableLocatorService {
     private getInreterpreterDetailsForCompany(tagKey: string, companyKey: string, hive: RegistryHive, arch?: Architecture): Promise<PythonInterpreter | undefined | null> {
         const key = `${tagKey}\\InstallPath`;
         type InterpreterInformation = null | undefined | {
-            installPath: string,
-            executablePath?: string,
-            displayName?: string,
-            version?: string,
-            companyDisplayName?: string
+            installPath: string;
+            executablePath?: string;
+            displayName?: string;
+            version?: string;
+            companyDisplayName?: string;
         };
         return this.registry.getValue(key, hive, arch)
             .then(installPath => {
@@ -109,20 +109,26 @@ export class WindowsRegistryService extends CacheableLocatorService {
                 ])
                     .then(([installedPath, executablePath, displayName, version, companyDisplayName]) => {
                         companyDisplayName = AnacondaCompanyNames.indexOf(companyDisplayName) === -1 ? companyDisplayName : AnacondaCompanyName;
-                        // tslint:disable-next-line:prefer-type-cast
+                        // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
                         return { installPath: installedPath, executablePath, displayName, version, companyDisplayName } as InterpreterInformation;
                     });
             })
-            .then((interpreterInfo?: InterpreterInformation) => {
+            .then(async (interpreterInfo?: InterpreterInformation) => {
                 if (!interpreterInfo) {
                     return;
                 }
 
                 const executablePath = interpreterInfo.executablePath && interpreterInfo.executablePath.length > 0 ? interpreterInfo.executablePath : path.join(interpreterInfo.installPath, DefaultPythonExecutable);
                 const displayName = interpreterInfo.displayName;
-                const version = interpreterInfo.version ? path.basename(interpreterInfo.version) : path.basename(tagKey);
-                // tslint:disable-next-line:prefer-type-cast
+                const helper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
+                const details = await helper.getInterpreterInformation(executablePath);
+                if (!details) {
+                    return;
+                }
+                const version = interpreterInfo.version ? path.basename(interpreterInfo.version) : details.version;
+                // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
                 return {
+                    ...(details as PythonInterpreter),
                     architecture: arch,
                     displayName,
                     path: executablePath,

@@ -8,25 +8,38 @@ import { Memento } from 'vscode';
 import { GLOBAL_MEMENTO, IMemento, IPersistentState, IPersistentStateFactory, WORKSPACE_MEMENTO } from './types';
 
 class PersistentState<T> implements IPersistentState<T>{
-    constructor(private storage: Memento, private key: string, private defaultValue: T) { }
+    constructor(private storage: Memento, private key: string, private defaultValue?: T, private expiryDurationMs?: number) { }
 
     public get value(): T {
-        return this.storage.get<T>(this.key, this.defaultValue);
+        if (this.expiryDurationMs) {
+            const cachedData = this.storage.get<{ data?: T; expiry?: number }>(this.key, { data: this.defaultValue! });
+            if (!cachedData || !cachedData.expiry || cachedData.expiry < Date.now()) {
+                return this.defaultValue!;
+            } else {
+                return cachedData.data!;
+            }
+        } else {
+            return this.storage.get<T>(this.key, this.defaultValue!);
+        }
     }
 
     public async updateValue(newValue: T): Promise<void> {
-        await this.storage.update(this.key, newValue);
+        if (this.expiryDurationMs) {
+            await this.storage.update(this.key, { data: newValue, expiry: Date.now() + this.expiryDurationMs });
+        } else {
+            await this.storage.update(this.key, newValue);
+        }
     }
 }
 
 @injectable()
 export class PersistentStateFactory implements IPersistentStateFactory {
-    constructor( @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
+    constructor(@inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento) { }
-    public createGlobalPersistentState<T>(key: string, defaultValue: T): IPersistentState<T> {
-        return new PersistentState<T>(this.globalState, key, defaultValue);
+    public createGlobalPersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T> {
+        return new PersistentState<T>(this.globalState, key, defaultValue, expiryDurationMs);
     }
-    public createWorkspacePersistentState<T>(key: string, defaultValue: T): IPersistentState<T> {
-        return new PersistentState<T>(this.workspaceState, key, defaultValue);
+    public createWorkspacePersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T> {
+        return new PersistentState<T>(this.workspaceState, key, defaultValue, expiryDurationMs);
     }
 }

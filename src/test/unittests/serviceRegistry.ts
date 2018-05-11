@@ -13,6 +13,7 @@ import { TestFlatteningVisitor } from '../../client/unittests/common/testVisitor
 import { TestFolderGenerationVisitor } from '../../client/unittests/common/testVisitors/folderGenerationVisitor';
 import { TestResultResetVisitor } from '../../client/unittests/common/testVisitors/resultResetVisitor';
 import { ITestResultsService, ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, TestProvider } from '../../client/unittests/common/types';
+// tslint:disable-next-line:no-duplicate-imports
 import { ITestCollectionStorageService, ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory } from '../../client/unittests/common/types';
 import { TestManager as NoseTestManager } from '../../client/unittests/nosetest/main';
 import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/unittests/nosetest/services/discoveryService';
@@ -31,7 +32,7 @@ export class UnitTestIocContainer extends IocContainer {
         super();
     }
     public getPythonMajorVersion(resource: Uri) {
-        return this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(resource)
+        return this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource })
             .then(pythonProcess => pythonProcess.exec(['-c', 'import sys;print(sys.version_info[0])'], {}))
             .then(output => parseInt(output.stdout.trim(), 10));
     }

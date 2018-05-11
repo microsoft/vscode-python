@@ -5,13 +5,18 @@
 import { Event, Terminal, Uri } from 'vscode';
 
 export enum TerminalShellType {
-    powershell = 1,
-    powershellCore = 2,
-    commandPrompt = 3,
-    bash = 4,
-    fish = 5,
-    cshell = 6,
-    other = 7
+    powershell = 'powershell',
+    powershellCore = 'powershellCore',
+    commandPrompt = 'commandPrompt',
+    gitbash = 'gitbash',
+    bash = 'bash',
+    zsh = 'zsh',
+    ksh = 'ksh',
+    fish = 'fish',
+    cshell = 'cshell',
+    tcshell = 'tshell',
+    wsl = 'wsl',
+    other = 'other'
 }
 
 export interface ITerminalService {

@@ -40,7 +40,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.18.0"
+        "vscode": "^1.23.0"
     },
     "recommendations": [
         "donjayamanne.jupyter"
@@ -84,7 +84,8 @@
         "onCommand:python.goToPythonObject",
         "onCommand:python.setLinter",
         "onCommand:python.enableLinting",
-        "onCommand:python.createTerminal"
+        "onCommand:python.createTerminal",
+        "onCommand:python.discoverTests"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -94,7 +95,7 @@
                 "path": "./snippets/python.json"
             }
         ],
-        "keybindings":[
+        "keybindings": [
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "ctrl+enter",
@@ -185,6 +186,11 @@
             {
                 "command": "python.runFailedTests",
                 "title": "%python.command.python.runFailedTests.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.discoverTests",
+                "title": "%python.command.python.discoverTests.title%",
                 "category": "Python"
             },
             {
@@ -386,7 +392,7 @@
                             "module": "flask",
                             "cwd": "^\"\\${workspaceFolder}\"",
                             "env": {
-                                "FLASK_APP": "^\"\\${workspaceFolder}/app.py\""
+                                "FLASK_APP": "app.py"
                             },
                             "args": [
                                 "run",
@@ -679,7 +685,7 @@
                         "request": "launch",
                         "module": "flask",
                         "env": {
-                            "FLASK_APP": "${workspaceFolder}/app.py"
+                            "FLASK_APP": "app.py"
                         },
                         "args": [
                             "run",
@@ -747,7 +753,8 @@
                 "enableBreakpointsFor": {
                     "languageIds": [
                         "python",
-                        "html"
+                        "html",
+                        "jinja"
                     ]
                 },
                 "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
@@ -801,7 +808,7 @@
                             "request": "launch",
                             "module": "flask",
                             "env": {
-                                "FLASK_APP": "^\"\\${workspaceFolder}/app.py\""
+                                "FLASK_APP": "app.py"
                             },
                             "args": [
                                 "run",
@@ -1100,7 +1107,7 @@
                         "request": "launch",
                         "module": "flask",
                         "env": {
-                            "FLASK_APP": "${workspaceFolder}/app.py"
+                            "FLASK_APP": "app.py"
                         },
                         "args": [
                             "run",
@@ -1156,26 +1163,6 @@
                     "description": "Whether to check if Python is installed (also warn when using the macOS-installed Python).",
                     "scope": "resource"
                 },
-                "python.disablePromptForFeatures": {
-                    "type": "array",
-                    "default": [],
-                    "description": "Do not display a prompt to install these features",
-                    "items": {
-                        "type": "string",
-                        "default": "pylint",
-                        "description": "Feature",
-                        "enum": [
-                            "flake8",
-                            "mypy",
-                            "pep8",
-                            "pylama",
-                            "prospector",
-                            "pydocstyle",
-                            "pylint"
-                        ]
-                    },
-                    "scope": "resource"
-                },
                 "python.envFile": {
                     "type": "string",
                     "description": "Absolute path to a file containing environment variable definitions.",
@@ -1200,12 +1187,28 @@
                 "python.formatting.provider": {
                     "type": "string",
                     "default": "autopep8",
-                    "description": "Provider for formatting. Possible options include 'autopep8' and 'yapf'.",
+                    "description": "Provider for formatting. Possible options include 'autopep8', 'black', and 'yapf'.",
                     "enum": [
                         "autopep8",
+                        "black",
                         "yapf",
                         "none"
                     ],
+                    "scope": "resource"
+                },
+                "python.formatting.blackArgs": {
+                    "type": "array",
+                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "scope": "resource"
+                },
+                "python.formatting.blackPath": {
+                    "type": "string",
+                    "default": "black",
+                    "description": "Path to Black, you can use a custom version of Black by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
                 "python.formatting.yapfArgs": {
@@ -1227,6 +1230,18 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Whether to install Python modules globally when not using an environment.",
+                    "scope": "resource"
+                },
+                "python.pythiaEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables AI-driven additions to the completion list. Does not apply to Jedi.",
+                    "scope": "resource"
+                },
+                "python.jediEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables Jedi as IntelliSense engine instead of Microsoft Python Analysis Engine.",
                     "scope": "resource"
                 },
                 "python.jediMemoryLimit": {
@@ -1616,12 +1631,6 @@
                     "description": "Optional working directory for unit tests.",
                     "scope": "resource"
                 },
-                "python.unitTest.debugHost": {
-                    "type": "number",
-                    "default": "localhost",
-                    "description": "IP Address of the of the local unit test server (default is localhost or use 127.0.0.1).",
-                    "scope": "resource"
-                },
                 "python.unitTest.debugPort": {
                     "type": "number",
                     "default": 3000,
@@ -1757,7 +1766,6 @@
                     "description": "Whether to re-build the tags file on start (defaults to true).",
                     "scope": "resource"
                 },
-
                 "python.workspaceSymbols.tagFilePath": {
                     "type": "string",
                     "default": "${workspaceFolder}/.vscode/tags",
@@ -1789,6 +1797,16 @@
                 "id": "yaml",
                 "filenames": [
                     ".condarc"
+                ]
+            },
+            {
+                "id": "jinja",
+                "extensions": [
+                    ".jinja2",
+                    ".j2"
+                ],
+                "aliases": [
+                    "Jinja"
                 ]
             }
         ],
@@ -1829,7 +1847,7 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "tsc -p ./",
+        "vscode:prepublish": "gulp checkNativeDependencies && tsc -p ./",
         "compile": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
@@ -1912,6 +1930,7 @@
         "decache": "^4.4.0",
         "del": "^3.0.0",
         "event-stream": "^3.3.4",
+        "flat": "^4.0.0",
         "gulp": "^3.9.1",
         "gulp-debounced-watch": "^1.0.4",
         "gulp-filter": "^5.1.0",
@@ -1924,6 +1943,7 @@
         "is-running": "^2.1.0",
         "istanbul": "^0.4.5",
         "mocha": "^5.0.4",
+        "node-has-native-dependencies": "^1.0.2",
         "relative": "^3.0.2",
         "remap-istanbul": "^0.10.1",
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",

@@ -330,7 +330,7 @@ export class JediProxy implements Disposable {
             this.languageServerStarted.reject(new Error('Language Server not started.'));
         }
         this.languageServerStarted = createDeferred<void>();
-        const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(Uri.file(this.workspacePath));
+        const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(this.workspacePath) });
         // Check if the python path is valid.
         if ((await pythonProcess.getExecutablePath().catch(() => '')).length === 0) {
             return;
@@ -606,7 +606,7 @@ export class JediProxy implements Disposable {
 
     private async getPathFromPythonCommand(args: string[]): Promise<string> {
         try {
-            const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(Uri.file(this.workspacePath));
+            const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(this.workspacePath) });
             const result = await pythonProcess.exec(args, { cwd: this.workspacePath });
             const lines = result.stdout.trim().splitLines();
             if (lines.length === 0) {

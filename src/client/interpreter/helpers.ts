@@ -1,8 +1,14 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { IFileSystem } from '../common/platform/types';
+import { IPythonExecutionFactory } from '../common/process/types';
+import { IPersistentStateFactory } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { IInterpreterHelper, WorkspacePythonPath } from './contracts';
+import { IInterpreterHelper, PythonInterpreter, WorkspacePythonPath } from './contracts';
+
+const EXPITY_DURATION = 24 * 60 * 60 * 1000;
+type CachedPythonInterpreter = Partial<PythonInterpreter> & { fileHash: string };
 
 export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
     if (!stdout) {
@@ -14,13 +20,17 @@ export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
 
 @injectable()
 export class InterpreterHelper implements IInterpreterHelper {
+    private readonly fs: IFileSystem;
+    private readonly persistentFactory: IPersistentStateFactory;
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+        this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
     public getActiveWorkspaceUri(): WorkspacePythonPath | undefined {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
 
-        if (!Array.isArray(workspaceService.workspaceFolders) || workspaceService.workspaceFolders.length === 0) {
+        if (!workspaceService.hasWorkspaceFolders) {
             return;
         }
         if (workspaceService.workspaceFolders.length === 1) {
@@ -31,6 +41,30 @@ export class InterpreterHelper implements IInterpreterHelper {
             if (workspaceFolder) {
                 return { configTarget: ConfigurationTarget.WorkspaceFolder, folderUri: workspaceFolder.uri };
             }
+        }
+    }
+    public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>> {
+        const fileHash = await this.fs.getFileHash(pythonPath).catch(() => '');
+        const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(pythonPath, undefined, EXPITY_DURATION);
+        if (store.value && store.value.fileHash === fileHash) {
+            return store.value;
+        }
+        const processService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ pythonPath });
+
+        try {
+            const info = await processService.getInterpreterInformation().catch(() => undefined);
+            if (!info) {
+                return;
+            }
+            const details = {
+                ...(info),
+                fileHash
+            };
+            await store.updateValue(details);
+            return details;
+        } catch (ex) {
+            console.error(`Failed to get interpreter information for '${pythonPath}'`, ex);
+            return {};
         }
     }
 }

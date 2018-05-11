@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IProcessService } from '../../client/common/process/types';
+import { IProcessServiceFactory } from '../../client/common/process/types';
 import { CommandSource } from '../../client/unittests/common/constants';
 import { ITestManagerFactory } from '../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
@@ -62,8 +62,8 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         ioc.registerMockProcessTypes();
     }
 
-    function injectTestDiscoveryOutput(outputFileName: string) {
-        const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+    async function injectTestDiscoveryOutput(outputFileName: string) {
+        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         procService.onExecObservable((file, args, options, callback) => {
             if (args.indexOf('--collect-only') >= 0) {
                 let out = fs.readFileSync(path.join(UNITTEST_TEST_FILES_PATH, outputFileName), 'utf8');
@@ -78,7 +78,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
     }
 
     test('Discover Tests (single test file)', async () => {
-        injectTestDiscoveryOutput('one.output');
+        await injectTestDiscoveryOutput('one.output');
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_SINGLE_TEST_FILE_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -89,7 +89,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
     });
 
     test('Check that nameToRun in testSuites has class name after : (single test file)', async () => {
-        injectTestDiscoveryOutput('two.output');
+        await injectTestDiscoveryOutput('two.output');
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_SINGLE_TEST_FILE_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -99,7 +99,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         assert.equal(tests.testSuites.every(t => t.testSuite.name === t.testSuite.nameToRun.split(':')[1]), true, 'Suite name does not match class name');
     });
     test('Discover Tests (-m=test)', async () => {
-        injectTestDiscoveryOutput('three.output');
+        await injectTestDiscoveryOutput('three.output');
         await updateSetting('unitTest.nosetestArgs', ['-m', 'test'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
@@ -115,7 +115,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
     });
 
     test('Discover Tests (-w=specific -m=tst)', async () => {
-        injectTestDiscoveryOutput('four.output');
+        await injectTestDiscoveryOutput('four.output');
         await updateSetting('unitTest.nosetestArgs', ['-w', 'specific', '-m', 'tst'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
@@ -128,7 +128,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
     });
 
     test('Discover Tests (-m=test_)', async () => {
-        injectTestDiscoveryOutput('five.output');
+        await injectTestDiscoveryOutput('five.output');
         await updateSetting('unitTest.nosetestArgs', ['-m', 'test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('nosetest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);

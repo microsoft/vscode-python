@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Container } from 'inversify';
+import * as TypeMoq from 'typemoq';
 import { Disposable, Memento, OutputChannel } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
 import { Logger } from '../client/common/logger';
@@ -16,7 +17,7 @@ import { ProcessService } from '../client/common/process/proc';
 import { PythonExecutionFactory } from '../client/common/process/pythonExecutionFactory';
 import { PythonToolExecutionService } from '../client/common/process/pythonToolService';
 import { registerTypes as processRegisterTypes } from '../client/common/process/serviceRegistry';
-import { IBufferDecoder, IProcessService, IPythonExecutionFactory, IPythonToolExecutionService } from '../client/common/process/types';
+import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonToolExecutionService } from '../client/common/process/types';
 import { registerTypes as commonRegisterTypes } from '../client/common/serviceRegistry';
 import { GLOBAL_MEMENTO, ICurrentProcess, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPathUtils, Is64Bit, IsWindows, WORKSPACE_MEMENTO } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
@@ -30,7 +31,7 @@ import { TEST_OUTPUT_CHANNEL } from '../client/unittests/common/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/unittests/serviceRegistry';
 import { MockOutputChannel } from './mockClasses';
 import { MockMemento } from './mocks/mementos';
-import { IOriginalProcessService, MockProcessService } from './mocks/proc';
+import { MockProcessService } from './mocks/proc';
 import { MockProcess } from './mocks/process';
 
 export class IocContainer {
@@ -93,8 +94,11 @@ export class IocContainer {
     }
     public registerMockProcessTypes() {
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
-        this.serviceManager.addSingleton<IProcessService>(IOriginalProcessService, ProcessService);
-        this.serviceManager.addSingleton<IProcessService>(IProcessService, MockProcessService);
+        const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+        // tslint:disable-next-line:no-any
+        const processService = new MockProcessService(new ProcessService(new BufferDecoder(), process.env as any));
+        processServiceFactory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService));
+        this.serviceManager.addSingletonInstance<IProcessServiceFactory>(IProcessServiceFactory, processServiceFactory.object);
         this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
         this.serviceManager.addSingleton<IPythonToolExecutionService>(IPythonToolExecutionService, PythonToolExecutionService);
     }

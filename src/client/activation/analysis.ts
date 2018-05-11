@@ -9,10 +9,11 @@ import { IApplicationShell } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
-import { IProcessService } from '../common/process/types';
+import { IProcessServiceFactory } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import {
     PYTHON_ANALYSIS_ENGINE_DOWNLOADED,
@@ -35,11 +36,11 @@ class LanguageServerStartupErrorHandler implements ErrorHandler {
     constructor(private readonly deferred: Deferred<void>) { }
     public error(error: Error, message: Message, count: number): ErrorAction {
         this.deferred.reject(error);
-        return ErrorAction.Shutdown;
+        return ErrorAction.Continue;
     }
     public closed(): CloseAction {
         this.deferred.reject();
-        return CloseAction.DoNotRestart;
+        return CloseAction.Restart;
     }
 }
 
@@ -50,7 +51,11 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly fs: IFileSystem;
     private readonly sw = new StopWatch();
     private readonly platformData: PlatformData;
+    private readonly interpreterService: IInterpreterService;
+    private readonly disposables: Disposable[] = [];
     private languageClient: LanguageClient | undefined;
+    private context: ExtensionContext | undefined;
+    private interpreterHash: string = '';
 
     constructor(private readonly services: IServiceContainer, pythonSettings: IPythonSettings) {
         this.configuration = this.services.get<IConfigurationService>(IConfigurationService);
@@ -58,13 +63,17 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.fs = this.services.get<IFileSystem>(IFileSystem);
         this.platformData = new PlatformData(services.get<IPlatformService>(IPlatformService), this.fs);
+        this.interpreterService = this.services.get<IInterpreterService>(IInterpreterService);
     }
 
     public async activate(context: ExtensionContext): Promise<boolean> {
+        this.sw.reset();
+        this.context = context;
         const clientOptions = await this.getAnalysisOptions(context);
         if (!clientOptions) {
             return false;
         }
+        this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.restartLanguageServer()));
         return this.startLanguageServer(context, clientOptions);
     }
 
@@ -72,17 +81,36 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         if (this.languageClient) {
             await this.languageClient.stop();
         }
+        for (const d of this.disposables) {
+            d.dispose();
+        }
+    }
+
+    private async restartLanguageServer(): Promise<void> {
+        if (!this.context) {
+            return;
+        }
+        const ids = new InterpreterDataService(this.context, this.services);
+        const idata = await ids.getInterpreterData();
+        if (!idata || idata.hash !== this.interpreterHash) {
+            this.interpreterHash = idata ? idata.hash : '';
+            await this.deactivate();
+            await this.activate(this.context);
+        }
     }
 
     private async startLanguageServer(context: ExtensionContext, clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
         const mscorlib = path.join(context.extensionPath, analysisEngineFolder, 'mscorlib.dll');
+        const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
         let downloadPackage = false;
 
         const reporter = getTelemetryReporter();
         reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ENABLED);
 
-        if (!await this.fs.fileExistsAsync(mscorlib)) {
+        await this.checkPythiaModel(context, downloader);
+
+        if (!await this.fs.fileExists(mscorlib)) {
             // Depends on .NET Runtime or SDK
             this.languageClient = this.createSimpleLanguageClient(context, clientOptions);
             try {
@@ -100,7 +128,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         }
 
         if (downloadPackage) {
-            const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
+            this.appShell.showWarningMessage('.NET Runtime is not found, platform-specific Python Analysis Engine will be downloaded.');
             await downloader.downloadAnalysisEngine(context);
             reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_DOWNLOADED);
         }
@@ -128,7 +156,9 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
             disposable = lc.start();
             lc.onReady()
                 .then(() => deferred.resolve())
-                .catch(deferred.reject);
+                .catch((reason) => {
+                    deferred.reject(reason);
+                });
             await deferred.promise;
 
             this.output.appendLine(`Language server ready: ${this.sw.elapsedTime} ms`);
@@ -172,20 +202,19 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         const interpreterData = await interpreterDataService.getInterpreterData();
         if (!interpreterData) {
             const appShell = this.services.get<IApplicationShell>(IApplicationShell);
-            appShell.showErrorMessage('Unable to determine path to Python interpreter.');
-            return;
+            appShell.showWarningMessage('Unable to determine path to Python interpreter. IntelliSense will be limited.');
         }
 
-        // tslint:disable-next-line:no-string-literal
-        properties['InterpreterPath'] = interpreterData.path;
-        // tslint:disable-next-line:no-string-literal
-        properties['Version'] = interpreterData.version;
-        // tslint:disable-next-line:no-string-literal
-        properties['PrefixPath'] = interpreterData.prefix;
-        // tslint:disable-next-line:no-string-literal
-        properties['DatabasePath'] = path.join(context.extensionPath, analysisEngineFolder);
+        if (interpreterData) {
+            // tslint:disable-next-line:no-string-literal
+            properties['InterpreterPath'] = interpreterData.path;
+            // tslint:disable-next-line:no-string-literal
+            properties['Version'] = interpreterData.version;
+            // tslint:disable-next-line:no-string-literal
+            properties['PrefixPath'] = interpreterData.prefix;
+        }
 
-        let searchPaths = interpreterData.searchPaths;
+        let searchPaths = interpreterData ? interpreterData.searchPaths : '';
         const settings = this.configuration.getSettings();
         if (settings.autoComplete) {
             const extraPaths = settings.autoComplete.extraPaths;
@@ -194,12 +223,15 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
             }
         }
 
+        // tslint:disable-next-line:no-string-literal
+        properties['DatabasePath'] = path.join(context.extensionPath, analysisEngineFolder);
+
         const envProvider = this.services.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
         const pythonPath = (await envProvider.getEnvironmentVariables()).PYTHONPATH;
+        this.interpreterHash = interpreterData ? interpreterData.hash : '';
 
         // tslint:disable-next-line:no-string-literal
         properties['SearchPaths'] = `${searchPaths};${pythonPath ? pythonPath : ''}`;
-
         const selector: string[] = [PYTHON];
 
         // Options to control the language client
@@ -215,21 +247,29 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                     properties
                 },
                 displayOptions: {
-                    preferredFormat: 1, // markdown
+                    preferredFormat: 1, // Markdown
                     trimDocumentationLines: false,
                     maxDocumentationLineLength: 0,
                     trimDocumentationText: false,
                     maxDocumentationTextLength: 0
                 },
                 asyncStartup: true,
+                pythiaEnabled: settings.pythiaEnabled,
                 testEnvironment: isTestExecution()
             }
         };
     }
 
     private async isDotNetInstalled(): Promise<boolean> {
-        const ps = this.services.get<IProcessService>(IProcessService);
+        const ps = await this.services.get<IProcessServiceFactory>(IProcessServiceFactory).create();
         const result = await ps.exec('dotnet', ['--version']).catch(() => { return { stdout: '' }; });
         return result.stdout.trim().startsWith('2.');
+    }
+
+    private async checkPythiaModel(context: ExtensionContext, downloader: AnalysisEngineDownloader): Promise<void> {
+        const settings = this.configuration.getSettings();
+        if (settings.pythiaEnabled) {
+            await downloader.downloadPythiaModel(context);
+        }
     }
 }

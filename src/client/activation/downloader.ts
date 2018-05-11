@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fs from 'fs';
+import * as fileSystem from 'fs';
 import * as path from 'path';
 import * as request from 'request';
 import * as requestProgress from 'request-progress';
 import { ExtensionContext, OutputChannel, ProgressLocation, window } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { noop } from '../common/core.utils';
 import { createDeferred, createTemporaryFile } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IOutputChannel } from '../common/types';
@@ -22,41 +21,71 @@ const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-analysis';
 const downloadBaseFileName = 'python-analysis-vscode';
 const downloadVersion = '0.1.0';
 const downloadFileExtension = '.nupkg';
+const pythiaModelName = 'model-sequence.json.gz';
 
 export class AnalysisEngineDownloader {
     private readonly output: OutputChannel;
     private readonly platform: IPlatformService;
     private readonly platformData: PlatformData;
+    private readonly fs: IFileSystem;
 
     constructor(private readonly services: IServiceContainer, private engineFolder: string) {
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.fs = this.services.get<IFileSystem>(IFileSystem);
         this.platform = this.services.get<IPlatformService>(IPlatformService);
-        this.platformData = new PlatformData(this.platform, this.services.get<IFileSystem>(IFileSystem));
+        this.platformData = new PlatformData(this.platform, this.fs);
     }
 
     public async downloadAnalysisEngine(context: ExtensionContext): Promise<void> {
-        const localTempFilePath = await this.downloadFile();
+        const platformString = await this.platformData.getPlatformName();
+        const enginePackageFileName = `${downloadBaseFileName}-${platformString}.${downloadVersion}${downloadFileExtension}`;
+
+        let localTempFilePath = '';
         try {
-            await this.verifyDownload(localTempFilePath);
+            localTempFilePath = await this.downloadFile(downloadUriPrefix, enginePackageFileName, 'Downloading Python Analysis Engine... ');
+            await this.verifyDownload(localTempFilePath, platformString);
             await this.unpackArchive(context.extensionPath, localTempFilePath);
         } catch (err) {
             this.output.appendLine('failed.');
             this.output.appendLine(err);
             throw new Error(err);
         } finally {
-            fs.unlink(localTempFilePath, noop);
+            if (localTempFilePath.length > 0) {
+                await this.fs.deleteFile(localTempFilePath);
+            }
         }
     }
 
-    private async downloadFile(): Promise<string> {
-        const platformString = await this.platformData.getPlatformName();
-        const remoteFileName = `${downloadBaseFileName}-${platformString}.${downloadVersion}${downloadFileExtension}`;
-        const uri = `${downloadUriPrefix}/${remoteFileName}`;
+    public async downloadPythiaModel(context: ExtensionContext): Promise<void> {
+        const modelFolder = path.join(context.extensionPath, 'analysis', 'Pythia', 'model');
+        const localPath = path.join(modelFolder, pythiaModelName);
+        if (await this.fs.fileExists(localPath)) {
+            return;
+        }
+
+        let localTempFilePath = '';
+        try {
+            localTempFilePath = await this.downloadFile(downloadUriPrefix, pythiaModelName, 'Downloading IntelliSense Model File... ');
+            await this.fs.createDirectory(modelFolder);
+            await this.fs.copyFile(localTempFilePath, localPath);
+        } catch (err) {
+            this.output.appendLine('failed.');
+            this.output.appendLine(err);
+            throw new Error(err);
+        } finally {
+            if (localTempFilePath.length > 0) {
+                await this.fs.deleteFile(localTempFilePath);
+            }
+        }
+    }
+
+    private async downloadFile(location: string, fileName: string, title: string): Promise<string> {
+        const uri = `${location}/${fileName}`;
         this.output.append(`Downloading ${uri}... `);
         const tempFile = await createTemporaryFile(downloadFileExtension);
 
         const deferred = createDeferred();
-        const fileStream = fs.createWriteStream(tempFile.filePath);
+        const fileStream = fileSystem.createWriteStream(tempFile.filePath);
         fileStream.on('finish', () => {
             fileStream.close();
         }).on('error', (err) => {
@@ -64,7 +93,6 @@ export class AnalysisEngineDownloader {
             deferred.reject(err);
         });
 
-        const title = 'Downloading Python Analysis Engine... ';
         await window.withProgress({
             location: ProgressLocation.Window,
             title
@@ -94,11 +122,11 @@ export class AnalysisEngineDownloader {
         return tempFile.filePath;
     }
 
-    private async verifyDownload(filePath: string): Promise<void> {
+    private async verifyDownload(filePath: string, platformString: string): Promise<void> {
         this.output.appendLine('');
         this.output.append('Verifying download... ');
         const verifier = new HashVerifier();
-        if (!await verifier.verifyHash(filePath, await this.platformData.getExpectedHash())) {
+        if (!await verifier.verifyHash(filePath, platformString, await this.platformData.getExpectedHash())) {
             throw new Error('Hash of the downloaded file does not match.');
         }
         this.output.append('valid.');
@@ -123,10 +151,10 @@ export class AnalysisEngineDownloader {
 
             let totalFiles = 0;
             let extractedFiles = 0;
-            zip.on('ready', () => {
+            zip.on('ready', async () => {
                 totalFiles = zip.entriesCount;
-                if (!fs.existsSync(installFolder)) {
-                    fs.mkdirSync(installFolder);
+                if (!await this.fs.directoryExists(installFolder)) {
+                    await this.fs.createDirectory(installFolder);
                 }
                 zip.extract(null, installFolder, (err, count) => {
                     if (err) {
@@ -147,7 +175,7 @@ export class AnalysisEngineDownloader {
         // Set file to executable
         if (!this.platform.isWindows) {
             const executablePath = path.join(installFolder, this.platformData.getEngineExecutableName());
-            fs.chmodSync(executablePath, '0764'); // -rwxrw-r--
+            fileSystem.chmodSync(executablePath, '0764'); // -rwxrw-r--
         }
     }
 }

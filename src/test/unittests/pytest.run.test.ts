@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IProcessService } from '../../client/common/process/types';
+import { IProcessServiceFactory } from '../../client/common/process/types';
 import { CommandSource } from '../../client/unittests/common/constants';
 import { ITestManagerFactory, TestFile, TestsToRun } from '../../client/unittests/common/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
@@ -43,8 +43,8 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         ioc.registerMockProcessTypes();
     }
 
-    function injectTestDiscoveryOutput(outputFileName: string) {
-        const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+    async function injectTestDiscoveryOutput(outputFileName: string) {
+        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         procService.onExecObservable((file, args, options, callback) => {
             if (args.indexOf('--collect-only') >= 0) {
                 callback({
@@ -55,8 +55,8 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         });
     }
 
-    function injectTestRunOutput(outputFileName: string, failedOutput: boolean = false) {
-        const procService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+    async function injectTestRunOutput(outputFileName: string, failedOutput: boolean = false) {
+        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         procService.onExecObservable((file, args, options, callback) => {
             if (failedOutput && args.indexOf('--last-failed') === -1) {
                 return;
@@ -73,8 +73,8 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     }
 
     test('Run Tests', async () => {
-        injectTestDiscoveryOutput('one.output');
-        injectTestRunOutput('one.xml');
+        await injectTestDiscoveryOutput('one.output');
+        await injectTestRunOutput('one.xml');
         await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
@@ -86,9 +86,9 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     });
 
     test('Run Failed Tests', async () => {
-        injectTestDiscoveryOutput('two.output');
-        injectTestRunOutput('two.xml');
-        injectTestRunOutput('two.again.xml', true);
+        await injectTestDiscoveryOutput('two.output');
+        await injectTestRunOutput('two.xml');
+        await injectTestRunOutput('two.again.xml', true);
         await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
@@ -106,8 +106,8 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     });
 
     test('Run Specific Test File', async () => {
-        injectTestDiscoveryOutput('three.output');
-        injectTestRunOutput('three.xml');
+        await injectTestDiscoveryOutput('three.output');
+        await injectTestRunOutput('three.xml');
         await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
@@ -130,8 +130,8 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     });
 
     test('Run Specific Test Suite', async () => {
-        injectTestDiscoveryOutput('four.output');
-        injectTestRunOutput('four.xml');
+        await injectTestDiscoveryOutput('four.output');
+        await injectTestRunOutput('four.xml');
         await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);
@@ -145,8 +145,8 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     });
 
     test('Run Specific Test Function', async () => {
-        injectTestDiscoveryOutput('five.output');
-        injectTestRunOutput('five.xml');
+        await injectTestDiscoveryOutput('five.output');
+        await injectTestRunOutput('five.xml');
         await updateSetting('unitTest.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri, UNITTEST_TEST_FILES_PATH);

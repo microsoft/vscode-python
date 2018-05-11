@@ -1,14 +1,15 @@
+// tslint:disable:no-any no-unnecessary-class
 export class EnumEx {
-    static getNamesAndValues<T extends number>(e: any) {
-        return EnumEx.getNames(e).map(n => ({ name: n, value: e[n] as T }));
+    public static getNamesAndValues<T>(e: any): { name: string; value: T }[] {
+        return EnumEx.getNames(e).map(n => ({ name: n, value: e[n] }));
     }
 
-    static getNames(e: any) {
-        return EnumEx.getObjValues(e).filter(v => typeof v === "string") as string[];
+    public static getNames(e: any) {
+        return EnumEx.getObjValues(e).filter(v => typeof v === 'string') as string[];
     }
 
-    static getValues<T extends number>(e: any) {
-        return EnumEx.getObjValues(e).filter(v => typeof v === "number") as T[];
+    public static getValues<T>(e: any) {
+        return EnumEx.getObjValues(e).filter(v => typeof v === 'number') as any as T[];
     }
 
     private static getObjValues(e: any): (number | string)[] {

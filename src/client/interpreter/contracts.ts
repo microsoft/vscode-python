@@ -1,5 +1,5 @@
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
-import { Architecture } from '../common/platform/types';
+import { InterpreterInfomation } from '../common/process/types';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
 export const WINDOWS_REGISTRY_SERVICE = 'WindowsRegistryService';
@@ -10,7 +10,6 @@ export const KNOWN_PATH_SERVICE = 'KnownPathsService';
 export const GLOBAL_VIRTUAL_ENV_SERVICE = 'VirtualEnvService';
 export const WORKSPACE_VIRTUAL_ENV_SERVICE = 'WorkspaceVirtualEnvService';
 export const PIPENV_SERVICE = 'PipEnvService';
-
 export const IInterpreterVersionService = Symbol('IInterpreterVersionService');
 export interface IInterpreterVersionService {
     getVersion(pythonPath: string, defaultValue: string): Promise<string>;
@@ -54,15 +53,14 @@ export interface ICondaService {
 export enum InterpreterType {
     Unknown = 1,
     Conda = 2,
-    VirtualEnv = 4
+    VirtualEnv = 4,
+    PipEnv = 8,
+    Pyenv = 16,
+    Venv = 32
 }
-
-export type PythonInterpreter = {
-    path: string;
+export type PythonInterpreter = InterpreterInfomation & {
     companyDisplayName?: string;
     displayName?: string;
-    version?: string;
-    architecture?: Architecture;
     type: InterpreterType;
     envName?: string;
     envPath?: string;
@@ -80,6 +78,7 @@ export interface IInterpreterService {
     getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
     autoSetInterpreter(): Promise<void>;
     getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;
+    getInterpreterDetails(pythonPath: string): Promise<Partial<PythonInterpreter>>;
     refresh(): Promise<void>;
     initialize(): void;
 }
@@ -97,4 +96,10 @@ export interface IShebangCodeLensProvider extends CodeLensProvider {
 export const IInterpreterHelper = Symbol('IInterpreterHelper');
 export interface IInterpreterHelper {
     getActiveWorkspaceUri(): WorkspacePythonPath | undefined;
+    getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>>;
+}
+
+export const IPipEnvService = Symbol('IPipEnvService');
+export interface IPipEnvService {
+    isRelatedPipEnvironment(dir: string, pythonPath: string): Promise<boolean>;
 }

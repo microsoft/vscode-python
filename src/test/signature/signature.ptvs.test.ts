@@ -95,7 +95,7 @@ suite('Signatures (Analysis Engine)', () => {
             return;
         }
         const expected = [
-            new SignatureHelpResult(0, 5, 0, 0, null),
+            new SignatureHelpResult(0, 5, 1, -1, null),
             new SignatureHelpResult(0, 6, 1, 0, 'value'),
             new SignatureHelpResult(0, 7, 1, 0, 'value'),
             new SignatureHelpResult(0, 8, 1, 1, '...'),

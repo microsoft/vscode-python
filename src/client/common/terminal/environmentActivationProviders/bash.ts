@@ -10,12 +10,17 @@ import { BaseActivationCommandProvider } from './baseActivationProvider';
 
 @injectable()
 export class Bash extends BaseActivationCommandProvider {
-    constructor( @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }
     public isShellSupported(targetShell: TerminalShellType): boolean {
         return targetShell === TerminalShellType.bash ||
+            targetShell === TerminalShellType.gitbash ||
+            targetShell === TerminalShellType.wsl ||
+            targetShell === TerminalShellType.ksh ||
+            targetShell === TerminalShellType.zsh ||
             targetShell === TerminalShellType.cshell ||
+            targetShell === TerminalShellType.tcshell ||
             targetShell === TerminalShellType.fish;
     }
     public async getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
@@ -28,9 +33,14 @@ export class Bash extends BaseActivationCommandProvider {
 
     private getScriptsInOrderOfPreference(targetShell: TerminalShellType): string[] {
         switch (targetShell) {
+            case TerminalShellType.wsl:
+            case TerminalShellType.ksh:
+            case TerminalShellType.zsh:
+            case TerminalShellType.gitbash:
             case TerminalShellType.bash: {
                 return ['activate.sh', 'activate'];
             }
+            case TerminalShellType.tcshell:
             case TerminalShellType.cshell: {
                 return ['activate.csh'];
             }

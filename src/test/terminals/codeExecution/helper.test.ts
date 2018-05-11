@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-multiline-string no-trailing-whitespace
+// tslint:disable:no-multiline-string no-trailing-whitespace max-func-body-length no-any
 
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
@@ -14,7 +14,7 @@ import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../../client/common/cons
 import '../../../client/common/extensions';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
-import { IProcessService } from '../../../client/common/process/types';
+import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -24,7 +24,6 @@ import { PYTHON_PATH } from '../../common';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
 
-// tslint:disable-next-line:max-func-body-length
 suite('Terminal - Code Execution Helper', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let applicationShell: TypeMoq.IMock<IApplicationShell>;
@@ -42,12 +41,15 @@ suite('Terminal - Code Execution Helper', () => {
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         pythonSettings.setup(p => p.pythonPath).returns(() => PYTHON_PATH);
+        processService.setup((x: any) => x.then).returns(() => undefined);
         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         envVariablesProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
+        const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+        processServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory), TypeMoq.It.isAny())).returns(() => processServiceFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDocumentManager), TypeMoq.It.isAny())).returns(() => documentManager.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny())).returns(() => applicationShell.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny())).returns(() => envVariablesProvider.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessService), TypeMoq.It.isAny())).returns(() => processService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configService.object);
         helper = new CodeExecutionHelper(serviceContainer.object);
 

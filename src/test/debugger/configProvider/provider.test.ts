@@ -345,7 +345,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
             pythonExecutionService.setup(e => e.exec(TypeMoq.It.isValue(args), TypeMoq.It.isAny()))
                 .returns(() => execOutput)
                 .verifiable(TypeMoq.Times.exactly(addPyramidDebugOption ? 1 : 0));
-            fileSystem.setup(f => f.fileExistsAsync(TypeMoq.It.isValue(pserveFilePath)))
+            fileSystem.setup(f => f.fileExists(TypeMoq.It.isValue(pserveFilePath)))
                 .returns(() => Promise.resolve(pyramidExists))
                 .verifiable(TypeMoq.Times.exactly(pyramidExists && addPyramidDebugOption ? 1 : 0));
             appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAny()))

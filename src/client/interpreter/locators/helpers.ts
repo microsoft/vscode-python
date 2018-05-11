@@ -18,7 +18,8 @@ export function fixInterpreterDisplayName(item: PythonInterpreter) {
     if (!item.displayName) {
         const arch = getArchitectureDislayName(item.architecture);
         const version = typeof item.version === 'string' ? item.version : '';
-        item.displayName = ['Python', version, arch].filter(namePart => namePart.length > 0).join(' ').trim();
+        const prefix = version.toUpperCase().startsWith('PYTHON') ? '' : 'Python';
+        item.displayName = [prefix, version, arch].filter(namePart => namePart.length > 0).join(' ').trim();
     }
     return item;
 }

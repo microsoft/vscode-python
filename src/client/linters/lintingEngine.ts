@@ -66,7 +66,7 @@ export class LintingEngine implements ILintingEngine {
 
     public async lintOpenPythonFiles(): Promise<vscode.DiagnosticCollection> {
         this.diagnosticCollection.clear();
-        const promises = this.documents.textDocuments.map(async document => await this.lintDocument(document, 'auto'));
+        const promises = this.documents.textDocuments.map(async document => this.lintDocument(document, 'auto'));
         await Promise.all(promises);
         return this.diagnosticCollection;
     }
@@ -197,6 +197,6 @@ export class LintingEngine implements ILintingEngine {
         if (document.uri.scheme !== 'file' || !document.uri.fsPath) {
             return false;
         }
-        return await this.fileSystem.fileExistsAsync(document.uri.fsPath);
+        return this.fileSystem.fileExists(document.uri.fsPath);
     }
 }

@@ -4,12 +4,10 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { IFileSystem } from '../../platform/types';
 import { IConfigurationService } from '../../types';
-import { TerminalShellType } from '../types';
-import { ITerminalActivationCommandProvider } from '../types';
+import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
 @injectable()
 export abstract class BaseActivationCommandProvider implements ITerminalActivationCommandProvider {
@@ -25,7 +23,7 @@ export abstract class BaseActivationCommandProvider implements ITerminalActivati
         for (const scriptFileName of scriptFileNames) {
             // Generate scripts are found in the same directory as the interpreter.
             const scriptFile = path.join(path.dirname(pythonPath), scriptFileName);
-            const found = await fs.fileExistsAsync(scriptFile);
+            const found = await fs.fileExists(scriptFile);
             if (found) {
                 return scriptFile;
             }
