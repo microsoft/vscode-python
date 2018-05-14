@@ -94,7 +94,7 @@
                 "path": "./snippets/python.json"
             }
         ],
-        "keybindings":[
+        "keybindings": [
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "ctrl+enter",
@@ -1757,7 +1757,6 @@
                     "description": "Whether to re-build the tags file on start (defaults to true).",
                     "scope": "resource"
                 },
-
                 "python.workspaceSymbols.tagFilePath": {
                     "type": "string",
                     "default": "${workspaceFolder}/.vscode/tags",
@@ -1933,7 +1932,7 @@
         "tslint-eslint-rules": "^5.1.0",
         "tslint-microsoft-contrib": "^5.0.3",
         "typemoq": "^2.1.0",
-        "typescript": "^2.7.2",
+        "typescript": "2.8.3",
         "typescript-formatter": "^7.1.0",
         "vscode": "^1.1.5",
         "vscode-debugadapter-testsupport": "^1.27.0"
