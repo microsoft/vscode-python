@@ -1788,6 +1788,7 @@
                 "filenamePatterns": [
                     "*-requirements.txt",
                     "requirements-*.txt",
+                    "contraints-*.txt",
                     "*-requirements.in",
                     "requirements-*.in"
                 ],
