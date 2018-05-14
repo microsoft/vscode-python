@@ -1783,12 +1783,14 @@
                 ],
                 "filenames": [
                     "requirements.txt",
+                    "constraints.txt",
                     "requirements.in"
                 ],
                 "filenamePatterns": [
                     "*-requirements.txt",
                     "requirements-*.txt",
-                    "contraints-*.txt",
+                    "constraints-*.txt",
+                    "*-constraints.txt",
                     "*-requirements.in",
                     "requirements-*.in"
                 ],
