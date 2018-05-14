@@ -1712,6 +1712,12 @@
                     "description": "Use the experimental debugger when debugging unit tests.",
                     "scope": "resource"
                 },
+                "python.unitTest.autoTestDiscoverOnSaveEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to enable or disable auto run test discovery when saving a unit test file.",
+                    "scope": "resource"
+                },
                 "python.venvFolders": {
                     "type": "array",
                     "default": [

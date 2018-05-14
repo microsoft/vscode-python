@@ -64,7 +64,9 @@ async function getTestManager(displayTestNotConfiguredMessage: boolean, resource
 let timeoutId: NodeJS.Timer;
 async function onDocumentSaved(doc: vscode.TextDocument): Promise<void> {
     const testManager = await getTestManager(false, doc.uri);
-    if (!testManager) {
+    const configurationService = PythonSettings.getInstance(doc.uri);
+    const autoTestDiscoverOnSaveEnabled = configurationService.unitTest.autoTestDiscoverOnSaveEnabled === true;
+    if (!testManager || !autoTestDiscoverOnSaveEnabled) {
         return;
     }
     const tests = await testManager.discoverTests(CommandSource.auto, false, true);

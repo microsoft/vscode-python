@@ -264,7 +264,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                     nosetestArgs: [], pyTestArgs: [], unittestArgs: [],
                     promptToConfigure: true, debugPort: 3000,
                     nosetestsEnabled: false, pyTestEnabled: false, unittestEnabled: false,
-                    nosetestPath: 'nosetests', pyTestPath: 'pytest'
+                    nosetestPath: 'nosetests', pyTestPath: 'pytest', autoTestDiscoverOnSaveEnabled: true
                 } as IUnitTestSettings;
             }
         }
@@ -275,7 +275,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             debugPort: 3000,
             nosetestArgs: [], nosetestPath: 'nosetest', nosetestsEnabled: false,
             pyTestArgs: [], pyTestEnabled: false, pyTestPath: 'pytest',
-            unittestArgs: [], unittestEnabled: false
+            unittestArgs: [], unittestEnabled: false, autoTestDiscoverOnSaveEnabled: true
         };
         this.unitTest.pyTestPath = getAbsolutePath(systemVariables.resolveAny(this.unitTest.pyTestPath), workspaceRoot);
         this.unitTest.nosetestPath = getAbsolutePath(systemVariables.resolveAny(this.unitTest.nosetestPath), workspaceRoot);
