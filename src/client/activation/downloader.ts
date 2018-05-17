@@ -21,7 +21,7 @@ const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-analysis';
 const downloadBaseFileName = 'python-analysis-vscode';
 const downloadVersion = '0.1.0';
 const downloadFileExtension = '.nupkg';
-const pythiaModelName = 'model-sequence.json.gz';
+const modelName = 'model-sequence.json.gz';
 
 export class AnalysisEngineDownloader {
     private readonly output: OutputChannel;
@@ -56,16 +56,16 @@ export class AnalysisEngineDownloader {
         }
     }
 
-    public async downloadPythiaModel(context: ExtensionContext): Promise<void> {
+    public async downloadIntelliCodeModel(context: ExtensionContext): Promise<void> {
         const modelFolder = path.join(context.extensionPath, 'analysis', 'Pythia', 'model');
-        const localPath = path.join(modelFolder, pythiaModelName);
+        const localPath = path.join(modelFolder, modelName);
         if (await this.fs.fileExists(localPath)) {
             return;
         }
 
         let localTempFilePath = '';
         try {
-            localTempFilePath = await this.downloadFile(downloadUriPrefix, pythiaModelName, 'Downloading IntelliSense Model File... ');
+            localTempFilePath = await this.downloadFile(downloadUriPrefix, modelName, 'Downloading IntelliCode Model File... ');
             await this.fs.createDirectory(modelFolder);
             await this.fs.copyFile(localTempFilePath, localPath);
         } catch (err) {
