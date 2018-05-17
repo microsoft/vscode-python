@@ -1232,12 +1232,6 @@
                     "description": "Whether to install Python modules globally when not using an environment.",
                     "scope": "resource"
                 },
-                "python.pythiaEnabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables AI-driven additions to the completion list. Does not apply to Jedi.",
-                    "scope": "resource"
-                },
                 "python.jediEnabled": {
                     "type": "boolean",
                     "default": true,

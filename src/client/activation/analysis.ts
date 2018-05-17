@@ -108,8 +108,6 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         const reporter = getTelemetryReporter();
         reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ENABLED);
 
-        await this.checkPythiaModel(context, downloader);
-
         if (!await this.fs.fileExists(mscorlib)) {
             // Depends on .NET Runtime or SDK
             this.languageClient = this.createSimpleLanguageClient(context, clientOptions);
@@ -254,7 +252,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                     maxDocumentationTextLength: 0
                 },
                 asyncStartup: true,
-                pythiaEnabled: settings.pythiaEnabled,
+                intelliCodeEnabled: settings.intelliCodeEnabled,
                 testEnvironment: isTestExecution()
             }
         };
@@ -264,12 +262,5 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         const ps = await this.services.get<IProcessServiceFactory>(IProcessServiceFactory).create();
         const result = await ps.exec('dotnet', ['--version']).catch(() => { return { stdout: '' }; });
         return result.stdout.trim().startsWith('2.');
-    }
-
-    private async checkPythiaModel(context: ExtensionContext, downloader: AnalysisEngineDownloader): Promise<void> {
-        const settings = this.configuration.getSettings();
-        if (settings.pythiaEnabled) {
-            await downloader.downloadPythiaModel(context);
-        }
     }
 }
