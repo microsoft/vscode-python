@@ -100,6 +100,7 @@ export interface IPythonSettings {
     readonly venvPath: string;
     readonly venvFolders: string[];
     readonly intelliCodeEnabled: boolean;
+    readonly downloadCodeAnalysis: boolean;
     readonly jediEnabled: boolean;
     readonly jediPath: string;
     readonly jediMemoryLimit: number;

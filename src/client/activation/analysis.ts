@@ -9,7 +9,6 @@ import { IApplicationShell } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
-import { IProcessServiceFactory } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
@@ -103,30 +102,19 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
         const mscorlib = path.join(context.extensionPath, analysisEngineFolder, 'mscorlib.dll');
         const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
-        let downloadPackage = false;
 
         const reporter = getTelemetryReporter();
         reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ENABLED);
 
-        if (!await this.fs.fileExists(mscorlib)) {
-            // Depends on .NET Runtime or SDK
+        const settings = this.configuration.getSettings();
+        if (!settings.downloadCodeAnalysis) {
+            // Depends on .NET Runtime or SDK. Typically development-only case.
             this.languageClient = this.createSimpleLanguageClient(context, clientOptions);
-            try {
-                await this.tryStartLanguageClient(context, this.languageClient);
-                return true;
-            } catch (ex) {
-                if (await this.isDotNetInstalled()) {
-                    this.appShell.showErrorMessage(`.NET Runtime appears to be installed but the language server did not start. Error ${ex}`);
-                    reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ERROR, { error: 'Failed to start (MSIL)' });
-                    return false;
-                }
-                // No .NET Runtime, no mscorlib - need to download self-contained package.
-                downloadPackage = true;
-            }
+            await this.tryStartLanguageClient(context, this.languageClient);
+            return true;
         }
 
-        if (downloadPackage) {
-            this.appShell.showWarningMessage('.NET Runtime is not found, platform-specific Python Analysis Engine will be downloaded.');
+        if (!await this.fs.fileExists(mscorlib)) {
             await downloader.downloadAnalysisEngine(context);
             reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_DOWNLOADED);
         }
@@ -256,11 +244,5 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                 testEnvironment: isTestExecution()
             }
         };
-    }
-
-    private async isDotNetInstalled(): Promise<boolean> {
-        const ps = await this.services.get<IProcessServiceFactory>(IProcessServiceFactory).create();
-        const result = await ps.exec('dotnet', ['--version']).catch(() => { return { stdout: '' }; });
-        return result.stdout.trim().startsWith('2.');
     }
 }
