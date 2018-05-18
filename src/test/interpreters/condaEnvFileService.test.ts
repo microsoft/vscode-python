@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../client/common/platform/types';
 import { ILogger, IPersistentStateFactory } from '../../client/common/types';
-import { ICondaService, IInterpreterLocatorService, IInterpreterVersionService, InterpreterType } from '../../client/interpreter/contracts';
+import { ICondaService, IInterpreterHelper, IInterpreterLocatorService, InterpreterType } from '../../client/interpreter/contracts';
 import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -18,7 +18,7 @@ const environmentsFilePath = path.join(environmentsPath, 'environments.txt');
 suite('Interpreters from Conda Environments Text File', () => {
     let logger: TypeMoq.IMock<ILogger>;
     let condaService: TypeMoq.IMock<ICondaService>;
-    let interpreterVersion: TypeMoq.IMock<IInterpreterVersionService>;
+    let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let condaFileProvider: IInterpreterLocatorService;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     suiteSetup(initialize);
@@ -31,14 +31,14 @@ suite('Interpreters from Conda Environments Text File', () => {
         stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => state);
 
         condaService = TypeMoq.Mock.ofType<ICondaService>();
-        interpreterVersion = TypeMoq.Mock.ofType<IInterpreterVersionService>();
+        interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         logger = TypeMoq.Mock.ofType<ILogger>();
-        condaFileProvider = new CondaEnvFileService(interpreterVersion.object, condaService.object, fileSystem.object, serviceContainer.object, logger.object);
+        condaFileProvider = new CondaEnvFileService(interpreterHelper.object, condaService.object, fileSystem.object, serviceContainer.object, logger.object);
     });
     test('Must return an empty list if environment file cannot be found', async () => {
         condaService.setup(c => c.condaEnvironmentsFile).returns(() => undefined);
-        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('Mock Name'));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: 'Mock Name' }));
         const interpreters = await condaFileProvider.getInterpreters();
         assert.equal(interpreters.length, 0, 'Incorrect number of entries');
     });
@@ -46,7 +46,7 @@ suite('Interpreters from Conda Environments Text File', () => {
         condaService.setup(c => c.condaEnvironmentsFile).returns(() => environmentsFilePath);
         fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(true));
         fileSystem.setup(fs => fs.readFile(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(''));
-        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('Mock Name'));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: 'Mock Name' }));
         const interpreters = await condaFileProvider.getInterpreters();
         assert.equal(interpreters.length, 0, 'Incorrect number of entries');
     });
@@ -81,7 +81,7 @@ suite('Interpreters from Conda Environments Text File', () => {
         });
 
         fileSystem.setup(fs => fs.readFile(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(interpreterPaths.join(EOL)));
-        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('Mock Name'));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: 'Mock Name' }));
 
         const interpreters = await condaFileProvider.getInterpreters();
 
@@ -113,7 +113,7 @@ suite('Interpreters from Conda Environments Text File', () => {
 
         for (const companyName of AnacondaCompanyNames) {
             const versionWithCompanyName = `Mock Version :: ${companyName}`;
-            interpreterVersion.setup(c => c.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(versionWithCompanyName));
+            interpreterHelper.setup(c => c.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: versionWithCompanyName }));
             const interpreters = await condaFileProvider.getInterpreters();
 
             assert.equal(interpreters.length, 1, 'Incorrect number of entries');

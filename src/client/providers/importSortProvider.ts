@@ -38,7 +38,7 @@ export class PythonImportSortProvider {
             const processService = await this.processServiceFactory.create(document.uri);
             promise = processService.exec(isort, args, { throwOnStdErr: true });
         } else {
-            promise = this.pythonExecutionFactory.create(document.uri)
+            promise = this.pythonExecutionFactory.create({ resource: document.uri })
                 .then(executionService => executionService.exec([importScript].concat(args), { throwOnStdErr: true }));
         }
 

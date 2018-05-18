@@ -11,6 +11,7 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { IConfigurationService, IPersistentState, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
 import { IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { CurrentPathService } from '../../client/interpreter/locators/services/currentPathService';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -20,14 +21,14 @@ suite('Interpreters CurrentPath Service', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let virtualEnvironmentManager: TypeMoq.IMock<IVirtualEnvironmentManager>;
-    let interpreterVersionService: TypeMoq.IMock<IInterpreterVersionService>;
+    let interpreterHelper: TypeMoq.IMock<InterpreterHelper>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let currentPathService: CurrentPathService;
     let persistentState: TypeMoq.IMock<IPersistentState<PythonInterpreter[]>>;
     setup(async () => {
         processService = TypeMoq.Mock.ofType<IProcessService>();
         virtualEnvironmentManager = TypeMoq.Mock.ofType<IVirtualEnvironmentManager>();
-        interpreterVersionService = TypeMoq.Mock.ofType<IInterpreterVersionService>();
+        interpreterHelper = TypeMoq.Mock.ofType<InterpreterHelper>();
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -43,20 +44,21 @@ suite('Interpreters CurrentPath Service', () => {
 
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IVirtualEnvironmentManager), TypeMoq.It.isAny())).returns(() => virtualEnvironmentManager.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterVersionService), TypeMoq.It.isAny())).returns(() => interpreterVersionService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterVersionService), TypeMoq.It.isAny())).returns(() => interpreterHelper.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny())).returns(() => persistentStateFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configurationService.object);
 
-        currentPathService = new CurrentPathService(virtualEnvironmentManager.object, interpreterVersionService.object, procServiceFactory.object, serviceContainer.object);
+        currentPathService = new CurrentPathService(virtualEnvironmentManager.object, interpreterHelper.object, procServiceFactory.object, serviceContainer.object);
     });
 
     test('Interpreters that do not exist on the file system are not excluded from the list', async () => {
         // Specific test for 1305
         const version = 'mockVersion';
         const envName = 'mockEnvName';
-        interpreterVersionService.setup(v => v.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(version));
+        interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version }));
         virtualEnvironmentManager.setup(v => v.getEnvironmentName(TypeMoq.It.isAny())).returns(() => Promise.resolve(envName));
+        virtualEnvironmentManager.setup(v => v.getEnvironmentType(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(InterpreterType.VirtualEnv));
 
         const execArgs = ['-c', 'import sys;print(sys.executable)'];
         pythonSettings.setup(p => p.pythonPath).returns(() => 'root:Python');
@@ -74,7 +76,7 @@ suite('Interpreters CurrentPath Service', () => {
         processService.verifyAll();
         fileSystem.verifyAll();
         expect(interpreters).to.be.of.length(2);
-        expect(interpreters).to.deep.include({ displayName: `${version} (${envName})`, path: 'c:/root:python', type: InterpreterType.VirtualEnv });
-        expect(interpreters).to.deep.include({ displayName: `${version} (${envName})`, path: 'c:/python3', type: InterpreterType.VirtualEnv });
+        expect(interpreters).to.deep.include({ version, envName, displayName: `${version} (${envName})`, path: 'c:/root:python', type: InterpreterType.VirtualEnv });
+        expect(interpreters).to.deep.include({ version, envName, displayName: `${version} (${envName})`, path: 'c:/python3', type: InterpreterType.VirtualEnv });
     });
 });

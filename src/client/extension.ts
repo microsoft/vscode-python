@@ -24,6 +24,7 @@ import { registerTypes as platformRegisterTypes } from './common/platform/servic
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { StopWatch } from './common/stopWatch';
+import { ITerminalHelper } from './common/terminal/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
@@ -186,10 +187,12 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
     const logger = serviceContainer.get<ILogger>(ILogger);
     try {
         await activatedPromise;
+        const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
+        const terminalShellType = terminalHelper.identifyTerminalShell(terminalHelper.getTerminalShellPath());
         const duration = stopWatch.elapsedTime;
         const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
         const condaVersion = await condaLocator.getCondaVersion().catch(() => undefined);
-        const props = condaVersion ? { condaVersion } : undefined;
+        const props = { condaVersion, terminal: terminalShellType };
         sendTelemetryEvent(EDITOR_LOAD, duration, props);
     } catch (ex) {
         logger.logError('sendStartupTelemetry failed.', ex);

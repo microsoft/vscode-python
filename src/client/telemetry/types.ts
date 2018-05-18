@@ -1,10 +1,12 @@
-import { LinterId } from '../linters/types';
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { TerminalShellType } from '../common/terminal/types';
+import { LinterId } from '../linters/types';
+
 export type EditorLoadTelemetry = {
-    condaVersion: string;
+    condaVersion: string | undefined;
+    terminal: TerminalShellType;
 };
 export type FormatTelemetry = {
     tool: 'autopep8' | 'black' | 'yapf';

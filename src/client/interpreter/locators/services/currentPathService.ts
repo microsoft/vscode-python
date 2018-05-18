@@ -1,12 +1,11 @@
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
-import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
@@ -14,7 +13,7 @@ import { CacheableLocatorService } from './cacheableLocatorService';
 export class CurrentPathService extends CacheableLocatorService {
     private readonly fs: IFileSystem;
     public constructor(@inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
-        @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService,
+        @inject(IInterpreterHelper) private helper: IInterpreterHelper,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('CurrentPathService', serviceContainer);
@@ -36,19 +35,25 @@ export class CurrentPathService extends CacheableLocatorService {
             .then(listOfInterpreters => _.flatten(listOfInterpreters))
             .then(interpreters => interpreters.filter(item => item.length > 0))
             // tslint:disable-next-line:promise-function-async
-            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))));
+            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter, resource))));
     }
-    private async getInterpreterDetails(interpreter: string): Promise<PythonInterpreter> {
+    private async getInterpreterDetails(interpreter: string, resource?: Uri): Promise<PythonInterpreter> {
         return Promise.all([
-            this.versionProvider.getVersion(interpreter, path.basename(interpreter)),
-            this.virtualEnvMgr.getEnvironmentName(interpreter)
+            this.helper.getInterpreterInformation(interpreter),
+            this.virtualEnvMgr.getEnvironmentName(interpreter),
+            this.virtualEnvMgr.getEnvironmentType(interpreter, resource)
         ]).
-            then(([displayName, virtualEnvName]) => {
-                displayName += virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
+            then(([details, virtualEnvName, type]) => {
+                if (!details) {
+                    return;
+                }
+                const displayName = `${details.version ? details.version : ''}${virtualEnvName.length > 0 ? ` (${virtualEnvName})` : ''}`;
                 return {
+                    ...(details as PythonInterpreter),
                     displayName,
+                    envName: virtualEnvName,
                     path: interpreter,
-                    type: virtualEnvName ? InterpreterType.VirtualEnv : InterpreterType.Unknown
+                    type: type ? type : InterpreterType.Unknown
                 };
             });
     }

@@ -4,6 +4,7 @@ import * as TypeMoq from 'typemoq';
 import { Architecture, RegistryHive } from '../../client/common/platform/types';
 import { IPersistentStateFactory } from '../../client/common/types';
 import { IS_WINDOWS } from '../../client/debugger/Common/Utils';
+import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
 import { IServiceContainer } from '../../client/ioc/types';
 import { initialize, initializeTest } from '../initialize';
@@ -18,8 +19,12 @@ suite('Interpreters from Windows Registry', () => {
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        const interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper))).returns(() => interpreterHelper.object);
         const state = new MockState(undefined);
+        // tslint:disable-next-line:no-empty no-any
+        interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({} as any));
         stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => state);
         return initializeTest();
     });
@@ -182,7 +187,7 @@ suite('Interpreters from Windows Registry', () => {
                 { key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['A'] },
                 { key: '\\Software\\Python\\Company A', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['Another Tag'] }
             ];
-            const registryValues: { key: string, hive: RegistryHive, arch?: Architecture, value: string, name?: string }[] = [
+            const registryValues: { key: string; hive: RegistryHive; arch?: Architecture; value: string; name?: string }[] = [
                 { key: '\\Software\\Python\\Company One', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Display Name for Company One', name: 'DisplayName' },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'numpy', 'python.exe'), name: 'ExecutablePath' },
@@ -241,7 +246,7 @@ suite('Interpreters from Windows Registry', () => {
                 { key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['A'] },
                 { key: '\\Software\\Python\\Company A', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['Another Tag'] }
             ];
-            const registryValues: { key: string, hive: RegistryHive, arch?: Architecture, value: string, name?: string }[] = [
+            const registryValues: { key: string; hive: RegistryHive; arch?: Architecture; value: string; name?: string }[] = [
                 { key: '\\Software\\Python\\Company One', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'Display Name for Company One', name: 'DisplayName' },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
                 { key: '\\Software\\Python\\Company One\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'numpy', 'python.exe'), name: 'ExecutablePath' },

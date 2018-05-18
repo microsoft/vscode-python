@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
 import { ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { CondaInfo, ICondaService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { CondaInfo, ICondaService, IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
 import { CondaHelper } from './condaHelper';
@@ -15,7 +15,7 @@ import { CondaHelper } from './condaHelper';
 export class CondaEnvService extends CacheableLocatorService {
     private readonly condaHelper = new CondaHelper();
     constructor(@inject(ICondaService) private condaService: ICondaService,
-        @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService,
+        @inject(IInterpreterHelper) private helper: IInterpreterHelper,
         @inject(ILogger) private logger: ILogger,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IFileSystem) private fileSystem: IFileSystem) {
@@ -37,25 +37,24 @@ export class CondaEnvService extends CacheableLocatorService {
             .map(async envPath => {
                 const pythonPath = this.condaService.getInterpreterPath(envPath);
 
-                const existsPromise = pythonPath ? this.fileSystem.fileExists(pythonPath) : Promise.resolve(false);
-                const versionPromise = this.versionService.getVersion(pythonPath, '');
-
-                const [exists, version] = await Promise.all([existsPromise, versionPromise]);
-                if (!exists) {
+                if (!(await this.fileSystem.fileExists(pythonPath))) {
+                    return;
+                }
+                const details = await this.helper.getInterpreterInformation(pythonPath);
+                if (!details) {
                     return;
                 }
 
-                const versionWithoutCompanyName = this.stripCondaDisplayName(this.stripCompanyName(version), condaDisplayName);
+                const versionWithoutCompanyName = this.stripCondaDisplayName(this.stripCompanyName(details.version!), condaDisplayName);
                 const displayName = `${condaDisplayName} ${versionWithoutCompanyName}`.trim();
-                // tslint:disable-next-line:no-unnecessary-local-variable
-                const interpreter: PythonInterpreter = {
+                return {
+                    ...(details as PythonInterpreter),
                     path: pythonPath,
                     displayName,
                     companyDisplayName: AnacondaCompanyName,
                     type: InterpreterType.Conda,
                     envPath
                 };
-                return interpreter;
             });
 
         return Promise.all(promises)

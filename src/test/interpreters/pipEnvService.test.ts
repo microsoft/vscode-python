@@ -15,7 +15,7 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { ICurrentProcess, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
-import { IInterpreterLocatorService, IInterpreterVersionService } from '../../client/interpreter/contracts';
+import { IInterpreterHelper, IInterpreterLocatorService } from '../../client/interpreter/contracts';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
 import { IServiceContainer } from '../../client/ioc/types';
 
@@ -31,7 +31,7 @@ suite('Interpreters - PipEnv', () => {
 
             let pipEnvService: IInterpreterLocatorService;
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-            let interpreterVersionService: TypeMoq.IMock<IInterpreterVersionService>;
+            let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
             let processService: TypeMoq.IMock<IProcessService>;
             let currentProcess: TypeMoq.IMock<ICurrentProcess>;
             let fileSystem: TypeMoq.IMock<IFileSystem>;
@@ -42,7 +42,7 @@ suite('Interpreters - PipEnv', () => {
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-                interpreterVersionService = TypeMoq.Mock.ofType<IInterpreterVersionService>();
+                interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
                 fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
                 processService = TypeMoq.Mock.ofType<IProcessService>();
                 appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -67,7 +67,7 @@ suite('Interpreters - PipEnv', () => {
 
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory), TypeMoq.It.isAny())).returns(() => procServiceFactory.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterVersionService))).returns(() => interpreterVersionService.object);
+                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper))).returns(() => interpreterHelper.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => currentProcess.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
@@ -116,12 +116,13 @@ suite('Interpreters - PipEnv', () => {
             });
             test(`Should return interpreter information${testSuffix}`, async () => {
                 const env = {};
-                const venvDir = 'one';
+                const pythonPath = 'one';
+                envVarsProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({})).verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
-                processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: venvDir }));
-                interpreterVersionService.setup(v => v.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('xyz'));
+                processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: pythonPath }));
+                interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: 'xyz' }));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true)).verifiable();
-                fileSystem.setup(fs => fs.directoryExists(TypeMoq.It.isValue(venvDir))).returns(() => Promise.resolve(true)).verifiable();
+                fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true)).verifiable();
                 const environments = await pipEnvService.getInterpreters(resource);
 
                 expect(environments).to.be.lengthOf(1);
@@ -132,13 +133,14 @@ suite('Interpreters - PipEnv', () => {
                 const env = {
                     PIPENV_PIPFILE: envPipFile
                 };
-                const venvDir = 'one';
+                const pythonPath = 'one';
+                envVarsProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({})).verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
-                processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: venvDir }));
-                interpreterVersionService.setup(v => v.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('xyz'));
+                processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: pythonPath }));
+                interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: 'xyz' }));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.never());
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, envPipFile)))).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
-                fileSystem.setup(fs => fs.directoryExists(TypeMoq.It.isValue(venvDir))).returns(() => Promise.resolve(true)).verifiable();
+                fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true)).verifiable();
                 const environments = await pipEnvService.getInterpreters(resource);
 
                 expect(environments).to.be.lengthOf(1);

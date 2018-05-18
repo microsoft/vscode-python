@@ -36,7 +36,7 @@ suite('Formatting', () => {
             fs.copySync(originalUnformattedFile, file, { overwrite: true });
         });
         fs.ensureDirSync(path.dirname(autoPep8FileToFormat));
-        const pythonProcess = await ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(vscode.Uri.file(workspaceRootPath));
+        const pythonProcess = await ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: vscode.Uri.file(workspaceRootPath) });
         const py2 = await ioc.getPythonMajorVersion(vscode.Uri.parse(originalUnformattedFile)) === 2;
         const yapf = pythonProcess.execModule('yapf', [originalUnformattedFile], { cwd: workspaceRootPath });
         const autoPep8 = pythonProcess.execModule('autopep8', [originalUnformattedFile], { cwd: workspaceRootPath });
@@ -113,7 +113,7 @@ suite('Formatting', () => {
     }
 
     test('AutoPep8', async () => testFormatting(new AutoPep8Formatter(ioc.serviceContainer), formattedAutoPep8, autoPep8FileToFormat, 'autopep8.output'));
-    test('Black', async function() {
+    test('Black', async function () {
         if (await ioc.getPythonMajorVersion(vscode.Uri.parse(blackFileToFormat)) === 2) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();

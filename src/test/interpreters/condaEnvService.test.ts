@@ -3,7 +3,8 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../client/common/platform/types';
 import { ILogger, IPersistentStateFactory } from '../../client/common/types';
-import { ICondaService, IInterpreterVersionService, InterpreterType } from '../../client/interpreter/contracts';
+import { ICondaService, InterpreterType } from '../../client/interpreter/contracts';
+import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { AnacondaCompanyName, AnacondaDisplayName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -14,12 +15,12 @@ import { MockState } from './mocks';
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 
 // tslint:disable-next-line:max-func-body-length
-suite('Interpreters from Conda Environments', () => {
+suite('Interpreters from Conda Environmentsx', () => {
     let ioc: UnitTestIocContainer;
     let logger: TypeMoq.IMock<ILogger>;
     let condaProvider: CondaEnvService;
     let condaService: TypeMoq.IMock<ICondaService>;
-    let interpreterVersion: TypeMoq.IMock<IInterpreterVersionService>;
+    let interpreterHelper: TypeMoq.IMock<InterpreterHelper>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     suiteSetup(initialize);
     setup(async () => {
@@ -32,9 +33,9 @@ suite('Interpreters from Conda Environments', () => {
         stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => state);
 
         condaService = TypeMoq.Mock.ofType<ICondaService>();
-        interpreterVersion = TypeMoq.Mock.ofType<IInterpreterVersionService>();
+        interpreterHelper = TypeMoq.Mock.ofType<InterpreterHelper>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        condaProvider = new CondaEnvService(condaService.object, interpreterVersion.object, logger.object, serviceContainer.object, fileSystem.object);
+        condaProvider = new CondaEnvService(condaService.object, interpreterHelper.object, logger.object, serviceContainer.object, fileSystem.object);
     });
     teardown(() => ioc.dispose());
     function initializeDI() {
@@ -65,7 +66,7 @@ suite('Interpreters from Conda Environments', () => {
             const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
             fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         });
-        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_p, defaultValue) => Promise.resolve(defaultValue));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
 
         const interpreters = await condaProvider.parseCondaInfo(info);
         assert.equal(interpreters.length, 2, 'Incorrect number of entries');
@@ -102,7 +103,7 @@ suite('Interpreters from Conda Environments', () => {
             const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
             fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         });
-        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_p, defaultValue) => Promise.resolve(defaultValue));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
         condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
         condaService.setup(c => c.getCondaInfo()).returns(() => Promise.resolve(info));
         condaService.setup(c => c.getCondaEnvironments(TypeMoq.It.isAny())).returns(() => Promise.resolve([
@@ -147,7 +148,7 @@ suite('Interpreters from Conda Environments', () => {
             const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
             fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         });
-        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_p, defaultValue) => Promise.resolve(defaultValue));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
 
         const interpreters = await condaProvider.parseCondaInfo(info);
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
@@ -171,7 +172,7 @@ suite('Interpreters from Conda Environments', () => {
             default_prefix: '',
             'sys.version': '3.6.1 |Anaonda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
         };
-        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_p, defaultValue) => Promise.resolve(defaultValue));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
         condaService.setup(c => c.getCondaInfo()).returns(() => Promise.resolve(info));
         condaService.setup(c => c.getCondaEnvironments(TypeMoq.It.isAny())).returns(() => Promise.resolve([
             { name: 'base', path: environmentsPath },
@@ -185,7 +186,7 @@ suite('Interpreters from Conda Environments', () => {
             const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
             fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         });
-        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_p, defaultValue) => Promise.resolve(defaultValue));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         fileSystem.setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p1: string, p2: string) => isWindows ? p1 === p2 : p1.toUpperCase() === p2.toUpperCase());
 
         const interpreters = await condaProvider.getInterpreters();
@@ -215,7 +216,7 @@ suite('Interpreters from Conda Environments', () => {
             const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
             fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         });
-        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_p, defaultValue) => Promise.resolve(defaultValue));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
 
         const interpreters = await condaProvider.parseCondaInfo(info);
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
@@ -245,7 +246,7 @@ suite('Interpreters from Conda Environments', () => {
             const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
             fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         });
-        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_p, defaultValue) => Promise.resolve(defaultValue));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
         condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
         condaService.setup(c => c.getCondaInfo()).returns(() => Promise.resolve(info));
         condaService.setup(c => c.getCondaEnvironments(TypeMoq.It.isAny())).returns(() => Promise.resolve([
@@ -280,7 +281,7 @@ suite('Interpreters from Conda Environments', () => {
         });
         const pythonPath = isWindows ? path.join(info.default_prefix, 'python.exe') : path.join(info.default_prefix, 'bin', 'python');
         fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
-        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_p, defaultValue) => Promise.resolve(defaultValue));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
 
         const interpreters = await condaProvider.parseCondaInfo(info);
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
@@ -308,7 +309,7 @@ suite('Interpreters from Conda Environments', () => {
             path.join(environmentsPath, 'path3', 'three.exe')]
         };
         const validPaths = info.envs.filter((_, index) => index % 2 === 0);
-        interpreterVersion.setup(i => i.getVersion(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_p, defaultValue) => Promise.resolve(defaultValue));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: '' }));
         validPaths.forEach(envPath => {
             condaService.setup(c => c.getInterpreterPath(TypeMoq.It.isValue(envPath))).returns(environmentPath => {
                 return isWindows ? path.join(environmentPath, 'python.exe') : path.join(environmentPath, 'bin', 'python');

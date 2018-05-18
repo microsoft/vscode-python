@@ -1,12 +1,11 @@
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
 import { ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import {
     ICondaService,
-    IInterpreterVersionService,
+    IInterpreterHelper,
     InterpreterType,
     PythonInterpreter
 } from '../../contracts';
@@ -15,7 +14,7 @@ import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName } from '
 
 @injectable()
 export class CondaEnvFileService extends CacheableLocatorService {
-    constructor(@inject(IInterpreterVersionService) private versionService: IInterpreterVersionService,
+    constructor(@inject(IInterpreterHelper) private helperService: IInterpreterHelper,
         @inject(ICondaService) private condaService: ICondaService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
@@ -70,13 +69,16 @@ export class CondaEnvFileService extends CacheableLocatorService {
             return;
         }
 
-        const version = await this.versionService.getVersion(interpreter, path.basename(interpreter));
-        const versionWithoutCompanyName = this.stripCompanyName(version);
+        const details = await this.helperService.getInterpreterInformation(interpreter);
+        if (!details) {
+            return;
+        }
+        const versionWithoutCompanyName = this.stripCompanyName(details.version!);
         return {
             displayName: `${AnacondaDisplayName} ${versionWithoutCompanyName}`,
+            ...(details as PythonInterpreter),
             path: interpreter,
             companyDisplayName: AnacondaCompanyName,
-            version: version,
             type: InterpreterType.Conda,
             envPath: environmentPath
         };

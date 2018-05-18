@@ -6,7 +6,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, IInterpreterVersionService } from '../contracts';
+import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, PythonInterpreter } from '../contracts';
 import { IVirtualEnvironmentManager } from '../virtualEnvs/types';
 
 // tslint:disable-next-line:completed-docs
@@ -15,7 +15,6 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     private readonly statusBar: StatusBarItem;
     private readonly interpreterService: IInterpreterService;
     private readonly virtualEnvMgr: IVirtualEnvironmentManager;
-    private readonly versionProvider: IInterpreterVersionService;
     private readonly fileSystem: IFileSystem;
     private readonly configurationService: IConfigurationService;
     private readonly helper: IInterpreterHelper;
@@ -24,7 +23,6 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.virtualEnvMgr = serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
-        this.versionProvider = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
@@ -63,17 +61,17 @@ export class InterpreterDisplay implements IInterpreterDisplay {
                 this.statusBar.tooltip += toolTipSuffix;
             }
         } else {
-            const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
             await Promise.all([
                 this.fileSystem.fileExists(pythonPath),
-                this.versionProvider.getVersion(pythonPath, defaultDisplayName),
-                this.getVirtualEnvironmentName(pythonPath).catch(() => '')
+                this.helper.getInterpreterInformation(pythonPath).catch<Partial<PythonInterpreter>>(() => undefined),
+                this.getVirtualEnvironmentName(pythonPath).catch<string>(() => '')
             ])
-                .then(([interpreterExists, displayName, virtualEnvName]) => {
+                .then(([interpreterExists, details, virtualEnvName]) => {
+                    const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
                     const dislayNameSuffix = virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
-                    this.statusBar.text = `${displayName}${dislayNameSuffix}`;
+                    this.statusBar.text = `${details ? details.version : defaultDisplayName}${dislayNameSuffix}`;
 
-                    if (!interpreterExists && displayName === defaultDisplayName && interpreters.length > 0) {
+                    if (!interpreterExists && !details && interpreters.length > 0) {
                         this.statusBar.color = 'yellow';
                         this.statusBar.text = '$(alert) Select Python Environment';
                     }

@@ -4,12 +4,25 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Disposable, StatusBarAlignment, StatusBarItem, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-import { IFileSystem } from '../../client/common/platform/types';
+import { Architecture, IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../../client/common/types';
-import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
+
+const info: PythonInterpreter = {
+    architecture: Architecture.Unknown,
+    companyDisplayName: '',
+    displayName: '',
+    envName: '',
+    path: '',
+    type: InterpreterType.Unknown,
+    version: '',
+    version_info: [0, 0, 0, 'alpha'],
+    sysPrefix: '',
+    sysVersion: ''
+};
 
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters Display', () => {
@@ -18,7 +31,6 @@ suite('Interpreters Display', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let virtualEnvMgr: TypeMoq.IMock<IVirtualEnvironmentManager>;
-    let versionProvider: TypeMoq.IMock<IInterpreterVersionService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let disposableRegistry: Disposable[];
     let statusBar: TypeMoq.IMock<StatusBarItem>;
@@ -32,7 +44,6 @@ suite('Interpreters Display', () => {
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         virtualEnvMgr = TypeMoq.Mock.ofType<IVirtualEnvironmentManager>();
-        versionProvider = TypeMoq.Mock.ofType<IInterpreterVersionService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         disposableRegistry = [];
@@ -44,7 +55,6 @@ suite('Interpreters Display', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => applicationShell.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService))).returns(() => interpreterService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IVirtualEnvironmentManager))).returns(() => virtualEnvMgr.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterVersionService))).returns(() => versionProvider.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => disposableRegistry);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configurationService.object);
@@ -72,6 +82,7 @@ suite('Interpreters Display', () => {
         const resource = Uri.file('x');
         const workspaceFolder = Uri.file('workspace');
         const activeInterpreter: PythonInterpreter = {
+            ...info,
             displayName: 'Dummy_Display_Name',
             type: InterpreterType.Unknown,
             path: path.join('user', 'development', 'env', 'bin', 'python')
@@ -89,6 +100,7 @@ suite('Interpreters Display', () => {
         const resource = Uri.file('x');
         const workspaceFolder = Uri.file('workspace');
         const activeInterpreter: PythonInterpreter = {
+            ...info,
             displayName: 'Dummy_Display_Name',
             type: InterpreterType.Unknown,
             companyDisplayName: 'Company Name',
@@ -114,7 +126,7 @@ suite('Interpreters Display', () => {
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
         virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
-        versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns((_path, defaultDisplayName) => Promise.resolve(defaultDisplayName));
+        interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
 
         await interpreterDisplay.refresh(resource);
 
@@ -132,7 +144,7 @@ suite('Interpreters Display', () => {
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
         // tslint:disable-next-line:no-any
         virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve('Mock Name'));
-        versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns((_path, defaultDisplayName) => Promise.resolve(defaultDisplayName));
+        interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
 
         await interpreterDisplay.refresh(resource);
 
@@ -150,8 +162,7 @@ suite('Interpreters Display', () => {
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
         fileSystem.setup(f => f.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
-        const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
-        versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(defaultDisplayName));
+        interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
         virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
 
         await interpreterDisplay.refresh(resource);
@@ -171,7 +182,7 @@ suite('Interpreters Display', () => {
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
         fileSystem.setup(f => f.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
-        versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(defaultDisplayName));
+        interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
         // tslint:disable-next-line:no-any
         virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve('Mock Env Name'));
         const expectedText = `${defaultDisplayName} (Mock Env Name)`;
@@ -192,7 +203,7 @@ suite('Interpreters Display', () => {
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
         fileSystem.setup(f => f.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));
         const displayName = 'Version from Interperter';
-        versionProvider.setup(v => v.getVersion(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny())).returns(() => Promise.resolve(displayName));
+        interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve({ version: displayName }));
         // tslint:disable-next-line:no-any
         virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
 
@@ -204,6 +215,7 @@ suite('Interpreters Display', () => {
         const workspaceFolder = Uri.file('x');
         const resource = workspaceFolder;
         const activeInterpreter: PythonInterpreter = {
+            ...info,
             displayName: 'Dummy_Display_Name',
             type: InterpreterType.Unknown,
             companyDisplayName: 'Company Name',
@@ -211,6 +223,7 @@ suite('Interpreters Display', () => {
         };
         interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(resource))).returns(() => Promise.resolve([]));
         interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(resource))).returns(() => Promise.resolve(activeInterpreter));
+        interpreterHelper.setup(i => i.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         const expectedTooltip = `${activeInterpreter.path}${EOL}${activeInterpreter.companyDisplayName}`;
         interpreterHelper.setup(i => i.getActiveWorkspaceUri()).returns(() => { return { folderUri: workspaceFolder, configTarget: ConfigurationTarget.Workspace }; });
 

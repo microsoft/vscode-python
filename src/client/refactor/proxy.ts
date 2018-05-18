@@ -106,7 +106,7 @@ export class RefactorProxy extends Disposable {
         });
     }
     private async initialize(pythonPath: string): Promise<void> {
-        const pythonProc = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(Uri.file(this.workspaceRoot));
+        const pythonProc = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(this.workspaceRoot) });
         this.initialized = createDeferred<void>();
         const args = ['refactor.py', this.workspaceRoot];
         const cwd = path.join(this._extensionDir, 'pythonFiles');

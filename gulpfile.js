@@ -26,6 +26,8 @@ const istanbul = require('istanbul');
 const glob = require('glob');
 const os = require('os');
 const _ = require('lodash');
+const nativeDependencyChecker = require('node-has-native-dependencies');
+const flat = require('flat');
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -97,6 +99,12 @@ gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 
 gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd*']));
 
+gulp.task('checkNativeDependencies', () => {
+    if (hasNativeDependencies()) {
+        throw new Error('Native dependencies deteced');
+    }
+});
+
 gulp.task('cover:enable', () => {
     return gulp.src("./coverconfig.json")
         .pipe(jeditor((json) => {
@@ -114,6 +122,23 @@ gulp.task('cover:disable', () => {
         }))
         .pipe(gulp.dest("./out", { 'overwrite': true }));
 });
+
+function hasNativeDependencies() {
+    let nativeDependencies = nativeDependencyChecker.check(path.join(__dirname, 'node_modules'));
+    if (!Array.isArray(nativeDependencies) || nativeDependencies.length === 0) {
+        return false;
+    }
+    const dependencies = JSON.parse(cp.spawnSync('npm', ['ls', '--json', '--prod']).stdout.toString());
+    const jsonProperties = Object.keys(flat.flatten(dependencies));
+    nativeDependencies = _.flatMap(nativeDependencies, item => path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep))
+        .filter(item => item.length > 0)
+        .filter(item => jsonProperties.findIndex(flattenedDependency => flattenedDependency.endsWith(`dependencies.${item}.version`)) >= 0);
+    if (nativeDependencies.length > 0) {
+        console.error('Native dependencies detected', nativeDependencies);
+        return true;
+    }
+    return false;
+}
 
 function buildDebugAdapterCoverage() {
     const matches = glob.sync(path.join(__dirname, 'debug_coverage*/coverage.json'));

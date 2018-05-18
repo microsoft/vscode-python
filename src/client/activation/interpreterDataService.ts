@@ -33,7 +33,7 @@ export class InterpreterDataService {
 
   public async getInterpreterData(resource?: Uri): Promise<InterpreterData | undefined> {
     const executionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-    const execService = await executionFactory.create(resource);
+    const execService = await executionFactory.create({ resource });
 
     const interpreterPath = await execService.getExecutablePath();
     if (interpreterPath.length === 0) {

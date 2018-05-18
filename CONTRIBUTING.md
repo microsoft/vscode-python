@@ -22,7 +22,7 @@
 ```shell
 git clone https://github.com/microsoft/vscode-python
 cd vscode-python
-yarn install
+yarn install --lock-file
 ```
 
 You may see warnings that ```The engine "vscode" appears to be invalid.```, you can ignore these.

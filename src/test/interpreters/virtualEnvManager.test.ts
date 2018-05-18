@@ -6,9 +6,14 @@
 import { expect } from 'chai';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
+import { IWorkspaceService } from '../../client/common/application/types';
+import { FileSystem } from '../../client/common/platform/fileSystem';
+import { PlatformService } from '../../client/common/platform/platformService';
+import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { IBufferDecoder, IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
+import { IPipEnvService } from '../../client/interpreter/contracts';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -33,6 +38,10 @@ suite('Virtual environment manager', () => {
     processServiceFactory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(new ProcessService(new BufferDecoder(), process.env as any)));
     serviceManager.addSingletonInstance<IProcessServiceFactory>(IProcessServiceFactory, processServiceFactory.object);
     serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
+    serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
+    serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
+    serviceManager.addSingletonInstance<IPipEnvService>(IPipEnvService, TypeMoq.Mock.ofType<IPipEnvService>().object);
+    serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, TypeMoq.Mock.ofType<IWorkspaceService>().object);
     const venvManager = new VirtualEnvironmentManager(serviceContainer);
     const name = await venvManager.getEnvironmentName(PYTHON_PATH);
     const result = name === '' || name === 'venv' || name === 'virtualenv';
@@ -45,6 +54,9 @@ suite('Virtual environment manager', () => {
     processService.setup((x: any) => x.then).returns(() => undefined);
     processServiceFactory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
     serviceManager.addSingletonInstance<IProcessServiceFactory>(IProcessServiceFactory, processServiceFactory.object);
+    serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, TypeMoq.Mock.ofType<IFileSystem>().object);
+    serviceManager.addSingletonInstance<IPipEnvService>(IPipEnvService, TypeMoq.Mock.ofType<IPipEnvService>().object);
+    serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, TypeMoq.Mock.ofType<IWorkspaceService>().object);
 
     const venvManager = new VirtualEnvironmentManager(serviceContainer);
     processService

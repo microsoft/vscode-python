@@ -5,12 +5,25 @@ import * as assert from 'assert';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
-import { IFileSystem } from '../../client/common/platform/types';
+import { Architecture, IFileSystem } from '../../client/common/platform/types';
 import { IInterpreterQuickPickItem, InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
+
+const info: PythonInterpreter = {
+    architecture: Architecture.Unknown,
+    companyDisplayName: '',
+    displayName: '',
+    envName: '',
+    path: '',
+    type: InterpreterType.Unknown,
+    version: '',
+    version_info: [0, 0, 0, 'alpha'],
+    sysPrefix: '',
+    sysVersion: ''
+};
 
 class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
     public path: string;
@@ -73,7 +86,7 @@ suite('Interpreters - selector', () => {
             { displayName: '2 (virtualenv)', path: 'c:/path2/path2', type: InterpreterType.VirtualEnv },
             { displayName: '3', path: 'c:/path2/path2', type: InterpreterType.Unknown },
             { displayName: '4', path: 'c:/path4/path4', type: InterpreterType.Conda }
-        ];
+        ].map(item => { return { ...info, ...item }; });
         interpreterService
             .setup(x => x.getInterpreters(TypeMoq.It.isAny()))
             .returns(() => new Promise((resolve) => resolve(initial)));

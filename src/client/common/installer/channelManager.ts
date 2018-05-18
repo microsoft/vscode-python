@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { QuickPickItem, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
@@ -34,9 +34,9 @@ export class InstallationChannelManager implements IInstallationChannelManager {
                 label: `Install using ${installer.displayName}`,
                 description: '',
                 installer
-            } as QuickPickItem & { installer: IModuleInstaller };
+            };
         });
-        const selection = await appShell.showQuickPick(options, { matchOnDescription: true, matchOnDetail: true, placeHolder });
+        const selection = await appShell.showQuickPick<typeof options[0]>(options, { matchOnDescription: true, matchOnDetail: true, placeHolder });
         return selection ? selection.installer : undefined;
     }
 

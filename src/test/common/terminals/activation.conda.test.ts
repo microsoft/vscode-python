@@ -104,7 +104,7 @@ suite('Terminal Environment Activation conda', () => {
         }
         expect(activationCommands).to.deep.equal(expectedActivationCommamnd, 'Incorrect Activation command');
     }
-    EnumEx.getNamesAndValues(TerminalShellType).forEach(shellType => {
+    EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
         test(`Conda activation command for shell ${shellType.name} on (windows)`, async () => {
             const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
             await expectNoCondaActivationCommandForPowershell(true, false, false, pythonPath, shellType.value);
@@ -120,7 +120,7 @@ suite('Terminal Environment Activation conda', () => {
             await expectNoCondaActivationCommandForPowershell(false, true, false, pythonPath, shellType.value);
         });
     });
-    EnumEx.getNamesAndValues(TerminalShellType).forEach(shellType => {
+    EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
         test(`Conda activation command for shell ${shellType.name} on (windows), containing spaces in environment name`, async () => {
             const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
             await expectNoCondaActivationCommandForPowershell(true, false, false, pythonPath, shellType.value, true);

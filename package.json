@@ -392,7 +392,7 @@
                             "module": "flask",
                             "cwd": "^\"\\${workspaceFolder}\"",
                             "env": {
-                                "FLASK_APP": "^\"\\${workspaceFolder}/app.py\""
+                                "FLASK_APP": "app.py"
                             },
                             "args": [
                                 "run",
@@ -685,7 +685,7 @@
                         "request": "launch",
                         "module": "flask",
                         "env": {
-                            "FLASK_APP": "${workspaceFolder}/app.py"
+                            "FLASK_APP": "app.py"
                         },
                         "args": [
                             "run",
@@ -808,7 +808,7 @@
                             "request": "launch",
                             "module": "flask",
                             "env": {
-                                "FLASK_APP": "^\"\\${workspaceFolder}/app.py\""
+                                "FLASK_APP": "app.py"
                             },
                             "args": [
                                 "run",
@@ -1107,7 +1107,7 @@
                         "request": "launch",
                         "module": "flask",
                         "env": {
-                            "FLASK_APP": "${workspaceFolder}/app.py"
+                            "FLASK_APP": "app.py"
                         },
                         "args": [
                             "run",
@@ -1783,11 +1783,14 @@
                 ],
                 "filenames": [
                     "requirements.txt",
+                    "constraints.txt",
                     "requirements.in"
                 ],
                 "filenamePatterns": [
                     "*-requirements.txt",
                     "requirements-*.txt",
+                    "constraints-*.txt",
+                    "*-constraints.txt",
                     "*-requirements.in",
                     "requirements-*.in"
                 ],
@@ -1847,7 +1850,7 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "tsc -p ./",
+        "vscode:prepublish": "gulp checkNativeDependencies && tsc -p ./",
         "compile": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
@@ -1930,6 +1933,7 @@
         "decache": "^4.4.0",
         "del": "^3.0.0",
         "event-stream": "^3.3.4",
+        "flat": "^4.0.0",
         "gulp": "^3.9.1",
         "gulp-debounced-watch": "^1.0.4",
         "gulp-filter": "^5.1.0",
@@ -1942,6 +1946,7 @@
         "is-running": "^2.1.0",
         "istanbul": "^0.4.5",
         "mocha": "^5.0.4",
+        "node-has-native-dependencies": "^1.0.2",
         "relative": "^3.0.2",
         "remap-istanbul": "^0.10.1",
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
@@ -1951,7 +1956,7 @@
         "tslint-eslint-rules": "^5.1.0",
         "tslint-microsoft-contrib": "^5.0.3",
         "typemoq": "^2.1.0",
-        "typescript": "^2.7.2",
+        "typescript": "2.8.3",
         "typescript-formatter": "^7.1.0",
         "vscode": "^1.1.5",
         "vscode-debugadapter-testsupport": "^1.27.0"

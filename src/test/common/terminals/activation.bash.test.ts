@@ -37,6 +37,10 @@ suite('Terminal Environment Activation (bash)', () => {
                     EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
                         let isScriptFileSupported = false;
                         switch (shellType.value) {
+                            case TerminalShellType.zsh:
+                            case TerminalShellType.ksh:
+                            case TerminalShellType.wsl:
+                            case TerminalShellType.gitbash:
                             case TerminalShellType.bash: {
                                 isScriptFileSupported = ['activate', 'activate.sh'].indexOf(scriptFileName) >= 0;
                                 break;
@@ -45,6 +49,7 @@ suite('Terminal Environment Activation (bash)', () => {
                                 isScriptFileSupported = ['activate.fish'].indexOf(scriptFileName) >= 0;
                                 break;
                             }
+                            case TerminalShellType.tcshell:
                             case TerminalShellType.cshell: {
                                 isScriptFileSupported = ['activate.csh'].indexOf(scriptFileName) >= 0;
                                 break;
@@ -61,7 +66,12 @@ suite('Terminal Environment Activation (bash)', () => {
 
                             const supported = bash.isShellSupported(shellType.value);
                             switch (shellType.value) {
+                                case TerminalShellType.wsl:
+                                case TerminalShellType.zsh:
+                                case TerminalShellType.ksh:
                                 case TerminalShellType.bash:
+                                case TerminalShellType.gitbash:
+                                case TerminalShellType.tcshell:
                                 case TerminalShellType.cshell:
                                 case TerminalShellType.fish: {
                                     expect(supported).to.be.equal(true, `${shellType.name} shell not supported (it should be)`);

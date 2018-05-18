@@ -74,7 +74,7 @@ abstract class BaseInstaller {
 
         const isModule = typeof moduleName === 'string' && moduleName.length > 0 && path.basename(executableName) === executableName;
         if (isModule) {
-            const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(resource);
+            const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource });
             return pythonProcess.isModuleInstalled(executableName);
         } else {
             const process = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(resource);

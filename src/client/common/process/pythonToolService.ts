@@ -15,7 +15,7 @@ export class PythonToolExecutionService implements IPythonToolExecutionService {
             throw new Error('Environment variables are not supported');
         }
         if (executionInfo.moduleName && executionInfo.moduleName.length > 0) {
-            const pythonExecutionService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(resource);
+            const pythonExecutionService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource });
             return pythonExecutionService.execModuleObservable(executionInfo.moduleName, executionInfo.args, options);
         } else {
             const processService = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(resource);
@@ -27,7 +27,7 @@ export class PythonToolExecutionService implements IPythonToolExecutionService {
             throw new Error('Environment variables are not supported');
         }
         if (executionInfo.moduleName && executionInfo.moduleName.length > 0) {
-            const pythonExecutionService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create(resource);
+            const pythonExecutionService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource });
             return pythonExecutionService.execModule(executionInfo.moduleName!, executionInfo.args, options);
         } else {
             const processService = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(resource);

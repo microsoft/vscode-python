@@ -23,8 +23,8 @@ export interface IPersistentState<T> {
 export const IPersistentStateFactory = Symbol('IPersistentStateFactory');
 
 export interface IPersistentStateFactory {
-    createGlobalPersistentState<T>(key: string, defaultValue: T): IPersistentState<T>;
-    createWorkspacePersistentState<T>(key: string, defaultValue: T): IPersistentState<T>;
+    createGlobalPersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T>;
+    createWorkspacePersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T>;
 }
 
 export type ExecutionInfo = {

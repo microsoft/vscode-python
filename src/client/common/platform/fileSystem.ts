@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { createHash } from 'crypto';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -116,5 +117,17 @@ export class FileSystem implements IFileSystem {
         const deferred = createDeferred<void>();
         fs.unlink(filename, err => err ? deferred.reject(err) : deferred.resolve());
         return deferred.promise;
+    }
+    public getFileHash(filePath: string): Promise<string | undefined> {
+        return new Promise<string | undefined>(resolve => {
+            fs.lstat(filePath, (err, stats) => {
+                if (err) {
+                    resolve();
+                } else {
+                    const actual = createHash('sha512').update(`${stats.ctimeMs}-${stats.mtimeMs}`).digest('hex');
+                    resolve(actual);
+                }
+            });
+        });
     }
 }

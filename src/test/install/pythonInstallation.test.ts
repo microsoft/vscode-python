@@ -7,14 +7,26 @@ import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell } from '../../client/common/application/types';
 import { PythonInstaller } from '../../client/common/installer/pythonInstallation';
-import { IPlatformService } from '../../client/common/platform/types';
+import { Architecture, IPlatformService } from '../../client/common/platform/types';
 import { IPythonSettings } from '../../client/common/types';
-import { IInterpreterLocatorService, IInterpreterService } from '../../client/interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IInterpreterLocatorService, IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
+
+const info: PythonInterpreter = {
+    architecture: Architecture.Unknown,
+    companyDisplayName: '',
+    displayName: '',
+    envName: '',
+    path: '',
+    type: InterpreterType.Unknown,
+    version: '',
+    version_info: [0, 0, 0, 'alpha'],
+    sysPrefix: '',
+    sysVersion: ''
+};
 
 class TestContext {
     public serviceManager: ServiceManager;
@@ -36,6 +48,7 @@ class TestContext {
         this.settings = TypeMoq.Mock.ofType<IPythonSettings>();
 
         const activeInterpreter: PythonInterpreter = {
+            ...info,
             type: InterpreterType.Unknown,
             path: ''
         };
@@ -116,6 +129,7 @@ suite('Installation', () => {
         c.appShell.setup(x => x.showWarningMessage(TypeMoq.It.isAnyString())).callback(() => called = true);
         c.settings.setup(x => x.pythonPath).returns(() => 'python');
         const interpreter: PythonInterpreter = {
+            ...info,
             path: 'python',
             type: InterpreterType.Unknown
         };
