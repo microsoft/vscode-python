@@ -58,7 +58,7 @@ export class PlatformData {
     public getEngineExecutableName(): string {
         return this.platform.isWindows
             ? 'Microsoft.PythonTools.VsCode.exe'
-            : 'Microsoft.PythonTools.VsCode';
+            : 'Microsoft.PythonTools.VsCode.VsCode';
     }
 
     public async getExpectedHash(): Promise<string> {
