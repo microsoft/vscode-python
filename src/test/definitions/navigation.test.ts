@@ -67,4 +67,60 @@ suite('Definition Navigation', () => {
         fileDefinitions,
         new vscode.Range(2, 0, 11, 17)
     ));
+
+    test('Function decorated by stdlib', buildTest(
+        fileDefinitions,
+        new vscode.Position(29, 6),
+        fileDefinitions,
+        new vscode.Range(21, 0, 27, 17)
+    ));
+
+    test('Function decorated by local decorator', buildTest(
+        fileDefinitions,
+        new vscode.Position(30, 6),
+        fileDefinitions,
+        new vscode.Range(14, 0, 18, 7)
+    ));
+
+    test('Module imported decorator usage', buildTest(
+        fileUsages,
+        new vscode.Position(3, 15),
+        fileDefinitions,
+        new vscode.Range(2, 0, 11, 17)
+    ));
+
+    test('Module imported function decorated by stdlib', buildTest(
+        fileUsages,
+        new vscode.Position(11, 19),
+        fileDefinitions,
+        new vscode.Range(21, 0, 27, 17)
+    ));
+
+    test('Module imported function decorated by local decorator', buildTest(
+        fileUsages,
+        new vscode.Position(12, 19),
+        fileDefinitions,
+        new vscode.Range(14, 0, 18, 7)
+    ));
+
+    test('Specifically imported decorator usage', buildTest(
+        fileUsages,
+        new vscode.Position(7, 1),
+        fileDefinitions,
+        new vscode.Range(2, 0, 11, 17)
+    ));
+
+    test('Specifically imported function decorated by stdlib', buildTest(
+        fileUsages,
+        new vscode.Position(14, 6),
+        fileDefinitions,
+        new vscode.Range(21, 0, 27, 17)
+    ));
+
+    test('Specifically imported function decorated by local decorator', buildTest(
+        fileUsages,
+        new vscode.Position(15, 6),
+        fileDefinitions,
+        new vscode.Range(14, 0, 18, 7)
+    ));
 });
