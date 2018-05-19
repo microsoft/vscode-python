@@ -129,11 +129,10 @@ export class AnalysisEngineDownloader {
         if (!await verifier.verifyHash(filePath, platformString, await this.platformData.getExpectedHash())) {
             throw new Error('Hash of the downloaded file does not match.');
         }
-        this.output.append('valid.');
+        this.output.appendLine('valid.');
     }
 
     private async unpackArchive(extensionPath: string, tempFilePath: string): Promise<void> {
-        this.output.appendLine('');
         this.output.append('Unpacking archive... ');
 
         const installFolder = path.join(extensionPath, this.engineFolder);
@@ -170,12 +169,12 @@ export class AnalysisEngineDownloader {
             });
             return deferred.promise;
         });
-        this.output.append('done.');
 
         // Set file to executable
         if (!this.platform.isWindows) {
             const executablePath = path.join(installFolder, this.platformData.getEngineExecutableName());
             fileSystem.chmodSync(executablePath, '0764'); // -rwxrw-r--
         }
+        this.output.appendLine('done.');
     }
 }
