@@ -18,7 +18,7 @@ import { PlatformData } from './platformData';
 const StreamZip = require('node-stream-zip');
 
 const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-analysis';
-const downloadBaseFileName = 'python-analysis-vscode';
+const downloadBaseFileName = 'Python-Analysis-VSCode';
 const downloadVersion = '0.1.0';
 const downloadFileExtension = '.nupkg';
 const modelName = 'model-sequence.json.gz';
