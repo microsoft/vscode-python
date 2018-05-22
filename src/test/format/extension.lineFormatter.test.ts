@@ -112,6 +112,15 @@ suite('Formatting - line formatter', () => {
     test('Function returning tuple', () => {
         testFormatLine('x,y=f(a)', 'x, y = f(a)');
     });
+    test('from. import A', () => {
+        testFormatLine('from. import A', 'from . import A');
+    });
+    test('from .. import', () => {
+        testFormatLine('from ..import', 'from .. import');
+    });
+    test('from..x import', () => {
+        testFormatLine('from..x import', 'from ..x import');
+    });
     test('Grammar file', () => {
         const content = fs.readFileSync(grammarFile).toString('utf8');
         const lines = content.splitLines({ trim: false, removeEmptyEntries: false });

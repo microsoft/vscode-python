@@ -98,6 +98,8 @@ export class LineFormatter {
     private handleOperator(index: number): void {
         const t = this.tokens.getItemAt(index);
         const prev = index > 0 ? this.tokens.getItemAt(index - 1) : undefined;
+        const next = index < this.tokens.count - 1 ? this.tokens.getItemAt(index + 1) : undefined;
+
         if (t.length === 1) {
             const opCode = this.text.charCodeAt(t.start);
             switch (opCode) {
@@ -107,6 +109,14 @@ export class LineFormatter {
                     }
                     break;
                 case Char.Period:
+                    if (prev && this.isKeyword(prev, 'from')) {
+                        this.builder.softAppendSpace();
+                    }
+                    this.builder.append(this.text[t.start]);
+                    if (next && this.isKeyword(next, 'import')) {
+                        this.builder.softAppendSpace();
+                    }
+                    return;
                 case Char.At:
                 case Char.ExclamationMark:
                     this.builder.append(this.text[t.start]);
