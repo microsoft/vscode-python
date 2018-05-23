@@ -240,7 +240,6 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                     maxDocumentationTextLength: 0
                 },
                 asyncStartup: true,
-                intelliCodeEnabled: settings.intelliCodeEnabled,
                 testEnvironment: isTestExecution()
             }
         };

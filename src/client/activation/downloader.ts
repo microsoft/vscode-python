@@ -21,7 +21,6 @@ const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-analysis';
 const downloadBaseFileName = 'Python-Analysis-VSCode';
 const downloadVersion = '0.1.0';
 const downloadFileExtension = '.nupkg';
-const modelName = 'model-sequence.json.gz';
 
 export class AnalysisEngineDownloader {
     private readonly output: OutputChannel;
@@ -45,29 +44,6 @@ export class AnalysisEngineDownloader {
             localTempFilePath = await this.downloadFile(downloadUriPrefix, enginePackageFileName, 'Downloading Python Analysis Engine... ');
             await this.verifyDownload(localTempFilePath, platformString);
             await this.unpackArchive(context.extensionPath, localTempFilePath);
-        } catch (err) {
-            this.output.appendLine('failed.');
-            this.output.appendLine(err);
-            throw new Error(err);
-        } finally {
-            if (localTempFilePath.length > 0) {
-                await this.fs.deleteFile(localTempFilePath);
-            }
-        }
-    }
-
-    public async downloadIntelliCodeModel(context: ExtensionContext): Promise<void> {
-        const modelFolder = path.join(context.extensionPath, 'analysis', 'Pythia', 'model');
-        const localPath = path.join(modelFolder, modelName);
-        if (await this.fs.fileExists(localPath)) {
-            return;
-        }
-
-        let localTempFilePath = '';
-        try {
-            localTempFilePath = await this.downloadFile(downloadUriPrefix, modelName, 'Downloading IntelliCode Model File... ');
-            await this.fs.createDirectory(modelFolder);
-            await this.fs.copyFile(localTempFilePath, localPath);
         } catch (err) {
             this.output.appendLine('failed.');
             this.output.appendLine(err);
