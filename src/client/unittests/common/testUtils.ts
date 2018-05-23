@@ -1,8 +1,10 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { commands, Uri, window, workspace } from 'vscode';
+import { Uri, window, workspace } from 'vscode';
+import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { IUnitTestSettings, Product } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
 import { CommandSource } from './constants';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
 import { ITestsHelper, ITestVisitor, TestFile, TestFolder, TestProvider, Tests, TestSettingsPropertyNames, TestsToRun, UnitTestProduct } from './types';
@@ -19,15 +21,6 @@ export async function selectTestWorkspace(): Promise<Uri | undefined> {
     }
 }
 
-export function displayTestErrorMessage(message: string) {
-    window.showErrorMessage(message, constants.Button_Text_Tests_View_Output).then(action => {
-        if (action === constants.Button_Text_Tests_View_Output) {
-            commands.executeCommand(constants.Commands.Tests_ViewOutput, undefined, CommandSource.ui);
-        }
-    });
-
-}
-
 export function extractBetweenDelimiters(content: string, startDelimiter: string, endDelimiter: string): string {
     content = content.substring(content.indexOf(startDelimiter) + startDelimiter.length);
     return content.substring(0, content.lastIndexOf(endDelimiter));
@@ -40,7 +33,13 @@ export function convertFileToPackage(filePath: string): string {
 
 @injectable()
 export class TestsHelper implements ITestsHelper {
-    constructor(@inject(ITestVisitor) @named('TestFlatteningVisitor') private flatteningVisitor: TestFlatteningVisitor) { }
+    private readonly appShell: IApplicationShell;
+    private readonly commandManager: ICommandManager;
+    constructor(@inject(ITestVisitor) @named('TestFlatteningVisitor') private flatteningVisitor: TestFlatteningVisitor,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+    }
     public parseProviderName(product: UnitTestProduct): TestProvider {
         switch (product) {
             case Product.nosetest: return 'nosetest';
@@ -164,5 +163,12 @@ export class TestsHelper implements ITestsHelper {
         // Just return this as a test file.
         // tslint:disable-next-line:no-object-literal-type-assertion
         return <TestsToRun>{ testFile: [{ name: name, nameToRun: name, functions: [], suites: [], xmlName: name, fullPath: '', time: 0 }] };
+    }
+    public displayTestErrorMessage(message: string) {
+        this.appShell.showErrorMessage(message, constants.Button_Text_Tests_View_Output).then(action => {
+            if (action === constants.Button_Text_Tests_View_Output) {
+                this.commandManager.executeCommand(constants.Commands.Tests_ViewOutput, undefined, CommandSource.ui);
+            }
+        });
     }
 }

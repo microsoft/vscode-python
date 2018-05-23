@@ -25,8 +25,8 @@ export class PipEnvInstaller implements IModuleInstaller {
         this.pipenv = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
     }
 
-    public installModule(name: string): Promise<void> {
-        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService();
+    public installModule(name: string, resource?: Uri): Promise<void> {
+        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(resource);
         return terminalService.sendCommand(pipenvName, ['install', name, '--dev']);
     }
 

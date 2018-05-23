@@ -143,7 +143,7 @@ foo = 42  # Marked as a blacklisted name.
 Please also test for general accuracy on the most "interesting" code you can find.
 
 - [ ] `"python.autoComplete.extraPaths"` works
-- [ ] `"python.autoComplete.preloadModules"` works
+- [ ] `"python.autoComplete.preloadModules"` works (e.g. listing `numpy` should visibly speed up completing on the module's contents)
 - [ ] `"python.autocomplete.addBrackets": true` causes auto-completion of functions to append `()`
 
 #### [Formatting](https://code.visualstudio.com/docs/python/editing#_formatting)

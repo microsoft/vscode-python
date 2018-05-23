@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
 import '../common/extensions';
 import { Product } from '../common/types';
@@ -28,7 +29,9 @@ export class Prospector extends BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        return this.run(['--absolute-paths', '--output-format=json', document.uri.fsPath], document, cancellation);
+        const cwd = this.getWorkspaceRootPath(document);
+        const relativePath = path.relative(cwd, document.uri.fsPath);
+        return this.run(['--absolute-paths', '--output-format=json', relativePath], document, cancellation);
     }
     protected async parseMessages(output: string, document: TextDocument, token: CancellationToken, regEx: string) {
         let parsedData: IProspectorResponse;

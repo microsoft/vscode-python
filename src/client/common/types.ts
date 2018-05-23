@@ -84,6 +84,7 @@ export const IPathUtils = Symbol('IPathUtils');
 
 export interface IPathUtils {
     getPathVariableName(): 'Path' | 'PATH';
+    basename(pathValue: string, ext?: string): string;
 }
 
 export const ICurrentProcess = Symbol('ICurrentProcess');

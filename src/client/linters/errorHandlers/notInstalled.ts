@@ -1,5 +1,4 @@
 import { OutputChannel, Uri } from 'vscode';
-import { isNotInstalledError } from '../../common/helpers';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ExecutionInfo, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';

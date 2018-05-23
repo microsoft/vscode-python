@@ -3,7 +3,7 @@
 
 import { DocumentFilter, ExtensionContext, languages, OutputChannel } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { IOutputChannel, IPythonSettings } from '../common/types';
+import { ILogger, IOutputChannel, IPythonSettings } from '../common/types';
 import { IShebangCodeLensProvider } from '../interpreter/contracts';
 import { IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
@@ -16,8 +16,7 @@ import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { activateSimplePythonRefactorProvider } from '../providers/simpleRefactorProvider';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
-import { TEST_OUTPUT_CHANNEL } from '../unittests/common/constants';
-import * as tests from '../unittests/main';
+import { IUnitTestManagementService } from '../unittests/types';
 import { IExtensionActivator } from './types';
 
 export class ClassicExtensionActivator implements IExtensionActivator {
@@ -49,8 +48,10 @@ export class ClassicExtensionActivator implements IExtensionActivator {
             context.subscriptions.push(languages.registerSignatureHelpProvider(this.documentSelector, new PythonSignatureProvider(jediFactory), '(', ','));
         }
 
-        const unitTestOutChannel = this.serviceManager.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
-        tests.activate(context, unitTestOutChannel, symbolProvider, this.serviceManager);
+        const testManagementService = this.serviceManager.get<IUnitTestManagementService>(IUnitTestManagementService);
+        testManagementService.activate()
+            .then(() => testManagementService.activateCodeLenses(symbolProvider))
+            .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
 
         return true;
     }

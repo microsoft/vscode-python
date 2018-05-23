@@ -38,7 +38,7 @@ type Instrumenter = istanbul.Instrumenter & { coverState: CoverState };
 type TestCallback = (error?: Error, failures?: number) => void;
 
 // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.
-// Since we are not running in a tty environment, we just implementt he method statically.
+// Since we are not running in a tty environment, we just implement the method statically.
 const tty = require('tty');
 if (!tty.getWindowSize) {
     tty.getWindowSize = function (): number[] { return [80, 75]; };
