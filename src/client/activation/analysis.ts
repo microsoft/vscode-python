@@ -3,11 +3,9 @@
 
 import * as path from 'path';
 import { ExtensionContext, OutputChannel } from 'vscode';
-import { Message } from 'vscode-jsonrpc';
-import { CloseAction, Disposable, ErrorAction, ErrorHandler, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
+import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 import { IApplicationShell } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
@@ -17,8 +15,7 @@ import { IServiceContainer } from '../ioc/types';
 import {
     PYTHON_ANALYSIS_ENGINE_DOWNLOADED,
     PYTHON_ANALYSIS_ENGINE_ENABLED,
-    PYTHON_ANALYSIS_ENGINE_ERROR,
-    PYTHON_ANALYSIS_ENGINE_STARTUP
+    PYTHON_ANALYSIS_ENGINE_ERROR
 } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';
 import { AnalysisEngineDownloader } from './downloader';
@@ -30,18 +27,6 @@ const PYTHON = 'python';
 const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 const analysisEngineFolder = 'analysis';
-
-class LanguageServerStartupErrorHandler implements ErrorHandler {
-    constructor(private readonly deferred: Deferred<void>) { }
-    public error(error: Error, message: Message, count: number): ErrorAction {
-        this.deferred.reject(error);
-        return ErrorAction.Continue;
-    }
-    public closed(): CloseAction {
-        this.deferred.reject();
-        return CloseAction.Restart;
-    }
-}
 
 export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly configuration: IConfigurationService;
@@ -110,7 +95,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         if (!settings.downloadCodeAnalysis) {
             // Depends on .NET Runtime or SDK. Typically development-only case.
             this.languageClient = this.createSimpleLanguageClient(context, clientOptions);
-            await this.tryStartLanguageClient(context, this.languageClient);
+            context.subscriptions.push(this.languageClient.start());
             return true;
         }
 
@@ -123,40 +108,12 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         // Now try to start self-contained app
         this.languageClient = this.createSelfContainedLanguageClient(context, serverModule, clientOptions);
         try {
-            await this.tryStartLanguageClient(context, this.languageClient);
+            context.subscriptions.push(this.languageClient.start());
             return true;
         } catch (ex) {
             this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
             reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ERROR, { error: 'Failed to start (platform)' });
             return false;
-        }
-    }
-
-    private async tryStartLanguageClient(context: ExtensionContext, lc: LanguageClient): Promise<void> {
-        let disposable: Disposable | undefined;
-        const deferred = createDeferred<void>();
-        try {
-            const sw = new StopWatch();
-            lc.clientOptions.errorHandler = new LanguageServerStartupErrorHandler(deferred);
-
-            disposable = lc.start();
-            lc.onReady()
-                .then(() => deferred.resolve())
-                .catch((reason) => {
-                    deferred.reject(reason);
-                });
-            await deferred.promise;
-
-            this.output.appendLine(`Language server ready: ${this.sw.elapsedTime} ms`);
-            context.subscriptions.push(disposable);
-
-            const reporter = getTelemetryReporter();
-            reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_STARTUP, {}, { startup_time: sw.elapsedTime });
-        } catch (ex) {
-            if (disposable) {
-                disposable.dispose();
-            }
-            throw ex;
         }
     }
 
