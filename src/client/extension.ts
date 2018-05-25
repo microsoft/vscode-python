@@ -52,8 +52,6 @@ import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager } from './terminals/types';
-import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
-import { OnEnterFormatter } from './typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
 import { WorkspaceSymbols } from './workspaceSymbols/main';
@@ -105,13 +103,8 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(linterProvider);
 
     // Enable indentAction
-    // tslint:disable-next-line:no-non-null-assertion
     languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
         onEnterRules: [
-            {
-                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except)\b.*:\s*\S+/,
-                action: { indentAction: IndentAction.None }
-            },
             {
                 beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/,
                 action: { indentAction: IndentAction.Indent }
@@ -135,8 +128,6 @@ export async function activate(context: ExtensionContext) {
         context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
     }
 
-    context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
-    context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
     context.subscriptions.push(languages.registerFoldingRangeProvider(PYTHON, new DocStringFoldingProvider()));
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
