@@ -85,8 +85,6 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
 
     private async startLanguageServer(context: ExtensionContext, clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
-        const mscorlib = path.join(context.extensionPath, analysisEngineFolder, 'mscorlib.dll');
-        const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
 
         const reporter = getTelemetryReporter();
         reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ENABLED);
@@ -95,25 +93,33 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         if (!settings.downloadCodeAnalysis) {
             // Depends on .NET Runtime or SDK. Typically development-only case.
             this.languageClient = this.createSimpleLanguageClient(context, clientOptions);
-            context.subscriptions.push(this.languageClient.start());
+            await this.startLanguageClient(context);
             return true;
         }
 
+        const mscorlib = path.join(context.extensionPath, analysisEngineFolder, 'mscorlib.dll');
         if (!await this.fs.fileExists(mscorlib)) {
+            const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
             await downloader.downloadAnalysisEngine(context);
             reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_DOWNLOADED);
         }
 
         const serverModule = path.join(context.extensionPath, analysisEngineFolder, this.platformData.getEngineExecutableName());
-        // Now try to start self-contained app
         this.languageClient = this.createSelfContainedLanguageClient(context, serverModule, clientOptions);
         try {
-            context.subscriptions.push(this.languageClient.start());
+            await this.startLanguageClient(context);
             return true;
         } catch (ex) {
             this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
             reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ERROR, { error: 'Failed to start (platform)' });
             return false;
+        }
+    }
+
+    private async startLanguageClient(context: ExtensionContext): Promise<void> {
+        context.subscriptions.push(this.languageClient!.start());
+        if (isTestExecution()) {
+            await this.languageClient!.onReady();
         }
     }
 
