@@ -350,10 +350,36 @@ export class Tokenizer implements ITokenizer {
         this.tokens.push(new Token(TokenType.Comment, start, this.cs.position - start));
     }
 
+    // tslint:disable-next-line:cyclomatic-complexity
     private getStringPrefixLength(): number {
-        if (this.cs.currentChar === Char.f && (this.cs.nextChar === Char.SingleQuote || this.cs.nextChar === Char.DoubleQuote)) {
+        if (this.cs.nextChar === Char.SingleQuote || this.cs.nextChar === Char.DoubleQuote) {
+            switch (this.cs.currentChar) {
+                case Char.f:
+                case Char.F:
+                case Char.r:
+                case Char.R:
+                case Char.b:
+                case Char.B:
+                case Char.u:
+                case Char.U:
+                    return 1;
+                default:
+                    break;
+            }
+        }
+        if ((this.cs.currentChar === Char.f || this.cs.currentChar === Char.F) && ) {
             return 1; // f-string
         }
+
+        if ((this.cs.currentChar === Char.r || this.cs.currentChar === Char.R)) {
+            if (this.cs.nextChar === Char.SingleQuote || this.cs.nextChar === Char.DoubleQuote) {
+                return 1; // r-string
+            }
+            if ((this.cs.nextChar === Char.f || this.cs.nextChar === Char.F) && (this.cs.lookAhead(2) === Char.SingleQuote || this.cs.lookAhead(2) === Char.DoubleQuote)) {
+                return 2; // rf-string
+            }
+        }
+
         if (this.cs.currentChar === Char.b || this.cs.currentChar === Char.B || this.cs.currentChar === Char.u || this.cs.currentChar === Char.U) {
             if (this.cs.nextChar === Char.SingleQuote || this.cs.nextChar === Char.DoubleQuote) {
                 // b-string or u-string

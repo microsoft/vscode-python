@@ -121,6 +121,12 @@ suite('Formatting - line formatter', () => {
     test('from..x import', () => {
         testFormatLine('from..x import', 'from ..x import');
     });
+    test('Raw strings', () => {
+        testFormatLine('z=r""', 'z = r""');
+        testFormatLine('z=rf""', 'z = rf""');
+        testFormatLine('z=R""', 'z = R""');
+        testFormatLine('z=RF""', 'z = RF""');
+    });
     test('Grammar file', () => {
         const content = fs.readFileSync(grammarFile).toString('utf8');
         const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
