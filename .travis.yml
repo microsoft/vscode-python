@@ -1,5 +1,8 @@
 language: python
-cache: pip
+cache:
+  directories:
+    - "node_modules"
+    - "$HOME/.cache/pip"
 
 matrix:
     include:
@@ -62,6 +65,7 @@ before_install: |
   source ./.nvm/nvm.sh
   nvm install 8.9.1
   nvm use 8.9.1
+  npm install npm@latest -g
   npm install -g vsce
   npm install -g azure-cli
   export TRAVIS_PYTHON_PATH=`which python`
