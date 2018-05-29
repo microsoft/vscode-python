@@ -62,51 +62,51 @@ before_install: |
   source ./.nvm/nvm.sh
   nvm install 8.9.1
   nvm use 8.9.1
-  yarn global add vsce
-  yarn global add azure-cli
+  npm install -g vsce
+  npm install -g azure-cli
   export TRAVIS_PYTHON_PATH=`which python`
 install:
   - python -m pip install --upgrade -r requirements.txt
   - python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
-  - yarn --frozen-lockfile
+  - npm ci
 
 script:
   - if [ $DEBUGGER_TEST == "true" ]; then
-        yarn run clean;
-        yarn run vscode:prepublish;
-        yarn run cover:enable;
-        yarn run testDebugger --silent;
+        npm run clean;
+        npm run vscode:prepublish;
+        npm run cover:enable;
+        npm run testDebugger --silent;
     fi
-  - yarn run debugger-coverage
+  - npm run debugger-coverage
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
     fi
-  - yarn run clean:ptvsd
+  - npm run clean:ptvsd
   - pip install -t ./pythonFiles/experimental/ptvsd ptvsd --pre --no-cache-dir;
   - if [ $DEBUGGER_TEST_RELEASE == "true" ]; then
-        yarn run clean;
-        yarn run vscode:prepublish;
-        yarn run cover:enable;
-        yarn run testDebugger --silent;
+        npm run clean;
+        npm run vscode:prepublish;
+        npm run cover:enable;
+        npm run testDebugger --silent;
     fi
-  - yarn run debugger-coverage
+  - npm run debugger-coverage
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
     fi
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then
-        yarn run clean;
-        yarn run vscode:prepublish;
-        yarn run cover:enable;
-        yarn run testSingleWorkspace --silent;
+        npm run clean;
+        npm run vscode:prepublish;
+        npm run cover:enable;
+        npm run testSingleWorkspace --silent;
     fi
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
     fi
   - if [ $MULTIROOT_WORKSPACE_TEST == "true" ]; then
-        yarn run clean;
-        yarn run vscode:prepublish;
-        yarn run cover:enable;
-        yarn run testMultiWorkspace --silent;
+        npm run clean;
+        npm run vscode:prepublish;
+        npm run cover:enable;
+        npm run testMultiWorkspace --silent;
     fi
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
@@ -116,7 +116,7 @@ script:
         python3 news/announce.py --dry-run;
     fi
   - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
-        yarn run clean;
+        npm run clean;
         vsce package;
         azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
