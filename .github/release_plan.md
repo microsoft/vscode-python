@@ -38,7 +38,7 @@
 ## Release a beta version for testing
 - [ ] Update the [version](https://github.com/Microsoft/vscode-python/blob/master/package.json) to be a `beta` & update the [changelog](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
 - [ ] Announce the beta [development build](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md#development-build) (along with how to help [validate fixes](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22+is%3Aclosed))
-- [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs)
+- [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
 
 # Week of Monday, XXX
 
@@ -55,7 +55,7 @@
 ## Test the release candidate code
 - [ ] Update the [version](https://github.com/Microsoft/vscode-python/blob/master/package.json) to be an `rc` & update the [changelog](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
 - [ ] Announce the release candidate [development build](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md#development-build)
-- [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs)
+- [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
 - [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post
 
 ## Prep the release

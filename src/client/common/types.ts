@@ -3,14 +3,16 @@
 // Licensed under the MIT License.
 
 import { Socket } from 'net';
-import { ConfigurationTarget, DiagnosticSeverity, Disposable, Uri } from 'vscode';
+import { ConfigurationTarget, DiagnosticSeverity, Disposable, ExtensionContext, OutputChannel, Uri } from 'vscode';
 
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
+export interface IOutputChannel extends OutputChannel { }
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export const IsWindows = Symbol('IS_WINDOWS');
 export const Is64Bit = Symbol('Is64Bit');
 export const IDisposableRegistry = Symbol('IDiposableRegistry');
+export type IDisposableRegistry = Disposable[];
 export const IMemento = Symbol('IGlobalMemento');
 export const GLOBAL_MEMENTO = Symbol('IGlobalMemento');
 export const WORKSPACE_MEMENTO = Symbol('IWorkspaceMemento');
@@ -233,3 +235,6 @@ export interface ISocketServer extends Disposable {
     readonly client: Promise<Socket>;
     Start(options?: { port?: number; host?: string }): Promise<number>;
 }
+
+export const IExtensionContext = Symbol('ExtensionContext');
+export interface IExtensionContext extends ExtensionContext { }

@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { DocumentFilter, ExtensionContext, languages, OutputChannel } from 'vscode';
-import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { ILogger, IOutputChannel, IPythonSettings } from '../common/types';
+import { inject, injectable } from 'inversify';
+import { DocumentFilter, languages, OutputChannel } from 'vscode';
+import { PYTHON, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { IConfigurationService, IExtensionContext, ILogger, IOutputChannel } from '../common/types';
 import { IShebangCodeLensProvider } from '../interpreter/contracts';
 import { IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
@@ -19,15 +20,22 @@ import { PythonSymbolProvider } from '../providers/symbolProvider';
 import { IUnitTestManagementService } from '../unittests/types';
 import { IExtensionActivator } from './types';
 
+@injectable()
 export class ClassicExtensionActivator implements IExtensionActivator {
-    constructor(private serviceManager: IServiceManager, private pythonSettings: IPythonSettings, private documentSelector: DocumentFilter[]) {
+    private readonly context: IExtensionContext;
+    private jediFactory?: JediFactory;
+    private readonly documentSelector: DocumentFilter[];
+    constructor(@inject(IServiceManager) private serviceManager: IServiceManager) {
+        this.context = this.serviceManager.get<IExtensionContext>(IExtensionContext);
+        this.documentSelector = PYTHON;
     }
 
-    public async activate(context: ExtensionContext): Promise<boolean> {
+    public async activate(): Promise<boolean> {
+        const context = this.context;
         const standardOutputChannel = this.serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         activateSimplePythonRefactorProvider(context, standardOutputChannel, this.serviceManager);
 
-        const jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager);
+        const jediFactory = this.jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager);
         context.subscriptions.push(jediFactory);
         context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
@@ -44,7 +52,8 @@ export class ClassicExtensionActivator implements IExtensionActivator {
         const symbolProvider = new PythonSymbolProvider(jediFactory);
         context.subscriptions.push(languages.registerDocumentSymbolProvider(this.documentSelector, symbolProvider));
 
-        if (this.pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
+        const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
+        if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
             context.subscriptions.push(languages.registerSignatureHelpProvider(this.documentSelector, new PythonSignatureProvider(jediFactory), '(', ','));
         }
 
@@ -56,6 +65,9 @@ export class ClassicExtensionActivator implements IExtensionActivator {
         return true;
     }
 
-    // tslint:disable-next-line:no-empty
-    public async deactivate(): Promise<void> { }
+    public async deactivate(): Promise<void> {
+        if (this.jediFactory) {
+            this.jediFactory.dispose();
+        }
+    }
 }

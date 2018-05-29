@@ -11,11 +11,10 @@ import {
     extensions, IndentAction, languages, Memento,
     OutputChannel, window
 } from 'vscode';
-import { AnalysisExtensionActivator } from './activation/analysis';
-import { ClassicExtensionActivator } from './activation/classic';
-import { IExtensionActivator } from './activation/types';
+import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
+import { IExtensionActivationService } from './activation/types';
 import { PythonSettings } from './common/configSettings';
-import { isPythonAnalysisEngineTest, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
 import { createDeferred } from './common/helpers';
 import { PythonInstaller } from './common/installer/pythonInstallation';
@@ -25,7 +24,7 @@ import { registerTypes as processRegisterTypes } from './common/process/serviceR
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { StopWatch } from './common/stopWatch';
 import { ITerminalHelper } from './common/terminal/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IExtensionContext, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
 import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
@@ -37,7 +36,7 @@ import { ICondaService, IInterpreterService } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
-import { IServiceContainer } from './ioc/types';
+import { IServiceContainer, IServiceManager } from './ioc/types';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ILintingEngine } from './linters/types';
@@ -76,18 +75,14 @@ export async function activate(context: ExtensionContext) {
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 
-    const activator: IExtensionActivator = isPythonAnalysisEngineTest() || !pythonSettings.jediEnabled
-        ? new AnalysisExtensionActivator(serviceManager, pythonSettings)
-        : new ClassicExtensionActivator(serviceManager, pythonSettings, PYTHON);
-
-    await activator.activate(context);
+    const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
+    await activationService.activate();
 
     const standardOutputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     sortImports.activate(context, standardOutputChannel, serviceManager);
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
-    // tslint:disable-next-line:no-floating-promises
-    sendStartupTelemetry(activated, serviceContainer);
+    sendStartupTelemetry(activated, serviceContainer).ignoreErrors();
 
     const pythonInstaller = new PythonInstaller(serviceContainer);
     pythonInstaller.checkPythonInstallation(PythonSettings.getInstance())
@@ -160,15 +155,18 @@ export async function activate(context: ExtensionContext) {
 
 function registerServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
     serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
+    serviceManager.addSingletonInstance<IServiceManager>(IServiceManager, serviceManager);
     serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, context.subscriptions);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
+    serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
 
     const standardOutputChannel = window.createOutputChannel('Python');
     const unitTestOutChannel = window.createOutputChannel('Python Test Log');
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
 
+    activationRegisterTypes(serviceManager);
     commonRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);

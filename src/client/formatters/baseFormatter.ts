@@ -41,7 +41,6 @@ export abstract class BaseFormatter {
         return vscode.Uri.file(__dirname);
     }
     protected async provideDocumentFormattingEdits(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, args: string[], cwd?: string): Promise<vscode.TextEdit[]> {
-        this.outputChannel.clear();
         if (typeof cwd !== 'string' || cwd.length === 0) {
             cwd = this.getWorkspaceUri(document).fsPath;
         }

@@ -1,9 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as vscode from 'vscode';
+export const IExtensionActivationService = Symbol('IExtensionActivationService');
+export interface IExtensionActivationService {
+  activate(): Promise<void>;
+}
 
+export enum ExtensionActivators {
+  Jedi = 'Jedi',
+  DotNet = 'DotNet'
+}
+
+export const IExtensionActivator = Symbol('IExtensionActivator');
 export interface IExtensionActivator {
-  activate(context: vscode.ExtensionContext): Promise<boolean>;
+  activate(): Promise<boolean>;
   deactivate(): Promise<void>;
 }

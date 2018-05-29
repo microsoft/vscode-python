@@ -115,9 +115,8 @@ script:
         python3 -m pip install --upgrade -r news/requirements.txt;
         python3 news/announce.py --dry-run;
     fi
-after_success:
-  - if [ $AZURE_STORAGE_ACCOUNT ]; then
+  - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         yarn run clean;
         vsce package;
-        azure storage blob upload --container $AZURE_STORAGE_CONTAINER --blob ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --file python*.vsix --quiet;
+        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi

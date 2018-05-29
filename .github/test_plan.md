@@ -155,8 +155,10 @@ def foo():pass
 
 - [ ] Prompted to install a formatter if none installed and `Format Document` is run
   - [ ] Installing `autopep8` works
+  - [ ] Installing `black` works
   - [ ] Installing `yapf` works
 - [ ] autopep8 works
+- [ ] black works
 - [ ] yapf works
 - [ ] `"editor.formatOnType": true` works and has expected results
 

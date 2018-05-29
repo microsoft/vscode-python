@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ExtensionContext, OutputChannel } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
@@ -8,7 +9,7 @@ import { IApplicationShell } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
-import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
+import { IConfigurationService, IExtensionContext, IOutputChannel } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
@@ -28,6 +29,7 @@ const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 const analysisEngineFolder = 'analysis';
 
+@injectable()
 export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly configuration: IConfigurationService;
     private readonly appShell: IApplicationShell;
@@ -38,10 +40,11 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly interpreterService: IInterpreterService;
     private readonly disposables: Disposable[] = [];
     private languageClient: LanguageClient | undefined;
-    private context: ExtensionContext | undefined;
+    private readonly context: ExtensionContext;
     private interpreterHash: string = '';
 
-    constructor(private readonly services: IServiceContainer, pythonSettings: IPythonSettings) {
+    constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
+        this.context = this.services.get<IExtensionContext>(IExtensionContext);
         this.configuration = this.services.get<IConfigurationService>(IConfigurationService);
         this.appShell = this.services.get<IApplicationShell>(IApplicationShell);
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
@@ -50,15 +53,14 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         this.interpreterService = this.services.get<IInterpreterService>(IInterpreterService);
     }
 
-    public async activate(context: ExtensionContext): Promise<boolean> {
+    public async activate(): Promise<boolean> {
         this.sw.reset();
-        this.context = context;
-        const clientOptions = await this.getAnalysisOptions(context);
+        const clientOptions = await this.getAnalysisOptions(this.context);
         if (!clientOptions) {
             return false;
         }
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.restartLanguageServer()));
-        return this.startLanguageServer(context, clientOptions);
+        return this.startLanguageServer(this.context, clientOptions);
     }
 
     public async deactivate(): Promise<void> {
@@ -79,7 +81,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         if (!idata || idata.hash !== this.interpreterHash) {
             this.interpreterHash = idata ? idata.hash : '';
             await this.deactivate();
-            await this.activate(this.context);
+            await this.activate();
         }
     }
 
