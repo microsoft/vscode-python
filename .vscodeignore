@@ -5,6 +5,7 @@
 .gitattributes
 .gitignore
 .gitmodules
+.npmrc
 .travis.yml
 CODE_OF_CONDUCT.md
 CODING_STANDARDS.md
