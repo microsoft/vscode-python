@@ -16,7 +16,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 
 suite('Activation - ActivationService', () => {
     [true, false].forEach(jediIsEnabled => {
-        suite(`Jedi is ${jediIsEnabled ? 'dnabled' : 'disabled'}`, () => {
+        suite(`Jedi is ${jediIsEnabled ? 'enabled' : 'disabled'}`, () => {
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
             let pythonSettings: TypeMoq.IMock<IPythonSettings>;
             let appShell: TypeMoq.IMock<IApplicationShell>;
