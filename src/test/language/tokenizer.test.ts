@@ -193,7 +193,7 @@ suite('Language.Tokenizer', () => {
     test('Hex number', () => {
         const t = new Tokenizer();
         const tokens = t.tokenize('1 0X2 0x3 0x');
-        assert.equal(tokens.count, 4);
+        assert.equal(tokens.count, 5);
 
         assert.equal(tokens.getItemAt(0).type, TokenType.Number);
         assert.equal(tokens.getItemAt(0).length, 1);
@@ -204,13 +204,16 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.getItemAt(2).type, TokenType.Number);
         assert.equal(tokens.getItemAt(2).length, 3);
 
-        assert.equal(tokens.getItemAt(3).type, TokenType.Unknown);
-        assert.equal(tokens.getItemAt(3).length, 2);
+        assert.equal(tokens.getItemAt(3).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(3).length, 1);
+
+        assert.equal(tokens.getItemAt(4).type, TokenType.Identifier);
+        assert.equal(tokens.getItemAt(4).length, 1);
     });
     test('Binary number', () => {
         const t = new Tokenizer();
         const tokens = t.tokenize('1 0B1 0b010 0b3 0b');
-        assert.equal(tokens.count, 6);
+        assert.equal(tokens.count, 7);
 
         assert.equal(tokens.getItemAt(0).type, TokenType.Number);
         assert.equal(tokens.getItemAt(0).length, 1);
@@ -227,13 +230,16 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.getItemAt(4).type, TokenType.Identifier);
         assert.equal(tokens.getItemAt(4).length, 2);
 
-        assert.equal(tokens.getItemAt(5).type, TokenType.Unknown);
-        assert.equal(tokens.getItemAt(5).length, 2);
+        assert.equal(tokens.getItemAt(5).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(5).length, 1);
+
+        assert.equal(tokens.getItemAt(6).type, TokenType.Identifier);
+        assert.equal(tokens.getItemAt(6).length, 1);
     });
     test('Octal number', () => {
         const t = new Tokenizer();
         const tokens = t.tokenize('1 0o4 0o077 -0o200 0o9 0oO');
-        assert.equal(tokens.count, 7);
+        assert.equal(tokens.count, 8);
 
         assert.equal(tokens.getItemAt(0).type, TokenType.Number);
         assert.equal(tokens.getItemAt(0).length, 1);
@@ -253,8 +259,11 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.getItemAt(5).type, TokenType.Identifier);
         assert.equal(tokens.getItemAt(5).length, 2);
 
-        assert.equal(tokens.getItemAt(6).type, TokenType.Unknown);
-        assert.equal(tokens.getItemAt(6).length, 3);
+        assert.equal(tokens.getItemAt(6).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(6).length, 1);
+
+        assert.equal(tokens.getItemAt(7).type, TokenType.Identifier);
+        assert.equal(tokens.getItemAt(7).length, 2);
     });
     test('Decimal number', () => {
         const t = new Tokenizer();
@@ -300,6 +309,17 @@ suite('Language.Tokenizer', () => {
 
         assert.equal(tokens.getItemAt(5).type, TokenType.Number);
         assert.equal(tokens.getItemAt(5).length, 5);
+    });
+    test('Underscore numbers', () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('+1_0_0_0 0_0 .5_00_3e-4 0xCAFE_F00D 10_000_000.0 0b_0011_1111_0100_1110');
+        const lengths = [8, 3, 10, 11, 12, 22];
+        assert.equal(tokens.count, 6);
+
+        for (let i = 0; i < tokens.count; i += 1) {
+            assert.equal(tokens.getItemAt(i).type, TokenType.Number);
+            assert.equal(tokens.getItemAt(i).length, lengths[i]);
+        }
     });
     test('Simple expression, leading minus', () => {
         const t = new Tokenizer();
