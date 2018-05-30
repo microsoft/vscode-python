@@ -143,6 +143,9 @@ suite('Formatting - line formatter', () => {
     test('Equals with type hints', () => {
         testFormatLine('def foo(x:int=3,x=100.)', 'def foo(x: int = 3, x=100.)');
     });
+    test('Trailing comma', () => {
+        testFormatLine('a, =[1]', 'a, = [1]');
+    });
     test('Grammar file', () => {
         const content = fs.readFileSync(grammarFile).toString('utf8');
         const lines = content.splitLines({ trim: false, removeEmptyEntries: false });

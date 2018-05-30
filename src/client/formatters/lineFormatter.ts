@@ -104,10 +104,8 @@ export class LineFormatter {
         if (t.length === 1) {
             switch (opCode) {
                 case Char.Equal:
-                    if (this.handleEqual(t, index)) {
-                        return;
-                    }
-                    break;
+                    this.handleEqual(t, index);
+                    return;
                 case Char.Period:
                     if (prev && this.isKeyword(prev, 'from')) {
                         this.builder.softAppendSpace();
@@ -172,16 +170,24 @@ export class LineFormatter {
         this.builder.softAppendSpace();
     }
 
-    private handleEqual(t: IToken, index: number): boolean {
+    private handleEqual(t: IToken, index: number): void {
         if (this.isMultipleStatements(index) && !this.braceCounter.isOpened(TokenType.OpenBrace)) {
-            return false; // x = 1; x, y = y, x
+            // x = 1; x, y = y, x
+            this.builder.softAppendSpace();
+            this.builder.append('=');
+            this.builder.softAppendSpace();
+            return;
         }
+
         // Check if this is = in function arguments. If so, do not add spaces around it.
         if (this.isEqualsInsideArguments(index)) {
             this.builder.append('=');
-            return true;
+            return;
         }
-        return false;
+
+        this.builder.softAppendSpace();
+        this.builder.append('=');
+        this.builder.softAppendSpace();
     }
 
     private handleOther(t: IToken, index: number): void {
