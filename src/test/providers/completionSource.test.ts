@@ -66,7 +66,7 @@ suite('Completion Provider', () => {
             return Promise.resolve(completionResult.object);
         });
 
-        const expectedSource = `${source}${autoCompleteItems[0].text}${addBrackets ? '($1)' : ''}`;
+        const expectedSource = `${source}${autoCompleteItems[0].text}`;
         itemInfoSource.setup(i => i.getItemInfoFromText(TypeMoq.It.isAny(), TypeMoq.It.isAny(),
             TypeMoq.It.isAny(), expectedSource, TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
