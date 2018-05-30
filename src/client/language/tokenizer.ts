@@ -280,6 +280,8 @@ export class Tokenizer implements ITokenizer {
             case Char.Caret:
             case Char.Equal:
             case Char.ExclamationMark:
+            case Char.Percent:
+            case Char.Tilde:
                 length = nextChar === Char.Equal ? 2 : 1;
                 break;
 

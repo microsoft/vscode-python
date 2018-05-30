@@ -185,7 +185,7 @@ suite('Language.Tokenizer', () => {
     });
     test('Unknown token', () => {
         const t = new Tokenizer();
-        const tokens = t.tokenize('~$');
+        const tokens = t.tokenize('`$');
         assert.equal(tokens.count, 1);
 
         assert.equal(tokens.getItemAt(0).type, TokenType.Unknown);
@@ -301,20 +301,37 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.getItemAt(5).type, TokenType.Number);
         assert.equal(tokens.getItemAt(5).length, 5);
     });
+    test('Simple expression, leading minus', () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('x == -y');
+        assert.equal(tokens.count, 4);
+
+        assert.equal(tokens.getItemAt(0).type, TokenType.Identifier);
+        assert.equal(tokens.getItemAt(0).length, 1);
+
+        assert.equal(tokens.getItemAt(1).type, TokenType.Operator);
+        assert.equal(tokens.getItemAt(1).length, 2);
+
+        assert.equal(tokens.getItemAt(2).type, TokenType.Operator);
+        assert.equal(tokens.getItemAt(2).length, 1);
+
+        assert.equal(tokens.getItemAt(3).type, TokenType.Identifier);
+        assert.equal(tokens.getItemAt(3).length, 1);
+    });
     test('Operators', () => {
         const text = '< <> << <<= ' +
             '== != > >> >>= >= <=' +
-            '+ -' +
+            '+ - ~ %' +
             '* ** / /= //=' +
-            '*= += -= **= ' +
+            '*= += -= ~= %= **= ' +
             '& &= | |= ^ ^= ->';
         const tokens = new Tokenizer().tokenize(text);
         const lengths = [
             1, 2, 2, 3,
             2, 2, 1, 2, 3, 2, 2,
-            1, 1,
+            1, 1, 1, 1,
             1, 2, 1, 2, 3,
-            2, 2, 2, 3,
+            2, 2, 2, 2, 2, 3,
             1, 2, 1, 2, 1, 2, 2];
         assert.equal(tokens.count, lengths.length);
         for (let i = 0; i < tokens.count; i += 1) {

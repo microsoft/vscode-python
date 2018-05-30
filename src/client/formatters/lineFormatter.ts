@@ -98,10 +98,10 @@ export class LineFormatter {
     private handleOperator(index: number): void {
         const t = this.tokens.getItemAt(index);
         const prev = index > 0 ? this.tokens.getItemAt(index - 1) : undefined;
+        const opCode = this.text.charCodeAt(t.start);
         const next = index < this.tokens.count - 1 ? this.tokens.getItemAt(index + 1) : undefined;
 
         if (t.length === 1) {
-            const opCode = this.text.charCodeAt(t.start);
             switch (opCode) {
                 case Char.Equal:
                     if (this.handleEqual(t, index)) {
@@ -112,7 +112,7 @@ export class LineFormatter {
                     if (prev && this.isKeyword(prev, 'from')) {
                         this.builder.softAppendSpace();
                     }
-                    this.builder.append(this.text[t.start]);
+                    this.builder.append('.');
                     if (next && this.isKeyword(next, 'import')) {
                         this.builder.softAppendSpace();
                     }
@@ -127,7 +127,7 @@ export class LineFormatter {
                         this.builder.append('@');
                     }
                     return;
-               case Char.ExclamationMark:
+                case Char.ExclamationMark:
                     this.builder.append('!');
                     return;
                 case Char.Asterisk:
@@ -162,6 +162,13 @@ export class LineFormatter {
 
         this.builder.softAppendSpace();
         this.builder.append(this.text.substring(t.start, t.end));
+
+        // Check unary case
+        if (prev && prev.type === TokenType.Operator) {
+            if (opCode === Char.Hyphen || opCode === Char.Plus || opCode === Char.Tilde) {
+                return;
+            }
+        }
         this.builder.softAppendSpace();
     }
 
@@ -193,6 +200,12 @@ export class LineFormatter {
 
         if (prev && (this.isOpenBraceType(prev.type) || prev.type === TokenType.Colon)) {
             // Don't insert space after (, [ or { .
+            this.builder.append(this.text.substring(t.start, t.end));
+            return;
+        }
+
+        if (t.type === TokenType.Number && prev && prev.type === TokenType.Operator && prev.length === 1 && this.text.charCodeAt(prev.start) === Char.Tilde) {
+            // Special case for ~ before numbers
             this.builder.append(this.text.substring(t.start, t.end));
             return;
         }
