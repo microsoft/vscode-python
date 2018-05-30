@@ -75,9 +75,9 @@ export class LineFormatter {
                     break;
 
                 case TokenType.Comment:
-                    // Add space before in-line comment.
+                    // Add 2 spaces before in-line comment per PEP guidelines.
                     if (prev) {
-                        this.builder.softAppendSpace();
+                        this.builder.softAppendSpace(2);
                     }
                     this.builder.append(this.text.substring(t.start, t.end));
                     break;

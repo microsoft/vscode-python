@@ -59,7 +59,7 @@ suite('Formatting - line formatter', () => {
         testFormatLine('[ 1 :[2: (x,),y]]{1}', '[1:[2:(x,), y]]{1}');
     });
     test('Trailing comment', () => {
-        testFormatLine('x=1  # comment', 'x = 1 # comment');
+        testFormatLine('x=1    # comment', 'x = 1  # comment');
     });
     test('Single comment', () => {
         testFormatLine('# comment', '# comment');
