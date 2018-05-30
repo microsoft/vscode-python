@@ -1,8 +1,5 @@
 language: python
-cache:
-  directories:
-    - "node_modules"
-    - "$HOME/.cache/pip"
+cache: pip
 
 matrix:
     include:
