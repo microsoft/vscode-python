@@ -314,7 +314,7 @@ export class LineFormatter {
         return s === 'in' || s === 'return' || s === 'and' ||
             s === 'or' || s === 'not' || s === 'from' ||
             s === 'import' || s === 'except' || s === 'for' ||
-            s === 'as' || s === 'is';
+            s === 'as' || s === 'is' || s === 'if';
     }
     private isKeyword(t: IToken, keyword: string): boolean {
         return t.type === TokenType.Identifier && t.length === keyword.length && this.text.substr(t.start, t.length) === keyword;

@@ -146,6 +146,9 @@ suite('Formatting - line formatter', () => {
     test('Trailing comma', () => {
         testFormatLine('a, =[1]', 'a, = [1]');
     });
+    test('if()', () => {
+        testFormatLine('if(True) :', 'if (True):');
+    });
     test('Grammar file', () => {
         const content = fs.readFileSync(grammarFile).toString('utf8');
         const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
