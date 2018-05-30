@@ -127,6 +127,9 @@ suite('Formatting - line formatter', () => {
         testFormatLine('z=R""', 'z = R""');
         testFormatLine('z=RF""', 'z = RF""');
     });
+    test('binary @', () => {
+        testFormatLine('a@  b', 'a @ b');
+    });
     test('Grammar file', () => {
         const content = fs.readFileSync(grammarFile).toString('utf8');
         const lines = content.splitLines({ trim: false, removeEmptyEntries: false });

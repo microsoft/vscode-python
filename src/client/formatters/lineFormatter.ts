@@ -118,8 +118,17 @@ export class LineFormatter {
                     }
                     return;
                 case Char.At:
-                case Char.ExclamationMark:
-                    this.builder.append(this.text[t.start]);
+                    if (prev) {
+                        // Binary case
+                        this.builder.softAppendSpace();
+                        this.builder.append('@');
+                        this.builder.softAppendSpace();
+                    } else {
+                        this.builder.append('@');
+                    }
+                    return;
+               case Char.ExclamationMark:
+                    this.builder.append('!');
                     return;
                 case Char.Asterisk:
                     if (prev && this.isKeyword(prev, 'lambda')) {

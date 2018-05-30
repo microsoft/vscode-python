@@ -1492,7 +1492,7 @@ class GrammarTests(unittest.TestCase):
                 self.other = o
                 return self
         m = M()
-        self.assertEqual(m@m, 4)
+        self.assertEqual(m @ m, 4)
         m @= 42
         self.assertEqual(m.other, 42)
 
