@@ -87,6 +87,10 @@ suite('Formatting - line formatter', () => {
     });
     test('Brace after keyword', () => {
         testFormatLine('for x in(1,2,3)', 'for x in (1, 2, 3)');
+        testFormatLine('assert(1,2,3)', 'assert (1, 2, 3)');
+        testFormatLine('if (True|False)and(False/True)not (! x )', 'if (True | False) and (False / True) not (!x)');
+        testFormatLine('while (True|False)', 'while (True | False)');
+        testFormatLine('yield(a%b)', 'yield (a % b)');
     });
     test('Dot operator', () => {
         testFormatLine('x.y', 'x.y');
