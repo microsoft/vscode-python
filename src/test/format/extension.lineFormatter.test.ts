@@ -129,16 +129,19 @@ suite('Formatting - line formatter', () => {
         testFormatLine('z=R""', 'z = R""');
         testFormatLine('z=RF""', 'z = RF""');
     });
-    test('binary @', () => {
+    test('Binary @', () => {
         testFormatLine('a@  b', 'a @ b');
     });
-    test('unary operators', () => {
+    test('Unary operators', () => {
         testFormatLine('x= - y', 'x = -y');
         testFormatLine('x= + y', 'x = +y');
         testFormatLine('x= ~ y', 'x = ~y');
         testFormatLine('x=-1', 'x = -1');
         testFormatLine('x=   +1', 'x = +1');
         testFormatLine('x=  ~1 ', 'x = ~1');
+    });
+    test('Equals with type hints', () => {
+        testFormatLine('def foo(x:int=3,x=100.)', 'def foo(x: int = 3, x=100.)');
     });
     test('Grammar file', () => {
         const content = fs.readFileSync(grammarFile).toString('utf8');

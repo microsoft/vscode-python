@@ -246,6 +246,10 @@ export class LineFormatter {
             return false;
         }
 
+        if (index > 1 && this.tokens.getItemAt(index - 2).type === TokenType.Colon) {
+            return false; // Type hint should have spaces around like foo(x: int = 1) per PEP 8
+        }
+
         const first = this.tokens.getItemAt(0);
         if (first.type === TokenType.Comma) {
             return true; // Line starts with commma
