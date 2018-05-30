@@ -157,7 +157,6 @@ suite('Formatting - line formatter', () => {
             const line = lines[i];
             const actual = formatMultiline(content, i);
             assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
-            prevLine = line;
         }
     });
 
@@ -190,10 +189,10 @@ suite('Formatting - line formatter', () => {
             }
 
             bits.push(lines[r.start.line].substr(r.start.character));
-            for (let i = r.start.line + 1; i < r.end.line - 1; i += 1) {
+            for (let i = r.start.line + 1; i < r.end.line; i += 1) {
                 bits.push(lines[i]);
             }
-            bits.push(lines[r.end.line].substr(0, r.end.character));
+            bits.push(lines[r.end.line].substring(0, r.end.character));
             return bits.join('\n');
         });
         document.setup(x => x.offsetAt(TypeMoq.It.isAny())).returns(o => {
