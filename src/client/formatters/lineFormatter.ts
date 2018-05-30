@@ -10,6 +10,20 @@ import { TextRangeCollection } from '../language/textRangeCollection';
 import { Tokenizer } from '../language/tokenizer';
 import { ITextRangeCollection, IToken, TokenType } from '../language/types';
 
+const keywordsWithSpaceBeforeBrace = [
+    'and', 'as', 'assert',
+    'del',
+    'except', 'elif',
+    'for', 'from',
+    'global',
+    'if', 'import', 'in', 'is',
+    'nonlocal', 'not',
+    'or',
+    'raise', 'return',
+    'while', 'with',
+    'yield'
+];
+
 export class LineFormatter {
     private builder = new TextBuilder();
     private tokens: ITextRangeCollection<IToken> = new TextRangeCollection<IToken>([]);
@@ -59,7 +73,7 @@ export class LineFormatter {
                     }
                     const id = this.text.substring(t.start, t.end);
                     this.builder.append(id);
-                    if (this.keywordWithSpaceAfter(id) && next && this.isOpenBraceType(next.type)) {
+                    if (this.isKeywordWithSpaceBeforeBrace(id) && next && this.isOpenBraceType(next.type)) {
                         // for x in ()
                         this.builder.softAppendSpace();
                     }
@@ -310,11 +324,9 @@ export class LineFormatter {
         }
         return false;
     }
-    private keywordWithSpaceAfter(s: string): boolean {
-        return s === 'in' || s === 'return' || s === 'and' ||
-            s === 'or' || s === 'not' || s === 'from' ||
-            s === 'import' || s === 'except' || s === 'for' ||
-            s === 'as' || s === 'is' || s === 'if';
+
+    private isKeywordWithSpaceBeforeBrace(s: string): boolean {
+        return keywordsWithSpaceBeforeBrace.indexOf(s) >= 0;
     }
     private isKeyword(t: IToken, keyword: string): boolean {
         return t.type === TokenType.Identifier && t.length === keyword.length && this.text.substr(t.start, t.length) === keyword;
