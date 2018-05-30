@@ -3,7 +3,7 @@
 
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
-import { TextDocument } from 'vscode';
+import { Position, Range, TextDocument } from 'vscode';
 import { BraceCounter } from '../language/braceCounter';
 import { TextBuilder } from '../language/textBuilder';
 import { TextRangeCollection } from '../language/textRangeCollection';
@@ -254,13 +254,11 @@ export class LineFormatter {
 
     // tslint:disable-next-line:cyclomatic-complexity
     private isEqualsInsideArguments(index: number): boolean {
-        // Since we don't have complete statement, this is mostly heuristics.
-        // Therefore the code may not be handling all possible ways of the
-        // argument list continuation.
         if (index < 1) {
             return false;
         }
 
+        // We are looking for IDENT = ?
         const prev = this.tokens.getItemAt(index - 1);
         if (prev.type !== TokenType.Identifier) {
             return false;
@@ -270,41 +268,7 @@ export class LineFormatter {
             return false; // Type hint should have spaces around like foo(x: int = 1) per PEP 8
         }
 
-        const first = this.tokens.getItemAt(0);
-        if (first.type === TokenType.Comma) {
-            return true; // Line starts with commma
-        }
-
-        const last = this.tokens.getItemAt(this.tokens.count - 1);
-        if (last.type === TokenType.Comma) {
-            return true; // Line ends in comma
-        }
-
-        if (last.type === TokenType.Comment && this.tokens.count > 1 && this.tokens.getItemAt(this.tokens.count - 2).type === TokenType.Comma) {
-            return true; // Line ends in comma and then comment
-        }
-
-        if (this.document) {
-            const prevLine = this.lineNumber > 0 ? this.document.lineAt(this.lineNumber - 1).text : '';
-            const prevLineTokens = new Tokenizer().tokenize(prevLine);
-            if (prevLineTokens.count > 0) {
-                const lastOnPrevLine = prevLineTokens.getItemAt(prevLineTokens.count - 1);
-                if (lastOnPrevLine.type === TokenType.Comma) {
-                    return true; // Previous line ends in comma
-                }
-                if (lastOnPrevLine.type === TokenType.Comment && prevLineTokens.count > 1 && prevLineTokens.getItemAt(prevLineTokens.count - 2).type === TokenType.Comma) {
-                    return true; // Previous line ends in comma and then comment
-                }
-            }
-        }
-
-        for (let i = 0; i < index; i += 1) {
-            const t = this.tokens.getItemAt(i);
-            if (this.isKeyword(t, 'lambda')) {
-                return true;
-            }
-        }
-        return this.braceCounter.isOpened(TokenType.OpenBrace);
+        return this.isInsideFunctionArguments(this.tokens.getItemAt(index).start);
     }
 
     private isOpenBraceType(type: TokenType): boolean {
@@ -316,6 +280,7 @@ export class LineFormatter {
     private isBraceType(type: TokenType): boolean {
         return this.isOpenBraceType(type) || this.isCloseBraceType(type);
     }
+
     private isMultipleStatements(index: number): boolean {
         for (let i = index; i >= 0; i -= 1) {
             if (this.tokens.getItemAt(i).type === TokenType.Semicolon) {
@@ -330,5 +295,92 @@ export class LineFormatter {
     }
     private isKeyword(t: IToken, keyword: string): boolean {
         return t.type === TokenType.Identifier && t.length === keyword.length && this.text.substr(t.start, t.length) === keyword;
+    }
+
+    // tslint:disable-next-line:cyclomatic-complexity
+    private isInsideFunctionArguments(position: number): boolean {
+        if (!this.document) {
+            return false; // unable to determine
+        }
+
+        // Walk up until beginning of the document or line with 'def IDENT(' or line ending with :
+        // IDENT( by itself is not reliable since they can be nested in IDENT(IDENT(a), x=1)
+        let start = new Position(0, 0);
+        for (let i = this.lineNumber; i >= 0; i -= 1) {
+            const line = this.document.lineAt(i);
+            const lineTokens = new Tokenizer().tokenize(line.text);
+            if (lineTokens.count === 0) {
+                continue;
+            }
+            // 'def IDENT('
+            const first = lineTokens.getItemAt(0);
+            if (lineTokens.count >= 3 &&
+                first.length === 3 && line.text.substr(first.start, first.length) === 'def' &&
+                lineTokens.getItemAt(1).type === TokenType.Identifier &&
+                lineTokens.getItemAt(2).type === TokenType.OpenBrace) {
+                start = line.range.start;
+                break;
+            }
+            if (lineTokens.count > 0 && i < this.lineNumber) {
+                // One of previous lines ends with :
+                const last = lineTokens.getItemAt(lineTokens.count - 1);
+                if (last.type === TokenType.Colon) {
+                    start = this.document.lineAt(i + 1).range.start;
+                    break;
+                } else if (lineTokens.count > 1) {
+                    const beforeLast = lineTokens.getItemAt(lineTokens.count - 2);
+                    if (beforeLast.type === TokenType.Colon && last.type === TokenType.Comment) {
+                        start = this.document.lineAt(i + 1).range.start;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Now tokenize from the nearest reasonable point
+        const currentLine = this.document.lineAt(this.lineNumber);
+        const text = this.document.getText(new Range(start, currentLine.range.end));
+        const tokens = new Tokenizer().tokenize(text);
+
+        // Translate position in the line being formatted to the tokenized block
+        position = this.document.offsetAt(currentLine.range.start) + position - this.document.offsetAt(start);
+
+        // Walk tokens locating narrowest function signature as in IDENT( | )
+        let funcCallStartIndex = -1;
+        let funcCallEndIndex = -1;
+        for (let i = 0; i < tokens.count - 1; i += 1) {
+            const t = tokens.getItemAt(i);
+            if (t.type === TokenType.Identifier) {
+                const next = tokens.getItemAt(i + 1);
+                if (next.type === TokenType.OpenBrace && !this.isKeywordWithSpaceBeforeBrace(text.substr(t.start, t.length))) {
+                    // We are at IDENT(, try and locate the closing brace
+                    let closeBraceIndex = this.findClosingBrace(tokens, i + 1);
+                    // Closing brace is not required in case construct is not yet terminated
+                    closeBraceIndex = closeBraceIndex > 0 ? closeBraceIndex : tokens.count - 1;
+                    // Are we in range?
+                    if (position > next.start && position < tokens.getItemAt(closeBraceIndex).start) {
+                        funcCallStartIndex = i;
+                        funcCallEndIndex = closeBraceIndex;
+                    }
+                }
+            }
+        }
+
+        // Did we find anything?
+        return funcCallStartIndex >= 0 && funcCallEndIndex > 0;
+    }
+
+    private findClosingBrace(tokens: ITextRangeCollection<IToken>, index: number) {
+        const braceCounter = new BraceCounter();
+        for (let i = index; i < tokens.count; i += 1) {
+            const t = tokens.getItemAt(i);
+            if (t.type === TokenType.OpenBrace || t.type === TokenType.CloseBrace) {
+                braceCounter.countBrace(t);
+            }
+            if (braceCounter.count === 0) {
+                return i;
+            }
+        }
+        return -1;
     }
 }
