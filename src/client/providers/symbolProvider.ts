@@ -2,6 +2,8 @@
 
 import { CancellationToken, DocumentSymbolProvider, Location, Range, SymbolInformation, TextDocument, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../common/helpers';
+import { IFileSystem } from '../common/platform/types';
+import { IServiceContainer } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
 import { SYMBOL } from '../telemetry/constants';
@@ -9,23 +11,10 @@ import * as proxy from './jediProxy';
 
 export class PythonSymbolProvider implements DocumentSymbolProvider {
     private debounceRequest: Map<string, { timer: NodeJS.Timer; deferred: Deferred<SymbolInformation[]> }>;
-    public constructor(private jediFactory: JediFactory, private readonly debounceTimeoutMs = 500) {
+    private readonly fs: IFileSystem;
+    public constructor(serviceContainer: IServiceContainer, private jediFactory: JediFactory, private readonly debounceTimeoutMs = 500) {
         this.debounceRequest = new Map<string, { timer: NodeJS.Timer; deferred: Deferred<SymbolInformation[]> }>();
-    }
-    private static parseData(document: TextDocument, data?: proxy.ISymbolResult): SymbolInformation[] {
-        if (data) {
-            const symbols = data.definitions.filter(sym => sym.fileName === document.fileName);
-            return symbols.map(sym => {
-                const symbol = sym.kind;
-                const range = new Range(
-                    sym.range.startLine, sym.range.startColumn,
-                    sym.range.endLine, sym.range.endColumn);
-                const uri = Uri.file(sym.fileName);
-                const location = new Location(uri, range);
-                return new SymbolInformation(sym.text, symbol, sym.container, location);
-            });
-        }
-        return [];
+        this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
     @captureTelemetry(SYMBOL)
     public provideDocumentSymbols(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
@@ -55,7 +44,7 @@ export class PythonSymbolProvider implements DocumentSymbolProvider {
             }
 
             this.jediFactory.getJediProxyHandler<proxy.ISymbolResult>(document.uri).sendCommand(cmd, token)
-                .then(data => PythonSymbolProvider.parseData(document, data))
+                .then(data => this.parseData(document, data))
                 .then(items => deferred.resolve(items))
                 .catch(ex => deferred.reject(ex));
 
@@ -89,6 +78,21 @@ export class PythonSymbolProvider implements DocumentSymbolProvider {
         }
 
         return this.jediFactory.getJediProxyHandler<proxy.ISymbolResult>(document.uri).sendCommandNonCancellableCommand(cmd, token)
-            .then(data => PythonSymbolProvider.parseData(document, data));
+            .then(data => this.parseData(document, data));
+    }
+    private parseData(document: TextDocument, data?: proxy.ISymbolResult): SymbolInformation[] {
+        if (data) {
+            const symbols = data.definitions.filter(sym => this.fs.arePathsSame(sym.fileName, document.fileName));
+            return symbols.map(sym => {
+                const symbol = sym.kind;
+                const range = new Range(
+                    sym.range.startLine, sym.range.startColumn,
+                    sym.range.endLine, sym.range.endColumn);
+                const uri = Uri.file(sym.fileName);
+                const location = new Location(uri, range);
+                return new SymbolInformation(sym.text, symbol, sym.container, location);
+            });
+        }
+        return [];
     }
 }

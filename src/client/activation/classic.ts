@@ -6,7 +6,7 @@ import { DocumentFilter, languages } from 'vscode';
 import { PYTHON } from '../common/constants';
 import { IConfigurationService, IExtensionContext, ILogger } from '../common/types';
 import { IShebangCodeLensProvider } from '../interpreter/contracts';
-import { IServiceManager } from '../ioc/types';
+import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from '../providers/completionProvider';
 import { PythonDefinitionProvider } from '../providers/definitionProvider';
@@ -46,7 +46,7 @@ export class ClassicExtensionActivator implements IExtensionActivator {
         context.subscriptions.push(languages.registerCompletionItemProvider(this.documentSelector, new PythonCompletionItemProvider(jediFactory, this.serviceManager), '.'));
         context.subscriptions.push(languages.registerCodeLensProvider(this.documentSelector, this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)));
 
-        const symbolProvider = new PythonSymbolProvider(jediFactory);
+        const symbolProvider = new PythonSymbolProvider(this.serviceManager.get<IServiceContainer>(IServiceContainer), jediFactory);
         context.subscriptions.push(languages.registerDocumentSymbolProvider(this.documentSelector, symbolProvider));
 
         const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
