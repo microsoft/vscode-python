@@ -11,12 +11,13 @@ import { Tokenizer } from '../language/tokenizer';
 import { ITextRangeCollection, IToken, TokenType } from '../language/types';
 
 const keywordsWithSpaceBeforeBrace = [
-    'and', 'as', 'assert',
+    'and', 'as', 'assert', 'await',
     'del',
     'except', 'elif',
     'for', 'from',
     'global',
     'if', 'import', 'in', 'is',
+    'lambda',
     'nonlocal', 'not',
     'or',
     'raise', 'return',

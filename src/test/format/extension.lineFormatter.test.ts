@@ -95,7 +95,6 @@ suite('Formatting - line formatter', () => {
     test('Dot operator', () => {
         testFormatLine('x.y', 'x.y');
         testFormatLine('5 .y', '5.y');
-        //testFormatLine('- 135 .bit_length()', '-135.bit_length()');
     });
     test('Unknown tokens no space', () => {
         testFormatLine('abc\\n\\', 'abc\\n\\');
