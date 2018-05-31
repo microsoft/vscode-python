@@ -1,4 +1,8 @@
-"""Generate the changelog."""
+"""Generate the changelog.
+
+Usage: announce [--dry_run | --interim | --final] [<directory>]
+
+"""
 import enum
 import operator
 import os
@@ -8,7 +12,7 @@ import subprocess
 import sys
 import types
 
-import click
+import docopt
 
 
 FILENAME_RE = re.compile(r"(?P<issue>\d+)(?P<nonce>-\S+)?\.md")
@@ -117,15 +121,6 @@ class RunType(enum.Enum):
     final = 2
 
 
-@click.command()
-@click.option('--dry-run', 'run_type', flag_value=RunType.dry_run,
-              help='validate input')
-@click.option('--interim', 'run_type', flag_value=RunType.interim, default=True,
-              help='generate Markdown')
-@click.option('--final', 'run_type', flag_value=RunType.final,
-              help='generate Markdown & `git rm` news files')
-@click.argument('directory', default=pathlib.Path(__file__).parent,
-                type=click.Path(exists=True, file_okay=False))
 def main(run_type, directory):
     directory = pathlib.Path(directory)
     data = gather(directory)
@@ -137,4 +132,11 @@ def main(run_type, directory):
 
 
 if __name__ == '__main__':
-    main()
+    arguments = docopt.docopt(__doc__)
+    run_type = RunType.interim
+    for possible_run_type in RunType:
+        if arguments[f"--{possible_run_type.name}"]:
+            run_type = possible_run_type
+            break
+    directory = arguments["<directory>"] or pathlib.Path(__file__).parent
+    main(run_type, directory)

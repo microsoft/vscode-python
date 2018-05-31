@@ -1,5 +1,6 @@
 import pathlib
 
+import docopt
 import pytest
 
 import announce as ann
@@ -78,8 +79,6 @@ def test_gather(directory):
     assert entries[1].description == 'Fix 2'
 
 
-
-
 def test_entry_markdown():
     markdown = ann.entry_markdown(ann.NewsEntry(42, 'Hello, world!', None))
     assert '42' in markdown
@@ -125,3 +124,14 @@ def test_cleanup(directory, monkeypatch):
     section, entries = results.pop()
     assert len(entries) == 1
     assert rm_path == entries[0].path
+
+
+def test_cli():
+    for option in ("--"+opt for opt in ["dry_run", "interim", "final"]):
+        args = docopt.docopt(ann.__doc__, [option])
+        assert args[option]
+    args = docopt.docopt(ann.__doc__, ["./news"])
+    assert args["<directory>"] == "./news"
+    args = docopt.docopt(ann.__doc__, ["--dry_run", "./news"])
+    assert args["--dry_run"]
+    assert args["<directory>"] == "./news"
