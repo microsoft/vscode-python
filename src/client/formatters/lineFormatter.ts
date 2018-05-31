@@ -322,6 +322,7 @@ export class LineFormatter {
                 start = line.range.start;
                 break;
             }
+
             if (lineTokens.count > 0 && i < this.lineNumber) {
                 // One of previous lines ends with :
                 const last = lineTokens.getItemAt(lineTokens.count - 1);
@@ -343,7 +344,7 @@ export class LineFormatter {
         const text = this.document.getText(new Range(start, currentLine.range.end));
         const tokens = new Tokenizer().tokenize(text);
 
-        // Translate position in the line being formatted to the tokenized block
+        // Translate position in the line being formatted to the position in the tokenized block
         position = this.document.offsetAt(currentLine.range.start) + position - this.document.offsetAt(start);
 
         // Walk tokens locating narrowest function signature as in IDENT( | )
@@ -366,12 +367,38 @@ export class LineFormatter {
                 }
             }
         }
-
         // Did we find anything?
+        if (funcCallStartIndex < 0) {
+            // No? See if we are between 'lambda' and ':'
+            for (let i = 0; i < tokens.count; i += 1) {
+                const t = tokens.getItemAt(i);
+                if (t.type === TokenType.Identifier && text.substr(t.start, t.length) === 'lambda') {
+                    if (position < t.start) {
+                        break; // Position is before the nearest 'lambda'
+                    }
+                    let colonIndex = this.findNearestColon(tokens, i + 1);
+                    // Closing : is not required in case construct is not yet terminated
+                    colonIndex = colonIndex > 0 ? colonIndex : tokens.count - 1;
+                    if (position > t.start && position < tokens.getItemAt(colonIndex).start) {
+                        funcCallStartIndex = i;
+                        funcCallEndIndex = colonIndex;
+                    }
+                }
+            }
+        }
         return funcCallStartIndex >= 0 && funcCallEndIndex > 0;
     }
 
-    private findClosingBrace(tokens: ITextRangeCollection<IToken>, index: number) {
+    private findNearestColon(tokens: ITextRangeCollection<IToken>, index: number): number {
+        for (let i = index; i < tokens.count; i += 1) {
+            if (tokens.getItemAt(i).type === TokenType.Colon) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private findClosingBrace(tokens: ITextRangeCollection<IToken>, index: number): number {
         const braceCounter = new BraceCounter();
         for (let i = index; i < tokens.count; i += 1) {
             const t = tokens.getItemAt(i);

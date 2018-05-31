@@ -131,6 +131,10 @@ suite('Formatting - line formatter', () => {
     test('if()', () => {
         testFormatLine('if(True) :', 'if (True):');
     });
+    test('lambda arguments', () => {
+        testFormatMultiline('l4= lambda x =lambda y =lambda z= 1: z: y(): x()', 0, 'l4 = lambda x=lambda y=lambda z=1: z: y(): x()');
+    });
+
     test('Multiline function call', () => {
         testFormatMultiline('def foo(x = 1)', 0, 'def foo(x=1)');
         testFormatMultiline('def foo(a\n, x = 1)', 1, ', x=1)');
@@ -181,7 +185,7 @@ suite('Formatting - line formatter', () => {
         });
         document.setup(x => x.getText(TypeMoq.It.isAny())).returns(o => {
             const r = o as Range;
-            const bits = [];
+            const bits: string[] = [];
 
             if (r.start.line === r.end.line) {
                 return lines[r.start.line].substring(r.start.character, r.end.character);
