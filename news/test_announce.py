@@ -48,8 +48,7 @@ def test_sections_sorting(directory):
 
 def test_sections_naming(directory):
     (directory / 'Hello').mkdir()
-    with pytest.raises(ValueError):
-        list(ann.sections(directory))
+    assert not ann.sections(directory)
 
 
 def test_gather(directory):
