@@ -39,6 +39,20 @@ export type DebuggerTelemetry = {
     pyspark?: boolean;
     hasEnvVars?: boolean;
 };
+export type DebuggerTelemetryV2 = {
+    trigger: 'launch' | 'attach';
+    console?: 'none' | 'integratedTerminal' | 'externalTerminal';
+    hasEnvVars: boolean;
+    hasArgs: boolean;
+    django: boolean;
+    flask: boolean;
+    jinja: boolean;
+    isLocalhost: boolean;
+    isModule: boolean;
+    isSudo: boolean;
+    stopOnEntry: boolean;
+    pyramid: boolean;
+};
 export type DebuggerPerformanceTelemetry = {
     duration: number;
     action: 'stepIn' | 'stepOut' | 'continue' | 'next' | 'launch';
@@ -64,5 +78,4 @@ export type TerminalTelemetry = {
     pythonVersion?: string;
     interpreterType?: InterpreterType;
 };
-export type TelemetryProperties = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry |
-    CodeExecutionTelemetry | TestRunTelemetry | TestDiscoverytTelemetry | FeedbackTelemetry | TerminalTelemetry;
+export type TelemetryProperties = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry | CodeExecutionTelemetry | TestRunTelemetry | TestDiscoverytTelemetry | FeedbackTelemetry | TerminalTelemetry | DebuggerTelemetryV2;

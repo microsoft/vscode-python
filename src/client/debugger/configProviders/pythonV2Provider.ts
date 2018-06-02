@@ -7,6 +7,9 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IPlatformService } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { DEBUGGER } from '../../telemetry/constants';
+import { DebuggerTelemetryV2 } from '../../telemetry/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../Common/Contracts';
 import { BaseConfigurationProvider, PythonAttachDebugConfiguration, PythonLaunchDebugConfiguration } from './baseProvider';
 import { IConfigurationProviderUtils } from './types';
@@ -37,7 +40,7 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
             this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
-        const isFlask = debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK';
+        const isFlask = this.isDebuggingFlask(debugConfiguration);
         if ((debugConfiguration.pyramid || isFlask)
             && debugOptions.indexOf(DebugOptions.Jinja) === -1
             && debugConfiguration.jinja !== false) {
@@ -47,6 +50,7 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
             const utils = this.serviceContainer.get<IConfigurationProviderUtils>(IConfigurationProviderUtils);
             debugConfiguration.program = (await utils.getPyramidStartupScriptFilePath(workspaceFolder))!;
         }
+        this.sendTelemetry('launch', debugConfiguration);
     }
     // tslint:disable-next-line:cyclomatic-complexity
     protected async provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonAttachDebugConfiguration<AttachRequestArguments>): Promise<void> {
@@ -72,7 +76,7 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
 
         // We'll need paths to be fixed only in the case where local and remote hosts are the same
         // I.e. only if hostName === 'localhost' or '127.0.0.1' or ''
-        const isLocalHost = !debugConfiguration.host || debugConfiguration.host === 'localhost' || debugConfiguration.host === '127.0.0.1';
+        const isLocalHost = this.isLocalHost(debugConfiguration.host);
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows && isLocalHost) {
             this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
@@ -99,11 +103,36 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
                 remoteRoot: workspaceFolder.fsPath
             });
         }
+        this.sendTelemetry('attach', debugConfiguration);
     }
     private debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions) {
         if (debugOptions.indexOf(debugOption) >= 0) {
             return;
         }
         debugOptions.push(debugOption);
+    }
+    private isLocalHost(hostName?: string) {
+        const LocalHosts = ['localhost', '127.0.0.1', '::1'];
+        return (hostName && LocalHosts.indexOf(hostName.toLowerCase()) >= 0) ? true : false;
+    }
+    private isDebuggingFlask(debugConfiguration: PythonAttachDebugConfiguration<Partial<LaunchRequestArguments & AttachRequestArguments>>) {
+        return (debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK') ? true : false;
+    }
+    private sendTelemetry(trigger: 'launch' | 'attach', debugConfiguration: PythonAttachDebugConfiguration<Partial<LaunchRequestArguments & AttachRequestArguments>>) {
+        const telemetryProps: DebuggerTelemetryV2 = {
+            trigger,
+            console: debugConfiguration.console,
+            hasEnvVars: typeof debugConfiguration.env === 'object' && Object.keys(debugConfiguration.env).length > 0,
+            django: !!debugConfiguration.django,
+            flask: this.isDebuggingFlask(debugConfiguration),
+            hasArgs: Array.isArray(debugConfiguration.args) && debugConfiguration.args.length > 0,
+            isLocalhost: this.isLocalHost(debugConfiguration.host),
+            isModule: typeof debugConfiguration.module === 'string' && debugConfiguration.module.length > 0,
+            isSudo: !!debugConfiguration.sudo,
+            jinja: !!debugConfiguration.jinja,
+            pyramid: !!debugConfiguration.pyramid,
+            stopOnEntry: !!debugConfiguration.stopOnEntry
+        };
+        sendTelemetryEvent(DEBUGGER, undefined, telemetryProps);
     }
 }
