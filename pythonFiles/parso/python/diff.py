@@ -490,6 +490,9 @@ class _NodesStack(object):
 
         new_tos = tos
         for node in nodes:
+            if node.start_pos[0] > until_line:
+                break
+
             if node.type == 'endmarker':
                 # We basically removed the endmarker, but we are not allowed to
                 # remove the newline at the end of the line, otherwise it's
@@ -501,8 +504,6 @@ class _NodesStack(object):
                 # Endmarkers just distort all the checks below. Remove them.
                 break
 
-            if node.start_pos[0] > until_line:
-                break
             # TODO this check might take a bit of time for large files. We
             # might want to change this to do more intelligent guessing or
             # binary search.

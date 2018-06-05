@@ -4,7 +4,7 @@
 
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
-import { isBinary, isDecimal, isHex, isIdentifierChar, isIdentifierStartChar, isOctal } from './characters';
+import { isBinary, isDecimal, isHex, isIdentifierChar, isIdentifierStartChar, isOctal, isWhiteSpace } from './characters';
 import { CharacterStream } from './characterStream';
 import { TextRangeCollection } from './textRangeCollection';
 import { ICharacterStream, ITextRangeCollection, IToken, ITokenizer, TextRange, TokenizerMode, TokenType } from './types';
@@ -29,12 +29,7 @@ class Token extends TextRange implements IToken {
 export class Tokenizer implements ITokenizer {
     private cs: ICharacterStream = new CharacterStream('');
     private tokens: IToken[] = [];
-    private floatRegex = /[-+]?(?:(?:\d*\.\d+)|(?:\d+\.?))(?:[Ee][+-]?\d+)?/;
     private mode = TokenizerMode.Full;
-
-    constructor() {
-        //this.floatRegex.compile();
-    }
 
     public tokenize(text: string): ITextRangeCollection<IToken>;
     public tokenize(text: string, start: number, length: number, mode: TokenizerMode): ITextRangeCollection<IToken>;
@@ -224,43 +219,74 @@ export class Tokenizer implements ITokenizer {
 
         if (this.cs.currentChar === Char._0) {
             let radix = 0;
-            // Try hex
-            if (this.cs.nextChar === Char.x || this.cs.nextChar === Char.X) {
+            // Try hex => hexinteger: "0" ("x" | "X") (["_"] hexdigit)+
+            if ((this.cs.nextChar === Char.x || this.cs.nextChar === Char.X) && isHex(this.cs.lookAhead(2))) {
                 this.cs.advance(2);
                 while (isHex(this.cs.currentChar)) {
                     this.cs.moveNext();
                 }
                 radix = 16;
             }
-            // Try binary
-            if (this.cs.nextChar === Char.b || this.cs.nextChar === Char.B) {
+            // Try binary => bininteger: "0" ("b" | "B") (["_"] bindigit)+
+            if ((this.cs.nextChar === Char.b || this.cs.nextChar === Char.B) && isBinary(this.cs.lookAhead(2))) {
                 this.cs.advance(2);
                 while (isBinary(this.cs.currentChar)) {
                     this.cs.moveNext();
                 }
                 radix = 2;
             }
-            // Try octal
-            if (this.cs.nextChar === Char.o || this.cs.nextChar === Char.O) {
+            // Try octal => octinteger: "0" ("o" | "O") (["_"] octdigit)+
+            if ((this.cs.nextChar === Char.o || this.cs.nextChar === Char.O) && isOctal(this.cs.lookAhead(2))) {
                 this.cs.advance(2);
                 while (isOctal(this.cs.currentChar)) {
                     this.cs.moveNext();
                 }
                 radix = 8;
             }
+            if (radix > 0) {
+                const text = this.cs.getText().substr(start + leadingSign, this.cs.position - start - leadingSign);
+                if (!isNaN(parseInt(text, radix))) {
+                    this.tokens.push(new Token(TokenType.Number, start, text.length + leadingSign));
+                    return true;
+                }
+            }
+        }
+
+        let decimal = false;
+        // Try decimal int =>
+        //    decinteger: nonzerodigit (["_"] digit)* | "0" (["_"] "0")*
+        //    nonzerodigit: "1"..."9"
+        //    digit: "0"..."9"
+        if (this.cs.currentChar >= Char._1 && this.cs.currentChar <= Char._9) {
+            while (isDecimal(this.cs.currentChar)) {
+                this.cs.moveNext();
+            }
+            decimal = this.cs.currentChar !== Char.Period && this.cs.currentChar !== Char.e && this.cs.currentChar !== Char.E;
+        }
+
+        if (this.cs.currentChar === Char._0) { // "0" (["_"] "0")*
+            while (this.cs.currentChar === Char._0 || this.cs.currentChar === Char.Underscore) {
+                this.cs.moveNext();
+            }
+            decimal = this.cs.currentChar !== Char.Period && this.cs.currentChar !== Char.e && this.cs.currentChar !== Char.E;
+        }
+
+        if (decimal) {
             const text = this.cs.getText().substr(start + leadingSign, this.cs.position - start - leadingSign);
-            if (radix > 0 && parseInt(text.substr(2), radix)) {
+            if (!isNaN(parseInt(text, 10))) {
                 this.tokens.push(new Token(TokenType.Number, start, text.length + leadingSign));
                 return true;
             }
         }
 
-        if (isDecimal(this.cs.currentChar) || this.cs.currentChar === Char.Period) {
-            const candidate = this.cs.getText().substr(this.cs.position);
-            const re = this.floatRegex.exec(candidate);
-            if (re && re.length > 0 && re[0] && candidate.startsWith(re[0])) {
-                this.tokens.push(new Token(TokenType.Number, start, re[0].length + leadingSign));
-                this.cs.position = start + re[0].length + leadingSign;
+        // Floating point
+        if ((this.cs.currentChar >= Char._0 && this.cs.currentChar <= Char._9) || this.cs.currentChar === Char.Period) {
+            while (!isWhiteSpace(this.cs.currentChar)) {
+                this.cs.moveNext();
+            }
+            const text = this.cs.getText().substr(start, this.cs.position - start);
+            if (!isNaN(parseFloat(text))) {
+                this.tokens.push(new Token(TokenType.Number, start, this.cs.position - start));
                 return true;
             }
         }
@@ -280,6 +306,8 @@ export class Tokenizer implements ITokenizer {
             case Char.Caret:
             case Char.Equal:
             case Char.ExclamationMark:
+            case Char.Percent:
+            case Char.Tilde:
                 length = nextChar === Char.Equal ? 2 : 1;
                 break;
 
@@ -350,23 +378,40 @@ export class Tokenizer implements ITokenizer {
         this.tokens.push(new Token(TokenType.Comment, start, this.cs.position - start));
     }
 
+    // tslint:disable-next-line:cyclomatic-complexity
     private getStringPrefixLength(): number {
-        if (this.cs.currentChar === Char.f && (this.cs.nextChar === Char.SingleQuote || this.cs.nextChar === Char.DoubleQuote)) {
-            return 1; // f-string
+        if (this.cs.currentChar === Char.SingleQuote || this.cs.currentChar === Char.DoubleQuote) {
+            return 0; // Simple string, no prefix
         }
-        if (this.cs.currentChar === Char.b || this.cs.currentChar === Char.B || this.cs.currentChar === Char.u || this.cs.currentChar === Char.U) {
-            if (this.cs.nextChar === Char.SingleQuote || this.cs.nextChar === Char.DoubleQuote) {
-                // b-string or u-string
-                return 1;
+
+        if (this.cs.nextChar === Char.SingleQuote || this.cs.nextChar === Char.DoubleQuote) {
+            switch (this.cs.currentChar) {
+                case Char.f:
+                case Char.F:
+                case Char.r:
+                case Char.R:
+                case Char.b:
+                case Char.B:
+                case Char.u:
+                case Char.U:
+                    return 1; // single-char prefix like u"" or r""
+                default:
+                    break;
             }
-            if (this.cs.nextChar === Char.r || this.cs.nextChar === Char.R) {
-                // b-string or u-string with 'r' suffix
-                if (this.cs.lookAhead(2) === Char.SingleQuote || this.cs.lookAhead(2) === Char.DoubleQuote) {
+        }
+
+        if (this.cs.lookAhead(2) === Char.SingleQuote || this.cs.lookAhead(2) === Char.DoubleQuote) {
+            const prefix = this.cs.getText().substr(this.cs.position, 2).toLowerCase();
+            switch (prefix) {
+                case 'rf':
+                case 'ur':
+                case 'br':
                     return 2;
-                }
+                default:
+                    break;
             }
         }
-        return this.cs.currentChar === Char.SingleQuote || this.cs.currentChar === Char.DoubleQuote ? 0 : -1;
+        return -1;
     }
 
     private getQuoteType(): QuoteType {

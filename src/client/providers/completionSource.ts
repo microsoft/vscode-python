@@ -50,20 +50,13 @@ export class CompletionSource {
         // Supply hover source with simulated document text where item in question was 'already typed'.
         const document = documentPosition.document;
         const position = documentPosition.position;
-        let insertText: string | undefined;
-        if (typeof completionItem.insertText === 'string') {
-            insertText = completionItem.insertText!;
-        } else if (completionItem.insertText instanceof vscode.SnippetString) {
-            insertText = (completionItem.insertText! as vscode.SnippetString).value;
-        }
-        const itemText = insertText ? insertText : completionItem.label;
         const wordRange = document.getWordRangeAtPosition(position);
 
         const leadingRange = wordRange !== undefined
             ? new vscode.Range(new vscode.Position(0, 0), wordRange.start)
             : new vscode.Range(new vscode.Position(0, 0), position);
 
-        const itemString = `${itemText}`;
+        const itemString = completionItem.label;
         const sourceText = `${document.getText(leadingRange)}${itemString}`;
         const range = new vscode.Range(leadingRange.end, leadingRange.end.translate(0, itemString.length));
 

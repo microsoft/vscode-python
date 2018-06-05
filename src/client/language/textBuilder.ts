@@ -16,8 +16,14 @@ export class TextBuilder {
         return this.segments.join('');
     }
 
-    public softAppendSpace(): void {
-        if (!this.isLastWhiteSpace() && this.segments.length > 0) {
+    public softAppendSpace(count: number = 1): void {
+        if (this.segments.length === 0) {
+            return;
+        }
+        if (this.isLastWhiteSpace()) {
+            count = count - 1;
+        }
+        for (let i = 0; i < count; i += 1) {
             this.segments.push(' ');
         }
     }

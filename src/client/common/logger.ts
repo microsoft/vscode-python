@@ -1,3 +1,5 @@
+// tslint:disable:no-console
+
 import { injectable } from 'inversify';
 import { ILogger } from './types';
 
@@ -17,6 +19,13 @@ export class Logger implements ILogger {
             console.warn(`${PREFIX}${message}`, ex);
         } else {
             console.warn(`${PREFIX}${message}`);
+        }
+    }
+    public logInformation(message: string, ex?: Error) {
+        if (ex) {
+            console.info(`${PREFIX}${message}`, ex);
+        } else {
+            console.info(`${PREFIX}${message}`);
         }
     }
 }

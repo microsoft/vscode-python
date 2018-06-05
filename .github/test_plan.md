@@ -2,11 +2,12 @@
 
 ## Environment
 
-- OS: XXX
+- OS: XXX (Windows, macOS, latest Ubuntu LTS)
+  - Shell: XXX (Command Prompt, PowerShell, bash, fish)
 - Python
-  - Distribution: XXX
-  - Version: XXX
-- VS Code: XXX
+  - Distribution: XXX (CPython, miniconda)
+  - Version: XXX (2.7, latest 3.x)
+- VS Code: XXX (Insiders)
 
 ## Tests
 
@@ -36,7 +37,8 @@
 #### Virtual environments
 
 **ALWAYS**:
-- Use the latest version of Anconda
+- Use the latest version of Anaconda
+- Realize that `conda` is slow
 - Create an environment with a space in their path somewhere
 - Make sure that you do not have `python.pythonPath` specified in your `settings.json` when testing automatic detection
 - Do note that the `Select Interpreter` drop-down window scrolls
@@ -46,7 +48,7 @@
   - [ ] [`Create Terminal`](https://code.visualstudio.com/docs/python/environments#_activating-an-environment-in-the-terminal) works
     - [ ] Steals focus
     - [ ] `"python.terminal.activateEnvironment": false` deactivates automatically running the activation script in the terminal
-- [ ] Detect multiple virtual environments in a directory specified by `"python.venvPath"`
+- [ ] Detect multiple virtual environments contained in the directory specified in `"python.venvPath"`
 - [ ] Detected all [conda environments created with an interpreter](https://code.visualstudio.com/docs/python/environments#_conda-environments)
   - [ ] Appropriate suffix label specified in status bar (e.g. `(condaenv)`)
   - [ ] Prompted to install Pylint

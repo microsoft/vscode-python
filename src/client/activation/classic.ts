@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { DocumentFilter, languages, OutputChannel } from 'vscode';
-import { PYTHON, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { IConfigurationService, IExtensionContext, ILogger, IOutputChannel } from '../common/types';
+import { DocumentFilter, languages } from 'vscode';
+import { PYTHON } from '../common/constants';
+import { IConfigurationService, IExtensionContext, ILogger } from '../common/types';
 import { IShebangCodeLensProvider } from '../interpreter/contracts';
-import { IServiceManager } from '../ioc/types';
+import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from '../providers/completionProvider';
 import { PythonDefinitionProvider } from '../providers/definitionProvider';
@@ -15,7 +15,6 @@ import { activateGoToObjectDefinitionProvider } from '../providers/objectDefinit
 import { PythonReferenceProvider } from '../providers/referenceProvider';
 import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
-import { activateSimplePythonRefactorProvider } from '../providers/simpleRefactorProvider';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
 import { IUnitTestManagementService } from '../unittests/types';
 import { IExtensionActivator } from './types';
@@ -32,8 +31,6 @@ export class ClassicExtensionActivator implements IExtensionActivator {
 
     public async activate(): Promise<boolean> {
         const context = this.context;
-        const standardOutputChannel = this.serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        activateSimplePythonRefactorProvider(context, standardOutputChannel, this.serviceManager);
 
         const jediFactory = this.jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager);
         context.subscriptions.push(jediFactory);
@@ -49,7 +46,7 @@ export class ClassicExtensionActivator implements IExtensionActivator {
         context.subscriptions.push(languages.registerCompletionItemProvider(this.documentSelector, new PythonCompletionItemProvider(jediFactory, this.serviceManager), '.'));
         context.subscriptions.push(languages.registerCodeLensProvider(this.documentSelector, this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)));
 
-        const symbolProvider = new PythonSymbolProvider(jediFactory);
+        const symbolProvider = new PythonSymbolProvider(this.serviceManager.get<IServiceContainer>(IServiceContainer), jediFactory);
         context.subscriptions.push(languages.registerDocumentSymbolProvider(this.documentSelector, symbolProvider));
 
         const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();

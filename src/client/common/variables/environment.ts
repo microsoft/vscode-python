@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as dotenv from 'dotenv';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -10,7 +11,7 @@ import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
     private readonly pathVariable: 'PATH' | 'Path';
-    constructor( @inject(IPathUtils) pathUtils: IPathUtils) {
+    constructor(@inject(IPathUtils) pathUtils: IPathUtils) {
         this.pathVariable = pathUtils.getPathVariableName();
     }
     public async parseFile(filePath: string): Promise<EnvironmentVariables | undefined> {
@@ -21,14 +22,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         if (!fs.lstatSync(filePath).isFile()) {
             return undefined;
         }
-        return new Promise<EnvironmentVariables | undefined>((resolve, reject) => {
-            fs.readFile(filePath, 'utf8', (error, data) => {
-                if (error) {
-                    return reject(error);
-                }
-                resolve(parseEnvironmentVariables(data));
-            });
-        });
+        return dotenv.parse(filePath);
     }
     public mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables) {
         if (!target) {
@@ -66,23 +60,4 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         }
         return vars;
     }
-}
-
-function parseEnvironmentVariables(contents: string): EnvironmentVariables | undefined {
-    if (typeof contents !== 'string' || contents.length === 0) {
-        return undefined;
-    }
-
-    const env = {} as EnvironmentVariables;
-    contents.split('\n').forEach(line => {
-        const match = line.match(/^\s*([\w\.\-]+)\s*=\s*(.*)?\s*$/);
-        if (match !== null) {
-            let value = typeof match[2] === 'string' ? match[2] : '';
-            if (value.length > 0 && value.charAt(0) === '"' && value.charAt(value.length - 1) === '"') {
-                value = value.replace(/\\n/gm, '\n');
-            }
-            env[match[1]] = value.replace(/(^['"]|['"]$)/g, '');
-        }
-    });
-    return env;
 }

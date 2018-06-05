@@ -5,14 +5,15 @@ if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
+import { StopWatch } from './common/stopWatch';
+// Do not move this linne of code (used to measure extension load times).
+const stopWatch = new StopWatch();
+
 import { Container } from 'inversify';
-import {
-    debug, Disposable, ExtensionContext,
-    extensions, IndentAction, languages, Memento,
-    OutputChannel, window
-} from 'vscode';
+import { debug, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationService } from './activation/types';
+import { IWorkspaceService } from './common/application/types';
 import { PythonSettings } from './common/configSettings';
 import { PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
@@ -22,7 +23,6 @@ import { registerTypes as installerRegisterTypes } from './common/installer/serv
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
-import { StopWatch } from './common/stopWatch';
 import { ITerminalHelper } from './common/terminal/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IExtensionContext, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
@@ -32,7 +32,7 @@ import { registerTypes as debugConfigurationRegisterTypes } from './debugger/con
 import { IDebugConfigurationProvider } from './debugger/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
-import { ICondaService, IInterpreterService } from './interpreter/contracts';
+import { ICondaService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
@@ -40,10 +40,11 @@ import { IServiceContainer, IServiceManager } from './ioc/types';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ILintingEngine } from './linters/types';
-import { DocStringFoldingProvider } from './providers/docStringFoldingProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { LinterProvider } from './providers/linterProvider';
+import { PythonRenameProvider } from './providers/renameProvider';
 import { ReplProvider } from './providers/replProvider';
+import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { TerminalProvider } from './providers/terminalProvider';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
 import * as sortImports from './sortImports';
@@ -75,10 +76,13 @@ export async function activate(context: ExtensionContext) {
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 
+    const standardOutputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+    context.subscriptions.push(languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceManager)));
+    activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceManager);
+
     const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
     await activationService.activate();
 
-    const standardOutputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     sortImports.activate(context, standardOutputChannel, serviceManager);
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
@@ -104,10 +108,6 @@ export async function activate(context: ExtensionContext) {
     languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
         onEnterRules: [
             {
-                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except)\b.*:\s*\S+/,
-                action: { indentAction: IndentAction.None }
-            },
-            {
                 beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/,
                 action: { indentAction: IndentAction.Indent }
             },
@@ -132,7 +132,6 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
     context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
-    context.subscriptions.push(languages.registerFoldingRangeProvider(PYTHON, new DocStringFoldingProvider()));
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtension);
@@ -181,7 +180,6 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {
-    const stopWatch = new StopWatch();
     const logger = serviceContainer.get<ILogger>(ILogger);
     try {
         await activatedPromise;
@@ -189,8 +187,21 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
         const terminalShellType = terminalHelper.identifyTerminalShell(terminalHelper.getTerminalShellPath());
         const duration = stopWatch.elapsedTime;
         const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
-        const condaVersion = await condaLocator.getCondaVersion().catch(() => undefined);
-        const props = { condaVersion, terminal: terminalShellType };
+        const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const [condaVersion, interpreter, interpreters] = await Promise.all([
+            condaLocator.getCondaVersion().catch(() => undefined),
+            interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
+            interpreterService.getInterpreters().catch<PythonInterpreter[]>(() => [])
+        ]);
+        const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
+        const pythonVersion = interpreter ? interpreter.version_info.join('.') : undefined;
+        const interpreterType = interpreter ? interpreter.type : undefined;
+        const hasPython3 = interpreters
+            .filter(item => item && Array.isArray(item.version_info) ? item.version_info[0] === 3 : false)
+            .length > 0;
+
+        const props = { condaVersion, terminal: terminalShellType, pythonVersion, interpreterType, workspaceFolderCount, hasPython3 };
         sendTelemetryEvent(EDITOR_LOAD, duration, props);
     } catch (ex) {
         logger.logError('sendStartupTelemetry failed.', ex);

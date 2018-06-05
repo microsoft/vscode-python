@@ -42,7 +42,7 @@ const info: PythonInterpreter = {
     sysVersion: ''
 };
 
-suite('Module Installerx', () => {
+suite('Module Installer', () => {
     [undefined, Uri.file(__filename)].forEach(resource => {
         let ioc: UnitTestIocContainer;
         let mockTerminalService: TypeMoq.IMock<ITerminalService>;

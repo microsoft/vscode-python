@@ -45,5 +45,6 @@ requirements.txt
 scripts/**
 src/**
 test/**
+tmp/**
 typings/**
 vsc-extension-quickstart.md

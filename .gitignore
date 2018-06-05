@@ -18,3 +18,5 @@ debug_coverage*/**
 analysis/**
 bin/**
 obj/**
+.pytest_cache
+tmp/**

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { TerminalShellType } from '../common/terminal/types';
+import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
 
 export type EditorLoadTelemetry = {
@@ -38,6 +39,20 @@ export type DebuggerTelemetry = {
     pyspark?: boolean;
     hasEnvVars?: boolean;
 };
+export type DebuggerTelemetryV2 = {
+    trigger: 'launch' | 'attach';
+    console?: 'none' | 'integratedTerminal' | 'externalTerminal';
+    hasEnvVars: boolean;
+    hasArgs: boolean;
+    django: boolean;
+    flask: boolean;
+    jinja: boolean;
+    isLocalhost: boolean;
+    isModule: boolean;
+    isSudo: boolean;
+    stopOnEntry: boolean;
+    pyramid: boolean;
+};
 export type DebuggerPerformanceTelemetry = {
     duration: number;
     action: 'stepIn' | 'stepOut' | 'continue' | 'next' | 'launch';
@@ -57,4 +72,13 @@ export type TestDiscoverytTelemetry = {
 export type FeedbackTelemetry = {
     action: 'accepted' | 'dismissed' | 'doNotShowAgain';
 };
-export type TelemetryProperties = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry | CodeExecutionTelemetry | TestRunTelemetry | TestDiscoverytTelemetry | FeedbackTelemetry;
+export type SettingsTelemetry = {
+    enabled: boolean;
+};
+export type TerminalTelemetry = {
+    terminal?: TerminalShellType;
+    triggeredBy?: 'commandpalette';
+    pythonVersion?: string;
+    interpreterType?: InterpreterType;
+};
+export type TelemetryProperties = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry | CodeExecutionTelemetry | TestRunTelemetry | TestDiscoverytTelemetry | FeedbackTelemetry | TerminalTelemetry | DebuggerTelemetryV2 | SettingsTelemetry;
