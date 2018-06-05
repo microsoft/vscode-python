@@ -10,7 +10,6 @@
 - [ ] Evaluate [projects](https://github.com/Microsoft/vscode-python/projects) & [`meta` issues](https://github.com/Microsoft/vscode-python/labels/meta)
 - [ ] Go through [`needs PR` issues](https://github.com/Microsoft/vscode-python/issues?utf8=%E2%9C%93&q=is%3Aopen+label%3A%22needs+PR%22+-label%3A%22help+wanted%22+-label%3A%22good+first+issue%22+no%3Amilestone) to see if there's anything we want to add to this milestone
 - [ ] Finalize the initial set of issues for the [milestone](https://github.com/Microsoft/vscode-python/milestones)
-- [ ] Make sure all issues for this [milestone](https://github.com/Microsoft/vscode-python/milestones) are assigned
 - [ ] Close issues that have [needed more info](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22needs+more+info%22+sort%3Aupdated-asc) for over a month
 
 # Week of Monday, XXX
@@ -67,7 +66,7 @@
 - [ ] Update the [changelog](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md) (including the names of external contributors & projects)
 - [ ] Update the [version](https://github.com/Microsoft/vscode-python/blob/master/package.json) number to be final
 - [ ] Make sure [CI](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md) is passing
-- [ ] Create the `release-` [branch](https://github.com/Microsoft/vscode-python/branches)
+- [ ] Create the `release-` [branch](https://github.com/Microsoft/vscode-python/)
 - [ ] Generate final `.vsix` file from the `release-` branch
 - [ ] Upload the final `.vsix` file to the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
 - [ ] Publish [documentation](https://code.visualstudio.com/docs/python/python-tutorial) [changes](https://github.com/microsoft/vscode-docs/pulls)
@@ -78,9 +77,9 @@
 - [ ] Bump the [version](https://github.com/Microsoft/vscode-python/blob/master/package.json) number to the next `alpha`
 - [ ] Make sure the next **two** [milestones](https://github.com/Microsoft/vscode-python/milestones) exist
 - [ ] Lift the feature freeze
-- [ ] Create a new [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan)
+- [ ] Create a new [release plan](https://github.com/Microsoft/vscode-python/edit/master/.github/release_plan.md)
 
 ## Clean up after _this_ release
 - [ ] Clean up any straggling [fixed issues needing validation](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22+is%3Aclosed)
-- [ ] Close the (now) old [milestone](https://github.com/Microsoft/vscode-python/labels/release%20plan)
+- [ ] Close the (now) old [milestone](https://github.com/Microsoft/vscode-python/milestones)
 - [ ] Delete the previous releases' [branch](https://github.com/Microsoft/vscode-python/branches)

@@ -201,6 +201,12 @@ const hygiene = (options) => {
         reRunCompilation = true;
         return;
     }
+    const fileListToProcess = options.mode === 'compile' ? undefined : getFileListToProcess(options);
+    if (Array.isArray(fileListToProcess) && fileListToProcess !== all
+        && fileListToProcess.filter(item => item.endsWith('.ts')).length === 0) {
+        return;
+    }
+
     const started = new Date().getTime();
     compilationInProgress = true;
     options = options || {};
@@ -348,7 +354,7 @@ const hygiene = (options) => {
         return tsProject(reporter);
     }
 
-    const files = options.mode === 'compile' ? tsProject.src() : getFilesToProcess(options);
+    const files = options.mode === 'compile' ? tsProject.src() : getFilesToProcess(fileListToProcess);
     const dest = options.mode === 'compile' ? './out' : '.';
     let result = files
         .pipe(filter(f => f && f.stat && !f.stat.isDirectory()));
@@ -482,22 +488,29 @@ function getModifiedFilesSync() {
 /**
 * @param {hygieneOptions} options
 */
-function getFilesToProcess(options) {
+function getFilesToProcess(fileList) {
+    const gulpSrcOptions = { base: '.' };
+    return gulp.src(fileList, gulpSrcOptions);
+}
+
+/**
+* @param {hygieneOptions} options
+*/
+function getFileListToProcess(options) {
     const mode = options ? options.mode : 'all';
     const gulpSrcOptions = { base: '.' };
 
     // If we need only modified files, then filter the glob.
     if (options && options.mode === 'changes') {
-        return gulp.src(getModifiedFilesSync(), gulpSrcOptions);
+        return getModifiedFilesSync();
     }
 
     if (options && options.mode === 'staged') {
-        return gulp.src(getStagedFilesSync(), gulpSrcOptions);
+        return getStagedFilesSync();
     }
 
-    return gulp.src(all, gulpSrcOptions);
+    return all;
 }
-
 exports.hygiene = hygiene;
 
 // this allows us to run hygiene as a git pre-commit hook.

@@ -7,8 +7,7 @@ import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
-import { ICurrentProcess } from '../../../common/types';
-import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
+import { ICurrentProcess, ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, InterpreterType, IPipEnvService, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
@@ -22,7 +21,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
     private readonly processServiceFactory: IProcessServiceFactory;
     private readonly workspace: IWorkspaceService;
     private readonly fs: IFileSystem;
-    private readonly envVarsProvider: IEnvironmentVariablesProvider;
+    private readonly logger: ILogger;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('PipEnvService', serviceContainer);
@@ -30,7 +29,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         this.processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        this.envVarsProvider = this.serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+        this.logger = this.serviceContainer.get<ILogger>(ILogger);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
@@ -127,7 +126,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             }
             // tslint:disable-next-line:no-empty
         } catch (error) {
-            console.error(error);
+            this.logger.logWarning('Error in invoking PipEnv', error);
             const errorMessage = error.message || error;
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
             appShell.showWarningMessage(`Workspace contains pipfile but attempt to run 'pipenv --venv' failed with '${errorMessage}'. Make sure pipenv is on the PATH.`);

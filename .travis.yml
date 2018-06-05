@@ -27,6 +27,9 @@ matrix:
         - os: linux
           python: "3.6-dev"
           env: MULTIROOT_WORKSPACE_TEST=true
+        - os: linux
+          python: "3.6-dev"
+          env: PERFORMANCE_TEST=true
     allow_failures:
         - os: linux
           python: "2.7"
@@ -110,6 +113,11 @@ script:
     fi
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
+    fi
+  - if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" && "$PERFORMANCE_TEST" == "true" ]]; then
+        yarn run clean;
+        yarn run vscode:prepublish;
+        yarn run testPerformance --silent;
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" != "2.7" ]; then
         python3 -m pip install --upgrade -r news/requirements.txt;

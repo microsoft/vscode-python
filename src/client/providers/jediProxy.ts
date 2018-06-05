@@ -391,9 +391,15 @@ export class JediProxy implements Disposable {
                 }
 
                 responses.forEach((response) => {
+                    if (!response) {
+                        return;
+                    }
                     const responseId = JediProxy.getProperty<number>(response, 'id');
-                    const cmd = <IExecutionCommand<ICommandResult>>this.commands.get(responseId);
-                    if (cmd === null) {
+                    if (!this.commands.has(responseId)) {
+                        return;
+                    }
+                    const cmd = this.commands.get(responseId);
+                    if (!cmd) {
                         return;
                     }
                     this.lastCmdIdProcessed = cmd.id;

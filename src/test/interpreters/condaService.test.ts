@@ -37,8 +37,9 @@ suite('Interpreters Conda Service', () => {
     let registryInterpreterLocatorService: TypeMoq.IMock<IInterpreterLocatorService>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
+    let logger: TypeMoq.IMock<ILogger>;
     setup(async () => {
-        const logger = TypeMoq.Mock.ofType<ILogger>();
+        logger = TypeMoq.Mock.ofType<ILogger>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         registryInterpreterLocatorService = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
@@ -415,7 +416,6 @@ suite('Interpreters Conda Service', () => {
     test('Returns conda environments when conda exists', async () => {
         const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
-        // tslint:disable-next-line:no-any
         const state = new MockState(undefined);
         stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
 
@@ -425,10 +425,24 @@ suite('Interpreters Conda Service', () => {
         assert.equal(environments, undefined, 'Conda environments do not match');
     });
 
+    test('Logs information message when conda does not exist', async () => {
+        const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+        const state = new MockState(undefined);
+        stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
+
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.reject(new Error('Not Found')));
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['env', 'list']), TypeMoq.It.isAny())).returns(() => Promise.reject(new Error('Not Found')));
+        logger.setup(l => l.logInformation(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .verifiable(TypeMoq.Times.once());
+        const environments = await condaService.getCondaEnvironments(true);
+        assert.equal(environments, undefined, 'Conda environments do not match');
+        logger.verifyAll();
+    });
+
     test('Returns cached conda environments', async () => {
         const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
-        // tslint:disable-next-line:no-any
         const state = new MockState({ data: 'CachedInfo' });
         stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
 
@@ -441,7 +455,6 @@ suite('Interpreters Conda Service', () => {
     test('Subsequent list of environments will be retrieved from cache', async () => {
         const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
-        // tslint:disable-next-line:no-any
         const state = new MockState(undefined);
         stateFactory.setup(s => s.createGlobalPersistentState(TypeMoq.It.isValue('CONDA_ENVIRONMENTS'), TypeMoq.It.isValue(undefined))).returns(() => state);
 

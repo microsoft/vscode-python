@@ -27,6 +27,7 @@ suite('Unit Tests - Debug Launcher', () => {
     let debugLauncher: DebugLauncher;
     let debugService: TypeMoq.IMock<IDebugService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let settings: TypeMoq.IMock<IPythonSettings>;
     setup(async () => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const configService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -38,7 +39,7 @@ suite('Unit Tests - Debug Launcher', () => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
 
-        const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+        settings = TypeMoq.Mock.ofType<IPythonSettings>();
         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
         unitTestSettings = TypeMoq.Mock.ofType<IUnitTestSettings>();
@@ -51,10 +52,12 @@ suite('Unit Tests - Debug Launcher', () => {
         args: string[], console, debugOptions: DebugOptions[],
         testProvider: TestProvider, useExperimentalDebugger: boolean) {
 
+        const envFile = __filename;
+        settings.setup(p => p.envFile).returns(() => envFile);
         const debugArgs = testProvider === 'unittest' && useExperimentalDebugger ? args.filter(item => item !== '--debug') : args;
 
         debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder),
-            TypeMoq.It.isObjectWith({ name, type, request, program, cwd, args: debugArgs, console, debugOptions })))
+            TypeMoq.It.isObjectWith({ name, type, request, program, cwd, args: debugArgs, console, envFile, debugOptions })))
             .returns(() => Promise.resolve(undefined as any))
             .verifiable(TypeMoq.Times.once());
     }
