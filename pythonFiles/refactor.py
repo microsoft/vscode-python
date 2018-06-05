@@ -2,9 +2,11 @@
 # 1. Working directory.
 # 2. Rope folder
 
+import difflib
 import io
-import sys
 import json
+import os
+import sys
 import traceback
 
 try:
@@ -55,6 +57,27 @@ class Change():
         self.diff = diff
         self.fileMode = fileMode
 
+def get_diff(changeset):
+    """This is a copy of the code form the ChangeSet.get_description method found in Rope."""
+    new = changeset.new_contents
+    old = changeset.old_contents
+    if old is None:
+        if changeset.resource.exists():
+            old = changeset.resource.read()
+        else:
+            old = ''
+
+    # Ensure code has a trailing empty lines, before generating a diff.
+    # https://github.com/Microsoft/vscode-python/issues/695.
+    old_lines = old.splitlines(True)
+    if not old_lines[-1].endswith('\n'):
+        old_lines[-1] = old_lines[-1] + os.linesep
+        new = new + os.linesep
+    
+    result = difflib.unified_diff(
+        old_lines, new.splitlines(True),
+        'a/' + changeset.resource.path, 'b/' + changeset.resource.path)
+    return ''.join(list(result))
 
 class BaseRefactoring(object):
     """
@@ -117,7 +140,7 @@ class RenameRefactor(BaseRefactoring):
         for item in changes.changes:
             if isinstance(item, rope.base.change.ChangeContents):
                 self.changes.append(
-                    Change(item.resource.real_path, ChangeType.EDIT, item.get_description()))
+                    Change(item.resource.real_path, ChangeType.EDIT, get_diff(item)))
             else:
                 raise Exception('Unknown Change')
 
@@ -141,7 +164,7 @@ class ExtractVariableRefactor(BaseRefactoring):
         for item in changes.changes:
             if isinstance(item, rope.base.change.ChangeContents):
                 self.changes.append(
-                    Change(item.resource.real_path, ChangeType.EDIT, item.get_description()))
+                    Change(item.resource.real_path, ChangeType.EDIT, get_diff(item)))
             else:
                 raise Exception('Unknown Change')
 
@@ -160,7 +183,7 @@ class ExtractMethodRefactor(ExtractVariableRefactor):
         for item in changes.changes:
             if isinstance(item, rope.base.change.ChangeContents):
                 self.changes.append(
-                    Change(item.resource.real_path, ChangeType.EDIT, item.get_description()))
+                    Change(item.resource.real_path, ChangeType.EDIT, get_diff(item)))
             else:
                 raise Exception('Unknown Change')
 

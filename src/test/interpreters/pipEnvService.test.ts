@@ -13,7 +13,7 @@ import { IApplicationShell, IWorkspaceService } from '../../client/common/applic
 import { EnumEx } from '../../client/common/enumUtils';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
-import { ICurrentProcess, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import { ICurrentProcess, ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterHelper, IInterpreterLocatorService } from '../../client/interpreter/contracts';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
@@ -39,6 +39,7 @@ suite('Interpreters - PipEnv', () => {
             let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
             let envVarsProvider: TypeMoq.IMock<IEnvironmentVariablesProvider>;
             let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
+            let logger: TypeMoq.IMock<ILogger>;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -50,6 +51,7 @@ suite('Interpreters - PipEnv', () => {
                 persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
                 envVarsProvider = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>();
                 procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+                logger = TypeMoq.Mock.ofType<ILogger>();
                 processService.setup((x: any) => x.then).returns(() => undefined);
                 procServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
 
@@ -73,6 +75,7 @@ suite('Interpreters - PipEnv', () => {
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => persistentStateFactory.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider))).returns(() => envVarsProvider.object);
+                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger))).returns(() => logger.object);
 
                 pipEnvService = new PipEnvService(serviceContainer.object);
             });
@@ -97,11 +100,12 @@ suite('Interpreters - PipEnv', () => {
                 processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.reject(''));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
                 appShell.setup(a => a.showWarningMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('')).verifiable(TypeMoq.Times.once());
+                logger.setup(l => l.logWarning(TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.once());
                 const environments = await pipEnvService.getInterpreters(resource);
 
                 expect(environments).to.be.deep.equal([]);
                 appShell.verifyAll();
-                appShell.verifyAll();
+                logger.verifyAll();
             });
             test(`Should display warning message if there is a \'PipFile\' but \'pipenv --venv\' failes with stderr ${testSuffix}`, async () => {
                 const env = {};
@@ -109,10 +113,12 @@ suite('Interpreters - PipEnv', () => {
                 processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stderr: 'PipEnv Failed', stdout: '' }));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
                 appShell.setup(a => a.showWarningMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('')).verifiable(TypeMoq.Times.once());
+                logger.setup(l => l.logWarning(TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.once());
                 const environments = await pipEnvService.getInterpreters(resource);
 
                 expect(environments).to.be.deep.equal([]);
                 appShell.verifyAll();
+                logger.verifyAll();
             });
             test(`Should return interpreter information${testSuffix}`, async () => {
                 const env = {};

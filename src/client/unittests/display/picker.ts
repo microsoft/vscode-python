@@ -1,13 +1,24 @@
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { commands, QuickPickItem, Uri, window } from 'vscode';
+import { commands, QuickPickItem, Uri } from 'vscode';
+import { IApplicationShell } from '../../common/application/types';
 import * as constants from '../../common/constants';
+import { noop } from '../../common/core.utils';
+import { IServiceContainer } from '../../ioc/types';
 import { CommandSource } from '../common/constants';
 import { FlattenedTestFunction, ITestCollectionStorageService, TestFile, TestFunction, Tests, TestStatus, TestsToRun } from '../common/types';
+import { ITestDisplay } from '../types';
 
-export class TestDisplay {
-    constructor(private testCollectionStorage: ITestCollectionStorageService) { }
+@injectable()
+export class TestDisplay implements ITestDisplay {
+    private readonly testCollectionStorage: ITestCollectionStorageService;
+    private readonly appShell: IApplicationShell;
+    constructor(@inject(IServiceContainer) serviceRegistry: IServiceContainer) {
+        this.testCollectionStorage = serviceRegistry.get<ITestCollectionStorageService>(ITestCollectionStorageService);
+        this.appShell = serviceRegistry.get<IApplicationShell>(IApplicationShell);
+    }
     public displayStopTestUI(workspace: Uri, message: string) {
-        window.showQuickPick([message]).then(item => {
+        this.appShell.showQuickPick([message]).then(item => {
             if (item === message) {
                 commands.executeCommand(constants.Commands.Tests_Stop, undefined, workspace);
             }
@@ -15,12 +26,12 @@ export class TestDisplay {
     }
     public displayTestUI(cmdSource: CommandSource, wkspace: Uri) {
         const tests = this.testCollectionStorage.getTests(wkspace);
-        window.showQuickPick(buildItems(tests), { matchOnDescription: true, matchOnDetail: true })
-            .then(item => onItemSelected(cmdSource, wkspace, item, false));
+        this.appShell.showQuickPick(buildItems(tests), { matchOnDescription: true, matchOnDetail: true })
+            .then(item => item ? onItemSelected(cmdSource, wkspace, item, false) : noop());
     }
     public selectTestFunction(rootDirectory: string, tests: Tests): Promise<FlattenedTestFunction> {
         return new Promise<FlattenedTestFunction>((resolve, reject) => {
-            window.showQuickPick(buildItemsForFunctions(rootDirectory, tests.testFunctions), { matchOnDescription: true, matchOnDetail: true })
+            this.appShell.showQuickPick(buildItemsForFunctions(rootDirectory, tests.testFunctions), { matchOnDescription: true, matchOnDetail: true })
                 .then(item => {
                     if (item && item.fn) {
                         return resolve(item.fn);
@@ -31,7 +42,7 @@ export class TestDisplay {
     }
     public selectTestFile(rootDirectory: string, tests: Tests): Promise<TestFile> {
         return new Promise<TestFile>((resolve, reject) => {
-            window.showQuickPick(buildItemsForTestFiles(rootDirectory, tests.testFiles), { matchOnDescription: true, matchOnDetail: true })
+            this.appShell.showQuickPick(buildItemsForTestFiles(rootDirectory, tests.testFiles), { matchOnDescription: true, matchOnDetail: true })
                 .then(item => {
                     if (item && item.testFile) {
                         return resolve(item.testFile);
@@ -55,10 +66,9 @@ export class TestDisplay {
                 testFunctions.some(testFunc => testFunc.nameToRun === fn.testFunction.nameToRun);
         });
 
-        window.showQuickPick(buildItemsForFunctions(rootDirectory, flattenedFunctions, undefined, undefined, debug),
-            { matchOnDescription: true, matchOnDetail: true }).then(testItem => {
-                return onItemSelected(cmdSource, wkspace, testItem, debug);
-            });
+        this.appShell.showQuickPick(buildItemsForFunctions(rootDirectory, flattenedFunctions, undefined, undefined, debug),
+            { matchOnDescription: true, matchOnDetail: true })
+            .then(testItem => testItem ? onItemSelected(cmdSource, wkspace, testItem, debug) : noop());
     }
 }
 
@@ -95,7 +105,7 @@ function getSummary(tests?: Tests) {
     if (!tests || !tests.summary) {
         return '';
     }
-    const statusText = [];
+    const statusText: string[] = [];
     if (tests.summary.passed > 0) {
         statusText.push(`${constants.Octicons.Test_Pass} ${tests.summary.passed} Passed`);
     }
@@ -137,7 +147,7 @@ function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunct
     const functionItems: TestItem[] = [];
     tests.forEach(fn => {
         let icon = '';
-        if (displayStatusIcons && statusIconMapping.has(fn.testFunction.status)) {
+        if (displayStatusIcons && fn.testFunction.status && statusIconMapping.has(fn.testFunction.status)) {
             icon = `${statusIconMapping.get(fn.testFunction.status)} `;
         }
 
@@ -152,7 +162,7 @@ function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunct
     functionItems.sort((a, b) => {
         let sortAPrefix = '5-';
         let sortBPrefix = '5-';
-        if (sortBasedOnResults) {
+        if (sortBasedOnResults && a.fn && a.fn.testFunction.status && b.fn && b.fn.testFunction.status) {
             sortAPrefix = statusSortPrefix[a.fn.testFunction.status] ? statusSortPrefix[a.fn.testFunction.status] : sortAPrefix;
             sortBPrefix = statusSortPrefix[b.fn.testFunction.status] ? statusSortPrefix[b.fn.testFunction.status] : sortBPrefix;
         }
@@ -177,10 +187,13 @@ function buildItemsForTestFiles(rootDirectory: string, testFiles: TestFile[]): T
         };
     });
     fileItems.sort((a, b) => {
-        if (a.detail < b.detail) {
+        if (!a.detail && !b.detail) {
+            return 0;
+        }
+        if (!a.detail || a.detail < b.detail!) {
             return -1;
         }
-        if (a.detail > b.detail) {
+        if (!b.detail || a.detail! > b.detail) {
             return 1;
         }
         return 0;
@@ -221,13 +234,13 @@ function onItemSelected(cmdSource: CommandSource, wkspace: Uri, selection: TestI
         case Type.RunMethod: {
             cmd = constants.Commands.Tests_Run;
             // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
-            args.push({ testFunction: [selection.fn.testFunction] } as TestsToRun);
+            args.push({ testFunction: [selection.fn!.testFunction] } as TestsToRun);
             break;
         }
         case Type.DebugMethod: {
             cmd = constants.Commands.Tests_Debug;
             // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
-            args.push({ testFunction: [selection.fn.testFunction] } as TestsToRun);
+            args.push({ testFunction: [selection.fn!.testFunction] } as TestsToRun);
             args.push(true);
             break;
         }

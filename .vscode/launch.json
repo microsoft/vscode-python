@@ -70,6 +70,22 @@
             "preLaunchTask": "Compile"
         },
         {
+            "name": "Debug Unit Tests",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/out/test/unittests.js",
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "args": [
+                "timeout=60000",
+                "grep="
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "Compile"
+        },
+        {
             "name": "Launch Multiroot Tests",
             "type": "extensionHost",
             "request": "launch",

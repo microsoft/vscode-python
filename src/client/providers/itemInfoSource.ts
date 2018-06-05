@@ -15,7 +15,15 @@ export class LanguageItemInfo {
         public signature: vscode.MarkdownString) { }
 }
 
-export class ItemInfoSource {
+export interface IItemInfoSource {
+    getItemInfoFromText(documentUri: vscode.Uri, fileName: string,
+        range: vscode.Range, sourceText: string,
+        token: vscode.CancellationToken): Promise<LanguageItemInfo[] | undefined>;
+    getItemInfoFromDocument(document: vscode.TextDocument, position: vscode.Position,
+        token: vscode.CancellationToken): Promise<LanguageItemInfo[] | undefined>;
+}
+
+export class ItemInfoSource implements IItemInfoSource {
     private textConverter = new RestTextConverter();
     constructor(private jediFactory: JediFactory) { }
 
@@ -51,7 +59,7 @@ export class ItemInfoSource {
         if (!range || range.isEmpty) {
             return;
         }
-        return await this.getHoverResultFromDocumentRange(document, range, token);
+        return this.getHoverResultFromDocumentRange(document, range, token);
     }
 
     private async getHoverResultFromDocumentRange(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken)
@@ -65,7 +73,7 @@ export class ItemInfoSource {
         if (document.isDirty) {
             cmd.source = document.getText();
         }
-        return await this.jediFactory.getJediProxyHandler<proxy.IHoverResult>(document.uri).sendCommand(cmd, token);
+        return this.jediFactory.getJediProxyHandler<proxy.IHoverResult>(document.uri).sendCommand(cmd, token);
     }
 
     private async getHoverResultFromTextRange(documentUri: vscode.Uri, fileName: string, range: vscode.Range, sourceText: string, token: vscode.CancellationToken)
@@ -77,7 +85,7 @@ export class ItemInfoSource {
             lineIndex: range.end.line,
             source: sourceText
         };
-        return await this.jediFactory.getJediProxyHandler<proxy.IHoverResult>(documentUri).sendCommand(cmd, token);
+        return this.jediFactory.getJediProxyHandler<proxy.IHoverResult>(documentUri).sendCommand(cmd, token);
     }
 
     private getItemInfoFromHoverResult(data: proxy.IHoverResult, currentWord: string): LanguageItemInfo[] {

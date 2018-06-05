@@ -15,18 +15,18 @@ const testDataWinMac = [
 ];
 
 const testDataLinux = [
-    { name: 'centos', expectedName: 'centos-x64' },
-    { name: 'debian', expectedName: 'debian-x64' },
-    { name: 'fedora', expectedName: 'fedora-x64' },
-    { name: 'ol', expectedName: 'ol-x64' },
-    { name: 'opensuse', expectedName: 'opensuse-x64' },
-    { name: 'rhel', expectedName: 'rhel-x64' },
-    { name: 'ubuntu', expectedName: 'ubuntu-x64' }
+    { name: 'centos', expectedName: 'linux-x64' },
+    { name: 'debian', expectedName: 'linux-x64' },
+    { name: 'fedora', expectedName: 'linux-x64' },
+    { name: 'ol', expectedName: 'linux-x64' },
+    { name: 'opensuse', expectedName: 'linux-x64' },
+    { name: 'rhel', expectedName: 'linux-x64' },
+    { name: 'ubuntu', expectedName: 'linux-x64' }
 ];
 
 const testDataModuleName = [
     { isWindows: true, expectedName: 'Microsoft.PythonTools.VsCode.exe' },
-    { isWindows: false, expectedName: 'Microsoft.PythonTools.VsCode' }
+    { isWindows: false, expectedName: 'Microsoft.PythonTools.VsCode.VsCode' }
 ];
 
 // tslint:disable-next-line:max-func-body-length

@@ -4,6 +4,8 @@ import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
 import * as path from 'path';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, Uri, workspace } from 'vscode';
+import { sendTelemetryEvent } from '../telemetry';
+import { COMPLETION_ADD_BRACKETS, FORMAT_ON_TYPE } from '../telemetry/constants';
 import { isTestExecution } from './constants';
 import {
     IAutoCompleteSettings,
@@ -25,7 +27,7 @@ export const IS_WINDOWS = /^win/.test(process.platform);
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
-    public pythiaEnabled = true;
+    public downloadCodeAnalysis = true;
     public jediEnabled = true;
     public jediPath = '';
     public jediMemoryLimit = 1024;
@@ -69,6 +71,9 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         if (!PythonSettings.pythonSettings.has(workspaceFolderKey)) {
             const settings = new PythonSettings(workspaceFolderUri);
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
+            const formatOnType = workspace.getConfiguration('editor', resource).get('formatOnType', false);
+            sendTelemetryEvent(COMPLETION_ADD_BRACKETS, undefined, { enabled: settings.autoComplete.addBrackets });
+            sendTelemetryEvent(FORMAT_ON_TYPE, undefined, { enabled: formatOnType });
         }
         // tslint:disable-next-line:no-non-null-assertion
         return PythonSettings.pythonSettings.get(workspaceFolderKey)!;
@@ -101,7 +106,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.disposables.forEach(disposable => disposable.dispose());
         this.disposables = [];
     }
-
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     private initializeSettings() {
         const workspaceRoot = this.workspaceRoot.fsPath;
@@ -115,6 +119,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
 
+        this.downloadCodeAnalysis = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadCodeAnalysis', true))!;
         this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;
         if (this.jediEnabled) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
@@ -125,8 +130,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                 this.jediPath = '';
             }
             this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
-        } else {
-            this.pythiaEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('pythiaEnabled', true))!;
         }
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion

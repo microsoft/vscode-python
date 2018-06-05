@@ -21,7 +21,7 @@ export abstract class ModuleInstaller {
     constructor(protected serviceContainer: IServiceContainer) { }
     public async installModule(name: string, resource?: vscode.Uri): Promise<void> {
         const executionInfo = await this.getExecutionInfo(name, resource);
-        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService();
+        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(resource);
 
         if (executionInfo.moduleName) {
             const settings = PythonSettings.getInstance(resource);

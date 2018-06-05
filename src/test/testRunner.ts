@@ -25,20 +25,20 @@ interface ITestRunnerOptions {
 
 // http://gotwarlost.github.io/istanbul/public/apidocs/files/lib_instrumenter.js.html#l478.
 type CoverState = {
-    path: string,
-    s: {},
-    b: {},
-    f: {},
-    fnMap: {},
-    statementMap: {},
-    branchMap: {}
+    path: string;
+    s: {};
+    b: {};
+    f: {};
+    fnMap: {};
+    statementMap: {};
+    branchMap: {};
 };
 
 type Instrumenter = istanbul.Instrumenter & { coverState: CoverState };
 type TestCallback = (error?: Error, failures?: number) => void;
 
 // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.
-// Since we are not running in a tty environment, we just implementt he method statically.
+// Since we are not running in a tty environment, we just implement the method statically.
 const tty = require('tty');
 if (!tty.getWindowSize) {
     tty.getWindowSize = function (): number[] { return [80, 75]; };
@@ -49,10 +49,15 @@ let mocha = new Mocha(<any>{
     useColors: true
 });
 
+export type SetupOptions = MochaSetupOptions & { testFilesSuffix?: string };
+let testFilesGlob = 'test';
 let coverageOptions: { coverageConfig: string } | undefined;
 
-export function configure(mochaOpts: MochaSetupOptions, coverageOpts?: { coverageConfig: string }): void {
-    mocha = new Mocha(mochaOpts);
+export function configure(setupOptions: SetupOptions, coverageOpts?: { coverageConfig: string }): void {
+    if (setupOptions.testFilesSuffix) {
+        testFilesGlob = setupOptions.testFilesSuffix;
+    }
+    mocha = new Mocha(setupOptions);
     coverageOptions = coverageOpts;
 }
 
@@ -70,7 +75,7 @@ export function run(testsRoot: string, callback: TestCallback): void {
     }
 
     // Run the tests.
-    glob('**/**.test.js', { cwd: testsRoot }, (error, files) => {
+    glob(`**/**.${testFilesGlob}.js`, { cwd: testsRoot }, (error, files) => {
         if (error) {
             return callback(error);
         }
@@ -94,7 +99,7 @@ function getCoverageOptions(testsRoot: string): ITestRunnerOptions | undefined {
 class CoverageRunner {
     private coverageVar: string = `$$cov_${new Date().getTime()}$$`;
     private sourceFiles: string[] = [];
-    private instrumenter: Instrumenter;
+    private instrumenter!: Instrumenter;
 
     private get coverage(): { [key: string]: CoverState } {
         if (global[this.coverageVar] === undefined || Object.keys(global[this.coverageVar]).length === 0) {

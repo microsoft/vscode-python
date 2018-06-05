@@ -22,7 +22,7 @@ export class HashVerifier {
 
         readStream.pipe(hash);
         await deferred.promise;
-        const actual = hash.read();
-        return expectedDigest === platformString ? true : actual === expectedDigest;
+        const actual = hash.read() as string;
+        return expectedDigest === platformString ? true : actual.toLowerCase() === expectedDigest.toLowerCase();
     }
 }

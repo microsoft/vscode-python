@@ -2,7 +2,10 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../client/common/configSettings';
+import { sleep } from './core';
 import { IS_MULTI_ROOT_TEST } from './initialize';
+
+export * from './core';
 
 const fileInNonRootWorkspace = path.join(__dirname, '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
 export const rootWorkspaceUri = getWorkspaceRoot();
@@ -30,6 +33,7 @@ export async function updateSetting(setting: PythonSettingKeys, value: {} | unde
     }
     // tslint:disable-next-line:await-promise
     await settings.update(setting, value, configTarget);
+    await sleep(2000);
     PythonSettings.dispose();
 }
 
@@ -109,10 +113,6 @@ export async function deleteFile(file: string) {
     if (exists) {
         await fs.remove(file);
     }
-}
-
-export async function sleep(milliseconds: number) {
-    return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 }
 
 // tslint:disable-next-line:no-non-null-assertion

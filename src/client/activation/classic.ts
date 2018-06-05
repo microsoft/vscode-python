@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { DocumentFilter, ExtensionContext, languages, OutputChannel } from 'vscode';
-import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { IOutputChannel, IPythonSettings } from '../common/types';
+import { inject, injectable } from 'inversify';
+import { DocumentFilter, languages } from 'vscode';
+import { PYTHON } from '../common/constants';
+import { IConfigurationService, IExtensionContext, ILogger } from '../common/types';
 import { IShebangCodeLensProvider } from '../interpreter/contracts';
-import { IServiceManager } from '../ioc/types';
+import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from '../providers/completionProvider';
 import { PythonDefinitionProvider } from '../providers/definitionProvider';
@@ -14,21 +15,24 @@ import { activateGoToObjectDefinitionProvider } from '../providers/objectDefinit
 import { PythonReferenceProvider } from '../providers/referenceProvider';
 import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
-import { activateSimplePythonRefactorProvider } from '../providers/simpleRefactorProvider';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
-import { TEST_OUTPUT_CHANNEL } from '../unittests/common/constants';
-import * as tests from '../unittests/main';
+import { IUnitTestManagementService } from '../unittests/types';
 import { IExtensionActivator } from './types';
 
+@injectable()
 export class ClassicExtensionActivator implements IExtensionActivator {
-    constructor(private serviceManager: IServiceManager, private pythonSettings: IPythonSettings, private documentSelector: DocumentFilter[]) {
+    private readonly context: IExtensionContext;
+    private jediFactory?: JediFactory;
+    private readonly documentSelector: DocumentFilter[];
+    constructor(@inject(IServiceManager) private serviceManager: IServiceManager) {
+        this.context = this.serviceManager.get<IExtensionContext>(IExtensionContext);
+        this.documentSelector = PYTHON;
     }
 
-    public async activate(context: ExtensionContext): Promise<boolean> {
-        const standardOutputChannel = this.serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        activateSimplePythonRefactorProvider(context, standardOutputChannel, this.serviceManager);
+    public async activate(): Promise<boolean> {
+        const context = this.context;
 
-        const jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager);
+        const jediFactory = this.jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager);
         context.subscriptions.push(jediFactory);
         context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
@@ -42,19 +46,25 @@ export class ClassicExtensionActivator implements IExtensionActivator {
         context.subscriptions.push(languages.registerCompletionItemProvider(this.documentSelector, new PythonCompletionItemProvider(jediFactory, this.serviceManager), '.'));
         context.subscriptions.push(languages.registerCodeLensProvider(this.documentSelector, this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)));
 
-        const symbolProvider = new PythonSymbolProvider(jediFactory);
+        const symbolProvider = new PythonSymbolProvider(this.serviceManager.get<IServiceContainer>(IServiceContainer), jediFactory);
         context.subscriptions.push(languages.registerDocumentSymbolProvider(this.documentSelector, symbolProvider));
 
-        if (this.pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
+        const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
+        if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
             context.subscriptions.push(languages.registerSignatureHelpProvider(this.documentSelector, new PythonSignatureProvider(jediFactory), '(', ','));
         }
 
-        const unitTestOutChannel = this.serviceManager.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
-        tests.activate(context, unitTestOutChannel, symbolProvider, this.serviceManager);
+        const testManagementService = this.serviceManager.get<IUnitTestManagementService>(IUnitTestManagementService);
+        testManagementService.activate()
+            .then(() => testManagementService.activateCodeLenses(symbolProvider))
+            .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
 
         return true;
     }
 
-    // tslint:disable-next-line:no-empty
-    public async deactivate(): Promise<void> { }
+    public async deactivate(): Promise<void> {
+        if (this.jediFactory) {
+            this.jediFactory.dispose();
+        }
+    }
 }

@@ -53,7 +53,7 @@ suite('Hover Definition (Analysis Engine)', () => {
         const expected = [
             'obj.method1:',
             '```python',
-            'method method1 of one.Class1 objects',
+            'method method1 of pythonFiles.autocomp.one.Class1 objects',
             '```',
             'This is method1'
         ];
@@ -70,7 +70,7 @@ suite('Hover Definition (Analysis Engine)', () => {
         const expected = [
             'two.ct().fun:',
             '```python',
-            'method fun of two.ct objects',
+            'method fun of pythonFiles.autocomp.two.ct objects',
             '```',
             'This is fun'
         ];
@@ -86,7 +86,7 @@ suite('Hover Definition (Analysis Engine)', () => {
         const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
         const expected = [
             '```python',
-            'four.Foo.bar() -> bool',
+            'pythonFiles.autocomp.four.Foo.bar() -> bool',
             'declared in Foo',
             '```',
             '说明 - keep this line, it works',
@@ -105,7 +105,7 @@ suite('Hover Definition (Analysis Engine)', () => {
         const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
         const expected = [
             '```python',
-            'four.showMessage()',
+            'pythonFiles.autocomp.four.showMessage()',
             '```',
             'Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи.',
             'Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.'
@@ -138,7 +138,7 @@ suite('Hover Definition (Analysis Engine)', () => {
         const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
         const expected = [
             '```python',
-            'class misc.Random(_random.Random)',
+            'class pythonFiles.autocomp.misc.Random(_random.Random)',
             '```',
             'Random number generator base class used by bound module functions.',
             'Used to instantiate instances of Random to get generators that don\'t',
@@ -162,7 +162,7 @@ suite('Hover Definition (Analysis Engine)', () => {
         const expected = [
             'rnd2.randint:',
             '```python',
-            'method randint of misc.Random objects  -> int',
+            'method randint of pythonFiles.autocomp.misc.Random objects -> int',
             '```',
             'Return random integer in range [a, b], including both end points.'
         ];
@@ -195,7 +195,7 @@ suite('Hover Definition (Analysis Engine)', () => {
         const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
         const expected = [
             '```python',
-            'class misc.Thread(_Verbose)',
+            'class pythonFiles.autocomp.misc.Thread(_Verbose)',
             '```',
             'A class that represents a thread of control.',
             'This class can be safely subclassed in a limited fashion.'

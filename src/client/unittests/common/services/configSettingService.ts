@@ -1,9 +1,31 @@
-import { Uri, workspace, WorkspaceConfiguration } from 'vscode';
+import { inject, injectable } from 'inversify';
+import { Uri, WorkspaceConfiguration } from 'vscode';
+import { IWorkspaceService } from '../../../common/application/types';
 import { Product } from '../../../common/types';
+import { IServiceContainer } from '../../../ioc/types';
 import { ITestConfigSettingsService, UnitTestProduct } from './../types';
 
+@injectable()
 export class TestConfigSettingsService implements ITestConfigSettingsService {
-    private static getTestArgSetting(product: UnitTestProduct) {
+    private readonly workspaceService: IWorkspaceService;
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    }
+    public async updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]) {
+        const setting = this.getTestArgSetting(product);
+        return this.updateSetting(testDirectory, setting, args);
+    }
+
+    public async enable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void> {
+        const setting = this.getTestEnablingSetting(product);
+        return this.updateSetting(testDirectory, setting, true);
+    }
+
+    public async disable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void> {
+        const setting = this.getTestEnablingSetting(product);
+        return this.updateSetting(testDirectory, setting, false);
+    }
+    private getTestArgSetting(product: UnitTestProduct) {
         switch (product) {
             case Product.unittest:
                 return 'unitTest.unittestArgs';
@@ -15,7 +37,7 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
                 throw new Error('Invalid Test Product');
         }
     }
-    private static getTestEnablingSetting(product: UnitTestProduct) {
+    private getTestEnablingSetting(product: UnitTestProduct) {
         switch (product) {
             case Product.unittest:
                 return 'unitTest.unittestEnabled';
@@ -28,36 +50,22 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
         }
     }
     // tslint:disable-next-line:no-any
-    private static async updateSetting(testDirectory: string | Uri, setting: string, value: any) {
+    private async updateSetting(testDirectory: string | Uri, setting: string, value: any) {
         let pythonConfig: WorkspaceConfiguration;
         const resource = typeof testDirectory === 'string' ? Uri.file(testDirectory) : testDirectory;
-        if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
-            pythonConfig = workspace.getConfiguration('python');
-        } else if (workspace.workspaceFolders.length === 1) {
-            pythonConfig = workspace.getConfiguration('python', workspace.workspaceFolders[0].uri);
+        if (!this.workspaceService.hasWorkspaceFolders) {
+            pythonConfig = this.workspaceService.getConfiguration('python');
+        } else if (this.workspaceService.workspaceFolders!.length === 1) {
+            pythonConfig = this.workspaceService.getConfiguration('python', this.workspaceService.workspaceFolders![0].uri);
         } else {
-            const workspaceFolder = workspace.getWorkspaceFolder(resource);
+            const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
             if (!workspaceFolder) {
                 throw new Error(`Test directory does not belong to any workspace (${testDirectory})`);
             }
             // tslint:disable-next-line:no-non-null-assertion
-            pythonConfig = workspace.getConfiguration('python', workspaceFolder!.uri);
+            pythonConfig = this.workspaceService.getConfiguration('python', workspaceFolder!.uri);
         }
 
         return pythonConfig.update(setting, value);
-    }
-    public async updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]) {
-        const setting = TestConfigSettingsService.getTestArgSetting(product);
-        return TestConfigSettingsService.updateSetting(testDirectory, setting, args);
-    }
-
-    public async enable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void> {
-        const setting = TestConfigSettingsService.getTestEnablingSetting(product);
-        return TestConfigSettingsService.updateSetting(testDirectory, setting, true);
-    }
-
-    public async disable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void> {
-        const setting = TestConfigSettingsService.getTestEnablingSetting(product);
-        return TestConfigSettingsService.updateSetting(testDirectory, setting, false);
     }
 }

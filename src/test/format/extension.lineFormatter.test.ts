@@ -6,7 +6,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { TextDocument, TextLine } from 'vscode';
+import { Position, Range, TextDocument, TextLine } from 'vscode';
 import '../../client/common/extensions';
 import { LineFormatter } from '../../client/formatters/lineFormatter';
 
@@ -22,15 +22,10 @@ suite('Formatting - line formatter', () => {
         testFormatLine('( x  +1 )*y/ 3', '(x + 1) * y / 3');
     });
     test('Braces spacing', () => {
-        testFormatLine('foo =(0 ,)', 'foo = (0,)');
-    });
-    test('Function arguments', () => {
-        testFormatLine('z=foo (0 , x= 1, (3+7) , y , z )',
-            'z = foo(0, x=1, (3 + 7), y, z)');
+        testFormatMultiline('foo =(0 ,)', 0, 'foo = (0,)');
     });
     test('Colon regular', () => {
-        testFormatLine('if x == 4 : print x,y; x,y= y, x',
-            'if x == 4: print x, y; x, y = y, x');
+        testFormatMultiline('if x == 4 : print x,y; x,y= y, x', 0, 'if x == 4: print x, y; x, y = y, x');
     });
     test('Colon slices', () => {
         testFormatLine('x[1: 30]', 'x[1:30]');
@@ -52,14 +47,13 @@ suite('Formatting - line formatter', () => {
             'ham[:upper_fn(x):step_fn(x)], ham[::step_fn(x)]');
     });
     test('Colon in for loop', () => {
-        testFormatLine('for index in  range( len(fruits) ): ',
-            'for index in range(len(fruits)):');
+        testFormatLine('for index in  range( len(fruits) ): ', 'for index in range(len(fruits)):');
     });
     test('Nested braces', () => {
         testFormatLine('[ 1 :[2: (x,),y]]{1}', '[1:[2:(x,), y]]{1}');
     });
     test('Trailing comment', () => {
-        testFormatLine('x=1  # comment', 'x = 1 # comment');
+        testFormatMultiline('x=1    # comment', 0, 'x = 1  # comment');
     });
     test('Single comment', () => {
         testFormatLine('# comment', '# comment');
@@ -67,29 +61,19 @@ suite('Formatting - line formatter', () => {
     test('Comment with leading whitespace', () => {
         testFormatLine('   # comment', '   # comment');
     });
-    test('Equals in first argument', () => {
-        testFormatLine('foo(x =0)', 'foo(x=0)');
-    });
-    test('Equals in second argument', () => {
-        testFormatLine('foo(x,y= \"a\",', 'foo(x, y=\"a\",');
-    });
-    test('Equals in multiline arguments', () => {
-        testFormatLine2('foo(a,', 'x = 1,y =-2)', 'x=1, y=-2)');
-    });
-    test('Equals in multiline arguments starting comma', () => {
-        testFormatLine(',x = 1,y =m)', ', x=1, y=m)');
-    });
-    test('Equals in multiline arguments ending comma', () => {
-        testFormatLine('x = 1,y =m,', 'x=1, y=m,');
-    });
     test('Operators without following space', () => {
         testFormatLine('foo( *a, ** b, ! c)', 'foo(*a, **b, !c)');
     });
     test('Brace after keyword', () => {
         testFormatLine('for x in(1,2,3)', 'for x in (1, 2, 3)');
+        testFormatLine('assert(1,2,3)', 'assert (1, 2, 3)');
+        testFormatLine('if (True|False)and(False/True)not (! x )', 'if (True | False) and (False / True) not (!x)');
+        testFormatLine('while (True|False)', 'while (True | False)');
+        testFormatLine('yield(a%b)', 'yield (a % b)');
     });
     test('Dot operator', () => {
         testFormatLine('x.y', 'x.y');
+        testFormatLine('5 .y', '5.y');
     });
     test('Unknown tokens no space', () => {
         testFormatLine('abc\\n\\', 'abc\\n\\');
@@ -104,29 +88,126 @@ suite('Formatting - line formatter', () => {
         testFormatLine('lambda * args, :0', 'lambda *args,: 0');
     });
     test('Comma expression', () => {
-        testFormatLine('x=1,2,3', 'x = 1, 2, 3');
+        testFormatMultiline('x=1,2,3', 0, 'x = 1, 2, 3');
     });
     test('is exression', () => {
         testFormatLine('a( (False is  2)  is 3)', 'a((False is 2) is 3)');
     });
     test('Function returning tuple', () => {
-        testFormatLine('x,y=f(a)', 'x, y = f(a)');
+        testFormatMultiline('x,y=f(a)', 0, 'x, y = f(a)');
+    });
+    test('from. import A', () => {
+        testFormatLine('from. import A', 'from . import A');
+    });
+    test('from .. import', () => {
+        testFormatLine('from ..import', 'from .. import');
+    });
+    test('from..x import', () => {
+        testFormatLine('from..x import', 'from ..x import');
+    });
+    test('Raw strings', () => {
+        testFormatMultiline('z=r""', 0, 'z = r""');
+        testFormatMultiline('z=rf""', 0, 'z = rf""');
+        testFormatMultiline('z=R""', 0, 'z = R""');
+        testFormatMultiline('z=RF""', 0, 'z = RF""');
+    });
+    test('Binary @', () => {
+        testFormatLine('a@  b', 'a @ b');
+    });
+    test('Unary operators', () => {
+        testFormatMultiline('x= - y', 0, 'x = -y');
+        testFormatMultiline('x= + y', 0, 'x = +y');
+        testFormatMultiline('x= ~ y', 0, 'x = ~y');
+        testFormatMultiline('x=-1', 0, 'x = -1');
+        testFormatMultiline('x=   +1', 0, 'x = +1');
+        testFormatMultiline('x=  ~1 ', 0, 'x = ~1');
+    });
+    test('Equals with type hints', () => {
+        testFormatMultiline('def foo(x:int=3,x=100.)', 0, 'def foo(x: int = 3, x=100.)');
+    });
+    test('Trailing comma', () => {
+        testFormatLine('a, =[1]', 'a, = [1]');
+    });
+    test('if()', () => {
+        testFormatLine('if(True) :', 'if (True):');
+    });
+    test('lambda arguments', () => {
+        testFormatMultiline('l4= lambda x =lambda y =lambda z= 1: z: y(): x()', 0, 'l4 = lambda x=lambda y=lambda z=1: z: y(): x()');
+    });
+
+    test('Multiline function call', () => {
+        testFormatMultiline('def foo(x = 1)', 0, 'def foo(x=1)');
+        testFormatMultiline('def foo(a\n, x = 1)', 1, ', x=1)');
+        testFormatMultiline('foo(a  ,b,\n  x = 1)', 1, '  x=1)');
+        testFormatMultiline('if True:\n  if False:\n    foo(a  , bar(\n      x = 1)', 3, '      x=1)');
+        testFormatMultiline('z=foo (0 , x= 1, (3+7) , y , z )', 0, 'z = foo(0, x=1, (3 + 7), y, z)');
+        testFormatMultiline('foo (0,\n x= 1,', 1, ' x=1,');
+        testFormatMultiline(
+// tslint:disable-next-line:no-multiline-string
+`async def fetch():
+  async with aiohttp.ClientSession() as session:
+    async with session.ws_connect(
+        "http://127.0.0.1:8000/", headers = cookie) as ws: # add unwanted spaces`, 3,
+            '        "http://127.0.0.1:8000/", headers=cookie) as ws:  # add unwanted spaces');
+        testFormatMultiline('def pos0key1(*, key): return key\npos0key1(key= 100)', 1, 'pos0key1(key=100)');
+        testFormatMultiline('def test_string_literals(self):\n  x= 1; y =2; self.assertTrue(len(x) == 0 and x == y)', 1,
+            '  x = 1; y = 2; self.assertTrue(len(x) == 0 and x == y)');
     });
     test('Grammar file', () => {
         const content = fs.readFileSync(grammarFile).toString('utf8');
         const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
-        let prevLine = '';
         for (let i = 0; i < lines.length; i += 1) {
             const line = lines[i];
-            const actual = formatLine2(prevLine, line);
+            const actual = formatMultiline(content, i);
             assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
-            prevLine = line;
         }
     });
 
     function testFormatLine(text: string, expected: string): void {
         const actual = formatLine(text);
         assert.equal(actual, expected);
+    }
+
+    function testFormatMultiline(content: string, lineNumber: number, expected: string): void {
+        const actual = formatMultiline(content, lineNumber);
+        assert.equal(actual, expected);
+    }
+
+    function formatMultiline(content: string, lineNumber: number): string {
+        const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
+
+        const document = TypeMoq.Mock.ofType<TextDocument>();
+        document.setup(x => x.lineAt(TypeMoq.It.isAnyNumber())).returns(n => {
+            const line = TypeMoq.Mock.ofType<TextLine>();
+            line.setup(x => x.text).returns(() => lines[n]);
+            line.setup(x => x.range).returns(() => new Range(new Position(n, 0), new Position(n, lines[n].length)));
+            return line.object;
+        });
+        document.setup(x => x.getText(TypeMoq.It.isAny())).returns(o => {
+            const r = o as Range;
+            const bits: string[] = [];
+
+            if (r.start.line === r.end.line) {
+                return lines[r.start.line].substring(r.start.character, r.end.character);
+            }
+
+            bits.push(lines[r.start.line].substr(r.start.character));
+            for (let i = r.start.line + 1; i < r.end.line; i += 1) {
+                bits.push(lines[i]);
+            }
+            bits.push(lines[r.end.line].substring(0, r.end.character));
+            return bits.join('\n');
+        });
+        document.setup(x => x.offsetAt(TypeMoq.It.isAny())).returns(o => {
+            const p = o as Position;
+            let offset = 0;
+            for (let i = 0; i < p.line; i += 1) {
+                offset += lines[i].length + 1; // Accounting for the line break
+            }
+            return offset + p.character;
+        });
+
+        return formatter.formatLine(document.object, lineNumber);
     }
 
     function formatLine(text: string): string {
@@ -137,24 +218,5 @@ suite('Formatting - line formatter', () => {
         document.setup(x => x.lineAt(TypeMoq.It.isAnyNumber())).returns(() => line.object);
 
         return formatter.formatLine(document.object, 0);
-    }
-
-    function formatLine2(prevLineText: string, lineText: string): string {
-        const thisLine = TypeMoq.Mock.ofType<TextLine>();
-        thisLine.setup(x => x.text).returns(() => lineText);
-
-        const prevLine = TypeMoq.Mock.ofType<TextLine>();
-        prevLine.setup(x => x.text).returns(() => prevLineText);
-
-        const document = TypeMoq.Mock.ofType<TextDocument>();
-        document.setup(x => x.lineAt(0)).returns(() => prevLine.object);
-        document.setup(x => x.lineAt(1)).returns(() => thisLine.object);
-
-        return formatter.formatLine(document.object, 1);
-    }
-
-    function testFormatLine2(prevLineText: string, lineText: string, expected: string): void {
-        const actual = formatLine2(prevLineText, lineText);
-        assert.equal(actual, expected);
     }
 });
