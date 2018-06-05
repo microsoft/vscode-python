@@ -41,6 +41,7 @@ export const ILogger = Symbol('ILogger');
 export interface ILogger {
     logError(message: string, error?: Error);
     logWarning(message: string, error?: Error);
+    logInformation(message: string, error?: Error);
 }
 
 export enum InstallerResponse {

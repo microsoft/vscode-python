@@ -46,7 +46,7 @@ suite('Formatting - OnEnter provider', () => {
 
     test('Formatting line ending in comment', async () => {
         const text = await formatAtPosition(6, 0);
-        assert.equal(text, 'x + 1 # ', 'Line ending in comment was not formatted');
+        assert.equal(text, 'x + 1  # ', 'Line ending in comment was not formatted');
     });
 
     test('Formatting line with @', async () => {
@@ -76,7 +76,7 @@ suite('Formatting - OnEnter provider', () => {
 
     test('Formatting space after open brace', async () => {
         const text = await formatAtPosition(12, 0);
-        assert.equal(text, 'while(1)', 'Space after open brace was not formatted');
+        assert.equal(text, 'while (1)', 'Space after open brace was not formatted');
     });
 
     test('Formatting line ending in string', async () => {

@@ -13,7 +13,7 @@ import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../..
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
-import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { IConfigurationService, ILogger, IPythonSettings } from '../../../client/common/types';
 import { PythonDebugConfigurationProvider, PythonV2DebugConfigurationProvider } from '../../../client/debugger';
 import { DebugOptions, LaunchRequestArguments } from '../../../client/debugger/Common/Contracts';
 import { PythonLaunchDebugConfiguration } from '../../../client/debugger/configProviders/baseProvider';
@@ -32,6 +32,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
         let fileSystem: TypeMoq.IMock<IFileSystem>;
         let appShell: TypeMoq.IMock<IApplicationShell>;
         let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
+        let logger: TypeMoq.IMock<ILogger>;
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             debugProvider = new provider.class(serviceContainer.object);
@@ -46,6 +47,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+            logger = TypeMoq.Mock.ofType<ILogger>();
 
             pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
             pythonExecutionService.setup((x: any) => x.then).returns(() => undefined);
@@ -58,6 +60,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationProviderUtils))).returns(() => new ConfigurationProviderUtils(serviceContainer.object));
+            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger))).returns(() => logger.object);
 
             const settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup(s => s.pythonPath).returns(() => pythonPath);
@@ -350,6 +353,8 @@ import { IServiceContainer } from '../../../client/ioc/types';
                 .verifiable(TypeMoq.Times.exactly(pyramidExists && addPyramidDebugOption ? 1 : 0));
             appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAny()))
                 .verifiable(TypeMoq.Times.exactly(pyramidExists || !addPyramidDebugOption ? 0 : 1));
+            logger.setup(a => a.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .verifiable(TypeMoq.Times.exactly(pyramidExists || !addPyramidDebugOption ? 0 : 1));
             const options = addPyramidDebugOption ? { debugOptions: [DebugOptions.Pyramid], pyramid: true } : {};
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, options as any as DebugConfiguration);
@@ -366,6 +371,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
             pythonExecutionService.verifyAll();
             fileSystem.verifyAll();
             appShell.verifyAll();
+            logger.verifyAll();
         }
         test('Program is set for Pyramid (windows)', async () => {
             await testPyramidConfiguration(true, false, false);

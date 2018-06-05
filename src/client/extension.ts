@@ -40,7 +40,6 @@ import { IServiceContainer, IServiceManager } from './ioc/types';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ILintingEngine } from './linters/types';
-import { DocStringFoldingProvider } from './providers/docStringFoldingProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { LinterProvider } from './providers/linterProvider';
 import { PythonRenameProvider } from './providers/renameProvider';
@@ -109,10 +108,6 @@ export async function activate(context: ExtensionContext) {
     languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
         onEnterRules: [
             {
-                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except)\b.*:\s*\S+/,
-                action: { indentAction: IndentAction.None }
-            },
-            {
                 beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/,
                 action: { indentAction: IndentAction.Indent }
             },
@@ -137,7 +132,6 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, new BlockFormatProviders(), ':'));
     context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
-    context.subscriptions.push(languages.registerFoldingRangeProvider(PYTHON, new DocStringFoldingProvider()));
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
     const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtension);

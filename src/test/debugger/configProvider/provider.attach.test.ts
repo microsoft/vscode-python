@@ -14,7 +14,7 @@ import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { EnumEx } from '../../../client/common/enumUtils';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { PythonDebugConfigurationProvider, PythonV2DebugConfigurationProvider } from '../../../client/debugger';
-import { DebugOptions } from '../../../client/debugger/Common/Contracts';
+import { AttachRequestArguments, DebugOptions } from '../../../client/debugger/Common/Contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 enum OS {
@@ -164,9 +164,44 @@ enum OS {
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot, request: 'attach' } as any as DebugConfiguration);
 
                 expect(debugConfig).to.have.property('localRoot', localRoot);
-                if (provider.debugType === 'pythonExperimental') {
-                    expect(debugConfig!.pathMappings).to.be.lengthOf(0);
-                }
+            });
+            ['localhost', '127.0.0.1', '::1'].forEach(host => {
+                test(`Ensure path mappings are automatically added when host is '${host}'`, async () => {
+                    const activeFile = 'xyz.py';
+                    const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+                    setupActiveEditor(activeFile, PYTHON_LANGUAGE);
+                    const defaultWorkspace = path.join('usr', 'desktop');
+                    setupWorkspaces([defaultWorkspace]);
+
+                    const localRoot = `Debug_PythonPath_${new Date().toString()}`;
+                    const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot, host, request: 'attach' } as any as DebugConfiguration);
+
+                    expect(debugConfig).to.have.property('localRoot', localRoot);
+                    if (provider.debugType === 'pythonExperimental') {
+                        const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                        expect(pathMappings).to.be.lengthOf(1);
+                        expect(pathMappings![0].localRoot).to.be.equal(workspaceFolder.uri.fsPath);
+                        expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
+                    }
+                });
+            });
+            ['192.168.1.123', 'don.debugger.com'].forEach(host => {
+                test(`Ensure path mappings are not automatically added when host is '${host}'`, async () => {
+                    const activeFile = 'xyz.py';
+                    const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+                    setupActiveEditor(activeFile, PYTHON_LANGUAGE);
+                    const defaultWorkspace = path.join('usr', 'desktop');
+                    setupWorkspaces([defaultWorkspace]);
+
+                    const localRoot = `Debug_PythonPath_${new Date().toString()}`;
+                    const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot, host, request: 'attach' } as any as DebugConfiguration);
+
+                    expect(debugConfig).to.have.property('localRoot', localRoot);
+                    if (provider.debugType === 'pythonExperimental') {
+                        const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
+                        expect(pathMappings).to.be.lengthOf(0);
+                    }
+                });
             });
             test('Ensure \'localRoot\' and \'remoteRoot\' is used', async function () {
                 if (provider.debugType !== 'pythonExperimental') {

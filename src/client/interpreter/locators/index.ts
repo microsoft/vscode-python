@@ -31,12 +31,6 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
     }
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
-        // Pipenv always wins
-        const pipenv = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
-        const interpreters = await pipenv.getInterpreters(resource);
-        if (interpreters.length > 0) {
-            return interpreters;
-        }
         return this.getInterpretersPerResource(resource);
     }
     public dispose() {
@@ -87,6 +81,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, KNOWN_PATH_SERVICE));
         }
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, CURRENT_PATH_SERVICE));
+        locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE));
 
         return locators;
     }

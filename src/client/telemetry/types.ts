@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { TerminalShellType } from '../common/terminal/types';
+import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
 
 export type EditorLoadTelemetry = {
@@ -57,4 +58,11 @@ export type TestDiscoverytTelemetry = {
 export type FeedbackTelemetry = {
     action: 'accepted' | 'dismissed' | 'doNotShowAgain';
 };
-export type TelemetryProperties = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry | CodeExecutionTelemetry | TestRunTelemetry | TestDiscoverytTelemetry | FeedbackTelemetry;
+export type TerminalTelemetry = {
+    terminal?: TerminalShellType;
+    triggeredBy?: 'commandpalette';
+    pythonVersion?: string;
+    interpreterType?: InterpreterType;
+};
+export type TelemetryProperties = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry |
+    CodeExecutionTelemetry | TestRunTelemetry | TestDiscoverytTelemetry | FeedbackTelemetry | TerminalTelemetry;

@@ -9,6 +9,7 @@ import { Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
+import { ILogger } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IConfigurationProviderUtils } from './types';
 
@@ -18,9 +19,11 @@ const PSERVE_SCRIPT_FILE_NAME = 'pserve.py';
 export class ConfigurationProviderUtils implements IConfigurationProviderUtils {
     private readonly executionFactory: IPythonExecutionFactory;
     private readonly fs: IFileSystem;
+    private readonly logger: ILogger;
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.executionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        this.logger = this.serviceContainer.get<ILogger>(ILogger);
     }
     public async getPyramidStartupScriptFilePath(resource?: Uri): Promise<string | undefined> {
         try {
@@ -30,7 +33,7 @@ export class ConfigurationProviderUtils implements IConfigurationProviderUtils {
             return await this.fs.fileExists(pserveFilePath) ? pserveFilePath : undefined;
         } catch (ex) {
             const message = 'Unable to locate \'pserve.py\' required for debugging of Pyramid applications.';
-            console.error(message, ex);
+            this.logger.logError(message, ex);
             const app = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
             app.showErrorMessage(message);
             return;

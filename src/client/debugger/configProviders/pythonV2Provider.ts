@@ -16,7 +16,7 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('pythonExperimental', serviceContainer);
     }
-    protected async provideLaunchDefaults(workspaceFolder: Uri, debugConfiguration: PythonLaunchDebugConfiguration<LaunchRequestArguments>): Promise<void> {
+    protected async provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration<LaunchRequestArguments>): Promise<void> {
         await super.provideLaunchDefaults(workspaceFolder, debugConfiguration);
         const debugOptions = debugConfiguration.debugOptions!;
         if (debugConfiguration.debugStdLib) {
@@ -48,7 +48,8 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
             debugConfiguration.program = (await utils.getPyramidStartupScriptFilePath(workspaceFolder))!;
         }
     }
-    protected async provideAttachDefaults(workspaceFolder: Uri, debugConfiguration: PythonAttachDebugConfiguration<AttachRequestArguments>): Promise<void> {
+    // tslint:disable-next-line:cyclomatic-complexity
+    protected async provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonAttachDebugConfiguration<AttachRequestArguments>): Promise<void> {
         await super.provideAttachDefaults(workspaceFolder, debugConfiguration);
         const debugOptions = debugConfiguration.debugOptions!;
         if (debugConfiguration.debugStdLib) {
@@ -82,10 +83,20 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
         if (!debugConfiguration.pathMappings) {
             debugConfiguration.pathMappings = [];
         }
+        // This is for backwards compatibility.
         if (debugConfiguration.localRoot && debugConfiguration.remoteRoot) {
             debugConfiguration.pathMappings!.push({
                 localRoot: debugConfiguration.localRoot,
                 remoteRoot: debugConfiguration.remoteRoot
+            });
+        }
+        // If attaching to local host, then always map local root and remote roots.
+        if (workspaceFolder && debugConfiguration.host &&
+            debugConfiguration.pathMappings!.length === 0 &&
+            ['LOCALHOST', '127.0.0.1', '::1'].indexOf(debugConfiguration.host.toUpperCase()) >= 0) {
+            debugConfiguration.pathMappings!.push({
+                localRoot: workspaceFolder.fsPath,
+                remoteRoot: workspaceFolder.fsPath
             });
         }
     }
