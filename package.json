@@ -1915,7 +1915,7 @@
         "@types/lodash": "^4.14.104",
         "@types/md5": "^2.1.32",
         "@types/mocha": "^2.2.48",
-        "@types/node": "^9.4.7",
+        "@types/node": "9.4.7",
         "@types/request": "^2.47.0",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
