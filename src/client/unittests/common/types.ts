@@ -161,6 +161,8 @@ export interface ITestsHelper {
     flattenTestFiles(testFiles: TestFile[]): Tests;
     placeTestFilesIntoFolders(tests: Tests): void;
     displayTestErrorMessage(message: string): void;
+    shouldRunAllTests(testsToRun?: TestsToRun): boolean;
+    mergeTests(items: Tests[]): Tests;
 }
 
 export const ITestVisitor = Symbol('ITestVisitor');
@@ -243,4 +245,27 @@ export interface IUnitTestSocketServer extends Disposable {
     on(event: string | symbol, listener: Function): this;
     start(options?: { port?: number; host?: string }): Promise<number>;
     stop(): void;
+}
+
+export type Options = {
+    workspaceFolder: Uri;
+    cwd: string;
+    args: string[];
+    outChannel?: OutputChannel;
+    token: CancellationToken;
+};
+
+export const ITestRunner = Symbol('ITestRunner');
+export interface ITestRunner {
+    run(testProvider: TestProvider, options: Options): Promise<string>;
+}
+
+export enum PassCalculationFormulae {
+    pytest,
+    nosetests
+}
+
+export const IXUnitParser = Symbol('IXUnitParser');
+export interface IXUnitParser {
+    updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, passCalculationFormulae: PassCalculationFormulae): Promise<void>;
 }

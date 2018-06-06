@@ -1,7 +1,6 @@
 import { CancellationToken, CancellationTokenSource, Disposable, OutputChannel, Uri, workspace } from 'vscode';
-import { PythonSettings } from '../../../common/configSettings';
 import { isNotInstalledError } from '../../../common/helpers';
-import { IDisposableRegistry, IInstaller, IOutputChannel, IPythonSettings, Product } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, IInstaller, IOutputChannel, IPythonSettings, Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_DISCOVER, UNITTEST_RUN } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry/index';
@@ -27,7 +26,6 @@ export abstract class BaseTestManager implements ITestManager {
     private _testResultsService: ITestResultsService;
     private _outputChannel: OutputChannel;
     private tests?: Tests;
-    // tslint:disable-next-line:variable-name
     private _status: TestStatus = TestStatus.Unknown;
     private testDiscoveryCancellationTokenSource?: CancellationTokenSource;
     private testRunnerCancellationTokenSource?: CancellationTokenSource;
@@ -42,12 +40,13 @@ export abstract class BaseTestManager implements ITestManager {
     constructor(public readonly testProvider: TestProvider, private product: Product, public readonly workspaceFolder: Uri, protected rootDirectory: string,
         protected serviceContainer: IServiceContainer) {
         this._status = TestStatus.Unknown;
-        this.settings = PythonSettings.getInstance(this.rootDirectory ? Uri.file(this.rootDirectory) : undefined);
+        const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.settings = configService.getSettings(this.rootDirectory ? Uri.file(this.rootDirectory) : undefined);
         const disposables = serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        disposables.push(this);
         this._outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         this.testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
         this._testResultsService = this.serviceContainer.get<ITestResultsService>(ITestResultsService);
+        disposables.push(this);
     }
     protected get testDiscoveryCancellationToken(): CancellationToken | undefined {
         return this.testDiscoveryCancellationTokenSource ? this.testDiscoveryCancellationTokenSource.token : undefined;
@@ -62,8 +61,7 @@ export abstract class BaseTestManager implements ITestManager {
         return this._status;
     }
     public get workingDirectory(): string {
-        const settings = PythonSettings.getInstance(Uri.file(this.rootDirectory));
-        return settings.unitTest.cwd && settings.unitTest.cwd.length > 0 ? settings.unitTest.cwd : this.rootDirectory;
+        return this.settings.unitTest.cwd && this.settings.unitTest.cwd.length > 0 ? this.settings.unitTest.cwd : this.rootDirectory;
     }
     public stop() {
         if (this.testDiscoveryCancellationTokenSource) {
