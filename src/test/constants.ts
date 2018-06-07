@@ -6,7 +6,7 @@ import { PythonSettings } from '../client/common/configSettings';
 
 export const IS_APPVEYOR = process.env.APPVEYOR === 'true';
 export const IS_TRAVIS = process.env.TRAVIS === 'true';
-export const IS_VSTS = process.env.TF_BUILD === 'true';
+export const IS_VSTS = process.env.TF_BUILD !== undefined;
 export const IS_CI_SERVER = IS_TRAVIS || IS_APPVEYOR || IS_VSTS;
 export const TEST_TIMEOUT = 25000;
 export const IS_MULTI_ROOT_TEST = isMultitrootTest();
