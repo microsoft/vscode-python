@@ -43,6 +43,7 @@ contributors (if you would like to contribute a translation, see the
 * `it`
 * `ja`
 * `ko-kr`
+* `pt-br`
 * `ru`
 * `zh-cn`
 * `zh-tw`
