@@ -1,31 +1,27 @@
-import * as fs from 'fs';
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { Uri } from 'vscode';
-import { IInstaller, Product } from '../../common/types';
+import { QuickPickItem, Uri } from 'vscode';
+import { IFileSystem } from '../../common/platform/types';
+import { Product } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
 import { TestConfigurationManager } from '../common/managers/testConfigurationManager';
-import { ITestConfigSettingsService } from '../common/types';
 
 export class ConfigurationManager extends TestConfigurationManager {
-    constructor(workspace: Uri, outputChannel: vscode.OutputChannel,
-        installer: IInstaller, testConfigSettingsService: ITestConfigSettingsService) {
-        super(workspace, Product.pytest, outputChannel, installer, testConfigSettingsService);
+    constructor(workspace: Uri, serviceContainer: IServiceContainer) {
+        super(workspace, Product.pytest, serviceContainer);
     }
-    private static async configFilesExist(rootDir: string): Promise<string[]> {
-        const promises = ['pytest.ini', 'tox.ini', 'setup.cfg'].map(cfg => {
-            return new Promise<string>(resolve => {
-                fs.exists(path.join(rootDir, cfg), exists => { resolve(exists ? cfg : ''); });
-            });
-        });
-        const values = await Promise.all(promises);
-        return values.filter(exists => exists.length > 0);
+    public async requiresUserToConfigure(wkspace: Uri): Promise<boolean> {
+        const configFiles = await this.getConfigFiles(wkspace.fsPath);
+        // If a config file exits, there's nothing to be configured.
+        if (configFiles.length > 0 && configFiles.length !== 1 && configFiles[0] !== 'setup.cfg') {
+            return false;
+        }
+        return true;
     }
-    // tslint:disable-next-line:no-any
     public async configure(wkspace: Uri) {
         const args: string[] = [];
         const configFileOptionLabel = 'Use existing config file';
-        const options: vscode.QuickPickItem[] = [];
-        const configFiles = await ConfigurationManager.configFilesExist(wkspace.fsPath);
+        const options: QuickPickItem[] = [];
+        const configFiles = await this.getConfigFiles(wkspace.fsPath);
         // If a config file exits, there's nothing to be configured.
         if (configFiles.length > 0 && configFiles.length !== 1 && configFiles[0] !== 'setup.cfg') {
             return;
@@ -47,5 +43,12 @@ export class ConfigurationManager extends TestConfigurationManager {
             await this.installer.install(Product.pytest);
         }
         await this.testConfigSettingsService.updateTestArgs(wkspace.fsPath, Product.pytest, args);
+    }
+    private async getConfigFiles(rootDir: string): Promise<string[]> {
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        const promises = ['pytest.ini', 'tox.ini', 'setup.cfg']
+            .map(async cfg => await fs.fileExists(path.join(rootDir, cfg)) ? cfg : '');
+        const values = await Promise.all(promises);
+        return values.filter(exists => exists.length > 0);
     }
 }

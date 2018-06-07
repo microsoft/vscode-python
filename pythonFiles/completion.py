@@ -570,21 +570,7 @@ class JediCompletion(object):
             sys_path=sys.path, environment=self.environment)
 
         if lookup == 'definitions':
-            defs = []
-            try:
-                defs = self._get_definitionsx(script.goto_definitions(follow_imports=False), request['id'])
-            except:
-                pass
-            try:
-                if len(defs) == 0:
-                    defs = self._get_definitionsx(script.goto_definitions(), request['id'])
-            except:
-                pass
-            try:
-                if len(defs) == 0:
-                    defs = self._get_definitionsx(script.goto_assignments(), request['id'])
-            except:
-                pass
+            defs = self._get_definitionsx(script.goto_assignments(follow_imports=True), request['id'])
             return json.dumps({'id': request['id'], 'results': defs})
         if lookup == 'tooltip':
             if jediPreview:

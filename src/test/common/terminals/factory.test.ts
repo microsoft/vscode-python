@@ -11,14 +11,12 @@ import { ITerminalHelper, ITerminalServiceFactory } from '../../../client/common
 import { IDisposableRegistry } from '../../../client/common/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { initialize } from '../../initialize';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Service Factory', () => {
     let factory: ITerminalServiceFactory;
     let disposables: Disposable[] = [];
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-    suiteSetup(initialize);
     setup(() => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();

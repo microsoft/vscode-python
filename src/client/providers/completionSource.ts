@@ -3,9 +3,10 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { PythonSettings } from '../common/configSettings';
+import { IConfigurationService } from '../common/types';
+import { IServiceContainer } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
-import { ItemInfoSource, LanguageItemInfo } from './itemInfoSource';
+import { IItemInfoSource, LanguageItemInfo } from './itemInfoSource';
 import * as proxy from './jediProxy';
 import { isPositionInsideStringOrComment } from './providerUtilities';
 
@@ -25,11 +26,10 @@ class DocumentPosition {
 
 export class CompletionSource {
     private jediFactory: JediFactory;
-    private itemInfoSource: ItemInfoSource;
 
-    constructor(jediFactory: JediFactory) {
+    constructor(jediFactory: JediFactory, private serviceContainer: IServiceContainer,
+        private itemInfoSource: IItemInfoSource) {
         this.jediFactory = jediFactory;
-        this.itemInfoSource = new ItemInfoSource(jediFactory);
     }
 
     public async getVsCodeCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken)
@@ -50,14 +50,13 @@ export class CompletionSource {
         // Supply hover source with simulated document text where item in question was 'already typed'.
         const document = documentPosition.document;
         const position = documentPosition.position;
-        const itemText = completionItem.insertText ? completionItem.insertText : completionItem.label;
         const wordRange = document.getWordRangeAtPosition(position);
 
         const leadingRange = wordRange !== undefined
             ? new vscode.Range(new vscode.Position(0, 0), wordRange.start)
             : new vscode.Range(new vscode.Position(0, 0), position);
 
-        const itemString = `${itemText}`;
+        const itemString = completionItem.label;
         const sourceText = `${document.getText(leadingRange)}${itemString}`;
         const range = new vscode.Range(leadingRange.end, leadingRange.end.translate(0, itemString.length));
 
@@ -100,7 +99,9 @@ export class CompletionSource {
     private toVsCodeCompletion(documentPosition: DocumentPosition, item: proxy.IAutoCompleteItem, resource: vscode.Uri): vscode.CompletionItem {
         const completionItem = new vscode.CompletionItem(item.text);
         completionItem.kind = item.type;
-        if (PythonSettings.getInstance(resource).autoComplete.addBrackets === true &&
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const pythonSettings = configurationService.getSettings(resource);
+        if (pythonSettings.autoComplete.addBrackets === true &&
             (item.kind === vscode.SymbolKind.Function || item.kind === vscode.SymbolKind.Method)) {
             completionItem.insertText = new vscode.SnippetString(item.text).appendText('(').appendTabstop().appendText(')');
         }

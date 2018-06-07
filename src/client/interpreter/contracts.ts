@@ -51,12 +51,12 @@ export interface ICondaService {
 }
 
 export enum InterpreterType {
-    Unknown = 1,
-    Conda = 2,
-    VirtualEnv = 4,
-    PipEnv = 8,
-    Pyenv = 16,
-    Venv = 32
+    Unknown = 'Unknown',
+    Conda = 'Conda',
+    VirtualEnv = 'VirtualEnv',
+    PipEnv = 'PipEnv',
+    Pyenv = 'Pyenv',
+    Venv = 'Venv'
 }
 export type PythonInterpreter = InterpreterInfomation & {
     companyDisplayName?: string;

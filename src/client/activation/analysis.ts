@@ -1,25 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ExtensionContext, OutputChannel } from 'vscode';
-import { Message } from 'vscode-jsonrpc';
-import { CloseAction, Disposable, ErrorAction, ErrorHandler, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
+import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 import { IApplicationShell } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
-import { IProcessServiceFactory } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
-import { IConfigurationService, IOutputChannel, IPythonSettings } from '../common/types';
+import { IConfigurationService, IExtensionContext, IOutputChannel } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import {
     PYTHON_ANALYSIS_ENGINE_DOWNLOADED,
     PYTHON_ANALYSIS_ENGINE_ENABLED,
-    PYTHON_ANALYSIS_ENGINE_ERROR,
-    PYTHON_ANALYSIS_ENGINE_STARTUP
+    PYTHON_ANALYSIS_ENGINE_ERROR
 } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';
 import { AnalysisEngineDownloader } from './downloader';
@@ -32,18 +29,7 @@ const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 const analysisEngineFolder = 'analysis';
 
-class LanguageServerStartupErrorHandler implements ErrorHandler {
-    constructor(private readonly deferred: Deferred<void>) { }
-    public error(error: Error, message: Message, count: number): ErrorAction {
-        this.deferred.reject(error);
-        return ErrorAction.Continue;
-    }
-    public closed(): CloseAction {
-        this.deferred.reject();
-        return CloseAction.Restart;
-    }
-}
-
+@injectable()
 export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly configuration: IConfigurationService;
     private readonly appShell: IApplicationShell;
@@ -54,10 +40,11 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly interpreterService: IInterpreterService;
     private readonly disposables: Disposable[] = [];
     private languageClient: LanguageClient | undefined;
-    private context: ExtensionContext | undefined;
+    private readonly context: ExtensionContext;
     private interpreterHash: string = '';
 
-    constructor(private readonly services: IServiceContainer, pythonSettings: IPythonSettings) {
+    constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
+        this.context = this.services.get<IExtensionContext>(IExtensionContext);
         this.configuration = this.services.get<IConfigurationService>(IConfigurationService);
         this.appShell = this.services.get<IApplicationShell>(IApplicationShell);
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
@@ -66,15 +53,14 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         this.interpreterService = this.services.get<IInterpreterService>(IInterpreterService);
     }
 
-    public async activate(context: ExtensionContext): Promise<boolean> {
+    public async activate(): Promise<boolean> {
         this.sw.reset();
-        this.context = context;
-        const clientOptions = await this.getAnalysisOptions(context);
+        const clientOptions = await this.getAnalysisOptions(this.context);
         if (!clientOptions) {
             return false;
         }
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.restartLanguageServer()));
-        return this.startLanguageServer(context, clientOptions);
+        return this.startLanguageServer(this.context, clientOptions);
     }
 
     public async deactivate(): Promise<void> {
@@ -95,47 +81,35 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         if (!idata || idata.hash !== this.interpreterHash) {
             this.interpreterHash = idata ? idata.hash : '';
             await this.deactivate();
-            await this.activate(this.context);
+            await this.activate();
         }
     }
 
     private async startLanguageServer(context: ExtensionContext, clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
-        const mscorlib = path.join(context.extensionPath, analysisEngineFolder, 'mscorlib.dll');
-        const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
-        let downloadPackage = false;
 
         const reporter = getTelemetryReporter();
         reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ENABLED);
 
-        if (!await this.fs.fileExists(mscorlib)) {
-            // Depends on .NET Runtime or SDK
+        const settings = this.configuration.getSettings();
+        if (!settings.downloadCodeAnalysis) {
+            // Depends on .NET Runtime or SDK. Typically development-only case.
             this.languageClient = this.createSimpleLanguageClient(context, clientOptions);
-            try {
-                await this.tryStartLanguageClient(context, this.languageClient);
-                return true;
-            } catch (ex) {
-                if (await this.isDotNetInstalled()) {
-                    this.appShell.showErrorMessage(`.NET Runtime appears to be installed but the language server did not start. Error ${ex}`);
-                    reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_ERROR, { error: 'Failed to start (MSIL)' });
-                    return false;
-                }
-                // No .NET Runtime, no mscorlib - need to download self-contained package.
-                downloadPackage = true;
-            }
+            await this.startLanguageClient(context);
+            return true;
         }
 
-        if (downloadPackage) {
-            this.appShell.showWarningMessage('.NET Runtime is not found, platform-specific Python Analysis Engine will be downloaded.');
+        const mscorlib = path.join(context.extensionPath, analysisEngineFolder, 'mscorlib.dll');
+        if (!await this.fs.fileExists(mscorlib)) {
+            const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
             await downloader.downloadAnalysisEngine(context);
             reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_DOWNLOADED);
         }
 
         const serverModule = path.join(context.extensionPath, analysisEngineFolder, this.platformData.getEngineExecutableName());
-        // Now try to start self-contained app
         this.languageClient = this.createSelfContainedLanguageClient(context, serverModule, clientOptions);
         try {
-            await this.tryStartLanguageClient(context, this.languageClient);
+            await this.startLanguageClient(context);
             return true;
         } catch (ex) {
             this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
@@ -144,31 +118,10 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         }
     }
 
-    private async tryStartLanguageClient(context: ExtensionContext, lc: LanguageClient): Promise<void> {
-        let disposable: Disposable | undefined;
-        const deferred = createDeferred<void>();
-        try {
-            const sw = new StopWatch();
-            lc.clientOptions.errorHandler = new LanguageServerStartupErrorHandler(deferred);
-
-            disposable = lc.start();
-            lc.onReady()
-                .then(() => deferred.resolve())
-                .catch((reason) => {
-                    deferred.reject(reason);
-                });
-            await deferred.promise;
-
-            this.output.appendLine(`Language server ready: ${this.sw.elapsedTime} ms`);
-            context.subscriptions.push(disposable);
-
-            const reporter = getTelemetryReporter();
-            reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_STARTUP, {}, { startup_time: sw.elapsedTime });
-        } catch (ex) {
-            if (disposable) {
-                disposable.dispose();
-            }
-            throw ex;
+    private async startLanguageClient(context: ExtensionContext): Promise<void> {
+        context.subscriptions.push(this.languageClient!.start());
+        if (isTestExecution()) {
+            await this.languageClient!.onReady();
         }
     }
 
@@ -252,15 +205,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                     maxDocumentationTextLength: 0
                 },
                 asyncStartup: true,
-                intelliCodeEnabled: settings.intelliCodeEnabled,
                 testEnvironment: isTestExecution()
             }
         };
-    }
-
-    private async isDotNetInstalled(): Promise<boolean> {
-        const ps = await this.services.get<IProcessServiceFactory>(IProcessServiceFactory).create();
-        const result = await ps.exec('dotnet', ['--version']).catch(() => { return { stdout: '' }; });
-        return result.stdout.trim().startsWith('2.');
     }
 }

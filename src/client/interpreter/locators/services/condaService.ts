@@ -142,7 +142,7 @@ export class CondaService implements ICondaService {
             // Failed because either:
             //   1. conda is not installed.
             //   2. `conda env list has changed signature.
-            this.logger.logError('Failed to get conda environment list from conda', ex);
+            this.logger.logInformation('Failed to get conda environment list from conda', ex);
         }
     }
     public getInterpreterPath(condaEnvironmentPath: string): string {

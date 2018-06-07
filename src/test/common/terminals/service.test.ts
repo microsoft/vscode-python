@@ -10,7 +10,6 @@ import { TerminalService } from '../../../client/common/terminal/service';
 import { ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { initialize } from '../../initialize';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Service', () => {
@@ -22,7 +21,6 @@ suite('Terminal Service', () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let disposables: Disposable[] = [];
     let mockServiceContainer: TypeMoq.IMock<IServiceContainer>;
-    suiteSetup(initialize);
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();

@@ -25,6 +25,15 @@
             }
         },
         {
+            "label": "Run Unit Tests",
+            "type": "npm",
+            "script": "test:unittests",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
+        },
+        {
             "label": "Hygiene",
             "type": "gulp",
             "task": "watch",

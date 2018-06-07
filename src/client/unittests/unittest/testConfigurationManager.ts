@@ -1,14 +1,15 @@
-import { OutputChannel, Uri } from 'vscode';
-import { IInstaller, Product } from '../../common/types';
+import { Uri } from 'vscode';
+import { Product } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
 import { TestConfigurationManager } from '../common/managers/testConfigurationManager';
-import { ITestConfigSettingsService } from '../common/types';
 
 export class ConfigurationManager extends TestConfigurationManager {
-    constructor(workspace: Uri, outputChannel: OutputChannel,
-        installer: IInstaller, testConfigSettingsService: ITestConfigSettingsService) {
-        super(workspace, Product.unittest, outputChannel, installer, testConfigSettingsService);
+    constructor(workspace: Uri, serviceContainer: IServiceContainer) {
+        super(workspace, Product.unittest, serviceContainer);
     }
-    // tslint:disable-next-line:no-any
+    public async requiresUserToConfigure(_wkspace: Uri): Promise<boolean> {
+        return true;
+    }
     public async configure(wkspace: Uri) {
         const args = ['-v'];
         const subDirs = await this.getTestDirs(wkspace.fsPath);

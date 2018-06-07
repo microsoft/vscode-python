@@ -92,7 +92,6 @@ export class LintingEngine implements ILintingEngine {
         });
 
         this.pendingLintings.set(document.uri.fsPath, cancelToken);
-        this.outputChannel.clear();
 
         const promises: Promise<ILintMessage[]>[] = this.linterManager.getActiveLinters(document.uri)
             .map(info => {

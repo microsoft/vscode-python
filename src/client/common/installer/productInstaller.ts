@@ -2,11 +2,12 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import '../../common/extensions';
 import { IFormatterHelper } from '../../formatters/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager } from '../../linters/types';
 import { ITestsHelper } from '../../unittests/common/types';
-import { IApplicationShell } from '../application/types';
+import { IApplicationShell, IWorkspaceService } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IPlatformService } from '../platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
@@ -28,16 +29,34 @@ enum ProductType {
 }
 
 // tslint:disable-next-line:max-classes-per-file
-abstract class BaseInstaller {
+export abstract class BaseInstaller {
+    private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
     protected appShell: IApplicationShell;
     protected configService: IConfigurationService;
+    private readonly workspaceService: IWorkspaceService;
 
     constructor(protected serviceContainer: IServiceContainer, protected outputChannel: vscode.OutputChannel) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
 
-    public abstract promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse>;
+    public promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
+        // If this method gets called twice, while previous promise has not been resolved, then return that same promise.
+        // E.g. previous promise is not resolved as a message has been displayed to the user, so no point displaying
+        // another message.
+        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
+        const key = `${product}${workspaceFolder ? workspaceFolder.uri.fsPath : ''}`;
+        if (BaseInstaller.PromptPromises.has(key)) {
+            return BaseInstaller.PromptPromises.get(key)!;
+        }
+        const promise = this.promptToInstallImplementation(product, resource);
+        BaseInstaller.PromptPromises.set(key, promise);
+        promise.then(() => BaseInstaller.PromptPromises.delete(key)).ignoreErrors();
+        promise.catch(() => BaseInstaller.PromptPromises.delete(key)).ignoreErrors();
+
+        return promise;
+    }
 
     public async install(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         if (product === Product.unittest) {
@@ -83,20 +102,15 @@ abstract class BaseInstaller {
                 .catch(() => false);
         }
     }
-
+    protected abstract promptToInstallImplementation(product: Product, resource?: vscode.Uri): Promise<InstallerResponse>;
     protected getExecutableNameFromSettings(product: Product, resource?: vscode.Uri): string {
         throw new Error('getExecutableNameFromSettings is not supported on this object');
     }
 }
 
-class CTagsInstaller extends BaseInstaller {
+export class CTagsInstaller extends BaseInstaller {
     constructor(serviceContainer: IServiceContainer, outputChannel: vscode.OutputChannel) {
         super(serviceContainer, outputChannel);
-    }
-
-    public async promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
-        const item = await this.appShell.showErrorMessage('Install CTags to enable Python workspace symbols?', 'Yes', 'No');
-        return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
 
     public async install(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
@@ -108,12 +122,16 @@ class CTagsInstaller extends BaseInstaller {
             this.outputChannel.appendLine('Option 3: Extract to any folder and define that path in the python.workspaceSymbols.ctagsPath setting of your user settings file (settings.json).');
             this.outputChannel.show();
         } else {
-            const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService();
+            const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(resource);
             const logger = this.serviceContainer.get<ILogger>(ILogger);
             terminalService.sendCommand(CTagsInsllationScript, [])
                 .catch(logger.logError.bind(logger, `Failed to install ctags. Script sent '${CTagsInsllationScript}'.`));
         }
         return InstallerResponse.Ignore;
+    }
+    protected async promptToInstallImplementation(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
+        const item = await this.appShell.showErrorMessage('Install CTags to enable Python workspace symbols?', 'Yes', 'No');
+        return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
 
     protected getExecutableNameFromSettings(product: Product, resource?: vscode.Uri): string {
@@ -122,8 +140,8 @@ class CTagsInstaller extends BaseInstaller {
     }
 }
 
-class FormatterInstaller extends BaseInstaller {
-    public async promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
+export class FormatterInstaller extends BaseInstaller {
+    protected async promptToInstallImplementation(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         // Hard-coded on purpose because the UI won't necessarily work having
         // another formatter.
         const formatters = [Product.autopep8, Product.black, Product.yapf];
@@ -159,8 +177,8 @@ class FormatterInstaller extends BaseInstaller {
 }
 
 // tslint:disable-next-line:max-classes-per-file
-class LinterInstaller extends BaseInstaller {
-    public async promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
+export class LinterInstaller extends BaseInstaller {
+    protected async promptToInstallImplementation(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const install = 'Install';
         const disableAllLinting = 'Disable linting';
@@ -188,8 +206,8 @@ class LinterInstaller extends BaseInstaller {
 }
 
 // tslint:disable-next-line:max-classes-per-file
-class TestFrameworkInstaller extends BaseInstaller {
-    public async promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
+export class TestFrameworkInstaller extends BaseInstaller {
+    protected async promptToInstallImplementation(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(`Test framework ${productName} is not installed. Install?`, 'Yes', 'No');
         return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
@@ -208,8 +226,8 @@ class TestFrameworkInstaller extends BaseInstaller {
 }
 
 // tslint:disable-next-line:max-classes-per-file
-class RefactoringLibraryInstaller extends BaseInstaller {
-    public async promptToInstall(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
+export class RefactoringLibraryInstaller extends BaseInstaller {
+    protected async promptToInstallImplementation(product: Product, resource?: vscode.Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(`Refactoring library ${productName} is not installed. Install?`, 'Yes', 'No');
         return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;

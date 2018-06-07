@@ -39,6 +39,8 @@
     "python.snippet.launch.flask.description": "Debug a Flask Application",
     "python.snippet.launch.flaskOld.label": "Python: Flask (0.10.x or earlier)",
     "python.snippet.launch.flaskOld.description": "Debug an older styled Flask Application",
+    "python.snippet.launch.gevent.label": "Python: Gevent",
+    "python.snippet.launch.gevent.description": "Debug a Gevent Application",
     "python.snippet.launch.pyramid.label": "Python: Pyramid Application",
     "python.snippet.launch.pyramid.description": "Debug a Pyramid Application",
     "python.snippet.launch.watson.label": "Python: Watson Application",

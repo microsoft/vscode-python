@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Container, interfaces } from 'inversify';
+import { Container, injectable, interfaces } from 'inversify';
 import { Abstract, IServiceManager, Newable } from './types';
 
 type identifier<T> = string | symbol | Newable<T> | Abstract<T>;
 
+@injectable()
 export class ServiceManager implements IServiceManager {
     constructor(private container: Container) { }
     // tslint:disable-next-line:no-any

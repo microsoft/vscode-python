@@ -7,13 +7,14 @@ import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
 import { COMPLETION } from '../telemetry/constants';
 import { CompletionSource } from './completionSource';
+import { ItemInfoSource } from './itemInfoSource';
 
 export class PythonCompletionItemProvider implements vscode.CompletionItemProvider {
     private completionSource: CompletionSource;
     private configService: IConfigurationService;
 
     constructor(jediFactory: JediFactory, serviceContainer: IServiceContainer) {
-        this.completionSource = new CompletionSource(jediFactory);
+        this.completionSource = new CompletionSource(jediFactory, serviceContainer, new ItemInfoSource(jediFactory));
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 

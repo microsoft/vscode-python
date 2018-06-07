@@ -2,11 +2,12 @@
 
 ## Environment
 
-- OS: XXX
+- OS: XXX (Windows, macOS, latest Ubuntu LTS)
+  - Shell: XXX (Command Prompt, PowerShell, bash, fish)
 - Python
-  - Distribution: XXX
-  - Version: XXX
-- VS Code: XXX
+  - Distribution: XXX (CPython, miniconda)
+  - Version: XXX (2.7, latest 3.x)
+- VS Code: XXX (Insiders)
 
 ## Tests
 
@@ -36,7 +37,8 @@
 #### Virtual environments
 
 **ALWAYS**:
-- Use the latest version of Anconda
+- Use the latest version of Anaconda
+- Realize that `conda` is slow
 - Create an environment with a space in their path somewhere
 - Make sure that you do not have `python.pythonPath` specified in your `settings.json` when testing automatic detection
 - Do note that the `Select Interpreter` drop-down window scrolls
@@ -46,7 +48,7 @@
   - [ ] [`Create Terminal`](https://code.visualstudio.com/docs/python/environments#_activating-an-environment-in-the-terminal) works
     - [ ] Steals focus
     - [ ] `"python.terminal.activateEnvironment": false` deactivates automatically running the activation script in the terminal
-- [ ] Detect multiple virtual environments in a directory specified by `"python.venvPath"`
+- [ ] Detect multiple virtual environments contained in the directory specified in `"python.venvPath"`
 - [ ] Detected all [conda environments created with an interpreter](https://code.visualstudio.com/docs/python/environments#_conda-environments)
   - [ ] Appropriate suffix label specified in status bar (e.g. `(condaenv)`)
   - [ ] Prompted to install Pylint
@@ -143,7 +145,7 @@ foo = 42  # Marked as a blacklisted name.
 Please also test for general accuracy on the most "interesting" code you can find.
 
 - [ ] `"python.autoComplete.extraPaths"` works
-- [ ] `"python.autoComplete.preloadModules"` works
+- [ ] `"python.autoComplete.preloadModules"` works (e.g. listing `numpy` should visibly speed up completing on the module's contents)
 - [ ] `"python.autocomplete.addBrackets": true` causes auto-completion of functions to append `()`
 
 #### [Formatting](https://code.visualstudio.com/docs/python/editing#_formatting)
@@ -155,8 +157,10 @@ def foo():pass
 
 - [ ] Prompted to install a formatter if none installed and `Format Document` is run
   - [ ] Installing `autopep8` works
+  - [ ] Installing `black` works
   - [ ] Installing `yapf` works
 - [ ] autopep8 works
+- [ ] black works
 - [ ] yapf works
 - [ ] `"editor.formatOnType": true` works and has expected results
 
@@ -172,7 +176,7 @@ def foo():pass
 
 **ALWAYS**:
 - Test the current debugger
-- Text the experimental debugger (and note whether it is _at least_ as fast as the old debugger)
+- Test the experimental debugger (and note whether it is _at least_ as fast as the old debugger)
 
 - [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work
   - [ ] `Current File`

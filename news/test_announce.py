@@ -1,5 +1,6 @@
 import pathlib
 
+import docopt
 import pytest
 
 import announce as ann
@@ -48,8 +49,7 @@ def test_sections_sorting(directory):
 
 def test_sections_naming(directory):
     (directory / 'Hello').mkdir()
-    with pytest.raises(ValueError):
-        list(ann.sections(directory))
+    assert not ann.sections(directory)
 
 
 def test_gather(directory):
@@ -77,8 +77,6 @@ def test_gather(directory):
     assert section.title == 'Fixes'
     assert entries[0].description == 'Fix 1'
     assert entries[1].description == 'Fix 2'
-
-
 
 
 def test_entry_markdown():
@@ -126,3 +124,14 @@ def test_cleanup(directory, monkeypatch):
     section, entries = results.pop()
     assert len(entries) == 1
     assert rm_path == entries[0].path
+
+
+def test_cli():
+    for option in ("--"+opt for opt in ["dry_run", "interim", "final"]):
+        args = docopt.docopt(ann.__doc__, [option])
+        assert args[option]
+    args = docopt.docopt(ann.__doc__, ["./news"])
+    assert args["<directory>"] == "./news"
+    args = docopt.docopt(ann.__doc__, ["--dry_run", "./news"])
+    assert args["--dry_run"]
+    assert args["<directory>"] == "./news"
