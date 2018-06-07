@@ -78,24 +78,24 @@ gulp.task('hygiene', () => run({ mode: 'all', skipFormatCheck: true, skipIndenta
 
 gulp.task('compile', () => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }));
 
-gulp.task('hygiene-modified', gulp.series(['compile'], () => run({ mode: 'changes' })));
-
-gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
-
-gulp.task('watch', gulp.series(['hygiene-modified', 'hygiene-watch']));
+gulp.task('watch', ['hygiene-modified', 'hygiene-watch']);
 
 // Duplicate to allow duplicate task in tasks.json (one ith problem matching, and one without)
-gulp.task('watchProblems', gulp.series(['hygiene-modified', 'hygiene-watch']));
+gulp.task('watchProblems', ['hygiene-modified', 'hygiene-watch']);
 
 gulp.task('debugger-coverage', () => buildDebugAdapterCoverage());
 
+gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
+
 gulp.task('hygiene-all', () => run({ mode: 'all' }));
+
+gulp.task('hygiene-modified', ['compile'], () => run({ mode: 'changes' }));
+
+gulp.task('clean', ['output:clean', 'cover:clean'], () => { });
 
 gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
 
 gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
-
-gulp.task('clean', gulp.series(['output:clean', 'cover:clean']), () => { });
 
 gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd*']));
 
