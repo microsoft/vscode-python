@@ -50,6 +50,14 @@ export enum InstallerResponse {
     Ignore
 }
 
+export enum ProductType {
+    Linter,
+    Formatter,
+    TestFramework,
+    RefactoringLibrary,
+    WorkspaceSymbols
+}
+
 export enum Product {
     pytest = 1,
     nosetest = 2,

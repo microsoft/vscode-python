@@ -1,44 +1,36 @@
+// tslint:disable:max-classes-per-file max-classes-per-file
+
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
-import * as path from 'path';
 import { OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
-import { IFormatterHelper } from '../../formatters/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager } from '../../linters/types';
-import { ITestsHelper } from '../../unittests/common/types';
 import { IApplicationShell, IWorkspaceService } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IPlatformService } from '../platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import { ITerminalServiceFactory } from '../terminal/types';
-import { IConfigurationService, IInstaller, ILogger, InstallerResponse, IOutputChannel, ModuleNamePurpose, Product } from '../types';
+import { IConfigurationService, IInstaller, ILogger, InstallerResponse, IOutputChannel, ModuleNamePurpose, Product, ProductType } from '../types';
 import { ProductNames } from './productNames';
-import { IInstallationChannelManager } from './types';
+import { IInstallationChannelManager, IProductPathService, IProductService } from './types';
 
 export { Product } from '../types';
 
 const CTagsInsllationScript = os.platform() === 'darwin' ? 'brew install ctags' : 'sudo apt-get install exuberant-ctags';
 
-enum ProductType {
-    Linter,
-    Formatter,
-    TestFramework,
-    RefactoringLibrary,
-    WorkspaceSymbols
-}
-
-// tslint:disable-next-line:max-classes-per-file
 export abstract class BaseInstaller {
     private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
-    protected appShell: IApplicationShell;
-    protected configService: IConfigurationService;
+    protected readonly appShell: IApplicationShell;
+    protected readonly configService: IConfigurationService;
     private readonly workspaceService: IWorkspaceService;
+    private readonly productService: IProductService;
 
     constructor(protected serviceContainer: IServiceContainer, protected outputChannel: OutputChannel) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.productService = serviceContainer.get<IProductService>(IProductService);
     }
 
     public promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse> {
@@ -82,16 +74,10 @@ export abstract class BaseInstaller {
         if (product === Product.unittest) {
             return true;
         }
-        let moduleName: string | undefined;
-        try {
-            moduleName = translateProductToModule(product, ModuleNamePurpose.run);
-            // tslint:disable-next-line:no-empty
-        } catch { }
-
-        // User may have customized the module name or provided the fully qualifieid path.
+        // User may have customized the module name or provided the fully qualified path.
         const executableName = this.getExecutableNameFromSettings(product, resource);
 
-        const isModule = typeof moduleName === 'string' && moduleName.length > 0 && path.basename(executableName) === executableName;
+        const isModule = this.isExecutableAModule(product, resource);
         if (isModule) {
             const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource });
             return pythonProcess.isModuleInstalled(executableName);
@@ -104,7 +90,14 @@ export abstract class BaseInstaller {
     }
     protected abstract promptToInstallImplementation(product: Product, resource?: Uri): Promise<InstallerResponse>;
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
-        throw new Error('getExecutableNameFromSettings is not supported on this object');
+        const productType = this.productService.getProductType(product);
+        const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService, productType);
+        return productPathService.getExecutableNameFromSettings(product, resource);
+    }
+    protected isExecutableAModule(product: Product, resource?: Uri): Boolean {
+        const productType = this.productService.getProductType(product);
+        const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService, productType);
+        return productPathService.isExecutableAModule(product, resource);
     }
 }
 
@@ -133,11 +126,6 @@ export class CTagsInstaller extends BaseInstaller {
         const item = await this.appShell.showErrorMessage('Install CTags to enable Python workspace symbols?', 'Yes', 'No');
         return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
-
-    protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
-        const settings = this.configService.getSettings(resource);
-        return settings.workspaceSymbols.ctagsPath;
-    }
 }
 
 export class FormatterInstaller extends BaseInstaller {
@@ -151,7 +139,16 @@ export class FormatterInstaller extends BaseInstaller {
         const useOptions = formatterNames.map((name) => `Use ${name}`);
         const yesChoice = 'Yes';
 
-        const item = await this.appShell.showErrorMessage(`Formatter ${productName} is not installed. Install?`, yesChoice, ...useOptions);
+        const options = [...useOptions];
+        let message = `Formatter ${productName} is not installed. Install?`;
+        if (this.isExecutableAModule(product, resource)) {
+            options.splice(0, 0, yesChoice);
+        } else {
+            const executable = this.getExecutableNameFromSettings(product, resource);
+            message = `Path to the ${productName} formatter is invalid (${executable})`;
+        }
+
+        const item = await this.appShell.showErrorMessage(message, yesChoice, ...useOptions);
         if (item === yesChoice) {
             return this.install(product, resource);
         } else if (typeof item === 'string') {
@@ -167,16 +164,8 @@ export class FormatterInstaller extends BaseInstaller {
 
         return InstallerResponse.Ignore;
     }
-
-    protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
-        const settings = this.configService.getSettings(resource);
-        const formatHelper = this.serviceContainer.get<IFormatterHelper>(IFormatterHelper);
-        const settingsPropNames = formatHelper.getSettingsPropertyNames(product);
-        return settings.formatting[settingsPropNames.pathName] as string;
-    }
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class LinterInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(product: Product, resource?: Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
@@ -184,8 +173,16 @@ export class LinterInstaller extends BaseInstaller {
         const disableAllLinting = 'Disable linting';
         const disableThisLinter = `Disable ${productName}`;
 
-        const response = await this.appShell
-            .showErrorMessage(`Linter ${productName} is not installed.`, install, disableThisLinter, disableAllLinting);
+        const options = [disableThisLinter, disableAllLinting];
+        let message = `Linter ${productName} is not installed.`;
+        if (this.isExecutableAModule(product, resource)) {
+            options.splice(0, 0, install);
+        } else {
+            const executable = this.getExecutableNameFromSettings(product, resource);
+            message = `Path to the ${productName} linter is invalid (${executable})`;
+        }
+
+        const response = await this.appShell.showErrorMessage(message, ...options);
         if (response === install) {
             return this.install(product, resource);
         }
@@ -199,66 +196,41 @@ export class LinterInstaller extends BaseInstaller {
         }
         return InstallerResponse.Ignore;
     }
-    protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
-        const linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
-        return linterManager.getLinterInfo(product).pathName(resource);
-    }
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class TestFrameworkInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(product: Product, resource?: Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
-        const item = await this.appShell.showErrorMessage(`Test framework ${productName} is not installed. Install?`, 'Yes', 'No');
-        return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
-    }
 
-    protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
-        const testHelper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
-        const settingsPropNames = testHelper.getSettingsPropertyNames(product);
-        if (!settingsPropNames.pathName) {
-            // E.g. in the case of UnitTests we don't allow customizing the paths.
-            return translateProductToModule(product, ModuleNamePurpose.run);
+        const options: string[] = [];
+        let message = `Test framework ${productName} is not installed. Install?`;
+        if (this.isExecutableAModule(product, resource)) {
+            options.push(...['Yes', 'No']);
+        } else {
+            const executable = this.getExecutableNameFromSettings(product, resource);
+            message = `Path to the ${productName} test framework is invalid (${executable})`;
         }
-        const settings = this.configService.getSettings(resource);
-        return settings.unitTest[settingsPropNames.pathName] as string;
+
+        const item = await this.appShell.showErrorMessage(message, ...options);
+        return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class RefactoringLibraryInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(product: Product, resource?: Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(`Refactoring library ${productName} is not installed. Install?`, 'Yes', 'No');
         return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
-    protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
-        return translateProductToModule(product, ModuleNamePurpose.run);
-    }
 }
 
-// tslint:disable-next-line:max-classes-per-file
 @injectable()
 export class ProductInstaller implements IInstaller {
-    private ProductTypes = new Map<Product, ProductType>();
+    private readonly productService: IProductService;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private outputChannel: OutputChannel) {
-        this.ProductTypes.set(Product.flake8, ProductType.Linter);
-        this.ProductTypes.set(Product.mypy, ProductType.Linter);
-        this.ProductTypes.set(Product.pep8, ProductType.Linter);
-        this.ProductTypes.set(Product.prospector, ProductType.Linter);
-        this.ProductTypes.set(Product.pydocstyle, ProductType.Linter);
-        this.ProductTypes.set(Product.pylama, ProductType.Linter);
-        this.ProductTypes.set(Product.pylint, ProductType.Linter);
-        this.ProductTypes.set(Product.ctags, ProductType.WorkspaceSymbols);
-        this.ProductTypes.set(Product.nosetest, ProductType.TestFramework);
-        this.ProductTypes.set(Product.pytest, ProductType.TestFramework);
-        this.ProductTypes.set(Product.unittest, ProductType.TestFramework);
-        this.ProductTypes.set(Product.autopep8, ProductType.Formatter);
-        this.ProductTypes.set(Product.black, ProductType.Formatter);
-        this.ProductTypes.set(Product.yapf, ProductType.Formatter);
-        this.ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
+        this.productService = serviceContainer.get<IProductService>(IProductService);
     }
 
     // tslint:disable-next-line:no-empty
@@ -275,9 +247,8 @@ export class ProductInstaller implements IInstaller {
     public translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string {
         return translateProductToModule(product, purpose);
     }
-
     private createInstaller(product: Product): BaseInstaller {
-        const productType = this.ProductTypes.get(product)!;
+        const productType = this.productService.getProductType(product);
         switch (productType) {
             case ProductType.Formatter:
                 return new FormatterInstaller(this.serviceContainer, this.outputChannel);

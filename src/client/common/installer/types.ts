@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { Product } from '../types';
+import { Product, ProductType } from '../types';
 
 export const IModuleInstaller = Symbol('IModuleInstaller');
 export interface IModuleInstaller {
@@ -22,4 +22,13 @@ export interface IInstallationChannelManager {
     getInstallationChannel(product: Product, resource?: Uri): Promise<IModuleInstaller | undefined>;
     getInstallationChannels(resource?: Uri): Promise<IModuleInstaller[]>;
     showNoInstallersMessage(): void;
+}
+export const IProductService = Symbol('IProductService');
+export interface IProductService {
+    getProductType(product: Product): ProductType;
+}
+export const IProductPathService = Symbol('IProductPathService');
+export interface IProductPathService {
+    getExecutableNameFromSettings(product: Product, resource?: Uri): string;
+    isExecutableAModule(product: Product, resource?: Uri): Boolean;
 }
