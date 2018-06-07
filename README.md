@@ -40,6 +40,7 @@ contributors (if you would like to contribute a translation, see the
 [pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)):
 
 * `en`
+* `es`
 * `it`
 * `ja`
 * `ko-kr`
