@@ -23,7 +23,7 @@ const testFilesSuffix = process.env.TEST_FILES_SUFFIX;
 // Hack, as retries is not supported as setting in tsd.
 const options: testRunner.SetupOptions & { retries: number } = {
     ui: 'tdd',
-    useColors: false,
+    useColors: true,
     timeout: 25000,
     retries: 3,
     grep,
