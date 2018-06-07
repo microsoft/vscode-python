@@ -176,7 +176,7 @@ def foo():pass
 
 **ALWAYS**:
 - Test the current debugger
-- Text the experimental debugger (and note whether it is _at least_ as fast as the old debugger)
+- Test the experimental debugger (and note whether it is _at least_ as fast as the old debugger)
 
 - [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work
   - [ ] `Current File`
