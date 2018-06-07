@@ -49,7 +49,14 @@ let mocha = new Mocha(<any>{
     useColors: true
 });
 
-export type SetupOptions = MochaSetupOptions & { testFilesSuffix?: string };
+export type SetupOptions = MochaSetupOptions & {
+    testFilesSuffix?: string;
+    reporter?: string;
+    reporterOptions?: {
+        output?: string;
+    };
+};
+
 let testFilesGlob = 'test';
 let coverageOptions: { coverageConfig: string } | undefined;
 

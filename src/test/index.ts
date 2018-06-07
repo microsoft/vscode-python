@@ -22,11 +22,18 @@ const testFilesSuffix = process.env.TEST_FILES_SUFFIX;
 // Hack, as retries is not supported as setting in tsd.
 const options: testRunner.SetupOptions & { retries: number } = {
     ui: 'tdd',
-    useColors: !IS_VSTS,
+    useColors: false,
     timeout: 25000,
     retries: 3,
     grep,
     testFilesSuffix
 };
+
+if (IS_VSTS) {
+    options.useColors = false;
+    options.reporter = 'xunit';
+    options.reporterOptions = { output: './junit-out.xml' };
+}
+
 testRunner.configure(options, { coverageConfig: '../coverconfig.json' });
 module.exports = testRunner;
