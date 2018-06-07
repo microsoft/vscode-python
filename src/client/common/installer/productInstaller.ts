@@ -148,7 +148,7 @@ export class FormatterInstaller extends BaseInstaller {
             message = `Path to the ${productName} formatter is invalid (${executable})`;
         }
 
-        const item = await this.appShell.showErrorMessage(message, yesChoice, ...useOptions);
+        const item = await this.appShell.showErrorMessage(message, ...useOptions);
         if (item === yesChoice) {
             return this.install(product, resource);
         } else if (typeof item === 'string') {

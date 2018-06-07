@@ -51,11 +51,11 @@ export enum InstallerResponse {
 }
 
 export enum ProductType {
-    Linter,
-    Formatter,
-    TestFramework,
-    RefactoringLibrary,
-    WorkspaceSymbols
+    Linter = 'Linter',
+    Formatter = 'Formatter',
+    TestFramework = 'TestFramework',
+    RefactoringLibrary = 'RefactoringLibrary',
+    WorkspaceSymbols = 'WorkspaceSymbols'
 }
 
 export enum Product {
