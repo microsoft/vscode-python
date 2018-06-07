@@ -30,9 +30,26 @@ const options: testRunner.SetupOptions & { retries: number } = {
 };
 
 if (IS_VSTS) {
+    // if the environment variable VSTS_MOCHA_FILE exists
+    // use this as the output file instead.
+    let junitReportFile: string = './junit-out.xml';
+    if (process.env.VSTS_MOCHA_FILE) {
+        junitReportFile = process.env.VSTS_MOCHA_FILE;
+    }
+
+    // specify extra properties into the JUnit log file if
+    // the environment variable for VSTS_MOCHA_PROPS exists
+    let junitProps: string = '';
+    if (process.env.VSTS_MOCHA_PROPS) {
+        junitProps = process.env.VSTS_MOCHA_PROPS;
+    }
+
     options.useColors = false;
-    options.reporter = 'xunit';
-    options.reporterOptions = { output: './junit-out.xml' };
+    options.reporter = 'mocha-junit-reporter';
+    options.reporterOptions = {
+        mochaFile: junitReportFile,
+        properties: junitProps
+    };
 }
 
 testRunner.configure(options, { coverageConfig: '../coverconfig.json' });

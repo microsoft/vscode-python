@@ -53,7 +53,8 @@ export type SetupOptions = MochaSetupOptions & {
     testFilesSuffix?: string;
     reporter?: string;
     reporterOptions?: {
-        output?: string;
+        mochaFile?: string;
+        properties?: string;
     };
 };
 
