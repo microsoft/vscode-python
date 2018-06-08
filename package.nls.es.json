@@ -9,7 +9,7 @@
     "python.command.python.setInterpreter.title": "Seleccionar intérprete",
     "python.command.python.updateSparkLibrary.title": "Actualizar las librerías PySpark del area de trabajo",
     "python.command.python.refactorExtractVariable.title": "Extraer variable",
-    "python.command.python.refactorExtractMethod.title": "Método de extracción",
+    "python.command.python.refactorExtractMethod.title": "Extraer método",
     "python.command.python.viewTestOutput.title": "Mostrar resultados de la prueba unitaria",
     "python.command.python.selectAndRunTestMethod.title": "Método de ejecución de pruebas unitarias ...",
     "python.command.python.selectAndDebugTestMethod.title": "Método de depuración de pruebas unitarias ...",
