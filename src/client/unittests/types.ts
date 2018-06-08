@@ -95,3 +95,9 @@ export const ITestManagerRunner = Symbol('ITestManagerRunner');
 export interface ITestManagerRunner {
     runTest(testResultsService: ITestResultsService, options: TestRunOptions, testManager: ITestManager): Promise<Tests>;
 }
+
+export const IUnitTestHelper = Symbol('IUnitTestHelper');
+export interface IUnitTestHelper {
+    getStartDirectory(args: string[]): string;
+    getIdsOfTestsToRun(tests: Tests, testsToRun: TestsToRun): string[];
+}

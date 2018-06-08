@@ -19,7 +19,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
         this.runner = this.serviceContainer.get<ITestRunner>(ITestRunner);
     }
     public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
-        // Remove unwanted arguments
+        // Remove unwanted arguments.
         const args = this.argsService.filterArguments(options.args, TestFilter.discovery);
 
         const token = options.token ? options.token : new CancellationTokenSource().token;

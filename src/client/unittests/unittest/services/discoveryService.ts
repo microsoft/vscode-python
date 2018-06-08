@@ -5,7 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import { Options, run } from '../../common/runner';
-import { ITestDiscoveryService, ITestsParser, TestDiscoveryOptions, Tests } from '../../common/types';
+import { ITestDiscoveryService, ITestRunner, ITestsParser, TestDiscoveryOptions, Tests } from '../../common/types';
 import { IArgumentsHelper } from '../../types';
 
 type UnitTestDiscoveryOptions = TestDiscoveryOptions & {
@@ -16,9 +16,11 @@ type UnitTestDiscoveryOptions = TestDiscoveryOptions & {
 @injectable()
 export class TestDiscoveryService implements ITestDiscoveryService {
     private readonly argsHelper: IArgumentsHelper;
+    private readonly runner: ITestRunner;
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(ITestsParser) @named(UNITTEST_PROVIDER) private testParser: ITestsParser) {
         this.argsHelper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
+        this.runner = serviceContainer.get<ITestRunner>(ITestRunner);
     }
     public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
         const pythonScript = this.getDiscoveryScript(options);
@@ -31,7 +33,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
             outChannel: options.outChannel
         };
 
-        const data = await run(this.serviceContainer, UNITTEST_PROVIDER, runOptions);
+        const data = await this.runner.run(UNITTEST_PROVIDER, runOptions);
 
         if (options.token && options.token.isCancellationRequested) {
             return Promise.reject<Tests>('cancelled');
@@ -55,11 +57,11 @@ for suite in suites._tests:
             pass`;
     }
     public translateOptions(options: TestDiscoveryOptions): UnitTestDiscoveryOptions {
-        // tslint:disable-next-line:no-object-literal-type-assertion
-        const unitTestOptions = { ...options } as UnitTestDiscoveryOptions;
-        unitTestOptions.startDirectory = this.getStartDirectory(options);
-        unitTestOptions.pattern = this.getTestPattern(options);
-        return unitTestOptions;
+        return {
+            ...options,
+            startDirectory: this.getStartDirectory(options),
+            pattern: this.getTestPattern(options)
+        };
     }
     private getStartDirectory(options: TestDiscoveryOptions) {
         const shortValue = this.argsHelper.getOptionValues(options.args, '-s');

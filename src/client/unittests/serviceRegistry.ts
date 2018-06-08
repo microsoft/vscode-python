@@ -36,7 +36,8 @@ import { TestManagerRunner as PytestManagerRunner } from './pytest/runner';
 import { ArgumentsService as PyTestArgumentsService } from './pytest/services/argsService';
 import { TestDiscoveryService as PytestTestDiscoveryService } from './pytest/services/discoveryService';
 import { TestsParser as PytestTestsParser } from './pytest/services/parserService';
-import { IArgumentsHelper, IArgumentsService, ITestConfigurationManagerFactory, ITestDisplay, ITestManagerRunner, ITestResultDisplay, IUnitTestConfigurationService, IUnitTestManagementService } from './types';
+import { IArgumentsHelper, IArgumentsService, ITestConfigurationManagerFactory, ITestDisplay, ITestManagerRunner, ITestResultDisplay, IUnitTestConfigurationService, IUnitTestHelper, IUnitTestManagementService } from './types';
+import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
 import { TestManagerRunner as UnitTestTestManagerRunner } from './unittest/runner';
 import { ArgumentsService as UnitTestArgumentsService } from './unittest/services/argsService';
@@ -69,6 +70,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
     serviceManager.addSingleton<ITestRunner>(ITestRunner, TestRunner);
     serviceManager.addSingleton<IXUnitParser>(IXUnitParser, XUnitParser);
+    serviceManager.add<IUnitTestHelper>(IUnitTestHelper, UnitTestHelper);
 
     serviceManager.addSingleton<IArgumentsService>(IArgumentsService, PyTestArgumentsService, PYTEST_PROVIDER);
     serviceManager.addSingleton<IArgumentsService>(IArgumentsService, NoseTestArgumentsService, NOSETEST_PROVIDER);

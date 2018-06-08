@@ -8,7 +8,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { UNITTEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
 import { ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner, IUnitTestSocketServer, LaunchOptions, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
-import { IArgumentsHelper, ITestManagerRunner } from '../types';
+import { IArgumentsHelper, ITestManagerRunner, IUnitTestHelper } from '../types';
 
 type TestStatusMap = {
     status: TestStatus;
@@ -31,6 +31,7 @@ interface ITestData {
 @injectable()
 export class TestManagerRunner implements ITestManagerRunner {
     private readonly argsHelper: IArgumentsHelper;
+    private readonly helper: IUnitTestHelper;
     private readonly testRunner: ITestRunner;
     private readonly server: IUnitTestSocketServer;
     private readonly logger: ILogger;
@@ -39,6 +40,7 @@ export class TestManagerRunner implements ITestManagerRunner {
         this.testRunner = serviceContainer.get<ITestRunner>(ITestRunner);
         this.server = this.serviceContainer.get<IUnitTestSocketServer>(IUnitTestSocketServer);
         this.logger = this.serviceContainer.get<ILogger>(ILogger);
+        this.helper = this.serviceContainer.get<IUnitTestHelper>(IUnitTestHelper);
     }
     public async  runTest(testResultsService: ITestResultsService, options: TestRunOptions, testManager: ITestManager): Promise<Tests> {
         options.tests.summary.errors = 0;
@@ -72,7 +74,7 @@ export class TestManagerRunner implements ITestManagerRunner {
         });
 
         const port = await this.server.start();
-        const testPaths: string[] = getIdsOfTestsToRun(options.tests, options.testsToRun!);
+        const testPaths: string[] = this.helper.getIdsOfTestsToRun(options.tests, options.testsToRun!);
         for (let counter = 0; counter < testPaths.length; counter += 1) {
             testPaths[counter] = `-t${testPaths[counter].trim()}`;
         }
@@ -137,19 +139,8 @@ export class TestManagerRunner implements ITestManagerRunner {
         testResultsService.updateResults(options.tests);
         return options.tests;
     }
-    private getStartDirectory(args: string[]): string {
-        const shortValue = this.argsHelper.getOptionValues(args, '-s');
-        if (typeof shortValue === 'string') {
-            return shortValue;
-        }
-        const longValue = this.argsHelper.getOptionValues(args, '--start-directory');
-        if (typeof longValue === 'string') {
-            return longValue;
-        }
-        return '.';
-    }
     private buildTestArgs(args: string[]): string[] {
-        const startTestDiscoveryDirectory = this.getStartDirectory(args);
+        const startTestDiscoveryDirectory = this.helper.getStartDirectory(args);
         let pattern = 'test*.py';
         const shortValue = this.argsHelper.getOptionValues(args, '-p');
         const longValueValue = this.argsHelper.getOptionValues(args, '-pattern');
@@ -166,28 +157,4 @@ export class TestManagerRunner implements ITestManagerRunner {
         }
         return testArgs;
     }
-}
-
-function getIdsOfTestsToRun(tests: Tests, testsToRun: TestsToRun): string[] {
-    const testIds: string[] = [];
-    if (testsToRun && testsToRun.testFolder) {
-        // Get test ids of files in these folders.
-        testsToRun.testFolder.map(folder => {
-            tests.testFiles.forEach(f => {
-                if (f.fullPath.startsWith(folder.name)) {
-                    testIds.push(f.nameToRun);
-                }
-            });
-        });
-    }
-    if (testsToRun && testsToRun.testFile) {
-        testIds.push(...testsToRun.testFile.map(f => f.nameToRun));
-    }
-    if (testsToRun && testsToRun.testSuite) {
-        testIds.push(...testsToRun.testSuite.map(f => f.nameToRun));
-    }
-    if (testsToRun && testsToRun.testFunction) {
-        testIds.push(...testsToRun.testFunction.map(f => f.nameToRun));
-    }
-    return testIds;
 }

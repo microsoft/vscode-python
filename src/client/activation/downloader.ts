@@ -7,7 +7,7 @@ import * as request from 'request';
 import * as requestProgress from 'request-progress';
 import { OutputChannel, ProgressLocation, window } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { createDeferred, createTemporaryFile } from '../common/helpers';
+import { createDeferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -58,14 +58,14 @@ export class AnalysisEngineDownloader {
     private async downloadFile(location: string, fileName: string, title: string): Promise<string> {
         const uri = `${location}/${fileName}`;
         this.output.append(`Downloading ${uri}... `);
-        const tempFile = await createTemporaryFile(downloadFileExtension);
+        const tempFile = await this.fs.createTemporaryFile(downloadFileExtension);
 
         const deferred = createDeferred();
         const fileStream = fileSystem.createWriteStream(tempFile.filePath);
         fileStream.on('finish', () => {
             fileStream.close();
         }).on('error', (err) => {
-            tempFile.cleanupCallback();
+            tempFile.dispose();
             deferred.reject(err);
         });
 

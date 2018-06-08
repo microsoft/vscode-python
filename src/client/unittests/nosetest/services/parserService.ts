@@ -13,7 +13,7 @@ const NOSE_WANT_FILE_SUFFIX_WITHOUT_EXT = '? True';
 
 @injectable()
 export class TestsParser implements ITestsParser {
-    constructor( @inject(ITestsHelper) private testsHelper: ITestsHelper) { }
+    constructor(@inject(ITestsHelper) private testsHelper: ITestsHelper) { }
     public parse(content: string, options: ParserOptions): Tests {
         let testFiles = this.getTestFiles(content, options);
         // Exclude tests that don't have any functions or test suites.
@@ -121,9 +121,10 @@ export class TestsParser implements ITestsParser {
                     time: 0, functionsFailed: 0, functionsPassed: 0
                 };
 
-                // tslint:disable-next-line:no-non-null-assertion
-                const cls = testFile.suites.find(suite => suite.name === clsName)!;
-                cls.functions.push(fn);
+                const cls = testFile.suites.find(suite => suite.name === clsName);
+                if (cls) {
+                    cls.functions.push(fn);
+                }
                 return;
             }
             if (line.startsWith('nose.selector: DEBUG: wantFunction <function ')) {

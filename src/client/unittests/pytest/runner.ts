@@ -1,7 +1,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { noop } from '../../common/core.utils';
-import { createTemporaryFile } from '../../common/helpers';
+import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
 import { PYTEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
@@ -15,11 +15,13 @@ export class TestManagerRunner implements ITestManagerRunner {
     private readonly argsHelper: IArgumentsHelper;
     private readonly testRunner: ITestRunner;
     private readonly xUnitParser: IXUnitParser;
+    private readonly fs: IFileSystem;
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.argsService = serviceContainer.get<IArgumentsService>(IArgumentsService, PYTEST_PROVIDER);
         this.argsHelper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
         this.testRunner = serviceContainer.get<ITestRunner>(ITestRunner);
         this.xUnitParser = this.serviceContainer.get<IXUnitParser>(IXUnitParser);
+        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
     public async runTest(testResultsService: ITestResultsService, options: TestRunOptions, _: ITestManager): Promise<Tests> {
         let testPaths: string[] = [];
@@ -36,12 +38,12 @@ export class TestManagerRunner implements ITestManagerRunner {
             testPaths = testPaths.concat(options.testsToRun.testFunction.map(f => f.nameToRun));
         }
 
-        let xmlLogFileCleanup: Function = noop;
+        let deleteJUnitXmlFile: Function = noop;
         const args = options.args;
         try {
             const xmlLogResult = await this.getJUnitXmlFile(args);
             const xmlLogFile = xmlLogResult.filePath;
-            xmlLogFileCleanup = xmlLogResult.cleanupCallback;
+            deleteJUnitXmlFile = xmlLogResult.dispose;
             // Remove the '--junixml' if it exists, and add it with our path.
             const testArgs = this.argsService.filterArguments(args, [JunitXmlArg]);
             testArgs.splice(0, 0, `${JunitXmlArg}=${xmlLogFile}`);
@@ -65,12 +67,11 @@ export class TestManagerRunner implements ITestManagerRunner {
                 await this.testRunner.run(PYTEST_PROVIDER, runOptions);
             }
 
-            const result = options.debug ? options.tests : await this.updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
-            xmlLogFileCleanup();
-            return result;
+            return options.debug ? options.tests : await this.updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
         } catch (ex) {
-            xmlLogFileCleanup();
             return Promise.reject<Tests>(ex);
+        } finally {
+            deleteJUnitXmlFile();
         }
     }
 
@@ -80,12 +81,12 @@ export class TestManagerRunner implements ITestManagerRunner {
         return tests;
     }
 
-    private async getJUnitXmlFile(args: string[]): Promise<{ filePath: string; cleanupCallback: Function }> {
+    private async getJUnitXmlFile(args: string[]): Promise<TemporaryFile> {
         const xmlFile = this.argsHelper.getOptionValues(args, JunitXmlArg);
         if (typeof xmlFile === 'string') {
-            return { filePath: xmlFile, cleanupCallback: noop };
+            return { filePath: xmlFile, dispose: noop };
         }
-        return createTemporaryFile('.xml');
+        return this.fs.createTemporaryFile('.xml');
     }
 
 }
