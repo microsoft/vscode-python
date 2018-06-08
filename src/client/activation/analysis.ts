@@ -5,8 +5,9 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ExtensionContext, OutputChannel } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
-import { IApplicationShell } from '../common/application/types';
+import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IExtensionContext, IOutputChannel } from '../common/types';
@@ -28,6 +29,7 @@ const PYTHON = 'python';
 const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 const analysisEngineFolder = 'analysis';
+const loadExtensionCommand = 'python._loadLanguageServerExtension';
 
 @injectable()
 export class AnalysisExtensionActivator implements IExtensionActivator {
@@ -38,7 +40,9 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly sw = new StopWatch();
     private readonly platformData: PlatformData;
     private readonly interpreterService: IInterpreterService;
+    private readonly startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
+
     private languageClient: LanguageClient | undefined;
     private readonly context: ExtensionContext;
     private interpreterHash: string = '';
@@ -51,6 +55,17 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         this.fs = this.services.get<IFileSystem>(IFileSystem);
         this.platformData = new PlatformData(services.get<IPlatformService>(IPlatformService), this.fs);
         this.interpreterService = this.services.get<IInterpreterService>(IInterpreterService);
+
+        this.startupCompleted = createDeferred<void>();
+        const commandManager = this.services.get<ICommandManager>(ICommandManager);
+        this.disposables.push(commandManager.registerCommand(loadExtensionCommand,
+            async (args) => {
+                if (this.languageClient) {
+                    await this.startupCompleted.promise;
+                    this.languageClient.sendRequest('python/loadExtension', args);
+                }
+            }
+        ));
     }
 
     public async activate(): Promise<boolean> {
@@ -119,9 +134,15 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     }
 
     private async startLanguageClient(context: ExtensionContext): Promise<void> {
+        this.languageClient!.onReady()
+            .then(() => {
+                this.startupCompleted.resolve();
+            })
+            .catch(error => this.startupCompleted.reject(error));
+
         context.subscriptions.push(this.languageClient!.start());
         if (isTestExecution()) {
-            await this.languageClient!.onReady();
+            await this.startupCompleted.promise;
         }
     }
 
