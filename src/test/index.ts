@@ -46,5 +46,17 @@ if (MOCHA_REPORTER_JUNIT) {
     };
 }
 
+process.on('unhandledRejection', (ex: string | Error, a) => {
+    const message = [`${ex}`];
+    if (typeof ex !== 'string' && ex && ex.message) {
+        message.push(ex.name);
+        message.push(ex.message);
+        if (ex.stack) {
+            message.push(ex.stack);
+        }
+    }
+    console.error(`Unhandled Promise Rejection with the message ${message.join(', ')}`);
+});
+
 testRunner.configure(options, { coverageConfig: '../coverconfig.json' });
 module.exports = testRunner;
