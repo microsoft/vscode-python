@@ -11,7 +11,7 @@ export const IS_CI_SERVER = IS_TRAVIS || IS_APPVEYOR || IS_VSTS;
 
 // allow the CI server to specify JUnit output...
 let reportJunit: boolean = false;
-if (IS_CI_SERVER && process.env.MOCHA_REPORTER_JUNIT !== undefined) {
+if (process.env.MOCHA_REPORTER_JUNIT !== undefined) {
     reportJunit = process.env.MOCHA_REPORTER_JUNIT.toLowerCase() === 'true';
 }
 export const MOCHA_REPORTER_JUNIT: boolean = reportJunit;
@@ -19,6 +19,8 @@ export const MOCHA_CI_REPORTFILE: string = MOCHA_REPORTER_JUNIT && process.env.M
                                             process.env.MOCHA_CI_REPORTFILE : './junit-out.xml';
 export const MOCHA_CI_PROPERTIES: string = MOCHA_REPORTER_JUNIT && process.env.MOCHA_CI_PROPERTIES !== undefined ?
                                             process.env.MOCHA_CI_PROPERTIES : '';
+export const MOCHA_CI_GREP: string = process.env.MOCHA_CI_GREP !== undefined ?
+                                            process.env.MOCHA_CI_GREP : '';
 
 export const TEST_TIMEOUT = 25000;
 export const IS_MULTI_ROOT_TEST = isMultitrootTest();
