@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { IConfigurationService } from '../../client/common/types';
 import { rootWorkspaceUri } from '../common';
-import { closeActiveWindows, initialize, initializeTest, IS_ANALYSIS_ENGINE_TEST } from '../initialize';
+import { closeActiveWindows, initialize, initializeTest, IsAnalysisEngineTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
@@ -104,7 +104,7 @@ suite('Autocomplete', function () {
     // https://github.com/DonJayamanne/pythonVSCode/issues/630
     test('For "abc.decorators"', async () => {
         // Disabled for MS Python Code Analysis, see https://github.com/Microsoft/PTVS/issues/3857
-        if (IS_ANALYSIS_ENGINE_TEST) {
+        if (IsAnalysisEngineTest()) {
             return;
         }
         const textDocument = await vscode.workspace.openTextDocument(fileDecorator);
@@ -205,7 +205,7 @@ suite('Autocomplete', function () {
     test('Suppress in strings/comments', async () => {
         // Excluded from MS Python Code Analysis b/c skipping of strings and comments
         // is not yet there. See https://github.com/Microsoft/PTVS/issues/3798
-        if (IS_ANALYSIS_ENGINE_TEST) {
+        if (IsAnalysisEngineTest()) {
             return;
         }
         const positions = [

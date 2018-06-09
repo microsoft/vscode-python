@@ -3,7 +3,7 @@ import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { IS_ANALYSIS_ENGINE_TEST } from '../constants';
+import { IsAnalysisEngineTest } from '../constants';
 import { closeActiveWindows, initialize } from '../initialize';
 import { normalizeMarkedString } from '../textUtils';
 
@@ -12,7 +12,7 @@ const fileOne = path.join(autoCompPath, 'one.py');
 
 suite('Code, Hover Definition and Intellisense (Jedi)', () => {
     suiteSetup(async function () {
-        if (IS_ANALYSIS_ENGINE_TEST) {
+        if (IsAnalysisEngineTest()) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }

@@ -7,6 +7,8 @@ import { IS_MULTI_ROOT_TEST } from './initialize';
 
 export * from './core';
 
+// tslint:disable:no-non-null-assertion no-unsafe-any await-promise no-any no-use-before-declare no-string-based-set-timeout no-unsafe-any no-any no-invalid-this
+
 const fileInNonRootWorkspace = path.join(__dirname, '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
 export const rootWorkspaceUri = getWorkspaceRoot();
 
@@ -31,7 +33,6 @@ export async function updateSetting(setting: PythonSettingKeys, value: {} | unde
         PythonSettings.dispose();
         return;
     }
-    // tslint:disable-next-line:await-promise
     await settings.update(setting, value, configTarget);
     await sleep(2000);
     PythonSettings.dispose();
@@ -48,25 +49,19 @@ function getWorkspaceRoot() {
     return workspaceFolder ? workspaceFolder.uri : workspace.workspaceFolders[0].uri;
 }
 
-// tslint:disable-next-line:no-any
 export function retryAsync(wrapped: Function, retryCount: number = 2) {
-    // tslint:disable-next-line:no-any
     return async (...args: any[]) => {
         return new Promise((resolve, reject) => {
-            // tslint:disable-next-line:no-any
             const reasons: any[] = [];
 
             const makeCall = () => {
-                // tslint:disable-next-line:no-unsafe-any no-any no-invalid-this
                 wrapped.call(this as Function, ...args)
-                    // tslint:disable-next-line:no-unsafe-any no-any
                     .then(resolve, (reason: any) => {
                         reasons.push(reason);
                         if (reasons.length >= retryCount) {
                             reject(reasons);
                         } else {
                             // If failed once, lets wait for some time before trying again.
-                            // tslint:disable-next-line:no-string-based-set-timeout
                             setTimeout(makeCall, 500);
                         }
                     });
@@ -91,11 +86,8 @@ async function setPythonPathInWorkspace(resource: string | Uri | undefined, conf
     }
 }
 async function restoreGlobalPythonPathSetting(): Promise<void> {
-    // tslint:disable-next-line:no-any
     const pythonConfig = workspace.getConfiguration('python', null as any as Uri);
-    // tslint:disable-next-line:no-non-null-assertion
     const currentGlobalPythonPathSetting = pythonConfig.inspect('pythonPath')!.globalValue;
-    // tslint:disable-next-line:no-use-before-declare
     if (globalPythonPathSetting !== currentGlobalPythonPathSetting) {
         await pythonConfig.update('pythonPath', undefined, true);
     }
@@ -115,16 +107,14 @@ export async function deleteFile(file: string) {
     }
 }
 
-// tslint:disable-next-line:no-non-null-assertion
-const globalPythonPathSetting = workspace.getConfiguration('python').inspect('pythonPath')!.globalValue;
+// In some tests we will be mocking VS Code API (mocked classes)
+const globalPythonPathSetting = workspace.getConfiguration('python') ? workspace.getConfiguration('python').inspect('pythonPath')!.globalValue : 'python';
 export const clearPythonPathInWorkspaceFolder = async (resource: string | Uri) => retryAsync(setPythonPathInWorkspace)(resource, ConfigurationTarget.WorkspaceFolder);
 export const setPythonPathInWorkspaceRoot = async (pythonPath: string) => retryAsync(setPythonPathInWorkspace)(undefined, ConfigurationTarget.Workspace, pythonPath);
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
 function getPythonPath(): string {
-    // tslint:disable-next-line:no-unsafe-any
     if (process.env.TRAVIS_PYTHON_PATH && fs.existsSync(process.env.TRAVIS_PYTHON_PATH)) {
-        // tslint:disable-next-line:no-unsafe-any
         return process.env.TRAVIS_PYTHON_PATH;
     }
     return 'python';
