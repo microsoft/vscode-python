@@ -1,12 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { expect } from 'chai';
+import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
+// tslint:disable-next-line:no-require-imports no-var-requires
+const assertArrays = require('chai-arrays');
+use(assertArrays);
 
 // tslint:disable-next-line:max-func-body-length
 suite('FileSystem', () => {

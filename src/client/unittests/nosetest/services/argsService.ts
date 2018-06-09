@@ -16,15 +16,15 @@ const OptionsWithArguments = ['--attr', '--config', '--cover-html-dir', '--cover
     '--where', '--xunit-file', '--xunit-testsuite-name',
     '-A', '-a', '-c', '-e', '-i', '-I', '-l', '-m', '-w'];
 
-const OptionsWithoutArguments = ['-h,', '--help', '-V,', '--version', '-p,', '--plugins',
-    '-v,', '--verbose', '-v', '--quiet', '-x,', '--stop', '-P,', '--no-path-adjustment',
-    '--exe', '--noexe', '--traverse-namespace', '--first-package-wins,', '--first-pkg-wins,',
-    '--1st-pkg-wins', '--no-byte-compile', '-s,', '--nocapture', '--nologcapture',
+const OptionsWithoutArguments = ['-h', '--help', '-V', '--version', '-p', '--plugins',
+    '-v', '--verbose', '--quiet', '-x', '--stop', '-P', '--no-path-adjustment',
+    '--exe', '--noexe', '--traverse-namespace', '--first-package-wins', '--first-pkg-wins',
+    '--1st-pkg-wins', '--no-byte-compile', '-s', '--nocapture', '--nologcapture',
     '--logging-clear-handlers', '--with-coverage', '--cover-erase', '--cover-tests',
     '--cover-inclusive', '--cover-html', '--cover-branches', '--cover-xml', '--pdb',
     '--pdb-failures', '--pdb-errors', '--no-deprecated', '--with-doctest', '--doctest-tests',
-    '--with-isolation', '-d,', '--detailed-errors,', '--failure-detail', '--no-skip',
-    '--with-id', '--failed', '--failed', '--process-restartworker', '--with-xunit',
+    '--with-isolation', '-d', '--detailed-errors', '--failure-detail', '--no-skip',
+    '--with-id', '--failed', '--process-restartworker', '--with-xunit',
     '--all-modules', '--collect-only'];
 
 @injectable()
@@ -32,6 +32,12 @@ export class ArgumentsService implements IArgumentsService {
     private readonly helper: IArgumentsHelper;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.helper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
+    }
+    public getKnownOptions(): { withArgs: string[]; withoutArgs: string[] } {
+        return {
+            withArgs: OptionsWithArguments,
+            withoutArgs: OptionsWithoutArguments
+        };
     }
     public getOptionValue(args: string[], option: string): string | string[] | undefined {
         return this.helper.getOptionValues(args, option);

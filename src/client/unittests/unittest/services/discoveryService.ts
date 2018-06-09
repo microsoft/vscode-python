@@ -4,7 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
-import { Options, run } from '../../common/runner';
+import { Options } from '../../common/runner';
 import { ITestDiscoveryService, ITestRunner, ITestsParser, TestDiscoveryOptions, Tests } from '../../common/types';
 import { IArgumentsHelper } from '../../types';
 
@@ -17,7 +17,7 @@ type UnitTestDiscoveryOptions = TestDiscoveryOptions & {
 export class TestDiscoveryService implements ITestDiscoveryService {
     private readonly argsHelper: IArgumentsHelper;
     private readonly runner: ITestRunner;
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(ITestsParser) @named(UNITTEST_PROVIDER) private testParser: ITestsParser) {
         this.argsHelper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
         this.runner = serviceContainer.get<ITestRunner>(ITestRunner);

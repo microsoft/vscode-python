@@ -44,15 +44,26 @@ export class ArgumentsHelper implements IArgumentsHelper {
         }
     }
     public getPositionalArguments(args: string[], optionsWithArguments: string[] = [], optionsWithoutArguments: string[] = []): string[] {
-        const filteredArgs = this.filterArguments(args, optionsWithArguments, optionsWithoutArguments);
-        return filteredArgs.filter(arg => {
-            // If we still have some args, then log them, and exlude them.
-            if (arg.startsWith('-') || arg.indexOf('=') >= 0) {
-                this.logger.logWarning(`Unknown command line option passed into PyTest '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`);
-                return false;
+        let lastIndexOfOption = -1;
+        args.forEach((arg, index) => {
+            if (optionsWithoutArguments.indexOf(arg) !== -1) {
+                lastIndexOfOption = index;
+                return;
+            } else if (optionsWithArguments.indexOf(arg) !== -1) {
+                // Cuz the next item is the value.
+                lastIndexOfOption = index + 1;
+            } else if (arg.startsWith('-')) {
+                // Ok this is an unknown option, lets treat this as one without values.
+                this.logger.logWarning(`Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`);
+                lastIndexOfOption = index;
+                return;
+            } else if (args.indexOf('=') > 0) {
+                // Ok this is an unknown option with a value
+                this.logger.logWarning(`Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`);
+                lastIndexOfOption = index;
             }
-            return true;
         });
+        return args.slice(lastIndexOfOption + 1);
     }
     public filterArguments(args: string[], optionsWithArguments: string[] = [], optionsWithoutArguments: string[] = []): string[] {
         let ignoreIndex = -1;

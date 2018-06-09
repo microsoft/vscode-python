@@ -2,11 +2,11 @@ import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
-import { CommandSource } from '../../client/unittests/common/constants';
-import { ITestManagerFactory } from '../../client/unittests/common/types';
-import { rootWorkspaceUri, updateSetting } from '../common';
-import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
-import { UnitTestIocContainer } from './serviceRegistry';
+import { CommandSource } from '../../../client/unittests/common/constants';
+import { ITestManagerFactory } from '../../../client/unittests/common/types';
+import { rootWorkspaceUri, updateSetting } from '../../common';
+import { UnitTestIocContainer } from '../serviceRegistry';
+import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
 const testFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles');
 const UNITTEST_TEST_FILES_PATH = path.join(testFilesPath, 'standard');

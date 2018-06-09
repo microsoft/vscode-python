@@ -78,6 +78,7 @@ export enum TestFilter {
 }
 export const IArgumentsService = Symbol('IArgumentsService');
 export interface IArgumentsService {
+    getKnownOptions(): { withArgs: string[]; withoutArgs: string[] };
     getOptionValue(args: string[], option: string): string | string[] | undefined;
     filterArguments(args: string[], argumentToRemove: string[]): string[];
     // tslint:disable-next-line:unified-signatures

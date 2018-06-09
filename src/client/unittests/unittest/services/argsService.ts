@@ -10,8 +10,8 @@ import { IArgumentsHelper, IArgumentsService, TestFilter } from '../../types';
 const OptionsWithArguments = ['-p', '-s', '-t', '--pattern',
     '--start-directory', '--top-level-directory'];
 
-const OptionsWithoutArgumentss = ['-b', '-c', '-f', '-q', '-v',
-    '--buffer', '--catch', '--failfast', '--locals',
+const OptionsWithoutArguments = ['-b', '-c', '-f', '-h', '-q', '-v',
+    '--buffer', '--catch', '--failfast', '--help', '--locals',
     '--quiet', '--verbose'];
 
 @injectable()
@@ -19,6 +19,12 @@ export class ArgumentsService implements IArgumentsService {
     private readonly helper: IArgumentsHelper;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.helper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
+    }
+    public getKnownOptions(): { withArgs: string[]; withoutArgs: string[] } {
+        return {
+            withArgs: OptionsWithArguments,
+            withoutArgs: OptionsWithoutArguments
+        };
     }
     public getOptionValue(args: string[], option: string): string | string[] | undefined {
         return this.helper.getOptionValues(args, option);
@@ -34,7 +40,7 @@ export class ArgumentsService implements IArgumentsService {
                 if (OptionsWithArguments.indexOf(item) >= 0) {
                     optionsWithoutArgsToRemove.push(item);
                 }
-                if (OptionsWithoutArgumentss.indexOf(item) >= 0) {
+                if (OptionsWithoutArguments.indexOf(item) >= 0) {
                     optionsWithoutArgsToRemove.push(item);
                 }
             });
@@ -64,7 +70,7 @@ export class ArgumentsService implements IArgumentsService {
 
         let filteredArgs = args.slice();
         if (removePositionalArgs) {
-            const positionalArgs = this.helper.getPositionalArguments(filteredArgs, OptionsWithArguments, OptionsWithoutArgumentss);
+            const positionalArgs = this.helper.getPositionalArguments(filteredArgs, OptionsWithArguments, OptionsWithoutArguments);
             filteredArgs = filteredArgs.filter(item => positionalArgs.indexOf(item) === -1);
         }
         return this.helper.filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);

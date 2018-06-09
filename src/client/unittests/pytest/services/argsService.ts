@@ -9,7 +9,7 @@ import { IArgumentsHelper, IArgumentsService, TestFilter } from '../../types';
 
 const OptionsWithArguments = ['-c', '-k', '-m', '-o', '-p', '-r', '-W',
     '--assert', '--basetemp', '--capture', '--color', '--confcutdir',
-    '--deselect', '--disable-warnings', '--doctest-glob',
+    '--deselect', '--dist', '--doctest-glob',
     '--doctest-report', '--durations', '--ignore', '--import-mode',
     '--junit-prefix', '--junit-xml', '--last-failed-no-failures',
     '--lfnf', '--log-cli-date-format', '--log-cli-format',
@@ -17,19 +17,31 @@ const OptionsWithArguments = ['-c', '-k', '-m', '-o', '-p', '-r', '-W',
     '--log-file-date-format', '--log-file-format', '--log-file-level',
     '--log-format', '--log-level', '--maxfail', '--override-ini',
     '--pastebin', '--pdbcls', '--pythonwarnings', '--result-log',
-    '--rootdir', '--show-capture', '--tb', '--verbosity'];
+    '--rootdir', '--show-capture', '--tb', '--verbosity', '--max-slave-restart',
+    '--numprocesses', '--rsyncdir', '--rsyncignore', '--tx'];
 
-const OptionsWithoutArgumentss = ['-h', '-l', '-q', '-s', '-v', '-x',
-    '--debug', '--exitfirst', '--ff', '--fixtures', '--funcargs',
-    '--help', '--lf', '--markers', '--nf', '--noconftest', '--pdb',
-    '--pyargs', '--quiet', '--runxfail', '--showlocals', '--strict',
-    '--verbose', '--version'];
+const OptionsWithoutArguments = ['--cache-clear', '--cache-show', '--collect-in-virtualenv',
+    '--collect-only', '--continue-on-collection-errors', '--debug', '--disable-pytest-warnings',
+    '--disable-warnings', '--doctest-continue-on-failure', '--doctest-ignore-import-errors',
+    '--doctest-modules', '--exitfirst', '--failed-first', '--ff', '--fixtures',
+    '--fixtures-per-test', '--force-sugar', '--full-trace', '--funcargs', '--help',
+    '--keep-duplicates', '--last-failed', '--lf', '--markers', '--new-first', '--nf',
+    '--no-print-logs', '--noconftest', '--old-summary', '--pdb', '--pyargs',
+    '--quiet', '--runxfail', '--setup-only', '--setup-plan', '--setup-show', '--showlocals',
+    '--strict', '--trace-config', '--verbose', '--version', '-h', '-l', '-q', '-s', '-v', '-x',
+    '--boxed', '--forked', '--looponfail', '--tx', '-d'];
 
 @injectable()
 export class ArgumentsService implements IArgumentsService {
     private readonly helper: IArgumentsHelper;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.helper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
+    }
+    public getKnownOptions(): { withArgs: string[]; withoutArgs: string[] } {
+        return {
+            withArgs: OptionsWithArguments,
+            withoutArgs: OptionsWithoutArguments
+        };
     }
     public getOptionValue(args: string[], option: string): string | string[] | undefined {
         return this.helper.getOptionValues(args, option);
@@ -45,7 +57,7 @@ export class ArgumentsService implements IArgumentsService {
                 if (OptionsWithArguments.indexOf(item) >= 0) {
                     optionsWithoutArgsToRemove.push(item);
                 }
-                if (OptionsWithoutArgumentss.indexOf(item) >= 0) {
+                if (OptionsWithoutArguments.indexOf(item) >= 0) {
                     optionsWithoutArgsToRemove.push(item);
                 }
             });
@@ -122,7 +134,7 @@ export class ArgumentsService implements IArgumentsService {
 
         let filteredArgs = args.slice();
         if (removePositionalArgs) {
-            const positionalArgs = this.helper.getPositionalArguments(filteredArgs, OptionsWithArguments, OptionsWithoutArgumentss);
+            const positionalArgs = this.helper.getPositionalArguments(filteredArgs, OptionsWithArguments, OptionsWithoutArguments);
             filteredArgs = filteredArgs.filter(item => positionalArgs.indexOf(item) === -1);
         }
         return this.helper.filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);
@@ -135,7 +147,7 @@ export class ArgumentsService implements IArgumentsService {
         if (Array.isArray(testDirs) && testDirs.length > 0) {
             return testDirs;
         }
-        const positionalArgs = this.helper.getPositionalArguments(args, OptionsWithArguments, OptionsWithoutArgumentss);
+        const positionalArgs = this.helper.getPositionalArguments(args, OptionsWithArguments, OptionsWithoutArguments);
         // Positional args in pytest are files or directories.
         // Remove files from the args, and what's left are test directories.
         // If users enter test modules/methods, then its not supported.
