@@ -4,9 +4,11 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
-import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER,
-         IS_MULTI_ROOT_TEST, IS_VSTS, MOCHA_CI_PROPERTIES,
-         MOCHA_CI_REPORTFILE, MOCHA_REPORTER_JUNIT } from './constants';
+import {
+    IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER,
+    IS_MULTI_ROOT_TEST, IS_VSTS, MOCHA_CI_PROPERTIES,
+    MOCHA_CI_REPORTFILE, MOCHA_REPORTER_JUNIT
+} from './constants';
 import * as testRunner from './testRunner';
 
 process.env.VSC_PYTHON_CI_TEST = '1';
