@@ -5,6 +5,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { CommandSource } from '../../../client/unittests/common/constants';
 import { ITestManagerFactory, TestFile, TestsToRun } from '../../../client/unittests/common/types';
@@ -13,8 +14,8 @@ import { MockProcessService } from '../../mocks/proc';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
-const UNITTEST_TEST_FILES_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
-const PYTEST_RESULTS_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'pytestFiles', 'results');
+const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
+const PYTEST_RESULTS_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'pytestFiles', 'results');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - pytest - run with mocked process output', () => {
@@ -48,7 +49,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         procService.onExecObservable((file, args, options, callback) => {
             if (args.indexOf('--collect-only') >= 0) {
                 callback({
-                    out: fs.readFileSync(path.join(PYTEST_RESULTS_PATH, outputFileName), 'utf8'),
+                    out: fs.readFileSync(path.join(PYTEST_RESULTS_PATH, outputFileName), 'utf8').replace(/\/Users\/donjayamanne\/.vscode\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles\/noseFiles/g, PYTEST_RESULTS_PATH),
                     source: 'stdout'
                 });
             }
