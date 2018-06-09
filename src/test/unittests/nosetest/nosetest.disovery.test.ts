@@ -5,6 +5,7 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { CommandSource } from '../../../client/unittests/common/constants';
 import { ITestManagerFactory } from '../../../client/unittests/common/types';
@@ -14,9 +15,9 @@ import { lookForTestFile } from '../helper';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
-const PYTHON_FILES_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles');
-const UNITTEST_TEST_FILES_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'noseFiles');
-const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'single');
+const PYTHON_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles');
+const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'noseFiles');
+const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'single');
 const filesToDelete = [
     path.join(UNITTEST_TEST_FILES_PATH, '.noseids'),
     path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')
