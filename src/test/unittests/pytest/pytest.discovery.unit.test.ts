@@ -7,6 +7,7 @@
 
 import { expect, use } from 'chai';
 import * as chaipromise from 'chai-as-promised';
+import * as path from 'path';
 import * as typeMoq from 'typemoq';
 import { CancellationToken } from 'vscode';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -39,9 +40,10 @@ suite('Unit Tests - PyTest - Discovery', () => {
 
         discoveryService = new TestDiscoveryService(serviceContainer.object, testParser.object);
     });
-    test('Ensure args are filtered for discovery', async () => {
+    test('Ensure discovery is invoked with the right args and single dir', async () => {
         const args: string[] = [];
         const runOutput = 'xyz';
+        const dir = path.join('a', 'b', 'c');
         const tests: Tests = {
             summary: { errors: 1, failures: 0, passed: 0, skipped: 0 },
             testFiles: [], testFunctions: [], testSuites: [],
@@ -51,7 +53,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             .returns(() => [])
             .verifiable(typeMoq.Times.once());
         argsService.setup(a => a.getTestFolders(typeMoq.It.isValue(args)))
-            .returns(() => [''])
+            .returns(() => [dir])
             .verifiable(typeMoq.Times.once());
         helper.setup(a => a.mergeTests(typeMoq.It.isAny()))
             .returns(() => tests)
@@ -61,6 +63,55 @@ suite('Unit Tests - PyTest - Discovery', () => {
                 expect(opts.args).to.include('--cache-clear');
                 expect(opts.args).to.include('-s');
                 expect(opts.args).to.include('--collect-only');
+                expect(opts.args[opts.args.length - 1]).to.equal(dir);
+            })
+            .returns(() => Promise.resolve(runOutput))
+            .verifiable(typeMoq.Times.once());
+        testParser.setup(t => t.parse(typeMoq.It.isValue(runOutput), typeMoq.It.isAny()))
+            .returns(() => tests)
+            .verifiable(typeMoq.Times.once());
+
+        const options = typeMoq.Mock.ofType<TestDiscoveryOptions>();
+        const token = typeMoq.Mock.ofType<CancellationToken>();
+        options.setup(o => o.args).returns(() => args);
+        options.setup(o => o.token).returns(() => token.object);
+        token.setup(t => t.isCancellationRequested)
+            .returns(() => false);
+
+        const result = await discoveryService.discoverTests(options.object);
+
+        expect(result).to.be.equal(tests);
+        argsService.verifyAll();
+        runner.verifyAll();
+        testParser.verifyAll();
+        helper.verifyAll();
+    });
+    test('Ensure discovery is invoked with the right args and multiple dirs', async () => {
+        const args: string[] = [];
+        const runOutput = 'xyz';
+        const dirs = [path.join('a', 'b', '1'), path.join('a', 'b', '2')];
+        const tests: Tests = {
+            summary: { errors: 1, failures: 0, passed: 0, skipped: 0 },
+            testFiles: [], testFunctions: [], testSuites: [],
+            rootTestFolders: [], testFolders: []
+        };
+        argsService.setup(a => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))
+            .returns(() => [])
+            .verifiable(typeMoq.Times.once());
+        argsService.setup(a => a.getTestFolders(typeMoq.It.isValue(args)))
+            .returns(() => dirs)
+            .verifiable(typeMoq.Times.once());
+        helper.setup(a => a.mergeTests(typeMoq.It.isAny()))
+            .returns(() => tests)
+            .verifiable(typeMoq.Times.once());
+        runner.setup(r => r.run(typeMoq.It.isValue(PYTEST_PROVIDER), typeMoq.It.isAny()))
+            .callback((_, opts: Options) => {
+                expect(opts.args).to.include('--cache-clear');
+                expect(opts.args).to.include('-s');
+                expect(opts.args).to.include('--collect-only');
+                const dir = opts.args[opts.args.length - 1];
+                expect(dirs).to.include(dir);
+                dirs.splice(dirs.indexOf(dir) - 1, 1);
             })
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());

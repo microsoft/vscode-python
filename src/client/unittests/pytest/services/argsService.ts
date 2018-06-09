@@ -92,7 +92,7 @@ export class ArgumentsService implements IArgumentsService {
                         '--setup-only', '--setup-show', '--setup-plan'
                     ]);
                     optionsWithArgsToRemove.push(...[
-                        '-k', '-m', '--maxfail',
+                        '-m', '--maxfail',
                         '--pdbcls', '--capture',
                         '--lfnf', '--last-failed-no-failures',
                         '--verbosity', '-r',

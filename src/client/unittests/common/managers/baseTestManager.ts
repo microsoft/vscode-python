@@ -1,4 +1,5 @@
-import { CancellationToken, CancellationTokenSource, Disposable, OutputChannel, Uri, workspace } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Disposable, OutputChannel, Uri } from 'vscode';
+import { IWorkspaceService } from '../../../common/application/types';
 import { isNotInstalledError } from '../../../common/helpers';
 import { IConfigurationService, IDisposableRegistry, IInstaller, IOutputChannel, IPythonSettings, Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
@@ -24,6 +25,7 @@ export abstract class BaseTestManager implements ITestManager {
     }
     private testCollectionStorage: ITestCollectionStorageService;
     private _testResultsService: ITestResultsService;
+    private workspaceService: IWorkspaceService;
     private _outputChannel: OutputChannel;
     private tests?: Tests;
     private _status: TestStatus = TestStatus.Unknown;
@@ -46,6 +48,7 @@ export abstract class BaseTestManager implements ITestManager {
         this._outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         this.testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
         this._testResultsService = this.serviceContainer.get<ITestResultsService>(ITestResultsService);
+        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         disposables.push(this);
     }
     protected get testDiscoveryCancellationToken(): CancellationToken | undefined {
@@ -130,7 +133,7 @@ export abstract class BaseTestManager implements ITestManager {
                     const testsHelper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
                     testsHelper.displayTestErrorMessage('There were some errors in discovering unit tests');
                 }
-                const wkspace = workspace.getWorkspaceFolder(Uri.file(this.rootDirectory))!.uri;
+                const wkspace = this.workspaceService.getWorkspaceFolder(Uri.file(this.rootDirectory))!.uri;
                 this.testCollectionStorage.storeTests(wkspace, tests);
                 this.disposeCancellationToken(CancellationTokenType.testDiscovery);
                 sendTelemetryEvent(UNITTEST_DISCOVER, undefined, telementryProperties);
@@ -154,7 +157,7 @@ export abstract class BaseTestManager implements ITestManager {
                     // tslint:disable-next-line:prefer-template
                     this.outputChannel.appendLine(reason.toString());
                 }
-                const wkspace = workspace.getWorkspaceFolder(Uri.file(this.rootDirectory))!.uri;
+                const wkspace = this.workspaceService.getWorkspaceFolder(Uri.file(this.rootDirectory))!.uri;
                 this.testCollectionStorage.storeTests(wkspace, null);
                 this.disposeCancellationToken(CancellationTokenType.testDiscovery);
                 return Promise.reject(reason);

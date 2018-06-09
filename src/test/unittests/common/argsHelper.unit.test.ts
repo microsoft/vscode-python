@@ -3,14 +3,13 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any no-conditional-assignment no-increment-decrement no-invalid-this
+// tslint:disable:max-func-body-length no-any no-conditional-assignment no-increment-decrement no-invalid-this no-require-imports no-var-requires
 import { expect, use } from 'chai';
 import * as typeMoq from 'typemoq';
 import { ILogger } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ArgumentsHelper } from '../../../client/unittests/common/argumentsHelper';
 import { IArgumentsHelper } from '../../../client/unittests/types';
-// tslint:disable-next-line:no-require-imports no-var-requires
 const assertArrays = require('chai-arrays');
 use(assertArrays);
 
@@ -62,6 +61,13 @@ suite('Unit Tests - Arguments Helper', () => {
     });
     test('Get multiple Positional options', () => {
         const args = ['-abc', '1234', '--value-option', 'value1', '--no-value-option', 'value2', 'value3'];
+        const values = argsHelper.getPositionalArguments(args, ['--value-option', '-abc'], ['--no-value-option']);
+        expect(values).to.be.array();
+        expect(values).to.be.lengthOf(2);
+        expect(values).to.be.deep.equal(['value2', 'value3']);
+    });
+    test('Get multiple Positional options and ineline values', () => {
+        const args = ['-abc=1234', '--value-option=value1', '--no-value-option', 'value2', 'value3'];
         const values = argsHelper.getPositionalArguments(args, ['--value-option', '-abc'], ['--no-value-option']);
         expect(values).to.be.array();
         expect(values).to.be.lengthOf(2);

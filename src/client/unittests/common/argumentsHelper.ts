@@ -52,6 +52,9 @@ export class ArgumentsHelper implements IArgumentsHelper {
             } else if (optionsWithArguments.indexOf(arg) !== -1) {
                 // Cuz the next item is the value.
                 lastIndexOfOption = index + 1;
+            } else if (optionsWithArguments.findIndex(item => arg.startsWith(`${item}=`)) !== -1) {
+                lastIndexOfOption = index;
+                return;
             } else if (arg.startsWith('-')) {
                 // Ok this is an unknown option, lets treat this as one without values.
                 this.logger.logWarning(`Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`);

@@ -407,7 +407,7 @@ export interface IDocumentManager {
     showTextDocument(uri: Uri, options?: TextDocumentShowOptions): Thenable<TextEditor>;
 }
 
-export const IWorkspaceService = Symbol('IWorkspace');
+export const IWorkspaceService = Symbol('IWorkspaceService');
 
 export interface IWorkspaceService {
     /**

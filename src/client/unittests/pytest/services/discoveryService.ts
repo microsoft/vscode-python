@@ -24,6 +24,13 @@ export class TestDiscoveryService implements ITestDiscoveryService {
 
         // Collect tests for each test directory separately and merge.
         const testDirectories = this.argsService.getTestFolders(options.args);
+        if (testDirectories.length === 0) {
+            const opts = {
+                ...options,
+                args
+            };
+            return this.discoverTestsInTestDirectory(opts);
+        }
         const results = await Promise.all(testDirectories.map(testDir => {
             // Add test directory as a positional argument.
             const opts = {

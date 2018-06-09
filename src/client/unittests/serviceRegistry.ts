@@ -67,17 +67,17 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, PytestTestDiscoveryService, PYTEST_PROVIDER);
     serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, NoseTestDiscoveryService, NOSETEST_PROVIDER);
 
-    serviceManager.addSingleton<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
-    serviceManager.addSingleton<ITestRunner>(ITestRunner, TestRunner);
-    serviceManager.addSingleton<IXUnitParser>(IXUnitParser, XUnitParser);
+    serviceManager.add<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
+    serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
+    serviceManager.add<IXUnitParser>(IXUnitParser, XUnitParser);
     serviceManager.add<IUnitTestHelper>(IUnitTestHelper, UnitTestHelper);
 
-    serviceManager.addSingleton<IArgumentsService>(IArgumentsService, PyTestArgumentsService, PYTEST_PROVIDER);
-    serviceManager.addSingleton<IArgumentsService>(IArgumentsService, NoseTestArgumentsService, NOSETEST_PROVIDER);
-    serviceManager.addSingleton<IArgumentsService>(IArgumentsService, UnitTestArgumentsService, UNITTEST_PROVIDER);
-    serviceManager.addSingleton<ITestManagerRunner>(ITestManagerRunner, PytestManagerRunner, PYTEST_PROVIDER);
-    serviceManager.addSingleton<ITestManagerRunner>(ITestManagerRunner, NoseTestManagerRunner, NOSETEST_PROVIDER);
-    serviceManager.addSingleton<ITestManagerRunner>(ITestManagerRunner, UnitTestTestManagerRunner, UNITTEST_PROVIDER);
+    serviceManager.add<IArgumentsService>(IArgumentsService, PyTestArgumentsService, PYTEST_PROVIDER);
+    serviceManager.add<IArgumentsService>(IArgumentsService, NoseTestArgumentsService, NOSETEST_PROVIDER);
+    serviceManager.add<IArgumentsService>(IArgumentsService, UnitTestArgumentsService, UNITTEST_PROVIDER);
+    serviceManager.add<ITestManagerRunner>(ITestManagerRunner, PytestManagerRunner, PYTEST_PROVIDER);
+    serviceManager.add<ITestManagerRunner>(ITestManagerRunner, NoseTestManagerRunner, NOSETEST_PROVIDER);
+    serviceManager.add<ITestManagerRunner>(ITestManagerRunner, UnitTestTestManagerRunner, UNITTEST_PROVIDER);
 
     serviceManager.addSingleton<IUnitTestConfigurationService>(IUnitTestConfigurationService, UnitTestConfigurationService);
     serviceManager.addSingleton<IUnitTestManagementService>(IUnitTestManagementService, UnitTestManagementService);

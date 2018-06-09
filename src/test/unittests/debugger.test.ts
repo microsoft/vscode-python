@@ -3,8 +3,19 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
 import { createDeferred } from '../../client/common/helpers';
-import { CANCELLATION_REASON, CommandSource } from '../../client/unittests/common/constants';
-import { ITestDebugLauncher, ITestManagerFactory, TestProvider } from '../../client/unittests/common/types';
+import { TestManagerRunner as NoseTestManagerRunner } from '../../client/unittests//nosetest/runner';
+import { TestManagerRunner as PytestManagerRunner } from '../../client/unittests//pytest/runner';
+import { TestManagerRunner as UnitTestTestManagerRunner } from '../../client/unittests//unittest/runner';
+import { ArgumentsHelper } from '../../client/unittests/common/argumentsHelper';
+import { CANCELLATION_REASON, CommandSource, NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/unittests/common/constants';
+import { TestRunner } from '../../client/unittests/common/runner';
+import { ITestDebugLauncher, ITestManagerFactory, ITestRunner, IXUnitParser, TestProvider } from '../../client/unittests/common/types';
+import { XUnitParser } from '../../client/unittests/common/xUnitParser';
+import { ArgumentsService as NoseTestArgumentsService } from '../../client/unittests/nosetest/services/argsService';
+import { ArgumentsService as PyTestArgumentsService } from '../../client/unittests/pytest/services/argsService';
+import { IArgumentsHelper, IArgumentsService, ITestManagerRunner, IUnitTestHelper } from '../../client/unittests/types';
+import { UnitTestHelper } from '../../client/unittests/unittest/helper';
+import { ArgumentsService as UnitTestArgumentsService } from '../../client/unittests/unittest/services/argsService';
 import { deleteDirectory, rootWorkspaceUri, updateSetting } from '../common';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 import { MockDebugLauncher } from './mocks';
@@ -60,6 +71,16 @@ suite('Unit Tests - debugging', () => {
         ioc.registerTestsHelper();
         ioc.registerTestManagers();
         ioc.registerMockUnitTestSocketServer();
+        ioc.serviceManager.add<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
+        ioc.serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
+        ioc.serviceManager.add<IXUnitParser>(IXUnitParser, XUnitParser);
+        ioc.serviceManager.add<IUnitTestHelper>(IUnitTestHelper, UnitTestHelper);
+        ioc.serviceManager.add<IArgumentsService>(IArgumentsService, NoseTestArgumentsService, NOSETEST_PROVIDER);
+        ioc.serviceManager.add<IArgumentsService>(IArgumentsService, PyTestArgumentsService, PYTEST_PROVIDER);
+        ioc.serviceManager.add<IArgumentsService>(IArgumentsService, UnitTestArgumentsService, UNITTEST_PROVIDER);
+        ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, PytestManagerRunner, PYTEST_PROVIDER);
+        ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, NoseTestManagerRunner, NOSETEST_PROVIDER);
+        ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, UnitTestTestManagerRunner, UNITTEST_PROVIDER);
         ioc.serviceManager.addSingleton<ITestDebugLauncher>(ITestDebugLauncher, MockDebugLauncher);
     }
 
@@ -77,8 +98,8 @@ suite('Unit Tests - debugging', () => {
 
         // This promise should never resolve nor reject.
         runningPromise
-           .then(() => deferred.reject('Debugger stopped when it shouldn\'t have'))
-           .catch(error => deferred.reject(error));
+            .then(() => deferred.reject('Debugger stopped when it shouldn\'t have'))
+            .catch(error => deferred.reject(error));
 
         mockDebugLauncher.launched
             .then((launched) => {
@@ -87,14 +108,14 @@ suite('Unit Tests - debugging', () => {
                 } else {
                     deferred.reject('Debugger not launched');
                 }
-            }) .catch(error => deferred.reject(error));
+            }).catch(error => deferred.reject(error));
 
         await deferred.promise;
     }
 
     test('Debugger should start (unittest)', async () => {
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
-        await  testStartingDebugger('unittest');
+        await testStartingDebugger('unittest');
     });
 
     test('Debugger should start (pytest)', async () => {

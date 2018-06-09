@@ -14,7 +14,8 @@ const OptionsWithArguments = ['--attr', '--config', '--cover-html-dir', '--cover
     '--logging-datefmt', '--logging-filter', '--logging-format', '--logging-level', '--match',
     '--process-timeout', '--processes', '--py3where', '--testmatch', '--tests', '--verbosity',
     '--where', '--xunit-file', '--xunit-testsuite-name',
-    '-A', '-a', '-c', '-e', '-i', '-I', '-l', '-m', '-w'];
+    '-A', '-a', '-c', '-e', '-i', '-I', '-l', '-m', '-w',
+    '--profile-restrict', '--profile-sort', '--profile-stats-file'];
 
 const OptionsWithoutArguments = ['-h', '--help', '-V', '--version', '-p', '--plugins',
     '-v', '--verbose', '--quiet', '-x', '--stop', '-P', '--no-path-adjustment',
@@ -25,7 +26,7 @@ const OptionsWithoutArguments = ['-h', '--help', '-V', '--version', '-p', '--plu
     '--pdb-failures', '--pdb-errors', '--no-deprecated', '--with-doctest', '--doctest-tests',
     '--with-isolation', '-d', '--detailed-errors', '--failure-detail', '--no-skip',
     '--with-id', '--failed', '--process-restartworker', '--with-xunit',
-    '--all-modules', '--collect-only'];
+    '--all-modules', '--collect-only', '--with-profile'];
 
 @injectable()
 export class ArgumentsService implements IArgumentsService {

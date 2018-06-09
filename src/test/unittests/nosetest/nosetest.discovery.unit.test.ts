@@ -35,7 +35,7 @@ suite('Unit Tests - nose - Discovery', () => {
 
         discoveryService = new TestDiscoveryService(serviceContainer.object, testParser.object);
     });
-    test('Ensure args are filtered for discovery', async () => {
+    test('Ensure discovery is invoked with the right args', async () => {
         const args: string[] = [];
         const runOutput = 'xyz';
         const tests: Tests = {
