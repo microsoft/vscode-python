@@ -344,10 +344,15 @@ import { IServiceContainer } from '../../../client/ioc/types';
             setupIoc(pythonPath, isWindows, isMac, isLinux);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const execOutput = pyramidExists ? Promise.resolve({ stdout: pyramidFilePath }) : Promise.reject('No Module');
-            pythonExecutionService.setup(e => e.exec(TypeMoq.It.isValue(args), TypeMoq.It.isAny()))
-                .returns(() => execOutput)
-                .verifiable(TypeMoq.Times.exactly(addPyramidDebugOption ? 1 : 0));
+            if (pyramidExists) {
+                pythonExecutionService.setup(e => e.exec(TypeMoq.It.isValue(args), TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve({ stdout: pyramidFilePath }))
+                    .verifiable(TypeMoq.Times.exactly(addPyramidDebugOption ? 1 : 0));
+            } else {
+                pythonExecutionService.setup(e => e.exec(TypeMoq.It.isValue(args), TypeMoq.It.isAny()))
+                    .returns(() => Promise.reject('No Module Available'))
+                    .verifiable(TypeMoq.Times.exactly(addPyramidDebugOption ? 1 : 0));
+            }
             fileSystem.setup(f => f.fileExists(TypeMoq.It.isValue(pserveFilePath)))
                 .returns(() => Promise.resolve(pyramidExists))
                 .verifiable(TypeMoq.Times.exactly(pyramidExists && addPyramidDebugOption ? 1 : 0));
