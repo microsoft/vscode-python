@@ -6,16 +6,23 @@ import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
+import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
-import { CommandSource } from '../../../client/unittests/common/constants';
-import { ITestManagerFactory, IUnitTestSocketServer, TestsToRun } from '../../../client/unittests/common/types';
+import { ArgumentsHelper } from '../../../client/unittests/common/argumentsHelper';
+import { CommandSource, UNITTEST_PROVIDER } from '../../../client/unittests/common/constants';
+import { TestRunner } from '../../../client/unittests/common/runner';
+import { ITestManagerFactory, ITestRunner, IUnitTestSocketServer, TestsToRun } from '../../../client/unittests/common/types';
+import { IArgumentsHelper, IArgumentsService, ITestManagerRunner, IUnitTestHelper } from '../../../client/unittests/types';
+import { UnitTestHelper } from '../../../client/unittests/unittest/helper';
+import { TestManagerRunner } from '../../../client/unittests/unittest/runner';
+import { ArgumentsService } from '../../../client/unittests/unittest/services/argsService';
 import { rootWorkspaceUri, updateSetting } from '../../common';
 import { MockProcessService } from '../../mocks/proc';
 import { MockUnitTestSocketServer } from '../mocks';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
-const testFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles');
+const testFilesPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles');
 const UNITTEST_TEST_FILES_PATH = path.join(testFilesPath, 'standard');
 const unitTestSpecificTestFilesPath = path.join(testFilesPath, 'specificTest');
 const defaultUnitTestArgs = [
@@ -68,6 +75,11 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         ioc.registerTestsHelper();
         ioc.registerTestStorage();
         ioc.registerTestVisitors();
+        ioc.serviceManager.add<IArgumentsService>(IArgumentsService, ArgumentsService, UNITTEST_PROVIDER);
+        ioc.serviceManager.add<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
+        ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, TestManagerRunner, UNITTEST_PROVIDER);
+        ioc.serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
+        ioc.serviceManager.add<IUnitTestHelper>(IUnitTestHelper, UnitTestHelper);
     }
 
     async function ignoreTestLauncher() {
