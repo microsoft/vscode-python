@@ -73,7 +73,7 @@ contributors (if you would like to contribute a translation, see the
   + Auto formatting of code upon saving changes (default to 'Off')
   + Use either [yapf](https://pypi.org/project/yapf/), [autopep8](https://pypi.org/project/autopep8/), or [Black](https://pypi.org/project/black/) for code formatting (defaults to autopep8)
 * Linting
-  + Support for multiple linters with custom settings (default is [Pylint](https://pypi.org/project/pylint/), but [Prospector](https://pypi.org/project/prospector/), [Flake8](https://pypi.org/project/flake8/), [pylama](https://github.com/klen/pylama), [pydocstyle](https://pypi.org/project/pydocstyle/), and [mypy](https://pypi.org/project/mypy/) are also supported)
+  + Support for multiple linters with custom settings (default is [Pylint](https://pypi.org/project/pylint/), but [Prospector](https://pypi.org/project/prospector/), [Flake8](https://pypi.org/project/flake8/), [pylama](https://pypi.org/project/pylama/), [pydocstyle](https://pypi.org/project/pydocstyle/), and [mypy](https://pypi.org/project/mypy/) are also supported)
 * Debugging
   + Watch window
   + Evaluate expressions
