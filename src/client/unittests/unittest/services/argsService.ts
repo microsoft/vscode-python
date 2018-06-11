@@ -45,27 +45,7 @@ export class ArgumentsService implements IArgumentsService {
                 }
             });
         } else {
-            switch (argumentToRemoveOrFilter) {
-                case TestFilter.removeTests:
-                case TestFilter.discovery: {
-                    removePositionalArgs = true;
-                    break;
-                }
-                case TestFilter.debugAll:
-                case TestFilter.runAll:
-                case TestFilter.debugSpecific:
-                case TestFilter.runSpecific: {
-                    optionsWithArgsToRemove.push(...[
-                        '-s', '--start-directory',
-                        '-t', '--top-level-directory',
-                        '-p', '--pattern'
-                    ]);
-                    break;
-                }
-                default: {
-                    throw new Error(`Unsupported Filter '${argumentToRemoveOrFilter}'`);
-                }
-            }
+            removePositionalArgs = true;
         }
 
         let filteredArgs = args.slice();
