@@ -1954,6 +1954,7 @@
         "chai-as-promised": "^7.1.1",
         "codecov": "^3.0.0",
         "colors": "^1.2.1",
+        "cross-spawn": "^6.0.5",
         "debounce": "^1.1.0",
         "decache": "^4.4.0",
         "del": "^3.0.0",

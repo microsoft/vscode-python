@@ -13,6 +13,7 @@ const tslint = require('tslint');
 const relative = require('relative');
 const ts = require('gulp-typescript');
 const cp = require('child_process');
+const spawn = require('cross-spawn');
 const colors = require('colors/safe');
 const gitmodified = require('gulp-gitmodified');
 const path = require('path');
@@ -128,7 +129,7 @@ function hasNativeDependencies() {
     if (!Array.isArray(nativeDependencies) || nativeDependencies.length === 0) {
         return false;
     }
-    const dependencies = JSON.parse(cp.spawnSync('npm', ['ls', '--json', '--prod']).stdout.toString());
+    const dependencies = JSON.parse(spawn.sync('npm', ['ls', '--json', '--prod']).stdout.toString());
     const jsonProperties = Object.keys(flat.flatten(dependencies));
     nativeDependencies = _.flatMap(nativeDependencies, item => path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep))
         .filter(item => item.length > 0)
