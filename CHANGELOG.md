@@ -13,7 +13,8 @@ our features:
 - [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
 - [rope](https://pypi.org/project/rope/) (user-installed)
 
-Also thanks to the various projects we provide integrations with:
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
 - Debugging support:
   [Django](https://pypi.org/project/Django/),
   [Flask](https://pypi.org/project/Flask/),
@@ -27,6 +28,13 @@ Also thanks to the various projects we provide integrations with:
   [autopep8](https://pypi.org/project/autopep8/),
   [black](https://pypi.org/project/black/),
   [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
 - Linting:
   [flake8](https://pypi.org/project/flake8/),
   [mypy](https://pypi.org/project/mypy/),
@@ -36,10 +44,12 @@ Also thanks to the various projects we provide integrations with:
   [pylama](https://pypi.org/project/pylama/)
 - Testing:
   [nose](https://pypi.org/project/nose/),
-  [pytest](https://pypi.org/project/pytest/)
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
 
 And finally thanks to the [Python](https://www.python.org/) development team and
-community for creating a fantastic programming language!
+community for creating a fantastic programming language and community to be a
+part of!
 
 ### Enhancements
 
