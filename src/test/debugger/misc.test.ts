@@ -472,12 +472,7 @@ let testCounter = 0;
                 debugClient.assertStoppedLocation('exception', pauseLocation)
             ]);
         });
-        test('Test multi-threaded debugging', async function () {
-            if (debuggerType !== 'python') {
-                // See GitHub issue #1250
-                this.skip();
-                return;
-            }
+        test('Test multi-threaded debugging', async () => {
             await Promise.all([
                 debugClient.configurationSequence(),
                 debugClient.launch(buildLaunchArgs('multiThread.py', false)),
