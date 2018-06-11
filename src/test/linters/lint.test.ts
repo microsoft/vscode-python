@@ -6,7 +6,10 @@ import * as vscode from 'vscode';
 import { ICommandManager } from '../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { Product } from '../../client/common/installer/productInstaller';
-import { IConfigurationService, IOutputChannel } from '../../client/common/types';
+import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
+import { ProductService } from '../../client/common/installer/productService';
+import { IProductPathService, IProductService } from '../../client/common/installer/types';
+import { IConfigurationService, IOutputChannel, ProductType } from '../../client/common/types';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
 import { deleteFile, PythonSettingKeys, rootWorkspaceUri } from '../common';
@@ -120,9 +123,15 @@ suite('Linting', () => {
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
         ioc.registerPlatformTypes();
-
+        ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         linterManager = new LinterManager(ioc.serviceContainer);
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, FormatterProductPathService, ProductType.Formatter);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
     }
 
     async function resetSettings() {
