@@ -114,8 +114,8 @@ export const setPythonPathInWorkspaceRoot = async (pythonPath: string) => retryA
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
 function getPythonPath(): string {
-    if (process.env.TRAVIS_PYTHON_PATH && fs.existsSync(process.env.TRAVIS_PYTHON_PATH)) {
-        return process.env.TRAVIS_PYTHON_PATH;
+    if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
+        return process.env.CI_PYTHON_PATH;
     }
     return 'python';
 }

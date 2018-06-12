@@ -68,7 +68,7 @@ before_install: |
   npm install npm@latest -g
   npm install -g vsce
   npm install -g azure-cli
-  export TRAVIS_PYTHON_PATH=`which python`
+  export CI_PYTHON_PATH=`which python`
 install:
   - python -m pip install --upgrade -r requirements.txt
   - python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
