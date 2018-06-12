@@ -6,7 +6,7 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
-import { Disposable, OutputChannel, WorkspaceFolder } from 'vscode';
+import { Disposable, OutputChannel, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { EnumEx } from '../../../client/common/enumUtils';
 import '../../../client/common/extensions';
@@ -16,7 +16,6 @@ import { ProductService } from '../../../client/common/installer/productService'
 import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from '../../../client/common/installer/types';
 import { IDisposableRegistry, ILogger, InstallerResponse, ModuleNamePurpose, Product } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { Uri } from '../../vscode-mock';
 
 use(chaiAsPromised);
 

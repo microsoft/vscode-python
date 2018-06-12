@@ -9,7 +9,7 @@ import { fail } from 'assert';
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
-import { OutputChannel } from 'vscode';
+import { OutputChannel, Uri } from 'vscode';
 import { EnumEx } from '../../../client/common/enumUtils';
 import '../../../client/common/extensions';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
@@ -21,7 +21,6 @@ import { IFormatterHelper } from '../../../client/formatters/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ILinterInfo, ILinterManager } from '../../../client/linters/types';
 import { ITestsHelper } from '../../../client/unittests/common/types';
-import { Uri } from '../../vscode-mock';
 
 use(chaiAsPromised);
 
