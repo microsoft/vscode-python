@@ -123,7 +123,6 @@ suite('Linting', () => {
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
         ioc.registerPlatformTypes();
-        ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         linterManager = new LinterManager(ioc.serviceContainer);
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
