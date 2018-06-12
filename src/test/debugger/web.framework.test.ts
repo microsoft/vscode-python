@@ -101,6 +101,8 @@ suite(`Django and Flask Debugging: ${debuggerType}`, () => {
             debugClient.waitForEvent('thread')
         ]);
 
+        // Wait for web apps to start (1s seems to be sufficient, but increasing to 3 to account flakyness of test).
+        await sleep(3000);
         const httpResult = await makeHttpRequest(`http://localhost:${port}`);
 
         expect(httpResult).to.contain('Hello this_is_a_value_from_server');
