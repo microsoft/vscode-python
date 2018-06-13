@@ -16,7 +16,9 @@ import { PythonReferenceProvider } from '../providers/referenceProvider';
 import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
+import { ThrottledPythonSymbolProvider } from '../providers/throttledSymbolProvider';
 import { IUnitTestManagementService } from '../unittests/types';
+import { WorkspaceSymbols } from '../workspaceSymbols/main';
 import { IExtensionActivator } from './types';
 
 @injectable()
@@ -46,7 +48,10 @@ export class ClassicExtensionActivator implements IExtensionActivator {
         context.subscriptions.push(languages.registerCompletionItemProvider(this.documentSelector, new PythonCompletionItemProvider(jediFactory, this.serviceManager), '.'));
         context.subscriptions.push(languages.registerCodeLensProvider(this.documentSelector, this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)));
 
-        const symbolProvider = new PythonSymbolProvider(this.serviceManager.get<IServiceContainer>(IServiceContainer), jediFactory);
+        const serviceContainer = this.serviceManager.get<IServiceContainer>(IServiceContainer);
+        context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
+
+        const symbolProvider = new ThrottledPythonSymbolProvider(serviceContainer, jediFactory);
         context.subscriptions.push(languages.registerDocumentSymbolProvider(this.documentSelector, symbolProvider));
 
         const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
@@ -56,7 +61,7 @@ export class ClassicExtensionActivator implements IExtensionActivator {
 
         const testManagementService = this.serviceManager.get<IUnitTestManagementService>(IUnitTestManagementService);
         testManagementService.activate()
-            .then(() => testManagementService.activateCodeLenses(symbolProvider))
+            .then(() => testManagementService.activateCodeLenses(new PythonSymbolProvider(serviceContainer, jediFactory)))
             .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
 
         return true;

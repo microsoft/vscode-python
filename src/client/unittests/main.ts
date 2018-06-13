@@ -9,7 +9,6 @@ import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/
 import * as constants from '../common/constants';
 import { IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { PythonSymbolProvider } from '../providers/symbolProvider';
 import { UNITTEST_STOP, UNITTEST_VIEW_OUTPUT } from '../telemetry/constants';
 import { sendTelemetryEvent } from '../telemetry/index';
 import { activateCodeLenses } from './codeLenses/main';
@@ -51,7 +50,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         this.autoDiscoverTests()
             .catch(ex => this.serviceContainer.get<ILogger>(ILogger).logError('Failed to auto discover tests upon activation', ex));
     }
-    public async activateCodeLenses(symboldProvider: PythonSymbolProvider): Promise<void> {
+    public async activateCodeLenses(symboldProvider: vscode.DocumentSymbolProvider): Promise<void> {
         const testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
         this.disposableRegistry.push(activateCodeLenses(this.onDidChange, symboldProvider, testCollectionStorage));
     }
@@ -91,6 +90,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             if (this.testResultDisplay) {
                 this.testResultDisplay.enabled = false;
             }
+            // tslint:disable-next-line:no-suspicious-comment
             // TODO: Why are we disposing, what happens when tests are enabled.
             if (this.workspaceTestManagerService) {
                 this.workspaceTestManagerService.dispose();
@@ -313,7 +313,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
         if (!settings.unitTest.autoTestDiscoverOnSaveEnabled) {
             return;
         }
-        this.discoverTestsForDocument(doc);
+        this.discoverTestsForDocument(doc).ignoreErrors();
     }
     private registerHandlers() {
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);

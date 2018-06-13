@@ -57,7 +57,6 @@ import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import { OnEnterFormatter } from './typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
-import { WorkspaceSymbols } from './workspaceSymbols/main';
 
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
@@ -144,7 +143,6 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
     context.subscriptions.push(new TerminalProvider(serviceContainer));
-    context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
 
     context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider()));
 

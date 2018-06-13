@@ -8,7 +8,7 @@
 
 ### Prerequisites
 
-1. .NET Core 2.0+ SDK
+1. .NET Core 2.1 SDK
    - [Windows](https://www.microsoft.com/net/learn/get-started/windows)
    - [Mac OS](https://www.microsoft.com/net/learn/get-started/macos)
    - [Linux](https://www.microsoft.com/net/learn/get-started/linux/rhel)

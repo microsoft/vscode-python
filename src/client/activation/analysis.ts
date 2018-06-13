@@ -10,7 +10,7 @@ import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
-import { IConfigurationService, IExtensionContext, IOutputChannel } from '../common/types';
+import { IConfigurationService, IExtensionContext, ILogger, IOutputChannel } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
@@ -20,9 +20,11 @@ import {
     PYTHON_ANALYSIS_ENGINE_ERROR
 } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';
+import { IUnitTestManagementService } from '../unittests/types';
 import { AnalysisEngineDownloader } from './downloader';
 import { InterpreterDataService } from './interpreterDataService';
 import { PlatformData } from './platformData';
+import { SymbolProvider } from './symbolProvider';
 import { IExtensionActivator } from './types';
 
 const PYTHON = 'python';
@@ -75,6 +77,14 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
             return false;
         }
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.restartLanguageServer()));
+
+        this.startupCompleted.promise.then(() => {
+            const testManagementService = this.services.get<IUnitTestManagementService>(IUnitTestManagementService);
+            testManagementService.activate()
+                .then(() => testManagementService.activateCodeLenses(new SymbolProvider(this.languageClient!)))
+                .catch(ex => this.services.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
+        }).ignoreErrors();
+
         return this.startLanguageServer(this.context, clientOptions);
     }
 
@@ -199,11 +209,17 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         properties['DatabasePath'] = path.join(context.extensionPath, analysisEngineFolder);
 
         const envProvider = this.services.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
-        const pythonPath = (await envProvider.getEnvironmentVariables()).PYTHONPATH;
+        let pythonPath = (await envProvider.getEnvironmentVariables()).PYTHONPATH;
         this.interpreterHash = interpreterData ? interpreterData.hash : '';
 
+        // Make sure paths do not contain multiple slashes so file URIs
+        // in VS Code (Node.js) and in the language server (.NET) match.
+        // Note: for the language server paths separator is always ;
+        searchPaths = searchPaths.split(path.delimiter).map(p => path.normalize(p)).join(';');
+        pythonPath = pythonPath ? path.normalize(pythonPath) : '';
+
         // tslint:disable-next-line:no-string-literal
-        properties['SearchPaths'] = `${searchPaths};${pythonPath ? pythonPath : ''}`;
+        properties['SearchPaths'] = `${searchPaths};${pythonPath}`;
         const selector: string[] = [PYTHON];
 
         // Options to control the language client
