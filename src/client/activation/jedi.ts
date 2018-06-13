@@ -16,12 +16,13 @@ import { PythonReferenceProvider } from '../providers/referenceProvider';
 import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
+import { ThrottledPythonSymbolProvider } from '../providers/throttledSymbolProvider';
 import { IUnitTestManagementService } from '../unittests/types';
 import { WorkspaceSymbols } from '../workspaceSymbols/main';
 import { IExtensionActivator } from './types';
 
 @injectable()
-export class JediExtensionActivator implements IExtensionActivator {
+export class ClassicExtensionActivator implements IExtensionActivator {
     private readonly context: IExtensionContext;
     private jediFactory?: JediFactory;
     private readonly documentSelector: DocumentFilter[];
@@ -50,7 +51,7 @@ export class JediExtensionActivator implements IExtensionActivator {
         const serviceContainer = this.serviceManager.get<IServiceContainer>(IServiceContainer);
         context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
 
-        const symbolProvider = new PythonSymbolProvider(serviceContainer, jediFactory);
+        const symbolProvider = new ThrottledPythonSymbolProvider(serviceContainer, jediFactory);
         context.subscriptions.push(languages.registerDocumentSymbolProvider(this.documentSelector, symbolProvider));
 
         const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
@@ -60,7 +61,7 @@ export class JediExtensionActivator implements IExtensionActivator {
 
         const testManagementService = this.serviceManager.get<IUnitTestManagementService>(IUnitTestManagementService);
         testManagementService.activate()
-            .then(() => testManagementService.activateCodeLenses(symbolProvider))
+            .then(() => testManagementService.activateCodeLenses(new PythonSymbolProvider(serviceContainer, jediFactory)))
             .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
 
         return true;
