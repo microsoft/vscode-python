@@ -10,7 +10,7 @@ import { StopWatch } from './common/stopWatch';
 const stopWatch = new StopWatch();
 
 import { Container } from 'inversify';
-import { debug, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
+import { CodeActionKind, debug, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationService } from './activation/types';
 import { IWorkspaceService } from './common/application/types';
@@ -146,7 +146,7 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(new TerminalProvider(serviceContainer));
     context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
 
-    context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider()));
+    context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), { providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports] }));
 
     type ConfigurationProvider = BaseConfigurationProvider<LaunchRequestArguments, AttachRequestArguments>;
     serviceContainer.getAll<ConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
