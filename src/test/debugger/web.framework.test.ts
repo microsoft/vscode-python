@@ -8,6 +8,7 @@
 import { expect } from 'chai';
 import * as getFreePort from 'get-port';
 import * as path from 'path';
+import { promisify } from 'util';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { noop } from '../../client/common/core.utils';
@@ -16,6 +17,8 @@ import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { DEBUGGER_TIMEOUT } from './common/constants';
 import { continueDebugging, createDebugAdapter, ExpectedVariable, hitHttpBreakpoint, makeHttpRequest, validateVariablesInFrame } from './utils';
+
+const waitOn = require('wait-on');
 
 let testCounter = 0;
 const debuggerType = 'pythonExperimental';
@@ -101,8 +104,10 @@ suite(`Django and Flask Debugging: ${debuggerType}`, () => {
             debugClient.waitForEvent('thread')
         ]);
 
-        // Wait for web apps to start (1s seems to be sufficient, but increasing to 3 to account flakyness of test).
-        await sleep(3000);
+        // Wait for web apps to start.
+        const opts = { resources: [`http-get://localhost:${port}`] };
+        await promisify(waitOn)(opts);
+
         const httpResult = await makeHttpRequest(`http://localhost:${port}`);
 
         expect(httpResult).to.contain('Hello this_is_a_value_from_server');
