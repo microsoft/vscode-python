@@ -4,7 +4,6 @@
 'use strict';
 
 import { expect } from 'chai';
-import { EOL } from 'os';
 import * as path from 'path';
 import * as typeMoq from 'typemoq';
 import { Range, TextEditorCursorStyle, TextEditorLineNumbersStyle, TextEditorOptions, window, workspace } from 'vscode';
@@ -27,6 +26,7 @@ suite('Refactor Rename', () => {
     const options: TextEditorOptions = { cursorStyle: TextEditorCursorStyle.Line, insertSpaces: true, lineNumbers: TextEditorLineNumbersStyle.Off, tabSize: 4 };
     let pythonSettings: typeMoq.IMock<IPythonSettings>;
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
+    const EOLUsedByRoped = '\n';
     suiteSetup(initialize);
     setup(async () => {
         pythonSettings = typeMoq.Mock.ofType<IPythonSettings>();
@@ -47,7 +47,7 @@ suite('Refactor Rename', () => {
 
     test('Rename function in source without a trailing empty line', async () => {
         const sourceFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'refactoring', 'source folder', 'without empty line.py');
-        const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(sourceFile)}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`;
+        const expectedDiff = `--- a/${path.basename(sourceFile)}${EOLUsedByRoped}+++ b/${path.basename(sourceFile)}${EOLUsedByRoped}@@ -1,8 +1,8 @@${EOLUsedByRoped} import os${EOLUsedByRoped} ${EOLUsedByRoped}-def one():${EOLUsedByRoped}+def three():${EOLUsedByRoped}     return True${EOLUsedByRoped} ${EOLUsedByRoped} def two():${EOLUsedByRoped}-    if one():${EOLUsedByRoped}-        print(\"A\" + one())${EOLUsedByRoped}+    if three():${EOLUsedByRoped}+        print(\"A\" + three())${EOLUsedByRoped}`;
 
         const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings.object, path.dirname(sourceFile), serviceContainer.object);
         const textDocument = await workspace.openTextDocument(sourceFile);
@@ -59,7 +59,7 @@ suite('Refactor Rename', () => {
     });
     test('Rename function in source with a trailing empty line', async () => {
         const sourceFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'refactoring', 'source folder', 'with empty line.py');
-        const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(sourceFile)}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`;
+        const expectedDiff = `--- a/${path.basename(sourceFile)}${EOLUsedByRoped}+++ b/${path.basename(sourceFile)}${EOLUsedByRoped}@@ -1,8 +1,8 @@${EOLUsedByRoped} import os${EOLUsedByRoped} ${EOLUsedByRoped}-def one():${EOLUsedByRoped}+def three():${EOLUsedByRoped}     return True${EOLUsedByRoped} ${EOLUsedByRoped} def two():${EOLUsedByRoped}-    if one():${EOLUsedByRoped}-        print(\"A\" + one())${EOLUsedByRoped}+    if three():${EOLUsedByRoped}+        print(\"A\" + three())${EOLUsedByRoped}`;
 
         const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings.object, path.dirname(sourceFile), serviceContainer.object);
         const textDocument = await workspace.openTextDocument(sourceFile);
