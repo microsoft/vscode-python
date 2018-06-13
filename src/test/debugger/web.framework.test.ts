@@ -8,7 +8,6 @@
 import { expect } from 'chai';
 import * as getFreePort from 'get-port';
 import * as path from 'path';
-import { promisify } from 'util';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { noop } from '../../client/common/core.utils';
@@ -106,7 +105,12 @@ suite(`Django and Flask Debugging: ${debuggerType}`, () => {
 
         // Wait for web apps to start.
         const opts = { resources: [`http-get://localhost:${port}`] };
-        await promisify(waitOn)(opts);
+        await new Promise((resolve, reject) => waitOn(opts, err => {
+            if (err) {
+                return reject(err);
+            }
+            resolve();
+        }));
 
         const httpResult = await makeHttpRequest(`http://localhost:${port}`);
 
