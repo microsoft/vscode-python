@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ExtensionContext, OutputChannel } from 'vscode';
+import { ExtensionContext, OutputChannel, workspace } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
@@ -11,7 +11,6 @@ import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, IExtensionContext, IOutputChannel } from '../common/types';
-import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import {
@@ -21,7 +20,7 @@ import {
 } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';
 import { AnalysisEngineDownloader } from './downloader';
-import { InterpreterDataService } from './interpreterDataService';
+import { InterpreterData, InterpreterDataService } from './interpreterDataService';
 import { PlatformData } from './platformData';
 import { IExtensionActivator } from './types';
 
@@ -80,7 +79,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
 
     public async deactivate(): Promise<void> {
         if (this.languageClient) {
-            await this.languageClient.stop();
+            // Do not await on this
+            this.languageClient.stop();
         }
         for (const d of this.disposables) {
             d.dispose();
@@ -168,16 +168,19 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private async getAnalysisOptions(context: ExtensionContext): Promise<LanguageClientOptions | undefined> {
         // tslint:disable-next-line:no-any
         const properties = new Map<string, any>();
+        let interpreterData: InterpreterData | undefined;
+        let pythonPath = '';
 
-        // Microsoft Python code analysis engine needs full path to the interpreter
-        const interpreterDataService = new InterpreterDataService(context, this.services);
-        const interpreterData = await interpreterDataService.getInterpreterData();
-        if (!interpreterData) {
-            const appShell = this.services.get<IApplicationShell>(IApplicationShell);
-            appShell.showWarningMessage('Unable to determine path to Python interpreter. IntelliSense will be limited.');
+        try {
+            const interpreterDataService = new InterpreterDataService(context, this.services);
+            interpreterData = await interpreterDataService.getInterpreterData();
+        } catch (ex) {
+            this.appShell.showErrorMessage('Unable to determine path to the Python interpreter. IntelliSense will be limited.');
         }
 
+        this.interpreterHash = interpreterData ? interpreterData.hash : '';
         if (interpreterData) {
+            pythonPath = path.dirname(interpreterData.path);
             // tslint:disable-next-line:no-string-literal
             properties['InterpreterPath'] = interpreterData.path;
             // tslint:disable-next-line:no-string-literal
@@ -198,23 +201,15 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         // tslint:disable-next-line:no-string-literal
         properties['DatabasePath'] = path.join(context.extensionPath, analysisEngineFolder);
 
-        const envProvider = this.services.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
-        let pythonPath = (await envProvider.getEnvironmentVariables()).PYTHONPATH;
-        this.interpreterHash = interpreterData ? interpreterData.hash : '';
-
         // Make sure paths do not contain multiple slashes so file URIs
         // in VS Code (Node.js) and in the language server (.NET) match.
         // Note: for the language server paths separator is always ;
         searchPaths = searchPaths.split(path.delimiter).map(p => path.normalize(p)).join(';');
-        pythonPath = pythonPath ? path.normalize(pythonPath) : '';
-
         // tslint:disable-next-line:no-string-literal
         properties['SearchPaths'] = `${searchPaths};${pythonPath}`;
-        const selector: string[] = [PYTHON];
 
-        // const searchExcludes = workspace.getConfiguration('search').get('exclude', null);
-        // const filesExcludes = workspace.getConfiguration('files').get('exclude', null);
-        // const watcherExcludes = workspace.getConfiguration('files').get('watcherExclude', null);
+        const selector: string[] = [PYTHON];
+        const excludeFiles = this.getExcludedFiles();
 
         // Options to control the language client
         return {
@@ -236,8 +231,27 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                     maxDocumentationTextLength: 0
                 },
                 asyncStartup: true,
+                excludeFiles: excludeFiles,
                 testEnvironment: isTestExecution()
             }
         };
+    }
+
+    private getExcludedFiles(): string[] {
+        const list: string[] = ['**/lib/**', '**/site-packages/**'];
+        this.getExcludeSection('search.exclude', list);
+        this.getExcludeSection('files.exclude', list);
+        this.getExcludeSection('files.watcherExclude', list);
+        return list;
+    }
+
+    private getExcludeSection(setting: string, list: string[]): void {
+        const states = workspace.getConfiguration(setting);
+        const paths = Object.keys(states).filter(k => k.indexOf('*') >= 0 && states[k]);
+        paths.forEach(p => {
+            if (p && p.length > 0) {
+                list.push(p);
+            }
+        });
     }
 }
