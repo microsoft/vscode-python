@@ -11,13 +11,12 @@ import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { noop } from '../../client/common/core.utils';
+import { StopWatch } from '../../client/common/stopWatch';
 import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { DEBUGGER_TIMEOUT } from './common/constants';
 import { continueDebugging, createDebugAdapter, ExpectedVariable, hitHttpBreakpoint, makeHttpRequest, validateVariablesInFrame } from './utils';
-
-const waitOn = require('wait-on');
 
 let testCounter = 0;
 const debuggerType = 'pythonExperimental';
@@ -94,6 +93,27 @@ suite(`Django and Flask Debugging: ${debuggerType}`, () => {
         return { options, port };
     }
 
+    async function waitForWebServerToStart(url: string): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            let maxTries = 50;
+            const timeout = 10_000;
+            const start = new StopWatch();
+            const fn = () => {
+                makeHttpRequest(url)
+                    .then(resolve)
+                    .catch(ex => {
+                        maxTries -= 1;
+                        if (maxTries === 0 || start.elapsedTime >= timeout) {
+                            reject(ex);
+                        } else {
+                            setTimeout(fn, 100);
+                        }
+                    });
+            };
+            fn();
+        });
+    }
+
     async function testTemplateDebugging(launchArgs: LaunchRequestArguments, port: number, viewFile: string, viewLine: number, templateFile: string, templateLine: number) {
         await Promise.all([
             debugClient.configurationSequence(),
@@ -103,27 +123,21 @@ suite(`Django and Flask Debugging: ${debuggerType}`, () => {
             debugClient.waitForEvent('thread')
         ]);
 
-        // Wait for web apps to start.
-        const opts = { resources: [`http-get://localhost:${port}`] };
-        await new Promise((resolve, reject) => waitOn(opts, err => {
-            if (err) {
-                return reject(err);
-            }
-            resolve();
-        }));
+        const url = `http://localhost:${port}`;
 
-        const httpResult = await makeHttpRequest(`http://localhost:${port}`);
+        await waitForWebServerToStart(url);
 
+        const httpResult = await makeHttpRequest(url);
         expect(httpResult).to.contain('Hello this_is_a_value_from_server');
         expect(httpResult).to.contain('Hello this_is_another_value_from_server');
 
-        await hitHttpBreakpoint(debugClient, `http://localhost:${port}`, viewFile, viewLine);
+        await hitHttpBreakpoint(debugClient, url, viewFile, viewLine);
 
         await continueDebugging(debugClient);
         await debugClient.setBreakpointsRequest({ breakpoints: [], lines: [], source: { path: viewFile } });
 
         // Template debugging.
-        const [stackTrace, htmlResultPromise] = await hitHttpBreakpoint(debugClient, `http://localhost:${port}`, templateFile, templateLine);
+        const [stackTrace, htmlResultPromise] = await hitHttpBreakpoint(debugClient, url, templateFile, templateLine);
 
         // Wait for breakpoint to hit
         const expectedVariables: ExpectedVariable[] = [
