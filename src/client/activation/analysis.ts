@@ -212,6 +212,10 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         properties['SearchPaths'] = `${searchPaths};${pythonPath}`;
         const selector: string[] = [PYTHON];
 
+        // const searchExcludes = workspace.getConfiguration('search').get('exclude', null);
+        // const filesExcludes = workspace.getConfiguration('files').get('exclude', null);
+        // const watcherExcludes = workspace.getConfiguration('files').get('watcherExclude', null);
+
         // Options to control the language client
         return {
             // Register the server for Python documents
