@@ -11,7 +11,7 @@ import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { EnumEx } from '../../client/common/enumUtils';
-import { IFileSystem } from '../../client/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { ICurrentProcess, ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
@@ -40,6 +40,7 @@ suite('Interpreters - PipEnv', () => {
             let envVarsProvider: TypeMoq.IMock<IEnvironmentVariablesProvider>;
             let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
             let logger: TypeMoq.IMock<ILogger>;
+            let platformService: TypeMoq.IMock<IPlatformService>;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -52,6 +53,7 @@ suite('Interpreters - PipEnv', () => {
                 envVarsProvider = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>();
                 procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
                 logger = TypeMoq.Mock.ofType<ILogger>();
+                platformService = TypeMoq.Mock.ofType<IPlatformService>();
                 processService.setup((x: any) => x.then).returns(() => undefined);
                 procServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
 
@@ -76,6 +78,7 @@ suite('Interpreters - PipEnv', () => {
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => persistentStateFactory.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider))).returns(() => envVarsProvider.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger))).returns(() => logger.object);
+                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
 
                 pipEnvService = new PipEnvService(serviceContainer.object);
             });
@@ -84,7 +87,7 @@ suite('Interpreters - PipEnv', () => {
                 const environments = pipEnvService.getInterpreters(resource);
                 expect(environments).to.be.eventually.deep.equal([]);
             });
-            test(`Should return an empty list if there is a \'PipFile\'${testSuffix}`, async () => {
+            test(`Should return an empty list if there is no \'PipFile\'${testSuffix}`, async () => {
                 const env = {};
                 envVarsProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({})).verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
@@ -97,10 +100,10 @@ suite('Interpreters - PipEnv', () => {
             test(`Should display warning message if there is a \'PipFile\' but \'pipenv --venv\' failes ${testSuffix}`, async () => {
                 const env = {};
                 currentProcess.setup(c => c.env).returns(() => env);
-                processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.reject(''));
+                processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.reject(''));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
                 appShell.setup(a => a.showWarningMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('')).verifiable(TypeMoq.Times.once());
-                logger.setup(l => l.logWarning(TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.once());
+                logger.setup(l => l.logWarning(TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.exactly(2));
                 const environments = await pipEnvService.getInterpreters(resource);
 
                 expect(environments).to.be.deep.equal([]);
@@ -110,10 +113,10 @@ suite('Interpreters - PipEnv', () => {
             test(`Should display warning message if there is a \'PipFile\' but \'pipenv --venv\' failes with stderr ${testSuffix}`, async () => {
                 const env = {};
                 currentProcess.setup(c => c.env).returns(() => env);
-                processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stderr: 'PipEnv Failed', stdout: '' }));
+                processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stderr: 'PipEnv Failed', stdout: '' }));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
                 appShell.setup(a => a.showWarningMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('')).verifiable(TypeMoq.Times.once());
-                logger.setup(l => l.logWarning(TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.once());
+                logger.setup(l => l.logWarning(TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.exactly(2));
                 const environments = await pipEnvService.getInterpreters(resource);
 
                 expect(environments).to.be.deep.equal([]);
@@ -125,7 +128,7 @@ suite('Interpreters - PipEnv', () => {
                 const pythonPath = 'one';
                 envVarsProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({})).verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
-                processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: pythonPath }));
+                processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: pythonPath }));
                 interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: 'xyz' }));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true)).verifiable();
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true)).verifiable();
@@ -142,7 +145,7 @@ suite('Interpreters - PipEnv', () => {
                 const pythonPath = 'one';
                 envVarsProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({})).verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
-                processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: pythonPath }));
+                processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: pythonPath }));
                 interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: 'xyz' }));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.never());
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, envPipFile)))).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
