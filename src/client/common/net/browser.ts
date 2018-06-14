@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 import * as child_process from 'child_process';
+import { injectable } from 'inversify';
 import * as os from 'os';
+import { IBrowserService } from '../types';
 
 export function launch(url: string) {
     let openCommand: string | undefined;
@@ -18,4 +20,11 @@ export function launch(url: string) {
         console.error(`Link is: ${url}`);
     }
     child_process.spawn(openCommand, [url]);
+}
+
+@injectable()
+export class BrowserService implements IBrowserService {
+    public launch(url: string): void{
+        launch(url);
+    }
 }

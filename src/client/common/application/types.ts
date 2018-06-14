@@ -4,12 +4,13 @@
 
 // tslint:disable:no-any unified-signatures
 
-import * as vscode from 'vscode';
-import { CancellationToken, ConfigurationChangeEvent, Disposable, Event, FileSystemWatcher, GlobPattern, TextDocument, TextDocumentShowOptions, WorkspaceConfiguration, WorkspaceFolderPickOptions } from 'vscode';
-import { TextEditor, TextEditorEdit, TextEditorOptionsChangeEvent, TextEditorSelectionChangeEvent, TextEditorViewColumnChangeEvent } from 'vscode';
-import { StatusBarAlignment, StatusBarItem } from 'vscode';
-import { Uri, ViewColumn, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
-import { Terminal, TerminalOptions } from 'vscode';
+import {
+    CancellationToken, ConfigurationChangeEvent, DebugConfiguration, DebugSession, Disposable, Event, FileSystemWatcher, GlobPattern, InputBoxOptions, MessageItem,
+    MessageOptions, OpenDialogOptions, QuickPickItem, QuickPickOptions, SaveDialogOptions,
+    StatusBarAlignment, StatusBarItem, Terminal, TerminalOptions, TextDocument, TextDocumentShowOptions, TextEditor,
+    TextEditorEdit, TextEditorOptionsChangeEvent, TextEditorSelectionChangeEvent, TextEditorViewColumnChangeEvent, Uri, ViewColumn, WorkspaceConfiguration, WorkspaceFolder,
+    WorkspaceFolderPickOptions, WorkspaceFoldersChangeEvent
+} from 'vscode';
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
@@ -24,7 +25,7 @@ export interface IApplicationShell {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    showInformationMessage(message: string, options: vscode.MessageOptions, ...items: string[]): Thenable<string | undefined>;
+    showInformationMessage(message: string, options: MessageOptions, ...items: string[]): Thenable<string | undefined>;
 
     /**
      * Show an information message.
@@ -35,7 +36,7 @@ export interface IApplicationShell {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    showInformationMessage<T extends vscode.MessageItem>(message: string, ...items: T[]): Thenable<T | undefined>;
+    showInformationMessage<T extends MessageItem>(message: string, ...items: T[]): Thenable<T | undefined>;
 
     /**
      * Show an information message.
@@ -47,7 +48,7 @@ export interface IApplicationShell {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    showInformationMessage<T extends vscode.MessageItem>(message: string, options: vscode.MessageOptions, ...items: T[]): Thenable<T | undefined>;
+    showInformationMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Thenable<T | undefined>;
 
     /**
      * Show a warning message.
@@ -70,7 +71,7 @@ export interface IApplicationShell {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    showWarningMessage(message: string, options: vscode.MessageOptions, ...items: string[]): Thenable<string | undefined>;
+    showWarningMessage(message: string, options: MessageOptions, ...items: string[]): Thenable<string | undefined>;
 
     /**
      * Show a warning message.
@@ -81,7 +82,7 @@ export interface IApplicationShell {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    showWarningMessage<T extends vscode.MessageItem>(message: string, ...items: T[]): Thenable<T | undefined>;
+    showWarningMessage<T extends MessageItem>(message: string, ...items: T[]): Thenable<T | undefined>;
 
     /**
      * Show a warning message.
@@ -93,7 +94,7 @@ export interface IApplicationShell {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    showWarningMessage<T extends vscode.MessageItem>(message: string, options: vscode.MessageOptions, ...items: T[]): Thenable<T | undefined>;
+    showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Thenable<T | undefined>;
 
     /**
      * Show an error message.
@@ -116,7 +117,7 @@ export interface IApplicationShell {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    showErrorMessage(message: string, options: vscode.MessageOptions, ...items: string[]): Thenable<string | undefined>;
+    showErrorMessage(message: string, options: MessageOptions, ...items: string[]): Thenable<string | undefined>;
 
     /**
      * Show an error message.
@@ -127,7 +128,7 @@ export interface IApplicationShell {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    showErrorMessage<T extends vscode.MessageItem>(message: string, ...items: T[]): Thenable<T | undefined>;
+    showErrorMessage<T extends MessageItem>(message: string, ...items: T[]): Thenable<T | undefined>;
 
     /**
      * Show an error message.
@@ -139,7 +140,7 @@ export interface IApplicationShell {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    showErrorMessage<T extends vscode.MessageItem>(message: string, options: vscode.MessageOptions, ...items: T[]): Thenable<T | undefined>;
+    showErrorMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Thenable<T | undefined>;
 
     /**
      * Shows a selection list.
@@ -149,7 +150,7 @@ export interface IApplicationShell {
      * @param token A token that can be used to signal cancellation.
      * @return A promise that resolves to the selection or `undefined`.
      */
-    showQuickPick(items: string[] | Thenable<string[]>, options?: vscode.QuickPickOptions, token?: vscode.CancellationToken): Thenable<string | undefined>;
+    showQuickPick(items: string[] | Thenable<string[]>, options?: QuickPickOptions, token?: CancellationToken): Thenable<string | undefined>;
 
     /**
      * Shows a selection list.
@@ -159,7 +160,7 @@ export interface IApplicationShell {
      * @param token A token that can be used to signal cancellation.
      * @return A promise that resolves to the selected item or `undefined`.
      */
-    showQuickPick<T extends vscode.QuickPickItem>(items: T[] | Thenable<T[]>, options?: vscode.QuickPickOptions, token?: vscode.CancellationToken): Thenable<T | undefined>;
+    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options?: QuickPickOptions, token?: CancellationToken): Thenable<T | undefined>;
 
     /**
      * Shows a file open dialog to the user which allows to select a file
@@ -168,7 +169,7 @@ export interface IApplicationShell {
      * @param options Options that control the dialog.
      * @returns A promise that resolves to the selected resources or `undefined`.
      */
-    showOpenDialog(options: vscode.OpenDialogOptions): Thenable<vscode.Uri[] | undefined>;
+    showOpenDialog(options: OpenDialogOptions): Thenable<Uri[] | undefined>;
 
     /**
      * Shows a file save dialog to the user which allows to select a file
@@ -177,7 +178,7 @@ export interface IApplicationShell {
      * @param options Options that control the dialog.
      * @returns A promise that resolves to the selected resource or `undefined`.
      */
-    showSaveDialog(options: vscode.SaveDialogOptions): Thenable<vscode.Uri | undefined>;
+    showSaveDialog(options: SaveDialogOptions): Thenable<Uri | undefined>;
 
     /**
      * Opens an input box to ask the user for input.
@@ -190,7 +191,7 @@ export interface IApplicationShell {
      * @param token A token that can be used to signal cancellation.
      * @return A promise that resolves to a string the user provided or to `undefined` in case of dismissal.
      */
-    showInputBox(options?: vscode.InputBoxOptions, token?: vscode.CancellationToken): Thenable<string | undefined>;
+    showInputBox(options?: InputBoxOptions, token?: CancellationToken): Thenable<string | undefined>;
 
     /**
      * Opens URL in a default browser.
@@ -535,6 +536,10 @@ export const IDebugService = Symbol('IDebugManager');
 
 export interface IDebugService {
     /**
+     * An [event](#Event) which fires when a new [debug session](#DebugSession) has been started.
+     */
+    onDidStartDebugSession: Event<DebugSession>;
+    /**
      * Start debugging by using either a named launch or named compound configuration,
      * or by directly passing a [DebugConfiguration](#DebugConfiguration).
      * The named configurations are looked up in '.vscode/launch.json' found in the given folder.
@@ -544,5 +549,44 @@ export interface IDebugService {
      * @param nameOrConfiguration Either the name of a debug or compound configuration or a [DebugConfiguration](#DebugConfiguration) object.
      * @return A thenable that resolves when debugging could be successfully started.
      */
-    startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | vscode.DebugConfiguration): Thenable<boolean>;
+    startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration): Thenable<boolean>;
+}
+
+export const IApplicationEnvironment = Symbol('IApplicationEnvironment');
+export interface IApplicationEnvironment {
+    /**
+     * The application name of the editor, like 'VS Code'.
+     *
+     * @readonly
+     */
+    appName: string;
+
+    /**
+     * The application root folder from which the editor is running.
+     *
+     * @readonly
+     */
+    appRoot: string;
+
+    /**
+     * Represents the preferred user-language, like `de-CH`, `fr`, or `en-US`.
+     *
+     * @readonly
+     */
+    language: string;
+
+    /**
+     * A unique identifier for the computer.
+     *
+     * @readonly
+     */
+    machineId: string;
+
+    /**
+     * A unique identifier for the current session.
+     * Changes each time the editor is started.
+     *
+     * @readonly
+     */
+    sessionId: string;
 }

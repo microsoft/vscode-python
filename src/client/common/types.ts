@@ -248,3 +248,8 @@ export interface ISocketServer extends Disposable {
 
 export const IExtensionContext = Symbol('ExtensionContext');
 export interface IExtensionContext extends ExtensionContext { }
+
+export const IBrowserService = Symbol('IBrowserService');
+export interface IBrowserService {
+    launch(url: string): void;
+}

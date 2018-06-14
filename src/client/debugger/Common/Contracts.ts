@@ -4,8 +4,9 @@
 import { ChildProcess } from 'child_process';
 import * as net from 'net';
 import { OutputEvent } from 'vscode-debugadapter';
-import { DebugProtocol } from 'vscode-debugprotocol';
+import { DebugProtocol } from 'vscode-debugprotocol/lib/debugProtocol';
 import { DebuggerPerformanceTelemetry, DebuggerTelemetry } from '../../telemetry/types';
+import { ExperimentalDebuggerType } from './constants';
 
 export class TelemetryEvent extends OutputEvent {
     body!: {
@@ -49,7 +50,7 @@ export interface ExceptionHandling {
     unhandled: string[];
 }
 
-export type DebuggerType = 'python' | 'pythonExperimental';
+export type DebuggerType = 'python' | typeof ExperimentalDebuggerType;
 
 export interface AdditionalLaunchDebugOptions {
     redirectOutput?: boolean;

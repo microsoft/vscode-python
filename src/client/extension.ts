@@ -29,7 +29,8 @@ import { registerTypes as variableRegisterTypes } from './common/variables/servi
 import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
 import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
-import { IDebugConfigurationProvider } from './debugger/types';
+import { registerTypes as debuggerRegisterTypes } from './debugger/serviceRegistry';
+import { IDebugConfigurationProvider, IExperimentalDebuggerBanner } from './debugger/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import { ICondaService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
@@ -150,6 +151,8 @@ export async function activate(context: ExtensionContext) {
     serviceContainer.getAll<ConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
         context.subscriptions.push(debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));
     });
+
+    serviceContainer.get<IExperimentalDebuggerBanner>(IExperimentalDebuggerBanner).initialize();
     activationDeferred.resolve();
 }
 
@@ -178,6 +181,7 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
+    debuggerRegisterTypes(serviceManager);
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {
