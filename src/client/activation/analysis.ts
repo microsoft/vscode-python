@@ -238,20 +238,36 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     }
 
     private getExcludedFiles(): string[] {
-        const list: string[] = ['**/lib/**', '**/site-packages/**'];
-        this.getExcludeSection('search.exclude', list);
-        this.getExcludeSection('files.exclude', list);
-        this.getExcludeSection('files.watcherExclude', list);
+        const list: string[] = ['**/Lib/**', '**/site-packages/**'];
+        this.getVsCodeExcludeSection('search.exclude', list);
+        this.getVsCodeExcludeSection('files.exclude', list);
+        this.getVsCodeExcludeSection('files.watcherExclude', list);
+        this.getPythonExcludeSection('linting.ignorePatterns', list);
+        this.getPythonExcludeSection('workspaceSymbols.exclusionPattern', list);
         return list;
     }
 
-    private getExcludeSection(setting: string, list: string[]): void {
+    private getVsCodeExcludeSection(setting: string, list: string[]): void {
         const states = workspace.getConfiguration(setting);
-        const paths = Object.keys(states).filter(k => k.indexOf('*') >= 0 && states[k]);
-        paths.forEach(p => {
-            if (p && p.length > 0) {
-                list.push(p);
-            }
-        });
+        if (states) {
+            const paths = Object.keys(states)
+                .filter(k => (k.indexOf('*') >= 0 || k.indexOf('/') >= 0) && states[k]);
+            paths.forEach(p => {
+                if (p && p.length > 0) {
+                    list.push(p);
+                }
+            });
+        }
+    }
+
+    private getPythonExcludeSection(setting: string, list: string[]): void {
+        const paths = workspace.getConfiguration('python').get<string[]>(setting);
+        if (paths) {
+            paths.forEach(p => {
+                if (p && p.length > 0) {
+                    list.push(p);
+                }
+            });
+        }
     }
 }
