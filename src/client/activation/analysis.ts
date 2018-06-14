@@ -45,6 +45,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private languageClient: LanguageClient | undefined;
     private readonly context: ExtensionContext;
     private interpreterHash: string = '';
+    private loadExtensionArgs;
 
     constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
         this.context = this.services.get<IExtensionContext>(IExtensionContext);
@@ -57,11 +58,14 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
 
         this.startupCompleted = createDeferred<void>();
         const commandManager = this.services.get<ICommandManager>(ICommandManager);
+
         this.disposables.push(commandManager.registerCommand(loadExtensionCommand,
             async (args) => {
                 if (this.languageClient) {
                     await this.startupCompleted.promise;
                     this.languageClient.sendRequest('python/loadExtension', args);
+                } else {
+                    this.loadExtensionArgs = args;
                 }
             }
         ));
@@ -137,6 +141,10 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         this.languageClient!.onReady()
             .then(() => {
                 this.startupCompleted.resolve();
+                if (this.loadExtensionArgs) {
+                    this.languageClient!.sendRequest('python/loadExtension', this.loadExtensionArgs);
+                    this.loadExtensionArgs = undefined;
+                }
             })
             .catch(error => this.startupCompleted.reject(error));
 
@@ -208,7 +216,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         // tslint:disable-next-line:no-string-literal
         properties['SearchPaths'] = `${searchPaths};${pythonPath}`;
 
-        const selector: string[] = [PYTHON];
+        const selector = [{ language: PYTHON, scheme: 'file' }];
         const excludeFiles = this.getExcludedFiles();
 
         // Options to control the language client
@@ -248,26 +256,20 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     }
 
     private getVsCodeExcludeSection(setting: string, list: string[]): void {
-        const states = workspace.getConfiguration(setting);
+        const states = workspace.getConfiguration(setting, null);
         if (states) {
-            const paths = Object.keys(states)
-                .filter(k => (k.indexOf('*') >= 0 || k.indexOf('/') >= 0) && states[k]);
-            paths.forEach(p => {
-                if (p && p.length > 0) {
-                    list.push(p);
-                }
-            });
+            Object.keys(states)
+                .filter(k => (k.indexOf('*') >= 0 || k.indexOf('/') >= 0) && states[k])
+                .forEach(p => list.push(p));
         }
     }
 
     private getPythonExcludeSection(setting: string, list: string[]): void {
-        const paths = workspace.getConfiguration('python').get<string[]>(setting);
-        if (paths) {
-            paths.forEach(p => {
-                if (p && p.length > 0) {
-                    list.push(p);
-                }
-            });
+        const paths = workspace.getConfiguration('python', null).get<string[]>(setting);
+        if (paths && Array.isArray(paths)) {
+            paths
+                .filter(p => p && p.length > 0)
+                .forEach(p => list.push(p));
         }
     }
 }
