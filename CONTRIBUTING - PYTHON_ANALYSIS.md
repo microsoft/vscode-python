@@ -33,7 +33,7 @@ Visual Studio 2017:
 4. Delete contents of the *analysis* folder in the Python Extension folder
 5. Copy *.dll, *.pdb, *.json fron *Python/BuildOutput/VsCode/raw* to *analysis*
 6. In VS Code set setting *python.downloadCodeAnalysis* to *false*
-7. In VS Code set setting *python.JediEnabled* to *false*
+7. In VS Code set setting *python.jediEnabled* to *false*
 
 ### Debugging code in Python Extension to VS Code
 Folow regular TypeScript debugging steps
