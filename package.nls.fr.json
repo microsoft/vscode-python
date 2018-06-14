@@ -43,7 +43,7 @@
     "python.snippet.launch.watson.label": "Python: Application Watson",
     "python.snippet.launch.watson.description": "Déboguer une Application Watson",
     "python.snippet.launch.attach.label": "Python: Attacher",
-    "python.snippet.launch.attach.description": "Attacher le débogueur pour un debugging distant",
+    "python.snippet.launch.attach.description": "Attacher le débogueur pour un débogage distant",
     "python.snippet.launch.scrapy.label": "Python : Scrapy",
     "python.snippet.launch.scrapy.description": "Scrapy avec un terminal intégré"
 }
