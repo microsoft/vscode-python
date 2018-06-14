@@ -1819,6 +1819,18 @@
                 ]
             },
             {
+                "id": "toml",
+                "filenames": [
+                    "Pipfile"
+                ]
+            },
+            {
+                "id": "json",
+                "filenames": [
+                    "Pipfile.lock"
+                ]
+            },
+            {
                 "id": "jinja",
                 "extensions": [
                     ".jinja2",
