@@ -1,6 +1,6 @@
 {
     "python.command.python.sortImports.title": "Trier les imports",
-    "python.command.python.startREPL.title": "Démarrer REPL",
+    "python.command.python.startREPL.title": "Démarrer la console interactive",
     "python.command.python.createTerminal.title": "Créer un terminal",
     "python.command.python.buildWorkspaceSymbols.title": "Construire les symboles de l'espace de travail",
     "python.command.python.runtests.title": "Exécuter tous les tests unitaires",
