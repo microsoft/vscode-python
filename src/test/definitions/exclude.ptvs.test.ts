@@ -51,6 +51,9 @@ suite('Exclude files (Analysis Engine)', () => {
         textDocument = await workspace.openTextDocument(file);
         await activated;
         await window.showTextDocument(textDocument);
+        // Make sure LS completes file loading and analysis.
+        // In test mode it awaits for the completion before trying
+        // to fetch data for completion, hover.etc.
         await commands.executeCommand('vscode.executeCompletionItemProvider', textDocument.uri, new Position(0, 0));
     }
 
