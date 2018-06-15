@@ -5,11 +5,11 @@ import * as fileSystem from 'fs';
 import * as path from 'path';
 import * as request from 'request';
 import * as requestProgress from 'request-progress';
-import { ExtensionContext, OutputChannel, ProgressLocation, window } from 'vscode';
+import { OutputChannel, ProgressLocation, window } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, createTemporaryFile } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
-import { IOutputChannel } from '../common/types';
+import { IExtensionContext, IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { HashVerifier } from './hashVerifier';
 import { PlatformData } from './platformData';
@@ -35,7 +35,7 @@ export class AnalysisEngineDownloader {
         this.platformData = new PlatformData(this.platform, this.fs);
     }
 
-    public async downloadAnalysisEngine(context: ExtensionContext): Promise<void> {
+    public async downloadAnalysisEngine(context: IExtensionContext): Promise<void> {
         const platformString = await this.platformData.getPlatformName();
         const enginePackageFileName = `${downloadBaseFileName}-${platformString}.${downloadVersion}${downloadFileExtension}`;
 

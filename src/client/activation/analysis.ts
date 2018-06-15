@@ -3,9 +3,9 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ExtensionContext, OutputChannel, workspace } from 'vscode';
+import { OutputChannel, Uri } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
-import { IApplicationShell, ICommandManager } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
@@ -41,11 +41,13 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly interpreterService: IInterpreterService;
     private readonly startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
+    private readonly context: IExtensionContext;
+    private readonly workspace: IWorkspaceService;
+    private readonly root: Uri | undefined;
 
     private languageClient: LanguageClient | undefined;
-    private readonly context: ExtensionContext;
     private interpreterHash: string = '';
-    private loadExtensionArgs;
+    private loadExtensionArgs: {} | undefined;
 
     constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
         this.context = this.services.get<IExtensionContext>(IExtensionContext);
@@ -55,6 +57,11 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         this.fs = this.services.get<IFileSystem>(IFileSystem);
         this.platformData = new PlatformData(services.get<IPlatformService>(IPlatformService), this.fs);
         this.interpreterService = this.services.get<IInterpreterService>(IInterpreterService);
+        this.workspace = this.services.get<IWorkspaceService>(IWorkspaceService);
+
+        // Currently only a single root. Multi-root support is future.
+        this.root = this.workspace && this.workspace.hasWorkspaceFolders
+            ? this.workspace.workspaceFolders![0]!.uri : undefined;
 
         this.startupCompleted = createDeferred<void>();
         const commandManager = this.services.get<ICommandManager>(ICommandManager);
@@ -73,12 +80,12 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
 
     public async activate(): Promise<boolean> {
         this.sw.reset();
-        const clientOptions = await this.getAnalysisOptions(this.context);
+        const clientOptions = await this.getAnalysisOptions();
         if (!clientOptions) {
             return false;
         }
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.restartLanguageServer()));
-        return this.startLanguageServer(this.context, clientOptions);
+        return this.startLanguageServer(clientOptions);
     }
 
     public async deactivate(): Promise<void> {
@@ -104,7 +111,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         }
     }
 
-    private async startLanguageServer(context: ExtensionContext, clientOptions: LanguageClientOptions): Promise<boolean> {
+    private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
 
         const reporter = getTelemetryReporter();
@@ -113,22 +120,22 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         const settings = this.configuration.getSettings();
         if (!settings.downloadCodeAnalysis) {
             // Depends on .NET Runtime or SDK. Typically development-only case.
-            this.languageClient = this.createSimpleLanguageClient(context, clientOptions);
-            await this.startLanguageClient(context);
+            this.languageClient = this.createSimpleLanguageClient(clientOptions);
+            await this.startLanguageClient();
             return true;
         }
 
-        const mscorlib = path.join(context.extensionPath, analysisEngineFolder, 'mscorlib.dll');
+        const mscorlib = path.join(this.context.extensionPath, analysisEngineFolder, 'mscorlib.dll');
         if (!await this.fs.fileExists(mscorlib)) {
             const downloader = new AnalysisEngineDownloader(this.services, analysisEngineFolder);
-            await downloader.downloadAnalysisEngine(context);
+            await downloader.downloadAnalysisEngine(this.context);
             reporter.sendTelemetryEvent(PYTHON_ANALYSIS_ENGINE_DOWNLOADED);
         }
 
-        const serverModule = path.join(context.extensionPath, analysisEngineFolder, this.platformData.getEngineExecutableName());
-        this.languageClient = this.createSelfContainedLanguageClient(context, serverModule, clientOptions);
+        const serverModule = path.join(this.context.extensionPath, analysisEngineFolder, this.platformData.getEngineExecutableName());
+        this.languageClient = this.createSelfContainedLanguageClient(serverModule, clientOptions);
         try {
-            await this.startLanguageClient(context);
+            await this.startLanguageClient();
             return true;
         } catch (ex) {
             this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
@@ -137,7 +144,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         }
     }
 
-    private async startLanguageClient(context: ExtensionContext): Promise<void> {
+    private async startLanguageClient(): Promise<void> {
         this.languageClient!.onReady()
             .then(() => {
                 this.startupCompleted.resolve();
@@ -148,15 +155,15 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
             })
             .catch(error => this.startupCompleted.reject(error));
 
-        context.subscriptions.push(this.languageClient!.start());
+        this.context.subscriptions.push(this.languageClient!.start());
         if (isTestExecution()) {
             await this.startupCompleted.promise;
         }
     }
 
-    private createSimpleLanguageClient(context: ExtensionContext, clientOptions: LanguageClientOptions): LanguageClient {
+    private createSimpleLanguageClient(clientOptions: LanguageClientOptions): LanguageClient {
         const commandOptions = { stdio: 'pipe' };
-        const serverModule = path.join(context.extensionPath, analysisEngineFolder, this.platformData.getEngineDllName());
+        const serverModule = path.join(this.context.extensionPath, analysisEngineFolder, this.platformData.getEngineDllName());
         const serverOptions: ServerOptions = {
             run: { command: dotNetCommand, args: [serverModule], options: commandOptions },
             debug: { command: dotNetCommand, args: [serverModule, '--debug'], options: commandOptions }
@@ -164,7 +171,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         return new LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
     }
 
-    private createSelfContainedLanguageClient(context: ExtensionContext, serverModule: string, clientOptions: LanguageClientOptions): LanguageClient {
+    private createSelfContainedLanguageClient(serverModule: string, clientOptions: LanguageClientOptions): LanguageClient {
         const options = { stdio: 'pipe' };
         const serverOptions: ServerOptions = {
             run: { command: serverModule, rgs: [], options: options },
@@ -173,14 +180,14 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         return new LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
     }
 
-    private async getAnalysisOptions(context: ExtensionContext): Promise<LanguageClientOptions | undefined> {
+    private async getAnalysisOptions(): Promise<LanguageClientOptions | undefined> {
         // tslint:disable-next-line:no-any
         const properties = new Map<string, any>();
         let interpreterData: InterpreterData | undefined;
         let pythonPath = '';
 
         try {
-            const interpreterDataService = new InterpreterDataService(context, this.services);
+            const interpreterDataService = new InterpreterDataService(this.context, this.services);
             interpreterData = await interpreterDataService.getInterpreterData();
         } catch (ex) {
             this.appShell.showErrorMessage('Unable to determine path to the Python interpreter. IntelliSense will be limited.');
@@ -207,7 +214,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         }
 
         // tslint:disable-next-line:no-string-literal
-        properties['DatabasePath'] = path.join(context.extensionPath, analysisEngineFolder);
+        properties['DatabasePath'] = path.join(this.context.extensionPath, analysisEngineFolder);
 
         // Make sure paths do not contain multiple slashes so file URIs
         // in VS Code (Node.js) and in the language server (.NET) match.
@@ -256,7 +263,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     }
 
     private getVsCodeExcludeSection(setting: string, list: string[]): void {
-        const states = workspace.getConfiguration(setting, null);
+        const states = this.workspace.getConfiguration(setting, this.root);
         if (states) {
             Object.keys(states)
                 .filter(k => (k.indexOf('*') >= 0 || k.indexOf('/') >= 0) && states[k])
@@ -265,7 +272,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     }
 
     private getPythonExcludeSection(setting: string, list: string[]): void {
-        const paths = workspace.getConfiguration('python', null).get<string[]>(setting);
+        const pythonSettings = this.configuration.getSettings(this.root);
+        const paths = pythonSettings && pythonSettings.linting ? pythonSettings.linting.ignorePatterns : undefined;
         if (paths && Array.isArray(paths)) {
             paths
                 .filter(p => p && p.length > 0)
