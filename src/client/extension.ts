@@ -13,6 +13,8 @@ import { Container } from 'inversify';
 import { CodeActionKind, debug, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationService } from './activation/types';
+import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
+import { IApplicationDiagnostics } from './application/types';
 import { IWorkspaceService } from './common/application/types';
 import { PythonSettings } from './common/configSettings';
 import { PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
@@ -68,6 +70,9 @@ export async function activate(context: ExtensionContext) {
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
     registerServices(context, serviceManager, serviceContainer);
+
+    const appDiagnostics = serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics);
+    await appDiagnostics.performPreStartupHealthCheck();
 
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     // This must be completed before we can continue as language server needs the interpreter path.
@@ -182,6 +187,7 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
     debuggerRegisterTypes(serviceManager);
+    appRegisterTypes(serviceManager);
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {

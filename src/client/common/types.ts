@@ -36,6 +36,12 @@ export type ExecutionInfo = {
     product?: Product;
 };
 
+export enum LogLevel {
+    Information = 'Information',
+    Error = 'Error',
+    Warning = 'Warning'
+}
+
 export const ILogger = Symbol('ILogger');
 
 export interface ILogger {
@@ -94,6 +100,7 @@ export interface IInstaller {
 export const IPathUtils = Symbol('IPathUtils');
 
 export interface IPathUtils {
+    readonly delimiter: string;
     getPathVariableName(): 'Path' | 'PATH';
     basename(pathValue: string, ext?: string): string;
 }

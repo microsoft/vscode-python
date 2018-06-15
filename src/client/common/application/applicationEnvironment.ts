@@ -4,7 +4,9 @@
 'use strict';
 
 import { injectable } from 'inversify';
+import * as path from 'path';
 import * as vscode from 'vscode';
+import { EXTENSION_ROOT_DIR } from '../constants';
 import { IApplicationEnvironment } from './types';
 
 @injectable()
@@ -23,5 +25,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     }
     public get machineId(): string {
         return vscode.env.machineId;
+    }
+    public get extensionName(): string {
+        // tslint:disable-next-line:non-literal-require
+        return require(path.join(EXTENSION_ROOT_DIR, 'package.json')).displayName;
     }
 }

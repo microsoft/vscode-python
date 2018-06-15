@@ -562,6 +562,13 @@ export interface IApplicationEnvironment {
     appName: string;
 
     /**
+     * The extension name.
+     *
+     * @readonly
+     */
+    extensionName: string;
+
+    /**
      * The application root folder from which the editor is running.
      *
      * @readonly
