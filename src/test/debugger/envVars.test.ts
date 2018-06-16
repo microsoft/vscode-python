@@ -103,7 +103,11 @@ suite('Resolving Environment Variables when Debugging', () => {
         }
     }
 
-    test('Confirm json environment variables exist when launched in external terminal', () => testJsonEnvVariables('externalTerminal', 2 + 2));
+    test('Confirm json environment variables exist when launched in external terminal', () => {
+        testJsonEnvVariables('externalTerminal', 2 + 2).catch((reason) => {
+            throw new Error(`Env Var Test broken: '${reason}'`);
+        });
+    });
 
     test('Confirm json environment variables exist when launched in intergrated terminal', () => testJsonEnvVariables('integratedTerminal', 2 + 2));
 
