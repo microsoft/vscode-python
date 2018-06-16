@@ -11,7 +11,7 @@ import { IConfigurationService } from '../../client/common/types';
 import { activated } from '../../client/extension';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
-import { IServiceContainer } from '../../client/ioc/types';
+import { IServiceContainer, IServiceManager } from '../../client/ioc/types';
 import { IsAnalysisEngineTest } from '../constants';
 import { closeActiveWindows } from '../initialize';
 
@@ -21,6 +21,7 @@ const fileOne = path.join(wksPath, 'one.py');
 // tslint:disable-next-line:max-func-body-length
 suite('Exclude files (Analysis Engine)', () => {
     let textDocument: TextDocument;
+    let serviceManager: IServiceManager;
     let serviceContainer: IServiceContainer;
     let configService: IConfigurationService;
 
@@ -33,7 +34,7 @@ suite('Exclude files (Analysis Engine)', () => {
     setup(async () => {
         const cont = new Container();
         serviceContainer = new ServiceContainer(cont);
-        const serviceManager = new ServiceManager(cont);
+        serviceManager = new ServiceManager(cont);
 
         serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
         configService = serviceManager.get<IConfigurationService>(IConfigurationService);
