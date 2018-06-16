@@ -38,15 +38,9 @@ suite('Exclude files (Analysis Engine)', () => {
 
         serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
         configService = serviceManager.get<IConfigurationService>(IConfigurationService);
-        await setSetting('linting.ignorePatterns', ['**/dir1/**']);
-    });
-    suiteTeardown(cleanup);
-    teardown(cleanup);
-
-    async function cleanup(): Promise<void> {
-        await setSetting('linting.ignorePatterns', undefined);
-        await closeActiveWindows();
-    }
+     });
+    suiteTeardown(closeActiveWindows);
+    teardown(closeActiveWindows);
 
     async function openFile(file: string): Promise<void> {
         textDocument = await workspace.openTextDocument(file);
@@ -82,6 +76,8 @@ suite('Exclude files (Analysis Engine)', () => {
         assert.equal(sitePackages.length, 0);
     });
     test('Exclude subfolder', async () => {
+        await setSetting('linting.ignorePatterns', ['**/dir1/**']);
+
         await openFile(fileOne);
         const diag = languages.getDiagnostics();
 
@@ -93,5 +89,7 @@ suite('Exclude files (Analysis Engine)', () => {
 
         const subdir2 = diag.filter(d => d[0].fsPath.indexOf('dir2file.py') >= 0);
         assert.equal(subdir2.length, 0);
+
+        await setSetting('linting.ignorePatterns', undefined);
     });
 });
