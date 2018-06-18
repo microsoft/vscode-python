@@ -6,17 +6,17 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as typemoq from 'typemoq';
+import { DiagnosticSeverity } from 'vscode';
 import { EnvironmentPathVariableDiagnosticsService } from '../../../../client/application/diagnostics/checks/envPathVariable';
+import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
-import { IDiagnostic, IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsService, DiagnosticScope, IDiagnosticCommand } from '../../../../client/application/diagnostics/types';
+import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsService } from '../../../../client/application/diagnostics/types';
 import { IApplicationEnvironment } from '../../../../client/common/application/types';
 import { IPlatformService } from '../../../../client/common/platform/types';
 import { ICurrentProcess, IPathUtils } from '../../../../client/common/types';
 import { EnvironmentVariables } from '../../../../client/common/variables/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { DiagnosticSeverity } from 'vscode';
-import { IDiagnosticsCommandFactory, CommandOption } from '../../../../client/application/diagnostics/commands/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Application Diagnostics - Checks Env Path Variable', () => {

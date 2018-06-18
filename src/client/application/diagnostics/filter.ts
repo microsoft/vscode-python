@@ -8,7 +8,7 @@ import { IPersistentStateFactory } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { DiagnosticScope, IDiagnosticFilterService } from './types';
 
-enum FilterKeys {
+export enum FilterKeys {
     GlobalDiagnosticFilter = 'GLOBAL_DIAGNOSTICS_FILTER',
     WorkspaceDiagnosticFilter = 'WORKSPACE_DIAGNOSTICS_FILTER'
 }
