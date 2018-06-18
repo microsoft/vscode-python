@@ -25,18 +25,18 @@ export class DiagnosticCommandPromptHandlerService implements IDiagnosticHandler
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
     }
-    public async handle(diagnostic: IDiagnostic, options: MessageCommandPrompt): Promise<void> {
+    public async handle(diagnostic: IDiagnostic, options: MessageCommandPrompt = { commandPrompts: [] }): Promise<void> {
         const prompts = options.commandPrompts.map(option => option.prompt);
         const response = await this.displayMessage(options.message ? options.message : diagnostic.message, diagnostic.severity, prompts);
         if (!response) {
             return;
         }
         const selectedOption = options.commandPrompts.find(option => option.prompt === response);
-        if (selectedOption.command) {
-            selectedOption.command.invoke();
+        if (selectedOption && selectedOption.command) {
+            await selectedOption.command.invoke();
         }
     }
-    private async displayMessage(message: string, severity: DiagnosticSeverity, prompts: string[]): Promise<string> {
+    private async displayMessage(message: string, severity: DiagnosticSeverity, prompts: string[]): Promise<string | undefined> {
         switch (severity) {
             case DiagnosticSeverity.Error: {
                 return this.appShell.showErrorMessage(message, ...prompts);
