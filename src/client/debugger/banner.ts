@@ -66,7 +66,7 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
                 break;
             }
             default: {
-                return;
+                this.disabled = true;
             }
         }
     }
