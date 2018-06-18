@@ -39,10 +39,10 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
             return;
         }
         const debuggerService = this.serviceContainer.get<IDebugService>(IDebugService);
-        const disposable = debuggerService.onDidStartDebugSession(e => {
+        const disposable = debuggerService.onDidStartDebugSession(async e => {
             if (e.type === ExperimentalDebuggerType) {
                 const logger = this.serviceContainer.get<ILogger>(ILogger);
-                this.onDebugSessionStarted()
+                await this.onDebugSessionStarted()
                     .catch(ex => logger.logError('Error in debugger Banner', ex));
             }
         });
