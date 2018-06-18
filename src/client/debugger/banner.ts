@@ -66,6 +66,7 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
                 break;
             }
             default: {
+                // Disable for the current session.
                 this.disabled = true;
             }
         }
