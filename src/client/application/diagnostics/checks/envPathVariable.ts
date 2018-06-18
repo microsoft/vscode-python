@@ -65,7 +65,7 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
             },
             {
                 prompt: 'More Info',
-                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://github.com/Microsoft/vscode-python/issues/1698' })
+                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/Niq35h' })
             }
         ];
 
