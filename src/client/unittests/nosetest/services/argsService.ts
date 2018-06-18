@@ -53,7 +53,7 @@ export class ArgumentsService implements IArgumentsService {
         if (Array.isArray(argumentToRemoveOrFilter)) {
             argumentToRemoveOrFilter.forEach(item => {
                 if (OptionsWithArguments.indexOf(item) >= 0) {
-                    optionsWithoutArgsToRemove.push(item);
+                    optionsWithArgsToRemove.push(item);
                 }
                 if (OptionsWithoutArguments.indexOf(item) >= 0) {
                     optionsWithoutArgsToRemove.push(item);
