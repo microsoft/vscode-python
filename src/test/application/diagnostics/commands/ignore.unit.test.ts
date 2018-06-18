@@ -4,7 +4,7 @@
 'use strict';
 
 import * as typemoq from 'typemoq';
-import { IgnoreDiagnostCommand } from '../../../../client/application/diagnostics/commands/ignore';
+import { IgnoreDiagnosticCommand } from '../../../../client/application/diagnostics/commands/ignore';
 import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticFilterService } from '../../../../client/application/diagnostics/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
@@ -16,7 +16,7 @@ suite('Application Diagnostics - Commands Ignore', () => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
 
         diagnostic = typemoq.Mock.ofType<IDiagnostic>();
-        ignoreCommand = new IgnoreDiagnostCommand(diagnostic.object, serviceContainer.object, DiagnosticScope.Global);
+        ignoreCommand = new IgnoreDiagnosticCommand(diagnostic.object, serviceContainer.object, DiagnosticScope.Global);
     });
 
     test('Invoking Command should invoke the filter Service', async () => {

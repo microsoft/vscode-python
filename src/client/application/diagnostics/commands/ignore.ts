@@ -5,9 +5,9 @@
 
 import { IServiceContainer } from '../../../ioc/types';
 import { DiagnosticScope, IDiagnostic, IDiagnosticFilterService } from '../types';
-import { BaseDiagnostCommand } from './base';
+import { BaseDiagnosticCommand } from './base';
 
-export class IgnoreDiagnostCommand extends BaseDiagnostCommand {
+export class IgnoreDiagnosticCommand extends BaseDiagnosticCommand {
     constructor(diagnostic: IDiagnostic, private serviceContainer: IServiceContainer, private readonly scope: DiagnosticScope) {
         super(diagnostic);
     }

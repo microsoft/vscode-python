@@ -6,9 +6,9 @@
 import { IBrowserService } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { IDiagnostic } from '../types';
-import { BaseDiagnostCommand } from './base';
+import { BaseDiagnosticCommand } from './base';
 
-export class LaunchBrowserCommand extends BaseDiagnostCommand {
+export class LaunchBrowserCommand extends BaseDiagnosticCommand {
     constructor(diagnostic: IDiagnostic, private serviceContainer: IServiceContainer, private url: string) {
         super(diagnostic);
     }

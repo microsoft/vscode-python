@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../../ioc/types';
 import { IDiagnostic, IDiagnosticCommand } from '../types';
-import { IgnoreDiagnostCommand } from './ignore';
+import { IgnoreDiagnosticCommand } from './ignore';
 import { LaunchBrowserCommand } from './launchBrowser';
 import { CommandOptions, IDiagnosticsCommandFactory } from './types';
 
@@ -17,7 +17,7 @@ export class DiagnosticsCommandFactory implements IDiagnosticsCommandFactory {
         const commandType = options.type;
         switch (options.type) {
             case 'ignore': {
-                return new IgnoreDiagnostCommand(diagnostic, this.serviceContainer, options.options);
+                return new IgnoreDiagnosticCommand(diagnostic, this.serviceContainer, options.options);
             }
             case 'launch': {
                 return new LaunchBrowserCommand(diagnostic, this.serviceContainer, options.options);

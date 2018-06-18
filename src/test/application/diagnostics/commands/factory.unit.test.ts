@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/factory';
-import { IgnoreDiagnostCommand } from '../../../../client/application/diagnostics/commands/ignore';
+import { IgnoreDiagnosticCommand } from '../../../../client/application/diagnostics/commands/ignore';
 import { LaunchBrowserCommand } from '../../../../client/application/diagnostics/commands/launchBrowser';
 import { IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticScope, IDiagnostic } from '../../../../client/application/diagnostics/types';
@@ -23,7 +23,7 @@ suite('Application Diagnostics - Commands Factory', () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
 
         const command = commandFactory.createCommand(diagnostic.object, { type: 'ignore', options: DiagnosticScope.Global });
-        expect(command).to.be.instanceOf(IgnoreDiagnostCommand);
+        expect(command).to.be.instanceOf(IgnoreDiagnosticCommand);
     });
 
     test('Test creation of Launch Browser Command', async () => {
