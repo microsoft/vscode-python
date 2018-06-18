@@ -51,9 +51,9 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
     }
     public async showBanner(): Promise<void> {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const yes = 'Take Survey';
+        const yes = 'Yes, take survey now';
         const no = 'No thanks';
-        const response = await appShell.showInformationMessage('Can you take 2 minutes to tell us how the Experimental Debugger is working for you?', yes, no);
+        const response = await appShell.showInformationMessage('Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?', yes, no);
         switch (response) {
             case yes:
                 {
