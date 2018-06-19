@@ -158,4 +158,26 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
         commandFactory.verifyAll();
         messageHandler.verifyAll();
     });
+    test('Should not display a message if the diagnostic code has been ignored', async () => {
+        platformService.setup(p => p.isWindows).returns(() => true);
+        const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
+
+        filterService.setup(f => f.shouldIgnoreDiagnostic(typemoq.It.isValue(DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic)))
+            .returns(() => Promise.resolve(true))
+            .verifiable(typemoq.Times.once());
+        diagnostic.setup(d => d.code)
+            .returns(() => DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic)
+            .verifiable(typemoq.Times.atLeastOnce());
+        commandFactory.setup(f => f.createCommand(typemoq.It.isAny(), typemoq.It.isAny()))
+            .verifiable(typemoq.Times.never());
+        messageHandler.setup(m => m.handle(typemoq.It.isAny(), typemoq.It.isAny()))
+            .verifiable(typemoq.Times.never());
+
+        await diagnosticService.handle([diagnostic.object]);
+
+        filterService.verifyAll();
+        diagnostic.verifyAll();
+        commandFactory.verifyAll();
+        messageHandler.verifyAll();
+    });
 });

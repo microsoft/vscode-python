@@ -54,6 +54,9 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
             return;
         }
         const diagnostic = diagnostics[0];
+        if (this.filterService.shouldIgnoreDiagnostic(diagnostic.code)) {
+            return;
+        }
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
         const options = [
             {
