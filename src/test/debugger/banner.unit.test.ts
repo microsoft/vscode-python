@@ -70,9 +70,9 @@ suite('Debugging - Banner', () => {
         browser.verifyAll();
     });
     test('Increment Debugger Launch Counter when debug session starts', async () => {
-        let onDidStartDebugSessionCb: (e: DebugSession) => Promise<void>;
-        debugService.setup(d => d.onDidStartDebugSession(typemoq.It.isAny()))
-            .callback(cb => onDidStartDebugSessionCb = cb)
+        let onDidTerminateDebugSessionCb: (e: DebugSession) => Promise<void>;
+        debugService.setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny()))
+            .callback(cb => onDidTerminateDebugSessionCb = cb)
             .verifiable(typemoq.Times.once());
 
         const debuggerLaunchCounter = 1234;
@@ -84,7 +84,7 @@ suite('Debugging - Banner', () => {
             .verifiable(typemoq.Times.atLeastOnce());
 
         banner.initialize();
-        await onDidStartDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
+        await onDidTerminateDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
 
         launchCounterState.verifyAll();
         browser.verifyAll();
@@ -92,7 +92,7 @@ suite('Debugging - Banner', () => {
         showBannerState.verifyAll();
     });
     test('Do not Increment Debugger Launch Counter when debug session starts and Banner is disabled', async () => {
-        debugService.setup(d => d.onDidStartDebugSession(typemoq.It.isAny()))
+        debugService.setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny()))
             .verifiable(typemoq.Times.never());
 
         const debuggerLaunchCounter = 1234;
@@ -147,11 +147,11 @@ suite('Debugging - Banner', () => {
         launchThresholdCounterState.verifyAll();
     });
     test('showBanner must be invoked when shouldShowBanner returns true', async () => {
-        let onDidStartDebugSessionCb: (e: DebugSession) => Promise<void>;
+        let onDidTerminateDebugSessionCb: (e: DebugSession) => Promise<void>;
         const currentLaunchCounter = 50;
 
-        debugService.setup(d => d.onDidStartDebugSession(typemoq.It.isAny()))
-            .callback(cb => onDidStartDebugSessionCb = cb)
+        debugService.setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny()))
+            .callback(cb => onDidTerminateDebugSessionCb = cb)
             .verifiable(typemoq.Times.atLeastOnce());
         showBannerState.setup(s => s.value).returns(() => true)
             .verifiable(typemoq.Times.atLeastOnce());
@@ -166,7 +166,7 @@ suite('Debugging - Banner', () => {
         appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no)))
             .verifiable(typemoq.Times.once());
         banner.initialize();
-        await onDidStartDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
+        await onDidTerminateDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
 
         appShell.verifyAll();
         showBannerState.verifyAll();
@@ -174,11 +174,11 @@ suite('Debugging - Banner', () => {
         launchThresholdCounterState.verifyAll();
     });
     test('showBanner must not be invoked the second time after dismissing the message', async () => {
-        let onDidStartDebugSessionCb: (e: DebugSession) => Promise<void>;
+        let onDidTerminateDebugSessionCb: (e: DebugSession) => Promise<void>;
         let currentLaunchCounter = 50;
 
-        debugService.setup(d => d.onDidStartDebugSession(typemoq.It.isAny()))
-            .callback(cb => onDidStartDebugSessionCb = cb)
+        debugService.setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny()))
+            .callback(cb => onDidTerminateDebugSessionCb = cb)
             .verifiable(typemoq.Times.atLeastOnce());
         showBannerState.setup(s => s.value).returns(() => true)
             .verifiable(typemoq.Times.atLeastOnce());
@@ -193,10 +193,10 @@ suite('Debugging - Banner', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
         banner.initialize();
-        await onDidStartDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
-        await onDidStartDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
-        await onDidStartDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
-        await onDidStartDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
+        await onDidTerminateDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
+        await onDidTerminateDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
+        await onDidTerminateDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
+        await onDidTerminateDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
 
         appShell.verifyAll();
         showBannerState.verifyAll();
