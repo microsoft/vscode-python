@@ -17,7 +17,7 @@ import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '.
 import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../types';
 
 const InvalidEnvPathVariableMessage = 'The environment variable \'{0}\' seems to have some paths containing characters (\';\', \'"\' or \';;\').' +
-    ' The existence of such characters are known to have caused the {1} extension to not load.';
+    ' The existence of such characters are known to have caused the {1} extension to not load. If the extension fails to load please modify your paths to remove these characters.';
 
 export class InvalidEnvironmentPathVariableDiagnostic extends BaseDiagnostic {
     constructor(message) {
