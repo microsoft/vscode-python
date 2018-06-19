@@ -114,7 +114,8 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
 
         expect(diagnostics).to.be.deep.equal([]);
     });
-    [';;', '"', '%'].forEach(invalidCharacter => {
+    // Note: On windows, when a path contains a `;` then Windows encloses the path within `"`.
+    [';;', '"'].forEach(invalidCharacter => {
         test(`Should return single diagnostics for Windows if path contains ${invalidCharacter}`, async () => {
             platformService.setup(p => p.isWindows).returns(() => true);
             const paths = [
