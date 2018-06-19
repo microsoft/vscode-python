@@ -133,6 +133,18 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
             expect(diagnostics[0].severity).to.be.equal(DiagnosticSeverity.Warning);
             expect(diagnostics[0].scope).to.be.equal(DiagnosticScope.Global);
         });
+        test('Should not return diagnostics for Windows if path ends with delimiter', async () => {
+            const paths = [
+                path.join('one', 'two', 'three'),
+                path.join('one', 'two', 'four')
+            ].join(pathDelimiter) + pathDelimiter;
+            platformService.setup(p => p.isWindows).returns(() => true);
+            procEnv.setup(env => env[pathVariableName]).returns(() => paths);
+
+            const diagnostics = await diagnosticService.diagnose();
+
+            expect(diagnostics).to.be.lengthOf(0);
+        });
     });
     test('Should display three options in message displayed with 2 commands', async () => {
         platformService.setup(p => p.isWindows).returns(() => true);
