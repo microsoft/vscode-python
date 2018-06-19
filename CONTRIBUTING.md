@@ -1,6 +1,15 @@
 # Contributing to the Python extension for Visual Studio Code
 
+---
+## CI Builds
 [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python) [![Build status (AppVeyor)](https://ci.appveyor.com/api/projects/status/s0pt8d79gqw222j7?svg=true)](https://ci.appveyor.com/project/DonJayamanne/vscode-python-v3vd6) [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)
+
+---
+## VSTS CI Builds
+| VSCode-Python-CI | VSCode-Python-Rolling-CI | VSCode-Python-ptvsd_master-CI |
+|-|-|-|
+|[![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/latest/VSCode-Python-CI) | [![vsts](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/latest/VSCode-Python-Rolling-CI) | [![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-ptvsd_master-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/latest/VSCode-Python-ptvsd_master-CI)|
+---
 
 # Contributing to Microsoft Python Analysis Engine
 [Contributing to Python Analysis Engine](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING%20-%20PYTHON_ANALYSIS.md)
