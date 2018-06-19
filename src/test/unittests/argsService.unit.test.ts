@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any no-conditional-assignment no-increment-decrement no-invalid-this
+// tslint:disable:max-func-body-length no-any no-conditional-assignment no-increment-decrement no-invalid-this insecure-random
 import { fail } from 'assert';
 import { expect } from 'chai';
 import { spawnSync } from 'child_process';
@@ -228,6 +228,27 @@ suite('Unit Tests - argsService', () => {
                     expect(testDirs).to.be.lengthOf(2);
                     expect(testDirs[0]).to.equal(dir);
                     expect(testDirs[1]).to.equal(dir2);
+                });
+                test('Test filtering of arguments', () => {
+                    const args: string[] = [];
+                    const knownOptions = argumentsService.getKnownOptions();
+                    const argumentsToRemove: string[] = [];
+                    const expectedFilteredArgs: string[] = [];
+                    // Generate some random arguments.
+                    for (let i = 0; i < 5; i += 1) {
+                        args.push(knownOptions.withArgs[i], `Random Value ${i}`);
+                        args.push(knownOptions.withoutArgs[i]);
+
+                        if (i % 2 === 0) {
+                            argumentsToRemove.push(knownOptions.withArgs[i], knownOptions.withoutArgs[i]);
+                        } else {
+                            expectedFilteredArgs.push(knownOptions.withArgs[i], `Random Value ${i}`);
+                            expectedFilteredArgs.push(knownOptions.withoutArgs[i]);
+                        }
+                    }
+
+                    const filteredArgs = argumentsService.filterArguments(args, argumentsToRemove);
+                    expect(filteredArgs).to.be.deep.equal(expectedFilteredArgs);
                 });
             });
         });
