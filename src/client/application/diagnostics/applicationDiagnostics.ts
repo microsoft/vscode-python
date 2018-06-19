@@ -20,7 +20,7 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
         const diagnostics = await envHealthCheck.diagnose();
         this.log(diagnostics);
         if (diagnostics.length > 0) {
-            envHealthCheck.handle(diagnostics);
+            await envHealthCheck.handle(diagnostics);
         }
     }
     private log(diagnostics: IDiagnostic[]): void {
