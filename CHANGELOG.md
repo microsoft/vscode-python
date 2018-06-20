@@ -53,7 +53,7 @@ part of!
 
 ### Enhancements
 
-1. Add setting for auto run test discover on save, `python.unitTest.autoTestDiscoverOnSaveEnabled`.
+1. Add setting to control automatic test discovery on save, `python.unitTest.autoTestDiscoverOnSaveEnabled`.
    (thanks [Lingyu Li](http://github.com/lingyv-li/))
    ([#1037](https://github.com/Microsoft/vscode-python/issues/1037))
 1. Add `gevent` launch configuration option to enable debugging of gevent monkey patched code.
