@@ -12,6 +12,7 @@ import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
+import { MOCHA_CI_REPORTFILE, MOCHA_REPORTER_JUNIT } from './ciConstants';
 import * as vscodeMoscks from './vscode-mock';
 
 export function runTests(testOptions?: { grep?: string; timeout?: number }) {
@@ -19,13 +20,36 @@ export function runTests(testOptions?: { grep?: string; timeout?: number }) {
 
     const grep: string | undefined = testOptions ? testOptions.grep : undefined;
     const timeout: number | undefined = testOptions ? testOptions.timeout : undefined;
+
     const options: MochaSetupOptions = {
         ui: 'tdd',
         useColors: true,
         timeout,
         grep
     };
-    const mocha = new Mocha(options);
+
+    let temp_mocha: Mocha | undefined;
+
+    if (MOCHA_REPORTER_JUNIT === true) {
+        temp_mocha = new Mocha({
+            grep: undefined,
+            ui: 'tdd',
+            timeout,
+            reporter: '../../../.mocha-reporter/mocha-vsts-reporter.js',
+            reporterOptions: {
+                useColors: false,
+                mochaFile: MOCHA_CI_REPORTFILE,
+                bail: false
+            },
+            slow: undefined
+        });
+    } else {
+        // we are running on the command line or debugger...
+        temp_mocha = new Mocha(options);
+    }
+
+    const mocha: Mocha = temp_mocha;
+
     require('source-map-support').install();
     const testsRoot = __dirname;
     glob('**/**.unit.test.js', { cwd: testsRoot }, (error, files) => {
