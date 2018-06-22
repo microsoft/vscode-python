@@ -3,6 +3,9 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
+/* jshint node: true */
+/* jshint esversion: 6 */
+
 'use strict';
 
 const gulp = require('gulp');
@@ -118,7 +121,7 @@ gulp.task('cover:enable', () => {
 gulp.task('cover:disable', () => {
     return gulp.src("./coverconfig.json")
         .pipe(jeditor((json) => {
-            json.enabled = true;
+            json.enabled = false;
             return json;
         }))
         .pipe(gulp.dest("./out", { 'overwrite': true }));
