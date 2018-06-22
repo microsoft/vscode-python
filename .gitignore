@@ -20,3 +20,4 @@ bin/**
 obj/**
 .pytest_cache
 tmp/**
+.python-version
