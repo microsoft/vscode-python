@@ -1,15 +1,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as vscode from 'vscode';
+import { Disposable, OutputChannel, Uri, window } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
-import { IProcessService } from '../common/process/types';
+import { IProcessServiceFactory } from '../common/process/types';
 import { IPythonSettings } from '../common/types';
 import { captureTelemetry } from '../telemetry';
 import { WORKSPACE_SYMBOLS_BUILD } from '../telemetry/constants';
 
-export class Generator implements vscode.Disposable {
+export class Generator implements Disposable {
     private optionsFile: string;
-    private disposables: vscode.Disposable[];
+    private disposables: Disposable[];
     private pythonSettings: IPythonSettings;
     public get tagFilePath(): string {
         return this.pythonSettings.workspaceSymbols.tagFilePath;
@@ -17,8 +17,8 @@ export class Generator implements vscode.Disposable {
     public get enabled(): boolean {
         return this.pythonSettings.workspaceSymbols.enabled;
     }
-    constructor(public readonly workspaceFolder: vscode.Uri, private output: vscode.OutputChannel,
-        private processService: IProcessService) {
+    constructor(public readonly workspaceFolder: Uri, private readonly output: OutputChannel,
+        private readonly processServiceFactory: IProcessServiceFactory) {
         this.disposables = [];
         this.optionsFile = path.join(__dirname, '..', '..', '..', 'resources', 'ctagOptions');
         this.pythonSettings = PythonSettings.getInstance(workspaceFolder);
@@ -31,7 +31,7 @@ export class Generator implements vscode.Disposable {
         if (!this.pythonSettings.workspaceSymbols.enabled) {
             return;
         }
-        return await this.generateTags({ directory: this.workspaceFolder.fsPath });
+        return this.generateTags({ directory: this.workspaceFolder.fsPath });
     }
     private buildCmdArgs(): string[] {
         const exclusions = this.pythonSettings.workspaceSymbols.exclusionPatterns;
@@ -40,7 +40,7 @@ export class Generator implements vscode.Disposable {
         return [`--options=${this.optionsFile}`, '--languages=Python'].concat(excludes);
     }
     @captureTelemetry(WORKSPACE_SYMBOLS_BUILD)
-    private generateTags(source: { directory?: string, file?: string }): Promise<void> {
+    private generateTags(source: { directory?: string; file?: string }): Promise<void> {
         const tagFile = path.normalize(this.pythonSettings.workspaceSymbols.tagFilePath);
         const cmd = this.pythonSettings.workspaceSymbols.ctagsPath;
         const args = this.buildCmdArgs();
@@ -60,8 +60,9 @@ export class Generator implements vscode.Disposable {
         args.push('-o', outputFile, '.');
         this.output.appendLine(`${'-'.repeat(10)}Generating Tags${'-'.repeat(10)}`);
         this.output.appendLine(`${cmd} ${args.join(' ')}`);
-        const promise = new Promise<void>((resolve, reject) => {
-            const result = this.processService.execObservable(cmd, args, { cwd: source.directory });
+        const promise = new Promise<void>(async (resolve, reject) => {
+            const processService = await this.processServiceFactory.create();
+            const result = processService.execObservable(cmd, args, { cwd: source.directory });
             let errorMsg = '';
             result.out.subscribe(output => {
                 if (output.source === 'stderr') {
@@ -79,7 +80,7 @@ export class Generator implements vscode.Disposable {
                 });
         });
 
-        vscode.window.setStatusBarMessage('Generating Tags', promise);
+        window.setStatusBarMessage('Generating Tags', promise);
 
         return promise;
     }

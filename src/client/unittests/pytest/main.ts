@@ -1,19 +1,26 @@
 'use strict';
+
 import { Uri } from 'vscode';
-import { PythonSettings } from '../../common/configSettings';
 import { Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { PYTEST_PROVIDER } from '../common/constants';
 import { BaseTestManager } from '../common/managers/baseTestManager';
-import { TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
-import { runTest } from './runner';
+import { ITestsHelper, TestDiscoveryOptions, TestRunOptions, Tests, TestsToRun } from '../common/types';
+import { IArgumentsService, ITestManagerRunner, TestFilter } from '../types';
 
 export class TestManager extends BaseTestManager {
+    private readonly argsService: IArgumentsService;
+    private readonly helper: ITestsHelper;
+    private readonly runner: ITestManagerRunner;
     public get enabled() {
-        return PythonSettings.getInstance(this.workspaceFolder).unitTest.pyTestEnabled;
+        return this.settings.unitTest.pyTestEnabled;
     }
     constructor(workspaceFolder: Uri, rootDirectory: string,
         serviceContainer: IServiceContainer) {
-        super('pytest', Product.pytest, workspaceFolder, rootDirectory, serviceContainer);
+        super(PYTEST_PROVIDER, Product.pytest, workspaceFolder, rootDirectory, serviceContainer);
+        this.argsService = this.serviceContainer.get<IArgumentsService>(IArgumentsService, this.testProvider);
+        this.helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
+        this.runner = this.serviceContainer.get<ITestManagerRunner>(ITestManagerRunner, this.testProvider);
     }
     public getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions {
         const args = this.settings.unitTest.pyTestArgs.slice(0);
@@ -24,10 +31,18 @@ export class TestManager extends BaseTestManager {
             outChannel: this.outputChannel
         };
     }
-    public async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<{}> {
-        const args = this.settings.unitTest.pyTestArgs.slice(0);
+    public async runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<Tests> {
+        let args: string[];
+
+        const runAllTests = this.helper.shouldRunAllTests(testsToRun);
+        if (debug) {
+            args = this.argsService.filterArguments(this.settings.unitTest.pyTestArgs, runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific);
+        } else {
+            args = this.argsService.filterArguments(this.settings.unitTest.pyTestArgs, runAllTests ? TestFilter.runAll : TestFilter.runSpecific);
+        }
+
         if (runFailedTests === true && args.indexOf('--lf') === -1 && args.indexOf('--last-failed') === -1) {
-            args.push('--last-failed');
+            args.splice(0, 0, '--last-failed');
         }
         const options: TestRunOptions = {
             workspaceFolder: this.workspaceFolder,
@@ -36,6 +51,6 @@ export class TestManager extends BaseTestManager {
             token: this.testRunnerCancellationToken!,
             outChannel: this.outputChannel
         };
-        return runTest(this.serviceContainer, this.testResultsService, options);
+        return this.runner.runTest(this.testResultsService, options, this);
     }
 }

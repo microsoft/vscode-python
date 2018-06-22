@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { CancellationTokenSource, ConfigurationTarget, Uri } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
-import { IProcessService } from '../../client/common/process/types';
+import { IProcessServiceFactory } from '../../client/common/process/types';
 import { Generator } from '../../client/workspaceSymbols/generator';
 import { WorkspaceSymbolProvider } from '../../client/workspaceSymbols/provider';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
@@ -15,7 +15,7 @@ const configUpdateTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFol
 
 suite('Workspace Symbols', () => {
     let ioc: UnitTestIocContainer;
-    let processService: IProcessService;
+    let processServiceFactory: IProcessServiceFactory;
     suiteSetup(initialize);
     suiteTeardown(closeActiveWindows);
     setup(async () => {
@@ -32,7 +32,7 @@ suite('Workspace Symbols', () => {
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
-        processService = ioc.serviceContainer.get<IProcessService>(IProcessService);
+        processServiceFactory = ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
     }
 
     test('symbols should be returned when enabeld and vice versa', async () => {
@@ -42,9 +42,9 @@ suite('Workspace Symbols', () => {
         // The workspace will be in the output test folder
         // So lets modify the settings so it sees the source test folder
         let settings = PythonSettings.getInstance(workspaceUri);
-        settings.workspaceSymbols.tagFilePath = path.join(workspaceUri.fsPath, '.vscode', 'tags');
+        settings.workspaceSymbols!.tagFilePath = path.join(workspaceUri.fsPath, '.vscode', 'tags');
 
-        let generator = new Generator(workspaceUri, outputChannel, processService);
+        let generator = new Generator(workspaceUri, outputChannel, processServiceFactory);
         let provider = new WorkspaceSymbolProvider([generator], outputChannel);
         let symbols = await provider.provideWorkspaceSymbols('', new CancellationTokenSource().token);
         assert.equal(symbols.length, 0, 'Symbols returned even when workspace symbols are turned off');
@@ -55,9 +55,9 @@ suite('Workspace Symbols', () => {
         // The workspace will be in the output test folder
         // So lets modify the settings so it sees the source test folder
         settings = PythonSettings.getInstance(workspaceUri);
-        settings.workspaceSymbols.tagFilePath = path.join(workspaceUri.fsPath, '.vscode', 'tags');
+        settings.workspaceSymbols!.tagFilePath = path.join(workspaceUri.fsPath, '.vscode', 'tags');
 
-        generator = new Generator(workspaceUri, outputChannel, processService);
+        generator = new Generator(workspaceUri, outputChannel, processServiceFactory);
         provider = new WorkspaceSymbolProvider([generator], outputChannel);
         symbols = await provider.provideWorkspaceSymbols('', new CancellationTokenSource().token);
         assert.notEqual(symbols.length, 0, 'Symbols should be returned when workspace symbols are turned on');
@@ -70,9 +70,9 @@ suite('Workspace Symbols', () => {
         // The workspace will be in the output test folder
         // So lets modify the settings so it sees the source test folder
         const settings = PythonSettings.getInstance(workspaceUri);
-        settings.workspaceSymbols.tagFilePath = path.join(workspaceUri.fsPath, '.vscode', 'tags');
+        settings.workspaceSymbols!.tagFilePath = path.join(workspaceUri.fsPath, '.vscode', 'tags');
 
-        const generators = [new Generator(workspaceUri, outputChannel, processService)];
+        const generators = [new Generator(workspaceUri, outputChannel, processServiceFactory)];
         const provider = new WorkspaceSymbolProvider(generators, outputChannel);
         const symbols = await provider.provideWorkspaceSymbols('meth1Of', new CancellationTokenSource().token);
 

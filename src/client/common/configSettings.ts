@@ -4,6 +4,8 @@ import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
 import * as path from 'path';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, Uri, workspace } from 'vscode';
+import { sendTelemetryEvent } from '../telemetry';
+import { COMPLETION_ADD_BRACKETS, FORMAT_ON_TYPE } from '../telemetry/constants';
 import { isTestExecution } from './constants';
 import {
     IAutoCompleteSettings,
@@ -25,21 +27,21 @@ export const IS_WINDOWS = /^win/.test(process.platform);
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
+    public downloadCodeAnalysis = true;
     public jediEnabled = true;
     public jediPath = '';
     public jediMemoryLimit = 1024;
     public envFile = '';
-    public disablePromptForFeatures: string[] = [];
     public venvPath = '';
     public venvFolders: string[] = [];
     public devOptions: string[] = [];
-    public linting?: ILintingSettings;
-    public formatting?: IFormattingSettings;
-    public autoComplete?: IAutoCompleteSettings;
-    public unitTest?: IUnitTestSettings;
+    public linting!: ILintingSettings;
+    public formatting!: IFormattingSettings;
+    public autoComplete!: IAutoCompleteSettings;
+    public unitTest!: IUnitTestSettings;
     public terminal!: ITerminalSettings;
-    public sortImports?: ISortImportSettings;
-    public workspaceSymbols?: IWorkspaceSymbolSettings;
+    public sortImports!: ISortImportSettings;
+    public workspaceSymbols!: IWorkspaceSymbolSettings;
     public disableInstallationChecks = false;
     public globalModuleInstallation = false;
 
@@ -69,6 +71,9 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         if (!PythonSettings.pythonSettings.has(workspaceFolderKey)) {
             const settings = new PythonSettings(workspaceFolderUri);
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
+            const formatOnType = workspace.getConfiguration('editor', resource ? resource : null).get('formatOnType', false);
+            sendTelemetryEvent(COMPLETION_ADD_BRACKETS, undefined, { enabled: settings.autoComplete.addBrackets });
+            sendTelemetryEvent(FORMAT_ON_TYPE, undefined, { enabled: formatOnType });
         }
         // tslint:disable-next-line:no-non-null-assertion
         return PythonSettings.pythonSettings.get(workspaceFolderKey)!;
@@ -101,7 +106,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.disposables.forEach(disposable => disposable.dispose());
         this.disposables = [];
     }
-
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     private initializeSettings() {
         const workspaceRoot = this.workspaceRoot.fsPath;
@@ -115,6 +119,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
 
+        this.downloadCodeAnalysis = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadCodeAnalysis', true))!;
         this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;
         if (this.jediEnabled) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
@@ -136,9 +141,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const lintingSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('linting'))!;
-        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        this.disablePromptForFeatures = pythonSettings.get<string[]>('disablePromptForFeatures')!;
-        this.disablePromptForFeatures = Array.isArray(this.disablePromptForFeatures) ? this.disablePromptForFeatures : [];
         if (this.linting) {
             Object.assign<ILintingSettings, ILintingSettings>(this.linting, lintingSettings);
         } else {
@@ -213,6 +215,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.formatting = this.formatting ? this.formatting : {
             autopep8Args: [], autopep8Path: 'autopep8',
             provider: 'autopep8',
+            blackArgs: [], blackPath: 'black',
             yapfArgs: [], yapfPath: 'yapf'
         };
         this.formatting.autopep8Path = getAbsolutePath(systemVariables.resolveAny(this.formatting.autopep8Path), workspaceRoot);
@@ -264,7 +267,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                     nosetestArgs: [], pyTestArgs: [], unittestArgs: [],
                     promptToConfigure: true, debugPort: 3000,
                     nosetestsEnabled: false, pyTestEnabled: false, unittestEnabled: false,
-                    nosetestPath: 'nosetests', pyTestPath: 'pytest'
+                    nosetestPath: 'nosetests', pyTestPath: 'pytest', autoTestDiscoverOnSaveEnabled: true
                 } as IUnitTestSettings;
             }
         }
@@ -275,7 +278,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             debugPort: 3000,
             nosetestArgs: [], nosetestPath: 'nosetest', nosetestsEnabled: false,
             pyTestArgs: [], pyTestEnabled: false, pyTestPath: 'pytest',
-            unittestArgs: [], unittestEnabled: false
+            unittestArgs: [], unittestEnabled: false, autoTestDiscoverOnSaveEnabled: true
         };
         this.unitTest.pyTestPath = getAbsolutePath(systemVariables.resolveAny(this.unitTest.pyTestPath), workspaceRoot);
         this.unitTest.nosetestPath = getAbsolutePath(systemVariables.resolveAny(this.unitTest.nosetestPath), workspaceRoot);

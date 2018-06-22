@@ -16,7 +16,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { initialize } from '../../initialize';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Module Installer', () => {
+suite('Module Installerx', () => {
     const pythonPath = path.join(__dirname, 'python');
     suiteSetup(initialize);
     [CondaInstaller, PipInstaller].forEach(installerClass => {

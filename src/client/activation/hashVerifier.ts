@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import { createDeferred } from '../common/helpers';
 
 export class HashVerifier {
-    public async verifyHash(filePath: string, expectedDigest: string): Promise<boolean> {
+    public async verifyHash(filePath: string, platformString: string, expectedDigest: string): Promise<boolean> {
         const readStream = fs.createReadStream(filePath);
         const deferred = createDeferred();
         const hash = createHash('sha512');
@@ -22,7 +22,7 @@ export class HashVerifier {
 
         readStream.pipe(hash);
         await deferred.promise;
-        const actual = hash.read();
-        return expectedDigest === '' ? true : actual === expectedDigest;
+        const actual = hash.read() as string;
+        return expectedDigest === platformString ? true : actual.toLowerCase() === expectedDigest.toLowerCase();
     }
 }

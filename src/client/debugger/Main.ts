@@ -92,7 +92,7 @@ export class PythonDebugger extends LoggingDebugSession {
     private startDebugServer(): Promise<IDebugServer> {
         let programDirectory = '';
         if ((this.launchArgs && this.launchArgs.program) || (this.attachArgs && this.attachArgs.localRoot)) {
-            programDirectory = this.launchArgs ? path.dirname(this.launchArgs.program) : this.attachArgs.localRoot;
+            programDirectory = (this.launchArgs && this.launchArgs.program) ? path.dirname(this.launchArgs.program) : this.attachArgs.localRoot;
         }
         if (this.launchArgs && typeof this.launchArgs.cwd === 'string' && this.launchArgs.cwd.length > 0 && this.launchArgs.cwd !== 'null') {
             programDirectory = this.launchArgs.cwd;
@@ -227,7 +227,7 @@ export class PythonDebugger extends LoggingDebugSession {
         }
         // Confirm the file exists
         if (typeof args.module !== 'string' || args.module.length === 0) {
-            if (!fs.existsSync(args.program)) {
+            if (!args.program || !fs.existsSync(args.program)) {
                 return this.sendErrorResponse(response, 2001, `File does not exist. "${args.program}"`);
             }
         }

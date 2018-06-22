@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { rootWorkspaceUri } from '../common';
-import { IS_ANALYSIS_ENGINE_TEST } from '../constants';
+import { IsAnalysisEngineTest } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -25,7 +25,7 @@ suite('Signatures (Analysis Engine)', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
     suiteSetup(async function () {
-        if (!IS_ANALYSIS_ENGINE_TEST) {
+        if (!IsAnalysisEngineTest()) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
@@ -95,7 +95,7 @@ suite('Signatures (Analysis Engine)', () => {
             return;
         }
         const expected = [
-            new SignatureHelpResult(0, 5, 0, 0, null),
+            new SignatureHelpResult(0, 5, 1, -1, null),
             new SignatureHelpResult(0, 6, 1, 0, 'value'),
             new SignatureHelpResult(0, 7, 1, 0, 'value'),
             new SignatureHelpResult(0, 8, 1, 1, '...'),

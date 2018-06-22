@@ -85,7 +85,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                         const bash = new CommandPromptAndPowerShell(serviceContainer.object);
 
                         const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.bat');
-                        fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
+                        fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
                         const commands = await bash.getActivationCommands(resource, TerminalShellType.commandPrompt);
 
                         // Ensure the script file is of the following form:
@@ -97,17 +97,17 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     });
 
                     test('Ensure batch files are supported by powershell (on windows)', async () => {
-                        const bash = new CommandPromptAndPowerShell(serviceContainer.object);
+                        const batch = new CommandPromptAndPowerShell(serviceContainer.object);
 
                         platform.setup(p => p.isWindows).returns(() => true);
                         const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.bat');
-                        fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
-                        const command = await bash.getActivationCommands(resource, TerminalShellType.powershell);
+                        fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
+                        const command = await batch.getActivationCommands(resource, TerminalShellType.powershell);
 
                         // Executing batch files from powershell requires going back to cmd, then into powershell
 
                         const activationCommand = pathToScriptFile.fileToCommandArgument();
-                        const commands = [`& cmd /k "${activationCommand} & powershell"`];
+                        const commands = [`& cmd /k "${activationCommand.replace(/"/g, '""')} & powershell"`];
                         expect(command).to.be.deep.equal(commands, 'Invalid command');
                     });
 
@@ -116,13 +116,13 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                         platform.setup(p => p.isWindows).returns(() => true);
                         const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.bat');
-                        fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
+                        fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
                         const command = await bash.getActivationCommands(resource, TerminalShellType.powershellCore);
 
                         // Executing batch files from powershell requires going back to cmd, then into powershell
 
                         const activationCommand = pathToScriptFile.fileToCommandArgument();
-                        const commands = [`& cmd /k "${activationCommand} & pwsh"`];
+                        const commands = [`& cmd /k "${activationCommand.replace(/"/g, '""')} & pwsh"`];
                         expect(command).to.be.deep.equal(commands, 'Invalid command');
                     });
 
@@ -131,7 +131,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                         platform.setup(p => p.isWindows).returns(() => false);
                         const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.bat');
-                        fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
+                        fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
                         const command = await bash.getActivationCommands(resource, TerminalShellType.powershell);
 
                         expect(command).to.be.equal(undefined, 'Invalid command');
@@ -142,7 +142,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                         platform.setup(p => p.isWindows).returns(() => false);
                         const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.bat');
-                        fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
+                        fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
                         const command = await bash.getActivationCommands(resource, TerminalShellType.powershellCore);
 
                         expect(command).to.be.equal(undefined, 'Invalid command');
@@ -172,7 +172,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                         platform.setup(p => p.isWindows).returns(() => true);
                         const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.ps1');
-                        fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
+                        fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
                         const command = await bash.getActivationCommands(resource, TerminalShellType.commandPrompt);
 
                         expect(command).to.be.deep.equal([], 'Invalid command (running powershell files are not supported on command prompt)');
@@ -183,7 +183,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                         platform.setup(p => p.isWindows).returns(() => true);
                         const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.ps1');
-                        fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
+                        fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
                         const command = await bash.getActivationCommands(resource, TerminalShellType.powershell);
 
                         expect(command).to.be.deep.equal([`& ${pathToScriptFile.fileToCommandArgument()}`.trim()], 'Invalid command');
@@ -194,7 +194,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                         platform.setup(p => p.isWindows).returns(() => true);
                         const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.ps1');
-                        fileSystem.setup(fs => fs.fileExistsAsync(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
+                        fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
                         const command = await bash.getActivationCommands(resource, TerminalShellType.powershellCore);
 
                         expect(command).to.be.deep.equal([`& ${pathToScriptFile.fileToCommandArgument()}`.trim()], 'Invalid command');

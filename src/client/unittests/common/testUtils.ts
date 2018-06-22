@@ -1,8 +1,10 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { commands, Uri, window, workspace } from 'vscode';
+import { Uri, window, workspace } from 'vscode';
+import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { IUnitTestSettings, Product } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
 import { CommandSource } from './constants';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
 import { ITestsHelper, ITestVisitor, TestFile, TestFolder, TestProvider, Tests, TestSettingsPropertyNames, TestsToRun, UnitTestProduct } from './types';
@@ -19,15 +21,6 @@ export async function selectTestWorkspace(): Promise<Uri | undefined> {
     }
 }
 
-export function displayTestErrorMessage(message: string) {
-    window.showErrorMessage(message, constants.Button_Text_Tests_View_Output).then(action => {
-        if (action === constants.Button_Text_Tests_View_Output) {
-            commands.executeCommand(constants.Commands.Tests_ViewOutput, undefined, CommandSource.ui);
-        }
-    });
-
-}
-
 export function extractBetweenDelimiters(content: string, startDelimiter: string, endDelimiter: string): string {
     content = content.substring(content.indexOf(startDelimiter) + startDelimiter.length);
     return content.substring(0, content.lastIndexOf(endDelimiter));
@@ -40,7 +33,13 @@ export function convertFileToPackage(filePath: string): string {
 
 @injectable()
 export class TestsHelper implements ITestsHelper {
-    constructor(@inject(ITestVisitor) @named('TestFlatteningVisitor') private flatteningVisitor: TestFlatteningVisitor) { }
+    private readonly appShell: IApplicationShell;
+    private readonly commandManager: ICommandManager;
+    constructor(@inject(ITestVisitor) @named('TestFlatteningVisitor') private flatteningVisitor: TestFlatteningVisitor,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+    }
     public parseProviderName(product: UnitTestProduct): TestProvider {
         switch (product) {
             case Product.nosetest: return 'nosetest';
@@ -164,5 +163,47 @@ export class TestsHelper implements ITestsHelper {
         // Just return this as a test file.
         // tslint:disable-next-line:no-object-literal-type-assertion
         return <TestsToRun>{ testFile: [{ name: name, nameToRun: name, functions: [], suites: [], xmlName: name, fullPath: '', time: 0 }] };
+    }
+    public displayTestErrorMessage(message: string) {
+        this.appShell.showErrorMessage(message, constants.Button_Text_Tests_View_Output).then(action => {
+            if (action === constants.Button_Text_Tests_View_Output) {
+                this.commandManager.executeCommand(constants.Commands.Tests_ViewOutput, undefined, CommandSource.ui);
+            }
+        });
+    }
+    public mergeTests(items: Tests[]): Tests {
+        return items.reduce((tests, otherTests, index) => {
+            if (index === 0) {
+                return tests;
+            }
+
+            tests.summary.errors += otherTests.summary.errors;
+            tests.summary.failures += otherTests.summary.failures;
+            tests.summary.passed += otherTests.summary.passed;
+            tests.summary.skipped += otherTests.summary.skipped;
+            tests.rootTestFolders.push(...otherTests.rootTestFolders);
+            tests.testFiles.push(...otherTests.testFiles);
+            tests.testFolders.push(...otherTests.testFolders);
+            tests.testFunctions.push(...otherTests.testFunctions);
+            tests.testSuites.push(...otherTests.testSuites);
+
+            return tests;
+        }, items[0]);
+    }
+
+    public shouldRunAllTests(testsToRun?: TestsToRun) {
+        if (!testsToRun) {
+            return true;
+        }
+        if (
+            (Array.isArray(testsToRun.testFile) && testsToRun.testFile.length > 0) ||
+            (Array.isArray(testsToRun.testFolder) && testsToRun.testFolder.length > 0) ||
+            (Array.isArray(testsToRun.testFunction) && testsToRun.testFunction.length > 0) ||
+            (Array.isArray(testsToRun.testSuite) && testsToRun.testSuite.length > 0)
+        ) {
+            return false;
+        }
+
+        return true;
     }
 }

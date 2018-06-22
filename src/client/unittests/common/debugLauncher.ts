@@ -4,6 +4,7 @@ import { Uri } from 'vscode';
 import { IDebugService, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { IConfigurationService } from '../../common/types';
+import { ExperimentalDebuggerType } from '../../debugger/Common/constants';
 import { DebugOptions } from '../../debugger/Common/Contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ITestDebugLauncher, LaunchOptions, TestProvider } from './types';
@@ -26,13 +27,12 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
 
         const cwd = cwdUri ? cwdUri.fsPath : workspaceFolder.uri.fsPath;
-        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(Uri.file(cwd));
-        const useExperimentalDebugger = configurationService.unitTest.useExperimentalDebugger === true;
+        const configSettings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(Uri.file(cwd));
+        const useExperimentalDebugger = configSettings.unitTest.useExperimentalDebugger === true;
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
-        const debuggerType = useExperimentalDebugger ? 'pythonExperimental' : 'python';
+        const debuggerType = useExperimentalDebugger ? ExperimentalDebuggerType : 'python';
         const debugArgs = this.fixArgs(options.args, options.testProvider, useExperimentalDebugger);
         const program = this.getTestLauncherScript(options.testProvider, useExperimentalDebugger);
-
         return debugManager.startDebugging(workspaceFolder, {
             name: 'Debug Unit Test',
             type: debuggerType,
@@ -41,6 +41,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             cwd,
             args: debugArgs,
             console: 'none',
+            envFile: configSettings.envFile,
             debugOptions: [DebugOptions.RedirectOutput]
         }).then(() => void (0));
     }

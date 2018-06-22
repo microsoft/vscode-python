@@ -4,7 +4,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { fsExistsAsync, IS_WINDOWS } from '../../../common/utils';
 import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterVersionService, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../contracts';
+import { IInterpreterHelper, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
@@ -13,8 +13,8 @@ const untildify = require('untildify');
 
 @injectable()
 export class KnownPathsService extends CacheableLocatorService {
-    public constructor( @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: string[],
-        @inject(IInterpreterVersionService) private versionProvider: IInterpreterVersionService,
+    public constructor(@inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: string[],
+        @inject(IInterpreterHelper) private helper: IInterpreterHelper,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('KnownPathsService', serviceContainer);
     }
@@ -29,17 +29,19 @@ export class KnownPathsService extends CacheableLocatorService {
             // tslint:disable-next-line:underscore-consistent-invocation
             .then(listOfInterpreters => _.flatten(listOfInterpreters))
             .then(interpreters => interpreters.filter(item => item.length > 0))
-            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))));
+            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))))
+            .then(interpreters => interpreters.filter(interpreter => !!interpreter).map(interpreter => interpreter!));
     }
-    private getInterpreterDetails(interpreter: string) {
-        return this.versionProvider.getVersion(interpreter, path.basename(interpreter))
-            .then(displayName => {
-                return {
-                    displayName,
-                    path: interpreter,
-                    type: InterpreterType.Unknown
-                };
-            });
+    private async getInterpreterDetails(interpreter: string) {
+        const details = await this.helper.getInterpreterInformation(interpreter);
+        if (!details) {
+            return;
+        }
+        return {
+            ...(details as PythonInterpreter),
+            path: interpreter,
+            type: InterpreterType.Unknown
+        };
     }
     private getInterpretersInDirectory(dir: string) {
         return fsExistsAsync(dir)

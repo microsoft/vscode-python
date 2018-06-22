@@ -4,6 +4,7 @@
 import { ChildProcess, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
+import { Architecture } from '../platform/types';
 import { ExecutionInfo } from '../types';
 import { EnvironmentVariables } from '../variables/types';
 
@@ -34,22 +35,40 @@ export type ExecutionResult<T extends string | Buffer> = {
     stderr?: T;
 };
 
-export const IProcessService = Symbol('IProcessService');
-
 export interface IProcessService {
     execObservable(file: string, args: string[], options?: SpawnOptions): ObservableExecutionResult<string>;
     exec(file: string, args: string[], options?: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
-export const IPythonExecutionFactory = Symbol('IPythonExecutionFactory');
+export const IProcessServiceFactory = Symbol('IProcessServiceFactory');
 
-export interface IPythonExecutionFactory {
-    create(resource?: Uri): Promise<IPythonExecutionService>;
+export interface IProcessServiceFactory {
+    create(resource?: Uri): Promise<IProcessService>;
 }
 
+export const IPythonExecutionFactory = Symbol('IPythonExecutionFactory');
+export type ExecutionFactoryCreationOptions = {
+    resource?: Uri;
+    pythonPath?: string;
+};
+export interface IPythonExecutionFactory {
+    create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
+}
+export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final';
+// tslint:disable-next-line:interface-name
+export type PythonVersionInfo = [number, number, number, ReleaseLevel];
+export type InterpreterInfomation = {
+    path: string;
+    version: string;
+    sysVersion: string;
+    architecture: Architecture;
+    version_info: PythonVersionInfo;
+    sysPrefix: string;
+};
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
 
 export interface IPythonExecutionService {
+    getInterpreterInformation(): Promise<InterpreterInfomation | undefined>;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
 

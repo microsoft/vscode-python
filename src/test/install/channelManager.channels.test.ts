@@ -8,11 +8,25 @@ import { QuickPickOptions } from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IModuleInstaller } from '../../client/common/installer/types';
+import { Architecture } from '../../client/common/platform/types';
 import { Product } from '../../client/common/types';
 import { IInterpreterLocatorService, InterpreterType, PIPENV_SERVICE, PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
+
+const info: PythonInterpreter = {
+    architecture: Architecture.Unknown,
+    companyDisplayName: '',
+    displayName: '',
+    envName: '',
+    path: '',
+    type: InterpreterType.Unknown,
+    version: '',
+    version_info: [0, 0, 0, 'alpha'],
+    sysPrefix: '',
+    sysVersion: ''
+};
 
 // tslint:disable-next-line:max-func-body-length
 suite('Installation - installation channels', () => {
@@ -55,6 +69,7 @@ suite('Installation - installation channels', () => {
         const pipenvInstaller = mockInstaller(true, 'pipenv', 10);
 
         const interpreter: PythonInterpreter = {
+            ...info,
             path: 'pipenv',
             type: InterpreterType.VirtualEnv
         };

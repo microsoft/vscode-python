@@ -28,7 +28,8 @@ from parso.utils import split_lines
 
 TokenCollection = namedtuple(
     'TokenCollection',
-    'pseudo_token single_quoted triple_quoted endpats fstring_pattern_map always_break_tokens',
+    'pseudo_token single_quoted triple_quoted endpats whitespace '
+    'fstring_pattern_map always_break_tokens',
 )
 
 BOM_UTF8_STRING = BOM_UTF8.decode('utf-8')
@@ -114,6 +115,7 @@ def _create_token_collection(version_info):
     # Note: we use unicode matching for names ("\w") but ascii matching for
     # number literals.
     Whitespace = r'[ \f\t]*'
+    whitespace = _compile(Whitespace)
     Comment = r'#[^\r\n]*'
     Name = r'\w+'
 
@@ -225,7 +227,7 @@ def _create_token_collection(version_info):
     pseudo_token_compiled = _compile(PseudoToken)
     return TokenCollection(
         pseudo_token_compiled, single_quoted, triple_quoted, endpats,
-        fstring_pattern_map, ALWAYS_BREAK_TOKENS
+        whitespace, fstring_pattern_map, ALWAYS_BREAK_TOKENS
     )
 
 
@@ -244,7 +246,7 @@ class PythonToken(Token):
         return tok_name[self.type]
 
     def __repr__(self):
-        return ('TokenInfo(type=%s, string=%r, start=%r, prefix=%r)' %
+        return ('TokenInfo(type=%s, string=%r, start_pos=%r, prefix=%r)' %
                 self._replace(type=self._get_type_name()))
 
 
@@ -354,7 +356,8 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
     token. This idea comes from lib2to3. The prefix contains all information
     that is irrelevant for the parser like newlines in parentheses or comments.
     """
-    pseudo_token, single_quoted, triple_quoted, endpats, fstring_pattern_map, always_break_tokens, = \
+    pseudo_token, single_quoted, triple_quoted, endpats, whitespace, \
+        fstring_pattern_map, always_break_tokens, = \
         _get_token_collection(version_info)
     paren_level = 0  # count parentheses
     indents = [0]
@@ -435,10 +438,14 @@ def tokenize_lines(lines, version_info, start_pos=(1, 0)):
 
             pseudomatch = pseudo_token.match(line, pos)
             if not pseudomatch:                             # scan for tokens
-                txt = line[pos:]
-                if txt.endswith('\n'):
+                if line.endswith('\n'):
                     new_line = True
-                yield PythonToken(ERRORTOKEN, txt, (lnum, pos), additional_prefix)
+                match = whitespace.match(line, pos)
+                pos = match.end()
+                yield PythonToken(
+                    ERRORTOKEN, line[pos:], (lnum, pos),
+                    additional_prefix + match.group(0)
+                )
                 additional_prefix = ''
                 break
 

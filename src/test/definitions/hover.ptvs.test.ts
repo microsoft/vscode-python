@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import '../../client/common/extensions';
-import { IS_ANALYSIS_ENGINE_TEST } from '../constants';
+import { IsAnalysisEngineTest } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { normalizeMarkedString } from '../textUtils';
 
@@ -23,7 +23,7 @@ let textDocument: vscode.TextDocument;
 // tslint:disable-next-line:max-func-body-length
 suite('Hover Definition (Analysis Engine)', () => {
     suiteSetup(async function () {
-        if (!IS_ANALYSIS_ENGINE_TEST) {
+        if (!IsAnalysisEngineTest()) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
@@ -52,7 +52,9 @@ suite('Hover Definition (Analysis Engine)', () => {
         const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
         const expected = [
             'obj.method1:',
-            'method method1 of one.Class1 objects',
+            '```python',
+            'method method1 of pythonFiles.autocomp.one.Class1 objects',
+            '```',
             'This is method1'
         ];
         verifySignatureLines(actual, expected);
@@ -67,7 +69,9 @@ suite('Hover Definition (Analysis Engine)', () => {
         const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
         const expected = [
             'two.ct().fun:',
-            'method fun of two.ct objects',
+            '```python',
+            'method fun of pythonFiles.autocomp.two.ct objects',
+            '```',
             'This is fun'
         ];
         verifySignatureLines(actual, expected);
@@ -81,12 +85,13 @@ suite('Hover Definition (Analysis Engine)', () => {
 
         const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
         const expected = [
-            'Foo.bar:',
-            'four.Foo.bar() -> bool',
+            '```python',
+            'pythonFiles.autocomp.four.Foo.bar() -> bool',
+            'declared in Foo',
+            '```',
             '说明 - keep this line, it works',
             'delete following line, it works',
-            '如果存在需要等待审批或正在执行的任务，将不刷新页面',
-            'declared in Foo'
+            '如果存在需要等待审批或正在执行的任务，将不刷新页面'
         ];
         verifySignatureLines(actual, expected);
     });
@@ -99,8 +104,9 @@ suite('Hover Definition (Analysis Engine)', () => {
 
         const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
         const expected = [
-            'four.showMessage:',
-            'four.showMessage()',
+            '```python',
+            'pythonFiles.autocomp.four.showMessage()',
+            '```',
             'Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи.',
             'Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.'
         ];
@@ -131,8 +137,9 @@ suite('Hover Definition (Analysis Engine)', () => {
 
         const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
         const expected = [
-            'misc.Random:',
-            'class misc.Random(_random.Random)',
+            '```python',
+            'class pythonFiles.autocomp.misc.Random(_random.Random)',
+            '```',
             'Random number generator base class used by bound module functions.',
             'Used to instantiate instances of Random to get generators that don\'t',
             'share state.',
@@ -154,7 +161,9 @@ suite('Hover Definition (Analysis Engine)', () => {
         const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
         const expected = [
             'rnd2.randint:',
-            'method randint of misc.Random objects  -> int',
+            '```python',
+            'method randint of pythonFiles.autocomp.misc.Random objects -> int',
+            '```',
             'Return random integer in range [a, b], including both end points.'
         ];
         verifySignatureLines(actual, expected);
@@ -168,8 +177,9 @@ suite('Hover Definition (Analysis Engine)', () => {
 
         const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
         const expected = [
-            'math.acos:',
-            'built-in function acos(x)',
+            '```python',
+            'acos(x)',
+            '```',
             'acos(x)',
             'Return the arc cosine (measured in radians) of x.'
         ];
@@ -184,8 +194,9 @@ suite('Hover Definition (Analysis Engine)', () => {
 
         const actual = normalizeMarkedString(def[0].contents[0]).splitLines();
         const expected = [
-            'misc.Thread:',
-            'class misc.Thread(_Verbose)',
+            '```python',
+            'class pythonFiles.autocomp.misc.Thread(_Verbose)',
+            '```',
             'A class that represents a thread of control.',
             'This class can be safely subclassed in a limited fashion.'
         ];
@@ -222,6 +233,7 @@ suite('Hover Definition (Analysis Engine)', () => {
     function verifySignatureLines(actual: string[], expected: string[]) {
         assert.equal(actual.length, expected.length, 'incorrect number of lines');
         for (let i = 0; i < actual.length; i += 1) {
+            actual[i] = actual[i].replace(new RegExp('&nbsp;', 'g'), ' ');
             assert.equal(actual[i].trim(), expected[i], `signature line ${i + 1} is incorrect`);
         }
     }

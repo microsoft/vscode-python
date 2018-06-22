@@ -40,9 +40,12 @@ contributors (if you would like to contribute a translation, see the
 [pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)):
 
 * `en`
+* `es`
+* `fr`
 * `it`
 * `ja`
 * `ko-kr`
+* `pt-br`
 * `ru`
 * `zh-cn`
 * `zh-tw`
@@ -69,9 +72,9 @@ contributors (if you would like to contribute a translation, see the
   + Ability to include custom module paths (e.g. include paths for libraries like Google App Engine, etc.; use the setting `python.autoComplete.extraPaths = []`)
 * Code formatting
   + Auto formatting of code upon saving changes (default to 'Off')
-  + Use either [yapf](https://pypi.io/project/yapf/) or [autopep8](https://pypi.io/project/autopep8/) for code formatting (defaults to autopep8)
+  + Use either [yapf](https://pypi.org/project/yapf/), [autopep8](https://pypi.org/project/autopep8/), or [Black](https://pypi.org/project/black/) for code formatting (defaults to autopep8)
 * Linting
-  + Support for multiple linters with custom settings (default is [Pylint](https://pypi.org/project/pylint/), but [Prospector](https://pypi.org/project/prospector/), [Flake8](https://pypi.io/project/flake8/), [pylama](https://github.com/klen/pylama), [pydocstyle](https://pypi.org/project/pydocstyle/), and [mypy](https://pypi.org/project/mypy/) are also supported)
+  + Support for multiple linters with custom settings (default is [Pylint](https://pypi.org/project/pylint/), but [Prospector](https://pypi.org/project/prospector/), [Flake8](https://pypi.org/project/flake8/), [pylama](https://pypi.org/project/pylama/), [pydocstyle](https://pypi.org/project/pydocstyle/), and [mypy](https://pypi.org/project/mypy/) are also supported)
 * Debugging
   + Watch window
   + Evaluate expressions
@@ -87,7 +90,7 @@ contributors (if you would like to contribute a translation, see the
   + Debugging in the integrated or external terminal window
   + Debugging as sudo
 * Unit testing
-  + Support for [unittest](https://docs.python.org/3/library/unittest.html#module-unittest), [pytest](https://pypi.io/project/pytest/), and [nose](https://pypi.io/project/nose/)
+  + Support for [unittest](https://docs.python.org/3/library/unittest.html#module-unittest), [pytest](https://pypi.org/project/pytest/), and [nose](https://pypi.org/project/nose/)
   + Ability to run all failed tests, individual tests
   + Debugging unit tests
 * Snippets

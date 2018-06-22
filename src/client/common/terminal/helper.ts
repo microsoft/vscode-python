@@ -14,23 +14,33 @@ import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType 
 
 // Types of shells can be found here:
 // 1. https://wiki.ubuntu.com/ChangingShells
-const IS_BASH = /(bash.exe$|wsl.exe$|bash$|zsh$|ksh$)/i;
+const IS_GITBASH = /(gitbash.exe$)/i;
+const IS_BASH = /(bash.exe$|bash$)/i;
+const IS_WSL = /(wsl.exe$)/i;
+const IS_ZSH = /(zsh$)/i;
+const IS_KSH = /(ksh$)/i;
 const IS_COMMAND = /cmd.exe$/i;
 const IS_POWERSHELL = /(powershell.exe$|powershell$)/i;
 const IS_POWERSHELL_CORE = /(pwsh.exe$|pwsh$)/i;
 const IS_FISH = /(fish$)/i;
 const IS_CSHELL = /(csh$)/i;
+const IS_TCSHELL = /(tcsh$)/i;
 
 @injectable()
 export class TerminalHelper implements ITerminalHelper {
     private readonly detectableShells: Map<TerminalShellType, RegExp>;
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
 
         this.detectableShells = new Map<TerminalShellType, RegExp>();
         this.detectableShells.set(TerminalShellType.powershell, IS_POWERSHELL);
+        this.detectableShells.set(TerminalShellType.gitbash, IS_GITBASH);
         this.detectableShells.set(TerminalShellType.bash, IS_BASH);
+        this.detectableShells.set(TerminalShellType.wsl, IS_WSL);
+        this.detectableShells.set(TerminalShellType.zsh, IS_ZSH);
+        this.detectableShells.set(TerminalShellType.ksh, IS_KSH);
         this.detectableShells.set(TerminalShellType.commandPrompt, IS_COMMAND);
         this.detectableShells.set(TerminalShellType.fish, IS_FISH);
+        this.detectableShells.set(TerminalShellType.tcshell, IS_TCSHELL);
         this.detectableShells.set(TerminalShellType.cshell, IS_CSHELL);
         this.detectableShells.set(TerminalShellType.powershellCore, IS_POWERSHELL_CORE);
     }

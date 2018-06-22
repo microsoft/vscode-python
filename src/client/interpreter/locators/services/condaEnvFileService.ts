@@ -1,12 +1,11 @@
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
 import { ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import {
     ICondaService,
-    IInterpreterVersionService,
+    IInterpreterHelper,
     InterpreterType,
     PythonInterpreter
 } from '../../contracts';
@@ -15,7 +14,7 @@ import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName } from '
 
 @injectable()
 export class CondaEnvFileService extends CacheableLocatorService {
-    constructor( @inject(IInterpreterVersionService) private versionService: IInterpreterVersionService,
+    constructor(@inject(IInterpreterHelper) private helperService: IInterpreterHelper,
         @inject(ICondaService) private condaService: ICondaService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
@@ -31,7 +30,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
         if (!this.condaService.condaEnvironmentsFile) {
             return [];
         }
-        return this.fileSystem.fileExistsAsync(this.condaService.condaEnvironmentsFile!)
+        return this.fileSystem.fileExists(this.condaService.condaEnvironmentsFile!)
             .then(exists => exists ? this.getEnvironmentsFromFile(this.condaService.condaEnvironmentsFile!) : Promise.resolve([]));
     }
     private async getEnvironmentsFromFile(envFile: string) {
@@ -66,17 +65,20 @@ export class CondaEnvFileService extends CacheableLocatorService {
     }
     private async getInterpreterDetails(environmentPath: string): Promise<PythonInterpreter | undefined> {
         const interpreter = this.condaService.getInterpreterPath(environmentPath);
-        if (!interpreter || !await this.fileSystem.fileExistsAsync(interpreter)) {
+        if (!interpreter || !await this.fileSystem.fileExists(interpreter)) {
             return;
         }
 
-        const version = await this.versionService.getVersion(interpreter, path.basename(interpreter));
-        const versionWithoutCompanyName = this.stripCompanyName(version);
+        const details = await this.helperService.getInterpreterInformation(interpreter);
+        if (!details) {
+            return;
+        }
+        const versionWithoutCompanyName = this.stripCompanyName(details.version!);
         return {
             displayName: `${AnacondaDisplayName} ${versionWithoutCompanyName}`,
+            ...(details as PythonInterpreter),
             path: interpreter,
             companyDisplayName: AnacondaCompanyName,
-            version: version,
             type: InterpreterType.Conda,
             envPath: environmentPath
         };

@@ -1,6 +1,5 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { IProcessService, IPythonExecutionFactory } from './common/process/types';
 import { IServiceContainer } from './ioc/types';
 import * as sortProvider from './providers/importSortProvider';
 
@@ -29,15 +28,14 @@ export function activate(context: vscode.ExtensionContext, outChannel: vscode.Ou
             });
         }
         return emptyLineAdded.then(() => {
-            const processService = serviceContainer.get<IProcessService>(IProcessService);
-            const pythonExecutionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-            return new sortProvider.PythonImportSortProvider(pythonExecutionFactory, processService).sortImports(rootDir, activeEditor.document);
+            return new sortProvider.PythonImportSortProvider(serviceContainer).sortImports(rootDir, activeEditor.document);
         }).then(changes => {
             if (!changes || changes!.length === 0) {
                 return;
             }
 
-            return new Promise((resolve, reject) => activeEditor.edit(builder => changes.forEach(change => builder.replace(change.range, change.newText))).then(resolve, reject));
+            // tslint:disable-next-line:no-any
+            return new Promise<any>((resolve, reject) => activeEditor.edit(builder => changes.forEach(change => builder.replace(change.range, change.newText))).then(resolve, reject));
         }).catch(error => {
             const message = typeof error === 'string' ? error : (error.message ? error.message : error);
             outChannel.appendLine(error);

@@ -3,14 +3,16 @@
 // Licensed under the MIT License.
 
 import { Socket } from 'net';
-import { ConfigurationTarget, DiagnosticSeverity, Disposable, Uri } from 'vscode';
+import { ConfigurationTarget, DiagnosticSeverity, Disposable, ExtensionContext, OutputChannel, Uri } from 'vscode';
 
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
+export interface IOutputChannel extends OutputChannel { }
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export const IsWindows = Symbol('IS_WINDOWS');
 export const Is64Bit = Symbol('Is64Bit');
 export const IDisposableRegistry = Symbol('IDiposableRegistry');
+export type IDisposableRegistry = Disposable[];
 export const IMemento = Symbol('IGlobalMemento');
 export const GLOBAL_MEMENTO = Symbol('IGlobalMemento');
 export const WORKSPACE_MEMENTO = Symbol('IWorkspaceMemento');
@@ -23,8 +25,8 @@ export interface IPersistentState<T> {
 export const IPersistentStateFactory = Symbol('IPersistentStateFactory');
 
 export interface IPersistentStateFactory {
-    createGlobalPersistentState<T>(key: string, defaultValue: T): IPersistentState<T>;
-    createWorkspacePersistentState<T>(key: string, defaultValue: T): IPersistentState<T>;
+    createGlobalPersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T>;
+    createWorkspacePersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T>;
 }
 
 export type ExecutionInfo = {
@@ -34,17 +36,32 @@ export type ExecutionInfo = {
     product?: Product;
 };
 
+export enum LogLevel {
+    Information = 'Information',
+    Error = 'Error',
+    Warning = 'Warning'
+}
+
 export const ILogger = Symbol('ILogger');
 
 export interface ILogger {
     logError(message: string, error?: Error);
     logWarning(message: string, error?: Error);
+    logInformation(message: string, error?: Error);
 }
 
 export enum InstallerResponse {
     Installed,
     Disabled,
     Ignore
+}
+
+export enum ProductType {
+    Linter = 'Linter',
+    Formatter = 'Formatter',
+    TestFramework = 'TestFramework',
+    RefactoringLibrary = 'RefactoringLibrary',
+    WorkspaceSymbols = 'WorkspaceSymbols'
 }
 
 export enum Product {
@@ -62,7 +79,8 @@ export enum Product {
     unittest = 12,
     ctags = 13,
     rope = 14,
-    isort = 15
+    isort = 15,
+    black = 16
 }
 
 export enum ModuleNamePurpose {
@@ -82,7 +100,9 @@ export interface IInstaller {
 export const IPathUtils = Symbol('IPathUtils');
 
 export interface IPathUtils {
+    readonly delimiter: string;
     getPathVariableName(): 'Path' | 'PATH';
+    basename(pathValue: string, ext?: string): string;
 }
 
 export const ICurrentProcess = Symbol('ICurrentProcess');
@@ -98,19 +118,19 @@ export interface IPythonSettings {
     readonly pythonPath: string;
     readonly venvPath: string;
     readonly venvFolders: string[];
+    readonly downloadCodeAnalysis: boolean;
     readonly jediEnabled: boolean;
     readonly jediPath: string;
     readonly jediMemoryLimit: number;
     readonly devOptions: string[];
-    readonly linting?: ILintingSettings;
-    readonly formatting?: IFormattingSettings;
-    readonly unitTest?: IUnitTestSettings;
-    readonly autoComplete?: IAutoCompleteSettings;
+    readonly linting: ILintingSettings;
+    readonly formatting: IFormattingSettings;
+    readonly unitTest: IUnitTestSettings;
+    readonly autoComplete: IAutoCompleteSettings;
     readonly terminal: ITerminalSettings;
-    readonly sortImports?: ISortImportSettings;
-    readonly workspaceSymbols?: IWorkspaceSymbolSettings;
+    readonly sortImports: ISortImportSettings;
+    readonly workspaceSymbols: IWorkspaceSymbolSettings;
     readonly envFile: string;
-    readonly disablePromptForFeatures: string[];
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
 }
@@ -122,7 +142,6 @@ export interface ISortImportSettings {
 export interface IUnitTestSettings {
     readonly promptToConfigure: boolean;
     readonly debugPort: number;
-    readonly debugHost?: string;
     readonly nosetestsEnabled: boolean;
     nosetestPath: string;
     nosetestArgs: string[];
@@ -133,6 +152,7 @@ export interface IUnitTestSettings {
     unittestArgs: string[];
     cwd?: string;
     readonly useExperimentalDebugger?: boolean;
+    readonly autoTestDiscoverOnSaveEnabled: boolean;
 }
 export interface IPylintCategorySeverity {
     readonly convention: DiagnosticSeverity;
@@ -191,6 +211,8 @@ export interface IFormattingSettings {
     readonly provider: string;
     autopep8Path: string;
     readonly autopep8Args: string[];
+    blackPath: string;
+    readonly blackArgs: string[];
     yapfPath: string;
     readonly yapfArgs: string[];
 }
@@ -229,4 +251,12 @@ export const ISocketServer = Symbol('ISocketServer');
 export interface ISocketServer extends Disposable {
     readonly client: Promise<Socket>;
     Start(options?: { port?: number; host?: string }): Promise<number>;
+}
+
+export const IExtensionContext = Symbol('ExtensionContext');
+export interface IExtensionContext extends ExtensionContext { }
+
+export const IBrowserService = Symbol('IBrowserService');
+export interface IBrowserService {
+    launch(url: string): void;
 }

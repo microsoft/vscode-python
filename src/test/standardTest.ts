@@ -2,7 +2,7 @@
 
 import * as path from 'path';
 
-process.env.CODE_TESTS_WORKSPACE = path.join(__dirname, '..', '..', 'src', 'test');
+process.env.CODE_TESTS_WORKSPACE = process.env.CODE_TESTS_WORKSPACE ? process.env.CODE_TESTS_WORKSPACE : path.join(__dirname, '..', '..', 'src', 'test');
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 
 function start() {

@@ -99,17 +99,17 @@ export class Pylint extends BaseLinter {
             return true;
         }
 
-        if (await fs.fileExistsAsync(path.join(folder, pylintrc)) || await fs.fileExistsAsync(path.join(folder, dotPylintrc))) {
+        if (await fs.fileExists(path.join(folder, pylintrc)) || await fs.fileExists(path.join(folder, dotPylintrc))) {
             return true;
         }
 
         let current = folder;
         let above = path.dirname(folder);
         do {
-            if (!await fs.fileExistsAsync(path.join(current, '__init__.py'))) {
+            if (!await fs.fileExists(path.join(current, '__init__.py'))) {
                 break;
             }
-            if (await fs.fileExistsAsync(path.join(current, pylintrc)) || await fs.fileExistsAsync(path.join(current, dotPylintrc))) {
+            if (await fs.fileExists(path.join(current, pylintrc)) || await fs.fileExists(path.join(current, dotPylintrc))) {
                 return true;
             }
             current = above;
@@ -117,15 +117,15 @@ export class Pylint extends BaseLinter {
         } while (!fs.arePathsSame(current, above));
 
         const home = os.homedir();
-        if (await fs.fileExistsAsync(path.join(home, dotPylintrc))) {
+        if (await fs.fileExists(path.join(home, dotPylintrc))) {
             return true;
         }
-        if (await fs.fileExistsAsync(path.join(home, '.config', pylintrc))) {
+        if (await fs.fileExists(path.join(home, '.config', pylintrc))) {
             return true;
         }
 
         if (!platformService.isWindows) {
-            if (await fs.fileExistsAsync(path.join('/etc', pylintrc))) {
+            if (await fs.fileExists(path.join('/etc', pylintrc))) {
                 return true;
             }
         }
@@ -138,7 +138,7 @@ export class Pylint extends BaseLinter {
         let current = folder;
         let above = path.dirname(current);
         do {
-            if (await fs.fileExistsAsync(path.join(current, pylintrc)) || await fs.fileExistsAsync(path.join(current, dotPylintrc))) {
+            if (await fs.fileExists(path.join(current, pylintrc)) || await fs.fileExists(path.join(current, dotPylintrc))) {
                 return true;
             }
             current = above;

@@ -1,39 +1,54 @@
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { Uri } from 'vscode';
+import { OutputChannel, QuickPickItem, Uri, window } from 'vscode';
 import { createDeferred } from '../../../common/helpers';
-import { IInstaller } from '../../../common/types';
+import { IInstaller, IOutputChannel, Product } from '../../../common/types';
 import { getSubDirectories } from '../../../common/utils';
+import { IServiceContainer } from '../../../ioc/types';
+import { ITestConfigurationManager } from '../../types';
+import { TEST_OUTPUT_CHANNEL } from '../constants';
 import { ITestConfigSettingsService, UnitTestProduct } from './../types';
 
-export abstract class TestConfigurationManager {
+export abstract class TestConfigurationManager implements ITestConfigurationManager {
+    protected readonly outputChannel: OutputChannel;
+    protected readonly installer: IInstaller;
+    protected readonly testConfigSettingsService: ITestConfigSettingsService;
     constructor(protected workspace: Uri,
         protected product: UnitTestProduct,
-        protected readonly outputChannel: vscode.OutputChannel,
-        protected installer: IInstaller,
-        protected testConfigSettingsService: ITestConfigSettingsService) { }
-    // tslint:disable-next-line:no-any
-    public abstract configure(wkspace: Uri): Promise<any>;
+        protected readonly serviceContainer: IServiceContainer) {
+        this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
+        this.installer = serviceContainer.get<IInstaller>(IInstaller);
+        this.testConfigSettingsService = serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
+    }
+    public abstract configure(wkspace: Uri): Promise<void>;
+    public abstract requiresUserToConfigure(wkspace: Uri): Promise<boolean>;
     public async enable() {
+        // Disable other test frameworks.
+        const testProducsToDisable = [Product.pytest, Product.unittest, Product.nosetest]
+            .filter(item => item !== this.product) as UnitTestProduct[];
+
+        for (const prod of testProducsToDisable) {
+            await this.testConfigSettingsService.disable(this.workspace, prod);
+        }
+
         return this.testConfigSettingsService.enable(this.workspace, this.product);
     }
     // tslint:disable-next-line:no-any
     public async disable() {
         return this.testConfigSettingsService.enable(this.workspace, this.product);
     }
-    protected selectTestDir(rootDir: string, subDirs: string[], customOptions: vscode.QuickPickItem[] = []): Promise<string> {
+    protected selectTestDir(rootDir: string, subDirs: string[], customOptions: QuickPickItem[] = []): Promise<string> {
         const options = {
             matchOnDescription: true,
             matchOnDetail: true,
             placeHolder: 'Select the directory containing the unit tests'
         };
-        let items: vscode.QuickPickItem[] = subDirs
+        let items: QuickPickItem[] = subDirs
             .map(dir => {
                 const dirName = path.relative(rootDir, dir);
                 if (dirName.indexOf('.') === 0) {
                     return;
                 }
-                return <vscode.QuickPickItem>{
+                return {
                     label: dirName,
                     description: ''
                 };
@@ -44,7 +59,7 @@ export abstract class TestConfigurationManager {
         items = [{ label: '.', description: 'Root directory' }, ...items];
         items = customOptions.concat(items);
         const def = createDeferred<string>();
-        vscode.window.showQuickPick(items, options).then(item => {
+        window.showQuickPick(items, options).then(item => {
             if (!item) {
                 return def.resolve();
             }
@@ -61,7 +76,7 @@ export abstract class TestConfigurationManager {
             matchOnDetail: true,
             placeHolder: 'Select the pattern to identify test files'
         };
-        const items: vscode.QuickPickItem[] = [
+        const items: QuickPickItem[] = [
             { label: '*test.py', description: 'Python Files ending with \'test\'' },
             { label: '*_test.py', description: 'Python Files ending with \'_test\'' },
             { label: 'test*.py', description: 'Python Files begining with \'test\'' },
@@ -70,7 +85,7 @@ export abstract class TestConfigurationManager {
         ];
 
         const def = createDeferred<string>();
-        vscode.window.showQuickPick(items, options).then(item => {
+        window.showQuickPick(items, options).then(item => {
             if (!item) {
                 return def.resolve();
             }

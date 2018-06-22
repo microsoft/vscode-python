@@ -1,6 +1,5 @@
 import { CancellationToken, Disposable, OutputChannel, Uri } from 'vscode';
-import { IUnitTestSettings } from '../../common/types';
-import { Product } from '../../common/types';
+import { IUnitTestSettings, Product } from '../../common/types';
 import { CommandSource } from './constants';
 
 export type TestProvider = 'nosetest' | 'pytest' | 'unittest';
@@ -126,8 +125,9 @@ export type TestsToRun = {
 
 export type UnitTestProduct = Product.nosetest | Product.pytest | Product.unittest;
 
+export const ITestConfigSettingsService = Symbol('ITestConfigSettingsService');
 export interface ITestConfigSettingsService {
-    updateTestArgs(testDirectory: string, product: UnitTestProduct, args: string[]): Promise<void>;
+    updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]): Promise<void>;
     enable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
     disable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
 }
@@ -160,6 +160,9 @@ export interface ITestsHelper {
     getSettingsPropertyNames(product: Product): TestSettingsPropertyNames;
     flattenTestFiles(testFiles: TestFile[]): Tests;
     placeTestFilesIntoFolders(tests: Tests): void;
+    displayTestErrorMessage(message: string): void;
+    shouldRunAllTests(testsToRun?: TestsToRun): boolean;
+    mergeTests(items: Tests[]): Tests;
 }
 
 export const ITestVisitor = Symbol('ITestVisitor');
@@ -240,6 +243,29 @@ export type ParserOptions = TestDiscoveryOptions;
 export const IUnitTestSocketServer = Symbol('IUnitTestSocketServer');
 export interface IUnitTestSocketServer extends Disposable {
     on(event: string | symbol, listener: Function): this;
-    start(options?: { port?: number, host?: string }): Promise<number>;
+    start(options?: { port?: number; host?: string }): Promise<number>;
     stop(): void;
+}
+
+export type Options = {
+    workspaceFolder: Uri;
+    cwd: string;
+    args: string[];
+    outChannel?: OutputChannel;
+    token: CancellationToken;
+};
+
+export const ITestRunner = Symbol('ITestRunner');
+export interface ITestRunner {
+    run(testProvider: TestProvider, options: Options): Promise<string>;
+}
+
+export enum PassCalculationFormulae {
+    pytest,
+    nosetests
+}
+
+export const IXUnitParser = Symbol('IXUnitParser');
+export interface IXUnitParser {
+    updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, passCalculationFormulae: PassCalculationFormulae): Promise<void>;
 }

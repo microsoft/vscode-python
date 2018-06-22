@@ -20,7 +20,7 @@ class Grammar(object):
     """
     :py:func:`parso.load_grammar` returns instances of this class.
 
-    Creating custom grammars by calling this is not supported, yet.
+    Creating custom none-python grammars by calling this is not supported, yet.
     """
     #:param text: A BNF representation of your grammar.
     _error_normalizer_config = None
@@ -219,12 +219,13 @@ def load_grammar(**kwargs):
     version.
 
     :param str version: A python version string, e.g. ``version='3.3'``.
+    :param str path: A path to a grammar file
     """
-    def load_grammar(language='python', version=None):
+    def load_grammar(language='python', version=None, path=None):
         if language == 'python':
             version_info = parse_version_string(version)
 
-            file = os.path.join(
+            file = path or os.path.join(
                 'python',
                 'grammar%s%s.txt' % (version_info.major, version_info.minor)
             )

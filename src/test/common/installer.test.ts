@@ -1,21 +1,22 @@
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
-import { IApplicationShell } from '../../client/common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { EnumEx } from '../../client/common/enumUtils';
 import { createDeferred } from '../../client/common/helpers';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
-import { IInstallationChannelManager, IModuleInstaller } from '../../client/common/installer/types';
+import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
+import { ProductService } from '../../client/common/installer/productService';
+import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
-import { IProcessService } from '../../client/common/process/types';
-import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product } from '../../client/common/types';
-import { rootWorkspaceUri } from '../common';
-import { updateSetting } from '../common';
+import { IProcessServiceFactory } from '../../client/common/process/types';
+import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product, ProductType } from '../../client/common/types';
+import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -55,12 +56,23 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
         ioc.serviceManager.addSingleton<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
+        ioc.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, TypeMoq.Mock.ofType<ICommandManager>().object);
 
         ioc.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, TypeMoq.Mock.ofType<IApplicationShell>().object);
         ioc.serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
 
+        const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
+        ioc.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
+
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
+        ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, FormatterProductPathService, ProductType.Formatter);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
     }
     async function resetSettings() {
         await updateSetting('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
@@ -68,7 +80,7 @@ suite('Installer', () => {
 
     async function testCheckingIfProductIsInstalled(product: Product) {
         const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
-        const processService = ioc.serviceContainer.get<MockProcessService>(IProcessService);
+        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
         const checkInstalledDef = createDeferred<boolean>();
         processService.onExec((file, args, options, callback) => {
             const moduleName = installer.translateProductToModuleName(product, ModuleNamePurpose.run);

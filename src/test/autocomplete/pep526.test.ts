@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { rootWorkspaceUri } from '../common';
-import { closeActiveWindows, initialize, initializeTest, IS_ANALYSIS_ENGINE_TEST } from '../initialize';
+import { closeActiveWindows, initialize, initializeTest, IsAnalysisEngineTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
@@ -14,7 +14,7 @@ suite('Autocomplete PEP 526', () => {
     let ioc: UnitTestIocContainer;
     suiteSetup(async function () {
         // https://github.com/Microsoft/PTVS/issues/3917
-        if (IS_ANALYSIS_ENGINE_TEST) {
+        if (IsAnalysisEngineTest()) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }

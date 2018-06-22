@@ -2,16 +2,18 @@
 // Licensed under the MIT License.
 
 import { IServiceManager } from '../ioc/types';
+import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
 import { CommandManager } from './application/commandManager';
 import { DebugService } from './application/debugService';
 import { DocumentManager } from './application/documentManager';
 import { TerminalManager } from './application/terminalManager';
-import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager, ITerminalManager, IWorkspaceService } from './application/types';
+import { IApplicationEnvironment, IApplicationShell, ICommandManager, IDebugService, IDocumentManager, ITerminalManager, IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { ConfigurationService } from './configuration/service';
 import { ProductInstaller } from './installer/productInstaller';
 import { Logger } from './logger';
+import { BrowserService } from './net/browser';
 import { PersistentStateFactory } from './persistentState';
 import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
@@ -21,7 +23,7 @@ import { CommandPromptAndPowerShell } from './terminal/environmentActivationProv
 import { TerminalServiceFactory } from './terminal/factory';
 import { TerminalHelper } from './terminal/helper';
 import { ITerminalActivationCommandProvider, ITerminalHelper, ITerminalServiceFactory } from './terminal/types';
-import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, Is64Bit, IsWindows } from './types';
+import { IBrowserService, IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, Is64Bit, IsWindows } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
@@ -40,6 +42,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
+    serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
+    serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Bash, 'bashCShellFish');

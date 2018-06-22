@@ -60,7 +60,6 @@ _GET_DEFINITION_TYPES = set([
 _IMPORTS = set(['import_name', 'import_from'])
 
 
-
 class DocstringMixin(object):
     __slots__ = ()
 
@@ -133,7 +132,6 @@ class PythonLeaf(PythonMixin, Leaf):
         return previous_leaf.end_pos
 
 
-
 class _LeafWithoutNewlines(PythonLeaf):
     """
     Simply here to optimize performance.
@@ -165,6 +163,10 @@ class PythonErrorLeaf(ErrorLeaf, PythonLeaf):
 class EndMarker(_LeafWithoutNewlines):
     __slots__ = ()
     type = 'endmarker'
+
+    @utf8_repr
+    def __repr__(self):
+        return "<%s: prefix=%s>" % (type(self).__name__, repr(self.prefix))
 
 
 class Newline(PythonLeaf):
@@ -233,7 +235,6 @@ class Name(_LeafWithoutNewlines):
                 return None
             node = node.parent
         return None
-
 
 
 class Literal(PythonLeaf):
@@ -652,6 +653,7 @@ class Function(ClassOrFunc):
             return None
         except IndexError:
             return None
+
 
 class Lambda(Function):
     """

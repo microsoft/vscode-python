@@ -27,6 +27,7 @@ suite('Unit Tests - Debug Launcher', () => {
     let debugLauncher: DebugLauncher;
     let debugService: TypeMoq.IMock<IDebugService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let settings: TypeMoq.IMock<IPythonSettings>;
     setup(async () => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const configService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -38,7 +39,7 @@ suite('Unit Tests - Debug Launcher', () => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
 
-        const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+        settings = TypeMoq.Mock.ofType<IPythonSettings>();
         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
         unitTestSettings = TypeMoq.Mock.ofType<IUnitTestSettings>();
@@ -51,10 +52,12 @@ suite('Unit Tests - Debug Launcher', () => {
         args: string[], console, debugOptions: DebugOptions[],
         testProvider: TestProvider, useExperimentalDebugger: boolean) {
 
+        const envFile = __filename;
+        settings.setup(p => p.envFile).returns(() => envFile);
         const debugArgs = testProvider === 'unittest' && useExperimentalDebugger ? args.filter(item => item !== '--debug') : args;
 
         debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder),
-            TypeMoq.It.isObjectWith({ name, type, request, program, cwd, args: debugArgs, console, debugOptions })))
+            TypeMoq.It.isObjectWith({ name, type, request, program, cwd, args: debugArgs, console, envFile, debugOptions })))
             .returns(() => Promise.resolve(undefined as any))
             .verifiable(TypeMoq.Times.once());
     }
@@ -83,7 +86,7 @@ suite('Unit Tests - Debug Launcher', () => {
     const testProviders: TestProvider[] = ['nosetest', 'pytest', 'unittest'];
     testProviders.forEach(testProvider => {
         [true, false].forEach(useExperimentalDebugger => {
-            const testTitleSuffix = `(Test Framework '${testProvider}', and use experimental debugger = '${useExperimentalDebugger}'`;
+            const testTitleSuffix = `(Test Framework '${testProvider}', and use experimental debugger = '${useExperimentalDebugger}')`;
             const testLaunchScript = getTestLauncherScript(testProvider, useExperimentalDebugger);
             const debuggerType = useExperimentalDebugger ? 'pythonExperimental' : 'python';
 
@@ -128,7 +131,7 @@ suite('Unit Tests - Debug Launcher', () => {
                 const cancellationToken = new CancellationTokenSource();
                 cancellationToken.cancel();
                 const token = cancellationToken.token;
-                expect(debugLauncher.launchDebugger({ cwd: '', args: [], token, testProvider })).to.be.eventually.equal(undefined, 'not undefined');
+                await expect(debugLauncher.launchDebugger({ cwd: '', args: [], token, testProvider })).to.be.eventually.equal(undefined, 'not undefined');
                 debugService.verifyAll();
             });
             test(`Must throw an exception if there are no workspaces ${testTitleSuffix}`, async () => {
@@ -139,7 +142,7 @@ suite('Unit Tests - Debug Launcher', () => {
                     .returns(() => Promise.resolve(undefined as any))
                     .verifiable(TypeMoq.Times.never());
 
-                expect(debugLauncher.launchDebugger({ cwd: '', args: [], testProvider })).to.eventually.throw('Please open a workspace');
+                await expect(debugLauncher.launchDebugger({ cwd: '', args: [], testProvider })).to.eventually.rejectedWith('Please open a workspace');
                 debugService.verifyAll();
             });
         });

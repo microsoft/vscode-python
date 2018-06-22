@@ -1,16 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fs from 'fs';
+import * as fileSystem from 'fs';
 import * as path from 'path';
 import * as request from 'request';
 import * as requestProgress from 'request-progress';
-import { ExtensionContext, OutputChannel, ProgressLocation, window } from 'vscode';
+import { OutputChannel, ProgressLocation, window } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { noop } from '../common/core.utils';
-import { createDeferred, createTemporaryFile } from '../common/helpers';
+import { createDeferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
-import { IOutputChannel } from '../common/types';
+import { IExtensionContext, IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { HashVerifier } from './hashVerifier';
 import { PlatformData } from './platformData';
@@ -19,7 +18,7 @@ import { PlatformData } from './platformData';
 const StreamZip = require('node-stream-zip');
 
 const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-analysis';
-const downloadBaseFileName = 'python-analysis-vscode';
+const downloadBaseFileName = 'Python-Analysis-VSCode';
 const downloadVersion = '0.1.0';
 const downloadFileExtension = '.nupkg';
 
@@ -27,44 +26,49 @@ export class AnalysisEngineDownloader {
     private readonly output: OutputChannel;
     private readonly platform: IPlatformService;
     private readonly platformData: PlatformData;
+    private readonly fs: IFileSystem;
 
     constructor(private readonly services: IServiceContainer, private engineFolder: string) {
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.fs = this.services.get<IFileSystem>(IFileSystem);
         this.platform = this.services.get<IPlatformService>(IPlatformService);
-        this.platformData = new PlatformData(this.platform, this.services.get<IFileSystem>(IFileSystem));
+        this.platformData = new PlatformData(this.platform, this.fs);
     }
 
-    public async downloadAnalysisEngine(context: ExtensionContext): Promise<void> {
-        const localTempFilePath = await this.downloadFile();
+    public async downloadAnalysisEngine(context: IExtensionContext): Promise<void> {
+        const platformString = await this.platformData.getPlatformName();
+        const enginePackageFileName = `${downloadBaseFileName}-${platformString}.${downloadVersion}${downloadFileExtension}`;
+
+        let localTempFilePath = '';
         try {
-            await this.verifyDownload(localTempFilePath);
+            localTempFilePath = await this.downloadFile(downloadUriPrefix, enginePackageFileName, 'Downloading Microsoft Python Language Server... ');
+            await this.verifyDownload(localTempFilePath, platformString);
             await this.unpackArchive(context.extensionPath, localTempFilePath);
         } catch (err) {
             this.output.appendLine('failed.');
             this.output.appendLine(err);
             throw new Error(err);
         } finally {
-            fs.unlink(localTempFilePath, noop);
+            if (localTempFilePath.length > 0) {
+                await this.fs.deleteFile(localTempFilePath);
+            }
         }
     }
 
-    private async downloadFile(): Promise<string> {
-        const platformString = await this.platformData.getPlatformName();
-        const remoteFileName = `${downloadBaseFileName}-${platformString}.${downloadVersion}${downloadFileExtension}`;
-        const uri = `${downloadUriPrefix}/${remoteFileName}`;
+    private async downloadFile(location: string, fileName: string, title: string): Promise<string> {
+        const uri = `${location}/${fileName}`;
         this.output.append(`Downloading ${uri}... `);
-        const tempFile = await createTemporaryFile(downloadFileExtension);
+        const tempFile = await this.fs.createTemporaryFile(downloadFileExtension);
 
         const deferred = createDeferred();
-        const fileStream = fs.createWriteStream(tempFile.filePath);
+        const fileStream = fileSystem.createWriteStream(tempFile.filePath);
         fileStream.on('finish', () => {
             fileStream.close();
         }).on('error', (err) => {
-            tempFile.cleanupCallback();
+            tempFile.dispose();
             deferred.reject(err);
         });
 
-        const title = 'Downloading Python Analysis Engine... ';
         await window.withProgress({
             location: ProgressLocation.Window,
             title
@@ -94,18 +98,17 @@ export class AnalysisEngineDownloader {
         return tempFile.filePath;
     }
 
-    private async verifyDownload(filePath: string): Promise<void> {
+    private async verifyDownload(filePath: string, platformString: string): Promise<void> {
         this.output.appendLine('');
         this.output.append('Verifying download... ');
         const verifier = new HashVerifier();
-        if (!await verifier.verifyHash(filePath, await this.platformData.getExpectedHash())) {
+        if (!await verifier.verifyHash(filePath, platformString, await this.platformData.getExpectedHash())) {
             throw new Error('Hash of the downloaded file does not match.');
         }
-        this.output.append('valid.');
+        this.output.appendLine('valid.');
     }
 
     private async unpackArchive(extensionPath: string, tempFilePath: string): Promise<void> {
-        this.output.appendLine('');
         this.output.append('Unpacking archive... ');
 
         const installFolder = path.join(extensionPath, this.engineFolder);
@@ -123,10 +126,10 @@ export class AnalysisEngineDownloader {
 
             let totalFiles = 0;
             let extractedFiles = 0;
-            zip.on('ready', () => {
+            zip.on('ready', async () => {
                 totalFiles = zip.entriesCount;
-                if (!fs.existsSync(installFolder)) {
-                    fs.mkdirSync(installFolder);
+                if (!await this.fs.directoryExists(installFolder)) {
+                    await this.fs.createDirectory(installFolder);
                 }
                 zip.extract(null, installFolder, (err, count) => {
                     if (err) {
@@ -142,12 +145,12 @@ export class AnalysisEngineDownloader {
             });
             return deferred.promise;
         });
-        this.output.append('done.');
 
         // Set file to executable
         if (!this.platform.isWindows) {
             const executablePath = path.join(installFolder, this.platformData.getEngineExecutableName());
-            fs.chmodSync(executablePath, '0764'); // -rwxrw-r--
+            fileSystem.chmodSync(executablePath, '0764'); // -rwxrw-r--
         }
+        this.output.appendLine('done.');
     }
 }

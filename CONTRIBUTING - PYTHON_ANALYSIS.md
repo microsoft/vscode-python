@@ -8,7 +8,7 @@
 
 ### Prerequisites
 
-1. .NET Core 2.0+ SDK
+1. .NET Core 2.1 SDK
    - [Windows](https://www.microsoft.com/net/learn/get-started/windows)
    - [Mac OS](https://www.microsoft.com/net/learn/get-started/macos)
    - [Linux](https://www.microsoft.com/net/learn/get-started/linux/rhel)
@@ -32,6 +32,8 @@ Visual Studio 2017:
 3. Binaries arrive in *Python/BuildOutput/VsCode/raw*
 4. Delete contents of the *analysis* folder in the Python Extension folder
 5. Copy *.dll, *.pdb, *.json fron *Python/BuildOutput/VsCode/raw* to *analysis*
+6. In VS Code set setting *python.downloadCodeAnalysis* to *false*
+7. In VS Code set setting *python.jediEnabled* to *false*
 
 ### Debugging code in Python Extension to VS Code
 Folow regular TypeScript debugging steps

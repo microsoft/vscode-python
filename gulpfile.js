@@ -13,6 +13,7 @@ const tslint = require('tslint');
 const relative = require('relative');
 const ts = require('gulp-typescript');
 const cp = require('child_process');
+const spawn = require('cross-spawn');
 const colors = require('colors/safe');
 const gitmodified = require('gulp-gitmodified');
 const path = require('path');
@@ -26,6 +27,8 @@ const istanbul = require('istanbul');
 const glob = require('glob');
 const os = require('os');
 const _ = require('lodash');
+const nativeDependencyChecker = require('node-has-native-dependencies');
+const flat = require('flat');
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -97,6 +100,12 @@ gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 
 gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd*']));
 
+gulp.task('checkNativeDependencies', () => {
+    if (hasNativeDependencies()) {
+        throw new Error('Native dependencies deteced');
+    }
+});
+
 gulp.task('cover:enable', () => {
     return gulp.src("./coverconfig.json")
         .pipe(jeditor((json) => {
@@ -114,6 +123,23 @@ gulp.task('cover:disable', () => {
         }))
         .pipe(gulp.dest("./out", { 'overwrite': true }));
 });
+
+function hasNativeDependencies() {
+    let nativeDependencies = nativeDependencyChecker.check(path.join(__dirname, 'node_modules'));
+    if (!Array.isArray(nativeDependencies) || nativeDependencies.length === 0) {
+        return false;
+    }
+    const dependencies = JSON.parse(spawn.sync('npm', ['ls', '--json', '--prod']).stdout.toString());
+    const jsonProperties = Object.keys(flat.flatten(dependencies));
+    nativeDependencies = _.flatMap(nativeDependencies, item => path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep))
+        .filter(item => item.length > 0)
+        .filter(item => jsonProperties.findIndex(flattenedDependency => flattenedDependency.endsWith(`dependencies.${item}.version`)) >= 0);
+    if (nativeDependencies.length > 0) {
+        console.error('Native dependencies detected', nativeDependencies);
+        return true;
+    }
+    return false;
+}
 
 function buildDebugAdapterCoverage() {
     const matches = glob.sync(path.join(__dirname, 'debug_coverage*/coverage.json'));
@@ -176,6 +202,12 @@ const hygiene = (options) => {
         reRunCompilation = true;
         return;
     }
+    const fileListToProcess = options.mode === 'compile' ? undefined : getFileListToProcess(options);
+    if (Array.isArray(fileListToProcess) && fileListToProcess !== all
+        && fileListToProcess.filter(item => item.endsWith('.ts')).length === 0) {
+        return;
+    }
+
     const started = new Date().getTime();
     compilationInProgress = true;
     options = options || {};
@@ -323,7 +355,7 @@ const hygiene = (options) => {
         return tsProject(reporter);
     }
 
-    const files = options.mode === 'compile' ? tsProject.src() : getFilesToProcess(options);
+    const files = options.mode === 'compile' ? tsProject.src() : getFilesToProcess(fileListToProcess);
     const dest = options.mode === 'compile' ? './out' : '.';
     let result = files
         .pipe(filter(f => f && f.stat && !f.stat.isDirectory()));
@@ -457,22 +489,29 @@ function getModifiedFilesSync() {
 /**
 * @param {hygieneOptions} options
 */
-function getFilesToProcess(options) {
+function getFilesToProcess(fileList) {
+    const gulpSrcOptions = { base: '.' };
+    return gulp.src(fileList, gulpSrcOptions);
+}
+
+/**
+* @param {hygieneOptions} options
+*/
+function getFileListToProcess(options) {
     const mode = options ? options.mode : 'all';
     const gulpSrcOptions = { base: '.' };
 
     // If we need only modified files, then filter the glob.
     if (options && options.mode === 'changes') {
-        return gulp.src(getModifiedFilesSync(), gulpSrcOptions);
+        return getModifiedFilesSync();
     }
 
     if (options && options.mode === 'staged') {
-        return gulp.src(getStagedFilesSync(), gulpSrcOptions);
+        return getStagedFilesSync();
     }
 
-    return gulp.src(all, gulpSrcOptions);
+    return all;
 }
-
 exports.hygiene = hygiene;
 
 // this allows us to run hygiene as a git pre-commit hook.

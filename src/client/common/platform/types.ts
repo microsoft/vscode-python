@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
+import { Disposable } from 'vscode';
 
 export enum Architecture {
     Unknown = 1,
@@ -28,20 +29,27 @@ export interface IPlatformService {
     virtualEnvBinName: 'bin' | 'scripts';
 }
 
+export type TemporaryFile = { filePath: string } & Disposable;
+
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
     directorySeparatorChar: string;
-    objectExistsAsync(path: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean>;
-    fileExistsAsync(path: string): Promise<boolean>;
+    objectExists(path: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean>;
+    fileExists(path: string): Promise<boolean>;
     fileExistsSync(path: string): boolean;
-    directoryExistsAsync(path: string): Promise<boolean>;
-    createDirectoryAsync(path: string): Promise<void>;
-    getSubDirectoriesAsync(rootDir: string): Promise<string[]>;
+    directoryExists(path: string): Promise<boolean>;
+    createDirectory(path: string): Promise<void>;
+    getSubDirectories(rootDir: string): Promise<string[]>;
     arePathsSame(path1: string, path2: string): boolean;
     readFile(filePath: string): Promise<string>;
     appendFileSync(filename: string, data: {}, encoding: string): void;
     appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
     // tslint:disable-next-line:unified-signatures
     appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string }): void;
-    getRealPathAsync(path: string): Promise<string>;
+    getRealPath(path: string): Promise<string>;
+    copyFile(src: string, dest: string): Promise<void>;
+    deleteFile(filename: string): Promise<void>;
+    getFileHash(filePath: string): Promise<string | undefined>;
+    search(globPattern: string): Promise<string[]>;
+    createTemporaryFile(extension: string): Promise<TemporaryFile>;
 }

@@ -1,25 +1,46 @@
 'use strict';
-import * as vscode from 'vscode';
+import { inject, injectable } from 'inversify';
+import { Event, EventEmitter, StatusBarAlignment, StatusBarItem } from 'vscode';
+import { IApplicationShell } from '../../common/application/types';
 import * as constants from '../../common/constants';
-import { createDeferred, isNotInstalledError } from '../../common/helpers';
+import { noop } from '../../common/core.utils';
+import { isNotInstalledError } from '../../common/helpers';
+import { IConfigurationService } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
 import { CANCELLATION_REASON } from '../common/constants';
-import { displayTestErrorMessage } from '../common/testUtils';
-import { Tests } from '../common/types';
+import { ITestsHelper, Tests } from '../common/types';
+import { ITestResultDisplay } from '../types';
 
-export class TestResultDisplay {
-    private statusBar: vscode.StatusBarItem;
+@injectable()
+export class TestResultDisplay implements ITestResultDisplay {
+    private statusBar: StatusBarItem;
     private discoverCounter = 0;
     private ticker = ['|', '/', '-', '|', '/', '-', '\\'];
     private progressTimeout;
+    private _enabled: boolean = false;
     private progressPrefix!: string;
+    private readonly didChange = new EventEmitter<void>();
+    private readonly appShell: IApplicationShell;
+    private readonly testsHelper: ITestsHelper;
+    public get onDidChange(): Event<void> {
+        return this.didChange.event;
+    }
+
     // tslint:disable-next-line:no-any
-    constructor(private onDidChange?: vscode.EventEmitter<any>) {
-        this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+        this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.statusBar = this.appShell.createStatusBarItem(StatusBarAlignment.Left);
+        this.testsHelper = serviceContainer.get<ITestsHelper>(ITestsHelper);
     }
     public dispose() {
+        this.clearProgressTicker();
         this.statusBar.dispose();
     }
+    public get enabled() {
+        return this._enabled;
+    }
     public set enabled(enable: boolean) {
+        this._enabled = enable;
         if (enable) {
             this.statusBar.show();
         } else {
@@ -32,11 +53,10 @@ export class TestResultDisplay {
             .then(tests => this.updateTestRunWithSuccess(tests, debug))
             .catch(this.updateTestRunWithFailure.bind(this))
             // We don't care about any other exceptions returned by updateTestRunWithFailure
-            // tslint:disable-next-line:no-empty
-            .catch(() => { });
+            .catch(noop);
     }
     public displayDiscoverStatus(testDiscovery: Promise<Tests>, quietMode: boolean = false) {
-        this.displayProgress('Discovering Tests', 'Discovering Tests (Click to Stop)', constants.Commands.Tests_Ask_To_Stop_Discovery);
+        this.displayProgress('Discovering Tests', 'Discovering tests (click to stop)', constants.Commands.Tests_Ask_To_Stop_Discovery);
         return testDiscovery.then(tests => {
             this.updateWithDiscoverSuccess(tests, quietMode);
             return tests;
@@ -78,11 +98,9 @@ export class TestResultDisplay {
         this.statusBar.text = statusText.length === 0 ? 'No Tests Ran' : statusText.join(' ');
         this.statusBar.color = foreColor;
         this.statusBar.command = constants.Commands.Tests_View_UI;
-        if (this.onDidChange) {
-            this.onDidChange.fire();
-        }
+        this.didChange.fire();
         if (statusText.length === 0 && !debug) {
-            vscode.window.showWarningMessage('No tests ran, please check the configuration settings for the tests.');
+            this.appShell.showWarningMessage('No tests ran, please check the configuration settings for the tests.');
         }
         return tests;
     }
@@ -97,7 +115,7 @@ export class TestResultDisplay {
         } else {
             this.statusBar.text = '$(alert) Tests Failed';
             this.statusBar.tooltip = 'Running Tests Failed';
-            displayTestErrorMessage('There was an error in running the tests.');
+            this.testsHelper.displayTestErrorMessage('There was an error in running the tests.');
         }
         return Promise.reject(reason);
     }
@@ -124,23 +142,14 @@ export class TestResultDisplay {
     }
 
     // tslint:disable-next-line:no-any
-    private disableTests(): Promise<any> {
-        // tslint:disable-next-line:no-any
-        const def = createDeferred<any>();
-        const pythonConfig = vscode.workspace.getConfiguration('python');
+    private async disableTests(): Promise<any> {
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settingsToDisable = ['unitTest.promptToConfigure', 'unitTest.pyTestEnabled',
             'unitTest.unittestEnabled', 'unitTest.nosetestsEnabled'];
 
-        function disableTest() {
-            if (settingsToDisable.length === 0) {
-                return def.resolve();
-            }
-            pythonConfig.update(settingsToDisable.shift()!, false)
-                .then(disableTest.bind(this), disableTest.bind(this));
+        for (const setting of settingsToDisable) {
+            await configurationService.updateSettingAsync(setting, false).catch(noop);
         }
-
-        disableTest();
-        return def.promise;
     }
 
     private updateWithDiscoverSuccess(tests: Tests, quietMode: boolean = false) {
@@ -150,12 +159,12 @@ export class TestResultDisplay {
         this.statusBar.tooltip = 'Run Tests';
         this.statusBar.command = constants.Commands.Tests_View_UI;
         this.statusBar.show();
-        if (this.onDidChange) {
-            this.onDidChange.fire();
+        if (this.didChange) {
+            this.didChange.fire();
         }
 
         if (!haveTests && !quietMode) {
-            vscode.window.showInformationMessage('No tests discovered, please check the configuration settings for the tests.', 'Disable Tests').then(item => {
+            this.appShell.showInformationMessage('No tests discovered, please check the configuration settings for the tests.', 'Disable Tests').then(item => {
                 if (item === 'Disable Tests') {
                     this.disableTests()
                         .catch(ex => console.error('Python Extension: disableTests', ex));
@@ -181,7 +190,7 @@ export class TestResultDisplay {
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO: show an option that will invoke a command 'python.test.configureTest' or similar.
                 // This will be hanlded by main.ts that will capture input from user and configure the tests.
-                vscode.window.showErrorMessage('There was an error in discovering tests, please check the configuration settings for the tests.');
+                this.appShell.showErrorMessage('Test discovery error, please check the configuration settings for the tests.');
             }
         }
     }

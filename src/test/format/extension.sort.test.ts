@@ -3,7 +3,6 @@ import * as fs from 'fs';
 import { EOL } from 'os';
 import * as path from 'path';
 import { commands, ConfigurationTarget, Position, Range, Uri, window, workspace } from 'vscode';
-import { IProcessService, IPythonExecutionFactory } from '../../client/common/process/types';
 import { PythonImportSortProvider } from '../../client/providers/importSortProvider';
 import { updateSetting } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
@@ -39,9 +38,7 @@ suite('Sorting', () => {
         fs.writeFileSync(fileToFormatWithConfig1, fs.readFileSync(originalFileToFormatWithConfig1));
         await updateSetting('sortImports.args', [], Uri.file(sortingPath), configTarget);
         await closeActiveWindows();
-        const pythonExecutionFactory = ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const processService = ioc.serviceContainer.get<IProcessService>(IProcessService);
-        sorter = new PythonImportSortProvider(pythonExecutionFactory, processService);
+        sorter = new PythonImportSortProvider(ioc.serviceContainer);
     });
     teardown(async () => {
         ioc.dispose();

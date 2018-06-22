@@ -5,6 +5,7 @@
 .gitattributes
 .gitignore
 .gitmodules
+.npmrc
 .travis.yml
 CODE_OF_CONDUCT.md
 CODING_STANDARDS.md
@@ -44,5 +45,6 @@ requirements.txt
 scripts/**
 src/**
 test/**
+tmp/**
 typings/**
 vsc-extension-quickstart.md

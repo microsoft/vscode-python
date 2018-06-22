@@ -3,16 +3,15 @@ import * as vscode from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
 import '../common/extensions';
 import { IPythonToolExecutionService } from '../common/process/types';
-import { IConfigurationService, IPythonSettings } from '../common/types';
-import { ExecutionInfo, ILogger, Product } from '../common/types';
+import { ExecutionInfo, IConfigurationService, ILogger, IPythonSettings, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/errorHandler';
 import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LintMessageSeverity } from './types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const namedRegexp = require('named-js-regexp');
-
-const REGEX = '(?<line>\\d+),(?<column>\\d+),(?<type>\\w+),(?<code>\\w\\d+):(?<message>.*)\\r?(\\n|$)';
+// Allow negative column numbers (https://github.com/PyCQA/pylint/issues/1822)
+const REGEX = '(?<line>\\d+),(?<column>-?\\d+),(?<type>\\w+),(?<code>\\w\\d+):(?<message>.*)\\r?(\\n|$)';
 
 export interface IRegexGroup {
     line: number;
@@ -36,7 +35,7 @@ export abstract class BaseLinter implements ILinter {
     protected readonly configService: IConfigurationService;
 
     private errorHandler: ErrorHandler;
-    private _pythonSettings: IPythonSettings;
+    private _pythonSettings!: IPythonSettings;
     private _info: ILinterInfo;
     private workspace: IWorkspaceService;
 
@@ -142,7 +141,7 @@ export abstract class BaseLinter implements ILinter {
         return {
             code: match.code,
             message: match.message,
-            column: isNaN(match.column) || match.column === 0 ? 0 : match.column - this.columnOffset,
+            column: isNaN(match.column) || match.column <= 0 ? 0 : match.column - this.columnOffset,
             line: match.line,
             type: match.type,
             provider: this.info.id

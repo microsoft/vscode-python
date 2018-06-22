@@ -4,8 +4,9 @@
 import { ChildProcess } from 'child_process';
 import * as net from 'net';
 import { OutputEvent } from 'vscode-debugadapter';
-import { DebugProtocol } from 'vscode-debugprotocol';
+import { DebugProtocol } from 'vscode-debugprotocol/lib/debugProtocol';
 import { DebuggerPerformanceTelemetry, DebuggerTelemetry } from '../../telemetry/types';
+import { ExperimentalDebuggerType } from './constants';
 
 export class TelemetryEvent extends OutputEvent {
     body!: {
@@ -49,11 +50,12 @@ export interface ExceptionHandling {
     unhandled: string[];
 }
 
-export type DebuggerType = 'python' | 'pythonExperimental';
+export type DebuggerType = 'python' | typeof ExperimentalDebuggerType;
 
 export interface AdditionalLaunchDebugOptions {
     redirectOutput?: boolean;
     django?: boolean;
+    gevent?: boolean;
     jinja?: boolean;
     debugStdLib?: boolean;
     sudo?: boolean;
@@ -63,6 +65,7 @@ export interface AdditionalLaunchDebugOptions {
 export interface AdditionalAttachDebugOptions {
     redirectOutput?: boolean;
     django?: boolean;
+    gevent?: boolean;
     jinja?: boolean;
     debugStdLib?: boolean;
 }
@@ -71,7 +74,7 @@ export interface BaseLaunchRequestArguments extends DebugProtocol.LaunchRequestA
     type?: DebuggerType;
     /** An absolute path to the program to debug. */
     module?: string;
-    program: string;
+    program?: string;
     pythonPath: string;
     /** Automatically stop target after launch. If not specified, target does not stop. */
     stopOnEntry?: boolean;

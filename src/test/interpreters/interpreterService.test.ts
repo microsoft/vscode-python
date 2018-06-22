@@ -9,7 +9,7 @@ import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Disposable, TextDocument, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { noop } from '../../client/common/core.utils';
-import { IFileSystem } from '../../client/common/platform/types';
+import { Architecture, IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../client/common/types';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
@@ -26,6 +26,19 @@ import {
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
+
+const info: PythonInterpreter = {
+    architecture: Architecture.Unknown,
+    companyDisplayName: '',
+    displayName: '',
+    envName: '',
+    path: '',
+    type: InterpreterType.Unknown,
+    version: '',
+    version_info: [0, 0, 0, 'alpha'],
+    sysPrefix: '',
+    sysVersion: ''
+};
 
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters service', () => {
@@ -85,6 +98,7 @@ suite('Interpreters service', () => {
             return { key: 'python' };
         });
         const interpreter: PythonInterpreter = {
+            ...info,
             path: path.join(path.sep, 'folder', 'py1', 'bin', 'python.exe'),
             type: InterpreterType.Unknown
         };
@@ -107,6 +121,7 @@ suite('Interpreters service', () => {
             return { key: 'python', workspaceValue: 'python' };
         });
         const interpreter: PythonInterpreter = {
+            ...info,
             path: 'python',
             type: InterpreterType.VirtualEnv
         };
@@ -120,6 +135,7 @@ suite('Interpreters service', () => {
             return { key: 'python', workspaceValue: 'elsewhere' };
         });
         const interpreter: PythonInterpreter = {
+            ...info,
             path: 'elsewhere',
             type: InterpreterType.Unknown
         };
@@ -135,6 +151,7 @@ suite('Interpreters service', () => {
         });
         const intPath = path.join(path.sep, 'root', 'under', 'bin', 'python.exe');
         const interpreter: PythonInterpreter = {
+            ...info,
             path: intPath,
             type: InterpreterType.Unknown
         };

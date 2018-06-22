@@ -12,7 +12,7 @@ import { BaseActivationCommandProvider } from './baseActivationProvider';
 
 @injectable()
 export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
-    constructor( @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }
     public isShellSupported(targetShell: TerminalShellType): boolean {
@@ -41,7 +41,7 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
                 const powershellExe = targetShell === TerminalShellType.powershell ? 'powershell' : 'pwsh';
                 const activationCmd = scriptFile.fileToCommandArgument();
                 return [
-                    `& cmd /k "${activationCmd} & ${powershellExe}"`
+                    `& cmd /k "${activationCmd.replace(/"/g, '""')} & ${powershellExe}"`
                 ];
             } else {
                 // Powershell on non-windows os, we cannot execute the batch file.

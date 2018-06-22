@@ -54,7 +54,7 @@ export class DjangoContextInitializer implements Disposable {
     private async ensureContextStateIsSet(): Promise<void> {
         const activeWorkspace = this.getActiveWorkspace();
         if (!activeWorkspace) {
-            return await this.isDjangoProject.set(false);
+            return this.isDjangoProject.set(false);
         }
         if (this.lastCheckedWorkspace === activeWorkspace) {
             return;
@@ -62,7 +62,7 @@ export class DjangoContextInitializer implements Disposable {
         if (this.workspaceContextKeyValues.has(activeWorkspace)) {
             await this.isDjangoProject.set(this.workspaceContextKeyValues.get(activeWorkspace)!);
         } else {
-            const exists = await this.fileSystem.fileExistsAsync(path.join(activeWorkspace, 'manage.py'));
+            const exists = await this.fileSystem.fileExists(path.join(activeWorkspace, 'manage.py'));
             await this.isDjangoProject.set(exists);
             this.workspaceContextKeyValues.set(activeWorkspace, exists);
             this.lastCheckedWorkspace = activeWorkspace;

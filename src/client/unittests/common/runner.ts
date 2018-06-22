@@ -1,28 +1,29 @@
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
 import { ErrorUtils } from '../../common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../common/errors/moduleNotInstalledError';
-import { IPythonToolExecutionService } from '../../common/process/types';
 import {
     IPythonExecutionFactory,
     IPythonExecutionService,
+    IPythonToolExecutionService,
     ObservableExecutionResult,
     SpawnOptions
 } from '../../common/process/types';
-import { IPythonSettings } from '../../common/types';
-import { ExecutionInfo } from '../../common/types';
+import { ExecutionInfo, IPythonSettings } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';
-import { ITestsHelper, TestProvider } from './types';
+import { ITestRunner, ITestsHelper, Options, TestProvider } from './types';
+export { Options } from './types';
 
-export type Options = {
-    workspaceFolder: Uri;
-    cwd: string;
-    args: string[];
-    outChannel?: OutputChannel;
-    token: CancellationToken;
-};
+@injectable()
+export class TestRunner implements ITestRunner {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    public run(testProvider: TestProvider, options: Options): Promise<string> {
+        return run(this.serviceContainer, testProvider, options);
+    }
+}
 
 export async function run(serviceContainer: IServiceContainer, testProvider: TestProvider, options: Options): Promise<string> {
     const testExecutablePath = getExecutablePath(testProvider, PythonSettings.getInstance(options.workspaceFolder));
@@ -36,7 +37,7 @@ export async function run(serviceContainer: IServiceContainer, testProvider: Tes
     if (!testExecutablePath && testProvider === UNITTEST_PROVIDER) {
         // Unit tests have a special way of being executed
         const pythonServiceFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        pythonExecutionServicePromise = pythonServiceFactory.create(options.workspaceFolder);
+        pythonExecutionServicePromise = pythonServiceFactory.create({ resource: options.workspaceFolder });
         promise = pythonExecutionServicePromise.then(executionService => executionService.execObservable(options.args, { ...spawnOptions }));
     } else {
         const pythonToolsExecutionService = serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);

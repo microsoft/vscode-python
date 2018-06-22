@@ -31,12 +31,6 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
     }
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
-        // Pipenv always wins
-        const pipenv = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
-        const interpreters = await pipenv.getInterpreters(resource);
-        if (interpreters.length > 0) {
-            return interpreters;
-        }
         return this.getInterpretersPerResource(resource);
     }
     public dispose() {
@@ -49,6 +43,8 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
 
         // tslint:disable-next-line:underscore-consistent-invocation
         return _.flatten(listOfInterpreters)
+            .filter(item => !!item)
+            .map(item => item!)
             .map(fixInterpreterDisplayName)
             .map(item => { item.path = path.normalize(item.path); return item; })
             .reduce<PythonInterpreter[]>((accumulator, current) => {
@@ -70,6 +66,9 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     private getLocators(): IInterpreterLocatorService[] {
         const locators: IInterpreterLocatorService[] = [];
         // The order of the services is important.
+        // The order is important because the data sources at the bottom of the list do not contain all,
+        //  the information about the interpreters (e.g. type, environment name, etc).
+        // This way, the items returned from the top of the list will win, when we combine the items returned.
         if (this.platform.isWindows) {
             locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE));
         }
@@ -82,6 +81,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, KNOWN_PATH_SERVICE));
         }
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, CURRENT_PATH_SERVICE));
+        locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE));
 
         return locators;
     }

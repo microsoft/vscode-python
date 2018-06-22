@@ -4,6 +4,7 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { execFile } from 'child_process';
+import * as fs from 'fs-extra';
 import { Container } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
@@ -83,7 +84,7 @@ suite('PythonExecutableService', () => {
     test('Importing without a valid PYTHONPATH should fail', async () => {
         await configService.updateSettingAsync('envFile', 'someInvalidFile.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
+        const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], { cwd: path.dirname(workspace4PyFile.fsPath), throwOnStdErr: true });
 
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
@@ -91,14 +92,14 @@ suite('PythonExecutableService', () => {
 
     test('Importing with a valid PYTHONPATH from .env file should succeed', async () => {
         await configService.updateSettingAsync('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
-        const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
+        const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], { cwd: path.dirname(workspace4PyFile.fsPath), throwOnStdErr: true });
 
         await expect(promise).to.eventually.have.property('stdout', `Hello${EOL}`);
     });
 
     test('Known modules such as \'os\' and \'sys\' should be deemed \'installed\'', async () => {
-        const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
+        const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const osModuleIsInstalled = pythonExecService.isModuleInstalled('os');
         const sysModuleIsInstalled = pythonExecService.isModuleInstalled('sys');
         await expect(osModuleIsInstalled).to.eventually.equal(true, 'os module is not installed');
@@ -106,7 +107,7 @@ suite('PythonExecutableService', () => {
     });
 
     test('Unknown modules such as \'xyzabc123\' be deemed \'not installed\'', async () => {
-        const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
+        const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const randomModuleName = `xyz123${new Date().getSeconds()}`;
         const randomModuleIsInstalled = pythonExecService.isModuleInstalled(randomModuleName);
         await expect(randomModuleIsInstalled).to.eventually.equal(false, `Random module '${randomModuleName}' is installed`);
@@ -114,12 +115,17 @@ suite('PythonExecutableService', () => {
 
     test('Ensure correct path to executable is returned', async () => {
         const pythonPath = PythonSettings.getInstance(workspace4Path).pythonPath;
-        const expectedExecutablePath = await new Promise<string>(resolve => {
-            execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_error, stdout, _stdErr) => {
-                resolve(stdout.trim());
+        let expectedExecutablePath: string;
+        if (await fs.pathExists(pythonPath)) {
+            expectedExecutablePath = pythonPath;
+        } else {
+            expectedExecutablePath = await new Promise<string>(resolve => {
+                execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_error, stdout, _stdErr) => {
+                    resolve(stdout.trim());
+                });
             });
-        });
-        const pythonExecService = await pythonExecFactory.create(workspace4PyFile);
+        }
+        const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const executablePath = await pythonExecService.getExecutablePath();
         expect(executablePath).to.equal(expectedExecutablePath, 'Executable paths are not the same');
     });

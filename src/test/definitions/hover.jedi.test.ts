@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IS_ANALYSIS_ENGINE_TEST } from '../constants';
+import { IsAnalysisEngineTest } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { normalizeMarkedString } from '../textUtils';
 
@@ -18,7 +18,7 @@ const fileStringFormat = path.join(hoverPath, 'stringFormat.py');
 // tslint:disable-next-line:max-func-body-length
 suite('Hover Definition (Jedi)', () => {
     suiteSetup(async function () {
-        if (IS_ANALYSIS_ENGINE_TEST) {
+        if (IsAnalysisEngineTest()) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }

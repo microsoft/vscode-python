@@ -1,12 +1,14 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { Uri } from 'vscode';
-import * as vscode from 'vscode';
+import { CancellationTokenSource, ConfigurationTarget, DiagnosticCollection, Uri, window, workspace } from 'vscode';
 import { ICommandManager } from '../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { Product } from '../../client/common/installer/productInstaller';
-import { IConfigurationService, IOutputChannel } from '../../client/common/types';
+import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
+import { ProductService } from '../../client/common/installer/productService';
+import { IProductPathService, IProductService } from '../../client/common/installer/types';
+import { IConfigurationService, IOutputChannel, ProductType } from '../../client/common/types';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager, ILintMessage, LintMessageSeverity } from '../../client/linters/types';
 import { deleteFile, PythonSettingKeys, rootWorkspaceUri } from '../common';
@@ -120,14 +122,19 @@ suite('Linting', () => {
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
         ioc.registerPlatformTypes();
-
         linterManager = new LinterManager(ioc.serviceContainer);
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, FormatterProductPathService, ProductType.Formatter);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
     }
 
     async function resetSettings() {
         // Don't run these updates in parallel, as they are updating the same file.
-        const target = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
+        const target = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
 
         await configService.updateSettingAsync('linting.enabled', true, rootWorkspaceUri, target);
         await configService.updateSettingAsync('linting.lintOnSave', false, rootWorkspaceUri, target);
@@ -147,11 +154,11 @@ suite('Linting', () => {
         const output = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
 
         await configService.updateSettingAsync(setting, enabled, rootWorkspaceUri,
-            IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace);
+            IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace);
 
         file = file ? file : fileToLint;
-        const document = await vscode.workspace.openTextDocument(file);
-        const cancelToken = new vscode.CancellationTokenSource();
+        const document = await workspace.openTextDocument(file);
+        const cancelToken = new CancellationTokenSource();
 
         await linterManager.setActiveLintersAsync([product]);
         await linterManager.enableLintingAsync(enabled);
@@ -199,8 +206,8 @@ suite('Linting', () => {
     // tslint:disable-next-line:no-any
     async function testLinterMessages(product: Product, pythonFile: string, messagesToBeReceived: ILintMessage[]): Promise<any> {
         const outputChannel = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const cancelToken = new vscode.CancellationTokenSource();
-        const document = await vscode.workspace.openTextDocument(pythonFile);
+        const cancelToken = new CancellationTokenSource();
+        const document = await workspace.openTextDocument(pythonFile);
 
         await linterManager.setActiveLintersAsync([product], document.uri);
         const linter = linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
@@ -256,15 +263,15 @@ suite('Linting', () => {
         this.timeout(40000);
 
         await closeActiveWindows();
-        const document = await vscode.workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
-        await vscode.window.showTextDocument(document);
+        const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
+        await window.showTextDocument(document);
         await configService.updateSettingAsync('linting.enabled', true, workspaceUri);
         await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await configService.updateSettingAsync('linting.pylintEnabled', true, workspaceUri);
         await configService.updateSettingAsync('linting.flake8Enabled', true, workspaceUri);
 
         const commands = ioc.serviceContainer.get<ICommandManager>(ICommandManager);
-        const collection = await commands.executeCommand('python.runLinting') as vscode.DiagnosticCollection;
+        const collection = await commands.executeCommand('python.runLinting') as DiagnosticCollection;
         assert.notEqual(collection, undefined, 'python.runLinting did not return valid diagnostics collection.');
 
         const messages = collection!.get(document.uri);

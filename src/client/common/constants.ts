@@ -1,5 +1,10 @@
 import * as path from 'path';
-export const PythonLanguage = { language: 'python' };
+
+export const PYTHON_LANGUAGE = 'python';
+export const PYTHON = [
+    { scheme: 'file', language: PYTHON_LANGUAGE },
+    { scheme: 'untitled', language: PYTHON_LANGUAGE }
+];
 
 export namespace Commands {
     export const Set_Interpreter = 'python.setInterpreter';
@@ -66,8 +71,7 @@ export namespace LinterErrors {
 export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
 
 export function isTestExecution(): boolean {
-    // tslint:disable-next-line:interface-name no-string-literal
-    return process.env['VSC_PYTHON_CI_TEST'] === '1';
+    return process.env.VSC_PYTHON_CI_TEST === '1';
 }
 export function isPythonAnalysisEngineTest(): boolean {
     return process.env.VSC_PYTHON_ANALYSIS === '1';

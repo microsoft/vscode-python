@@ -5,36 +5,42 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
-import { IFileSystem } from '../../../common/platform/types';
-import { IProcessService } from '../../../common/process/types';
-import { ICurrentProcess } from '../../../common/types';
-import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
-import { getPythonExecutable } from '../../../debugger/Common/Utils';
+import { IFileSystem, IPlatformService } from '../../../common/platform/types';
+import { IProcessServiceFactory } from '../../../common/process/types';
+import { ICurrentProcess, ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../contracts';
+import { IInterpreterHelper, InterpreterType, IPipEnvService, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 const execName = 'pipenv';
 const pipEnvFileNameVariable = 'PIPENV_PIPFILE';
 
 @injectable()
-export class PipEnvService extends CacheableLocatorService {
-    private readonly versionService: IInterpreterVersionService;
-    private readonly process: IProcessService;
+export class PipEnvService extends CacheableLocatorService implements IPipEnvService {
+    private readonly helper: IInterpreterHelper;
+    private readonly processServiceFactory: IProcessServiceFactory;
     private readonly workspace: IWorkspaceService;
     private readonly fs: IFileSystem;
-    private readonly envVarsProvider: IEnvironmentVariablesProvider;
+    private readonly logger: ILogger;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('PipEnvService', serviceContainer);
-        this.versionService = this.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
-        this.process = this.serviceContainer.get<IProcessService>(IProcessService);
+        this.helper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
+        this.processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        this.envVarsProvider = this.serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+        this.logger = this.serviceContainer.get<ILogger>(ILogger);
     }
     // tslint:disable-next-line:no-empty
     public dispose() { }
+    public async isRelatedPipEnvironment(dir: string, pythonPath: string): Promise<boolean> {
+        // In PipEnv, the name of the cwd is used as a prefix in the virtual env.
+        if (pythonPath.indexOf(`${path.sep}${path.basename(dir)}-`) === -1) {
+            return false;
+        }
+        const envName = await this.getInterpreterPathFromPipenv(dir, true);
+        return !!envName;
+    }
     protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
         const pipenvCwd = this.getPipenvWorkingDirectory(resource);
         if (!pipenvCwd) {
@@ -52,13 +58,15 @@ export class PipEnvService extends CacheableLocatorService {
             return;
         }
 
-        const pythonExecutablePath = getPythonExecutable(interpreterPath);
-        const ver = await this.versionService.getVersion(pythonExecutablePath, '');
+        const details = await this.helper.getInterpreterInformation(interpreterPath);
+        if (!details) {
+            return;
+        }
         return {
-            path: pythonExecutablePath,
-            displayName: `${ver} (${execName})`,
-            type: InterpreterType.VirtualEnv,
-            version: ver
+            ...(details as PythonInterpreter),
+            displayName: `${details.version} (${execName})`,
+            path: interpreterPath,
+            type: InterpreterType.PipEnv
         };
     }
 
@@ -72,21 +80,33 @@ export class PipEnvService extends CacheableLocatorService {
         return wsFolder ? wsFolder.uri.fsPath : this.workspace.rootPath;
     }
 
-    private async getInterpreterPathFromPipenv(cwd: string): Promise<string | undefined> {
+    private async getInterpreterPathFromPipenv(cwd: string, ignoreErrors = false): Promise<string | undefined> {
         // Quick check before actually running pipenv
         if (!await this.checkIfPipFileExists(cwd)) {
             return;
         }
-        const venvFolder = await this.invokePipenv('--venv', cwd);
-        return venvFolder && await this.fs.directoryExistsAsync(venvFolder) ? venvFolder : undefined;
+        try {
+            const pythonPath = await this.invokePipenv('--py', cwd);
+            // TODO: Why do we need to do this?
+            return pythonPath && await this.fs.fileExists(pythonPath) ? pythonPath : undefined;
+            // tslint:disable-next-line:no-empty
+        } catch (error) {
+            console.error(error);
+            if (ignoreErrors) {
+                return;
+            }
+            const errorMessage = error.message || error;
+            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            appShell.showWarningMessage(`Workspace contains pipfile but attempt to run 'pipenv --py' failed with ${errorMessage}. Make sure pipenv is on the PATH.`);
+        }
     }
     private async checkIfPipFileExists(cwd: string): Promise<boolean> {
         const currentProcess = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
         const pipFileName = currentProcess.env[pipEnvFileNameVariable];
-        if (typeof pipFileName === 'string' && await this.fs.fileExistsAsync(path.join(cwd, pipFileName))) {
+        if (typeof pipFileName === 'string' && await this.fs.fileExists(path.join(cwd, pipFileName))) {
             return true;
         }
-        if (await this.fs.fileExistsAsync(path.join(cwd, 'Pipfile'))) {
+        if (await this.fs.fileExists(path.join(cwd, 'Pipfile'))) {
             return true;
         }
         return false;
@@ -94,8 +114,8 @@ export class PipEnvService extends CacheableLocatorService {
 
     private async invokePipenv(arg: string, rootPath: string): Promise<string | undefined> {
         try {
-            const env = await this.envVarsProvider.getEnvironmentVariables(Uri.file(rootPath));
-            const result = await this.process.exec(execName, [arg], { cwd: rootPath, env });
+            const processService = await this.processServiceFactory.create(Uri.file(rootPath));
+            const result = await processService.exec(execName, [arg], { cwd: rootPath });
             if (result) {
                 const stdout = result.stdout ? result.stdout.trim() : '';
                 const stderr = result.stderr ? result.stderr.trim() : '';
@@ -106,10 +126,19 @@ export class PipEnvService extends CacheableLocatorService {
             }
             // tslint:disable-next-line:no-empty
         } catch (error) {
-            console.error(error);
+            const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
+            const currentProc = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
+            const enviromentVariableValues = {
+                LC_ALL: currentProc.env.LC_ALL,
+                LANG: currentProc.env.LANG
+            };
+            enviromentVariableValues[platformService.pathVariableName] = currentProc.env[platformService.pathVariableName];
+
+            this.logger.logWarning('Error in invoking PipEnv', error);
+            this.logger.logWarning(`Relevant Environment Variables ${JSON.stringify(enviromentVariableValues, undefined, 4)}`);
             const errorMessage = error.message || error;
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            appShell.showWarningMessage(`Workspace contains pipfile but attempt to run 'pipenv --venv' failed with ${errorMessage}. Make sure pipenv is on the PATH.`);
+            appShell.showWarningMessage(`Workspace contains pipfile but attempt to run 'pipenv --venv' failed with '${errorMessage}'. Make sure pipenv is on the PATH.`);
         }
     }
 }

@@ -83,18 +83,22 @@ export function isLineBreak(ch: number): boolean {
     return ch === Char.CarriageReturn || ch === Char.LineFeed;
 }
 
+export function isNumber(ch: number): boolean {
+    return ch >= Char._0 && ch <= Char._9 || ch === Char.Underscore;
+}
+
 export function isDecimal(ch: number): boolean {
-    return ch >= Char._0 && ch <= Char._9;
+    return ch >= Char._0 && ch <= Char._9 || ch === Char.Underscore;
 }
 
 export function isHex(ch: number): boolean {
-    return isDecimal(ch) || (ch >= Char.a && ch <= Char.f) || (ch >= Char.A && ch <= Char.F);
+    return isDecimal(ch) || (ch >= Char.a && ch <= Char.f) || (ch >= Char.A && ch <= Char.F) || ch === Char.Underscore;
 }
 
 export function isOctal(ch: number): boolean {
-    return ch >= Char._0 && ch <= Char._7;
+    return ch >= Char._0 && ch <= Char._7 || ch === Char.Underscore;
 }
 
 export function isBinary(ch: number): boolean {
-    return ch === Char._0 || ch === Char._1;
+    return ch === Char._0 || ch === Char._1 || ch === Char.Underscore;
 }

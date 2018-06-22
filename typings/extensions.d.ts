@@ -26,6 +26,11 @@ declare interface String {
      * E.g. if an argument contains a space, then it will be enclosed within double quotes.
      */
     fileToCommandArgument(): string;
+    /**
+     * String.format() implementation.
+     * Tokens such as {0}, {1} will be replaced with corresponding positional arguments.
+     */
+    format(...args: string[]): string;
 }
 
 // tslint:disable-next-line:interface-name
