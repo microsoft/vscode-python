@@ -175,6 +175,9 @@ export interface IMypyCategorySeverity {
     readonly error: DiagnosticSeverity;
     readonly note: DiagnosticSeverity;
 }
+export interface IDiagnosticsSettings {
+    readonly unresolvedImports: DiagnosticSeverity;
+}
 export interface ILintingSettings {
     readonly enabled: boolean;
     readonly ignorePatterns: string[];
