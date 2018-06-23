@@ -1894,7 +1894,8 @@
         "clean": "gulp clean",
         "clean:ptvsd": "gulp clean:ptvsd",
         "cover:enable": "gulp cover:enable",
-        "debugger-coverage": "gulp debugger-coverage"
+        "debugger-coverage": "gulp debugger-coverage",
+        "cover:inlinesource": "gulp inlinesource"
     },
     "dependencies": {
         "arch": "2.1.0",
@@ -1978,6 +1979,7 @@
         "gulp-debounced-watch": "^1.0.4",
         "gulp-filter": "^5.1.0",
         "gulp-gitmodified": "^1.1.1",
+        "gulp-inline-source": "^3.2.0",
         "gulp-json-editor": "^2.2.2",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^4.0.1",

@@ -32,6 +32,7 @@ const os = require('os');
 const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
+const inlinesource = require('gulp-inline-source');
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -125,6 +126,16 @@ gulp.task('cover:disable', () => {
             return json;
         }))
         .pipe(gulp.dest("./out", { 'overwrite': true }));
+});
+
+/**
+ * Inline CSS into the coverage report for better visualizations on
+ * the VSTS report page for code coverage.
+ */
+gulp.task('inlinesource', () => {
+    return gulp.src('./coverage/lcov-report/*.html')
+                .pipe(inlinesource({attribute: false}))
+                .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
 
 function hasNativeDependencies() {
