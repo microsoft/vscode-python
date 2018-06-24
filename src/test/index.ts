@@ -6,7 +6,7 @@ if ((Reflect as any).metadata === undefined) {
 
 import {
     IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER,
-    IS_VSTS, MOCHA_CI_PROPERTIES,
+    IS_VSTS, MOCHA_CI_PROPERTIES, MOCHA_CI_REPORTER_ID,
     MOCHA_CI_REPORTFILE, MOCHA_REPORTER_JUNIT
 } from './ciConstants';
 import { IS_MULTI_ROOT_TEST } from './constants';
@@ -42,7 +42,7 @@ if (IS_VSTS) {
 // 'MOCHA_REPORTER_JUNIT' is defined, further control is afforded
 // by other 'MOCHA_CI_...' variables. See constants.ts for info.
 if (MOCHA_REPORTER_JUNIT) {
-    options.reporter = 'mocha-junit-reporter';
+    options.reporter = MOCHA_CI_REPORTER_ID;
     options.reporterOptions = {
         mochaFile: MOCHA_CI_REPORTFILE,
         properties: MOCHA_CI_PROPERTIES

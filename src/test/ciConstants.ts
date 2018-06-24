@@ -22,5 +22,6 @@ export const MOCHA_CI_REPORTFILE: string = MOCHA_REPORTER_JUNIT && process.env.M
                                             process.env.MOCHA_CI_REPORTFILE : './junit-out.xml';
 export const MOCHA_CI_PROPERTIES: string = MOCHA_REPORTER_JUNIT && process.env.MOCHA_CI_PROPERTIES !== undefined ?
                                             process.env.MOCHA_CI_PROPERTIES : '';
-
+export const MOCHA_CI_REPORTER_ID: string = MOCHA_REPORTER_JUNIT && process.env.MOCHA_CI_REPORTER_ID !== undefined ?
+                                            process.env.MOCHA_CI_REPORTER_ID : 'mocha-junit-reporter';
 export const IS_CI_SERVER_TEST_DEBUGGER = process.env.IS_CI_SERVER_TEST_DEBUGGER === '1';

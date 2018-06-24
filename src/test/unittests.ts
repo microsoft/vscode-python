@@ -12,7 +12,8 @@ import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
-import { MOCHA_CI_REPORTFILE, MOCHA_REPORTER_JUNIT } from './ciConstants';
+import { MOCHA_CI_REPORTER_ID, MOCHA_CI_REPORTFILE,
+    MOCHA_REPORTER_JUNIT } from './ciConstants';
 import * as vscodeMoscks from './vscode-mock';
 
 export function runTests(testOptions?: { grep?: string; timeout?: number }) {
@@ -35,7 +36,7 @@ export function runTests(testOptions?: { grep?: string; timeout?: number }) {
             grep: undefined,
             ui: 'tdd',
             timeout,
-            reporter: '../../../.mocha-reporter/mocha-vsts-reporter.js',
+            reporter: MOCHA_CI_REPORTER_ID,
             reporterOptions: {
                 useColors: false,
                 mochaFile: MOCHA_CI_REPORTFILE,
