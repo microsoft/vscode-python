@@ -79,7 +79,7 @@ export class TestsParser implements ITestsParser {
         }
 
         // Check if we already have this test file
-        const classNameToRun = className;
+        const classNameToRun = `${path.parse(filePath).name}.${className}`;
         let testSuite = testFile.suites.find(cls => cls.nameToRun === classNameToRun);
         if (!testSuite) {
             testSuite = {
@@ -88,7 +88,7 @@ export class TestsParser implements ITestsParser {
                 suites: [],
                 isUnitTest: true,
                 isInstance: false,
-                nameToRun: `${path.parse(filePath).name}.${classNameToRun}`,
+                nameToRun: classNameToRun,
                 xmlName: '',
                 status: TestStatus.Idle,
                 time: 0
