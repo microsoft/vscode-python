@@ -29,7 +29,7 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
             this.server = undefined;
         }
     }
-    public start(options: { port?: number, host?: string } = { port: 0, host: 'localhost' }): Promise<number> {
+    public start(options: { port?: number; host?: string } = { port: 0, host: 'localhost' }): Promise<number> {
         this.startedDef = createDeferred<number>();
         this.server = net.createServer(this.connectionListener.bind(this));
         this.server!.maxConnections = MaxConnections;
