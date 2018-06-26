@@ -8,6 +8,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { COMPLETION_ADD_BRACKETS, FORMAT_ON_TYPE } from '../telemetry/constants';
 import { isTestExecution } from './constants';
 import {
+    IAnalysisSettings,
     IAutoCompleteSettings,
     IFormattingSettings,
     ILintingSettings,
@@ -44,6 +45,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     public workspaceSymbols!: IWorkspaceSymbolSettings;
     public disableInstallationChecks = false;
     public globalModuleInstallation = false;
+    public analysis!: IAnalysisSettings;
 
     private workspaceRoot: Uri;
     private disposables: Disposable[] = [];
@@ -145,6 +147,14 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             Object.assign<ILintingSettings, ILintingSettings>(this.linting, lintingSettings);
         } else {
             this.linting = lintingSettings;
+        }
+
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        const analysisSettings = systemVariables.resolveAny(pythonSettings.get<IAnalysisSettings>('analysis'))!;
+        if (this.analysis) {
+            Object.assign<IAnalysisSettings, IAnalysisSettings>(this.analysis, analysisSettings);
+        } else {
+            this.analysis = analysisSettings;
         }
 
         this.disableInstallationChecks = pythonSettings.get<boolean>('disableInstallationCheck') === true;

@@ -1275,6 +1275,21 @@
                     "description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory).",
                     "scope": "resource"
                 },
+                "python.analysis.openFilesOnly": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Only show errors and warnings for open files rather than for the entire workspace.",
+                    "scope": "resource"
+                },
+                "python.analysis.typeshedPaths": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Paths to look for typeshed modules.",
+                    "scope": "resource"
+                },
                 "python.linting.enabled": {
                     "type": "boolean",
                     "default": true,
