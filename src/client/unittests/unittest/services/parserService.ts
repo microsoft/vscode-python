@@ -78,8 +78,10 @@ export class TestsParser implements ITestsParser {
             testFiles.push(testFile);
         }
 
-        // Check if we already have this test file
-        const classNameToRun = `${path.parse(filePath).name}.${className}`;
+        // Check if we already have this suite
+        const thePath: path.ParsedPath = path.parse(filePath);
+        const relativePath: string = thePath.dir.substring(rootDirectory.length + 1);
+        const classNameToRun: string = `${relativePath.replace(path.sep, '.')}.${thePath.name}.${className}`;
         let testSuite = testFile.suites.find(cls => cls.nameToRun === classNameToRun);
         if (!testSuite) {
             testSuite = {
