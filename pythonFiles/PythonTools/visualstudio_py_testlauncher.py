@@ -1,16 +1,16 @@
 # Python Tools for Visual Studio
 # Copyright(c) Microsoft Corporation
 # All rights reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the License); you may not use
 # this file except in compliance with the License. You may obtain a copy of the
 # License at http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
 # IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
 # MERCHANTABLITY OR NON-INFRINGEMENT.
-# 
+#
 # See the Apache Version 2.0 License for specific language governing
 # permissions and limitations under the License.
 
@@ -43,11 +43,11 @@ class _TestOutput(object):
     def flush(self):
         if self.old_out:
             self.old_out.flush()
-    
+
     def writelines(self, lines):
         for line in lines:
             self.write(line)
-    
+
     @property
     def encoding(self):
         return 'utf8'
@@ -58,13 +58,13 @@ class _TestOutput(object):
             self.old_out.write(value)
             # flush immediately, else things go wonky and out of order
             self.flush()
-    
+
     def isatty(self):
         return True
 
     def next(self):
         pass
-    
+
     @property
     def name(self):
         if self.is_stdout:
@@ -84,7 +84,7 @@ class _TestOutputBuffer(object):
         _channel.send_event('stdout' if self.is_stdout else 'stderr', content=data)
         self.buffer.write(data)
 
-    def flush(self): 
+    def flush(self):
         self.buffer.flush()
 
     def truncate(self, pos = None):
@@ -137,7 +137,7 @@ class VsTestResult(unittest.TextTestResult):
         super(VsTestResult, self).startTest(test)
         if _channel is not None:
             _channel.send_event(
-                name='start', 
+                name='start',
                 test = test.id()
             )
 
@@ -177,7 +177,7 @@ class VsTestResult(unittest.TextTestResult):
                 tb = ''.join(formatted)
                 message = str(trace[1])
             _channel.send_event(
-                name='result', 
+                name='result',
                 outcome=outcome,
                 traceback = tb,
                 message = message,
@@ -196,7 +196,7 @@ def stopTests():
 class ExitCommand(Exception):
     pass
 
-def signal_handler(signal, frame):    
+def signal_handler(signal, frame):
     raise ExitCommand()
 
 def main():
@@ -223,7 +223,7 @@ def main():
 
     if opts.debug:
         from ptvsd.visualstudio_py_debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
-    
+
     sys.path[0] = os.getcwd()
     if opts.result_port:
         try:
@@ -243,7 +243,7 @@ def main():
 
         pass
     elif opts.mixed_mode:
-        # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(), 
+        # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(),
         # so we have to use Win32 API in a loop to do the same thing.
         from time import sleep
         from ctypes import windll, c_char
@@ -278,43 +278,44 @@ def main():
                 opts.up = 'test*.py'
             tests = unittest.defaultTestLoader.discover(opts.us, opts.up)
         else:
-            # loadTestsFromNames doesn't work well (with duplicate file names or class names) 
+            # loadTestsFromNames doesn't work well (with duplicate file names or class names)
             # Easier approach is find the test suite and use that for running
             loader = unittest.TestLoader()
             # opts.us will be passed in
             suites = loader.discover(opts.us, pattern=os.path.basename(opts.testFile))
             suite = None
-            tests = None            
+            tests = None
             if opts.tests is None:
                 # Run everything in the test file
                 tests = suites
             else:
                 # Run a specific test class or test method
-                for suite in suites._tests:
-                    for cls in suite._tests:                        
+                for test_suite in suites._tests:
+                    for cls in test_suite._tests:
                         try:
                             for m in cls._tests:
                                 testId = m.id()
                                 if testId.startswith(opts.tests[0]):
                                     suite = cls
+                                    break
                                 if testId == opts.tests[0]:
                                     tests = m
                                     break
                         except Exception as err:
-                            errorMessage = traceback.format_exception()                            
+                            errorMessage = traceback.format_exception()
                             pass
                 if tests is None:
                     tests = suite
             if tests is None and suite is None:
                 _channel.send_event(
-                    name='error', 
+                    name='error',
                     outcome='',
                     traceback = '',
                     message = 'Failed to identify the test',
                     test = ''
                 )
         if opts.uvInt is None:
-            opts.uvInt = 0        
+            opts.uvInt = 0
         if opts.uf is not None:
             runner = unittest.TextTestRunner(verbosity=opts.uvInt, resultclass=VsTestResult, failfast=True)
         else:
