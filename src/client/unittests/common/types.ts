@@ -24,6 +24,8 @@ export type TestRunOptions = {
     debug?: boolean;
 };
 
+export type UnitTestParserOptions = TestDiscoveryOptions & { startDirectory: string };
+
 export type TestFolder = TestResult & {
     name: string;
     testFiles: TestFile[];
