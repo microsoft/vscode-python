@@ -3,7 +3,9 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ITestsHelper, ITestsParser, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestStatus, UnitTestParserOptions } from '../../common/types';
+import { ITestsHelper, ITestsParser, TestFile,
+    TestFunction, Tests, TestStatus,
+    UnitTestParserOptions } from '../../common/types';
 
 @injectable()
 export class TestsParser implements ITestsParser {
