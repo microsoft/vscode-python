@@ -11,7 +11,7 @@ import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
-import { IConfigurationService, IExtensionContext, IOutputChannel } from '../common/types';
+import { IConfigurationService, IExtensionContext, IOutputChannel, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import {
     PYTHON_ANALYSIS_ENGINE_DOWNLOADED,
@@ -47,6 +47,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private languageClient: LanguageClient | undefined;
     private interpreterHash: string = '';
     private excludedFiles: string[] = [];
+    private typeshedPaths: string[] = [];
     private loadExtensionArgs: {} | undefined;
 
     constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
@@ -210,12 +211,9 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         searchPaths.push(pythonPath);
         searchPaths = searchPaths.map(p => path.normalize(p));
 
-        const typeStubSearchPaths = settings.analysis.typeshedPaths && settings.analysis.typeshedPaths.length > 0
-            ? settings.analysis.typeshedPaths
-            : [path.join(this.context.extensionPath, 'typeshed')];
-
         const selector = [{ language: PYTHON, scheme: 'file' }];
         this.excludedFiles = this.getExcludedFiles();
+        this.typeshedPaths = this.getTypeshedPaths(settings);
 
         // Options to control the language client
         return {
@@ -237,7 +235,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                     maxDocumentationTextLength: 0
                 },
                 searchPaths,
-                typeStubSearchPaths,
+                typeStubSearchPaths: this.typeshedPaths,
                 excludeFiles: this.excludedFiles,
                 testEnvironment: isTestExecution()
             }
@@ -273,6 +271,12 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         }
     }
 
+    private getTypeshedPaths(settings: IPythonSettings): string[] {
+        return settings.analysis.typeshedPaths && settings.analysis.typeshedPaths.length > 0
+            ? settings.analysis.typeshedPaths
+            : [path.join(this.context.extensionPath, 'typeshed')];
+    }
+
     private async onSettingsChanged(): Promise<void> {
         const ids = new InterpreterDataService(this.context, this.services);
         const idata = await ids.getInterpreterData();
@@ -283,13 +287,21 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         }
 
         const excludedFiles = this.getExcludedFiles();
-        if (this.excludedFiles.length !== excludedFiles.length) {
+        await this.restartLanguageServerIfArrayChanged(this.excludedFiles, excludedFiles);
+
+        const settings = this.configuration.getSettings();
+        const typeshedPaths = this.getTypeshedPaths(settings);
+        await this.restartLanguageServerIfArrayChanged(this.typeshedPaths, typeshedPaths);
+    }
+
+    private async restartLanguageServerIfArrayChanged(oldArray: string[], newArray: string[]): Promise<void> {
+        if (newArray.length !== oldArray.length) {
             await this.restartLanguageServer();
             return;
         }
 
-        for (let i = 0; i < this.excludedFiles.length; i += 1) {
-            if (this.excludedFiles[i] !== excludedFiles[i]) {
+        for (let i = 0; i < oldArray.length; i += 1) {
+            if (oldArray[i] !== newArray[i]) {
                 await this.restartLanguageServer();
                 return;
             }
