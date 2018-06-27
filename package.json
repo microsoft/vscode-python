@@ -1290,6 +1290,42 @@
                     "description": "Paths to look for typeshed modules.",
                     "scope": "resource"
                 },
+                "python.analysis.errors": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of diagnostics messages to be shown as errors.",
+                    "scope": "resource"
+                },
+                "python.analysis.warnings": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of diagnostics messages to be shown as warnings.",
+                    "scope": "resource"
+                },
+                "python.analysis.information": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of diagnostics messages to be shown as information.",
+                    "scope": "resource"
+                },
+                "python.analysis.disabled": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of suppressed diagnostic messages.",
+                    "scope": "resource"
+                },
                 "python.linting.enabled": {
                     "type": "boolean",
                     "default": true,
