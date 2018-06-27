@@ -60,6 +60,7 @@ export class TestsParser implements ITestsParser {
         const paths = testIdParts.slice(0, testIdParts.length - 2);
         const filePath = `${path.join(rootDirectory, ...paths)}.py`;
         const functionName = testIdParts.pop()!;
+        const suiteToRun = testIdParts.join('.');
         const className = testIdParts.pop()!;
 
         // Check if we already have this test file
@@ -70,7 +71,7 @@ export class TestsParser implements ITestsParser {
                 fullPath: filePath,
                 functions: [],
                 suites: [],
-                nameToRun: `${className}.${functionName}`,
+                nameToRun: suiteToRun,
                 xmlName: '',
                 status: TestStatus.Idle,
                 time: 0
@@ -79,10 +80,8 @@ export class TestsParser implements ITestsParser {
         }
 
         // Check if we already have this suite
-        const thePath: path.ParsedPath = path.parse(filePath);
-        const relativePath: string = thePath.dir.substring(rootDirectory.length + 1);
-        const classNameToRun: string = `${relativePath.replace(path.sep, '.')}.${thePath.name}.${className}`;
-        let testSuite = testFile.suites.find(cls => cls.nameToRun === classNameToRun);
+        // nameToRun = testId - method name
+        let testSuite = testFile.suites.find(cls => cls.nameToRun === suiteToRun);
         if (!testSuite) {
             testSuite = {
                 name: className,
@@ -90,7 +89,7 @@ export class TestsParser implements ITestsParser {
                 suites: [],
                 isUnitTest: true,
                 isInstance: false,
-                nameToRun: classNameToRun,
+                nameToRun: suiteToRun,
                 xmlName: '',
                 status: TestStatus.Idle,
                 time: 0
