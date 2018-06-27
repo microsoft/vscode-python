@@ -7,8 +7,9 @@ import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import * as tmp from 'tmp';
 import { createDeferred } from '../helpers';
-import { IFileSystem, IPlatformService } from './types';
+import { IFileSystem, IPlatformService, TemporaryFile } from './types';
 
 @injectable()
 export class FileSystem implements IFileSystem {
@@ -140,5 +141,16 @@ export class FileSystem implements IFileSystem {
                 resolve(Array.isArray(files) ? files : []);
             });
         });
+    }
+    public createTemporaryFile(extension: string): Promise<TemporaryFile> {
+        return new Promise<TemporaryFile>((resolve, reject) => {
+            tmp.file({ postfix: extension }, (err, tmpFile, _, cleanupCallback) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve({ filePath: tmpFile, dispose: cleanupCallback });
+            });
+        });
+
     }
 }

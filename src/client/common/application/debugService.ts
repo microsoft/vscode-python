@@ -9,8 +9,11 @@ import { IDebugService } from './types';
 
 @injectable()
 export class DebugService implements IDebugService {
-    public get onDidStartDebugSession(): Event<DebugSession>{
+    public get onDidStartDebugSession(): Event<DebugSession> {
         return debug.onDidStartDebugSession;
+    }
+    public get onDidTerminateDebugSession(): Event<DebugSession> {
+        return debug.onDidTerminateDebugSession;
     }
     public startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration): Thenable<boolean> {
         return debug.startDebugging(folder, nameOrConfiguration);

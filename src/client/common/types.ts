@@ -240,6 +240,10 @@ export interface ITerminalSettings {
 export interface IAnalysisSettings {
     readonly openFilesOnly: boolean;
     readonly typeshedPaths: string[];
+    readonly errors: string[];
+    readonly warnings: string[];
+    readonly information: string[];
+    readonly disabled: string[];
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

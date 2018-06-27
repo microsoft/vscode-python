@@ -3,6 +3,9 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
+/* jshint node: true */
+/* jshint esversion: 6 */
+
 'use strict';
 
 const gulp = require('gulp');
@@ -29,6 +32,7 @@ const os = require('os');
 const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
+const inlinesource = require('gulp-inline-source');
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -118,10 +122,20 @@ gulp.task('cover:enable', () => {
 gulp.task('cover:disable', () => {
     return gulp.src("./coverconfig.json")
         .pipe(jeditor((json) => {
-            json.enabled = true;
+            json.enabled = false;
             return json;
         }))
         .pipe(gulp.dest("./out", { 'overwrite': true }));
+});
+
+/**
+ * Inline CSS into the coverage report for better visualizations on
+ * the VSTS report page for code coverage.
+ */
+gulp.task('inlinesource', () => {
+    return gulp.src('./coverage/lcov-report/*.html')
+                .pipe(inlinesource({attribute: false}))
+                .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
 
 function hasNativeDependencies() {
@@ -516,12 +530,5 @@ exports.hygiene = hygiene;
 
 // this allows us to run hygiene as a git pre-commit hook.
 if (require.main === module) {
-    const result = run({ exitOnError: true, mode: 'staged' });
-    // Run unit tests and ensure they pass as well.
-    if (result && result.on) {
-        result.on('end', () => {
-            const main = require('./out/test/unittests');
-            main.runTests();
-        })
-    }
+    run({ exitOnError: true, mode: 'staged' });
 }

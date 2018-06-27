@@ -4,8 +4,9 @@
 import { inject, injectable, named } from 'inversify';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
-import { Options, run } from '../../common/runner';
-import { ITestDiscoveryService, ITestsParser, TestDiscoveryOptions, Tests } from '../../common/types';
+import { Options } from '../../common/runner';
+import { ITestDiscoveryService, ITestRunner, ITestsParser, TestDiscoveryOptions, Tests } from '../../common/types';
+import { IArgumentsHelper } from '../../types';
 
 type UnitTestDiscoveryOptions = TestDiscoveryOptions & {
     startDirectory: string;
@@ -14,8 +15,13 @@ type UnitTestDiscoveryOptions = TestDiscoveryOptions & {
 
 @injectable()
 export class TestDiscoveryService implements ITestDiscoveryService {
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(ITestsParser) @named(UNITTEST_PROVIDER) private testParser: ITestsParser) { }
+    private readonly argsHelper: IArgumentsHelper;
+    private readonly runner: ITestRunner;
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(ITestsParser) @named(UNITTEST_PROVIDER) private testParser: ITestsParser) {
+        this.argsHelper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
+        this.runner = serviceContainer.get<ITestRunner>(ITestRunner);
+    }
     public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
         const pythonScript = this.getDiscoveryScript(options);
         const unitTestOptions = this.translateOptions(options);
@@ -27,7 +33,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
             outChannel: options.outChannel
         };
 
-        const data = await run(this.serviceContainer, UNITTEST_PROVIDER, runOptions);
+        const data = await this.runner.run(UNITTEST_PROVIDER, runOptions);
 
         if (options.token && options.token.isCancellationRequested) {
             return Promise.reject<Tests>('cancelled');
@@ -51,43 +57,32 @@ for suite in suites._tests:
             pass`;
     }
     public translateOptions(options: TestDiscoveryOptions): UnitTestDiscoveryOptions {
-        const unitTestOptions = { ...options } as UnitTestDiscoveryOptions;
-        unitTestOptions.startDirectory = this.getStartDirectory(options);
-        unitTestOptions.pattern = this.getTestPattern(options);
-        return unitTestOptions;
+        return {
+            ...options,
+            startDirectory: this.getStartDirectory(options),
+            pattern: this.getTestPattern(options)
+        };
     }
     private getStartDirectory(options: TestDiscoveryOptions) {
-        let startDirectory = '.';
-        const indexOfStartDir = options.args.findIndex(arg => arg.indexOf('-s') === 0);
-        if (indexOfStartDir >= 0) {
-            const startDir = options.args[indexOfStartDir].trim();
-            if (startDir.trim() === '-s' && options.args.length >= indexOfStartDir) {
-                // Assume the next items is the directory
-                startDirectory = options.args[indexOfStartDir + 1];
-            } else {
-                startDirectory = startDir.substring(2).trim();
-                if (startDirectory.startsWith('=') || startDirectory.startsWith(' ')) {
-                    startDirectory = startDirectory.substring(1);
-                }
-            }
+        const shortValue = this.argsHelper.getOptionValues(options.args, '-s');
+        if (typeof shortValue === 'string') {
+            return shortValue;
         }
-        return startDirectory;
+        const longValue = this.argsHelper.getOptionValues(options.args, '--start-directory');
+        if (typeof longValue === 'string') {
+            return longValue;
+        }
+        return '.';
     }
     private getTestPattern(options: TestDiscoveryOptions) {
-        let pattern = 'test*.py';
-        const indexOfPattern = options.args.findIndex(arg => arg.indexOf('-p') === 0);
-        if (indexOfPattern >= 0) {
-            const patternValue = options.args[indexOfPattern].trim();
-            if (patternValue.trim() === '-p' && options.args.length >= indexOfPattern) {
-                // Assume the next items is the directory
-                pattern = options.args[indexOfPattern + 1];
-            } else {
-                pattern = patternValue.substring(2).trim();
-                if (pattern.startsWith('=')) {
-                    pattern = pattern.substring(1);
-                }
-            }
+        const shortValue = this.argsHelper.getOptionValues(options.args, '-p');
+        if (typeof shortValue === 'string') {
+            return shortValue;
         }
-        return pattern;
+        const longValue = this.argsHelper.getOptionValues(options.args, '--pattern');
+        if (typeof longValue === 'string') {
+            return longValue;
+        }
+        return 'test*.py';
     }
 }

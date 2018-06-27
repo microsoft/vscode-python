@@ -24,7 +24,7 @@
     "python.command.python.enableLinting.title": "Enable Linting",
     "python.command.python.runLinting.title": "Run Linting",
     "python.snippet.launch.standard.label": "Python: Current File",
-    "python.snippet.launch.standard.description": "Debug a Python program with standard output",
+    "python.snippet.launch.standard.description": "Debug a Python Program with Standard Output",
     "python.snippet.launch.pyspark.label": "Python: PySpark",
     "python.snippet.launch.pyspark.description": "Debug PySpark",
     "python.snippet.launch.module.label": "Python: Module",
@@ -46,7 +46,7 @@
     "python.snippet.launch.watson.label": "Python: Watson Application",
     "python.snippet.launch.watson.description": "Debug a Watson Application",
     "python.snippet.launch.attach.label": "Python: Attach",
-    "python.snippet.launch.attach.description": "Attach the debugger for remote debugging",
+    "python.snippet.launch.attach.description": "Attach the Debugger for Remote Debugging",
     "python.snippet.launch.scrapy.label": "Python: Scrapy",
     "python.snippet.launch.scrapy.description": "Scrapy with Integrated Terminal/Console"
 }

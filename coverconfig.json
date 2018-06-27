@@ -11,7 +11,8 @@
         "json",
         "html",
         "lcov",
-        "lcovonly"
+        "lcovonly",
+        "cobertura"
     ],
     "verbose": false
 }

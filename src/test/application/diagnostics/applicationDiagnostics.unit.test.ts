@@ -79,7 +79,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         }
 
         for (const diagnostic of diagnostics) {
-            const message = `Diagnostic Code: ${diagnostic.code}, Mesage: ${diagnostic.message}`;
+            const message = `Diagnostic Code: ${diagnostic.code}, Message: ${diagnostic.message}`;
             switch (diagnostic.severity) {
                 case DiagnosticSeverity.Error: {
                     logger.setup(l => l.logError(message))

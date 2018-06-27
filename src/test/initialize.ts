@@ -1,6 +1,5 @@
 // tslint:disable:no-string-literal
 
-import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { PythonSettings } from '../client/common/configSettings';
@@ -8,6 +7,7 @@ import { activated } from '../client/extension';
 import { clearPythonPathInWorkspaceFolder, PYTHON_PATH, resetGlobalPythonPathSetting, setPythonPathInWorkspaceRoot } from './common';
 
 export * from './constants';
+export * from './ciConstants';
 
 const dummyPythonFile = path.join(__dirname, '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
 const multirootPath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc');

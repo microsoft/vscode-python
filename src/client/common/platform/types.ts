@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
+import { Disposable } from 'vscode';
 
 export enum Architecture {
     Unknown = 1,
@@ -28,6 +29,8 @@ export interface IPlatformService {
     virtualEnvBinName: 'bin' | 'scripts';
 }
 
+export type TemporaryFile = { filePath: string } & Disposable;
+
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
     directorySeparatorChar: string;
@@ -48,4 +51,5 @@ export interface IFileSystem {
     deleteFile(filename: string): Promise<void>;
     getFileHash(filePath: string): Promise<string | undefined>;
     search(globPattern: string): Promise<string[]>;
+    createTemporaryFile(extension: string): Promise<TemporaryFile>;
 }

@@ -1,6 +1,14 @@
 # Contributing to the Python extension for Visual Studio Code
 
-[![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python) [![Build status (AppVeyor)](https://ci.appveyor.com/api/projects/status/s0pt8d79gqw222j7?svg=true)](https://ci.appveyor.com/project/DonJayamanne/vscode-python-v3vd6) [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)
+
+ 
+
+---
+
+| macOS/Windows CI | Linux CI | Rolling CI | ptvsd master CI | Code Coverage |
+|-|-|-|-|-|
+|[![Build status - CI](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-CI)](https://vscode-python.visualstudio.com/VSCode-Python/VSCode-Python%20Team/_build/results?buildId=375&view=logs) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python) | [![Build status - Rolling](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI)](https://vscode-python.visualstudio.com/3dc2a9b3-d195-4dba-9886-844383409c6c/_build/index?buildId=378) | [![Build status - PTVSD](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-ptvsd_master-CI)](https://vscode-python.visualstudio.com/3dc2a9b3-d195-4dba-9886-844383409c6c/_build/index?buildId=361) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
+---
 
 # Contributing to Microsoft Python Analysis Engine
 [Contributing to Python Analysis Engine](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING%20-%20PYTHON_ANALYSIS.md)
@@ -89,33 +97,37 @@ person to do (long term this project aims to automate as much of the
 development process as possible). The current issues being worked on
 for a release are tracked in a
 [milestone](https://github.com/Microsoft/vscode-python/milestones)
-(which is actively updated as plans change).
+(which is actively updated as plans change). All
+[P0](https://github.com/Microsoft/vscode-python/labels/P0) are expected to
+be fixed in a milestone, else the release will be blocked.
+[P1](https://github.com/Microsoft/vscode-python/labels/P1) issues are a
+top-priority in a milestone, but if they are not completed they will not
+block a milestone. All other issues are considered best-effort for that
+milestone.
 
 The overall schedule for a release is to feature freeze for on the last
 Monday of the month to coincide with Visual Studio Code's code freeze.
 We then aim to release later that week so the latest version of the
-extension is already live by the time Visual Studio Code launches
-their new release. This is so we are ready to use any new features
+extension is already live by the time Visual Studio Code does their
+release the following week. This is so we are ready to use any new features
 of Visual Studio Code the day they go live. We do bugfix-only releases
-between scheduled releases as necessary.
+between scheduled releases as necessary, but otherwise we aim to do one
+release a month.
 
 All development is actively done in the `master` branch of the
-repository. It is what allows us to have an
-[insiders build](#insiders-build) which is expected to be stable at
+repository. It is what allows us to have a
+[development build](#development-build) which is expected to be stable at
 all times. We do keep the most recent release as a branch in case the
 need for a bugfix release arises. But once a new release is made we
 delete the older release branch (all releases are appropriately
-tagged, so history is lost).
+tagged, so no history is lost).
 
 ### Issue triaging
 
-To help actively track what stage issues are at, various labels are
-used. Which labels are expected to be set vary from when an issue is
-open to when an issue is closed.
-
-When an
-[issue is first opened](https://github.com/Microsoft/vscode-python/issues),
-it is triaged to contain at least two types of labels:
+To help actively track what stage
+[issues](https://github.com/Microsoft/vscode-python/issues)
+are at, various labels are used. The following label types are expected to
+be set on all open issues (otherwise the issue is not considered triaged):
 
 1. `needs`
 1. `feature`
@@ -129,32 +141,16 @@ the issue, and what kind of issue it is.
 When an issue is closed  by a pull request we add a
 [`validate fix`](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22+is%3Aclosed)
 label in order to request people help us test the fix to validate the issue was
-resolved successfully.
+resolved successfully. Once the fix has been manually validated we remove the label.
 
 ### Pull request workflow
 
-1. Check that there is an issue corresponding to what the pull request
-   is attempting to address
-   * If an issue exists, make sure it has reached the stage of
-     `awaiting 2-PR`
-   * If no issue exists, open one and wait for it to reach the
-     `awaiting 2-PR` stage before submitting the pull request
-1. Create the pull request, mentioning the appropriate issue(s) in the
-   pull request message body
-   * The pull request is expected to have appropriate unit tests
-   * The pull request must pass its CI run before merging will be
-     considered
-   * Code coverage is expected to (at minimum) not worsen
-   * A [news entry file](https://github.com/Microsoft/vscode-python/tree/master/news) (as appropriate)
-1. Make sure all status checks are green (e.g. CLA check, CI, etc.)
-1. Address any review comments
-1. [Maintainers only] Merge the pull request
-1. [Maintainers only] Update affected issues:
-   1. Add the [`validate fix`](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22+is%3Aclosed)
-      label
-   1. The issue(s) are attached to the current milestone
-   1. Register OSS usage
-   1. Email CELA about any 3rd-party usage changes
+Key details that all pull requests are expected to handle should be
+in the PR template. The only key detail not covered in that template is
+that any change in our dependencies must be properly reflected in our
+third-party notices file and registered with the OSPO internally at
+Microsoft (obviously external developers do not need to concern themselves
+with these legal/technical issues).
 
 ### Versioning
 

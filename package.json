@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2018.6.0-beta",
+    "version": "2018.7.0-alpha",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -19,14 +19,14 @@
     "qna": "https://stackoverflow.com/questions/tagged/visual-studio-code+python",
     "badges": [
         {
+            "url": "https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI?branchName=master",
+            "href": "https://vscode-python.visualstudio.com/VSCode-Python/VSCode-Python%20Team/_build/index?context=allDefinitions&path=&definitionId=9",
+            "description": "Continuous integration (VSTS)"
+        },
+        {
             "url": "https://travis-ci.org/Microsoft/vscode-python.svg?branch=master",
             "href": "https://travis-ci.org/Microsoft/vscode-python",
             "description": "Continuous integration (Travis)"
-        },
-        {
-            "url": "https://ci.appveyor.com/api/projects/status/s0pt8d79gqw222j7?svg=true",
-            "href": "https://ci.appveyor.com/project/DonJayamanne/vscode-python-v3vd6/branch/master",
-            "description": "Continuous integration (AppVeyor)"
         },
         {
             "url": "https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg",
@@ -1169,7 +1169,7 @@
                 },
                 "python.autoComplete.showAdvancedMembers": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Controls appearance of methods with double underscores in the completion list.",
                     "scope": "resource"
                 },
@@ -1954,7 +1954,8 @@
         "clean": "gulp clean",
         "clean:ptvsd": "gulp clean:ptvsd",
         "cover:enable": "gulp cover:enable",
-        "debugger-coverage": "gulp debugger-coverage"
+        "debugger-coverage": "gulp debugger-coverage",
+        "cover:inlinesource": "gulp inlinesource"
     },
     "dependencies": {
         "arch": "2.1.0",
@@ -2015,6 +2016,7 @@
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
         "@types/sinon": "^4.3.0",
+        "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
         "@types/winreg": "^1.2.30",
@@ -2037,6 +2039,7 @@
         "gulp-debounced-watch": "^1.0.4",
         "gulp-filter": "^5.1.0",
         "gulp-gitmodified": "^1.1.1",
+        "gulp-inline-source": "^3.2.0",
         "gulp-json-editor": "^2.2.2",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^4.0.1",
@@ -2058,6 +2061,7 @@
         "typemoq": "^2.1.0",
         "typescript": "^2.9.1",
         "typescript-formatter": "^7.1.0",
+        "uuid": "^3.2.1",
         "vscode": "^1.1.5",
         "vscode-debugadapter-testsupport": "^1.27.0"
     },

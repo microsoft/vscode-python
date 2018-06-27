@@ -2,6 +2,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../client/common/configSettings';
+import { EXTENSION_ROOT_DIR } from '../client/common/constants';
 import { sleep } from './core';
 import { IS_MULTI_ROOT_TEST } from './initialize';
 
@@ -9,7 +10,7 @@ export * from './core';
 
 // tslint:disable:no-non-null-assertion no-unsafe-any await-promise no-any no-use-before-declare no-string-based-set-timeout no-unsafe-any no-any no-invalid-this
 
-const fileInNonRootWorkspace = path.join(__dirname, '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
+const fileInNonRootWorkspace = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'dummy.py');
 export const rootWorkspaceUri = getWorkspaceRoot();
 
 export const PYTHON_PATH = getPythonPath();
@@ -40,7 +41,7 @@ export async function updateSetting(setting: PythonSettingKeys, value: {} | unde
 
 function getWorkspaceRoot() {
     if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
-        return Uri.file(path.join(__dirname, '..', '..', 'src', 'test'));
+        return Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test'));
     }
     if (workspace.workspaceFolders.length === 1) {
         return workspace.workspaceFolders[0].uri;
