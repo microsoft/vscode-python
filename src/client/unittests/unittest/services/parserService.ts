@@ -18,7 +18,7 @@ export class TestsParser implements ITestsParser {
         }
         return this.parseTestIds(testsDirectory, testIds);
     }
-    public getTestIds(content: string): string[] {
+    private getTestIds(content: string): string[] {
         let startedCollecting = false;
         return content.split(/\r?\n/g)
             .map(line => {
@@ -32,7 +32,7 @@ export class TestsParser implements ITestsParser {
             })
             .filter(line => line.length > 0);
     }
-    public parseTestIds(rootDirectory: string, testIds: string[]): Tests {
+    private parseTestIds(rootDirectory: string, testIds: string[]): Tests {
         const testFiles: TestFile[] = [];
         testIds.forEach(testId => this.addTestId(rootDirectory, testId, testFiles));
 
@@ -44,13 +44,13 @@ export class TestsParser implements ITestsParser {
      * TestIds are fully qualified including the method names.
      * E.g. tone_test.Failing2Tests.test_failure
      * Where tone_test = folder, Failing2Tests = class/suite, test_failure = method.
-     * @public
+     * @private
      * @param {string} rootDirectory
      * @param {string[]} testIds
      * @returns {Tests}
      * @memberof TestsParser
      */
-    public addTestId(rootDirectory: string, testId: string, testFiles: TestFile[]) {
+    private addTestId(rootDirectory: string, testId: string, testFiles: TestFile[]) {
         const testIdParts = testId.split('.');
         // We must have a file, class and function name
         if (testIdParts.length <= 2) {
