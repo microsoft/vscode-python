@@ -71,7 +71,7 @@ export class TestsParser implements ITestsParser {
                 fullPath: filePath,
                 functions: [],
                 suites: [],
-                nameToRun: suiteToRun,
+                nameToRun: `${suiteToRun}.${functionName}`,
                 xmlName: '',
                 status: TestStatus.Idle,
                 time: 0
