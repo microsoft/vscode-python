@@ -9,12 +9,16 @@ import { expect, use } from 'chai';
 import * as chaipromise from 'chai-as-promised';
 import * as path from 'path';
 import * as typeMoq from 'typemoq';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { UNITTEST_PROVIDER } from '../../../client/unittests/common/constants';
-import { ITestDiscoveryService, ITestRunner, ITestsParser, Options, TestDiscoveryOptions, Tests } from '../../../client/unittests/common/types';
+import { TestsHelper } from '../../../client/unittests/common/testUtils';
+import { TestFlatteningVisitor } from '../../../client/unittests/common/testVisitors/flatteningVisitor';
+import { ITestDiscoveryService, ITestRunner, ITestsParser,
+    Options, TestDiscoveryOptions, Tests, UnitTestParserOptions } from '../../../client/unittests/common/types';
 import { IArgumentsHelper } from '../../../client/unittests/types';
 import { TestDiscoveryService } from '../../../client/unittests/unittest/services/discoveryService';
+import { TestsParser } from '../../../client/unittests/unittest/services/parserService';
 
 use(chaipromise);
 
@@ -23,10 +27,11 @@ suite('Unit Tests - Unittest - Discovery', () => {
     let argsHelper: typeMoq.IMock<IArgumentsHelper>;
     let testParser: typeMoq.IMock<ITestsParser>;
     let runner: typeMoq.IMock<ITestRunner>;
+    let serviceContainer: typeMoq.IMock<IServiceContainer>;
     const dir = path.join('a', 'b', 'c');
     const pattern = 'Pattern_To_Search_For';
     setup(() => {
-        const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
+        serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         argsHelper = typeMoq.Mock.ofType<IArgumentsHelper>();
         testParser = typeMoq.Mock.ofType<ITestsParser>();
         runner = typeMoq.Mock.ofType<ITestRunner>();
@@ -300,4 +305,45 @@ suite('Unit Tests - Unittest - Discovery', () => {
         runner.verifyAll();
         testParser.verifyAll();
     });
+    test('Ensure discovery resolves test suites in n-depth directories', async () => {
+        const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor(), serviceContainer.object);
+
+        const testsParser: TestsParser = new TestsParser(testHelper);
+
+        const opts = typeMoq.Mock.ofType<UnitTestParserOptions>();
+        const token = typeMoq.Mock.ofType<CancellationToken>();
+        const wspace = typeMoq.Mock.ofType<Uri>();
+        opts.setup(o => o.token).returns(() => token.object);
+        opts.setup(o => o.workspaceFolder).returns(() => wspace.object);
+        token.setup(t => t.isCancellationRequested)
+            .returns(() => true);
+        opts.setup(o => o.cwd).returns(() => '/home/user/dev');
+        opts.setup(o => o.startDirectory).returns(() => '/home/user/dev/tests');
+
+        const discoveryOutput: string = ['start',
+            'apptests.debug.class_name.RootClassName.test_root',
+            'apptests.debug.class_name.RootClassName.test_root_other',
+            'apptests.debug.first.class_name.FirstLevelClassName.test_first',
+            'apptests.debug.first.class_name.FirstLevelClassName.test_first_other',
+            'apptests.debug.first.second.class_name.SecondLevelClassName.test_second',
+            'apptests.debug.first.second.class_name.SecondLevelClassName.test_second_other',
+            ''].join('\n');
+
+        const tests: Tests = testsParser.parse(discoveryOutput, opts.object);
+
+        expect(tests.testFiles.length).to.be.equal(3);
+        expect(tests.testFunctions.length).to.be.equal(6);
+        expect(tests.testSuites.length).to.be.equal(3);
+        expect(tests.testFolders.length).to.be.equal(1);
+    });
+
+    // no start directory given
+    // relative start directory given
+    // absolute start directory given
+
+    // no content given
+    // corrupted/invalid content given
+    // correct content given
+    // incorrect content given (no tests in the given path)
+
 });
