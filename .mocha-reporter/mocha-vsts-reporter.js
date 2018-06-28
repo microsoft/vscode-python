@@ -37,7 +37,7 @@ function MochaVstsReporter(runner, options) {
       // ##vso[task.setprogress]current operation
     }
   });
-  
+
   runner.on('pass', function(test){
     passes++;
     console.log('%s✓ %s (%dms)', indenter, test.title, test.duration);
@@ -52,7 +52,7 @@ function MochaVstsReporter(runner, options) {
   runner.on('fail', function(test, err){
     failures++;
     console.log('%s✖ %s -- error: %s', indenter, test.title, err.message);
-    console.log('##vso[task.logissue type=warning;sourcepath=%s;]SKIPPED TEST %s :: %s', test.file, test.parent.title, test.title);
+    console.log('##vso[task.logissue type=error;sourcepath=%s;]FAILED %s :: %s', test.file, test.parent.title, test.title);
   });
 
   runner.on('end', function(){
