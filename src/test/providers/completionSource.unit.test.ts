@@ -5,17 +5,25 @@
 
 // tslint:disable:max-func-body-length no-any
 
+// import { expect, use } from 'chai';
+// import * as chaipromise from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, CompletionItemKind, Position, SymbolKind, TextDocument, TextLine } from 'vscode';
+import { CancellationTokenSource, CompletionItemKind, // CancellationToken
+    Position, SymbolKind, TextDocument, TextLine } from 'vscode'; // SignatureHelp
 import { IAutoCompleteSettings, IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { JediFactory } from '../../client/languageServices/jediProxyFactory';
 import { CompletionSource } from '../../client/providers/completionSource';
 import { IItemInfoSource } from '../../client/providers/itemInfoSource';
-import { IAutoCompleteItem, ICompletionResult, JediProxyHandler } from '../../client/providers/jediProxy';
+import { IAutoCompleteItem, // IArgumentsResult
+    ICompletionResult, JediProxyHandler } from '../../client/providers/jediProxy';
+//import { PythonSignatureProvider } from '../../client/providers/signatureProvider';
+
+//use(chaipromise);
 
 suite('Completion Provider', () => {
     let completionSource: CompletionSource;
+    //let pySignatureProvider: PythonSignatureProvider;
     let jediHandler: TypeMoq.IMock<JediProxyHandler<ICompletionResult>>;
     let autoCompleteSettings: TypeMoq.IMock<IAutoCompleteSettings>;
     let itemInfoSource: TypeMoq.IMock<IItemInfoSource>;
@@ -36,6 +44,7 @@ suite('Completion Provider', () => {
         pythonSettings.setup(p => p.autoComplete).returns(() => autoCompleteSettings.object);
         itemInfoSource = TypeMoq.Mock.ofType<IItemInfoSource>();
         completionSource = new CompletionSource(jediFactory.object, serviceContainer.object, itemInfoSource.object);
+        //pySignatureProvider = new PythonSignatureProvider(jediFactory.object);
     });
 
     async function testDocumentation(source: string, addBrackets: boolean) {
@@ -85,5 +94,24 @@ suite('Completion Provider', () => {
         const source = 'if True:\n    print("Hello")\n';
         await testDocumentation(source, true);
     });
+    // test('Signature provides docs for commands', async () => {
+    //     const source = '  print(\'Python is awesome\',)';
+    //     const position = new Position(1, 27);
 
+    //     const lineText = TypeMoq.Mock.ofType<TextLine>();
+    //     lineText.setup(l => l.text).returns(() => source);
+
+    //     const doc = TypeMoq.Mock.ofType<TextDocument>();
+    //     doc.setup(d => d.fileName).returns(() => '');
+    //     doc.setup(d => d.getText(TypeMoq.It.isAny())).returns(() => source);
+    //     doc.setup(d => d.lineAt(TypeMoq.It.isAny())).returns(() => lineText.object);
+    //     doc.setup(d => d.offsetAt(TypeMoq.It.isAny())).returns(() => 0);
+    //     const cancelToken = TypeMoq.Mock.ofType<CancellationToken>();
+    //     jediHandler.setup(j => j.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+    //         .returns(() => new Promise.resolve(IArgumentsResult));
+
+    //     const items: SignatureHelp = await pySignatureProvider.provideSignatureHelp(doc.object, position, cancelToken.object);
+
+    //     expect(items).to.not.equal(null, 'Expected to have a signature generated for this line of code.');
+    // });
 });

@@ -65,25 +65,18 @@ export class CompletionSource {
 
     private async getCompletionResult(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken)
         : Promise<proxy.ICompletionResult | undefined> {
-        if (position.character <= 0) {
+        if (position.character <= 0 ||
+            isPositionInsideStringOrComment(document, position)) {
             return undefined;
         }
-        const filename = document.fileName;
-        const lineText = document.lineAt(position.line).text;
-        if (lineText.match(/^\s*\/\//)) {
-            return undefined;
-        }
-        // Suppress completion inside string and comments.
-        if (isPositionInsideStringOrComment(document, position)) {
-            return undefined;
-        }
+
         const type = proxy.CommandType.Completions;
         const columnIndex = position.character;
 
         const source = document.getText();
         const cmd: proxy.ICommand<proxy.ICommandResult> = {
             command: type,
-            fileName: filename,
+            fileName: document.fileName,
             columnIndex: columnIndex,
             lineIndex: position.line,
             source: source
