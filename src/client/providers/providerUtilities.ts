@@ -14,7 +14,7 @@ export function isPositionInsideStringOrComment(document: TextDocument, position
     const tokenizeTo = position.translate(1, 0);
     const tokens = getDocumentTokens(document, tokenizeTo, TokenizerMode.CommentsAndStrings);
     const offset = document.offsetAt(position);
-    let index = tokens.getItemContaining(offset);
+    let index = tokens.getItemContaining(offset - 1);
     if (index >= 0) {
         const token = tokens.getItemAt(index);
         return token.type === TokenType.String || token.type === TokenType.Comment;
