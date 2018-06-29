@@ -111,12 +111,12 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
         return new SignatureHelp();
     }
     @captureTelemetry(SIGNATURE)
-    public provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken): Thenable<SignatureHelp | undefined> {
+    public provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken): Thenable<SignatureHelp> {
         // early exit if we're in a string or comment (or in an undefined position)
         if (position.character <= 0 ||
             isPositionInsideStringOrComment(document, position))
         {
-            return Promise.resolve(undefined);
+            return Promise.resolve(new SignatureHelp());
         }
 
         const cmd: proxy.ICommand<proxy.IArgumentsResult> = {
