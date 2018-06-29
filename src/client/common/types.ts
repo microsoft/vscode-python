@@ -133,6 +133,7 @@ export interface IPythonSettings {
     readonly envFile: string;
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
+    readonly analysis: IAnalysisSettings;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -221,6 +222,7 @@ export interface IAutoCompleteSettings {
     readonly extraPaths: string[];
     readonly preloadModules: string[];
     readonly showAdvancedMembers: boolean;
+    readonly typeshedPaths: string[];
 }
 export interface IWorkspaceSymbolSettings {
     readonly enabled: boolean;
@@ -235,12 +237,16 @@ export interface ITerminalSettings {
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
 }
-export interface IPythonAnalysisEngineSettings {
-    readonly showAdvancedMembers: boolean;
+export interface IAnalysisSettings {
+    readonly openFilesOnly: boolean;
+    readonly typeshedPaths: string[];
+    readonly errors: string[];
+    readonly warnings: string[];
+    readonly information: string[];
+    readonly disabled: string[];
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
-
 export interface IConfigurationService {
     getSettings(resource?: Uri): IPythonSettings;
     isTestExecution(): boolean;

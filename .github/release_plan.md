@@ -70,12 +70,13 @@
 - [ ] Update the [changelog](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md) (including the names of external contributors & projects)
 - [ ] Update the [version](https://github.com/Microsoft/vscode-python/blob/master/package.json) number to be final
 - [ ] Make sure [CI](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md) is passing
-- [ ] Create the `release-` [branch](https://github.com/Microsoft/vscode-python/)
-- [ ] Generate final `.vsix` file from the `release-` branch
+- [ ] Generate the final `.vsix` file
 - [ ] Upload the final `.vsix` file to the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
 - [ ] Publish [documentation](https://code.visualstudio.com/docs/python/python-tutorial) [changes](https://github.com/microsoft/vscode-docs/pulls)
 - [ ] Publish the [blog](http://aka.ms/pythonblog) post
 - [ ] Create a [release](https://github.com/Microsoft/vscode-python/releases) on GitHub (which creates an appropriate git tag)
+- [ ] Determine if a hotfix is needed
+- [ ] Create the `release-` [branch](https://github.com/Microsoft/vscode-python/)
 
 ## Prep for the _next_ release
 - [ ] Bump the [version](https://github.com/Microsoft/vscode-python/blob/master/package.json) number to the next `alpha`

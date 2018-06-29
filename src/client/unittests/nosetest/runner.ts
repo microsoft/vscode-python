@@ -1,99 +1,99 @@
 'use strict';
-import { createTemporaryFile } from '../../common/helpers';
+
+import { inject, injectable } from 'inversify';
+import { noop } from '../../common/core.utils';
+import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
-import { Options, run } from '../common/runner';
-import { ITestDebugLauncher, ITestResultsService, LaunchOptions, TestRunOptions, Tests } from '../common/types';
-import { PassCalculationFormulae, updateResultsFromXmlLogFile } from '../common/xUnitParser';
+import { NOSETEST_PROVIDER } from '../common/constants';
+import { Options } from '../common/runner';
+import { ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner, IXUnitParser, LaunchOptions, PassCalculationFormulae, TestRunOptions, Tests } from '../common/types';
+import { IArgumentsHelper, IArgumentsService, ITestManagerRunner } from '../types';
 
 const WITH_XUNIT = '--with-xunit';
 const XUNIT_FILE = '--xunit-file';
 
-// tslint:disable-next-line:no-any
-export function runTest(serviceContainer: IServiceContainer, testResultsService: ITestResultsService, options: TestRunOptions): Promise<any> {
-    let testPaths: string[] = [];
-    if (options.testsToRun && options.testsToRun.testFolder) {
-        testPaths = testPaths.concat(options.testsToRun.testFolder.map(f => f.nameToRun));
+@injectable()
+export class TestManagerRunner implements ITestManagerRunner {
+    private readonly argsService: IArgumentsService;
+    private readonly argsHelper: IArgumentsHelper;
+    private readonly testRunner: ITestRunner;
+    private readonly xUnitParser: IXUnitParser;
+    private readonly fs: IFileSystem;
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+        this.argsService = serviceContainer.get<IArgumentsService>(IArgumentsService, NOSETEST_PROVIDER);
+        this.argsHelper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
+        this.testRunner = serviceContainer.get<ITestRunner>(ITestRunner);
+        this.xUnitParser = this.serviceContainer.get<IXUnitParser>(IXUnitParser);
+        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
-    if (options.testsToRun && options.testsToRun.testFile) {
-        testPaths = testPaths.concat(options.testsToRun.testFile.map(f => f.nameToRun));
-    }
-    if (options.testsToRun && options.testsToRun.testSuite) {
-        testPaths = testPaths.concat(options.testsToRun.testSuite.map(f => f.nameToRun));
-    }
-    if (options.testsToRun && options.testsToRun.testFunction) {
-        testPaths = testPaths.concat(options.testsToRun.testFunction.map(f => f.nameToRun));
-    }
-
-    let xmlLogFile = '';
-    // tslint:disable-next-line:no-empty
-    let xmlLogFileCleanup: Function = () => { };
-
-    // Check if '--with-xunit' is in args list
-    const noseTestArgs = options.args.slice();
-    if (noseTestArgs.indexOf(WITH_XUNIT) === -1) {
-        noseTestArgs.push(WITH_XUNIT);
-    }
-
-    // Check if '--xunit-file' exists, if not generate random xml file
-    const indexOfXUnitFile = noseTestArgs.findIndex(value => value.indexOf(XUNIT_FILE) === 0);
-    let promiseToGetXmlLogFile: Promise<string>;
-    if (indexOfXUnitFile === -1) {
-        promiseToGetXmlLogFile = createTemporaryFile('.xml').then(xmlLogResult => {
-            xmlLogFileCleanup = xmlLogResult.cleanupCallback;
-            xmlLogFile = xmlLogResult.filePath;
-
-            noseTestArgs.push(`${XUNIT_FILE}=${xmlLogFile}`);
-            return xmlLogResult.filePath;
-        });
-    } else {
-        if (noseTestArgs[indexOfXUnitFile].indexOf('=') === -1) {
-            xmlLogFile = noseTestArgs[indexOfXUnitFile + 1];
-        } else {
-            xmlLogFile = noseTestArgs[indexOfXUnitFile].substring(noseTestArgs[indexOfXUnitFile].indexOf('=') + 1).trim();
+    public async runTest(testResultsService: ITestResultsService, options: TestRunOptions, _: ITestManager): Promise<Tests> {
+        let testPaths: string[] = [];
+        if (options.testsToRun && options.testsToRun.testFolder) {
+            testPaths = testPaths.concat(options.testsToRun.testFolder.map(f => f.nameToRun));
+        }
+        if (options.testsToRun && options.testsToRun.testFile) {
+            testPaths = testPaths.concat(options.testsToRun.testFile.map(f => f.nameToRun));
+        }
+        if (options.testsToRun && options.testsToRun.testSuite) {
+            testPaths = testPaths.concat(options.testsToRun.testSuite.map(f => f.nameToRun));
+        }
+        if (options.testsToRun && options.testsToRun.testFunction) {
+            testPaths = testPaths.concat(options.testsToRun.testFunction.map(f => f.nameToRun));
         }
 
-        promiseToGetXmlLogFile = Promise.resolve(xmlLogFile);
-    }
+        let deleteJUnitXmlFile: Function = noop;
+        const args = options.args;
+        // Check if '--with-xunit' is in args list
+        if (args.indexOf(WITH_XUNIT) === -1) {
+            args.splice(0, 0, WITH_XUNIT);
+        }
 
-    return promiseToGetXmlLogFile.then(() => {
-        if (options.debug === true) {
-            const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
-            const nosetestlauncherargs = [options.cwd, 'nose'];
-            const debuggerArgs = nosetestlauncherargs.concat(noseTestArgs.concat(testPaths));
-            const launchOptions: LaunchOptions = { cwd: options.cwd, args: debuggerArgs, token: options.token, outChannel: options.outChannel, testProvider: 'nosetest' };
-            // tslint:disable-next-line:prefer-type-cast no-any
-            return debugLauncher.launchDebugger(launchOptions) as Promise<any>;
-        } else {
-            // tslint:disable-next-line:prefer-type-cast no-any
-            const runOptions: Options = {
-                args: noseTestArgs.concat(testPaths),
-                cwd: options.cwd,
-                outChannel: options.outChannel,
-                token: options.token,
-                workspaceFolder: options.workspaceFolder
-            };
+        try {
+            const xmlLogResult = await this.getUnitXmlFile(args);
+            const xmlLogFile = xmlLogResult.filePath;
+            deleteJUnitXmlFile = xmlLogResult.dispose;
+            // Remove the '--unixml' if it exists, and add it with our path.
+            const testArgs = this.argsService.filterArguments(args, [XUNIT_FILE]);
+            testArgs.splice(0, 0, `${XUNIT_FILE}=${xmlLogFile}`);
 
-            // Remove the directory argument, as we'll provide tests to be run.
-            if (testPaths.length > 0 && runOptions.args.length > 0 && !runOptions.args[0].trim().startsWith('-')) {
-                runOptions.args.shift();
+            // Positional arguments control the tests to be run.
+            testArgs.push(...testPaths);
+
+            if (options.debug === true) {
+                const debugLauncher = this.serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
+                const debuggerArgs = [options.cwd, 'nose'].concat(testArgs);
+                const launchOptions: LaunchOptions = { cwd: options.cwd, args: debuggerArgs, token: options.token, outChannel: options.outChannel, testProvider: NOSETEST_PROVIDER };
+                await debugLauncher.launchDebugger(launchOptions);
+            } else {
+                const runOptions: Options = {
+                    args: testArgs.concat(testPaths),
+                    cwd: options.cwd,
+                    outChannel: options.outChannel,
+                    token: options.token,
+                    workspaceFolder: options.workspaceFolder
+                };
+                await this.testRunner.run(NOSETEST_PROVIDER, runOptions);
             }
-            return run(serviceContainer, 'nosetest', runOptions);
-        }
-    }).then(() => {
-        return options.debug ? options.tests : updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
-    }).then(result => {
-        xmlLogFileCleanup();
-        return result;
-    }).catch(reason => {
-        xmlLogFileCleanup();
-        return Promise.reject(reason);
-    });
-}
 
-// tslint:disable-next-line:no-any
-export function updateResultsFromLogFiles(tests: Tests, outputXmlFile: string, testResultsService: ITestResultsService): Promise<any> {
-    return updateResultsFromXmlLogFile(tests, outputXmlFile, PassCalculationFormulae.nosetests).then(() => {
+            return options.debug ? options.tests : await this.updateResultsFromLogFiles(options.tests, xmlLogFile, testResultsService);
+        } catch (ex) {
+            return Promise.reject<Tests>(ex);
+        } finally {
+            deleteJUnitXmlFile();
+        }
+    }
+
+    private async updateResultsFromLogFiles(tests: Tests, outputXmlFile: string, testResultsService: ITestResultsService): Promise<Tests> {
+        await this.xUnitParser.updateResultsFromXmlLogFile(tests, outputXmlFile, PassCalculationFormulae.nosetests);
         testResultsService.updateResults(tests);
         return tests;
-    });
+    }
+    private async getUnitXmlFile(args: string[]): Promise<TemporaryFile> {
+        const xmlFile = this.argsHelper.getOptionValues(args, XUNIT_FILE);
+        if (typeof xmlFile === 'string') {
+            return { filePath: xmlFile, dispose: noop };
+        }
+
+        return this.fs.createTemporaryFile('.xml');
+    }
 }

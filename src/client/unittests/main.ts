@@ -91,6 +91,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             if (this.testResultDisplay) {
                 this.testResultDisplay.enabled = false;
             }
+            // tslint:disable-next-line:no-suspicious-comment
             // TODO: Why are we disposing, what happens when tests are enabled.
             if (this.workspaceTestManagerService) {
                 this.workspaceTestManagerService.dispose();

@@ -16,8 +16,8 @@ import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
 import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../types';
 
-const InvalidEnvPathVariableMessage = 'The environment variable \'{0}\' seems to have some paths containing characters (\';\', \'"\', \'%\' or \';;\').' +
-    ' The existence of such characters are known to have caused the {1} extension to not load.';
+const InvalidEnvPathVariableMessage = 'The environment variable \'{0}\' seems to have some paths containing characters (\';\', \'"\' or \';;\').' +
+    ' The existence of such characters are known to have caused the {1} extension to not load. If the extension fails to load please modify your paths to remove these characters.';
 
 export class InvalidEnvironmentPathVariableDiagnostic extends BaseDiagnostic {
     constructor(message) {
@@ -54,7 +54,7 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
             return;
         }
         const diagnostic = diagnostics[0];
-        if (this.filterService.shouldIgnoreDiagnostic(diagnostic.code)) {
+        if (await this.filterService.shouldIgnoreDiagnostic(diagnostic.code)) {
             return;
         }
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
@@ -79,6 +79,6 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
         const pathValue = currentProc.env[this.platform.pathVariableName];
         const pathSeparator = this.serviceContainer.get<IPathUtils>(IPathUtils).delimiter;
         const paths = pathValue.split(pathSeparator);
-        return paths.filter(item => item.indexOf('"') >= 0 || item.indexOf(';') >= 0 || item.indexOf('%') >= 0 || item.length === 0).length > 0;
+        return paths.filter((item, index) => item.indexOf('"') >= 0 || item.indexOf(';') >= 0 || (item.length === 0 && index !== paths.length - 1)).length > 0;
     }
 }

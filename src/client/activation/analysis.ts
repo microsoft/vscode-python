@@ -6,12 +6,12 @@ import * as path from 'path';
 import { OutputChannel, Uri } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
+import { PythonSettings } from '../common/configSettings';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
-import { IConfigurationService, IExtensionContext, IOutputChannel } from '../common/types';
-import { IInterpreterService } from '../interpreter/contracts';
+import { IConfigurationService, IExtensionContext, IOutputChannel, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import {
     PYTHON_ANALYSIS_ENGINE_DOWNLOADED,
@@ -38,7 +38,6 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private readonly fs: IFileSystem;
     private readonly sw = new StopWatch();
     private readonly platformData: PlatformData;
-    private readonly interpreterService: IInterpreterService;
     private readonly startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
     private readonly context: IExtensionContext;
@@ -47,6 +46,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
 
     private languageClient: LanguageClient | undefined;
     private interpreterHash: string = '';
+    private excludedFiles: string[] = [];
+    private typeshedPaths: string[] = [];
     private loadExtensionArgs: {} | undefined;
 
     constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
@@ -56,7 +57,6 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.fs = this.services.get<IFileSystem>(IFileSystem);
         this.platformData = new PlatformData(services.get<IPlatformService>(IPlatformService), this.fs);
-        this.interpreterService = this.services.get<IInterpreterService>(IInterpreterService);
         this.workspace = this.services.get<IWorkspaceService>(IWorkspaceService);
 
         // Currently only a single root. Multi-root support is future.
@@ -76,6 +76,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                 }
             }
         ));
+
+        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
     }
 
     public async activate(): Promise<boolean> {
@@ -84,7 +86,6 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         if (!clientOptions) {
             return false;
         }
-        this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.restartLanguageServer()));
         return this.startLanguageServer(clientOptions);
     }
 
@@ -96,19 +97,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         for (const d of this.disposables) {
             d.dispose();
         }
-    }
-
-    private async restartLanguageServer(): Promise<void> {
-        if (!this.context) {
-            return;
-        }
-        const ids = new InterpreterDataService(this.context, this.services);
-        const idata = await ids.getInterpreterData();
-        if (!idata || idata.hash !== this.interpreterHash) {
-            this.interpreterHash = idata ? idata.hash : '';
-            await this.deactivate();
-            await this.activate();
-        }
+        (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged);
     }
 
     private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
@@ -190,7 +179,7 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
             const interpreterDataService = new InterpreterDataService(this.context, this.services);
             interpreterData = await interpreterDataService.getInterpreterData();
         } catch (ex) {
-            this.appShell.showErrorMessage('Unable to determine path to the Python interpreter. IntelliSense will be limited.');
+            this.appShell.showWarningMessage('Unable to determine path to the Python interpreter. IntelliSense will be limited.');
         }
 
         this.interpreterHash = interpreterData ? interpreterData.hash : '';
@@ -204,27 +193,27 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
             properties['PrefixPath'] = interpreterData.prefix;
         }
 
-        let searchPaths = interpreterData ? interpreterData.searchPaths : '';
+        // tslint:disable-next-line:no-string-literal
+        properties['DatabasePath'] = path.join(this.context.extensionPath, analysisEngineFolder);
+
+        let searchPaths = interpreterData ? interpreterData.searchPaths.split(path.delimiter) : [];
         const settings = this.configuration.getSettings();
         if (settings.autoComplete) {
             const extraPaths = settings.autoComplete.extraPaths;
             if (extraPaths && extraPaths.length > 0) {
-                searchPaths = `${searchPaths};${extraPaths.join(';')}`;
+                searchPaths.push(...extraPaths);
             }
         }
-
-        // tslint:disable-next-line:no-string-literal
-        properties['DatabasePath'] = path.join(this.context.extensionPath, analysisEngineFolder);
 
         // Make sure paths do not contain multiple slashes so file URIs
         // in VS Code (Node.js) and in the language server (.NET) match.
         // Note: for the language server paths separator is always ;
-        searchPaths = searchPaths.split(path.delimiter).map(p => path.normalize(p)).join(';');
-        // tslint:disable-next-line:no-string-literal
-        properties['SearchPaths'] = `${searchPaths};${pythonPath}`;
+        searchPaths.push(pythonPath);
+        searchPaths = searchPaths.map(p => path.normalize(p));
 
         const selector = [{ language: PYTHON, scheme: 'file' }];
-        const excludeFiles = this.getExcludedFiles();
+        this.excludedFiles = this.getExcludedFiles();
+        this.typeshedPaths = this.getTypeshedPaths(settings);
 
         // Options to control the language client
         return {
@@ -245,8 +234,9 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                     trimDocumentationText: false,
                     maxDocumentationTextLength: 0
                 },
-                asyncStartup: true,
-                excludeFiles: excludeFiles,
+                searchPaths,
+                typeStubSearchPaths: this.typeshedPaths,
+                excludeFiles: this.excludedFiles,
                 testEnvironment: isTestExecution()
             }
         };
@@ -279,5 +269,50 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                 .filter(p => p && p.length > 0)
                 .forEach(p => list.push(p));
         }
+    }
+
+    private getTypeshedPaths(settings: IPythonSettings): string[] {
+        return settings.analysis.typeshedPaths && settings.analysis.typeshedPaths.length > 0
+            ? settings.analysis.typeshedPaths
+            : [path.join(this.context.extensionPath, 'typeshed')];
+    }
+
+    private async onSettingsChanged(): Promise<void> {
+        const ids = new InterpreterDataService(this.context, this.services);
+        const idata = await ids.getInterpreterData();
+        if (!idata || idata.hash !== this.interpreterHash) {
+            this.interpreterHash = idata ? idata.hash : '';
+            await this.restartLanguageServer();
+            return;
+        }
+
+        const excludedFiles = this.getExcludedFiles();
+        await this.restartLanguageServerIfArrayChanged(this.excludedFiles, excludedFiles);
+
+        const settings = this.configuration.getSettings();
+        const typeshedPaths = this.getTypeshedPaths(settings);
+        await this.restartLanguageServerIfArrayChanged(this.typeshedPaths, typeshedPaths);
+    }
+
+    private async restartLanguageServerIfArrayChanged(oldArray: string[], newArray: string[]): Promise<void> {
+        if (newArray.length !== oldArray.length) {
+            await this.restartLanguageServer();
+            return;
+        }
+
+        for (let i = 0; i < oldArray.length; i += 1) {
+            if (oldArray[i] !== newArray[i]) {
+                await this.restartLanguageServer();
+                return;
+            }
+        }
+    }
+
+    private async restartLanguageServer(): Promise<void> {
+        if (!this.context) {
+            return;
+        }
+        await this.deactivate();
+        await this.activate();
     }
 }

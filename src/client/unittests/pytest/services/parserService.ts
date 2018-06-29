@@ -5,13 +5,13 @@ import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { convertFileToPackage, extractBetweenDelimiters } from '../../common/testUtils';
-import { ITestsHelper, ITestsParser, ParserOptions, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestStatus, TestSuite } from '../../common/types';
+import { ITestsHelper, ITestsParser, ParserOptions, TestFile, TestFunction, Tests, TestSuite } from '../../common/types';
 
 const DELIMITER = '\'';
 
 @injectable()
 export class TestsParser implements ITestsParser {
-    constructor( @inject(ITestsHelper) private testsHelper: ITestsHelper) { }
+    constructor(@inject(ITestsHelper) private testsHelper: ITestsHelper) { }
     public parse(content: string, options: ParserOptions): Tests {
         const testFiles = this.getTestFiles(content, options);
         return this.testsHelper.flattenTestFiles(testFiles);
@@ -20,7 +20,7 @@ export class TestsParser implements ITestsParser {
     private getTestFiles(content: string, options: ParserOptions) {
         let logOutputLines: string[] = [''];
         const testFiles: TestFile[] = [];
-        const parentNodes: { indent: number, item: TestFile | TestSuite }[] = [];
+        const parentNodes: { indent: number; item: TestFile | TestSuite }[] = [];
 
         const errorLine = /==*( *)ERRORS( *)=*/;
         const errorFileLine = /__*( *)ERROR collecting (.*)/;
@@ -75,7 +75,7 @@ export class TestsParser implements ITestsParser {
     }
 
     private parsePyTestModuleCollectionError(rootDirectory: string, lines: string[], testFiles: TestFile[],
-        parentNodes: { indent: number, item: TestFile | TestSuite }[]) {
+        parentNodes: { indent: number; item: TestFile | TestSuite }[]) {
 
         lines = lines.filter(line => line.trim().length > 0);
         if (lines.length <= 1) {
@@ -98,7 +98,7 @@ export class TestsParser implements ITestsParser {
         return;
 
     }
-    private parsePyTestModuleCollectionResult(rootDirectory: string, lines: string[], testFiles: TestFile[], parentNodes: { indent: number, item: TestFile | TestSuite }[]) {
+    private parsePyTestModuleCollectionResult(rootDirectory: string, lines: string[], testFiles: TestFile[], parentNodes: { indent: number; item: TestFile | TestSuite }[]) {
         let currentPackage: string = '';
 
         lines.forEach(line => {
@@ -146,7 +146,7 @@ export class TestsParser implements ITestsParser {
         });
     }
 
-    private findParentOfCurrentItem(indentOfCurrentItem: number, parentNodes: { indent: number, item: TestFile | TestSuite }[]): { indent: number, item: TestFile | TestSuite } | undefined {
+    private findParentOfCurrentItem(indentOfCurrentItem: number, parentNodes: { indent: number; item: TestFile | TestSuite }[]): { indent: number; item: TestFile | TestSuite } | undefined {
         while (parentNodes.length > 0) {
             const parentNode = parentNodes[parentNodes.length - 1];
             if (parentNode.indent < indentOfCurrentItem) {

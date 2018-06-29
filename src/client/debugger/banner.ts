@@ -39,10 +39,10 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
             return;
         }
         const debuggerService = this.serviceContainer.get<IDebugService>(IDebugService);
-        const disposable = debuggerService.onDidStartDebugSession(async e => {
+        const disposable = debuggerService.onDidTerminateDebugSession(async e => {
             if (e.type === ExperimentalDebuggerType) {
                 const logger = this.serviceContainer.get<ILogger>(ILogger);
-                await this.onDebugSessionStarted()
+                await this.onDidTerminateDebugSession()
                     .catch(ex => logger.logError('Error in debugger Banner', ex));
             }
         });
@@ -114,7 +114,7 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
         const num = parseInt(`0x${lastHexValue}`, 16);
         return isNaN(num) ? crypto.randomBytes(1).toString('hex').slice(-1) : lastHexValue;
     }
-    private async onDebugSessionStarted(): Promise<void> {
+    private async onDidTerminateDebugSession(): Promise<void> {
         if (!this.enabled) {
             return;
         }

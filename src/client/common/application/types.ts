@@ -407,7 +407,7 @@ export interface IDocumentManager {
     showTextDocument(uri: Uri, options?: TextDocumentShowOptions): Thenable<TextEditor>;
 }
 
-export const IWorkspaceService = Symbol('IWorkspace');
+export const IWorkspaceService = Symbol('IWorkspaceService');
 
 export interface IWorkspaceService {
     /**
@@ -539,6 +539,11 @@ export interface IDebugService {
      * An [event](#Event) which fires when a new [debug session](#DebugSession) has been started.
      */
     onDidStartDebugSession: Event<DebugSession>;
+
+    /**
+     * An [event](#Event) which fires when a [debug session](#DebugSession) has terminated.
+     */
+    onDidTerminateDebugSession: Event<DebugSession>;
     /**
      * Start debugging by using either a named launch or named compound configuration,
      * or by directly passing a [DebugConfiguration](#DebugConfiguration).
