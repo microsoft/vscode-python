@@ -19,12 +19,12 @@ export function isPositionInsideStringOrComment(document: TextDocument, position
         const token = tokens.getItemAt(index);
         return token.type === TokenType.String || token.type === TokenType.Comment;
     }
-    if (offset > 0) {
+    if (offset > 1) {
         // In case position is at the every end of the comment or unterminated string
-        index = tokens.getItemContaining(offset - 1);
+        index = tokens.getItemContaining(offset - 2);
         if (index >= 0) {
             const token = tokens.getItemAt(index);
-            return token.end === offset && token.type === TokenType.Comment;
+            return token.end === (offset - 1) && token.type === TokenType.Comment;
         }
     }
     return false;
