@@ -46,5 +46,13 @@ scripts/**
 src/**
 test/**
 tmp/**
+typeshed/tests/**
+typeshed/.flake8
+typeshed/.git
+typeshed/.gitignore
+typeshed/.travis.yml
+typeshed/CONTRIBUTING.md
+typeshed/README.md
+typeshed/*.txt
 typings/**
 vsc-extension-quickstart.md
