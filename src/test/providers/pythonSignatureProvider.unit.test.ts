@@ -94,7 +94,7 @@ suite('Signature Provider unit tests', () => {
         const source = '  print(\'Python\',)\n';
         let sigHelp: SignatureHelp;
         try {
-            sigHelp = await testSignatureReturns(source, 17);
+            sigHelp = await testSignatureReturns(source, 18);
             expect(sigHelp).to.not.equal(undefined, 'Expected to get a blank signature item back - did the pattern change here?');
             expect(sigHelp.signatures.length).to.not.equal(0, 'Expected dummy argresult back from testing our print signature.');
             expect(sigHelp.activeParameter).to.be.equal(0, 'Parameter for print should be the first member of the test argresult\'s params object.');
