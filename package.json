@@ -98,7 +98,7 @@
         "keybindings": [
             {
                 "command": "python.execSelectionInTerminal",
-                "key": "shift+enter",
+                "key": "alt+shift+enter",
                 "when": "editorFocus && editorLangId == python"
             }
         ],
