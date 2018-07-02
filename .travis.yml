@@ -30,6 +30,18 @@ matrix:
         - os: linux
           python: "3.6-dev"
           env: PERFORMANCE_TEST=true
+        - os: linux
+          python: "3.7-dev"
+          env: DEBUGGER_TEST=true
+        - os: linux
+          python: "3.7-dev"
+          env: DEBUGGER_TEST_RELEASE=true
+        - os: linux
+          python: "3.7-dev"
+          env: SINGLE_WORKSPACE_TEST=true
+        - os: linux
+          python: "3.7-dev"
+          env: MULTIROOT_WORKSPACE_TEST=true
     allow_failures:
         - os: linux
           python: "2.7"
@@ -42,6 +54,12 @@ matrix:
           env: DEBUGGER_TEST=true
         - os: linux
           python: "3.6-dev"
+          env: DEBUGGER_TEST_RELEASE=true
+        - os: linux
+          python: "3.7-dev"
+          env: DEBUGGER_TEST=true
+        - os: linux
+          python: "3.7-dev"
           env: DEBUGGER_TEST_RELEASE=true
 before_install: |
   if [ $TRAVIS_OS_NAME == "linux" ]; then
