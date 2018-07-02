@@ -173,6 +173,14 @@ export class LineFormatter {
             return;
         }
 
+        // Check previous line for the same condition
+        const lastLine = this.getPreviousLineTokens();
+        const lastToken = lastLine && lastLine.count > 0 ? lastLine.getItemAt(lastLine.count - 1) : undefined;
+        if (lastToken && (this.isOpenBraceType(lastToken.type) || lastToken.type === TokenType.Comma)) {
+            this.builder.append(this.text.substring(t.start, t.end));
+            return;
+        }
+
         this.builder.softAppendSpace();
         this.builder.append(this.text.substring(t.start, t.end));
 
@@ -410,5 +418,13 @@ export class LineFormatter {
             }
         }
         return -1;
+    }
+
+    private getPreviousLineTokens(): ITextRangeCollection<IToken> | undefined {
+        if (!this.document || this.lineNumber === 0) {
+            return undefined; // unable to determine
+        }
+        const line = this.document.lineAt(this.lineNumber - 1);
+        return new Tokenizer().tokenize(line.text);
     }
 }
