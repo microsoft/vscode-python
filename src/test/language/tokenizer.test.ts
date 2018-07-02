@@ -310,6 +310,26 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.getItemAt(5).type, TokenType.Number);
         assert.equal(tokens.getItemAt(5).length, 5);
     });
+    test('Floating point numbers with braces', () => {
+        const t = new Tokenizer();
+        const tokens = t.tokenize('(3.0) (.2) (+.3e+12, .4e1; 0)');
+        assert.equal(tokens.count, 13);
+
+        assert.equal(tokens.getItemAt(1).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(1).length, 3);
+
+        assert.equal(tokens.getItemAt(4).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(4).length, 2);
+
+        assert.equal(tokens.getItemAt(7).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(7).length, 7);
+
+        assert.equal(tokens.getItemAt(9).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(9).length, 4);
+
+        assert.equal(tokens.getItemAt(11).type, TokenType.Number);
+        assert.equal(tokens.getItemAt(11).length, 1);
+    });
     test('Underscore numbers', () => {
         const t = new Tokenizer();
         const tokens = t.tokenize('+1_0_0_0 0_0 .5_00_3e-4 0xCAFE_F00D 10_000_000.0 0b_0011_1111_0100_1110');
