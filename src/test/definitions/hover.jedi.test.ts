@@ -13,7 +13,7 @@ const fileThree = path.join(autoCompPath, 'three.py');
 const fileEncoding = path.join(autoCompPath, 'four.py');
 const fileEncodingUsed = path.join(autoCompPath, 'five.py');
 const fileHover = path.join(autoCompPath, 'hoverTest.py');
-const fileStringFormat = path.join(hoverPath, 'stringFormat.py');
+const fileStringFormat = path.join(hoverPath, 'functionHover.py');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Hover Definition (Jedi)', () => {
@@ -264,20 +264,20 @@ suite('Hover Definition (Jedi)', () => {
         }).then(done, done);
     });
 
-    test('format().capitalize()', async () => {
+    test('Hover over method shows proper text.', async () => {
         const textDocument = await vscode.workspace.openTextDocument(fileStringFormat);
         await vscode.window.showTextDocument(textDocument);
-        const position = new vscode.Position(5, 41);
+        const position = new vscode.Position(8, 4);
         const def = (await vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position))!;
         assert.equal(def.length, 1, 'Definition length is incorrect');
         assert.equal(def[0].contents.length, 1, 'Only expected one result');
         const contents = normalizeMarkedString(def[0].contents[0]);
-        if (contents.indexOf('def capitalize') === -1) {
-            assert.fail(contents, '', '\'def capitalize\' is missing', 'compare');
+        if (contents.indexOf('def my_func') === -1) {
+            assert.fail(contents, '', '\'def my_func\' is missing', 'compare');
         }
-        if (contents.indexOf('Return a capitalized version of S') === -1 &&
-            contents.indexOf('Return a copy of the string S with only its first character') === -1) {
-            assert.fail(contents, '', '\'Return a capitalized version of S/Return a copy of the string S with only its first character\' message missing', 'compare');
+        if (contents.indexOf('This is a test.') === -1 &&
+            contents.indexOf('It also includes this text, too.') === -1) {
+            assert.fail(contents, '', 'Expected custom function text missing', 'compare');
         }
     });
 });
