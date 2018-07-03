@@ -1,6 +1,5 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as vscode from 'vscode';
 import { CancellationTokenSource, Position, Uri, window, workspace } from 'vscode';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
@@ -36,8 +35,8 @@ suite('Formatting', () => {
             fs.copySync(originalUnformattedFile, file, { overwrite: true });
         });
         fs.ensureDirSync(path.dirname(autoPep8FileToFormat));
-        const pythonProcess = await ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: vscode.Uri.file(workspaceRootPath) });
-        const py2 = await ioc.getPythonMajorVersion(vscode.Uri.parse(originalUnformattedFile)) === 2;
+        const pythonProcess = await ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(workspaceRootPath) });
+        const py2 = await ioc.getPythonMajorVersion(Uri.parse(originalUnformattedFile)) === 2;
         const yapf = pythonProcess.execModule('yapf', [originalUnformattedFile], { cwd: workspaceRootPath });
         const autoPep8 = pythonProcess.execModule('autopep8', [originalUnformattedFile], { cwd: workspaceRootPath });
         const formatters = [yapf, autoPep8];
@@ -99,22 +98,28 @@ suite('Formatting', () => {
     }
 
     async function testFormatting(formatter: AutoPep8Formatter | BlackFormatter | YapfFormatter, formattedContents: string, fileToFormat: string, outputFileName: string) {
-        const textDocument = await vscode.workspace.openTextDocument(fileToFormat);
-        const textEditor = await vscode.window.showTextDocument(textDocument);
+        const textDocument = await workspace.openTextDocument(fileToFormat);
+        const textEditor = await window.showTextDocument(textDocument);
         const options = { insertSpaces: textEditor.options.insertSpaces! as boolean, tabSize: textEditor.options.tabSize! as number };
 
         await injectFormatOutput(outputFileName);
 
-        const edits = await formatter.formatDocument(textDocument, options, new vscode.CancellationTokenSource().token);
+        const edits = await formatter.formatDocument(textDocument, options, new CancellationTokenSource().token);
         await textEditor.edit(editBuilder => {
             edits.forEach(edit => editBuilder.replace(edit.range, edit.newText));
         });
         compareFiles(formattedContents, textEditor.document.getText());
     }
 
-    test('AutoPep8', async () => testFormatting(new AutoPep8Formatter(ioc.serviceContainer), formattedAutoPep8, autoPep8FileToFormat, 'autopep8.output'));
+    test('AutoPep8', async () => {
+        await testFormatting(
+            new AutoPep8Formatter(ioc.serviceContainer),
+            formattedAutoPep8,
+            autoPep8FileToFormat,
+            'autopep8.output');
+    });
     test('Black', async function () {
-        if (await ioc.getPythonMajorVersion(vscode.Uri.parse(blackFileToFormat)) === 2) {
+        if (await ioc.getPythonMajorVersion(Uri.parse(blackFileToFormat)) === 2) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
@@ -154,7 +159,7 @@ suite('Formatting', () => {
 
             const options = { insertSpaces: textEditor.options.insertSpaces! as boolean, tabSize: 1 };
             const formatter = new YapfFormatter(ioc.serviceContainer);
-            const edits = await formatter.formatDocument(textDocument, options, new vscode.CancellationTokenSource().token);
+            const edits = await formatter.formatDocument(textDocument, options, new CancellationTokenSource().token);
             await textEditor.edit(editBuilder => {
                 edits.forEach(edit => editBuilder.replace(edit.range, edit.newText));
             });
