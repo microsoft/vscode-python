@@ -50,11 +50,11 @@ suite('Signatures (Jedi)', () => {
         const expected = [
             new SignatureHelpResult(5, 11, 0, 0, null),
             new SignatureHelpResult(5, 12, 1, 0, 'name'),
-            new SignatureHelpResult(5, 13, 1, 0, 'name'),
-            new SignatureHelpResult(5, 14, 1, 0, 'name'),
-            new SignatureHelpResult(5, 15, 1, 0, 'name'),
-            new SignatureHelpResult(5, 16, 1, 0, 'name'),
-            new SignatureHelpResult(5, 17, 1, 0, 'name'),
+            new SignatureHelpResult(5, 13, 0, 0, null),
+            new SignatureHelpResult(5, 14, 0, 0, null),
+            new SignatureHelpResult(5, 15, 0, 0, null),
+            new SignatureHelpResult(5, 16, 0, 0, null),
+            new SignatureHelpResult(5, 17, 0, 0, null),
             new SignatureHelpResult(5, 18, 1, 1, 'age'),
             new SignatureHelpResult(5, 19, 1, 1, 'age'),
             new SignatureHelpResult(5, 20, 0, 0, null)
