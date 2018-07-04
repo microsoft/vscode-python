@@ -134,20 +134,21 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     }
 
     private async startLanguageClient(): Promise<void> {
-        this.languageClient!.onReady()
-            .then(() => {
-                this.startupCompleted.resolve();
-                if (this.loadExtensionArgs) {
-                    this.languageClient!.sendRequest('python/loadExtension', this.loadExtensionArgs);
-                    this.loadExtensionArgs = undefined;
-                }
-            })
-            .catch(error => this.startupCompleted.reject(error));
-
         this.context.subscriptions.push(this.languageClient!.start());
-        if (isTestExecution()) {
+        this.serverReady().ignoreErrors();
+         if (isTestExecution()) {
             await this.startupCompleted.promise;
         }
+    }
+
+    private async serverReady(): Promise<void> {
+        while (!this.languageClient!.initializeResult) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        if (this.loadExtensionArgs) {
+            this.languageClient!.sendRequest('python/loadExtension', this.loadExtensionArgs);
+        }
+        this.startupCompleted.resolve();
     }
 
     private createSimpleLanguageClient(clientOptions: LanguageClientOptions): LanguageClient {
