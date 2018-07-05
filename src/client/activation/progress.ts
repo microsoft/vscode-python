@@ -18,11 +18,11 @@ export class ProgressReporting {
       this.statusBarMessage = window.setStatusBarMessage(m);
     });
 
-    this.languageClient.onNotification('python/beginProgress', async args => {
+    this.languageClient.onNotification('python/beginProgress', async _ => {
       this.progressDeferred = createDeferred<void>();
       window.withProgress({
         location: ProgressLocation.Window,
-        title: args.title
+        title: ''
       }, progress => {
         this.progress = progress;
         return this.progressDeferred!.promise;
@@ -39,6 +39,7 @@ export class ProgressReporting {
     this.languageClient.onNotification('python/endProgress', _ => {
       if (this.progressDeferred) {
         this.progressDeferred.resolve();
+        this.progressDeferred = undefined;
       }
     });
   }

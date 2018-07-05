@@ -138,11 +138,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
 
     private async startLanguageClient(): Promise<void> {
         this.context.subscriptions.push(this.languageClient!.start());
-        this.serverReady().ignoreErrors();
+        await this.serverReady();
         this.progressReporting = new ProgressReporting(this.languageClient!);
-        if (isTestExecution()) {
-            await this.startupCompleted.promise;
-        }
     }
 
     private async serverReady(): Promise<void> {
@@ -242,7 +239,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                 searchPaths,
                 typeStubSearchPaths: this.typeshedPaths,
                 excludeFiles: this.excludedFiles,
-                testEnvironment: isTestExecution()
+                testEnvironment: isTestExecution(),
+                analysisUpdates: true
             }
         };
     }
