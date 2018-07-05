@@ -22,6 +22,7 @@ import { getTelemetryReporter } from '../telemetry/telemetry';
 import { AnalysisEngineDownloader } from './downloader';
 import { InterpreterData, InterpreterDataService } from './interpreterDataService';
 import { PlatformData } from './platformData';
+import { ProgressReporting } from './progress';
 import { IExtensionActivator } from './types';
 
 const PYTHON = 'python';
@@ -49,6 +50,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private excludedFiles: string[] = [];
     private typeshedPaths: string[] = [];
     private loadExtensionArgs: {} | undefined;
+    // tslint:disable-next-line:no-unused-variable
+    private progressReporting: ProgressReporting | undefined;
 
     constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
         this.context = this.services.get<IExtensionContext>(IExtensionContext);
@@ -136,7 +139,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
     private async startLanguageClient(): Promise<void> {
         this.context.subscriptions.push(this.languageClient!.start());
         this.serverReady().ignoreErrors();
-         if (isTestExecution()) {
+        this.progressReporting = new ProgressReporting(this.languageClient!);
+        if (isTestExecution()) {
             await this.startupCompleted.promise;
         }
     }
