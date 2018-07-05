@@ -244,6 +244,7 @@ export interface IAnalysisSettings {
     readonly warnings: string[];
     readonly information: string[];
     readonly disabled: string[];
+    readonly traceLogging: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

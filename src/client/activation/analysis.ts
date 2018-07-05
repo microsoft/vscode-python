@@ -217,6 +217,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
         this.excludedFiles = this.getExcludedFiles();
         this.typeshedPaths = this.getTypeshedPaths(settings);
 
+        const traceLogging = (settings.analysis && settings.analysis.traceLogging) ? settings.analysis.traceLogging : false;
+
         // Options to control the language client
         return {
             // Register the server for Python documents
@@ -240,7 +242,8 @@ export class AnalysisExtensionActivator implements IExtensionActivator {
                 typeStubSearchPaths: this.typeshedPaths,
                 excludeFiles: this.excludedFiles,
                 testEnvironment: isTestExecution(),
-                analysisUpdates: true
+                analysisUpdates: true,
+                traceLogging
             }
         };
     }
