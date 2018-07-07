@@ -98,8 +98,8 @@
         "keybindings": [
             {
                 "command": "python.execSelectionInTerminal",
-                "key": "alt+shift+enter",
-                "when": "editorFocus && editorLangId == python"
+                "key": "shift+enter",
+                "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed"
             }
         ],
         "commands": [
