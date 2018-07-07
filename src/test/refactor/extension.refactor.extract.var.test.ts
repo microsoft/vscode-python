@@ -83,7 +83,63 @@ suite('Variable Extraction', () => {
     test('Extract Variable', async () => {
         const startPos = new Position(234, 29);
         const endPos = new Position(234, 38);
-        await testingVariableExtraction(false, startPos, endPos);
+        const shouldError: boolean = false;
+
+        // await testingVariableExtraction(false, startPos, endPos);
+
+        const pythonSettings = PythonSettings.getInstance(Uri.file(refactorTargetFile));
+        const rangeOfTextToExtract = new Range(startPos, endPos);
+        // tslint:disable:no-console
+        console.log(`Start is ${rangeOfTextToExtract.start.line}:${rangeOfTextToExtract.start.character} to ${rangeOfTextToExtract.end.line}:${rangeOfTextToExtract.end.character}`);
+        const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile), ioc.serviceContainer);
+
+        const DIFF = '--- a/refactor.py\n+++ b/refactor.py\n@@ -232,7 +232,8 @@\n         sys.stdout.flush()\n \n     def watch(self):\n-        self._write_response("STARTED")\n+        myNewVariable = "STARTED"\n+        self._write_response(myNewVariable)\n         while True:\n             try:\n                 self._process_request(self._input.readline())\n';
+        // tslint:disable:no-console
+        console.log(`Opening test file ${refactorTargetFile}`);
+        const mockTextDoc = await workspace.openTextDocument(refactorTargetFile);
+        const expectedTextEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
+        try {
+            const response = await proxy.extractVariable<RenameResponse>(
+                mockTextDoc,
+                'myNewVariable',
+                refactorTargetFile,
+                rangeOfTextToExtract,
+                options);
+            const cmdmockup = {
+                lookup: 'extract_variable',
+                file: refactorTargetFile,
+                start: mockTextDoc.offsetAt(rangeOfTextToExtract.start),
+                end: mockTextDoc.offsetAt(rangeOfTextToExtract.end),
+                id: '1',
+                name: 'myNewVariable',
+                indent_size: options.tabSize
+            };
+            const commandToSendIntoRefactoryPy: string = JSON.stringify(cmdmockup);
+            // tslint:disable:no-console
+            console.log(`Sent to refactor.py: ${commandToSendIntoRefactoryPy}`);
+
+            if (shouldError) {
+                assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
+            }
+            const textEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
+            assert.equal(response.results.length, 1, 'Invalid number of items in response');
+            assert.equal(textEdits.length, expectedTextEdits.length, 'Invalid number of Text Edits');
+            // tslint:disable:no-console
+            console.log(`New text we will add to the file: ${textEdits[0].newText}`);
+            // tslint:disable:no-console
+            console.log(`Edits exist from LN:${textEdits[0].range.start.line}:${textEdits[0].range.start.character} to LN:${textEdits[0].range.end.line}:${textEdits[0].range.end.character}`);
+
+            textEdits.forEach(edit => {
+                const foundEdit = expectedTextEdits.filter(item => item.newText === edit.newText && item.range.isEqual(edit.range));
+                assert.equal(foundEdit.length, 1, 'Edit not found');
+                // tslint:disable:no-console
+                console.log(`Found edit contains newText ${foundEdit[0].newText} and happens from ${foundEdit[0].range.start.line}:${foundEdit[0].range.start.character} -> ${foundEdit[0].range.end.line}:${foundEdit[0].range.end.character}`);
+            });
+        } catch (error) {
+            if (!shouldError) {
+                assert.equal('Error', 'No error', `${error}`);
+            }
+        }
     });
 
     test('Extract Variable fails if whole string not selected', async () => {
