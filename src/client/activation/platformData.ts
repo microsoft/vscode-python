@@ -28,13 +28,13 @@ export class PlatformData {
     }
 
     public getEngineDllName(): string {
-        return 'Microsoft.Python.LanguageServer.VsCode.dll';
+        return 'Microsoft.Python.LanguageServer.dll';
     }
 
     public getEngineExecutableName(): string {
         return this.platform.isWindows
-            ? 'Microsoft.Python.LanguageServer.VsCode.exe'
-            : 'Microsoft.Python.LanguageServer.VsCode.VsCode';
+            ? 'Microsoft.Python.LanguageServer.exe'
+            : 'Microsoft.Python.LanguageServer.LanguageServer';
     }
 
     public async getExpectedHash(): Promise<string> {

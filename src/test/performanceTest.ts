@@ -84,11 +84,11 @@ class TestRunner {
 
         await this.launchTest(env);
     }
-    private async  runPerfTest(devLogFiles: string[], releaseLogFiles: string[], newAnalysisEngineLogFiles: string[]) {
+    private async  runPerfTest(devLogFiles: string[], releaseLogFiles: string[], languageServerLogFiles: string[]) {
         const env: { [key: string]: {} } = {
             ACTIVATION_TIMES_DEV_LOG_FILE_PATHS: JSON.stringify(devLogFiles),
             ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS: JSON.stringify(releaseLogFiles),
-            ACTIVATION_TIMES_DEV_ANALYSIS_LOG_FILE_PATHS: JSON.stringify(newAnalysisEngineLogFiles)
+            ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS: JSON.stringify(languageServerLogFiles)
         };
 
         await this.launchTest(env);

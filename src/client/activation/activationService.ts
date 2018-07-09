@@ -39,7 +39,7 @@ export class ExtensionActivationService implements IExtensionActivationService, 
         const jedi = this.useJedi();
 
         const engineName = jedi ? 'Jedi Python language engine' : 'Microsoft Python language server';
-        this.output.appendLine(`Starting the ${engineName}.`);
+        this.output.appendLine(`Starting ${engineName}.`);
         const activatorName = jedi ? ExtensionActivators.Jedi : ExtensionActivators.DotNet;
         const activator = this.serviceContainer.get<IExtensionActivator>(IExtensionActivator, activatorName);
         this.currentActivator = { jedi, activator };

@@ -203,7 +203,7 @@ suite('Autocomplete', function () {
 
     // https://github.com/Microsoft/vscode-python/issues/110
     test('Suppress in strings/comments', async () => {
-        // Excluded from MS Python Code Analysis b/c skipping of strings and comments
+        // Excluded from the Language Server b/c skipping of strings and comments
         // is not yet there. See https://github.com/Microsoft/PTVS/issues/3798
         if (IsLanguageServerTest()) {
             return;

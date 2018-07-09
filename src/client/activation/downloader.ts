@@ -18,7 +18,7 @@ import { PlatformData } from './platformData';
 const StreamZip = require('node-stream-zip');
 
 const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-language-server';
-const downloadBaseFileName = 'Python-Language-Server-VSCode';
+const downloadBaseFileName = 'Python-Language-Server';
 const downloadVersion = '0.1.0';
 const downloadFileExtension = '.nupkg';
 
@@ -142,6 +142,8 @@ export class LanguageServerDownloader {
             }).on('extract', (entry, file) => {
                 extractedFiles += 1;
                 progress.report({ message: `${title}${Math.round(100 * extractedFiles / totalFiles)}%` });
+            }).on('error', e => {
+                deferred.reject(e);
             });
             return deferred.promise;
         });
