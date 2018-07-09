@@ -36,6 +36,11 @@ export class UnitTestIocContainer extends IocContainer {
             .then(pythonProcess => pythonProcess.exec(['-c', 'import sys;print(sys.version_info[0])'], {}))
             .then(output => parseInt(output.stdout.trim(), 10));
     }
+    public getPythonMajorMinorVersionString(resource: Uri): Promise<string> {
+        return this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource })
+            .then(pythonProcess => pythonProcess.exec(['-c', 'import sys;print("{0}.{1}".format(*sys.version_info[:2]))'], {}))
+            .then(output => output.stdout.trim());
+    }
     public registerTestVisitors() {
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestFlatteningVisitor, 'TestFlatteningVisitor');
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestFolderGenerationVisitor, 'TestFolderGenerationVisitor');
