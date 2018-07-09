@@ -3,7 +3,7 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { commands, Position, Range, Selection, TextDocument, TextEdit, TextEditorCursorStyle, TextEditorLineNumbersStyle, TextEditorOptions, Uri, window, workspace } from 'vscode';
+import { commands, Position, Range, Selection, TextEditorCursorStyle, TextEditorLineNumbersStyle, TextEditorOptions, Uri, window, workspace } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
@@ -59,7 +59,6 @@ suite('Variable Extraction', () => {
         const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile), ioc.serviceContainer);
 
         const DIFF = '--- a/refactor.py\n+++ b/refactor.py\n@@ -232,7 +232,8 @@\n         sys.stdout.flush()\n \n     def watch(self):\n-        self._write_response("STARTED")\n+        myNewVariable = "STARTED"\n+        self._write_response(myNewVariable)\n         while True:\n             try:\n                 self._process_request(self._input.readline())\n';
-
         const mockTextDoc = await workspace.openTextDocument(refactorTargetFile);
         const expectedTextEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
         try {
@@ -95,35 +94,13 @@ suite('Variable Extraction', () => {
         const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile), ioc.serviceContainer);
 
         const DIFF = '--- a/refactor.py\n+++ b/refactor.py\n@@ -232,7 +232,8 @@\n         sys.stdout.flush()\n \n     def watch(self):\n-        self._write_response("STARTED")\n+        myNewVariable = "STARTED"\n+        self._write_response(myNewVariable)\n         while True:\n             try:\n                 self._process_request(self._input.readline())\n';
-
         // tslint:disable:no-console
         console.log(`Opening test file ${refactorTargetFile}`);
-        let opTimer: NodeJS.Timer;
-        let timerCounter: number = 0;
-        let expectedTextEdits: TextEdit[];
-        let mockTextDoc: TextDocument;
-        let counterTimerSection: string;
-        opTimer = global.setInterval(() => {
-            console.log(`Timer count for '${counterTimerSection}'... x${timerCounter}`);
-            timerCounter += 1;
-        } , 1000);
-
+        const mockTextDoc = await workspace.openTextDocument(refactorTargetFile);
+        const expectedTextEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
         try {
-
-            mockTextDoc = await workspace.openTextDocument(refactorTargetFile);
-            counterTimerSection = 'getTextEditsFromPatch';
-            expectedTextEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
-        } catch (error) {
-            assert.equal('GetTextEdits', 'No error', `${error}`);
-        } finally {
-            opTimer.unref();
-        }
-
-        try {
-            // tslint:disable:no-console
-            console.log('Extracting variable from sources...');
             const response = await proxy.extractVariable<RenameResponse>(
-                mockTextDoc!,
+                mockTextDoc,
                 'myNewVariable',
                 refactorTargetFile,
                 rangeOfTextToExtract,
@@ -131,8 +108,8 @@ suite('Variable Extraction', () => {
             const cmdmockup = {
                 lookup: 'extract_variable',
                 file: refactorTargetFile,
-                start: mockTextDoc!.offsetAt(rangeOfTextToExtract.start),
-                end: mockTextDoc!.offsetAt(rangeOfTextToExtract.end),
+                start: mockTextDoc.offsetAt(rangeOfTextToExtract.start),
+                end: mockTextDoc.offsetAt(rangeOfTextToExtract.end),
                 id: '1',
                 name: 'myNewVariable',
                 indent_size: options.tabSize
@@ -144,9 +121,9 @@ suite('Variable Extraction', () => {
             if (shouldError) {
                 assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
             }
-            const textEdits = getTextEditsFromPatch(mockTextDoc!.getText(), DIFF);
+            const textEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
             assert.equal(response.results.length, 1, 'Invalid number of items in response');
-            assert.equal(textEdits.length, expectedTextEdits!.length, 'Invalid number of Text Edits');
+            assert.equal(textEdits.length, expectedTextEdits.length, 'Invalid number of Text Edits');
             // tslint:disable:no-console
             console.log(`New text we will add to the file: ${textEdits[0].newText}`);
             // tslint:disable:no-console
