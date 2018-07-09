@@ -96,10 +96,10 @@ suite('Variable Extraction', () => {
         const DIFF = '--- a/refactor.py\n+++ b/refactor.py\n@@ -232,7 +232,8 @@\n         sys.stdout.flush()\n \n     def watch(self):\n-        self._write_response("STARTED")\n+        myNewVariable = "STARTED"\n+        self._write_response(myNewVariable)\n         while True:\n             try:\n                 self._process_request(self._input.readline())\n';
         // tslint:disable:no-console
         console.log(`Opening test file ${refactorTargetFile}`);
-        const mockTextDoc = await workspace.openTextDocument(refactorTargetFile);
-        const expectedTextEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
         try {
-            const response = await proxy.extractVariable<RenameResponse>(
+            const mockTextDoc = await workspace.openTextDocument(refactorTargetFile);
+            const expectedTextEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
+                const response = await proxy.extractVariable<RenameResponse>(
                 mockTextDoc,
                 'myNewVariable',
                 refactorTargetFile,
