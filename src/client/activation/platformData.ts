@@ -20,7 +20,7 @@ export class PlatformData {
         }
         if (this.platform.isLinux) {
             if (!this.platform.is64bit) {
-                throw new Error('Python Analysis Engine does not support 32-bit Linux.');
+                throw new Error('Microsoft Python Language Server does not support 32-bit Linux.');
             }
             return 'linux-x64';
         }
@@ -28,13 +28,13 @@ export class PlatformData {
     }
 
     public getEngineDllName(): string {
-        return 'Microsoft.PythonTools.VsCode.dll';
+        return 'Microsoft.Python.LanguageServer.VsCode.dll';
     }
 
     public getEngineExecutableName(): string {
         return this.platform.isWindows
-            ? 'Microsoft.PythonTools.VsCode.exe'
-            : 'Microsoft.PythonTools.VsCode.VsCode';
+            ? 'Microsoft.Python.LanguageServer.VsCode.exe'
+            : 'Microsoft.Python.LanguageServer.VsCode.VsCode';
     }
 
     public async getExpectedHash(): Promise<string> {
