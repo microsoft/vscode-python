@@ -28,7 +28,7 @@ export const IS_WINDOWS = /^win/.test(process.platform);
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
-    public downloadCodeAnalysis = true;
+    public downloadLanguageServer = true;
     public jediEnabled = true;
     public jediPath = '';
     public jediMemoryLimit = 1024;
@@ -121,7 +121,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
 
-        this.downloadCodeAnalysis = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadCodeAnalysis', true))!;
+        this.downloadLanguageServer = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadLanguageServer', true))!;
         this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;
         if (this.jediEnabled) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion

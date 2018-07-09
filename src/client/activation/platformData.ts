@@ -3,11 +3,11 @@
 
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import {
-    analysis_engine_linux_x64_sha512,
-    analysis_engine_osx_x64_sha512,
-    analysis_engine_win_x64_sha512,
-    analysis_engine_win_x86_sha512
-} from './analysisEngineHashes';
+    language_server_linux_x64_sha512,
+    language_server_osx_x64_sha512,
+    language_server_win_x64_sha512,
+    language_server_win_x86_sha512
+} from './languageServerHashes';
 
 export class PlatformData {
     constructor(private platform: IPlatformService, fs: IFileSystem) { }
@@ -39,13 +39,13 @@ export class PlatformData {
 
     public async getExpectedHash(): Promise<string> {
         if (this.platform.isWindows) {
-            return this.platform.is64bit ? analysis_engine_win_x64_sha512 : analysis_engine_win_x86_sha512;
+            return this.platform.is64bit ? language_server_win_x64_sha512 : language_server_win_x86_sha512;
         }
         if (this.platform.isMac) {
-            return analysis_engine_osx_x64_sha512;
+            return language_server_osx_x64_sha512;
         }
         if (this.platform.isLinux && this.platform.is64bit) {
-            return analysis_engine_linux_x64_sha512;
+            return language_server_linux_x64_sha512;
         }
         throw new Error('Unknown platform.');
     }

@@ -5,12 +5,12 @@
 
 import { IServiceManager } from '../ioc/types';
 import { ExtensionActivationService } from './activationService';
-import { AnalysisExtensionActivator } from './analysis';
-import { ClassicExtensionActivator } from './classic';
+import { JediExtensionActivator } from './jedi';
+import { LanguageServerExtensionActivator } from './languageServer';
 import { ExtensionActivators, IExtensionActivationService, IExtensionActivator } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, ExtensionActivationService);
-    serviceManager.add<IExtensionActivator>(IExtensionActivator, ClassicExtensionActivator, ExtensionActivators.Jedi);
-    serviceManager.add<IExtensionActivator>(IExtensionActivator, AnalysisExtensionActivator, ExtensionActivators.DotNet);
+    serviceManager.add<IExtensionActivator>(IExtensionActivator, JediExtensionActivator, ExtensionActivators.Jedi);
+    serviceManager.add<IExtensionActivator>(IExtensionActivator, LanguageServerExtensionActivator, ExtensionActivators.DotNet);
 }

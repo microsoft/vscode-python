@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { rootWorkspaceUri } from '../common';
-import { IsAnalysisEngineTest } from '../constants';
+import { IsLanguageServerTest } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -14,7 +14,7 @@ suite('Autocomplete PEP 484', () => {
     let ioc: UnitTestIocContainer;
     suiteSetup(async function () {
         // https://github.com/Microsoft/PTVS/issues/3917
-        if (IsAnalysisEngineTest()) {
+        if (IsLanguageServerTest()) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }

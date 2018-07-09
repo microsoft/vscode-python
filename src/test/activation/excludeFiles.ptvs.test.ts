@@ -12,21 +12,21 @@ import { activated } from '../../client/extension';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../../client/ioc/types';
-import { IsAnalysisEngineTest } from '../constants';
+import { IsLanguageServerTest } from '../constants';
 import { closeActiveWindows } from '../initialize';
 
 const wksPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'exclusions');
 const fileOne = path.join(wksPath, 'one.py');
 
 // tslint:disable-next-line:max-func-body-length
-suite('Exclude files (Analysis Engine)', () => {
+suite('Exclude files (Language Server)', () => {
     let textDocument: TextDocument;
     let serviceManager: IServiceManager;
     let serviceContainer: IServiceContainer;
     let configService: IConfigurationService;
 
     suiteSetup(async function () {
-        if (!IsAnalysisEngineTest()) {
+        if (!IsLanguageServerTest()) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }

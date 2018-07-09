@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { rootWorkspaceUri } from '../common';
-import { IsAnalysisEngineTest } from '../constants';
+import { IsLanguageServerTest } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -21,11 +21,11 @@ class SignatureHelpResult {
 }
 
 // tslint:disable-next-line:max-func-body-length
-suite('Signatures (Analysis Engine)', () => {
+suite('Signatures (Language Server)', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
     suiteSetup(async function () {
-        if (!IsAnalysisEngineTest()) {
+        if (!IsLanguageServerTest()) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
