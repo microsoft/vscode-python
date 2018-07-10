@@ -149,19 +149,16 @@ export class LineFormatter {
                         this.builder.append('*');
                         return;
                     }
+                    if (this.handleStarOperator(t, prev)) {
+                        return;
+                    }
                     break;
                 default:
                     break;
             }
         } else if (t.length === 2) {
             if (this.text.charCodeAt(t.start) === Char.Asterisk && this.text.charCodeAt(t.start + 1) === Char.Asterisk) {
-                if (!prev || (prev.type !== TokenType.Identifier && prev.type !== TokenType.Number)) {
-                    this.builder.append('**');
-                    return;
-                }
-                if (prev && this.isKeyword(prev, 'lambda')) {
-                    this.builder.softAppendSpace();
-                    this.builder.append('**');
+                if (this.handleStarOperator(t, prev)) {
                     return;
                 }
             }
@@ -183,6 +180,28 @@ export class LineFormatter {
             }
         }
         this.builder.softAppendSpace();
+    }
+
+    private handleStarOperator(current: IToken, prev: IToken): boolean {
+        if (this.text.charCodeAt(current.start) === Char.Asterisk && this.text.charCodeAt(current.start + 1) === Char.Asterisk) {
+            if (!prev || (prev.type !== TokenType.Identifier && prev.type !== TokenType.Number)) {
+                this.builder.append('**');
+                return true;
+            }
+            if (prev && this.isKeyword(prev, 'lambda')) {
+                this.builder.softAppendSpace();
+                this.builder.append('**');
+                return true;
+            }
+        }
+        // Check previous line for the **/* condition
+        const lastLine = this.getPreviousLineTokens();
+        const lastToken = lastLine && lastLine.count > 0 ? lastLine.getItemAt(lastLine.count - 1) : undefined;
+        if (lastToken && (this.isOpenBraceType(lastToken.type) || lastToken.type === TokenType.Comma)) {
+            this.builder.append(this.text.substring(current.start, current.end));
+            return true;
+        }
+        return false;
     }
 
     private handleEqual(t: IToken, index: number): void {
@@ -410,5 +429,13 @@ export class LineFormatter {
             }
         }
         return -1;
+    }
+
+    private getPreviousLineTokens(): ITextRangeCollection<IToken> | undefined {
+        if (!this.document || this.lineNumber === 0) {
+            return undefined; // unable to determine
+        }
+        const line = this.document.lineAt(this.lineNumber - 1);
+        return new Tokenizer().tokenize(line.text);
     }
 }
