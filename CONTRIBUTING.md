@@ -1,13 +1,13 @@
 # Contributing to the Python extension for Visual Studio Code
 
 
- 
+
 
 ---
 
-| macOS/Windows CI | Linux CI | Rolling CI | ptvsd master CI | Code Coverage |
+| macOS/Windows CI | Linux CI | Rolling CI (macOS/Windows) | Code Coverage |
 |-|-|-|-|-|
-|[![Build status - CI](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-CI)](https://vscode-python.visualstudio.com/VSCode-Python/VSCode-Python%20Team/_build/results?buildId=375&view=logs) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python) | [![Build status - Rolling](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI)](https://vscode-python.visualstudio.com/3dc2a9b3-d195-4dba-9886-844383409c6c/_build/index?buildId=378) | [![Build status - PTVSD](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-ptvsd_master-CI)](https://vscode-python.visualstudio.com/3dc2a9b3-d195-4dba-9886-844383409c6c/_build/index?buildId=361) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
+|[![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=4) | [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python) | [![Build status](https://vscode-python.visualstudio.com/VSCode-Python/_apis/build/status/VSCode-Python-Rolling-CI)](https://vscode-python.visualstudio.com/VSCode-Python/_build/latest?definitionId=9) | [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)|
 ---
 
 # Contributing to Microsoft Python Analysis Engine
