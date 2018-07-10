@@ -1,5 +1,86 @@
 # Changelog
 
+## 2018.7.0-beta (10 July 2018)
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort 4.3.4](https://pypi.org/project/isort/4.3.4/)
+- [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
+  and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
+- [ptvsd 3.0.0](https://pypi.org/project/ptvsd/3.0.0/) and [4.1.11a5](https://pypi.org/project/ptvsd/4.1.11a5/)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+### Enhancements
+
+1. Language server now reports code analysis progress in the status bar.
+   ([#1591](https://github.com/Microsoft/vscode-python/issues/1591))
+
+### Fixes
+
+1. Ensure dunder variables are always displayed in code completion when using the new language server.
+   ([#2013](https://github.com/Microsoft/vscode-python/issues/2013))
+1. Store testId for files & suites during unittest discovery.
+   ([#2044](https://github.com/Microsoft/vscode-python/issues/2044))
+1. `editor.formatOnType` no longer adds space after `*` in multi-line arguments.
+   ([#2048](https://github.com/Microsoft/vscode-python/issues/2048))
+1. Fix bug where tooltips would popup whenever a comma is typed within a string.
+   ([#2057](https://github.com/Microsoft/vscode-python/issues/2057))
+1. Change keyboard shortcut for `Run Selection/Line in Python Terminal` to not
+   interfere with the Find/Replace dialog box.
+   ([#2068](https://github.com/Microsoft/vscode-python/issues/2068))
+1. `editor.formatOnType` is more reliable handling floating point numbers.
+   ([#2079](https://github.com/Microsoft/vscode-python/issues/2079))
+
+### Code Health
+
+1. Removed pre-commit hook that ran unit tests.
+   ([#1986](https://github.com/Microsoft/vscode-python/issues/1986))
+
+
+
+
+
 ## 2018.6.0 (20 June 2018)
 
 ### Thanks
