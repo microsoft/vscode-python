@@ -5,6 +5,7 @@
 - [ ] Go through all [merged pull requests](https://github.com/Microsoft/vscode-python/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Amerged) and add the [`validate fix` label](https://github.com/Microsoft/vscode-python/labels/validate%20fix) as appropriate as well as checking for news entries
 - [ ] Validate [fixed issues](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22+is%3Aclosed)
 - [ ] Triage [unverified issues](https://github.com/Microsoft/vscode-python/labels/needs%20verification)
+- [ ] Update pre-existing dependencies as appropriate (npm, Python, git submodule, or otherwise; requires updating CELA)
 
 ## Planning
 - [ ] Evaluate if TypeScript usage needs updating to sync with VS Code's usage

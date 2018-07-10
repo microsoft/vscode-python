@@ -28,7 +28,7 @@
 ### Setup
 
 ```shell
-git clone https://github.com/microsoft/vscode-python
+git clone --recurse-submodules https://github.com/microsoft/vscode-python
 cd vscode-python
 npm install
 ```
