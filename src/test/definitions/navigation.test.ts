@@ -108,27 +108,27 @@ suite('Definition Navigation', () => {
     test('Specifically imported decorator usage', buildTest(
         fileUsages,
         new vscode.Position(7, 1),
-        isLanguageServerTest() ? [fileUsages, fileDefinitions] : [fileDefinitions],
+        isLanguageServerTest() ? [fileDefinitions] : [fileDefinitions],
         isLanguageServerTest()
-            ? [new vscode.Range(1, 45, 1, 57), new vscode.Range(2, 4, 2, 16)]
+            ? [new vscode.Range(2, 4, 2, 16)]
             : [new vscode.Range(2, 0, 11, 17)]
     ));
 
     test('Specifically imported function decorated by stdlib', buildTest(
         fileUsages,
         new vscode.Position(14, 6),
-        isLanguageServerTest() ? [fileUsages, fileDefinitions] : [fileDefinitions],
+        isLanguageServerTest() ? [fileDefinitions] : [fileDefinitions],
         isLanguageServerTest()
-            ? [new vscode.Range(1, 25, 1, 43), new vscode.Range(21, 4, 21, 22)]
+            ? [new vscode.Range(21, 4, 21, 22)]
             : [new vscode.Range(21, 0, 27, 17)]
     ));
 
     test('Specifically imported function decorated by local decorator', buildTest(
         fileUsages,
         new vscode.Position(15, 6),
-        isLanguageServerTest() ? [fileUsages, fileDefinitions] : [fileDefinitions],
+        isLanguageServerTest() ? [fileDefinitions] : [fileDefinitions],
         isLanguageServerTest()
-            ? [new vscode.Range(1, 59, 1, 64), new vscode.Range(14, 4, 14, 9)]
+            ? [new vscode.Range(14, 4, 14, 9)]
             : [new vscode.Range(14, 0, 18, 7)]
     ));
 });
