@@ -5,26 +5,24 @@
 
 import * as crypto from 'crypto';
 import { inject, injectable } from 'inversify';
-import { Disposable } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell, IDebugService } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import '../common/extensions';
-import { IBrowserService, IDismissableSurveyBanner, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../common/types';
+import { IBrowserService, IDismissableSurveyBanner, IPersistentStateFactory } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { ExperimentalDebuggerType } from './Common/constants';
 
-export enum PersistentStateKeys {
-    ShowBanner = 'ShowBanner',
-    DebuggerLaunchCounter = 'DebuggerLaunchCounter',
-    DebuggerLaunchThresholdCounter = 'DebuggerLaunchThresholdCounter'
+export enum PythonLangServerPersistentStateKeys {
+    ShowLanguageServiceBanner = 'ShowLanguageServiceBanner',
+    PythonLSLaunchCounter = 'PythonLSLaunchCounter',
+    PythonLSLaunchThresholdCounter = 'PythonLSLaunchThresholdCounter'
 }
 
 @injectable()
-export class ExperimentalDebuggerBanner implements IDismissableSurveyBanner {
+export class LanguageServerBanner implements IDismissableSurveyBanner {
     private initialized?: boolean;
     private disabledInCurrentSession?: boolean;
     public get enabled(): boolean {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        return factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, true).value;
+        return factory.createGlobalPersistentState<boolean>(PythonLangServerPersistentStateKeys.ShowLanguageServiceBanner, true).value;
     }
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
     public initialize() {
@@ -37,21 +35,14 @@ export class ExperimentalDebuggerBanner implements IDismissableSurveyBanner {
         if (!this.enabled) {
             return;
         }
-        const debuggerService = this.serviceContainer.get<IDebugService>(IDebugService);
-        const disposable = debuggerService.onDidTerminateDebugSession(async e => {
-            if (e.type === ExperimentalDebuggerType) {
-                const logger = this.serviceContainer.get<ILogger>(ILogger);
-                await this.onDidTerminateDebugSession()
-                    .catch(ex => logger.logError('Error in debugger Banner', ex));
-            }
-        });
 
-        this.serviceContainer.get<Disposable[]>(IDisposableRegistry).push(disposable);
+        const lsExtService = IExtensionActivatorService = this.serviceContainer.get<IExtensionActivationService>(IExtensionActivatorService);
     }
+
     public async showBanner(): Promise<void> {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const yes = 'Yes, take survey now';
-        const no = 'No thanks';
+        const no = 'No, thanks';
         const response = await appShell.showInformationMessage('Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?', yes, no);
         switch (response) {
             case yes:
@@ -74,32 +65,33 @@ export class ExperimentalDebuggerBanner implements IDismissableSurveyBanner {
         if (!this.enabled || this.disabledInCurrentSession) {
             return false;
         }
-        const [threshold, debuggerCounter] = await Promise.all([this.getDebuggerLaunchThresholdCounter(), this.getGetDebuggerLaunchCounter()]);
-        return debuggerCounter >= threshold;
+        const [threshold, launchCounter] = await Promise.all([this.getPythonLSLaunchThresholdCounter(), this.getPythonLSLaunchCounter()]);
+        return launchCounter >= threshold;
     }
 
     public async disable(): Promise<void> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        await factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, false).updateValue(false);
+        await factory.createGlobalPersistentState<boolean>(PythonLangServerPersistentStateKeys.ShowLanguageServiceBanner, false).updateValue(false);
     }
+
     public async launchSurvey(): Promise<void> {
-        const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
+        const launchCounter = await this.getPythonLSLaunchCounter();
         const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
-        browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
+        browser.launch(`https://www.research.net/r/LJZV9BZ?n=${launchCounter}`);
     }
-    private async incrementDebuggerLaunchCounter(): Promise<void> {
+    private async incrementPythonLanguageServiceLaunchCounter(): Promise<void> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const state = factory.createGlobalPersistentState<number>(PersistentStateKeys.DebuggerLaunchCounter, 0);
+        const state = factory.createGlobalPersistentState<number>(PythonLangServerPersistentStateKeys.PythonLSLaunchCounter, 0);
         await state.updateValue(state.value + 1);
     }
-    private async getGetDebuggerLaunchCounter(): Promise<number> {
+    private async getPythonLSLaunchCounter(): Promise<number> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const state = factory.createGlobalPersistentState<number>(PersistentStateKeys.DebuggerLaunchCounter, 0);
+        const state = factory.createGlobalPersistentState<number>(PythonLangServerPersistentStateKeys.PythonLSLaunchCounter, 0);
         return state.value;
     }
-    private async getDebuggerLaunchThresholdCounter(): Promise<number> {
+    private async getPythonLSLaunchThresholdCounter(): Promise<number> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const state = factory.createGlobalPersistentState<number | undefined>(PersistentStateKeys.DebuggerLaunchThresholdCounter, undefined);
+        const state = factory.createGlobalPersistentState<number | undefined>(PythonLangServerPersistentStateKeys.PythonLSLaunchThresholdCounter, undefined);
         if (state.value === undefined) {
             const hexValue = parseInt(`0x${this.getRandomHex()}`, 16);
             const randomNumber = Math.floor((10 * hexValue) / 16) + 1;
@@ -113,11 +105,12 @@ export class ExperimentalDebuggerBanner implements IDismissableSurveyBanner {
         const num = parseInt(`0x${lastHexValue}`, 16);
         return isNaN(num) ? crypto.randomBytes(1).toString('hex').slice(-1) : lastHexValue;
     }
-    private async onDidTerminateDebugSession(): Promise<void> {
+
+    private async onInitializedPythonLanguageService(): Promise<void> {
         if (!this.enabled) {
             return;
         }
-        await this.incrementDebuggerLaunchCounter();
+        await this.incrementPythonLanguageServiceLaunchCounter();
         const show = await this.shouldShowBanner();
         if (!show) {
             return;

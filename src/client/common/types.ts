@@ -267,3 +267,13 @@ export const IBrowserService = Symbol('IBrowserService');
 export interface IBrowserService {
     launch(url: string): void;
 }
+
+export const IDismissableSurveyBanner = Symbol('IDismissableSurveyBanner');
+export interface IDismissableSurveyBanner {
+    enabled: boolean;
+    initialize(): void;
+    showBanner(): Promise<void>;
+    shouldShowBanner(): Promise<boolean>;
+    disable(): Promise<void>;
+    launchSurvey(): Promise<void>;
+}
