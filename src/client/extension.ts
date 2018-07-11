@@ -59,7 +59,7 @@ import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibra
 import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
-import { ICodeExecutionManager } from './terminals/types';
+import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import { OnEnterFormatter } from './typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
@@ -83,6 +83,7 @@ export async function activate(context: ExtensionContext) {
     interpreterManager.initialize();
     await interpreterManager.autoSetInterpreter();
 
+    serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).initilialize();
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 

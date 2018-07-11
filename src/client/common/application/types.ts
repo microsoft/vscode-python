@@ -572,6 +572,11 @@ export interface ITerminalManager {
      */
     readonly onDidCloseTerminal: Event<Terminal>;
     /**
+     * An [event](#Event) which fires when a terminal has been created, either through the
+     * [createTerminal](#window.createTerminal) API or commands.
+     */
+    readonly onDidOpenTerminal: Event<Terminal>;
+    /**
      * Creates a [Terminal](#Terminal). The cwd of the terminal will be the workspace directory
      * if it exists, regardless of whether an explicit customStartPath setting exists.
      *

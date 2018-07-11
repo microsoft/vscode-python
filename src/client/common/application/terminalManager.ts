@@ -10,6 +10,9 @@ export class TerminalManager implements ITerminalManager {
     public get onDidCloseTerminal(): Event<Terminal> {
         return window.onDidCloseTerminal;
     }
+    public get onDidOpenTerminal(): Event<Terminal> {
+        return window.onDidOpenTerminal;
+    }
     public createTerminal(options: TerminalOptions): Terminal {
         return window.createTerminal(options);
     }
