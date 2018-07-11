@@ -25,8 +25,8 @@ const testDataLinux = [
 ];
 
 const testDataModuleName = [
-    { isWindows: true, expectedName: 'Microsoft.PythonTools.VsCode.exe' },
-    { isWindows: false, expectedName: 'Microsoft.PythonTools.VsCode.VsCode' }
+    { isWindows: true, expectedName: 'Microsoft.Python.LanguageServer.exe' },
+    { isWindows: false, expectedName: 'Microsoft.Python.LanguageServer.LanguageServer' }
 ];
 
 // tslint:disable-next-line:max-func-body-length
