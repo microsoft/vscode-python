@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TextEditor, Uri } from 'vscode';
+import { Terminal, TextEditor, Uri } from 'vscode';
 
 export const ICodeExecutionService = Symbol('ICodeExecutionService');
 
