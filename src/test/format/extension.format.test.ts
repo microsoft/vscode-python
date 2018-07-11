@@ -123,7 +123,7 @@ suite('Formatting', () => {
     test('Black', async function () {
         const pyVersion: PythonVersionInformation = await ioc.getPythonMajorMinorVersion(Uri.parse(blackFileToFormat));
 
-        if (pyVersion && (pyVersion.major > 3 || (pyVersion.major === 3 && pyVersion.minor >= 6))) {
+        if (pyVersion && (pyVersion.major < 3 || (pyVersion.major === 3 && pyVersion.minor < 6))) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
