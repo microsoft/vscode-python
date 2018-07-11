@@ -8,6 +8,7 @@ import { PythonSettings } from '../../client/common/configSettings';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
+import { PythonVersionInformation } from '../../client/unittests/common/types';
 import { rootWorkspaceUri } from '../common';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { closeActiveWindows, initialize, initializeTest, IS_CI_SERVER } from './../initialize';
@@ -82,8 +83,8 @@ suite('Variable Extraction', () => {
     }
 
     test('Extract Variable', async () => {
-        const pyVersion: string = await ioc.getPythonMajorMinorVersionString(rootWorkspaceUri);
-        if (pyVersion.indexOf('3.7') === 0) {
+        const pyVersion: PythonVersionInformation = await ioc.getPythonMajorMinorVersion(rootWorkspaceUri);
+        if (pyVersion.major === 3 && pyVersion.minor === 7) {
             // tslint:disable-next-line:no-console
             console.log('SKIPPING TEST: Extract Variable'); // how to skip?
         } else {
