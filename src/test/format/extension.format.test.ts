@@ -5,6 +5,7 @@ import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/co
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
+import { PythonVersionInformation } from '../../client/unittests/common/types';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { MockProcessService } from '../mocks/proc';
 import { compareFiles } from '../textUtils';
@@ -118,12 +119,14 @@ suite('Formatting', () => {
             autoPep8FileToFormat,
             'autopep8.output');
     });
+    // tslint:disable-next-line:no-function-expression
     test('Black', async function () {
-        if (await ioc.getPythonMajorVersion(Uri.parse(blackFileToFormat)) === 2) {
+        const pyVersion: PythonVersionInformation = await ioc.getPythonMajorMinorVersion(Uri.parse(blackFileToFormat));
+
+        if (pyVersion && (pyVersion.major > 3 || (pyVersion.major === 3 && pyVersion.minor >= 6))) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
-
         await testFormatting(new BlackFormatter(ioc.serviceContainer), formattedBlack, blackFileToFormat, 'black.output');
     });
     test('Yapf', async () => testFormatting(new YapfFormatter(ioc.serviceContainer), formattedYapf, yapfFileToFormat, 'yapf.output'));
