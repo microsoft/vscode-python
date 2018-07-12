@@ -1992,6 +1992,7 @@
         "vscode-extension-telemetry": "0.0.15",
         "vscode-languageclient": "^4.3.0",
         "vscode-languageserver": "^4.3.0",
+        "vscode-languageserver-protocol": "^3.9.0",
         "winreg": "1.2.4",
         "xml2js": "0.4.19"
     },
