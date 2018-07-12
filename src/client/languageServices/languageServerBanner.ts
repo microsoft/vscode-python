@@ -5,11 +5,11 @@
 
 import * as crypto from 'crypto';
 import { inject, injectable } from 'inversify';
+import { ExtensionActivators, IExtensionActivationService, IExtensionActivator } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import { IBrowserService, IDismissableSurveyBanner, IPersistentStateFactory } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-
 export enum PythonLangServerPersistentStateKeys {
     ShowLanguageServiceBanner = 'ShowLanguageServiceBanner',
     PythonLSLaunchCounter = 'PythonLSLaunchCounter',
@@ -36,7 +36,10 @@ export class LanguageServerBanner implements IDismissableSurveyBanner {
             return;
         }
 
-        const lsExtService = IExtensionActivatorService = this.serviceContainer.get<IExtensionActivationService>(IExtensionActivatorService);
+        const activator = this.serviceContainer.get<IExtensionActivator>(IExtensionActivator, ExtensionActivators.DotNet);
+        activator.activate();
+        // const lsExtService: IExtensionActivationService = this.serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
+        // lsExtService.activate();
     }
 
     public async showBanner(): Promise<void> {
