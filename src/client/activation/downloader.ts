@@ -70,8 +70,7 @@ export class LanguageServerDownloader {
         });
 
         await window.withProgress({
-            location: ProgressLocation.Window,
-            title
+            location: ProgressLocation.Window
         }, (progress) => {
 
             requestProgress(request(uri))
