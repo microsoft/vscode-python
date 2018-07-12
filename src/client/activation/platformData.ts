@@ -3,11 +3,11 @@
 
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import {
-    analysis_engine_linux_x64_sha512,
-    analysis_engine_osx_x64_sha512,
-    analysis_engine_win_x64_sha512,
-    analysis_engine_win_x86_sha512
-} from './analysisEngineHashes';
+    language_server_linux_x64_sha512,
+    language_server_osx_x64_sha512,
+    language_server_win_x64_sha512,
+    language_server_win_x86_sha512
+} from './languageServerHashes';
 
 export class PlatformData {
     constructor(private platform: IPlatformService, fs: IFileSystem) { }
@@ -20,7 +20,7 @@ export class PlatformData {
         }
         if (this.platform.isLinux) {
             if (!this.platform.is64bit) {
-                throw new Error('Python Analysis Engine does not support 32-bit Linux.');
+                throw new Error('Microsoft Python Language Server does not support 32-bit Linux.');
             }
             return 'linux-x64';
         }
@@ -28,24 +28,24 @@ export class PlatformData {
     }
 
     public getEngineDllName(): string {
-        return 'Microsoft.PythonTools.VsCode.dll';
+        return 'Microsoft.Python.LanguageServer.dll';
     }
 
     public getEngineExecutableName(): string {
         return this.platform.isWindows
-            ? 'Microsoft.PythonTools.VsCode.exe'
-            : 'Microsoft.PythonTools.VsCode.VsCode';
+            ? 'Microsoft.Python.LanguageServer.exe'
+            : 'Microsoft.Python.LanguageServer.LanguageServer';
     }
 
     public async getExpectedHash(): Promise<string> {
         if (this.platform.isWindows) {
-            return this.platform.is64bit ? analysis_engine_win_x64_sha512 : analysis_engine_win_x86_sha512;
+            return this.platform.is64bit ? language_server_win_x64_sha512 : language_server_win_x86_sha512;
         }
         if (this.platform.isMac) {
-            return analysis_engine_osx_x64_sha512;
+            return language_server_osx_x64_sha512;
         }
         if (this.platform.isLinux && this.platform.is64bit) {
-            return analysis_engine_linux_x64_sha512;
+            return language_server_linux_x64_sha512;
         }
         throw new Error('Unknown platform.');
     }

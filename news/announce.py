@@ -3,6 +3,7 @@
 Usage: announce [--dry_run | --interim | --final] [<directory>]
 
 """
+import dataclasses
 import enum
 import operator
 import os
@@ -10,7 +11,6 @@ import pathlib
 import re
 import subprocess
 import sys
-import types
 
 import docopt
 
@@ -18,12 +18,14 @@ import docopt
 FILENAME_RE = re.compile(r"(?P<issue>\d+)(?P<nonce>-\S+)?\.md")
 
 
-def NewsEntry(issue_number, description, path):
-    """Construct a data object for a news entry."""
-    # TODO: replace with a dataclass in Python 3.7.
-    return types.SimpleNamespace(
-        issue_number=issue_number, description=description, path=path
-    )
+
+@dataclasses.dataclass
+class NewsEntry:
+    """Representation of a news entry."""
+
+    issue_number: int
+    description: str
+    path: pathlib.Path
 
 
 def news_entries(directory):
@@ -39,10 +41,13 @@ def news_entries(directory):
         yield NewsEntry(issue, entry, path)
 
 
-def SectionTitle(index, title, path):
+@dataclasses.dataclass
+class SectionTitle:
     """Create a data object for a section of the changelog."""
-    # TODO: replace with a dataclass in Python 3.7.
-    return types.SimpleNamespace(index=index, title=title, path=path)
+
+    index: int
+    title: str
+    path: pathlib.Path
 
 
 def sections(directory):

@@ -1,4 +1,4 @@
-# Contributing to Microsoft Python Analysis Engine
+# Contributing to Microsoft Python Language Server
 [![Contributing to Python Tools for Visual Studio](https://github.com/Microsoft/PTVS/blob/master/CONTRIBUTING.md)]
 
 [![Build Status (Travis)](https://travis-ci.org/Microsoft/vscode-python.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-python) [![Build status (AppVeyor)](https://ci.appveyor.com/api/projects/status/s0pt8d79gqw222j7?svg=true)](https://ci.appveyor.com/project/DonJayamanne/vscode-python-v3vd6) [![codecov](https://codecov.io/gh/Microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/Microsoft/vscode-python)
@@ -30,9 +30,9 @@ Visual Studio 2017:
 1. Open solution in Python/Product/VsCode
 2. Build AnalysisVsc project
 3. Binaries arrive in *Python/BuildOutput/VsCode/raw*
-4. Delete contents of the *analysis* folder in the Python Extension folder
-5. Copy *.dll, *.pdb, *.json fron *Python/BuildOutput/VsCode/raw* to *analysis*
-6. In VS Code set setting *python.downloadCodeAnalysis* to *false*
+4. Delete contents of the *languageServer* folder in the Python Extension folder
+5. Copy *.dll, *.pdb, *.json fron *Python/BuildOutput/VsCode/raw* to *languageServer*
+6. In VS Code set setting *python.downloadLanguageServer* to *false*
 7. In VS Code set setting *python.jediEnabled* to *false*
 
 ### Debugging code in Python Extension to VS Code
@@ -44,7 +44,7 @@ Folow regular TypeScript debugging steps
 3. Python Analysis Engine code is in *Python/Product/VsCode/Analysis*
 4. Run extension from VS Code
 5. In the instance with C# code select Dotnet Attach launch task.
-6. Attach to *dotnet* process running *Microsoft.PythonTools.VsCode.dll*
+6. Attach to *dotnet* process running *Microsoft.Python.languageServer.dll*
 
 On Windows you can also attach from Visual Studio 2017.
 

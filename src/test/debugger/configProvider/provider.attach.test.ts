@@ -33,9 +33,13 @@ enum OS {
             let platformService: TypeMoq.IMock<IPlatformService>;
             let fileSystem: TypeMoq.IMock<IFileSystem>;
             const debugOptionsAvailable = [DebugOptions.RedirectOutput];
-            if (os.value === OS.Windows && provider.debugType === 'pythonExperimental') {
-                debugOptionsAvailable.push(DebugOptions.FixFilePathCase);
-                debugOptionsAvailable.push(DebugOptions.WindowsClient);
+            if (provider.debugType === 'pythonExperimental') {
+                if (os.value === OS.Windows) {
+                    debugOptionsAvailable.push(DebugOptions.FixFilePathCase);
+                    debugOptionsAvailable.push(DebugOptions.WindowsClient);
+                } else {
+                    debugOptionsAvailable.push(DebugOptions.UnixClient);
+                }
             }
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();

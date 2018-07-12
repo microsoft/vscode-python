@@ -22,5 +22,5 @@ function isMultitrootTest() {
     return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;
 }
 
-export const IsAnalysisEngineTest = () =>
-    !IS_TRAVIS && (process.env.VSC_PYTHON_ANALYSIS === '1' || !PythonSettings.getInstance().jediEnabled);
+export const IsLanguageServerTest = () =>
+    !IS_TRAVIS && (process.env.VSC_PYTHON_LANGUAGE_SERVER === '1' || !PythonSettings.getInstance().jediEnabled);

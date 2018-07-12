@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
-import { isPythonAnalysisEngineTest, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { isLanguageServerTest, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -38,8 +38,8 @@ export class ExtensionActivationService implements IExtensionActivationService, 
 
         const jedi = this.useJedi();
 
-        const engineName = jedi ? 'classic analysis engine' : 'analysis engine';
-        this.output.appendLine(`Starting the ${engineName}.`);
+        const engineName = jedi ? 'Jedi Python language engine' : 'Microsoft Python language server';
+        this.output.appendLine(`Starting ${engineName}.`);
         const activatorName = jedi ? ExtensionActivators.Jedi : ExtensionActivators.DotNet;
         const activator = this.serviceContainer.get<IExtensionActivator>(IExtensionActivator, activatorName);
         this.currentActivator = { jedi, activator };
@@ -61,7 +61,7 @@ export class ExtensionActivationService implements IExtensionActivationService, 
             return;
         }
 
-        const item = await this.appShell.showInformationMessage('Please reload the window switching between the analysis engines.', 'Reload');
+        const item = await this.appShell.showInformationMessage('Please reload the window switching between language engines.', 'Reload');
         if (item === 'Reload') {
             this.serviceContainer.get<ICommandManager>(ICommandManager).executeCommand('workbench.action.reloadWindow');
         }
@@ -70,6 +70,6 @@ export class ExtensionActivationService implements IExtensionActivationService, 
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders!.map(item => item.uri) : [undefined];
         const configuraionService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const jediEnabledForAnyWorkspace = workspacesUris.filter(uri => configuraionService.getSettings(uri).jediEnabled).length > 0;
-        return !isPythonAnalysisEngineTest() && jediEnabledForAnyWorkspace;
+        return !isLanguageServerTest() && jediEnabledForAnyWorkspace;
     }
 }

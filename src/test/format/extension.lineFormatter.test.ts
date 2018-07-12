@@ -134,6 +134,14 @@ suite('Formatting - line formatter', () => {
     test('lambda arguments', () => {
         testFormatMultiline('l4= lambda x =lambda y =lambda z= 1: z: y(): x()', 0, 'l4 = lambda x=lambda y=lambda z=1: z: y(): x()');
     });
+    test('star in multiline arguments', () => {
+        testFormatMultiline('x = [\n  * param1,\n  * param2\n]', 1, '  *param1,');
+        testFormatMultiline('x = [\n  * param1,\n  * param2\n]', 2, '  *param2');
+    });
+    test('arrow operator', () => {
+        //testFormatMultiline('def f(a, b: 1, e: 3 = 4, f =5, * g: 6, ** k: 11) -> 12: pass', 0, 'def f(a, b: 1, e: 3 = 4, f=5, *g: 6, **k: 11) -> 12: pass');
+        testFormatMultiline('def f(a, \n    ** k: 11) -> 12: pass', 1, '    **k: 11) -> 12: pass');
+    });
 
     test('Multiline function call', () => {
         testFormatMultiline('def foo(x = 1)', 0, 'def foo(x=1)');

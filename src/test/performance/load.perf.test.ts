@@ -40,7 +40,7 @@ suite('Activation Times', () => {
 
     if (process.env.ACTIVATION_TIMES_DEV_LOG_FILE_PATHS &&
         process.env.ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS &&
-        process.env.ACTIVATION_TIMES_DEV_ANALYSIS_LOG_FILE_PATHS) {
+        process.env.ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS) {
 
         test('Test activation times of Dev vs Release Extension', async () => {
             function getActivationTimes(files: string[]) {
@@ -57,14 +57,14 @@ suite('Activation Times', () => {
             }
             const devActivationTimes = getActivationTimes(JSON.parse(process.env.ACTIVATION_TIMES_DEV_LOG_FILE_PATHS!));
             const releaseActivationTimes = getActivationTimes(JSON.parse(process.env.ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS!));
-            const analysisEngineActivationTimes = getActivationTimes(JSON.parse(process.env.ACTIVATION_TIMES_DEV_ANALYSIS_LOG_FILE_PATHS!));
+            const languageServerActivationTimes = getActivationTimes(JSON.parse(process.env.ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS!));
             const devActivationAvgTime = devActivationTimes.reduce((sum, item) => sum + item, 0) / devActivationTimes.length;
             const releaseActivationAvgTime = releaseActivationTimes.reduce((sum, item) => sum + item, 0) / releaseActivationTimes.length;
-            const analysisEngineActivationAvgTime = analysisEngineActivationTimes.reduce((sum, item) => sum + item, 0) / analysisEngineActivationTimes.length;
+            const languageServerActivationAvgTime = languageServerActivationTimes.reduce((sum, item) => sum + item, 0) / languageServerActivationTimes.length;
 
-            console.log(`Dev version Loaded in ${devActivationAvgTime}ms`);
-            console.log(`Release version Loaded in ${releaseActivationAvgTime}ms`);
-            console.log(`Analysis Engine Loaded in ${analysisEngineActivationAvgTime}ms`);
+            console.log(`Dev version loaded in ${devActivationAvgTime}ms`);
+            console.log(`Release version loaded in ${releaseActivationAvgTime}ms`);
+            console.log(`Language Server loaded in ${languageServerActivationAvgTime}ms`);
 
             expect(devActivationAvgTime - releaseActivationAvgTime).to.be.lessThan(AllowedIncreaseInActivationDelayInMS, 'Activation times have increased above allowed threshold.');
         });

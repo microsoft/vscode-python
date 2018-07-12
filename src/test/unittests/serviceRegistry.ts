@@ -12,7 +12,9 @@ import { TestsHelper } from '../../client/unittests/common/testUtils';
 import { TestFlatteningVisitor } from '../../client/unittests/common/testVisitors/flatteningVisitor';
 import { TestFolderGenerationVisitor } from '../../client/unittests/common/testVisitors/folderGenerationVisitor';
 import { TestResultResetVisitor } from '../../client/unittests/common/testVisitors/resultResetVisitor';
-import { ITestResultsService, ITestsHelper, ITestsParser, ITestVisitor, IUnitTestSocketServer, TestProvider } from '../../client/unittests/common/types';
+import { ITestResultsService, ITestsHelper, ITestsParser,
+    ITestVisitor, IUnitTestSocketServer,
+    PythonVersionInformation, TestProvider } from '../../client/unittests/common/types';
 // tslint:disable-next-line:no-duplicate-imports
 import { ITestCollectionStorageService, ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory } from '../../client/unittests/common/types';
 import { TestManager as NoseTestManager } from '../../client/unittests/nosetest/main';
@@ -35,6 +37,25 @@ export class UnitTestIocContainer extends IocContainer {
         return this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource })
             .then(pythonProcess => pythonProcess.exec(['-c', 'import sys;print(sys.version_info[0])'], {}))
             .then(output => parseInt(output.stdout.trim(), 10));
+    }
+
+    public getPythonMajorMinorVersionString(resource: Uri): Promise<string> {
+        return this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource })
+            .then(pythonProcess => pythonProcess.exec(['-c', 'import sys;print("{0}.{1}".format(*sys.version_info[:2]))'], {}))
+            .then(output => output.stdout.trim());
+    }
+
+    public getPythonMajorMinorVersion(resource: Uri): Promise<PythonVersionInformation> {
+        return this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource })
+            .then(pythonProcess => pythonProcess.exec(['-c', 'import sys;print("{0}|{1}".format(*sys.version_info[:2]))'], {}))
+            .then(output => {
+                const versionString: string = output.stdout.trim();
+                const versionInfo: string[] = versionString.split('|');
+                return {
+                    major: parseInt(versionInfo[0].trim(), 10),
+                    minor: parseInt(versionInfo[1].trim(), 10)
+                };
+            });
     }
     public registerTestVisitors() {
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestFlatteningVisitor, 'TestFlatteningVisitor');

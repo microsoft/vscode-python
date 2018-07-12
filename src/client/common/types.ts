@@ -118,7 +118,7 @@ export interface IPythonSettings {
     readonly pythonPath: string;
     readonly venvPath: string;
     readonly venvFolders: string[];
-    readonly downloadCodeAnalysis: boolean;
+    readonly downloadLanguageServer: boolean;
     readonly jediEnabled: boolean;
     readonly jediPath: string;
     readonly jediMemoryLimit: number;
@@ -244,6 +244,7 @@ export interface IAnalysisSettings {
     readonly warnings: string[];
     readonly information: string[];
     readonly disabled: string[];
+    readonly traceLogging: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

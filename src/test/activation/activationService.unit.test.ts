@@ -10,7 +10,7 @@ import { ConfigurationChangeEvent, Disposable } from 'vscode';
 import { ExtensionActivationService } from '../../client/activation/activationService';
 import { ExtensionActivators, IExtensionActivationService, IExtensionActivator } from '../../client/activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
-import { isPythonAnalysisEngineTest } from '../../client/common/constants';
+import { isLanguageServerTest } from '../../client/common/constants';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
@@ -23,7 +23,7 @@ suite('Activation - ActivationService', () => {
             let cmdManager: TypeMoq.IMock<ICommandManager>;
             let workspaceService: TypeMoq.IMock<IWorkspaceService>;
             setup(function () {
-                if (isPythonAnalysisEngineTest()) {
+                if (isLanguageServerTest()) {
                     // tslint:disable-next-line:no-invalid-this
                     return this.skip();
                 }

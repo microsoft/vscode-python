@@ -279,15 +279,15 @@ export class Tokenizer implements ITokenizer {
             }
         }
 
-        // Floating point
-        if ((this.cs.currentChar >= Char._0 && this.cs.currentChar <= Char._9) || this.cs.currentChar === Char.Period) {
-            while (!isWhiteSpace(this.cs.currentChar)) {
-                this.cs.moveNext();
-            }
-            const text = this.cs.getText().substr(start, this.cs.position - start);
-            if (!isNaN(parseFloat(text))) {
-                this.tokens.push(new Token(TokenType.Number, start, this.cs.position - start));
-                return true;
+        // Floating point. Sign was already skipped over.
+        if ((this.cs.currentChar >= Char._0 && this.cs.currentChar <= Char._9) ||
+            (this.cs.currentChar === Char.Period && this.cs.nextChar >= Char._0 && this.cs.nextChar <= Char._9)) {
+            if (this.skipFloatingPointCandidate(false)) {
+                const text = this.cs.getText().substr(start, this.cs.position - start);
+                if (!isNaN(parseFloat(text))) {
+                    this.tokens.push(new Token(TokenType.Number, start, this.cs.position - start));
+                    return true;
+                }
             }
         }
 
@@ -466,5 +466,35 @@ export class Tokenizer implements ITokenizer {
             this.cs.moveNext();
         }
         this.cs.advance(3);
+    }
+
+    private skipFloatingPointCandidate(allowSign: boolean): boolean {
+        // Determine end of the potential floating point number
+        const start = this.cs.position;
+        this.skipFractionalNumber(allowSign);
+        if (this.cs.position > start) {
+            if (this.cs.currentChar === Char.e || this.cs.currentChar === Char.E) {
+                this.cs.moveNext(); // Optional exponent sign
+            }
+            this.skipDecimalNumber(true); // skip exponent value
+        }
+        return this.cs.position > start;
+    }
+
+    private skipFractionalNumber(allowSign: boolean): void {
+        this.skipDecimalNumber(allowSign);
+        if (this.cs.currentChar === Char.Period) {
+            this.cs.moveNext(); // Optional period
+        }
+        this.skipDecimalNumber(false);
+    }
+
+    private skipDecimalNumber(allowSign: boolean): void {
+        if (allowSign && (this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus)) {
+            this.cs.moveNext(); // Optional sign
+        }
+        while (isDecimal(this.cs.currentChar)) {
+            this.cs.moveNext(); // skip integer part
+        }
     }
 }

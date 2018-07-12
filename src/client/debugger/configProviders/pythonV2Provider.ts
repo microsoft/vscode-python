@@ -82,6 +82,8 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
         }
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
             this.debugOption(debugOptions, DebugOptions.WindowsClient);
+        } else {
+            this.debugOption(debugOptions, DebugOptions.UnixClient);
         }
 
         if (!debugConfiguration.pathMappings) {

@@ -95,7 +95,7 @@ const filteredPep88MessagesToBeReturned: ILintMessage[] = [
 ];
 
 // tslint:disable-next-line:max-func-body-length
-suite('Linting', () => {
+suite('Linting - General Tests', () => {
     let ioc: UnitTestIocContainer;
     let linterManager: ILinterManager;
     let configService: IConfigurationService;

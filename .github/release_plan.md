@@ -5,6 +5,7 @@
 - [ ] Go through all [merged pull requests](https://github.com/Microsoft/vscode-python/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Amerged) and add the [`validate fix` label](https://github.com/Microsoft/vscode-python/labels/validate%20fix) as appropriate as well as checking for news entries
 - [ ] Validate [fixed issues](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22+is%3Aclosed)
 - [ ] Triage [unverified issues](https://github.com/Microsoft/vscode-python/labels/needs%20verification)
+- [ ] Update pre-existing dependencies as appropriate (npm, Python, git submodule, or otherwise; requires updating CELA)
 
 ## Planning
 - [ ] Evaluate if TypeScript usage needs updating to sync with VS Code's usage
@@ -35,7 +36,7 @@
 
 ## Legal
 - [ ] Announce the lock-down of dependencies for this release
-- [ ] Notify CELA of all changes to the [repository](https://github.com/Microsoft/vscode-python/tree/master/pythonFiles) and [distribution dependencies](https://github.com/Microsoft/vscode-python/blob/master/package.json)
+- [ ] Notify CELA of all changes to the [repository](https://github.com/Microsoft/vscode-python/tree/master/pythonFiles), [distribution dependencies](https://github.com/Microsoft/vscode-python/blob/master/package.json) (including [ptvsd](https://pypi.org/project/ptvsd/), and [git submodules](https://github.com/Microsoft/vscode-python) (e.g. Typeshed) 
 
 ## Release a beta version for testing
 - [ ] Update the [version](https://github.com/Microsoft/vscode-python/blob/master/package.json) to be a `beta` & update the [changelog](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
@@ -88,3 +89,4 @@
 - [ ] Clean up any straggling [fixed issues needing validation](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22+is%3Aclosed)
 - [ ] Close the (now) old [milestone](https://github.com/Microsoft/vscode-python/milestones)
 - [ ] Delete the previous releases' [branch](https://github.com/Microsoft/vscode-python/branches)
+- [ ] Go through [`needs more info` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22needs+more+info%22+sort%3Aupdated-asc) and close any that have no activity for over a month

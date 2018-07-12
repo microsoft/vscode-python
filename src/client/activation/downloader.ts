@@ -17,12 +17,12 @@ import { PlatformData } from './platformData';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const StreamZip = require('node-stream-zip');
 
-const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-analysis';
-const downloadBaseFileName = 'Python-Analysis-VSCode';
+const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-language-server';
+const downloadBaseFileName = 'Python-Language-Server';
 const downloadVersion = '0.1.0';
 const downloadFileExtension = '.nupkg';
 
-export class AnalysisEngineDownloader {
+export class LanguageServerDownloader {
     private readonly output: OutputChannel;
     private readonly platform: IPlatformService;
     private readonly platformData: PlatformData;
@@ -35,7 +35,7 @@ export class AnalysisEngineDownloader {
         this.platformData = new PlatformData(this.platform, this.fs);
     }
 
-    public async downloadAnalysisEngine(context: IExtensionContext): Promise<void> {
+    public async downloadLanguageServer(context: IExtensionContext): Promise<void> {
         const platformString = await this.platformData.getPlatformName();
         const enginePackageFileName = `${downloadBaseFileName}-${platformString}.${downloadVersion}${downloadFileExtension}`;
 
@@ -142,6 +142,8 @@ export class AnalysisEngineDownloader {
             }).on('extract', (entry, file) => {
                 extractedFiles += 1;
                 progress.report({ message: `${title}${Math.round(100 * extractedFiles / totalFiles)}%` });
+            }).on('error', e => {
+                deferred.reject(e);
             });
             return deferred.promise;
         });
