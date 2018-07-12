@@ -1277,7 +1277,7 @@
                 },
                 "python.analysis.openFilesOnly": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Only show errors and warnings for open files rather than for the entire workspace.",
                     "scope": "resource"
                 },
