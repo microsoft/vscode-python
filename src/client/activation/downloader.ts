@@ -42,7 +42,7 @@ export class LanguageServerDownloader {
         let localTempFilePath = '';
         try {
             localTempFilePath = await this.downloadFile(downloadUriPrefix, enginePackageFileName, 'Downloading Microsoft Python Language Server... ');
-            await this.verifyDownload(localTempFilePath, platformString);
+            // await this.verifyDownload(localTempFilePath, platformString);
             await this.unpackArchive(context.extensionPath, localTempFilePath);
         } catch (err) {
             this.output.appendLine('failed.');
@@ -70,8 +70,7 @@ export class LanguageServerDownloader {
         });
 
         await window.withProgress({
-            location: ProgressLocation.Window,
-            title
+            location: ProgressLocation.Window
         }, (progress) => {
 
             requestProgress(request(uri))
