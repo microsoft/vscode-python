@@ -5,14 +5,15 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { OutputChannel, Uri } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
-import { IConfigurationService, IExtensionContext, IOutputChannel, IPythonSettings } from '../common/types';
+import { IBrowserService, IConfigurationService, IExtensionContext, IOutputChannel, IPersistentStateFactory, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { NewLanguageServerSurveyBanner } from '../languageServices/newLanguageServerSurveyBanner';
 import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
     PYTHON_LANGUAGE_SERVER_ENABLED,
@@ -50,6 +51,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private excludedFiles: string[] = [];
     private typeshedPaths: string[] = [];
     private loadExtensionArgs: {} | undefined;
+    private surveyBanner: NewLanguageServerSurveyBanner;
     // tslint:disable-next-line:no-unused-variable
     private progressReporting: ProgressReporting | undefined;
 
@@ -73,12 +75,19 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             async (args) => {
                 if (this.languageClient) {
                     await this.startupCompleted.promise;
+                    this.languageClient.onNotification.bind(this);
                     this.languageClient.sendRequest('python/loadExtension', args);
                 } else {
                     this.loadExtensionArgs = args;
                 }
             }
         ));
+
+        this.surveyBanner = new NewLanguageServerSurveyBanner(
+            this.services.get<IApplicationShell>(IApplicationShell),
+            this.services.get<IApplicationEnvironment>(IApplicationEnvironment),
+            this.services.get<IBrowserService>(IBrowserService),
+            this.services.get<IPersistentStateFactory>(IPersistentStateFactory));
 
         (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
     }
@@ -149,6 +158,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         if (this.loadExtensionArgs) {
             this.languageClient!.sendRequest('python/loadExtension', this.loadExtensionArgs);
         }
+        await this.surveyBanner.onInitializedPythonLanguageService();
+
         this.startupCompleted.resolve();
     }
 
