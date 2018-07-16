@@ -103,7 +103,7 @@ export class NewLanguageServerSurveyBanner implements IDismissableSurveyBanner {
         if (launchCounter >= threshold) {
             // now see how many times we've already attempted to show this survey banner
             if ((launchCounter - threshold) > this.maxShowAttempts) {
-                // We've asked a reasonable amount of times, back off.
+                // We've asked a reasonable amount of times, back off. *should we re-initialize here to the next threshold instead?
                 await this.disable();
                 return false;
             }
@@ -121,7 +121,7 @@ export class NewLanguageServerSurveyBanner implements IDismissableSurveyBanner {
         this.browserService.launch(`https://www.research.net/r/LJZV9BZ?n=${launchCounter}`);
     }
 
-    public async onInitializedPythonLanguageService(): Promise<void> {
+    public async onUpdateIncidentCount(): Promise<void> {
         if (!this.enabled) {
             return;
         }
@@ -133,6 +133,10 @@ export class NewLanguageServerSurveyBanner implements IDismissableSurveyBanner {
         }
 
         await this.showBanner();
+    }
+
+    public async onInitializedPythonLanguageService(): Promise<void> {
+        return this.onUpdateIncidentCount();
     }
 
     private async incrementPythonLanguageServiceLaunchCounter(): Promise<void> {

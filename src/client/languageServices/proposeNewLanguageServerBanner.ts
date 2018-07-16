@@ -34,7 +34,7 @@ export class ProposeNewLanguageServerBanner implements IDismissableSurveyBanner 
                 @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
                 @inject(IConfigurationService) private configuration: IConfigurationService,
                 maxShowAttemptThreshold: number = 10,
-                sampleSizePerOneHundredUsers: number
+                sampleSizePerOneHundredUsers: number = 10
             )
     {
         this.maxShowAttempts = maxShowAttemptThreshold;
