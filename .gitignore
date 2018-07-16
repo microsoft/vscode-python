@@ -21,3 +21,4 @@ obj/**
 .pytest_cache
 tmp/**
 .python-version
+vscode-python.code-workspace
