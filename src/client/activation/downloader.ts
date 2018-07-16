@@ -11,7 +11,6 @@ import { createDeferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { HashVerifier } from './hashVerifier';
 import { PlatformData } from './platformData';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -42,7 +41,6 @@ export class LanguageServerDownloader {
         let localTempFilePath = '';
         try {
             localTempFilePath = await this.downloadFile(downloadUriPrefix, enginePackageFileName, 'Downloading Microsoft Python Language Server... ');
-            await this.verifyDownload(localTempFilePath, platformString);
             await this.unpackArchive(context.extensionPath, localTempFilePath);
         } catch (err) {
             this.output.appendLine('failed.');
@@ -70,8 +68,7 @@ export class LanguageServerDownloader {
         });
 
         await window.withProgress({
-            location: ProgressLocation.Window,
-            title
+            location: ProgressLocation.Window
         }, (progress) => {
 
             requestProgress(request(uri))
@@ -96,16 +93,6 @@ export class LanguageServerDownloader {
         });
 
         return tempFile.filePath;
-    }
-
-    private async verifyDownload(filePath: string, platformString: string): Promise<void> {
-        this.output.appendLine('');
-        this.output.append('Verifying download... ');
-        const verifier = new HashVerifier();
-        if (!await verifier.verifyHash(filePath, platformString, await this.platformData.getExpectedHash())) {
-            throw new Error('Hash of the downloaded file does not match.');
-        }
-        this.output.appendLine('valid.');
     }
 
     private async unpackArchive(extensionPath: string, tempFilePath: string): Promise<void> {

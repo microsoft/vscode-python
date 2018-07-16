@@ -232,7 +232,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                     properties
                 },
                 displayOptions: {
-                    preferredFormat: 1, // Markdown
+                    preferredFormat: 'markdown',
                     trimDocumentationLines: false,
                     maxDocumentationLineLength: 0,
                     trimDocumentationText: false,
