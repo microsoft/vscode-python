@@ -162,7 +162,7 @@ export class ProposeNewLanguageServerBanner implements IDismissableSurveyBanner 
     }
 
     private getRandom(): number {
-        const lastHexValue = this.appEnv.machineId.slice(-4);
+        const lastHexValue = this.appEnv.machineId.slice(-2);
         let num = parseInt(`0x${lastHexValue}`, 16);
 
         if (isNaN(num)) {
