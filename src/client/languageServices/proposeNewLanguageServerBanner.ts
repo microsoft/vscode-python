@@ -16,16 +16,31 @@ export enum ProposeNewLSStateKeys {
     ShowAttemptCount = 'ShowProposalBannerCount'
 }
 
+interface IPopupButtonCommands {
+    labels: string[];
+    action(label: string);
+}
+
+/*
+This class represents a popup that propose that the user try out a new
+feature of the extension, and optionally enable that new feature if they
+choose to do so. It is meant to be shown only to a subset of our users,
+and will show as soon as it is instructed to do so, if a random sample
+function enables the popup for this user.
+*/
+
 @injectable()
 export class ProposeNewLanguageServerBanner implements IDismissableSurveyBanner {
     private initialized?: boolean;
     private disabledInCurrentSession?: boolean;
     private bannerMessage: string = 'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
+
     private bannerOptionLabels: string[] = [
         'Try it now',
         'No thanks',
         'Remind me Later'
     ];
+
     private maxShowAttempts: number;
     private sampleSizePerHundred: number;
 
@@ -85,12 +100,10 @@ export class ProposeNewLanguageServerBanner implements IDismissableSurveyBanner 
 
         const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerOptionLabels);
         switch (response) {
-            case this.bannerOptionLabels[0]:
-                {
-                    await this.enableNewLanguageServer();
-                    await this.disable();
-                    break;
-                }
+            case this.bannerOptionLabels[0]: {
+
+                break;
+            }
             case this.bannerOptionLabels[1]: {
                 await this.disable();
                 break;

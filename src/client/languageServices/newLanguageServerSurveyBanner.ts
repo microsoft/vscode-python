@@ -3,21 +3,27 @@
 
 'use strict';
 
-import * as crypto from 'crypto';
+import { randomBytes } from 'crypto';
 import { inject, injectable } from 'inversify';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import '../common/extensions';
-import { IBrowserService, IDismissableSurveyBanner, IPersistentStateFactory } from '../common/types';
+import { IBrowserService, IPersistentStateFactory } from '../common/types';
 
 // persistent state names, exported to make use of in testing
 export enum NewLSSurveyStateKeys {
-    ShowBanner = 'ShowLSSurveyBanner_2',
-    ShowAttemptCounter = 'LSSurveyLaunchAttempts_2',
-    ShowAfterCompletionCount = 'LSSurveyLaunchAfterCompletionCount_2'
+    ShowBanner = 'ShowLSSurveyBanner',
+    ShowAttemptCounter = 'LSSurveyLaunchAttempts',
+    ShowAfterCompletionCount = 'LSSurveyLaunchAfterCompletionCount'
 }
 
+/*
+This class represents a popup that will ask our users for some feedback after
+a specific event occurs N times. Because we are asking for some valuable
+information, it will only request the feedback a specific number of times,
+then it will leave the customer alone, so as to not be annoying.
+*/
 @injectable()
-export class NewLanguageServerSurveyBanner implements IDismissableSurveyBanner {
+export class NewLanguageServerSurveyBanner {
     private initialized?: boolean;
     private disabledInCurrentSession: boolean = false;
     private bannerMessage: string = 'Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?';
@@ -27,8 +33,8 @@ export class NewLanguageServerSurveyBanner implements IDismissableSurveyBanner {
 
     constructor(@inject(IApplicationShell) private appShell: IApplicationShell,
                 @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
-                @inject(IBrowserService) private browserService: IBrowserService,
                 @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
+                @inject(IBrowserService) private browserService: IBrowserService,
                 maxShowAttemptThreshold: number = 10,
                 showAfterMinimumEventsCount: number = 100,
                 showBeforeMaximumEventsCount: number = 500
@@ -144,15 +150,12 @@ export class NewLanguageServerSurveyBanner implements IDismissableSurveyBanner {
     }
 
     private getRandom(): number {
-        const lastHexValue = this.appEnv.machineId.slice(-2);
+        const lastHexValue = this.appEnv.machineId.slice(-4);
         let num = parseInt(`0x${lastHexValue}`, 16);
 
         if (isNaN(num)) {
-            num = 0;
-            const buf: Buffer = crypto.randomBytes(4);
-            for (let i: number = 0 ; i < 4; i += 1) {
-                num = (num << 4) + buf.readUInt8(i);
-            }
+            const buf: Buffer = randomBytes(2);
+            num = (buf.readUInt8(0) << 8) + buf.readUInt8(1);
         }
 
         const maxValue: number = Math.pow(16, 4) - 1;

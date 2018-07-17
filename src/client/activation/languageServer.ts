@@ -90,11 +90,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.surveyBanner = new NewLanguageServerSurveyBanner(
             this.services.get<IApplicationShell>(IApplicationShell),
             this.services.get<IApplicationEnvironment>(IApplicationEnvironment),
-            this.services.get<IBrowserService>(IBrowserService),
             this.services.get<IPersistentStateFactory>(IPersistentStateFactory),
-            5,
-            2,
-            5);
+            this.services.get<IBrowserService>(IBrowserService));
 
         (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
     }
