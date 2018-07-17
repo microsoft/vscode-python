@@ -18,7 +18,7 @@ import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService, ILogger, IPersistentStateFactory } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
-import { ProposeNewLanguageServerBanner } from '../languageServices/proposeNewLanguageServerBanner';
+import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguageServerBanner';
 import * as logger from './../common/logger';
 
 const IS_WINDOWS = /^win/.test(process.platform);
@@ -151,7 +151,7 @@ export class JediProxy implements Disposable {
     private pidUsageFailures = { timer: new StopWatch(), counter: 0 };
     private lastCmdIdProcessed?: number;
     private lastCmdIdProcessedForPidUsage?: number;
-    private proposeNewLanguageServerPopup: ProposeNewLanguageServerBanner;
+    private proposeNewLanguageServerPopup: ProposeLanguageServerBanner;
 
     public constructor(private extensionRootDir: string, workspacePath: string, private serviceContainer: IServiceContainer) {
         this.workspacePath = workspacePath;
@@ -162,7 +162,7 @@ export class JediProxy implements Disposable {
         this.initialized = createDeferred<void>();
         this.startLanguageServer().then(() => this.initialized.resolve()).ignoreErrors();
 
-        this.proposeNewLanguageServerPopup = new ProposeNewLanguageServerBanner(
+        this.proposeNewLanguageServerPopup = new ProposeLanguageServerBanner(
             serviceContainer.get<IApplicationShell>(IApplicationShell),
             serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
             serviceContainer.get<IConfigurationService>(IConfigurationService));

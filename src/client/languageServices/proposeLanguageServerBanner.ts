@@ -10,9 +10,9 @@ import { IConfigurationService, IPersistentStateFactory } from '../common/types'
 import { getRandomBetween } from '../common/utils';
 
 // persistent state names, exported to make use of in testing
-export enum ProposeNewLSStateKeys {
-    ShowBanner = 'ShowProposeNewLanguageServerBanner',
-    ShowAttemptCount = 'ShowProposalBannerCount'
+export enum ProposeLSStateKeys {
+    ShowBanner = 'ProposeLSBanner',
+    ShowAttemptCount = 'ProposeLSBannerCount'
 }
 
 /*
@@ -23,7 +23,7 @@ and will show as soon as it is instructed to do so, if a random sample
 function enables the popup for this user.
 */
 
-export class ProposeNewLanguageServerBanner {
+export class ProposeLanguageServerBanner {
     private initialized?: boolean;
     private disabledInCurrentSession?: boolean;
     private maxShowAttempts: number;
@@ -61,7 +61,7 @@ export class ProposeNewLanguageServerBanner {
     }
 
     public get enabled(): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(ProposeNewLSStateKeys.ShowBanner, true).value;
+        return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
     }
 
     public async showBanner(): Promise<void> {
@@ -120,7 +120,7 @@ export class ProposeNewLanguageServerBanner {
     }
 
     public async disable(): Promise<void> {
-        await this.persistentState.createGlobalPersistentState<boolean>(ProposeNewLSStateKeys.ShowBanner, false).updateValue(false);
+        await this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, false).updateValue(false);
     }
 
     public async enableNewLanguageServer(): Promise<void> {
@@ -129,13 +129,13 @@ export class ProposeNewLanguageServerBanner {
     }
 
     private async incrementBannerLaunchCounter(): Promise<number> {
-        const state = this.persistentState.createGlobalPersistentState<number>(ProposeNewLSStateKeys.ShowAttemptCount, 0);
+        const state = this.persistentState.createGlobalPersistentState<number>(ProposeLSStateKeys.ShowAttemptCount, 0);
         await state.updateValue(state.value + 1);
         return state.value;
     }
 
     private async getBannerLaunchCount(): Promise<number> {
-        const state = this.persistentState.createGlobalPersistentState<number>(ProposeNewLSStateKeys.ShowAttemptCount, 0);
+        const state = this.persistentState.createGlobalPersistentState<number>(ProposeLSStateKeys.ShowAttemptCount, 0);
         return state.value;
     }
 

@@ -16,7 +16,7 @@ import { StopWatch } from '../common/stopWatch';
 import { IBrowserService, IConfigurationService, IExtensionContext,
     IOutputChannel, IPersistentStateFactory, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { NewLanguageServerSurveyBanner } from '../languageServices/newLanguageServerSurveyBanner';
+import { LanguageServerSurveyBanner } from '../languageServices/languageServerSurveyBanner';
 import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
     PYTHON_LANGUAGE_SERVER_ENABLED,
@@ -54,7 +54,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private excludedFiles: string[] = [];
     private typeshedPaths: string[] = [];
     private loadExtensionArgs: {} | undefined;
-    private surveyBanner: NewLanguageServerSurveyBanner;
+    private surveyBanner: LanguageServerSurveyBanner;
     // tslint:disable-next-line:no-unused-variable
     private progressReporting: ProgressReporting | undefined;
 
@@ -78,7 +78,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             async (args) => {
                 if (this.languageClient) {
                     await this.startupCompleted.promise;
-                    this.languageClient.onNotification.bind(this);
                     this.languageClient.sendRequest('python/loadExtension', args);
                 } else {
                     this.loadExtensionArgs = args;
@@ -86,7 +85,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             }
         ));
 
-        this.surveyBanner = new NewLanguageServerSurveyBanner(
+        this.surveyBanner = new LanguageServerSurveyBanner(
             this.services.get<IApplicationShell>(IApplicationShell),
             this.services.get<IPersistentStateFactory>(IPersistentStateFactory),
             this.services.get<IBrowserService>(IBrowserService));

@@ -9,7 +9,7 @@ import { IBrowserService, IPersistentStateFactory } from '../common/types';
 import { getRandomBetween } from '../common/utils';
 
 // persistent state names, exported to make use of in testing
-export enum NewLSSurveyStateKeys {
+export enum LSSurveyStateKeys {
     ShowBanner = 'ShowLSSurveyBanner',
     ShowAttemptCounter = 'LSSurveyShowAttempt',
     ShowAfterCompletionCount = 'LSSurveyShowCount'
@@ -21,7 +21,7 @@ a specific event occurs N times. Because we are asking for some valuable
 information, it will only request the feedback a specific number of times,
 then it will leave the customer alone, so as to not be annoying.
 */
-export class NewLanguageServerSurveyBanner {
+export class LanguageServerSurveyBanner {
     private disabledInCurrentSession: boolean = false;
     private minCompletionsBeforeShow: number;
     private maxCompletionsBeforeShow: number;
@@ -41,7 +41,7 @@ export class NewLanguageServerSurveyBanner {
     }
 
     public get enabled(): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(NewLSSurveyStateKeys.ShowBanner, true).value;
+        return this.persistentState.createGlobalPersistentState<boolean>(LSSurveyStateKeys.ShowBanner, true).value;
     }
 
     public async showBanner(): Promise<void> {
@@ -100,7 +100,7 @@ export class NewLanguageServerSurveyBanner {
     }
 
     public async disable(): Promise<void> {
-        await this.persistentState.createGlobalPersistentState<boolean>(NewLSSurveyStateKeys.ShowBanner, false).updateValue(false);
+        await this.persistentState.createGlobalPersistentState<boolean>(LSSurveyStateKeys.ShowBanner, false).updateValue(false);
     }
 
     public async launchSurvey(): Promise<void> {
@@ -109,18 +109,18 @@ export class NewLanguageServerSurveyBanner {
     }
 
     private async incrementPythonLanguageServiceLaunchCounter(): Promise<number> {
-        const state = this.persistentState.createGlobalPersistentState<number>(NewLSSurveyStateKeys.ShowAttemptCounter, 0);
+        const state = this.persistentState.createGlobalPersistentState<number>(LSSurveyStateKeys.ShowAttemptCounter, 0);
         await state.updateValue(state.value + 1);
         return state.value;
     }
 
     private async getPythonLSLaunchCounter(): Promise<number> {
-        const state = this.persistentState.createGlobalPersistentState<number>(NewLSSurveyStateKeys.ShowAttemptCounter, 0);
+        const state = this.persistentState.createGlobalPersistentState<number>(LSSurveyStateKeys.ShowAttemptCounter, 0);
         return state.value;
     }
 
     private async getPythonLSLaunchThresholdCounter(): Promise<number> {
-        const state = this.persistentState.createGlobalPersistentState<number | undefined>(NewLSSurveyStateKeys.ShowAfterCompletionCount, undefined);
+        const state = this.persistentState.createGlobalPersistentState<number | undefined>(LSSurveyStateKeys.ShowAfterCompletionCount, undefined);
         if (state.value === undefined) {
             await state.updateValue(getRandomBetween(this.minCompletionsBeforeShow, this.maxCompletionsBeforeShow));
         }
