@@ -26,9 +26,9 @@ import { registerTypes as platformRegisterTypes } from './common/platform/servic
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { ITerminalHelper } from './common/terminal/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IDismissableSurveyBanner,
-    IDisposableRegistry, IExtensionContext, ILogger, IMemento, IOutputChannel,
-    IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry,
+    IExtensionContext, ILogger, IMemento, IOutputChannel, IPersistentStateFactory,
+    IPythonExtensionSurveyBanner, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
 import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
@@ -159,7 +159,7 @@ export async function activate(context: ExtensionContext) {
         context.subscriptions.push(debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));
     });
 
-    serviceContainer.get<IDismissableSurveyBanner>(IDismissableSurveyBanner).initialize();
+    serviceContainer.get<IPythonExtensionSurveyBanner>(IPythonExtensionSurveyBanner).initialize();
     activationDeferred.resolve();
 }
 

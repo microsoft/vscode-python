@@ -268,8 +268,8 @@ export interface IBrowserService {
     launch(url: string): void;
 }
 
-export const IDismissableSurveyBanner = Symbol('IDismissableSurveyBanner');
-export interface IDismissableSurveyBanner {
+export const IPythonExtensionSurveyBanner = Symbol('IPythonExtensionSurveyBanner');
+export interface IPythonExtensionSurveyBanner {
     enabled: boolean;
     initialize(): void;
     showBanner(): Promise<void>;
@@ -277,3 +277,14 @@ export interface IDismissableSurveyBanner {
     disable(): Promise<void>;
     launchSurvey(): Promise<void>;
 }
+
+export const IPythonExtensionBanner = Symbol('IPythonExtensionBanner');
+export interface IPythonExtensionBanner {
+    enabled: boolean;
+    shownCount: Promise<number>;
+    optionLabels: string[];
+    showBanner(): Promise<void>;
+    optionTriggerCount(label: string): number;
+}
+export const BANNER_NAME_LS_SURVEY: string = 'LSSurveyBanner';
+export const BANNER_NAME_PROPOSE_LS: string = 'ProposeLS';

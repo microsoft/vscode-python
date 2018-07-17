@@ -13,10 +13,9 @@ import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
-import { IBrowserService, IConfigurationService, IExtensionContext,
-    IOutputChannel, IPersistentStateFactory, IPythonSettings } from '../common/types';
+import { BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext,
+    IOutputChannel, IPythonExtensionBanner, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { LanguageServerSurveyBanner } from '../languageServices/languageServerSurveyBanner';
 import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
     PYTHON_LANGUAGE_SERVER_ENABLED,
@@ -54,7 +53,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private excludedFiles: string[] = [];
     private typeshedPaths: string[] = [];
     private loadExtensionArgs: {} | undefined;
-    private surveyBanner: LanguageServerSurveyBanner;
+    private surveyBanner: IPythonExtensionBanner;
     // tslint:disable-next-line:no-unused-variable
     private progressReporting: ProgressReporting | undefined;
 
@@ -85,10 +84,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             }
         ));
 
-        this.surveyBanner = new LanguageServerSurveyBanner(
-            this.services.get<IApplicationShell>(IApplicationShell),
-            this.services.get<IPersistentStateFactory>(IPersistentStateFactory),
-            this.services.get<IBrowserService>(IBrowserService));
+        this.surveyBanner = services.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_LS_SURVEY);
 
         (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
     }

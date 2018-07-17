@@ -3,16 +3,24 @@
 
 'use strict';
 
+import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
-import { IConfigurationService, IPersistentStateFactory } from '../common/types';
+import { IConfigurationService, IPersistentStateFactory,
+    IPythonExtensionBanner } from '../common/types';
 import { getRandomBetween } from '../common/utils';
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
     ShowBanner = 'ProposeLSBanner',
     ShowAttemptCount = 'ProposeLSBannerCount'
+}
+
+enum ProposeLSLabelIndex {
+    Yes,
+    No,
+    Later
 }
 
 /*
@@ -22,19 +30,22 @@ choose to do so. It is meant to be shown only to a subset of our users,
 and will show as soon as it is instructed to do so, if a random sample
 function enables the popup for this user.
 */
-
-export class ProposeLanguageServerBanner {
+@injectable()
+export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     private initialized?: boolean;
     private disabledInCurrentSession?: boolean;
     private maxShowAttempts: number;
     private sampleSizePerHundred: number;
+    private bannerMessage: string = 'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
+    private bannerLabels: string[] = [ 'Try it now', 'No thanks', 'Remind me Later' ];
+    private bannerTriggerCounts: number[] = [0, 0, 0];
 
-    constructor(private appShell: IApplicationShell,
-                private persistentState: IPersistentStateFactory,
-                private configuration: IConfigurationService,
-                maxShowAttemptThreshold: number = 10,
-                sampleSizePerOneHundredUsers: number = 10
-            )
+    constructor(
+        @inject(IApplicationShell) private appShell: IApplicationShell,
+        @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
+        @inject(IConfigurationService) private configuration: IConfigurationService,
+        maxShowAttemptThreshold: number = 10,
+        sampleSizePerOneHundredUsers: number = 10)
     {
         this.maxShowAttempts = maxShowAttemptThreshold;
         this.sampleSizePerHundred = sampleSizePerOneHundredUsers;
@@ -60,6 +71,37 @@ export class ProposeLanguageServerBanner {
         }
     }
 
+    public get shownCount(): Promise<number> {
+        // tslint:disable-next-line:no-any
+        return this.getBannerLaunchCount().then((r: number) => r, (failReason: any) => -1);
+    }
+
+    public get optionLabels(): string[] {
+        return this.bannerLabels;
+    }
+
+    public optionTriggerCount(label: string): number {
+        let count: number = -1;
+        switch (label) {
+            case this.bannerLabels[ProposeLSLabelIndex.Yes]: {
+                count = this.optionTriggerCount[ProposeLSLabelIndex.Yes];
+                break;
+            }
+            case this.bannerLabels[ProposeLSLabelIndex.No]: {
+                count = this.optionTriggerCount[ProposeLSLabelIndex.No];
+                break;
+            }
+            case this.bannerLabels[ProposeLSLabelIndex.Later]: {
+                count = this.optionTriggerCount[ProposeLSLabelIndex.Later];
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+        return count;
+    }
+
     public get enabled(): boolean {
         return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
     }
@@ -75,23 +117,21 @@ export class ProposeLanguageServerBanner {
             return;
         }
 
-        const bannerMessage: string = 'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
-        const yes: string = 'Try it now';
-        const no: string = 'No thanks';
-        const later: string = 'Remind me Later';
-
-        const response = await this.appShell.showInformationMessage(bannerMessage, yes, no, later);
+        const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
-            case yes: {
+            case this.bannerLabels[ProposeLSLabelIndex.Yes]: {
+                this.bannerTriggerCounts[ProposeLSLabelIndex.Yes] += 1;
                 await this.enableNewLanguageServer();
                 await this.disable();
                 break;
             }
-            case no: {
+            case this.bannerLabels[ProposeLSLabelIndex.No]: {
+                this.bannerTriggerCounts[ProposeLSLabelIndex.No] += 1;
                 await this.disable();
                 break;
             }
-            case later: {
+            case this.bannerLabels[ProposeLSLabelIndex.Later]: {
+                this.bannerTriggerCounts[ProposeLSLabelIndex.Later] += 1;
                 this.disabledInCurrentSession = true;
                 break;
             }
@@ -138,5 +178,4 @@ export class ProposeLanguageServerBanner {
         const state = this.persistentState.createGlobalPersistentState<number>(ProposeLSStateKeys.ShowAttemptCount, 0);
         return state.value;
     }
-
 }

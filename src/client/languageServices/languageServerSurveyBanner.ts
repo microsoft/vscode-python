@@ -3,9 +3,11 @@
 
 'use strict';
 
+import { inject, injectable } from 'inversify';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
-import { IBrowserService, IPersistentStateFactory } from '../common/types';
+import { IBrowserService, IPersistentStateFactory,
+    IPythonExtensionBanner } from '../common/types';
 import { getRandomBetween } from '../common/utils';
 
 // persistent state names, exported to make use of in testing
@@ -15,29 +17,64 @@ export enum LSSurveyStateKeys {
     ShowAfterCompletionCount = 'LSSurveyShowCount'
 }
 
+enum LSSurveyLabelIndex {
+    Yes,
+    No
+}
+
 /*
 This class represents a popup that will ask our users for some feedback after
 a specific event occurs N times. Because we are asking for some valuable
 information, it will only request the feedback a specific number of times,
 then it will leave the customer alone, so as to not be annoying.
 */
-export class LanguageServerSurveyBanner {
+@injectable()
+export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     private disabledInCurrentSession: boolean = false;
     private minCompletionsBeforeShow: number;
     private maxCompletionsBeforeShow: number;
     private maxShowAttempts: number;
+    private bannerMessage: string = 'Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?';
+    private bannerLabels: string [] = [ 'Yes, take survey now', 'No, thanks'];
+    private labelTriggerCount: number[] = [0, 0];
 
-    constructor(private appShell: IApplicationShell,
-                private persistentState: IPersistentStateFactory,
-                private browserService: IBrowserService,
-                maxShowAttemptThreshold: number = 10,    // tslint:disable-next-line:no-empty
-                showAfterMinimumEventsCount: number = 100,
-                showBeforeMaximumEventsCount: number = 500
-            )
+    constructor(
+        @inject(IApplicationShell) private appShell: IApplicationShell,
+        @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
+        @inject(IBrowserService) private browserService: IBrowserService,
+        maxShowAttemptThreshold: number = 10,
+        showAfterMinimumEventsCount: number = 100,
+        showBeforeMaximumEventsCount: number = 500)
     {
         this.minCompletionsBeforeShow = showAfterMinimumEventsCount;
         this.maxCompletionsBeforeShow = showBeforeMaximumEventsCount;
         this.maxShowAttempts = maxShowAttemptThreshold;
+    }
+
+    public get optionLabels(): string[] {
+        return this.bannerLabels;
+    }
+
+    public get shownCount(): Promise<number> {
+        return this.getPythonLSLaunchCounter();
+    }
+
+    public optionTriggerCount(label: string): number {
+        let count: number = -1;
+        switch (label) {
+            case this.bannerLabels[LSSurveyLabelIndex.Yes]: {
+                count = this.labelTriggerCount[LSSurveyLabelIndex.Yes];
+                break;
+            }
+            case this.bannerLabels[LSSurveyLabelIndex.No]: {
+                count = this.labelTriggerCount[LSSurveyLabelIndex.No];
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+        return count;
     }
 
     public get enabled(): boolean {
@@ -55,18 +92,17 @@ export class LanguageServerSurveyBanner {
             return;
         }
 
-        const bannerMessage: string = 'Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?';
-        const yes = 'Yes, take survey now';
-        const no = 'No, thanks';
-        const response = await this.appShell.showInformationMessage(bannerMessage, yes, no);
+        const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
-            case yes:
+            case this.bannerLabels[LSSurveyLabelIndex.Yes]:
                 {
+                    this.labelTriggerCount[LSSurveyLabelIndex.Yes] += 1;
                     await this.launchSurvey();
                     await this.disable();
                     break;
                 }
-            case no: {
+            case this.bannerLabels[LSSurveyLabelIndex.No]: {
+                this.labelTriggerCount[LSSurveyLabelIndex.No] += 1;
                 await this.disable();
                 break;
             }

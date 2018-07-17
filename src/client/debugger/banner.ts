@@ -8,7 +8,8 @@ import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IDebugService } from '../common/application/types';
 import '../common/extensions';
-import { IBrowserService, IDismissableSurveyBanner, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../common/types';
+import { IBrowserService, IDisposableRegistry, ILogger,
+    IPersistentStateFactory, IPythonExtensionSurveyBanner } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ExperimentalDebuggerType } from './Common/constants';
 
@@ -19,7 +20,7 @@ export enum PersistentStateKeys {
 }
 
 @injectable()
-export class ExperimentalDebuggerBanner implements IDismissableSurveyBanner {
+export class ExperimentalDebuggerBanner implements IPythonExtensionSurveyBanner {
     private initialized?: boolean;
     private disabledInCurrentSession?: boolean;
     public get enabled(): boolean {
