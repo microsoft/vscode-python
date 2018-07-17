@@ -9,6 +9,7 @@ import { IArgumentsHelper, IArgumentsService, TestFilter } from '../../types';
 
 const OptionsWithArguments = ['-c', '-k', '-m', '-o', '-p', '-r', '-W',
     '--assert', '--basetemp', '--capture', '--color', '--confcutdir',
+    '--cov', '--cov-config', '--cov-fail-under', '--cov-report',
     '--deselect', '--dist', '--doctest-glob',
     '--doctest-report', '--durations', '--ignore', '--import-mode',
     '--junit-prefix', '--junit-xml', '--last-failed-no-failures',
@@ -21,12 +22,14 @@ const OptionsWithArguments = ['-c', '-k', '-m', '-o', '-p', '-r', '-W',
     '--numprocesses', '--rsyncdir', '--rsyncignore', '--tx'];
 
 const OptionsWithoutArguments = ['--cache-clear', '--cache-show', '--collect-in-virtualenv',
-    '--collect-only', '--continue-on-collection-errors', '--debug', '--disable-pytest-warnings',
+    '--collect-only', '--continue-on-collection-errors',
+    '--cov-append', '--cov-branch', '--debug', '--disable-pytest-warnings',
     '--disable-warnings', '--doctest-continue-on-failure', '--doctest-ignore-import-errors',
     '--doctest-modules', '--exitfirst', '--failed-first', '--ff', '--fixtures',
     '--fixtures-per-test', '--force-sugar', '--full-trace', '--funcargs', '--help',
     '--keep-duplicates', '--last-failed', '--lf', '--markers', '--new-first', '--nf',
-    '--no-print-logs', '--noconftest', '--old-summary', '--pdb', '--pyargs',
+    '--no-cov', '--no-cov-on-fail',
+    '--no-print-logs', '--noconftest', '--old-summary', '--pdb', '--pyargs', '-PyTest, Unittest-pyargs',
     '--quiet', '--runxfail', '--setup-only', '--setup-plan', '--setup-show', '--showlocals',
     '--strict', '--trace-config', '--verbose', '--version', '-h', '-l', '-q', '-s', '-v', '-x',
     '--boxed', '--forked', '--looponfail', '--tx', '-d'];
