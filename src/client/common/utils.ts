@@ -113,7 +113,7 @@ export function arePathsSame(path1: string, path2: string) {
     }
 }
 
-export function getRandom(): number {
+function getRandom(): number {
     let num: number = 0;
 
     const buf: Buffer = crypto.randomBytes(2);
