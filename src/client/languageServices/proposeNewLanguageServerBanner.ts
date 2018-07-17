@@ -3,22 +3,16 @@
 
 'use strict';
 
-import * as crypto from 'crypto';
-import { inject, injectable } from 'inversify';
-import { Uri, window } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { ConfigurationTarget } from 'vscode';
+import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
-import { IConfigurationService, IDismissableSurveyBanner, IPersistentStateFactory } from '../common/types';
+import { IConfigurationService, IPersistentStateFactory } from '../common/types';
+import { getRandomBetween } from '../common/utils';
 
 // persistent state names, exported to make use of in testing
 export enum ProposeNewLSStateKeys {
     ShowBanner = 'ShowProposeNewLanguageServerBanner',
     ShowAttemptCount = 'ShowProposalBannerCount'
-}
-
-interface IPopupButtonCommands {
-    labels: string[];
-    action(label: string);
 }
 
 /*
@@ -29,31 +23,22 @@ and will show as soon as it is instructed to do so, if a random sample
 function enables the popup for this user.
 */
 
-@injectable()
-export class ProposeNewLanguageServerBanner implements IDismissableSurveyBanner {
+export class ProposeNewLanguageServerBanner {
     private initialized?: boolean;
     private disabledInCurrentSession?: boolean;
-    private bannerMessage: string = 'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
-
-    private bannerOptionLabels: string[] = [
-        'Try it now',
-        'No thanks',
-        'Remind me Later'
-    ];
-
     private maxShowAttempts: number;
     private sampleSizePerHundred: number;
 
-    constructor(@inject(IApplicationShell) private appShell: IApplicationShell,
-                @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
-                @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-                @inject(IConfigurationService) private configuration: IConfigurationService,
+    constructor(private appShell: IApplicationShell,
+                private persistentState: IPersistentStateFactory,
+                private configuration: IConfigurationService,
                 maxShowAttemptThreshold: number = 10,
                 sampleSizePerOneHundredUsers: number = 10
             )
     {
         this.maxShowAttempts = maxShowAttemptThreshold;
         this.sampleSizePerHundred = sampleSizePerOneHundredUsers;
+        this.initialize();
     }
 
     public initialize() {
@@ -68,22 +53,14 @@ export class ProposeNewLanguageServerBanner implements IDismissableSurveyBanner 
         }
 
         // we only want 10% of folks that use Jedi to see this survey.
-        const randomSample: number = this.getRandomBetween(0, 100);
-        if (randomSample > this.sampleSizePerHundred) {
+        const randomSample: number = getRandomBetween(0, 100);
+        if (randomSample === this.sampleSizePerHundred) {
             this.disable().ignoreErrors();
             return;
         }
     }
 
     public get enabled(): boolean {
-        if (process.env!.USER!.indexOf('dekeeler') === 0) {
-            // tslint:disable-next-line:no-console
-            console.log('DEREK YOU NEED TO REMOVE YOURSELF FROM LanguageServerBanner.enabled');
-            if (process.env.TF_BUILD || process.env.TRAVIS_CI) {
-                throw new Error('Derek you need to turn off your enabled tweak. I just knew you would forget.');
-            }
-            return true;
-        }
         return this.persistentState.createGlobalPersistentState<boolean>(ProposeNewLSStateKeys.ShowBanner, true).value;
     }
 
@@ -98,17 +75,23 @@ export class ProposeNewLanguageServerBanner implements IDismissableSurveyBanner 
             return;
         }
 
-        const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerOptionLabels);
-        switch (response) {
-            case this.bannerOptionLabels[0]: {
+        const bannerMessage: string = 'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
+        const yes: string = 'Try it now';
+        const no: string = 'No thanks';
+        const later: string = 'Remind me Later';
 
-                break;
-            }
-            case this.bannerOptionLabels[1]: {
+        const response = await this.appShell.showInformationMessage(bannerMessage, yes, no, later);
+        switch (response) {
+            case yes: {
+                await this.enableNewLanguageServer();
                 await this.disable();
                 break;
             }
-            case this.bannerOptionLabels[2]: {
+            case no: {
+                await this.disable();
+                break;
+            }
+            case later: {
                 this.disabledInCurrentSession = true;
                 break;
             }
@@ -120,15 +103,6 @@ export class ProposeNewLanguageServerBanner implements IDismissableSurveyBanner 
     }
 
     public async shouldShowBanner(launchCount: number = -1): Promise<boolean> {
-        if (process.env!.USER!.indexOf('dekeeler') === 0) {
-            // tslint:disable-next-line:no-console
-            console.log('DEREK YOU NEED TO REMOVE YOURSELF FROM LanguageServerBanner.shouldShowBanner');
-            if (process.env.TF_BUILD || process.env.TRAVIS_CI) {
-                throw new Error('Derek you need to turn off your enabled tweak. I just knew you would forget.');
-            }
-            return true;
-        }
-
         if (!this.enabled || this.disabledInCurrentSession) {
             return false;
         }
@@ -142,31 +116,22 @@ export class ProposeNewLanguageServerBanner implements IDismissableSurveyBanner 
             await this.disable();
         }
 
-        return launchCount >= this.maxShowAttempts;
+        return launchCount < this.maxShowAttempts;
     }
 
     public async disable(): Promise<void> {
         await this.persistentState.createGlobalPersistentState<boolean>(ProposeNewLSStateKeys.ShowBanner, false).updateValue(false);
     }
 
-    // tslint:disable-next-line:no-empty
-    public async launchSurvey(): Promise<void> {
-    }
-
     public async enableNewLanguageServer(): Promise<void> {
         // set the extension setting useJediLanguageServer: false
-        await this.configuration.updateSettingAsync('python.jediEnabled', 'false', this.settingsUri());
-        // reload the current window, or perhaps just warn the user to do so?
-    }
-
-    private settingsUri(): Uri | undefined {
-        return window.activeTextEditor ? window.activeTextEditor.document.uri : undefined;
+        await this.configuration.updateSettingAsync('jediEnabled', false, undefined, ConfigurationTarget.Global);
     }
 
     private async incrementBannerLaunchCounter(): Promise<number> {
         const state = this.persistentState.createGlobalPersistentState<number>(ProposeNewLSStateKeys.ShowAttemptCount, 0);
         await state.updateValue(state.value + 1);
-        return state.value + 1;
+        return state.value;
     }
 
     private async getBannerLaunchCount(): Promise<number> {
@@ -174,24 +139,4 @@ export class ProposeNewLanguageServerBanner implements IDismissableSurveyBanner 
         return state.value;
     }
 
-    private getRandom(): number {
-        const lastHexValue = this.appEnv.machineId.slice(-2);
-        let num = parseInt(`0x${lastHexValue}`, 16);
-
-        if (isNaN(num)) {
-            num = 0;
-            const buf: Buffer = crypto.randomBytes(4);
-            for (let i: number = 0 ; i < 4; i += 1) {
-                num = (num * 16) + buf.readUInt8(i);
-            }
-        }
-
-        const maxValue: number = Math.pow(16, 4) - 1;
-        return (num / maxValue);
-    }
-
-    private getRandomBetween(min: number = 0, max: number = 10): number {
-        const randomVal: number = this.getRandom();
-        return min + (randomVal * (max - min));
-    }
 }

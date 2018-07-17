@@ -6,8 +6,9 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as pidusage from 'pidusage';
-import { CancellationToken, CancellationTokenSource, CompletionItemKind, Disposable, SymbolKind, Uri } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { CancellationToken, CancellationTokenSource, CompletionItemKind,
+    Disposable, SymbolKind, Uri } from 'vscode';
+import { IApplicationShell } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
 import { debounce, swallowExceptions } from '../common/decorators';
 import '../common/extensions';
@@ -163,7 +164,6 @@ export class JediProxy implements Disposable {
 
         this.proposeNewLanguageServerPopup = new ProposeNewLanguageServerBanner(
             serviceContainer.get<IApplicationShell>(IApplicationShell),
-            serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment),
             serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
             serviceContainer.get<IConfigurationService>(IConfigurationService));
 
@@ -301,7 +301,7 @@ export class JediProxy implements Disposable {
     private async startLanguageServer(): Promise<void> {
         const newAutoComletePaths = await this.buildAutoCompletePaths();
         this.additionalAutoCompletePaths = newAutoComletePaths;
-        this.proposeNewLanguageServerPopup.showBanner();
+        await this.proposeNewLanguageServerPopup.showBanner();
         return this.restartLanguageServer();
     }
     private restartLanguageServer(): Promise<void> {

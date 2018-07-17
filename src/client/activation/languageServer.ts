@@ -7,8 +7,7 @@ import { CancellationToken, OutputChannel, Position as VPosition,
      TextDocument, Uri } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions,
     ProvideCompletionItemsSignature, ServerOptions } from 'vscode-languageclient';
-import { IApplicationEnvironment, IApplicationShell,
-    ICommandManager, IWorkspaceService } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
@@ -89,7 +88,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
         this.surveyBanner = new NewLanguageServerSurveyBanner(
             this.services.get<IApplicationShell>(IApplicationShell),
-            this.services.get<IApplicationEnvironment>(IApplicationEnvironment),
             this.services.get<IPersistentStateFactory>(IPersistentStateFactory),
             this.services.get<IBrowserService>(IBrowserService));
 
@@ -162,7 +160,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         if (this.loadExtensionArgs) {
             this.languageClient!.sendRequest('python/loadExtension', this.loadExtensionArgs);
         }
-        //await this.surveyBanner.onUpdateIncidentCount();
 
         this.startupCompleted.resolve();
     }
@@ -263,7 +260,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             middleware: {
                 provideCompletionItem: (document: TextDocument, position: VPosition, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
                     if (this.surveyBanner) {
-                        this.surveyBanner.onUpdateIncidentCount();
+                        this.surveyBanner.showBanner().ignoreErrors();
                     }
                     return next(document, position, token);
                 }

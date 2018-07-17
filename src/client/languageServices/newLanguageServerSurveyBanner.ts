@@ -3,17 +3,16 @@
 
 'use strict';
 
-import { randomBytes } from 'crypto';
-import { inject, injectable } from 'inversify';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import { IBrowserService, IPersistentStateFactory } from '../common/types';
+import { getRandomBetween } from '../common/utils';
 
 // persistent state names, exported to make use of in testing
 export enum NewLSSurveyStateKeys {
     ShowBanner = 'ShowLSSurveyBanner',
-    ShowAttemptCounter = 'LSSurveyLaunchAttempts',
-    ShowAfterCompletionCount = 'LSSurveyLaunchAfterCompletionCount'
+    ShowAttemptCounter = 'LSSurveyShowAttempt',
+    ShowAfterCompletionCount = 'LSSurveyShowCount'
 }
 
 /*
@@ -22,20 +21,16 @@ a specific event occurs N times. Because we are asking for some valuable
 information, it will only request the feedback a specific number of times,
 then it will leave the customer alone, so as to not be annoying.
 */
-@injectable()
 export class NewLanguageServerSurveyBanner {
-    private initialized?: boolean;
     private disabledInCurrentSession: boolean = false;
-    private bannerMessage: string = 'Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?';
     private minCompletionsBeforeShow: number;
     private maxCompletionsBeforeShow: number;
     private maxShowAttempts: number;
 
-    constructor(@inject(IApplicationShell) private appShell: IApplicationShell,
-                @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
-                @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-                @inject(IBrowserService) private browserService: IBrowserService,
-                maxShowAttemptThreshold: number = 10,
+    constructor(private appShell: IApplicationShell,
+                private persistentState: IPersistentStateFactory,
+                private browserService: IBrowserService,
+                maxShowAttemptThreshold: number = 10,    // tslint:disable-next-line:no-empty
                 showAfterMinimumEventsCount: number = 100,
                 showBeforeMaximumEventsCount: number = 500
             )
@@ -45,26 +40,25 @@ export class NewLanguageServerSurveyBanner {
         this.maxShowAttempts = maxShowAttemptThreshold;
     }
 
-    public initialize() {
-        if (this.initialized) {
-            return;
-        }
-        this.initialized = true;
-
-        // Don't even bother adding handlers if banner has been turned off.
-        if (!this.enabled) {
-            return;
-        }
-    }
-
     public get enabled(): boolean {
         return this.persistentState.createGlobalPersistentState<boolean>(NewLSSurveyStateKeys.ShowBanner, true).value;
     }
 
     public async showBanner(): Promise<void> {
+        if (!this.enabled || this.disabledInCurrentSession) {
+            return;
+        }
+
+        const launchCounter: number = await this.incrementPythonLanguageServiceLaunchCounter();
+        const show = await this.shouldShowBanner(launchCounter);
+        if (!show) {
+            return;
+        }
+
+        const bannerMessage: string = 'Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?';
         const yes = 'Yes, take survey now';
         const no = 'No, thanks';
-        const response = await this.appShell.showInformationMessage(this.bannerMessage, yes, no);
+        const response = await this.appShell.showInformationMessage(bannerMessage, yes, no);
         switch (response) {
             case yes:
                 {
@@ -114,56 +108,22 @@ export class NewLanguageServerSurveyBanner {
         this.browserService.launch(`https://www.research.net/r/LJZV9BZ?n=${launchCounter}`);
     }
 
-    public async onUpdateIncidentCount(): Promise<void> {
-        if (!this.enabled || this.disabledInCurrentSession) {
-            return;
-        }
-
-        await this.incrementPythonLanguageServiceLaunchCounter();
-        const show = await this.shouldShowBanner();
-        if (!show) {
-            return;
-        }
-
-        await this.showBanner();
-    }
-
-    public async onInitializedPythonLanguageService(): Promise<void> {
-        return this.onUpdateIncidentCount();
-    }
-
-    private async incrementPythonLanguageServiceLaunchCounter(): Promise<void> {
+    private async incrementPythonLanguageServiceLaunchCounter(): Promise<number> {
         const state = this.persistentState.createGlobalPersistentState<number>(NewLSSurveyStateKeys.ShowAttemptCounter, 0);
         await state.updateValue(state.value + 1);
+        return state.value;
     }
+
     private async getPythonLSLaunchCounter(): Promise<number> {
         const state = this.persistentState.createGlobalPersistentState<number>(NewLSSurveyStateKeys.ShowAttemptCounter, 0);
         return state.value;
     }
-    private async getPythonLSLaunchThresholdCounter(): Promise<number> {
 
+    private async getPythonLSLaunchThresholdCounter(): Promise<number> {
         const state = this.persistentState.createGlobalPersistentState<number | undefined>(NewLSSurveyStateKeys.ShowAfterCompletionCount, undefined);
         if (state.value === undefined) {
-            await state.updateValue(this.getRandomBetween(this.minCompletionsBeforeShow, this.maxCompletionsBeforeShow));
+            await state.updateValue(getRandomBetween(this.minCompletionsBeforeShow, this.maxCompletionsBeforeShow));
         }
         return state.value!;
-    }
-
-    private getRandom(): number {
-        const lastHexValue = this.appEnv.machineId.slice(-4);
-        let num = parseInt(`0x${lastHexValue}`, 16);
-
-        if (isNaN(num)) {
-            const buf: Buffer = randomBytes(2);
-            num = (buf.readUInt8(0) << 8) + buf.readUInt8(1);
-        }
-
-        const maxValue: number = Math.pow(16, 4) - 1;
-        return (num / maxValue);
-    }
-
-    private getRandomBetween(min: number = 0, max: number = 10): number {
-        const randomVal: number = this.getRandom();
-        return min + (randomVal * (max - min));
     }
 }
