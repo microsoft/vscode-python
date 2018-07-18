@@ -9,20 +9,27 @@ import {
     language_server_win_x86_sha512
 } from './languageServerHashes';
 
+export enum PlatformName {
+    Windows32Bit = 'win-x86',
+    Windows64Bit = 'win-x64',
+    Mac64Bit = 'osx-x64',
+    Linux64Bit = 'linux-x64'
+}
+
 export class PlatformData {
     constructor(private platform: IPlatformService, fs: IFileSystem) { }
-    public async getPlatformName(): Promise<string> {
+    public async getPlatformName(): Promise<PlatformName> {
         if (this.platform.isWindows) {
-            return this.platform.is64bit ? 'win-x64' : 'win-x86';
+            return this.platform.is64bit ? PlatformName.Windows64Bit : PlatformName.Windows32Bit;
         }
         if (this.platform.isMac) {
-            return 'osx-x64';
+            return PlatformName.Mac64Bit;
         }
         if (this.platform.isLinux) {
             if (!this.platform.is64bit) {
                 throw new Error('Microsoft Python Language Server does not support 32-bit Linux.');
             }
-            return 'linux-x64';
+            return PlatformName.Linux64Bit;
         }
         throw new Error('Unknown OS platform.');
     }

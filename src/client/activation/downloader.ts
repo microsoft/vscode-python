@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import * as fileSystem from 'fs';
 import * as path from 'path';
 import * as request from 'request';
@@ -11,7 +13,7 @@ import { createDeferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { PlatformData } from './platformData';
+import { PlatformData, PlatformName } from './platformData';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const StreamZip = require('node-stream-zip');
@@ -20,6 +22,13 @@ const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-language-se
 const downloadBaseFileName = 'Python-Language-Server';
 const downloadVersion = '0.1.0';
 const downloadFileExtension = '.nupkg';
+
+const DownloadLinks = {
+    [PlatformName.Windows32Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Windows32Bit}.${downloadVersion}${downloadFileExtension}`,
+    [PlatformName.Windows64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Windows64Bit}.${downloadVersion}${downloadFileExtension}`,
+    [PlatformName.Linux64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Linux64Bit}.${downloadVersion}${downloadFileExtension}`,
+    [PlatformName.Mac64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Mac64Bit}.${downloadVersion}${downloadFileExtension}`
+};
 
 export class LanguageServerDownloader {
     private readonly output: OutputChannel;
@@ -34,13 +43,17 @@ export class LanguageServerDownloader {
         this.platformData = new PlatformData(this.platform, this.fs);
     }
 
-    public async downloadLanguageServer(context: IExtensionContext): Promise<void> {
+    public async getDownloadUri() {
         const platformString = await this.platformData.getPlatformName();
-        const enginePackageFileName = `${downloadBaseFileName}-${platformString}.${downloadVersion}${downloadFileExtension}`;
+        return DownloadLinks[platformString];
+    }
+
+    public async downloadLanguageServer(context: IExtensionContext): Promise<void> {
+        const downloadUri = await this.getDownloadUri();
 
         let localTempFilePath = '';
         try {
-            localTempFilePath = await this.downloadFile(downloadUriPrefix, enginePackageFileName, 'Downloading Microsoft Python Language Server... ');
+            localTempFilePath = await this.downloadFile(downloadUri, 'Downloading Microsoft Python Language Server... ');
             await this.unpackArchive(context.extensionPath, localTempFilePath);
         } catch (err) {
             this.output.appendLine('failed.');
@@ -53,8 +66,7 @@ export class LanguageServerDownloader {
         }
     }
 
-    private async downloadFile(location: string, fileName: string, title: string): Promise<string> {
-        const uri = `${location}/${fileName}`;
+    private async downloadFile(uri: string, title: string): Promise<string> {
         this.output.append(`Downloading ${uri}... `);
         const tempFile = await this.fs.createTemporaryFile(downloadFileExtension);
 
