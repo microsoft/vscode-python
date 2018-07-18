@@ -3,7 +3,8 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationTarget, Uri } from 'vscode';
+import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
+import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { CondaInstaller } from '../../client/common/installer/condaInstaller';
@@ -102,6 +103,12 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
             ioc.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
             ioc.serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
+
+            const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+            ioc.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
+            const http = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+            http.setup(h => h.get(TypeMoq.It.isValue('proxy'), TypeMoq.It.isAny())).returns(() => '');
+            workspaceService.setup(w => w.getConfiguration(TypeMoq.It.isValue('http'))).returns(() => http.object);
 
             ioc.registerMockProcessTypes();
             ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);

@@ -10,11 +10,10 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { PythonSettings } from '../configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { noop } from '../core.utils';
 import { ITerminalServiceFactory } from '../terminal/types';
-import { ExecutionInfo, IOutputChannel } from '../types';
+import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
 
 @injectable()
 export abstract class ModuleInstaller {
@@ -23,9 +22,12 @@ export abstract class ModuleInstaller {
         const executionInfo = await this.getExecutionInfo(name, resource);
         const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(resource);
 
+        const executionInfoArgs = await this.processInstallArgs(executionInfo.args, resource);
         if (executionInfo.moduleName) {
-            const settings = PythonSettings.getInstance(resource);
-            const args = ['-m', 'pip'].concat(executionInfo.args);
+            const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+            const settings = configService.getSettings(resource);
+            const args = ['-m', executionInfo.moduleName].concat(executionInfoArgs);
+
             const pythonPath = settings.pythonPath;
 
             const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -43,12 +45,28 @@ export abstract class ModuleInstaller {
                 await terminalService.sendCommand(pythonPath, args.concat(['--user']));
             }
         } else {
-            await terminalService.sendCommand(executionInfo.execPath!, executionInfo.args);
+            await terminalService.sendCommand(executionInfo.execPath!, executionInfoArgs);
         }
     }
     public abstract isSupported(resource?: vscode.Uri): Promise<boolean>;
     protected abstract getExecutionInfo(moduleName: string, resource?: vscode.Uri): Promise<ExecutionInfo>;
+    private async processInstallArgs(args: string[], resource?: vscode.Uri): Promise<string[]> {
+        const indexOfPylint = args.findIndex(arg => arg.toUpperCase() === 'PYLINT');
+        if (indexOfPylint === -1) {
+            return args;
+        }
 
+        // If installing pylint on python 2.x, then use pylint~=1.9.0
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
+        if (currentInterpreter && currentInterpreter.version_info && currentInterpreter.version_info[0] === 2) {
+            const newArgs = [...args];
+            // This command could be sent to the terminal, hence '<' needs to be escaped for UNIX.
+            newArgs[indexOfPylint] = '"pylint<2.0.0"';
+            return newArgs;
+        }
+        return args;
+    }
     private async isPathWritableAsync(directoryPath: string): Promise<boolean> {
         const filePath = `${directoryPath}${path.sep}___vscpTest___`;
         return new Promise<boolean>(resolve => {
