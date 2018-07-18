@@ -32,7 +32,7 @@ function enables the popup for this user.
 @injectable()
 export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     private initialized?: boolean;
-    private disabledInCurrentSession?: boolean;
+    private disabledInCurrentSession: boolean = false;
     private sampleSizePerHundred: number;
     private bannerMessage: string = 'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
     private bannerLabels: string[] = [ 'Try it now', 'No thanks', 'Remind me Later' ];
@@ -60,7 +60,7 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
 
         // we only want 10% of folks that use Jedi to see this survey.
         const randomSample: number = getRandomBetween(0, 100);
-        if (randomSample === this.sampleSizePerHundred) {
+        if (randomSample >= this.sampleSizePerHundred) {
             this.disable().ignoreErrors();
             return;
         }
@@ -111,7 +111,7 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     }
 
     public async shouldShowBanner(): Promise<boolean> {
-        return (this.enabled && !this.disabledInCurrentSession);
+        return Promise.resolve(this.enabled && !this.disabledInCurrentSession);
     }
 
     public async disable(): Promise<void> {
