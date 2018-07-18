@@ -33,7 +33,7 @@
 - [ ] `Run Selection/Line in Python Terminal`
   - [ ] Right-click
   - [ ] Command
-  - [ ] `Ctrl-Enter`
+  - [ ] `Shift+Enter`
 
 #### Virtual environments
 
