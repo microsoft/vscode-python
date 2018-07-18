@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, OutputChannel, Position as VPosition,
+import { CancellationToken, CompletionContext, OutputChannel, Position,
      TextDocument, Uri } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions,
     ProvideCompletionItemsSignature, ServerOptions } from 'vscode-languageclient';
@@ -253,11 +253,11 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 traceLogging
             },
             middleware: {
-                provideCompletionItem: (document: TextDocument, position: VPosition, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
+                provideCompletionItem: (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
                     if (this.surveyBanner) {
                         this.surveyBanner.showBanner().ignoreErrors();
                     }
-                    return next(document, position, token);
+                    return next(document, position, context, token);
                 }
             }
         };
