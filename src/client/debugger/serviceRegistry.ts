@@ -9,13 +9,10 @@ import { FileSystem } from '../common/platform/fileSystem';
 import { PlatformService } from '../common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { CurrentProcess } from '../common/process/currentProcess';
-import { BANNER_NAME_LS_SURVEY, BANNER_NAME_PROPOSE_LS, ICurrentProcess,
-    IExperimentalDebuggerBanner, IPythonExtensionBanner, ISocketServer } from '../common/types';
+import { ICurrentProcess, IExperimentalDebuggerBanner, ISocketServer } from '../common/types';
 import { ServiceContainer } from '../ioc/container';
 import { ServiceManager } from '../ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
-import { LanguageServerSurveyBanner } from '../languageServices/languageServerSurveyBanner';
-import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguageServerBanner';
 import { ExperimentalDebuggerBanner } from './banner';
 import { DebugStreamProvider } from './Common/debugStreamProvider';
 import { ProtocolLogger } from './Common/protocolLogger';
@@ -45,6 +42,4 @@ function registerDebuggerTypes(serviceManager: IServiceManager) {
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExperimentalDebuggerBanner>(IExperimentalDebuggerBanner, ExperimentalDebuggerBanner);
-    serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, LanguageServerSurveyBanner, BANNER_NAME_LS_SURVEY);
-    serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, ProposeLanguageServerBanner, BANNER_NAME_PROPOSE_LS);
 }
