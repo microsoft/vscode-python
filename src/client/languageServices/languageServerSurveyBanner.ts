@@ -24,16 +24,14 @@ enum LSSurveyLabelIndex {
 
 /*
 This class represents a popup that will ask our users for some feedback after
-a specific event occurs N times. Because we are asking for some valuable
-information, it will only request the feedback a specific number of times,
-then it will leave the customer alone, so as to not be annoying.
+a specific event occurs N times.
 */
 @injectable()
 export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     private disabledInCurrentSession: boolean = false;
     private minCompletionsBeforeShow: number;
     private maxCompletionsBeforeShow: number;
-    private maxShowAttempts: number;
+    private isInitialized: boolean = false;
     private bannerMessage: string = 'Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?';
     private bannerLabels: string [] = [ 'Yes, take survey now', 'No, thanks'];
 
@@ -41,13 +39,23 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
-        maxShowAttemptThreshold: number = 10,
         showAfterMinimumEventsCount: number = 100,
         showBeforeMaximumEventsCount: number = 500)
     {
         this.minCompletionsBeforeShow = showAfterMinimumEventsCount;
         this.maxCompletionsBeforeShow = showBeforeMaximumEventsCount;
-        this.maxShowAttempts = maxShowAttemptThreshold;
+        this.initialize();
+    }
+
+    public initialize(): void {
+        if (this.isInitialized) {
+            return;
+        }
+        this.isInitialized = true;
+
+        if (this.minCompletionsBeforeShow >= this.maxCompletionsBeforeShow) {
+            this.disable().ignoreErrors();
+        }
     }
 
     public get optionLabels(): string[] {
@@ -101,15 +109,6 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
             launchCounter = await this.getPythonLSLaunchCounter();
         }
         const threshold: number = await this.getPythonLSLaunchThresholdCounter();
-
-        if (launchCounter >= threshold) {
-            // now see how many times we've already attempted to show this survey banner
-            if ((launchCounter - threshold) > this.maxShowAttempts) {
-                // We've asked a reasonable amount of times, back off. *should we re-initialize here to the next threshold instead?
-                await this.disable();
-                return false;
-            }
-        }
 
         return launchCounter >= threshold;
     }
