@@ -901,7 +901,7 @@
                             "name": "Attach (Remote Debug)",
                             "type": "pythonExperimental",
                             "request": "attach",
-                            "port": 3000,
+                            "port": 5678,
                             "host": "localhost"
                         }
                     }
@@ -1101,7 +1101,7 @@
                         "name": "Python Experimental: Attach",
                         "type": "pythonExperimental",
                         "request": "attach",
-                        "port": 3000,
+                        "port": 5678,
                         "host": "localhost"
                     },
                     {
