@@ -36,7 +36,6 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     private maxShowAttempts: number;
     private bannerMessage: string = 'Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?';
     private bannerLabels: string [] = [ 'Yes, take survey now', 'No, thanks'];
-    private labelTriggerCount: number[] = [0, 0];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
@@ -59,24 +58,6 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
         return this.getPythonLSLaunchCounter();
     }
 
-    public optionTriggerCount(label: string): number {
-        let count: number = -1;
-        switch (label) {
-            case this.bannerLabels[LSSurveyLabelIndex.Yes]: {
-                count = this.labelTriggerCount[LSSurveyLabelIndex.Yes];
-                break;
-            }
-            case this.bannerLabels[LSSurveyLabelIndex.No]: {
-                count = this.labelTriggerCount[LSSurveyLabelIndex.No];
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-        return count;
-    }
-
     public get enabled(): boolean {
         return this.persistentState.createGlobalPersistentState<boolean>(LSSurveyStateKeys.ShowBanner, true).value;
     }
@@ -96,13 +77,11 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
         switch (response) {
             case this.bannerLabels[LSSurveyLabelIndex.Yes]:
                 {
-                    this.labelTriggerCount[LSSurveyLabelIndex.Yes] += 1;
                     await this.launchSurvey();
                     await this.disable();
                     break;
                 }
             case this.bannerLabels[LSSurveyLabelIndex.No]: {
-                this.labelTriggerCount[LSSurveyLabelIndex.No] += 1;
                 await this.disable();
                 break;
             }

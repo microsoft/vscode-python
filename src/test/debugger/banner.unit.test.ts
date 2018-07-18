@@ -9,8 +9,8 @@ import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../client/common/application/types';
-import { IBrowserService, IDisposableRegistry, ILogger,
-    IPersistentState, IPersistentStateFactory, IPythonExtensionSurveyBanner } from '../../client/common/types';
+import { IBrowserService, IDisposableRegistry, IExperimentalDebuggerBanner,
+    ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { ExperimentalDebuggerBanner, PersistentStateKeys } from '../../client/debugger/banner';
 import { ExperimentalDebuggerType } from '../../client/debugger/Common/constants';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -23,7 +23,7 @@ suite('Debugging - Banner', () => {
     let showBannerState: typemoq.IMock<IPersistentState<boolean>>;
     let debugService: typemoq.IMock<IDebugService>;
     let appShell: typemoq.IMock<IApplicationShell>;
-    let banner: IPythonExtensionSurveyBanner;
+    let banner: IExperimentalDebuggerBanner;
     const message = 'Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?';
     const yes = 'Yes, take survey now';
     const no = 'No thanks';

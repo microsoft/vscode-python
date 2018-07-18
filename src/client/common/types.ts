@@ -268,8 +268,8 @@ export interface IBrowserService {
     launch(url: string): void;
 }
 
-export const IPythonExtensionSurveyBanner = Symbol('IPythonExtensionSurveyBanner');
-export interface IPythonExtensionSurveyBanner {
+export const IExperimentalDebuggerBanner = Symbol('IExperimentalDebuggerBanner');
+export interface IExperimentalDebuggerBanner {
     enabled: boolean;
     initialize(): void;
     showBanner(): Promise<void>;
@@ -284,7 +284,6 @@ export interface IPythonExtensionBanner {
     shownCount: Promise<number>;
     optionLabels: string[];
     showBanner(): Promise<void>;
-    optionTriggerCount(label: string): number;
 }
 export const BANNER_NAME_LS_SURVEY: string = 'LSSurveyBanner';
 export const BANNER_NAME_PROPOSE_LS: string = 'ProposeLS';

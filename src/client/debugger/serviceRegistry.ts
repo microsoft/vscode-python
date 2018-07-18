@@ -10,7 +10,7 @@ import { PlatformService } from '../common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { CurrentProcess } from '../common/process/currentProcess';
 import { BANNER_NAME_LS_SURVEY, BANNER_NAME_PROPOSE_LS, ICurrentProcess,
-    IPythonExtensionBanner, IPythonExtensionSurveyBanner, ISocketServer } from '../common/types';
+    IExperimentalDebuggerBanner, IPythonExtensionBanner, ISocketServer } from '../common/types';
 import { ServiceContainer } from '../ioc/container';
 import { ServiceManager } from '../ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
@@ -44,7 +44,7 @@ function registerDebuggerTypes(serviceManager: IServiceManager) {
 }
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IPythonExtensionSurveyBanner>(IPythonExtensionSurveyBanner, ExperimentalDebuggerBanner);
+    serviceManager.addSingleton<IExperimentalDebuggerBanner>(IExperimentalDebuggerBanner, ExperimentalDebuggerBanner);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, LanguageServerSurveyBanner, BANNER_NAME_LS_SURVEY);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, ProposeLanguageServerBanner, BANNER_NAME_PROPOSE_LS);
 }
