@@ -9,10 +9,10 @@ import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../client/common/application/types';
-import { IBrowserService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import { IBrowserService, IDisposableRegistry, IExperimentalDebuggerBanner,
+    ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { ExperimentalDebuggerBanner, PersistentStateKeys } from '../../client/debugger/banner';
 import { ExperimentalDebuggerType } from '../../client/debugger/Common/constants';
-import { IExperimentalDebuggerBanner } from '../../client/debugger/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 suite('Debugging - Banner', () => {
