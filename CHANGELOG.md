@@ -1,6 +1,6 @@
 # Changelog
 
-## 2018.7.0-beta (10 July 2018)
+## 2018.7.0 (18 July 2018)
 
 ### Thanks
 
@@ -55,6 +55,15 @@ part of!
 
 1. Language server now reports code analysis progress in the status bar.
    ([#1591](https://github.com/Microsoft/vscode-python/issues/1591))
+1. Only report Language Server download progress once.
+   ([#2000](https://github.com/Microsoft/vscode-python/issues/2000))
+1. Messages changes to reflect name of the language server: 'Microsoft Python Language Server';
+   folder name changed from `analysis` to `languageServer`.
+   ([#2107](https://github.com/Microsoft/vscode-python/issues/2107))
+1. Set default analysis for language server to open files only.
+   ([#2113](https://github.com/Microsoft/vscode-python/issues/2113))
+1. Add two popups to the extension: one to ask users to move to the new language server, the other to request feedback from users of that language server.
+   ([#2127](https://github.com/Microsoft/vscode-python/issues/2127))
 
 ### Fixes
 
@@ -69,15 +78,25 @@ part of!
 1. Change keyboard shortcut for `Run Selection/Line in Python Terminal` to not
    interfere with the Find/Replace dialog box.
    ([#2068](https://github.com/Microsoft/vscode-python/issues/2068))
+1. Relax validation of the environment `Path` variable.
+   ([#2076](https://github.com/Microsoft/vscode-python/issues/2076))
 1. `editor.formatOnType` is more reliable handling floating point numbers.
    ([#2079](https://github.com/Microsoft/vscode-python/issues/2079))
+1. Change the default port used in remote debugging using `Experimental` debugger to `5678`.
+   ([#2146](https://github.com/Microsoft/vscode-python/issues/2146))
+1. Register test manager when using the new language server.
+   ([#2186](https://github.com/Microsoft/vscode-python/issues/2186))
 
 ### Code Health
 
 1. Removed pre-commit hook that ran unit tests.
    ([#1986](https://github.com/Microsoft/vscode-python/issues/1986))
-
-
+1. Pass OS type to the debugger.
+   ([#2128](https://github.com/Microsoft/vscode-python/issues/2128))
+1. Ensure 'languageServer' directory is excluded from the build output.
+   ([#2150](https://github.com/Microsoft/vscode-python/issues/2150))
+1. Change the download links of the language server files.
+   ([#2180](https://github.com/Microsoft/vscode-python/issues/2180))
 
 
 
