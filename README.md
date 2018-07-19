@@ -39,6 +39,7 @@ The extension is available in multiple languages thanks to external
 contributors (if you would like to contribute a translation, see the
 [pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)):
 
+* `de`
 * `en`
 * `es`
 * `fr`
