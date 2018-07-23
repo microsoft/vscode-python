@@ -7,7 +7,7 @@
 
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
-import { downloadBaseFileName, downloadFileExtension, downloadUriPrefix, downloadVersion, LanguageServerDownloader } from '../../client/activation/downloader';
+import { DownloadLinks, LanguageServerDownloader } from '../../client/activation/downloader';
 import { PlatformName } from '../../client/activation/platformData';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IOutputChannel } from '../../client/common/types';
@@ -44,21 +44,21 @@ suite('Activation - Downloader', () => {
     test('Windows 32Bit', async () => {
         setupPlatform({ windows: true });
         const link = await languageServerDownloader.getDownloadUri();
-        assert.equal(link, `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Windows32Bit}.${downloadVersion}${downloadFileExtension}`);
+        assert.equal(link, DownloadLinks[PlatformName.Windows32Bit]);
     });
     test('Windows 64Bit', async () => {
         setupPlatform({ windows: true, is64Bit: true });
         const link = await languageServerDownloader.getDownloadUri();
-        assert.equal(link, `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Windows64Bit}.${downloadVersion}${downloadFileExtension}`);
+        assert.equal(link, DownloadLinks[PlatformName.Windows64Bit]);
     });
     test('Mac 64Bit', async () => {
         setupPlatform({ mac: true, is64Bit: true });
         const link = await languageServerDownloader.getDownloadUri();
-        assert.equal(link, `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Mac64Bit}.${downloadVersion}${downloadFileExtension}`);
+        assert.equal(link, DownloadLinks[PlatformName.Mac64Bit]);
     });
     test('Linux 64Bit', async () => {
         setupPlatform({ linux: true, is64Bit: true });
         const link = await languageServerDownloader.getDownloadUri();
-        assert.equal(link, `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Linux64Bit}.${downloadVersion}${downloadFileExtension}`);
+        assert.equal(link, DownloadLinks[PlatformName.Linux64Bit]);
     });
 });

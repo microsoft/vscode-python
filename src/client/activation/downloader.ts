@@ -18,12 +18,12 @@ import { PlatformData, PlatformName } from './platformData';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const StreamZip = require('node-stream-zip');
 
-export const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-language-server';
-export const downloadBaseFileName = 'Python-Language-Server';
-export const downloadVersion = '0.1.18204.3';
-export const downloadFileExtension = '.nupkg';
+const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-language-server';
+const downloadBaseFileName = 'Python-Language-Server';
+const downloadVersion = '0.1.18204.3';
+const downloadFileExtension = '.nupkg';
 
-const DownloadLinks = {
+export const DownloadLinks = {
     [PlatformName.Windows32Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Windows32Bit}.${downloadVersion}${downloadFileExtension}`,
     [PlatformName.Windows64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Windows64Bit}.${downloadVersion}${downloadFileExtension}`,
     [PlatformName.Linux64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Linux64Bit}.${downloadVersion}${downloadFileExtension}`,
