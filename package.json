@@ -1810,7 +1810,7 @@
                 "python.workspaceSymbols.ctagsPath": {
                     "type": "string",
                     "default": "ctags",
-                    "description": "Fully qualilified path to the ctags executable (else leave as ctags, assuming it is in current path).",
+                    "description": "Fully qualified path to the ctags executable (else leave as ctags, assuming it is in current path).",
                     "scope": "resource"
                 },
                 "python.workspaceSymbols.enabled": {
