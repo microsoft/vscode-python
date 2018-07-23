@@ -43,7 +43,7 @@ suite('Interpreters display version', () => {
         const pyVersion = await interpreterVersion.getVersion('INVALID_INTERPRETER', 'DEFAULT_TEST_VALUE');
         assert.equal(pyVersion, 'DEFAULT_TEST_VALUE', 'Incorrect version');
     });
-    test('Must return the pip Version', async () => {
+    test('Must return the pip Version.', async () => {
         const pythonProcess = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
         const result = await pythonProcess.exec(PYTHON_PATH, ['-m', 'pip', '--version'], { cwd: __dirname, mergeStdOutErr: true });
         const output = result.stdout.splitLines()[0];
@@ -60,7 +60,7 @@ suite('Interpreters display version', () => {
         // tslint:disable-next-line:no-non-null-assertion
         await expect(pipVersionPromise).to.eventually.equal(matches![0].trim());
     });
-    test('Must throw an exceptionn when pip version cannot be determine', async () => {
+    test('Must throw an exception when pip version cannot be determined', async () => {
         const interpreterVersion = ioc.serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
         const pipVersionPromise = interpreterVersion.getPipVersion('INVALID_INTERPRETER');
         await expect(pipVersionPromise).to.be.rejectedWith();
