@@ -26,8 +26,7 @@ def _projects(package_data):
     return packages
 
 
-# XXX Make async.
-def projects_from_data(raw_data):
+async def projects_from_data(raw_data):
     """Create the requested projects from the data string provided."""
     json_data = json.loads(raw_data)
     return _projects(json_data)

@@ -5,7 +5,8 @@ import pytest
 from .. import npm
 
 
-def test_projects():
+@pytest.mark.asyncio
+async def test_projects():
     json_data = {
         "dependencies": {
             "append-buffer": {
@@ -45,7 +46,7 @@ def test_projects():
             },
         }
     }
-    packages = npm.projects_from_data(json.dumps(json_data))
+    packages = await npm.projects_from_data(json.dumps(json_data))
     assert len(packages) == 2
     assert "arch" in packages
     assert packages["arch"] == {

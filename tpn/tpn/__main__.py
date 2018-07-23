@@ -24,8 +24,7 @@ async def handle_index(module, raw_path, config_projects, cached_projects):
     _, _, index_name = module.__name__.rpartition(".")
     with open(raw_path, encoding="utf-8") as file:
         raw_data = file.read()
-    # XXX Make async.
-    requested_projects = module.projects_from_data(raw_data)
+    requested_projects = await module.projects_from_data(raw_data)
     projects, stale = config.sort(index_name, config_projects, requested_projects)
     for name, details in projects.items():
         print(f"{name} {details['version']}: configuration file")
