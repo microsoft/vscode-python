@@ -41,7 +41,7 @@ export class PlatformData {
     public getEngineExecutableName(): string {
         return this.platform.isWindows
             ? 'Microsoft.Python.LanguageServer.exe'
-            : 'Microsoft.Python.LanguageServer.LanguageServer';
+            : 'Microsoft.Python.LanguageServer';
     }
 
     public async getExpectedHash(): Promise<string> {
