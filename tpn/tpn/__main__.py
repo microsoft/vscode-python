@@ -27,10 +27,10 @@ async def handle_index(module, raw_path, config_projects, cached_projects):
     requested_projects = await module.projects_from_data(raw_data)
     projects, stale = config.sort(index_name, config_projects, requested_projects)
     for name, details in projects.items():
-        print(f"{name} {details.version}: configuration file")
+        print(f"{name} {details.version}: sourced from configuration file")
     valid_cache_entries = tpnfile.sort(cached_projects, requested_projects)
     for name, details in valid_cache_entries.items():
-        print(f"{name} {details.version}: TPN cache")
+        print(f"{name} {details.version}: sourced from TPN cache")
     projects.update(valid_cache_entries)
     failures = await module.fill_in_licenses(requested_projects)
     projects.update(requested_projects)
