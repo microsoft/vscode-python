@@ -20,6 +20,9 @@ from . import tpnfile
 from . import npm
 
 
+ACCEPTABLE_PURPOSES = frozenset({"explicit", "npm", "pypi"})
+
+
 async def handle_index(module, raw_path, config_projects, cached_projects):
     _, _, index_name = module.__name__.rpartition(".")
     with open(raw_path, encoding="utf-8") as file:
@@ -41,7 +44,7 @@ def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
     tpn_path = pathlib.Path(tpn_path)
     config_path = pathlib.Path(config_path)
     config_data = toml.loads(config_path.read_text(encoding="utf-8"))
-    config_projects = config.get_projects(config_data)
+    config_projects = config.get_projects(config_data, ACCEPTABLE_PURPOSES)
     projects = config.get_explicit_entries(config_projects)
     if tpn_path.exists():
         cached_projects = tpnfile.parse_tpn(tpn_path.read_text(encoding="utf-8"))

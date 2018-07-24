@@ -18,13 +18,18 @@ class ConfigProject(data.Project):
 FIELDS = {"name", "version", "url", "purpose", "license"}
 
 
-def get_projects(config):
+def get_projects(config, acceptable_purposes):
     """Pull out projects as specified in a configuration file."""
     projects = {}
     for project_data in config["project"]:
         if not all(key in project_data for key in FIELDS):
-            raise KeyError(
-                f"A key from {sorted(FIELDS)!r} is missing from {sorted(project.keys())!r}"
+            name = project_data.get("name", "<unknown>")
+            missing_keys = FIELDS.difference(project_data.keys())
+            raise KeyError(f"{name!r} is missing the keys {sorted(missing_keys)}")
+        if project_data["purpose"] not in acceptable_purposes:
+            raise ValueError(
+                f"{project_data['name']!r} has a purpose of {project_data['purpose']!r}"
+                f" which is not one of {sorted(acceptable_purposes)}"
             )
         projects[project_data["name"]] = ConfigProject(**project_data)
     return projects
