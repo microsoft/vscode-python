@@ -16,6 +16,12 @@ export enum PlatformName {
     Linux64Bit = 'linux-x64'
 }
 
+export enum PlatformLSExecutables {
+    Windows = 'Microsoft.Python.LanguageServer.exe',
+    MacOS = 'Microsoft.Python.LanguageServer',
+    Linux = 'Microsoft.Python.LanguageServer'
+}
+
 export class PlatformData {
     constructor(private platform: IPlatformService, fs: IFileSystem) { }
     public async getPlatformName(): Promise<PlatformName> {
@@ -39,9 +45,15 @@ export class PlatformData {
     }
 
     public getEngineExecutableName(): string {
-        return this.platform.isWindows
-            ? 'Microsoft.Python.LanguageServer.exe'
-            : 'Microsoft.Python.LanguageServer.LanguageServer';
+        if (this.platform.isWindows) {
+            return PlatformLSExecutables.Windows;
+        } else if (this.platform.isLinux) {
+            return PlatformLSExecutables.Linux;
+        } else if (this.platform.isMac) {
+            return PlatformLSExecutables.MacOS;
+        } else {
+            return 'unknown-platform';
+        }
     }
 
     public async getExpectedHash(): Promise<string> {

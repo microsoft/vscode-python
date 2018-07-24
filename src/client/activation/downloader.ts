@@ -20,10 +20,10 @@ const StreamZip = require('node-stream-zip');
 
 const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-language-server';
 const downloadBaseFileName = 'Python-Language-Server';
-const downloadVersion = '0.1.0';
+const downloadVersion = '0.1.18204.3';
 const downloadFileExtension = '.nupkg';
 
-const DownloadLinks = {
+export const DownloadLinks = {
     [PlatformName.Windows32Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Windows32Bit}.${downloadVersion}${downloadFileExtension}`,
     [PlatformName.Windows64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Windows64Bit}.${downloadVersion}${downloadFileExtension}`,
     [PlatformName.Linux64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Linux64Bit}.${downloadVersion}${downloadFileExtension}`,

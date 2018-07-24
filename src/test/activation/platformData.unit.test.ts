@@ -4,7 +4,7 @@
 // tslint:disable:no-unused-variable
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
-import { PlatformData } from '../../client/activation/platformData';
+import { PlatformData, PlatformLSExecutables } from '../../client/activation/platformData';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 
 const testDataWinMac = [
@@ -24,8 +24,9 @@ const testDataLinux = [
 ];
 
 const testDataModuleName = [
-    { isWindows: true, expectedName: 'Microsoft.Python.LanguageServer.exe' },
-    { isWindows: false, expectedName: 'Microsoft.Python.LanguageServer.LanguageServer' }
+    { isWindows: true, isMac: false, isLinux: false, expectedName: PlatformLSExecutables.Windows },
+    { isWindows: false, isMac: true, isLinux: false, expectedName: PlatformLSExecutables.MacOS },
+    { isWindows: false, isMac: false, isLinux: true, expectedName: PlatformLSExecutables.Linux }
 ];
 
 // tslint:disable-next-line:max-func-body-length
@@ -70,6 +71,8 @@ suite('Activation - platform data', () => {
         for (const t of testDataModuleName) {
             const platformService = TypeMoq.Mock.ofType<IPlatformService>();
             platformService.setup(x => x.isWindows).returns(() => t.isWindows);
+            platformService.setup(x => x.isLinux).returns(() => t.isLinux);
+            platformService.setup(x => x.isMac).returns(() => t.isMac);
 
             const fs = TypeMoq.Mock.ofType<IFileSystem>();
             const pd = new PlatformData(platformService.object, fs.object);
