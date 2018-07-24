@@ -91,7 +91,7 @@ if (require.main === module) {
     const timeoutArgIndex = args.findIndex(arg => arg.startsWith('timeout='));
     const grepArgIndex = args.findIndex(arg => arg.startsWith('grep='));
     const timeout: number | undefined = timeoutArgIndex >= 0 ? parseInt(args[timeoutArgIndex].split('=')[1].trim(), 10) : undefined;
-    let grep: string | undefined = timeoutArgIndex >= 0 ? args[grepArgIndex].split('=')[1].trim() : undefined;
+    let grep: string | undefined = grepArgIndex >= 0 ? args[grepArgIndex].split('=')[1].trim() : undefined;
     grep = grep && grep.length > 0 ? grep : undefined;
 
     runTests({ grep, timeout });

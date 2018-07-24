@@ -22,7 +22,7 @@
 
 ```shell
 git clone https://github.com/microsoft/ptvs
-cd Python/Product/VsCode/AnalysisVsc
+cd ptvs/Python/Product/VSCode/AnalysisVsc
 dotnet build
 ```
 

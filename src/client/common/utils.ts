@@ -1,6 +1,7 @@
 'use strict';
 // tslint:disable: no-any one-line no-suspicious-comment prefer-template prefer-const no-unnecessary-callback-wrapper no-function-expression no-string-literal no-control-regex no-shadowed-variable
 
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -110,4 +111,19 @@ export function arePathsSame(path1: string, path2: string) {
     } else {
         return path1 === path2;
     }
+}
+
+function getRandom(): number {
+    let num: number = 0;
+
+    const buf: Buffer = crypto.randomBytes(2);
+    num = (buf.readUInt8(0) << 8) + buf.readUInt8(1);
+
+    const maxValue: number = Math.pow(16, 4) - 1;
+    return (num / maxValue);
+}
+
+export function getRandomBetween(min: number = 0, max: number = 10): number {
+    const randomVal: number = getRandom();
+    return min + (randomVal * (max - min));
 }

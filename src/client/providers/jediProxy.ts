@@ -6,14 +6,16 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as pidusage from 'pidusage';
-import { CancellationToken, CancellationTokenSource, CompletionItemKind, Disposable, SymbolKind, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, CompletionItemKind,
+    Disposable, SymbolKind, Uri } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
+import { isTestExecution } from '../common/constants';
 import { debounce, swallowExceptions } from '../common/decorators';
 import '../common/extensions';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
-import { ILogger } from '../common/types';
+import { BANNER_NAME_PROPOSE_LS, ILogger, IPythonExtensionBanner } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import * as logger from './../common/logger';
@@ -148,6 +150,7 @@ export class JediProxy implements Disposable {
     private pidUsageFailures = { timer: new StopWatch(), counter: 0 };
     private lastCmdIdProcessed?: number;
     private lastCmdIdProcessedForPidUsage?: number;
+    private proposeNewLanguageServerPopup: IPythonExtensionBanner;
 
     public constructor(private extensionRootDir: string, workspacePath: string, private serviceContainer: IServiceContainer) {
         this.workspacePath = workspacePath;
@@ -157,6 +160,8 @@ export class JediProxy implements Disposable {
         this.pythonSettings.on('change', () => this.pythonSettingsChangeHandler());
         this.initialized = createDeferred<void>();
         this.startLanguageServer().then(() => this.initialized.resolve()).ignoreErrors();
+
+        this.proposeNewLanguageServerPopup = serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_PROPOSE_LS);
 
         this.checkJediMemoryFootprint().ignoreErrors();
     }
@@ -292,6 +297,9 @@ export class JediProxy implements Disposable {
     private async startLanguageServer(): Promise<void> {
         const newAutoComletePaths = await this.buildAutoCompletePaths();
         this.additionalAutoCompletePaths = newAutoComletePaths;
+        if (!isTestExecution()) {
+            await this.proposeNewLanguageServerPopup.showBanner();
+        }
         return this.restartLanguageServer();
     }
     private restartLanguageServer(): Promise<void> {

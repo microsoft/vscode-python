@@ -4,9 +4,8 @@
 // tslint:disable:no-unused-variable
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
-import { PlatformData } from '../../client/activation/platformData';
+import { PlatformData, PlatformLSExecutables } from '../../client/activation/platformData';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { initialize } from '../initialize';
 
 const testDataWinMac = [
     { isWindows: true, is64Bit: true, expectedName: 'win-x64' },
@@ -25,14 +24,13 @@ const testDataLinux = [
 ];
 
 const testDataModuleName = [
-    { isWindows: true, expectedName: 'Microsoft.Python.LanguageServer.exe' },
-    { isWindows: false, expectedName: 'Microsoft.Python.LanguageServer.LanguageServer' }
+    { isWindows: true, isMac: false, isLinux: false, expectedName: PlatformLSExecutables.Windows },
+    { isWindows: false, isMac: true, isLinux: false, expectedName: PlatformLSExecutables.MacOS },
+    { isWindows: false, isMac: false, isLinux: true, expectedName: PlatformLSExecutables.Linux }
 ];
 
 // tslint:disable-next-line:max-func-body-length
 suite('Activation - platform data', () => {
-    suiteSetup(initialize);
-
     test('Name and hash (Windows/Mac)', async () => {
         for (const t of testDataWinMac) {
             const platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -43,11 +41,11 @@ suite('Activation - platform data', () => {
             const fs = TypeMoq.Mock.ofType<IFileSystem>();
             const pd = new PlatformData(platformService.object, fs.object);
 
-            let actual = await pd.getPlatformName();
+            const actual = await pd.getPlatformName();
             assert.equal(actual, t.expectedName, `${actual} does not match ${t.expectedName}`);
 
-            actual = await pd.getExpectedHash();
-            assert.equal(actual, t.expectedName, `${actual} hash not match ${t.expectedName}`);
+            const actualHash = await pd.getExpectedHash();
+            assert.equal(actualHash, t.expectedName, `${actual} hash not match ${t.expectedName}`);
         }
     });
     test('Name and hash (Linux)', async () => {
@@ -62,10 +60,10 @@ suite('Activation - platform data', () => {
             fs.setup(x => x.readFile(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(`NAME="name"\nID=${t.name}\nID_LIKE=debian`));
             const pd = new PlatformData(platformService.object, fs.object);
 
-            let actual = await pd.getPlatformName();
+            const actual = await pd.getPlatformName();
             assert.equal(actual, t.expectedName, `${actual} does not match ${t.expectedName}`);
 
-            actual = await pd.getExpectedHash();
+            const actualHash = await pd.getExpectedHash();
             assert.equal(actual, t.expectedName, `${actual} hash not match ${t.expectedName}`);
         }
     });
@@ -73,6 +71,8 @@ suite('Activation - platform data', () => {
         for (const t of testDataModuleName) {
             const platformService = TypeMoq.Mock.ofType<IPlatformService>();
             platformService.setup(x => x.isWindows).returns(() => t.isWindows);
+            platformService.setup(x => x.isLinux).returns(() => t.isLinux);
+            platformService.setup(x => x.isMac).returns(() => t.isMac);
 
             const fs = TypeMoq.Mock.ofType<IFileSystem>();
             const pd = new PlatformData(platformService.object, fs.object);

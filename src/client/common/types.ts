@@ -267,3 +267,23 @@ export const IBrowserService = Symbol('IBrowserService');
 export interface IBrowserService {
     launch(url: string): void;
 }
+
+export const IExperimentalDebuggerBanner = Symbol('IExperimentalDebuggerBanner');
+export interface IExperimentalDebuggerBanner {
+    enabled: boolean;
+    initialize(): void;
+    showBanner(): Promise<void>;
+    shouldShowBanner(): Promise<boolean>;
+    disable(): Promise<void>;
+    launchSurvey(): Promise<void>;
+}
+
+export const IPythonExtensionBanner = Symbol('IPythonExtensionBanner');
+export interface IPythonExtensionBanner {
+    enabled: boolean;
+    shownCount: Promise<number>;
+    optionLabels: string[];
+    showBanner(): Promise<void>;
+}
+export const BANNER_NAME_LS_SURVEY: string = 'LSSurveyBanner';
+export const BANNER_NAME_PROPOSE_LS: string = 'ProposeLS';
