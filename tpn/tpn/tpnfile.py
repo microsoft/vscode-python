@@ -43,7 +43,7 @@ def sort(cached_projects, requested_projects):
 def generate_tpn(config, projects):
     """Create the TPN text."""
     parts = [config["metadata"]["header"]]
-    project_names = sorted(projects.keys())
+    project_names = sorted(projects.keys(), key=str.lower)
     toc = []
     index_padding = len(f"{len(project_names)}.")
     for index, name in enumerate(project_names, 1):
