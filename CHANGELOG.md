@@ -1,5 +1,14 @@
 # Changelog
 
+## 2018.7.1 (23 July 2018)
+
+### Fixes
+
+1. Update the language server to code as of
+   [651468731500ec1cc644029c3666c57b82f77d76](https://github.com/Microsoft/PTVS/commit/651468731500ec1cc644029c3666c57b82f77d76).
+   ([#2233](https://github.com/Microsoft/vscode-python/issues/2233))
+
+
 ## 2018.7.0 (18 July 2018)
 
 ### Thanks
