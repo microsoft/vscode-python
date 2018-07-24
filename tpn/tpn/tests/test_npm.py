@@ -53,7 +53,7 @@ async def test_projects():
     assert packages["arch"] == data.Project(
         name="arch",
         version="2.1.0",
-        url="https://registry.npmjs.org/arch/-/arch-2.1.0.tgz"
+        url="https://registry.npmjs.org/arch/-/arch-2.1.0.tgz",
     )
     assert "applicationinsights" in packages
     assert packages["applicationinsights"] == data.Project(

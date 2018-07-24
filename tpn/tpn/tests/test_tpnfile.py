@@ -53,7 +53,10 @@ END OF Python programming language NOTICES AND INFORMATION
 
 @pytest.fixture
 def example_data():
-    return {name: data.Project(**project_data) for name, project_data in PROJECT_DATA.items()}
+    return {
+        name: data.Project(**project_data)
+        for name, project_data in PROJECT_DATA.items()
+    }
 
 
 def test_parse_tpn(example_data):
