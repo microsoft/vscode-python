@@ -70,6 +70,7 @@ async def _fetch_license(session, tarball_url):
     """Download and extract the license file."""
     try:
         async with session.get(tarball_url) as response:
+            response.raise_for_status()
             content = await response.read()
         with tarfile.open(mode="r:gz", fileobj=io.BytesIO(content)) as tarball:
             filenames = _top_level_package_filenames(tarball.getnames())
