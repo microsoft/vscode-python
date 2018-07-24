@@ -2,6 +2,8 @@ import dataclasses
 import pathlib
 import re
 
+from . import data
+
 
 TPN_SECTION_TEMPLATE = "%% {name} {version} NOTICES AND INFORMATION BEGIN HERE ({url})\n=========================================\n{license}\n=========================================\nEND OF {name} NOTICES AND INFORMATION"
 TPN_SECTION_RE = re.compile(
@@ -16,7 +18,7 @@ def parse_tpn(text):
     for match in TPN_SECTION_RE.finditer(text):
         details = match.groupdict()
         name = details["name"]
-        licenses[name] = details
+        licenses[name] = data.Project(**details)
     return licenses
 
 

@@ -56,14 +56,14 @@ def example_data():
     return {name: data.Project(**project_data) for name, project_data in PROJECT_DATA.items()}
 
 
-def test_parse_tpn():
+def test_parse_tpn(example_data):
     licenses = tpnfile.parse_tpn(EXAMPLE)
     assert "Arch" in licenses
-    assert licenses["Arch"] == PROJECT_DATA["Arch"]
+    assert licenses["Arch"] == example_data["Arch"]
     assert "Python programming language" in licenses
     assert (
         licenses["Python programming language"]
-        == PROJECT_DATA["Python programming language"]
+        == example_data["Python programming language"]
     )
 
 
