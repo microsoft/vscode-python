@@ -6,6 +6,8 @@ import tarfile
 
 import aiohttp
 
+from . import data
+
 
 def _projects(package_data):
     """Retrieve the list of projects from the package data.
@@ -18,11 +20,7 @@ def _projects(package_data):
     for name, details in package_data["dependencies"].items():
         if details.get("dev", False):
             continue
-        packages[name] = {
-            "name": name,
-            "version": details["version"],
-            "url": details["resolved"],
-        }
+        packages[name] = data.Project(name, details["version"], url=details["resolved"])
     return packages
 
 
@@ -90,15 +88,15 @@ async def fill_in_licenses(requested_projects):
     """
     failures = {}
     names = list(requested_projects.keys())
-    urls = (requested_projects[name]["url"] for name in names)
+    urls = (requested_projects[name].url for name in names)
     async with aiohttp.ClientSession() as session:
         tasks = (_fetch_license(session, url) for url in urls)
         for name, license_or_exc in zip(names, await asyncio.gather(*tasks)):
             details = requested_projects[name]
-            license_or_exc = await _fetch_license(session, details["url"])
+            license_or_exc = await _fetch_license(session, details.url)
             if isinstance(license_or_exc, Exception):
-                details["error"] = license_or_exc
+                details.error = license_or_exc
                 failures[name] = details
             else:
-                details["license"] = license_or_exc
+                details.license = license_or_exc
     return failures

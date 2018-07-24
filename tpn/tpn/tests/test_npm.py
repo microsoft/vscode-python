@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+from .. import data
 from .. import npm
 
 
@@ -49,17 +50,17 @@ async def test_projects():
     packages = await npm.projects_from_data(json.dumps(json_data))
     assert len(packages) == 2
     assert "arch" in packages
-    assert packages["arch"] == {
-        "name": "arch",
-        "version": "2.1.0",
-        "url": "https://registry.npmjs.org/arch/-/arch-2.1.0.tgz",
-    }
+    assert packages["arch"] == data.Project(
+        name="arch",
+        version="2.1.0",
+        url="https://registry.npmjs.org/arch/-/arch-2.1.0.tgz"
+    )
     assert "applicationinsights" in packages
-    assert packages["applicationinsights"] == {
-        "name": "applicationinsights",
-        "version": "1.0.1",
-        "url": "https://registry.npmjs.org/applicationinsights/-/applicationinsights-1.0.1.tgz",
-    }
+    assert packages["applicationinsights"] == data.Project(
+        name="applicationinsights",
+        version="1.0.1",
+        url="https://registry.npmjs.org/applicationinsights/-/applicationinsights-1.0.1.tgz",
+    )
 
 
 def test_top_level_package_filenames():
@@ -84,13 +85,12 @@ def test_find_license():
 
 @pytest.mark.asyncio
 async def test_fill_in_licenses():
-    example = {
-        "user-home": {
-            "name": "user-home",
-            "version": "2.0.0",
-            "url": "https://registry.npmjs.org/user-home/-/user-home-2.0.0.tgz",
-        }
-    }
+    project = data.Project(
+        "user-home",
+        "2.0.0",
+        "https://registry.npmjs.org/user-home/-/user-home-2.0.0.tgz",
+    )
+    example = {"user-home": project}
     failures = await npm.fill_in_licenses(example)
     assert not failures
-    assert "license" in example["user-home"]
+    assert example["user-home"].license is not None
