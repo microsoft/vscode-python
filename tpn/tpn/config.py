@@ -1,4 +1,18 @@
+from __future__ import annotations
+
+import dataclasses
 import enum
+
+from . import data
+
+
+@dataclasses.dataclass
+class ConfigProject(data.Project):
+    """Projects from a TOML configuration file."""
+
+    license: str
+    # Must be optional due to 'error' being optional in base class.
+    purpose: Optional[str] = None
 
 
 FIELDS = {"name", "version", "url", "purpose", "license"}
@@ -7,12 +21,12 @@ FIELDS = {"name", "version", "url", "purpose", "license"}
 def get_projects(config):
     """Pull out projects as specified in a configuration file."""
     projects = {}
-    for project in config["project"]:
-        if not all(key in project for key in FIELDS):
+    for project_data in config["project"]:
+        if not all(key in project_data for key in FIELDS):
             raise KeyError(
                 f"A key from {sorted(FIELDS)!r} is missing from {sorted(project.keys())!r}"
             )
-        projects[project["name"]] = project
+        projects[project_data["name"]] = ConfigProject(**project_data)
     return projects
 
 
@@ -25,7 +39,7 @@ def get_explicit_entries(config_projects):
     explicit_projects = {
         name: details
         for name, details in config_projects.items()
-        if details["purpose"] == "explicit"
+        if details.purpose == "explicit"
     }
     for project in explicit_projects:
         del config_projects[project]
@@ -53,14 +67,14 @@ def sort(purpose, config_projects, requested_projects):
     config_subset = {
         project: details
         for project, details in config_projects.items()
-        if details["purpose"] == purpose
+        if details.purpose == purpose
     }
     for name, details in config_subset.items():
         del config_projects[name]
-        config_version = details["version"]
+        config_version = details.version
         match = False
         if name in requested_projects:
-            requested_version = requested_projects[name]["version"]
+            requested_version = requested_projects[name].version
             if config_version == requested_version:
                 projects[name] = details
                 del requested_projects[name]

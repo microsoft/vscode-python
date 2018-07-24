@@ -1,3 +1,4 @@
+import dataclasses
 import pathlib
 import re
 
@@ -31,7 +32,7 @@ def sort(cached_projects, requested_projects):
         if name in cached_projects:
             cached_details = cached_projects[name]
             del cached_projects[name]
-            if cached_details["version"] == details["version"]:
+            if cached_details.version == details.version:
                 projects[name] = cached_details
                 del requested_projects[name]
     return projects
@@ -46,12 +47,12 @@ def generate_tpn(config, projects):
     for index, name in enumerate(project_names, 1):
         index_format = f"{index}.".ljust(index_padding)
         toc.append(
-            f"{index_format} {name} {projects[name]['version']} ({projects[name]['url']})"
+            f"{index_format} {name} {projects[name].version} ({projects[name].url})"
         )
     parts.append("\n".join(toc))
     licenses = []
     for name in project_names:
         details = projects[name]
-        licenses.append(TPN_SECTION_TEMPLATE.format(**details))
+        licenses.append(TPN_SECTION_TEMPLATE.format(**dataclasses.asdict(details)))
     parts.append("\n\n".join(licenses))
     return "\n\n\n".join(parts) + "\n"
