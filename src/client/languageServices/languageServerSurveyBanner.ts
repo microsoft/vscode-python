@@ -32,7 +32,7 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     private minCompletionsBeforeShow: number;
     private maxCompletionsBeforeShow: number;
     private isInitialized: boolean = false;
-    private bannerMessage: string = 'Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?';
+    private bannerMessage: string = 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?';
     private bannerLabels: string [] = [ 'Yes, take survey now', 'No, thanks'];
 
     constructor(
