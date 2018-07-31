@@ -31,7 +31,7 @@ const OptionsWithoutArguments = ['--cache-clear', '--cache-show', '--collect-in-
     '--no-cov', '--no-cov-on-fail',
     '--no-print-logs', '--noconftest', '--old-summary', '--pdb', '--pyargs', '-PyTest, Unittest-pyargs',
     '--quiet', '--runxfail', '--setup-only', '--setup-plan', '--setup-show', '--showlocals',
-    '--strict', '--trace-config', '--verbose', '--version', '-h', '-l', '-q', '-s', '-v', '-x',
+    '--strict', '--trace', '--trace-config', '--verbose', '--version', '-h', '-l', '-q', '-s', '-v', '-x',
     '--boxed', '--forked', '--looponfail', '--tx', '-d'];
 
 @injectable()
