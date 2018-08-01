@@ -5,7 +5,6 @@ import { DebugClient } from './DebugClient';
 import { DebuggerLauncherScriptProvider, NoDebugLauncherScriptProvider } from './launcherProvider';
 import { LocalDebugClient } from './LocalDebugClient';
 import { LocalDebugClientV2 } from './localDebugClientV2';
-import { NonDebugClient } from './NonDebugClient';
 import { NonDebugClientV2 } from './nonDebugClientV2';
 import { RemoteDebugClient } from './RemoteDebugClient';
 
@@ -14,10 +13,10 @@ export function CreateLaunchDebugClient(launchRequestOptions: LaunchRequestArgum
     let debugClientClass: typeof LocalDebugClient;
     if (launchRequestOptions.noDebug === true) {
         launchScriptProvider = new NoDebugLauncherScriptProvider();
-        debugClientClass = launchRequestOptions.type === 'pythonExperimental' ? NonDebugClientV2 : NonDebugClient;
+        debugClientClass = NonDebugClientV2;
     } else {
         launchScriptProvider = new DebuggerLauncherScriptProvider();
-        debugClientClass = launchRequestOptions.type === 'pythonExperimental' ? LocalDebugClientV2 : LocalDebugClient;
+        debugClientClass = LocalDebugClientV2;
     }
     return new debugClientClass(launchRequestOptions, debugSession, canLaunchTerminal, launchScriptProvider);
 }

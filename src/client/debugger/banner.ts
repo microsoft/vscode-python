@@ -8,10 +8,11 @@ import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IDebugService } from '../common/application/types';
 import '../common/extensions';
-import { IBrowserService, IDisposableRegistry, IExperimentalDebuggerBanner,
+import { IBrowserService, IDisposableRegistry,
     ILogger, IPersistentStateFactory } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { ExperimentalDebuggerType } from './Common/constants';
+import { DebuggerTypeName } from './Common/constants';
+import { IExperimentalDebuggerBanner } from './types';
 
 export enum PersistentStateKeys {
     ShowBanner = 'ShowBanner',
@@ -40,7 +41,7 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
         }
         const debuggerService = this.serviceContainer.get<IDebugService>(IDebugService);
         const disposable = debuggerService.onDidTerminateDebugSession(async e => {
-            if (e.type === ExperimentalDebuggerType) {
+            if (e.type === DebuggerTypeName) {
                 const logger = this.serviceContainer.get<ILogger>(ILogger);
                 await this.onDidTerminateDebugSession()
                     .catch(ex => logger.logError('Error in debugger Banner', ex));
@@ -53,7 +54,7 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const yes = 'Yes, take survey now';
         const no = 'No thanks';
-        const response = await appShell.showInformationMessage('Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?', yes, no);
+        const response = await appShell.showInformationMessage('Can you please take 2 minutes to tell us how the Debugger is working for you?', yes, no);
         switch (response) {
             case yes:
                 {

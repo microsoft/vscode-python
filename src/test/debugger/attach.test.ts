@@ -15,6 +15,7 @@ import { AttachRequestArgumentsV1 } from '../../client/debugger/Common/Contracts
 import { PYTHON_PATH, sleep } from '../common';
 import { initialize, IS_APPVEYOR, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { DEBUGGER_TIMEOUT } from './common/constants';
+import { DebuggerTypeName } from '../../client/debugger/Common/constants';
 
 const fileToDebug = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger.py');
 const ptvsdPath = path.join(__dirname, '..', '..', '..', 'pythonFiles', 'PythonTools');
@@ -30,7 +31,7 @@ suite('Attach Debugger', () => {
             this.skip();
         }
         await sleep(1000);
-        debugClient = new DebugClient('node', DEBUG_ADAPTER, 'python');
+        debugClient = new DebugClient('node', DEBUG_ADAPTER, DebuggerTypeName);
         debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
         await debugClient.start();
     });

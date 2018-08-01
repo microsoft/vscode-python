@@ -17,9 +17,10 @@ import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { DEBUGGER_TIMEOUT } from './common/constants';
 import { continueDebugging, createDebugAdapter, ExpectedVariable, hitHttpBreakpoint, makeHttpRequest, validateVariablesInFrame } from './utils';
+import { DebuggerTypeName } from '../../client/debugger/Common/constants';
 
 let testCounter = 0;
-const debuggerType = 'pythonExperimental';
+const debuggerType = DebuggerTypeName;
 suite(`Django and Flask Debugging: ${debuggerType}`, () => {
     let debugClient: DebugClient;
     setup(async function () {

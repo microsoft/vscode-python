@@ -5,14 +5,13 @@
 'use strict';
 
 import { DebugConfigurationProvider } from 'vscode';
-import { PythonDebugConfigurationProvider, PythonV2DebugConfigurationProvider } from '..';
+import { PythonV2DebugConfigurationProvider } from '..';
 import { IServiceManager } from '../../ioc/types';
 import { IDebugConfigurationProvider } from '../types';
 import { ConfigurationProviderUtils } from './configurationProviderUtils';
 import { IConfigurationProviderUtils } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<DebugConfigurationProvider>(IDebugConfigurationProvider, PythonDebugConfigurationProvider);
     serviceManager.addSingleton<DebugConfigurationProvider>(IDebugConfigurationProvider, PythonV2DebugConfigurationProvider);
     serviceManager.addSingleton<IConfigurationProviderUtils>(IConfigurationProviderUtils, ConfigurationProviderUtils);
 }

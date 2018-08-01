@@ -9,7 +9,7 @@ pep8
 prospector
 pydocstyle
 nose
-pytest
+pytest==3.6.3
 rope
 flask
 django

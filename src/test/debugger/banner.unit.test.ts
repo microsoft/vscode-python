@@ -9,10 +9,11 @@ import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../client/common/application/types';
-import { IBrowserService, IDisposableRegistry, IExperimentalDebuggerBanner,
+import { IBrowserService, IDisposableRegistry,
     ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { ExperimentalDebuggerBanner, PersistentStateKeys } from '../../client/debugger/banner';
-import { ExperimentalDebuggerType } from '../../client/debugger/Common/constants';
+import { DebuggerTypeName } from '../../client/debugger/Common/constants';
+import { IExperimentalDebuggerBanner } from '../../client/debugger/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 suite('Debugging - Banner', () => {
@@ -24,7 +25,7 @@ suite('Debugging - Banner', () => {
     let debugService: typemoq.IMock<IDebugService>;
     let appShell: typemoq.IMock<IApplicationShell>;
     let banner: IExperimentalDebuggerBanner;
-    const message = 'Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?';
+    const message = 'Can you please take 2 minutes to tell us how the Debugger is working for you?';
     const yes = 'Yes, take survey now';
     const no = 'No thanks';
 
@@ -84,7 +85,7 @@ suite('Debugging - Banner', () => {
             .verifiable(typemoq.Times.atLeastOnce());
 
         banner.initialize();
-        await onDidTerminateDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
+        await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
 
         launchCounterState.verifyAll();
         browser.verifyAll();
@@ -166,7 +167,7 @@ suite('Debugging - Banner', () => {
         appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no)))
             .verifiable(typemoq.Times.once());
         banner.initialize();
-        await onDidTerminateDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
+        await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
 
         appShell.verifyAll();
         showBannerState.verifyAll();
@@ -193,10 +194,10 @@ suite('Debugging - Banner', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
         banner.initialize();
-        await onDidTerminateDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
-        await onDidTerminateDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
-        await onDidTerminateDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
-        await onDidTerminateDebugSessionCb!({ type: ExperimentalDebuggerType } as any);
+        await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
+        await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
+        await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
+        await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
 
         appShell.verifyAll();
         showBannerState.verifyAll();

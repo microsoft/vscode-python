@@ -17,7 +17,7 @@ import { IConfigurationProviderUtils } from './types';
 @injectable()
 export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvider<LaunchRequestArguments, AttachRequestArguments> {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super('pythonExperimental', serviceContainer);
+        super('python', serviceContainer);
     }
     protected async provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration<LaunchRequestArguments>): Promise<void> {
         await super.provideLaunchDefaults(workspaceFolder, debugConfiguration);

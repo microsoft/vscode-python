@@ -6,8 +6,9 @@ import * as net from 'net';
 import { OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol/lib/debugProtocol';
 import { DebuggerPerformanceTelemetry, DebuggerTelemetry } from '../../telemetry/types';
-import { ExperimentalDebuggerType } from './constants';
+import { DebuggerTypeName } from './constants';
 
+export type DebuggerType = typeof DebuggerTypeName;
 export class TelemetryEvent extends OutputEvent {
     body!: {
         /** The category of output (such as: 'console', 'stdout', 'stderr', 'telemetry'). If not specified, 'console' is assumed. */
@@ -51,8 +52,6 @@ export interface ExceptionHandling {
     unhandled: string[];
 }
 
-export type DebuggerType = 'python' | typeof ExperimentalDebuggerType;
-
 export interface AdditionalLaunchDebugOptions {
     redirectOutput?: boolean;
     django?: boolean;
@@ -72,7 +71,7 @@ export interface AdditionalAttachDebugOptions {
 }
 
 export interface BaseLaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
-    type?: DebuggerType;
+    type?: typeof DebuggerTypeName;
     /** An absolute path to the program to debug. */
     module?: string;
     program?: string;
@@ -98,7 +97,7 @@ export interface LaunchRequestArguments extends BaseLaunchRequestArguments, Addi
 }
 
 export interface BaseAttachRequestArguments extends DebugProtocol.AttachRequestArguments {
-    type?: DebuggerType;
+    type?: typeof DebuggerTypeName;
     /** An absolute path to local directory with source. */
     port?: number;
     host?: string;

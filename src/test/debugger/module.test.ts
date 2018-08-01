@@ -9,14 +9,14 @@ import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { noop } from '../../client/common/core.utils';
-import { PTVSD_PATH } from '../../client/debugger/Common/constants';
+import { PTVSD_PATH, DebuggerTypeName } from '../../client/debugger/Common/constants';
 import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { createDebugAdapter } from './utils';
 
 const workspaceDirectory = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5');
-const debuggerType = 'pythonExperimental';
+const debuggerType = DebuggerTypeName;
 suite(`Module Debugging - Misc tests: ${debuggerType}`, () => {
     let debugClient: DebugClient;
     setup(async function () {

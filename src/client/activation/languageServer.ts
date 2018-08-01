@@ -87,7 +87,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
         this.surveyBanner = services.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_LS_SURVEY);
 
-        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
+        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged.bind(this));
     }
 
     public async activate(): Promise<boolean> {
@@ -112,7 +112,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         for (const d of this.disposables) {
             d.dispose();
         }
-        (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged);
+        (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged.bind(this));
     }
 
     private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {

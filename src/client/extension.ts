@@ -27,14 +27,14 @@ import { registerTypes as processRegisterTypes } from './common/process/serviceR
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { ITerminalHelper } from './common/terminal/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry,
-    IExperimentalDebuggerBanner, IExtensionContext, ILogger, IMemento, IOutputChannel,
+    IExtensionContext, ILogger, IMemento, IOutputChannel,
     IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
 import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
 import { registerTypes as debuggerRegisterTypes } from './debugger/serviceRegistry';
-import { IDebugConfigurationProvider } from './debugger/types';
+import { IDebugConfigurationProvider, IExperimentalDebuggerBanner } from './debugger/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import { ICondaService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
