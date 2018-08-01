@@ -799,7 +799,7 @@
                 },
                 "python.jediEnabled": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Enables Jedi as IntelliSense engine instead of Microsoft Python Analysis Engine.",
                     "scope": "resource"
                 },
