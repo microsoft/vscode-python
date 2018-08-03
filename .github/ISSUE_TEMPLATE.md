@@ -9,7 +9,7 @@ Python configuration issues? Please check https://code.visualstudio.com/docs/pyt
 
 Otherwise **please** fill in the requested details below. "XXX" markers should not be present in the final bug report.
 
-If you think a GIF of what is happening would be helpful, consider tools like https://www.cockos.com/licecap/ or https://www.screentogif.com/ .
+If you think a GIF of what is happening would be helpful, consider tools like https://www.cockos.com/licecap/, https://github.com/phw/peek or https://www.screentogif.com/ .
 -->
 
 ## Environment data
