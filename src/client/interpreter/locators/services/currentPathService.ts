@@ -35,9 +35,10 @@ export class CurrentPathService extends CacheableLocatorService {
             .then(listOfInterpreters => _.flatten(listOfInterpreters))
             .then(interpreters => interpreters.filter(item => item.length > 0))
             // tslint:disable-next-line:promise-function-async
-            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter, resource))));
+            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter, resource))))
+            .then(interpreters => interpreters.filter(item => !!item).map(item => item!));
     }
-    private async getInterpreterDetails(interpreter: string, resource?: Uri): Promise<PythonInterpreter> {
+    private async getInterpreterDetails(interpreter: string, resource?: Uri): Promise<PythonInterpreter | undefined> {
         return Promise.all([
             this.helper.getInterpreterInformation(interpreter),
             this.virtualEnvMgr.getEnvironmentName(interpreter),

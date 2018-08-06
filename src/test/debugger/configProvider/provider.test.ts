@@ -14,16 +14,16 @@ import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { IConfigurationService, ILogger, IPythonSettings } from '../../../client/common/types';
-import { PythonDebugConfigurationProvider, PythonV2DebugConfigurationProvider } from '../../../client/debugger';
+import { PythonV2DebugConfigurationProvider } from '../../../client/debugger';
 import { DebugOptions, LaunchRequestArguments } from '../../../client/debugger/Common/Contracts';
 import { PythonLaunchDebugConfiguration } from '../../../client/debugger/configProviders/baseProvider';
 import { ConfigurationProviderUtils } from '../../../client/debugger/configProviders/configurationProviderUtils';
 import { IConfigurationProviderUtils } from '../../../client/debugger/configProviders/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { DebuggerTypeName } from '../../../client/debugger/Common/constants';
 
 [
-    { debugType: 'pythonExperimental', class: PythonV2DebugConfigurationProvider },
-    { debugType: 'python', class: PythonDebugConfigurationProvider }
+    { debugType: DebuggerTypeName, class: PythonV2DebugConfigurationProvider }
 ].forEach(provider => {
     suite(`Debugging - Config Provider ${provider.debugType}`, () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -250,10 +250,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 
             expect(debugConfig).to.have.property('pythonPath', debugPythonPath);
         });
-        test('Test defaults of experimental debugger', async () => {
-            if (provider.debugType !== 'pythonExperimental') {
-                return;
-            }
+        test('Test defaults of debugger', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             const pythonFile = 'xyz.py';
@@ -268,7 +265,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
             expect((debugConfig as any).debugOptions).to.be.deep.equal(['RedirectOutput']);
         });
         test('Test defaults of python debugger', async () => {
-            if (provider.debugType !== 'python') {
+            if (provider.debugType === DebuggerTypeName) {
                 return;
             }
             const pythonPath = `PythonPath_${new Date().toString()}`;
@@ -283,10 +280,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
             expect(debugConfig).to.have.property('debugOptions');
             expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.RedirectOutput]);
         });
-        test('Test overriding defaults of experimental debugger', async () => {
-            if (provider.debugType !== 'pythonExperimental') {
-                return;
-            }
+        test('Test overriding defaults of debugger', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             const pythonFile = 'xyz.py';
@@ -315,21 +309,12 @@ import { IServiceContainer } from '../../../client/ioc/types';
             }
         }
         test('Test fixFilePathCase for Windows', async () => {
-            if (provider.debugType === 'python') {
-                return;
-            }
             await testFixFilePathCase(true, false, false);
         });
         test('Test fixFilePathCase for Linux', async () => {
-            if (provider.debugType === 'python') {
-                return;
-            }
             await testFixFilePathCase(false, false, true);
         });
         test('Test fixFilePathCase for Mac', async () => {
-            if (provider.debugType === 'python') {
-                return;
-            }
             await testFixFilePathCase(false, true, false);
         });
         async function testPyramidConfiguration(isWindows: boolean, isLinux: boolean, isMac: boolean, addPyramidDebugOption: boolean = true, pyramidExists = true, shouldWork = true) {
@@ -366,10 +351,8 @@ import { IServiceContainer } from '../../../client/ioc/types';
             if (shouldWork) {
                 expect(debugConfig).to.have.property('program', pserveFilePath);
 
-                if (provider.debugType === 'pythonExperimental') {
-                    expect(debugConfig).to.have.property('debugOptions');
-                    expect((debugConfig as any).debugOptions).contains(DebugOptions.Jinja);
-                }
+                expect(debugConfig).to.have.property('debugOptions');
+                expect((debugConfig as any).debugOptions).contains(DebugOptions.Jinja);
             } else {
                 expect(debugConfig!.program).to.be.not.equal(pserveFilePath);
             }
@@ -406,9 +389,6 @@ import { IServiceContainer } from '../../../client/ioc/types';
             await testPyramidConfiguration(false, false, true, true, false, false);
         });
         test('Auto detect flask debugging', async () => {
-            if (provider.debugType === 'python') {
-                return;
-            }
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             const pythonFile = 'xyz.py';

@@ -467,7 +467,7 @@ class DebugManager implements Disposable {
 }
 
 async function startDebugger() {
-    logger.init(noop, path.join(__dirname, '..', '..', '..', 'experimental_debug.log'));
+    logger.init(noop, path.join(__dirname, '..', '..', '..', 'debug.log'));
     const serviceContainer = initializeIoc();
     const protocolMessageWriter = serviceContainer.get<IProtocolMessageWriter>(IProtocolMessageWriter);
     try {

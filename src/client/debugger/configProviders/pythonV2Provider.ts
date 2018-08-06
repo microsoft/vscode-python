@@ -17,13 +17,16 @@ import { IConfigurationProviderUtils } from './types';
 @injectable()
 export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvider<LaunchRequestArguments, AttachRequestArguments> {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super('pythonExperimental', serviceContainer);
+        super('python', serviceContainer);
     }
     protected async provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration<LaunchRequestArguments>): Promise<void> {
         await super.provideLaunchDefaults(workspaceFolder, debugConfiguration);
         const debugOptions = debugConfiguration.debugOptions!;
         if (debugConfiguration.debugStdLib) {
             this.debugOption(debugOptions, DebugOptions.DebugStdLib);
+        }
+        if (debugConfiguration.stopOnEntry) {
+            this.debugOption(debugOptions, DebugOptions.StopOnEntry);
         }
         if (debugConfiguration.django) {
             this.debugOption(debugOptions, DebugOptions.Django);

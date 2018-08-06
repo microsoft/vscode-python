@@ -9,6 +9,7 @@ import { IArgumentsHelper, IArgumentsService, TestFilter } from '../../types';
 
 const OptionsWithArguments = ['-c', '-k', '-m', '-o', '-p', '-r', '-W',
     '--assert', '--basetemp', '--capture', '--color', '--confcutdir',
+    '--cov', '--cov-config', '--cov-fail-under', '--cov-report',
     '--deselect', '--dist', '--doctest-glob',
     '--doctest-report', '--durations', '--ignore', '--import-mode',
     '--junit-prefix', '--junit-xml', '--last-failed-no-failures',
@@ -21,15 +22,17 @@ const OptionsWithArguments = ['-c', '-k', '-m', '-o', '-p', '-r', '-W',
     '--numprocesses', '--rsyncdir', '--rsyncignore', '--tx'];
 
 const OptionsWithoutArguments = ['--cache-clear', '--cache-show', '--collect-in-virtualenv',
-    '--collect-only', '--continue-on-collection-errors', '--debug', '--disable-pytest-warnings',
+    '--collect-only', '--continue-on-collection-errors',
+    '--cov-append', '--cov-branch', '--debug', '--disable-pytest-warnings',
     '--disable-warnings', '--doctest-continue-on-failure', '--doctest-ignore-import-errors',
     '--doctest-modules', '--exitfirst', '--failed-first', '--ff', '--fixtures',
     '--fixtures-per-test', '--force-sugar', '--full-trace', '--funcargs', '--help',
     '--keep-duplicates', '--last-failed', '--lf', '--markers', '--new-first', '--nf',
-    '--no-print-logs', '--noconftest', '--old-summary', '--pdb', '--pyargs',
+    '--no-cov', '--no-cov-on-fail',
+    '--no-print-logs', '--noconftest', '--old-summary', '--pdb', '--pyargs', '-PyTest, Unittest-pyargs',
     '--quiet', '--runxfail', '--setup-only', '--setup-plan', '--setup-show', '--showlocals',
     '--strict', '--trace-config', '--verbose', '--version', '-h', '-l', '-q', '-s', '-v', '-x',
-    '--boxed', '--forked', '--looponfail', '--tx', '-d'];
+    '--boxed', '--forked', '--looponfail', '--trace', '--tx', '-d'];
 
 @injectable()
 export class ArgumentsService implements IArgumentsService {
@@ -89,7 +92,7 @@ export class ArgumentsService implements IArgumentsService {
                         '-l', '--showlocals',
                         '--no-print-logs',
                         '--debug',
-                        '--setup-only', '--setup-show', '--setup-plan'
+                        '--setup-only', '--setup-show', '--setup-plan', '--trace'
                     ]);
                     optionsWithArgsToRemove.push(...[
                         '-m', '--maxfail',
@@ -108,7 +111,7 @@ export class ArgumentsService implements IArgumentsService {
                 }
                 case TestFilter.debugAll:
                 case TestFilter.runAll: {
-                    optionsWithoutArgsToRemove.push('--collect-only');
+                    optionsWithoutArgsToRemove.push(...['--collect-only', '--trace']);
                     break;
                 }
                 case TestFilter.debugSpecific:
@@ -117,7 +120,8 @@ export class ArgumentsService implements IArgumentsService {
                         '--collect-only',
                         '--lf', '--last-failed',
                         '--ff', '--failed-first',
-                        '--nf', '--new-first'
+                        '--nf', '--new-first',
+                        '--trace'
                     ]);
                     optionsWithArgsToRemove.push(...[
                         '-k', '-m',

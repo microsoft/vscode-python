@@ -4,7 +4,6 @@ import { ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri }
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import * as settings from '../../common/configSettings';
 import { Commands } from '../../common/constants';
-import { IFileSystem } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IInterpreterService, IShebangCodeLensProvider, PythonInterpreter, WorkspacePythonPath } from '../contracts';
 import { IInterpreterSelector, IPythonPathUpdaterServiceManager } from './types';
@@ -20,14 +19,12 @@ export class InterpreterSelector implements IInterpreterSelector {
     private readonly workspaceService: IWorkspaceService;
     private readonly applicationShell: IApplicationShell;
     private readonly documentManager: IDocumentManager;
-    private readonly fileSystem: IFileSystem;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.applicationShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
-        this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
 
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
         this.disposables.push(commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this)));
@@ -38,8 +35,7 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 
     public async getSuggestions(resourceUri?: Uri) {
-        let interpreters = await this.interpreterManager.getInterpreters(resourceUri);
-        interpreters = await this.removeDuplicates(interpreters);
+        const interpreters = await this.interpreterManager.getInterpreters(resourceUri);
         // tslint:disable-next-line:no-non-null-assertion
         interpreters.sort((a, b) => a.displayName! > b.displayName! ? 1 : -1);
         return Promise.all(interpreters.map(item => this.suggestionToQuickPickItem(item, resourceUri)));
@@ -72,17 +68,6 @@ export class InterpreterSelector implements IInterpreterSelector {
             detail: `${cachedPrefix}${detail}`,
             path: suggestion.path
         };
-    }
-
-    private async removeDuplicates(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
-        const result: PythonInterpreter[] = [];
-        interpreters.forEach(x => {
-            if (result.findIndex(a => a.displayName === x.displayName
-                && a.type === x.type && this.fileSystem.arePathsSame(path.dirname(a.path), path.dirname(x.path))) < 0) {
-                result.push(x);
-            }
-        });
-        return result;
     }
 
     private async setInterpreter() {

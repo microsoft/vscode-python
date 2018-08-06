@@ -96,6 +96,9 @@ suite('Debugging - Capabilities', () => {
         protocolWriter.write(socket!, initializeRequest);
         const actualResponse = await actualResponsePromise;
 
+        // supportsDebuggerProperties is not documented, most probably a VS specific item.
+        const body: any = actualResponse.body;
+        delete body.supportsDebuggerProperties;
         expect(actualResponse.body).to.deep.equal(expectedResponse.body);
     });
 });

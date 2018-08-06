@@ -7,7 +7,13 @@ import { Abstract, IServiceContainer, Newable } from './types';
 
 // This needs to be done once, hence placed in a common location.
 // Used by UnitTestSockerServer and also the extension unit tests.
-decorate(injectable(), EventEmitter);
+// Place within try..catch, as this can only be done once (it's
+// possible another extesion would perform this before our extension).
+try {
+    decorate(injectable(), EventEmitter);
+} catch (ex) {
+    console.warn('Failed to decorate EventEmitter for DI (possibly already decorated by another Extension)', ex);
+}
 
 @injectable()
 export class ServiceContainer implements IServiceContainer {

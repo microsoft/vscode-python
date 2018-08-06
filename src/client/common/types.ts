@@ -152,7 +152,6 @@ export interface IUnitTestSettings {
     readonly unittestEnabled: boolean;
     unittestArgs: string[];
     cwd?: string;
-    readonly useExperimentalDebugger?: boolean;
     readonly autoTestDiscoverOnSaveEnabled: boolean;
 }
 export interface IPylintCategorySeverity {
@@ -267,3 +266,13 @@ export const IBrowserService = Symbol('IBrowserService');
 export interface IBrowserService {
     launch(url: string): void;
 }
+
+export const IPythonExtensionBanner = Symbol('IPythonExtensionBanner');
+export interface IPythonExtensionBanner {
+    enabled: boolean;
+    shownCount: Promise<number>;
+    optionLabels: string[];
+    showBanner(): Promise<void>;
+}
+export const BANNER_NAME_LS_SURVEY: string = 'LSSurveyBanner';
+export const BANNER_NAME_PROPOSE_LS: string = 'ProposeLS';

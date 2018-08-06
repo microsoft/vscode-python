@@ -5,13 +5,14 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { ITerminalServiceFactory } from '../terminal/types';
+import { ExecutionInfo } from '../types';
+import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller } from './types';
 
-const pipenvName = 'pipenv';
+export const pipenvName = 'pipenv';
 
 @injectable()
-export class PipEnvInstaller implements IModuleInstaller {
+export class PipEnvInstaller extends ModuleInstaller implements IModuleInstaller {
     private readonly pipenv: IInterpreterLocatorService;
 
     public get displayName() {
@@ -21,17 +22,18 @@ export class PipEnvInstaller implements IModuleInstaller {
         return 10;
     }
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        super(serviceContainer);
         this.pipenv = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
     }
-
-    public installModule(name: string, resource?: Uri): Promise<void> {
-        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(resource);
-        return terminalService.sendCommand(pipenvName, ['install', name, '--dev']);
-    }
-
     public async isSupported(resource?: Uri): Promise<boolean> {
         const interpreters = await this.pipenv.getInterpreters(resource);
         return interpreters && interpreters.length > 0;
+    }
+    protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
+        return {
+            args: ['install', moduleName, '--dev'],
+            execPath: pipenvName
+        };
     }
 }

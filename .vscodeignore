@@ -10,7 +10,7 @@
 CODE_OF_CONDUCT.md
 CODING_STANDARDS.md
 CONTRIBUTING.md
-CONTRIBUTING - PYTHON_ANALYSIS.md
+CONTRIBUTING - LANGUAGE SERVER.md
 coverconfig.json
 gulpfile.js
 packageExtension.cmd
@@ -26,7 +26,7 @@ yarn.lock
 .nvm/**
 .vscode/**
 .vscode-test/**
-languageServer/publish*.*
+languageServer/**
 bin/**
 BuildOutput/**
 coverage/**

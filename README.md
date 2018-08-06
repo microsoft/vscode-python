@@ -1,6 +1,6 @@
 # Python extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (_including Python 3.6_), including features such as linting, debugging, IntelliSense, code navigation, code formatting, refactoring, unit tests, snippets, and more!
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (2.7, >=3.4), including features such as linting, debugging, IntelliSense, code navigation, code formatting, refactoring, unit tests, snippets, and more!
 
 ## Quick start
 
@@ -39,6 +39,7 @@ The extension is available in multiple languages thanks to external
 contributors (if you would like to contribute a translation, see the
 [pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)):
 
+* `de`
 * `en`
 * `es`
 * `fr`

@@ -3,15 +3,18 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { OutputChannel, Uri } from 'vscode';
-import { Disposable, LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
+import { CancellationToken, CompletionContext, OutputChannel, Position,
+     TextDocument, Uri } from 'vscode';
+import { Disposable, LanguageClient, LanguageClientOptions,
+    ProvideCompletionItemsSignature, ServerOptions } from 'vscode-languageclient';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
-import { IConfigurationService, IExtensionContext, IOutputChannel, IPythonSettings } from '../common/types';
+import { BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, ILogger,
+    IOutputChannel, IPythonExtensionBanner, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
@@ -19,6 +22,7 @@ import {
     PYTHON_LANGUAGE_SERVER_ERROR
 } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';
+import { IUnitTestManagementService } from '../unittests/types';
 import { LanguageServerDownloader } from './downloader';
 import { InterpreterData, InterpreterDataService } from './interpreterDataService';
 import { PlatformData } from './platformData';
@@ -50,6 +54,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private excludedFiles: string[] = [];
     private typeshedPaths: string[] = [];
     private loadExtensionArgs: {} | undefined;
+    private surveyBanner: IPythonExtensionBanner;
     // tslint:disable-next-line:no-unused-variable
     private progressReporting: ProgressReporting | undefined;
 
@@ -80,7 +85,9 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             }
         ));
 
-        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
+        this.surveyBanner = services.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_LS_SURVEY);
+
+        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged.bind(this));
     }
 
     public async activate(): Promise<boolean> {
@@ -89,6 +96,11 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         if (!clientOptions) {
             return false;
         }
+
+        const testManagementService = this.services.get<IUnitTestManagementService>(IUnitTestManagementService);
+        testManagementService.activate()
+            .catch(ex => this.services.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
+
         return this.startLanguageServer(clientOptions);
     }
 
@@ -100,7 +112,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         for (const d of this.disposables) {
             d.dispose();
         }
-        (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged);
+        (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged.bind(this));
     }
 
     private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
@@ -149,6 +161,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         if (this.loadExtensionArgs) {
             this.languageClient!.sendRequest('python/loadExtension', this.loadExtensionArgs);
         }
+
         this.startupCompleted.resolve();
     }
 
@@ -232,7 +245,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                     properties
                 },
                 displayOptions: {
-                    preferredFormat: 1, // Markdown
+                    preferredFormat: 'markdown',
                     trimDocumentationLines: false,
                     maxDocumentationLineLength: 0,
                     trimDocumentationText: false,
@@ -244,6 +257,14 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 testEnvironment: isTestExecution(),
                 analysisUpdates: true,
                 traceLogging
+            },
+            middleware: {
+                provideCompletionItem: (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
+                    if (this.surveyBanner) {
+                        this.surveyBanner.showBanner().ignoreErrors();
+                    }
+                    return next(document, position, context, token);
+                }
             }
         };
     }

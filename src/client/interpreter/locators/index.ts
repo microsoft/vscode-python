@@ -1,34 +1,33 @@
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
-import * as path from 'path';
 import { Disposable, Uri } from 'vscode';
 import { IPlatformService } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
-import { arePathsSame } from '../../common/utils';
 import { IServiceContainer } from '../../ioc/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
     GLOBAL_VIRTUAL_ENV_SERVICE,
+    IInterpreterLocatorHelper,
     IInterpreterLocatorService,
-    InterpreterType,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../contracts';
-import { fixInterpreterDisplayName, isMacDefaultPythonPath } from './helpers';
 
 @injectable()
 export class PythonInterpreterLocatorService implements IInterpreterLocatorService {
-    private disposables: Disposable[] = [];
-    private platform: IPlatformService;
+    private readonly disposables: Disposable[] = [];
+    private readonly platform: IPlatformService;
+    private readonly interpreterLocatorHelper: IInterpreterLocatorHelper;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
+        this.interpreterLocatorHelper = serviceContainer.get<IInterpreterLocatorHelper>(IInterpreterLocatorHelper);
     }
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
         return this.getInterpretersPerResource(resource);
@@ -41,27 +40,10 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         const promises = locators.map(async provider => provider.getInterpreters(resource));
         const listOfInterpreters = await Promise.all(promises);
 
-        // tslint:disable-next-line:underscore-consistent-invocation
-        return _.flatten(listOfInterpreters)
+        const items = _.flatten(listOfInterpreters)
             .filter(item => !!item)
-            .map(item => item!)
-            .map(fixInterpreterDisplayName)
-            .map(item => { item.path = path.normalize(item.path); return item; })
-            .reduce<PythonInterpreter[]>((accumulator, current) => {
-                if (this.platform.isMac && isMacDefaultPythonPath(current.path)) {
-                    return accumulator;
-                }
-                const existingItem = accumulator.find(item => arePathsSame(item.path, current.path));
-                if (!existingItem) {
-                    accumulator.push(current);
-                } else {
-                    // Preserve type information.
-                    if (existingItem.type === InterpreterType.Unknown && current.type !== InterpreterType.Unknown) {
-                        existingItem.type = current.type;
-                    }
-                }
-                return accumulator;
-            }, []);
+            .map(item => item!);
+        return this.interpreterLocatorHelper.mergeInterpreters(items);
     }
     private getLocators(): IInterpreterLocatorService[] {
         const locators: IInterpreterLocatorService[] = [];
@@ -74,6 +56,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         }
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, CONDA_ENV_SERVICE));
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, CONDA_ENV_FILE_SERVICE));
+        locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE));
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, GLOBAL_VIRTUAL_ENV_SERVICE));
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE));
 
@@ -81,7 +64,6 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, KNOWN_PATH_SERVICE));
         }
         locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, CURRENT_PATH_SERVICE));
-        locators.push(this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE));
 
         return locators;
     }

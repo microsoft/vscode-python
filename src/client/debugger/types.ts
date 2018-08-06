@@ -38,7 +38,6 @@ export interface IProtocolMessageWriter {
 }
 
 export const IDebugConfigurationProvider = Symbol('DebugConfigurationProvider');
-
 export const IExperimentalDebuggerBanner = Symbol('IExperimentalDebuggerBanner');
 export interface IExperimentalDebuggerBanner {
     enabled: boolean;
