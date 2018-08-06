@@ -823,6 +823,12 @@
                     "description": "Only show errors and warnings for open files rather than for the entire workspace.",
                     "scope": "resource"
                 },
+                "python.analysis.diagnosticPublishDelay": {
+                    "type": "integer",
+                    "default": 1000,
+                    "description": "Delay before diagnostic messages are transferred to the problems list.",
+                    "scope": "resource"
+                },
                 "python.analysis.typeshedPaths": {
                     "type": "array",
                     "default": [],
