@@ -67,9 +67,11 @@ export class ExtensionActivationService implements IExtensionActivationService, 
         }
     }
     private useJedi(): boolean {
+        if (isLanguageServerTest()) {
+            return false;
+        }
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders!.map(item => item.uri) : [undefined];
         const configuraionService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const jediEnabledForAnyWorkspace = workspacesUris.filter(uri => configuraionService.getSettings(uri).jediEnabled).length > 0;
-        return !isLanguageServerTest() && jediEnabledForAnyWorkspace;
+        return workspacesUris.filter(uri => configuraionService.getSettings(uri).jediEnabled).length > 0;
     }
 }
