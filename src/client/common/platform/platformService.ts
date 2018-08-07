@@ -3,7 +3,7 @@
 'use strict';
 
 import { injectable } from 'inversify';
-import { arch } from 'os';
+import { arch, release } from 'os';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
 import { IPlatformService } from './types';
 
@@ -33,5 +33,16 @@ export class PlatformService implements IPlatformService {
     }
     public get virtualEnvBinName() {
         return this.isWindows ? 'scripts' : 'bin';
+    }
+    public get version(): string {
+        return release();
+    }
+    public get versionMajor(): number {
+        const parts = this.version.split('.');
+        return parts.length > 0 ? parseInt(parts[0], 10) : 0;
+    }
+    public get versionMinor(): number {
+        const parts = this.version.split('.');
+        return parts.length > 1 ? parseInt(parts[1], 10) : 0;
     }
 }
