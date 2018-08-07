@@ -11,6 +11,7 @@ import { ExtensionActivationService } from '../../client/activation/activationSe
 import { ExtensionActivators, IExtensionActivationService, IExtensionActivator } from '../../client/activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { isLanguageServerTest } from '../../client/common/constants';
+import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
@@ -22,6 +23,7 @@ suite('Activation - ActivationService', () => {
             let appShell: TypeMoq.IMock<IApplicationShell>;
             let cmdManager: TypeMoq.IMock<ICommandManager>;
             let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+            let platformService: TypeMoq.IMock<IPlatformService>;
             setup(function () {
                 if (isLanguageServerTest()) {
                     // tslint:disable-next-line:no-invalid-this
@@ -31,6 +33,7 @@ suite('Activation - ActivationService', () => {
                 appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                 workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
                 cmdManager = TypeMoq.Mock.ofType<ICommandManager>();
+                platformService = TypeMoq.Mock.ofType<IPlatformService>();
                 const configService = TypeMoq.Mock.ofType<IConfigurationService>();
                 pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
 
@@ -45,6 +48,7 @@ suite('Activation - ActivationService', () => {
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => []);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICommandManager))).returns(() => cmdManager.object);
+                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
             });
 
             async function testActivation(activationService: IExtensionActivationService, activator: TypeMoq.IMock<IExtensionActivator>) {
