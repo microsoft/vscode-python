@@ -40,18 +40,6 @@ export class PlatformService implements IPlatformService {
     public get osVersion(): string {
         return this._osVersion;
     }
-    // XXX deprecate
-    public get isWindows(): boolean {
-        return this._osType === OSType.Windows;
-    }
-    // XXX deprecate
-    public get isMac(): boolean {
-        return this._osType === OSType.OSX;
-    }
-    // XXX deprecate
-    public get isLinux(): boolean {
-        return this._osType === OSType.Linux;
-    }
     public get is64bit(): boolean {
         return os.arch() === 'x64';
     }
@@ -60,6 +48,17 @@ export class PlatformService implements IPlatformService {
     }
     public get virtualEnvBinName() {
         return this.isWindows ? 'scripts' : 'bin';
+    }
+
+    // XXX Drop the following (in favor of osType).
+    public get isWindows(): boolean {
+        return this._osType === OSType.Windows;
+    }
+    public get isMac(): boolean {
+        return this._osType === OSType.OSX;
+    }
+    public get isLinux(): boolean {
+        return this._osType === OSType.Linux;
     }
 }
 

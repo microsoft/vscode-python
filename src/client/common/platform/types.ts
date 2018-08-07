@@ -28,12 +28,16 @@ export interface IRegistry {
 
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
-    isWindows: boolean;
-    isMac: boolean;
-    isLinux: boolean;
+    osType: OSType;
+    osVersion: string;
     is64bit: boolean;
     pathVariableName: 'Path' | 'PATH';
     virtualEnvBinName: 'bin' | 'scripts';
+
+    // XXX Drop the following (in favor of osType).
+    isWindows: boolean;
+    isMac: boolean;
+    isLinux: boolean;
 }
 
 export type TemporaryFile = { filePath: string } & Disposable;
