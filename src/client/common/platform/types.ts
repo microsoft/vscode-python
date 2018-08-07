@@ -9,6 +9,13 @@ export enum Architecture {
     x86 = 2,
     x64 = 3
 }
+export enum OSType {
+    Unsupported,
+    Windows,
+    OSX,
+    Linux
+}
+// Add "enum OSDistro" here if needed later.
 export enum RegistryHive {
     HKCU, HKLM
 }

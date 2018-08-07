@@ -3,30 +3,42 @@
 'use strict';
 
 import { injectable } from 'inversify';
-import { arch } from 'os';
+import * as os from 'os';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
-import { IPlatformService } from './types';
+import { IPlatformService, OSType } from './types';
 
 @injectable()
 export class PlatformService implements IPlatformService {
-    private _isWindows: boolean;
-    private _isMac: boolean;
+    private _osType: OSType;
 
     constructor() {
-        this._isWindows = /^win/.test(process.platform);
-        this._isMac = /^darwin/.test(process.platform);
+        if (/^win/.test(process.platform)) {
+            this._osType = OSType.Windows;
+        } else if (/^darwin/.test(process.platform)) {
+            this._osType = OSType.OSX;
+        } else if (/^linux/.test(process.platform)) {
+            this._osType = OSType.Linux;
+        } else {
+            this._osType = OSType.Unsupported;
+        }
     }
+    public get osType(): OSType {
+        return this._osType;
+    }
+    // XXX deprecate
     public get isWindows(): boolean {
-        return this._isWindows;
+        return this._osType === OSType.Windows;
     }
+    // XXX deprecate
     public get isMac(): boolean {
-        return this._isMac;
+        return this._osType === OSType.OSX;
     }
+    // XXX deprecate
     public get isLinux(): boolean {
-        return !(this.isWindows || this.isMac);
+        return this._osType === OSType.Linux;
     }
     public get is64bit(): boolean {
-        return arch() === 'x64';
+        return os.arch() === 'x64';
     }
     public get pathVariableName() {
         return this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
