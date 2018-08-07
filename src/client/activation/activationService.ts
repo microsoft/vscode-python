@@ -4,15 +4,20 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import * as semver from 'semver';
 import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { isLanguageServerTest, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
+import { IPlatformService, OSType } from '../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ExtensionActivators, IExtensionActivationService, IExtensionActivator } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
+const LS_MIN_OS_VERSIONS: Map<OSType, string> = new Map([
+    [OSType.OSX, '10.11.0']
+]);
 
 type ActivatorInfo = { jedi: boolean; activator: IExtensionActivator };
 
@@ -36,7 +41,11 @@ export class ExtensionActivationService implements IExtensionActivationService, 
             return;
         }
 
-        const jedi = this.useJedi();
+        let jedi = this.useJedi();
+        if (!jedi && !isLSSupported(this.serviceContainer)) {
+            this.appShell.showWarningMessage('The Python Language Server is not supported on your platform.');
+            jedi = true;
+        }
 
         const engineName = jedi ? 'Jedi Python language engine' : 'Microsoft Python language server';
         this.output.appendLine(`Starting ${engineName}.`);
@@ -74,4 +83,16 @@ export class ExtensionActivationService implements IExtensionActivationService, 
         const configuraionService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         return workspacesUris.filter(uri => configuraionService.getSettings(uri).jediEnabled).length > 0;
     }
+}
+
+function isLSSupported(services: IServiceContainer): boolean {
+    const platform = services.get<IPlatformService>(IPlatformService);
+    const minVer = LS_MIN_OS_VERSIONS[platform.osType];
+    if (minVer === undefined || minVer === null) {
+        return true;
+    }
+    if (platform.osVersion === '') {
+        return false;
+    }
+    return semver.gt(platform.osVersion, minVer);
 }
