@@ -16,7 +16,7 @@ import { ExtensionActivators, IExtensionActivationService, IExtensionActivator }
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
 const LS_MIN_OS_VERSIONS: Map<OSType, string> = new Map([
-    [OSType.OSX, '10.11.0']
+    [OSType.OSX, '10.12.0']  // Sierra or higher
 ]);
 
 type ActivatorInfo = { jedi: boolean; activator: IExtensionActivator };
@@ -94,5 +94,5 @@ function isLSSupported(services: IServiceContainer): boolean {
     if (platform.osVersion === '') {
         return false;
     }
-    return semver.gt(platform.osVersion, minVer);
+    return semver.gte(platform.osVersion, minVer);
 }
