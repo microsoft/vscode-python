@@ -125,7 +125,6 @@ suite('ArgsService: Common', () => {
 });
 
 function getOptions(product: Product, moduleName: string, withValues: boolean) {
-    // const result = spawnSync('/Users/donjayamanne/Desktop/Development/PythonStuff/vscodePythonTesting/testingFolder/venv/bin/python', ['-m', moduleName, '-h']);
     const result = spawnSync(PYTHON_PATH, ['-m', moduleName, '-h']);
     const output = result.stdout.toString();
 
