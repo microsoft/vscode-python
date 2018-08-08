@@ -54,9 +54,3 @@ export interface IFileSystem {
     search(globPattern: string): Promise<string[]>;
     createTemporaryFile(extension: string): Promise<TemporaryFile>;
 }
-
-export interface IVersion {
-    readonly versionString: string;
-    readonly versionMajor: number;
-    readonly versionMinor: number;
-}
