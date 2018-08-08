@@ -127,7 +127,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
     private async checkSupportedPlatform(): Promise<boolean> {
         const platform = this.services.get<IPlatformService>(IPlatformService);
-        const message = await platform.isNetCoreCompatibleOS();
+        const message = await platform.isNetCoreCompatible();
         if (message && message.length > 0) {
             if (platform.isMac) {
                 this.services.get<ILogger>(ILogger).logError(message);

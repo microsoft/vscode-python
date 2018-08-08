@@ -4,11 +4,16 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
+import { Container } from '../../../../node_modules/inversify';
+import { OperatingSystem } from '../../../client/common/platform/operatingSystem';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { PlatformService } from '../../../client/common/platform/platformService';
+import { IOperatingSystem } from '../../../client/common/platform/types';
 import { IPathUtils } from '../../../client/common/types';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
+import { ServiceContainer } from '../../../client/ioc/container';
+import { ServiceManager } from '../../../client/ioc/serviceManager';
 
 use(chaiAsPromised);
 
@@ -19,7 +24,12 @@ suite('Environment Variables Service', () => {
     let pathUtils: IPathUtils;
     let variablesService: IEnvironmentVariablesService;
     setup(() => {
-        pathUtils = new PathUtils(new PlatformService().isWindows);
+        const cont = new Container();
+        const serviceManager = new ServiceManager(cont);
+        const serviceContainer = new ServiceContainer(cont);
+        serviceManager.addSingleton(IOperatingSystem, OperatingSystem);
+
+        pathUtils = new PathUtils(new PlatformService(serviceContainer).isWindows);
         variablesService = new EnvironmentVariablesService(pathUtils);
     });
 
