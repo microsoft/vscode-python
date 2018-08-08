@@ -12,7 +12,7 @@ import { IBrowserService, IDisposableRegistry,
     ILogger, IPersistentStateFactory } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { DebuggerTypeName } from './Common/constants';
-import { IExperimentalDebuggerBanner } from './types';
+import { IDebuggerBanner } from './types';
 
 export enum PersistentStateKeys {
     ShowBanner = 'ShowBanner',
@@ -21,7 +21,7 @@ export enum PersistentStateKeys {
 }
 
 @injectable()
-export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
+export class DebuggerBanner implements IDebuggerBanner {
     private initialized?: boolean;
     private disabledInCurrentSession?: boolean;
     public get enabled(): boolean {

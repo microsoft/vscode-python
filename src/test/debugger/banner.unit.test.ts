@@ -11,9 +11,9 @@ import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../client/common/application/types';
 import { IBrowserService, IDisposableRegistry,
     ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
-import { ExperimentalDebuggerBanner, PersistentStateKeys } from '../../client/debugger/banner';
+import { DebuggerBanner, PersistentStateKeys } from '../../client/debugger/banner';
 import { DebuggerTypeName } from '../../client/debugger/Common/constants';
-import { IExperimentalDebuggerBanner } from '../../client/debugger/types';
+import { IDebuggerBanner } from '../../client/debugger/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 suite('Debugging - Banner', () => {
@@ -24,7 +24,7 @@ suite('Debugging - Banner', () => {
     let showBannerState: typemoq.IMock<IPersistentState<boolean>>;
     let debugService: typemoq.IMock<IDebugService>;
     let appShell: typemoq.IMock<IApplicationShell>;
-    let banner: IExperimentalDebuggerBanner;
+    let banner: IDebuggerBanner;
     const message = 'Can you please take 2 minutes to tell us how the Debugger is working for you?';
     const yes = 'Yes, take survey now';
     const no = 'No thanks';
@@ -57,7 +57,7 @@ suite('Debugging - Banner', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
 
-        banner = new ExperimentalDebuggerBanner(serviceContainer.object);
+        banner = new DebuggerBanner(serviceContainer.object);
     });
     test('Browser is displayed when launching service along with debugger launch counter', async () => {
         const debuggerLaunchCounter = 1234;
