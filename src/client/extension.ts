@@ -34,7 +34,7 @@ import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Commo
 import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
 import { registerTypes as debuggerRegisterTypes } from './debugger/serviceRegistry';
-import { IDebugConfigurationProvider, IExperimentalDebuggerBanner } from './debugger/types';
+import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import { ICondaService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
@@ -159,7 +159,7 @@ export async function activate(context: ExtensionContext) {
         context.subscriptions.push(debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));
     });
 
-    serviceContainer.get<IExperimentalDebuggerBanner>(IExperimentalDebuggerBanner).initialize();
+    serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
     activationDeferred.resolve();
 }
 
