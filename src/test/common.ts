@@ -3,7 +3,6 @@ import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
-import { sleep } from './core';
 import { IS_MULTI_ROOT_TEST } from './initialize';
 
 export * from './core';
@@ -35,7 +34,6 @@ export async function updateSetting(setting: PythonSettingKeys, value: {} | unde
         return;
     }
     await settings.update(setting, value, configTarget);
-    await sleep(2000);
     PythonSettings.dispose();
 }
 
