@@ -27,9 +27,7 @@ export interface IPlatformService {
     is64bit: boolean;
     pathVariableName: 'Path' | 'PATH';
     virtualEnvBinName: 'bin' | 'scripts';
-    version: string;
-    versionMajor: number;
-    versionMinor: number;
+    isNetCoreCompatibleOS: boolean;
 }
 
 export type TemporaryFile = { filePath: string } & Disposable;
@@ -55,4 +53,10 @@ export interface IFileSystem {
     getFileHash(filePath: string): Promise<string | undefined>;
     search(globPattern: string): Promise<string[]>;
     createTemporaryFile(extension: string): Promise<TemporaryFile>;
+}
+
+export interface IVersion {
+    readonly versionString: string;
+    readonly versionMajor: number;
+    readonly versionMinor: number;
 }
