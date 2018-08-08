@@ -60,8 +60,3 @@ export interface IOperatingSystem {
     release(): string;
     arch(): string;
 }
-
-export const ICurrentProcess = Symbol('ICurrentProcess');
-export interface ICurrentProcess {
-    readonly platform: string;
-}
