@@ -12,7 +12,7 @@ import { ArgumentsHelper } from '../../../client/unittests/common/argumentsHelpe
 import { ArgumentsService as PyTestArgumentsService } from '../../../client/unittests/pytest/services/argsService';
 import { IArgumentsHelper } from '../../../client/unittests/types';
 
-suite('ArgsService: nosetest', () => {
+suite('ArgsService: pytest', () => {
     let argumentsService: PyTestArgumentsService;
 
     suiteSetup(() => {
