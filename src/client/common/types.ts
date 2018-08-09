@@ -111,6 +111,7 @@ export interface ICurrentProcess {
     readonly argv: string[];
     readonly stdout: NodeJS.WriteStream;
     readonly stdin: NodeJS.ReadStream;
+    readonly platform: string;
     on(event: string | symbol, listener: Function): this;
 }
 
@@ -244,6 +245,8 @@ export interface IAnalysisSettings {
     readonly information: string[];
     readonly disabled: string[];
     readonly traceLogging: boolean;
+    readonly diagnosticPublishDelay: number;
+    readonly checkOSVersion: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
