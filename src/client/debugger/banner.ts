@@ -36,7 +36,7 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(DebuggerBannerConfig) private config: DebuggerBannerConfig = defaultConfig,
+        private config: DebuggerBannerConfig = defaultConfig,
         _randInt: RandIntFunc | null = getRandomBetween)
     {
         if (!this.enabled) {
