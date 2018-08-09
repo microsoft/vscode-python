@@ -24,11 +24,9 @@ export enum PersistentStateKeys {
 export class DebuggerBanner implements IDebuggerBanner {
     private initialized?: boolean;
     private disabledInCurrentSession?: boolean;
-    public get enabled(): boolean {
-        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        return factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, true).value;
-    }
+
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+
     public initialize() {
         if (this.initialized) {
             return;
@@ -39,17 +37,35 @@ export class DebuggerBanner implements IDebuggerBanner {
         if (!this.enabled) {
             return;
         }
-        const debuggerService = this.serviceContainer.get<IDebugService>(IDebugService);
-        const disposable = debuggerService.onDidTerminateDebugSession(async e => {
-            if (e.type === DebuggerTypeName) {
-                const logger = this.serviceContainer.get<ILogger>(ILogger);
-                await this.onDidTerminateDebugSession()
-                    .catch(ex => logger.logError('Error in debugger Banner', ex));
-            }
-        });
 
-        this.serviceContainer.get<Disposable[]>(IDisposableRegistry).push(disposable);
+        this.addCallback();
     }
+
+    public async launchSurvey(): Promise<void> {
+        return this.action();
+    }
+
+    // "enabled" state
+
+    public get enabled(): boolean {
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        return factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, true).value;
+    }
+
+    public async disable(): Promise<void> {
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        await factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, false).updateValue(false);
+    }
+
+    // showing banner
+
+    public async shouldShowBanner(): Promise<boolean> {
+        if (!this.enabled || this.disabledInCurrentSession) {
+            return false;
+        }
+        return this.passedThreshold();
+    }
+
     public async showBanner(): Promise<void> {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const yes = 'Yes, take survey now';
@@ -58,7 +74,7 @@ export class DebuggerBanner implements IDebuggerBanner {
         switch (response) {
             case yes:
                 {
-                    await this.launchSurvey();
+                    await this.action();
                     await this.disable();
                     break;
                 }
@@ -72,33 +88,26 @@ export class DebuggerBanner implements IDebuggerBanner {
             }
         }
     }
-    public async shouldShowBanner(): Promise<boolean> {
-        if (!this.enabled || this.disabledInCurrentSession) {
-            return false;
-        }
+
+    // persistent counter
+
+    private async passedThreshold(): Promise<boolean> {
         const [threshold, debuggerCounter] = await Promise.all([this.getDebuggerLaunchThresholdCounter(), this.getGetDebuggerLaunchCounter()]);
         return debuggerCounter >= threshold;
     }
 
-    public async disable(): Promise<void> {
-        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        await factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, false).updateValue(false);
-    }
-    public async launchSurvey(): Promise<void> {
-        const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
-        const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
-        browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
-    }
     private async incrementDebuggerLaunchCounter(): Promise<void> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const state = factory.createGlobalPersistentState<number>(PersistentStateKeys.DebuggerLaunchCounter, 0);
         await state.updateValue(state.value + 1);
     }
+
     private async getGetDebuggerLaunchCounter(): Promise<number> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const state = factory.createGlobalPersistentState<number>(PersistentStateKeys.DebuggerLaunchCounter, 0);
         return state.value;
     }
+
     private async getDebuggerLaunchThresholdCounter(): Promise<number> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const state = factory.createGlobalPersistentState<number | undefined>(PersistentStateKeys.DebuggerLaunchThresholdCounter, undefined);
@@ -109,12 +118,34 @@ export class DebuggerBanner implements IDebuggerBanner {
         }
         return state.value!;
     }
+
     private getRandomHex() {
         const appEnv = this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
         const lastHexValue = appEnv.machineId.slice(-1);
         const num = parseInt(`0x${lastHexValue}`, 16);
         return isNaN(num) ? crypto.randomBytes(1).toString('hex').slice(-1) : lastHexValue;
     }
+
+    // debugger-specific functionality
+
+    private addCallback() {
+        const debuggerService = this.serviceContainer.get<IDebugService>(IDebugService);
+        const disposable = debuggerService.onDidTerminateDebugSession(async e => {
+            if (e.type === DebuggerTypeName) {
+                const logger = this.serviceContainer.get<ILogger>(ILogger);
+                await this.onDidTerminateDebugSession()
+                    .catch(ex => logger.logError('Error in debugger Banner', ex));
+            }
+        });
+        this.serviceContainer.get<Disposable[]>(IDisposableRegistry).push(disposable);
+    }
+
+    private async action(): Promise<void> {
+        const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
+        const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
+        browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
+    }
+
     private async onDidTerminateDebugSession(): Promise<void> {
         if (!this.enabled) {
             return;
