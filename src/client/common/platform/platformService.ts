@@ -3,12 +3,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { arch, release } from 'os';
 import { Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { IProcessService, IProcessServiceFactory } from '../process/types';
-import { IConfigurationService, ICurrentProcess } from '../types';
+import { IConfigurationService } from '../types';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
-import { IOperatingSystem, IPlatformService } from './types';
+import { IPlatformService } from './types';
 
 enum OSCheckResult {
     Compatible,
@@ -17,10 +18,10 @@ enum OSCheckResult {
 }
 
 class MacOSVersion {
-    public isCompatibleOS(os: IOperatingSystem): Promise<string> {
+    public isCompatibleOS(): Promise<string> {
         // https://en.wikipedia.org/wiki/Darwin_%28operating_system%29#Release_history
         // 10.12 == Darwin 16.0
-        const parts = os.release().split('.');
+        const parts = release().split('.');
         const versionMajor = parts.length > 0 ? parseInt(parts[0], 10) : 0;
         return Promise.resolve(versionMajor >= 16 ? '' : 'Microsoft Python Language Server does not support MacOS older than 10.12.');
     }
@@ -86,7 +87,7 @@ class LinuxVersion {
 
     private async checkLinux(process: IProcessService, command: string, args: string[], osName: string, key: string, values: string[]): Promise<OSCheckResult> {
         const result = await process.exec(command, args);
-        const words = result.stdout.split(/\s/);
+        const words = result.stdout.split(' \t\n');
         if (words.indexOf(osName) <= 0) {
             return Promise.resolve(OSCheckResult.Unknown);
         }
@@ -116,15 +117,12 @@ class LinuxVersion {
 // tslint:disable-next-line:max-classes-per-file
 @injectable()
 export class PlatformService implements IPlatformService {
-    private readonly _isWindows: boolean;
-    private readonly _isMac: boolean;
-    private readonly os: IOperatingSystem;
+    private _isWindows: boolean;
+    private _isMac: boolean;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-        const process = serviceContainer.get<ICurrentProcess>(ICurrentProcess);
         this._isWindows = /^win/.test(process.platform);
         this._isMac = /^darwin/.test(process.platform);
-        this.os = this.serviceContainer.get<IOperatingSystem>(IOperatingSystem);
     }
     public get isWindows(): boolean {
         return this._isWindows;
@@ -136,7 +134,7 @@ export class PlatformService implements IPlatformService {
         return !(this.isWindows || this.isMac);
     }
     public get is64bit(): boolean {
-        return this.os.arch() === 'x64';
+        return arch() === 'x64';
     }
     public get pathVariableName() {
         return this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
@@ -144,19 +142,17 @@ export class PlatformService implements IPlatformService {
     public get virtualEnvBinName() {
         return this.isWindows ? 'scripts' : 'bin';
     }
-    public isNetCoreCompatible(resource?: Uri): Promise<string> {
-        if (this.serviceContainer) {
-            const config = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-            const settings = config.getSettings(resource);
-            if (settings && settings.analysis && !settings.analysis.checkOSVersion) {
-                return Promise.resolve('');
-            }
-            if (this.isMac) {
-                return new MacOSVersion().isCompatibleOS(this.os);
-            }
-            if (this.isLinux) {
-                return new LinuxVersion(this.serviceContainer).isCompatibleOS();
-            }
+    public isNetCoreCompatibleOS(resource?: Uri): Promise<string> {
+        const config = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const settings = config.getSettings(resource);
+        if (settings && settings.analysis && !settings.analysis.checkOSVersion) {
+            return Promise.resolve('');
+        }
+        if (this.isMac) {
+            return new MacOSVersion().isCompatibleOS();
+        }
+        if (this.isLinux) {
+            return new LinuxVersion(this.serviceContainer).isCompatibleOS();
         }
         return Promise.resolve(''); // Windows matches between .NET Core and VS Code.
     }

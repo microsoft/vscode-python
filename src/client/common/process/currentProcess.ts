@@ -22,7 +22,4 @@ export class CurrentProcess implements ICurrentProcess {
     public get stdin(): NodeJS.ReadStream {
         return process.stdin;
     }
-    public get platform(): string {
-        return process.platform;
-    }
 }

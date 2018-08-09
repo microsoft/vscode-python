@@ -21,7 +21,4 @@ export class MockProcess implements ICurrentProcess {
     public get stdin(): NodeJS.ReadStream {
         return TypeMoq.Mock.ofType<NodeJS.ReadStream>().object;
     }
-    public get platform(): string {
-        return 'win';
-    }
 }
