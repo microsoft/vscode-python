@@ -8,8 +8,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IDebugService } from '../common/application/types';
 import '../common/extensions';
-import { IBrowserService, IDisposableRegistry,
-    ILogger, IPersistentStateFactory } from '../common/types';
+import { IDisposableRegistry, ILogger, IPersistentStateFactory } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { DebuggerTypeName } from './Common/constants';
 import { IExperimentalDebuggerBanner } from './types';
@@ -86,8 +85,8 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
     }
     public async launchSurvey(): Promise<void> {
         const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
-        const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
-        browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
+        const appShell: IApplicationShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        appShell.openUrl(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
     }
     private async incrementDebuggerLaunchCounter(): Promise<void> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
