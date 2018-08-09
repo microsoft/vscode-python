@@ -27,9 +27,6 @@ export interface IPlatformService {
     is64bit: boolean;
     pathVariableName: 'Path' | 'PATH';
     virtualEnvBinName: 'bin' | 'scripts';
-    version: string;
-    versionMajor: number;
-    versionMinor: number;
 }
 
 export type TemporaryFile = { filePath: string } & Disposable;

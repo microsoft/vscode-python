@@ -3,24 +3,18 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import {
-    CancellationToken, CompletionContext, OutputChannel, Position,
-    TextDocument, Uri
-} from 'vscode';
-import {
-    Disposable, LanguageClient, LanguageClientOptions,
-    ProvideCompletionItemsSignature, ServerOptions
-} from 'vscode-languageclient';
+import { CancellationToken, CompletionContext, OutputChannel, Position,
+     TextDocument, Uri } from 'vscode';
+import { Disposable, LanguageClient, LanguageClientOptions,
+    ProvideCompletionItemsSignature, ServerOptions } from 'vscode-languageclient';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
-import {
-    BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, ILogger,
-    IOutputChannel, IPythonExtensionBanner, IPythonSettings
-} from '../common/types';
+import { BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, ILogger,
+    IOutputChannel, IPythonExtensionBanner, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
@@ -97,10 +91,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     }
 
     public async activate(): Promise<boolean> {
-        if (!this.checkSupportedPlatform()) {
-            return false;
-        }
-
         this.sw.reset();
         const clientOptions = await this.getAnalysisOptions();
         if (!clientOptions) {
@@ -125,15 +115,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged.bind(this));
     }
 
-    private checkSupportedPlatform(): boolean {
-        const platform = this.services.get<IPlatformService>(IPlatformService);
-        if (platform.isMac && platform.versionMajor === 10 && platform.versionMinor < 12) {
-            this.services.get<ILogger>(ILogger).logError('Unsupported MacOS');
-            this.appShell.showErrorMessage('Microsoft Python Language Server does not support MacOS older than 10.12.');
-            return false;
-        }
-        return true;
-    }
     private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
 
