@@ -9,7 +9,21 @@ import { IServiceContainer } from '../../ioc/types';
 import { IProcessService, IProcessServiceFactory } from '../process/types';
 import { IConfigurationService } from '../types';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
-import { IPlatformService } from './types';
+import { IPlatformService, IVersion } from './types';
+
+class OSVersion implements IVersion {
+    public get versionString(): string {
+        return release();
+    }
+    public get versionMajor(): number {
+        const parts = this.versionString.split('.');
+        return parts.length > 0 ? parseInt(parts[0], 10) : 0;
+    }
+    public get versionMinor(): number {
+        const parts = this.versionString.split('.');
+        return parts.length > 1 ? parseInt(parts[1], 10) : 0;
+    }
+}
 
 enum OSCheckResult {
     Compatible,
@@ -21,9 +35,7 @@ class MacOSVersion {
     public isCompatibleOS(): Promise<string> {
         // https://en.wikipedia.org/wiki/Darwin_%28operating_system%29#Release_history
         // 10.12 == Darwin 16.0
-        const parts = release().split('.');
-        const versionMajor = parts.length > 0 ? parseInt(parts[0], 10) : 0;
-        return Promise.resolve(versionMajor >= 16 ? '' : 'Microsoft Python Language Server does not support MacOS older than 10.12.');
+        return Promise.resolve(new OSVersion().versionMajor >= 16 ? '' : 'Microsoft Python Language Server does not support MacOS older than 10.12.');
     }
 }
 
