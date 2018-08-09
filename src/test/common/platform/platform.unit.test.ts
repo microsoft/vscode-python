@@ -4,9 +4,8 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Container } from '../../../../node_modules/inversify';
-import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../../../client/common/platform/constants';
 import { PlatformService } from '../../../client/common/platform/platformService';
-import { IOperatingSystem, IPlatformService } from '../../../client/common/platform/types';
+import { IOperatingSystem } from '../../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { IAnalysisSettings, IConfigurationService, ICurrentProcess, IPythonSettings } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
@@ -45,13 +44,21 @@ suite('Platform', () => {
         serviceManager.addSingletonInstance(IPythonExecutionFactory, execFactory.object);
     });
     test('Windows platform check', async () => {
-        const platform = setupWindows();
+        process.setup(x => x.platform).returns(() => 'win32');
+        serviceManager.addSingletonInstance(ICurrentProcess, process.object);
+        serviceManager.addSingletonInstance(IOperatingSystem, os.object);
+        const platform = new PlatformService(serviceContainer);
+
         expect(platform.isWindows).to.be.equal(true, 'Platform must be Windows');
         expect(platform.isMac).to.be.equal(false, 'Platform must not be Mac');
         expect(platform.isLinux).to.be.equal(false, 'Platform must not be Linux');
     });
     test('Mac platform check', async () => {
-        const platform = setupMac();
+        process.setup(x => x.platform).returns(() => 'darwin');
+        serviceManager.addSingletonInstance(ICurrentProcess, process.object);
+        serviceManager.addSingletonInstance(IOperatingSystem, os.object);
+        const platform = new PlatformService(serviceContainer);
+
         expect(platform.isMac).to.be.equal(true, 'Platform must be Mac');
         expect(platform.isWindows).to.be.equal(false, 'Platform must not be Windows');
         expect(platform.isLinux).to.be.equal(false, 'Platform must not be Linux');
@@ -73,51 +80,19 @@ suite('Platform', () => {
         expect(platform.is64bit).to.be.equal(true, 'Platform must be x64');
     });
     test('bin/scripts check (Windows)', async () => {
-        const platform = setupWindows();
-        expect(platform.virtualEnvBinName).to.be.equal('scripts', 'Venv bin must be scripts on Windows');
-    });
-    test('bin/scripts check (Mac/Linux)', async () => {
-        const platform = setupMac();
-        expect(platform.virtualEnvBinName).to.be.equal('bin', 'Venv bin must be scripts on Mac');
-    });
-    test('Path variable check (Windows)', async () => {
-        const platform = setupWindows();
-        expect(platform.pathVariableName).to.be.equal(WINDOWS_PATH_VARIABLE_NAME, 'Wrong path variable name on Windows');
-    });
-    test('Path variable check (Mac/Linux)', async () => {
-        const platform = setupMac();
-        expect(platform.pathVariableName).to.be.equal(NON_WINDOWS_PATH_VARIABLE_NAME, 'Wrong path variable name on Mac');
-    });
-    test('.NET Core compat (Windows)', async () => {
-        const platform = setupWindows();
-        expect(platform.isNetCoreCompatible()).to.eventually.be.equal('', 'Windows must be .NET Core compatible');
-    });
-    test('.NET Core compat (Mac 16)', async () => {
-        const platform = setupMac('16.1');
-        expect(platform.isNetCoreCompatible()).to.eventually.be.equal('', 'Darwin 16.1 must be .NET Core compatible');
-    });
-    test('.NET Core compat (Mac 17)', async () => {
-        const platform = setupMac('17.0');
-        expect(platform.isNetCoreCompatible()).to.eventually.be.equal('', 'Darwin 17.0 must be .NET Core compatible');
-    });
-    test('.NET Core compat (Mac 15)', async () => {
-        const platform = setupMac('15.1');
-        expect(platform.isNetCoreCompatible()).to.eventually.be.equal('Microsoft Python Language Server does not support MacOS older than 10.12.', 'Darwin 15.1 must not be .NET Core compatible');
-    });
-
-    function setupWindows(): IPlatformService {
         process.setup(x => x.platform).returns(() => 'win32');
         serviceManager.addSingletonInstance(ICurrentProcess, process.object);
         serviceManager.addSingletonInstance(IOperatingSystem, os.object);
-        return new PlatformService(serviceContainer);
-    }
-    function setupMac(release?: string): IPlatformService {
+        const platform = new PlatformService(serviceContainer);
+
+        expect(platform.virtualEnvBinName).to.be.equal('scripts', 'Venv bin must be scripts on Windows');
+    });
+    test('bin/scripts check (Mac/Linux)', async () => {
         process.setup(x => x.platform).returns(() => 'darwin');
         serviceManager.addSingletonInstance(ICurrentProcess, process.object);
-        if (release) {
-            os.setup(x => x.release()).returns(() => release);
-        }
         serviceManager.addSingletonInstance(IOperatingSystem, os.object);
-        return new PlatformService(serviceContainer);
-    }
+        const platform = new PlatformService(serviceContainer);
+
+        expect(platform.virtualEnvBinName).to.be.equal('bin', 'Venv bin must be scripts on Mac');
+    });
 });
