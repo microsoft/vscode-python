@@ -6,8 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
-import { IBrowserService, IPersistentStateFactory,
-    IPythonExtensionBanner } from '../common/types';
+import { IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
 import { getRandomBetween } from '../common/utils';
 
 // persistent state names, exported to make use of in testing
@@ -33,15 +32,13 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     private maxCompletionsBeforeShow: number;
     private isInitialized: boolean = false;
     private bannerMessage: string = 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?';
-    private bannerLabels: string [] = [ 'Yes, take survey now', 'No, thanks'];
+    private bannerLabels: string[] = ['Yes, take survey now', 'No, thanks'];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-        @inject(IBrowserService) private browserService: IBrowserService,
         showAfterMinimumEventsCount: number = 100,
-        showBeforeMaximumEventsCount: number = 500)
-    {
+        showBeforeMaximumEventsCount: number = 500) {
         this.minCompletionsBeforeShow = showAfterMinimumEventsCount;
         this.maxCompletionsBeforeShow = showBeforeMaximumEventsCount;
         this.initialize();
@@ -105,7 +102,7 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
             return false;
         }
 
-        if (! launchCounter) {
+        if (!launchCounter) {
             launchCounter = await this.getPythonLSLaunchCounter();
         }
         const threshold: number = await this.getPythonLSLaunchThresholdCounter();
@@ -117,9 +114,13 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
         await this.persistentState.createGlobalPersistentState<boolean>(LSSurveyStateKeys.ShowBanner, false).updateValue(false);
     }
 
+    public async enable(): Promise<void> {
+        await this.persistentState.createGlobalPersistentState<boolean>(LSSurveyStateKeys.ShowBanner, true).updateValue(true);
+    }
+
     public async launchSurvey(): Promise<void> {
         const launchCounter = await this.getPythonLSLaunchCounter();
-        this.browserService.launch(`https://www.research.net/r/LJZV9BZ?n=${launchCounter}`);
+        this.appShell.openUrl(`https://www.research.net/r/LJZV9BZ?n=${launchCounter}`);
     }
 
     private async incrementPythonLanguageServiceLaunchCounter(): Promise<number> {

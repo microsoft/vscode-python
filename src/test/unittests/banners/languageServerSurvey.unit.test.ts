@@ -8,13 +8,12 @@
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { IApplicationShell } from '../../../client/common/application/types';
-import { IBrowserService, IConfigurationService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
+import { IConfigurationService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { LanguageServerSurveyBanner, LSSurveyStateKeys } from '../../../client/languageServices/languageServerSurveyBanner';
 
 suite('Language Server Survey Banner', () => {
     let config: typemoq.IMock<IConfigurationService>;
     let appShell: typemoq.IMock<IApplicationShell>;
-    let browser: typemoq.IMock<IBrowserService>;
     const message = 'Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?';
     const yes = 'Yes, take survey now';
     const no = 'No, thanks';
@@ -22,36 +21,35 @@ suite('Language Server Survey Banner', () => {
     setup(() => {
         config = typemoq.Mock.ofType<IConfigurationService>();
         appShell = typemoq.Mock.ofType<IApplicationShell>();
-        browser = typemoq.Mock.ofType<IBrowserService>();
     });
     test('Is debugger enabled upon creation?', () => {
         const enabledValue: boolean = true;
         const attemptCounter: number = 0;
         const completionsCount: number = 0;
-        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 100, appShell.object, browser.object);
+        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 100, appShell.object);
         expect(testBanner.enabled).to.be.equal(true, 'Sampling 100/100 should always enable the banner.');
     });
     test('Do not show banner when it is disabled', () => {
         appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message),
-                                                    typemoq.It.isValue(yes),
-                                                    typemoq.It.isValue(no)))
+            typemoq.It.isValue(yes),
+            typemoq.It.isValue(no)))
             .verifiable(typemoq.Times.never());
         const enabledValue: boolean = true;
         const attemptCounter: number = 0;
         const completionsCount: number = 0;
-        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object);
+        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object);
         testBanner.showBanner().ignoreErrors();
     });
     test('shouldShowBanner must return false when Banner is implicitly disabled by sampling', () => {
         const enabledValue: boolean = true;
         const attemptCounter: number = 0;
         const completionsCount: number = 0;
-        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object);
+        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object);
         expect(testBanner.enabled).to.be.equal(false, 'We implicitly disabled the banner, it should never show.');
     });
 });
 
-function preparePopup(attemptCounter: number, completionsCount: number, enabledValue: boolean, minCompletionCount: number, maxCompletionCount: number, appShell: IApplicationShell, browser: IBrowserService): LanguageServerSurveyBanner {
+function preparePopup(attemptCounter: number, completionsCount: number, enabledValue: boolean, minCompletionCount: number, maxCompletionCount: number, appShell: IApplicationShell): LanguageServerSurveyBanner {
     const myfactory: typemoq.IMock<IPersistentStateFactory> = typemoq.Mock.ofType<IPersistentStateFactory>();
     const enabledValState: typemoq.IMock<IPersistentState<boolean>> = typemoq.Mock.ofType<IPersistentState<boolean>>();
     const attemptCountState: typemoq.IMock<IPersistentState<number>> = typemoq.Mock.ofType<IPersistentState<number>>();
@@ -99,7 +97,6 @@ function preparePopup(attemptCounter: number, completionsCount: number, enabledV
     return new LanguageServerSurveyBanner(
         appShell,
         myfactory.object,
-        browser,
         minCompletionCount,
         maxCompletionCount);
 }

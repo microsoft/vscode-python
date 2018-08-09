@@ -9,8 +9,8 @@ import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../client/common/application/types';
-import { IBrowserService, IDisposableRegistry,
-    ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import { IDisposableRegistry, ILogger,
+    IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { ExperimentalDebuggerBanner, PersistentStateKeys } from '../../client/debugger/banner';
 import { DebuggerTypeName } from '../../client/debugger/Common/constants';
 import { IExperimentalDebuggerBanner } from '../../client/debugger/types';
@@ -18,7 +18,6 @@ import { IServiceContainer } from '../../client/ioc/types';
 
 suite('Debugging - Banner', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
-    let browser: typemoq.IMock<IBrowserService>;
     let launchCounterState: typemoq.IMock<IPersistentState<number>>;
     let launchThresholdCounterState: typemoq.IMock<IPersistentState<number | undefined>>;
     let showBannerState: typemoq.IMock<IPersistentState<boolean>>;
@@ -31,7 +30,6 @@ suite('Debugging - Banner', () => {
 
     setup(() => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
-        browser = typemoq.Mock.ofType<IBrowserService>();
         debugService = typemoq.Mock.ofType<IDebugService>();
         const logger = typemoq.Mock.ofType<ILogger>();
 
@@ -50,7 +48,6 @@ suite('Debugging - Banner', () => {
             .setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.DebuggerLaunchThresholdCounter), typemoq.It.isAny()))
             .returns(() => launchThresholdCounterState.object);
 
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IBrowserService))).returns(() => browser.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IPersistentStateFactory))).returns(() => factory.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDebugService))).returns(() => debugService.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(ILogger))).returns(() => logger.object);
@@ -62,13 +59,12 @@ suite('Debugging - Banner', () => {
     test('Browser is displayed when launching service along with debugger launch counter', async () => {
         const debuggerLaunchCounter = 1234;
         launchCounterState.setup(l => l.value).returns(() => debuggerLaunchCounter).verifiable(typemoq.Times.once());
-        browser.setup(b => b.launch(typemoq.It.isValue(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`)))
+        appShell.setup(b => b.openUrl(typemoq.It.isValue(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`)))
             .verifiable(typemoq.Times.once());
 
         await banner.launchSurvey();
 
         launchCounterState.verifyAll();
-        browser.verifyAll();
     });
     test('Increment Debugger Launch Counter when debug session starts', async () => {
         let onDidTerminateDebugSessionCb: (e: DebugSession) => Promise<void>;
@@ -88,7 +84,6 @@ suite('Debugging - Banner', () => {
         await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
 
         launchCounterState.verifyAll();
-        browser.verifyAll();
         debugService.verifyAll();
         showBannerState.verifyAll();
     });
@@ -107,7 +102,6 @@ suite('Debugging - Banner', () => {
         banner.initialize();
 
         launchCounterState.verifyAll();
-        browser.verifyAll();
         debugService.verifyAll();
         showBannerState.verifyAll();
     });
