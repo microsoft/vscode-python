@@ -7,7 +7,7 @@ import { Container } from '../../../../node_modules/inversify';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../../../client/common/platform/constants';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IOperatingSystem, IPlatformService } from '../../../client/common/platform/types';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
+import { ExecutionResult, IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { IAnalysisSettings, IConfigurationService, ICurrentProcess, IPythonSettings } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
@@ -19,8 +19,8 @@ suite('Platform', () => {
     let config: TypeMoq.IMock<IConfigurationService>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let analysisSettings: TypeMoq.IMock<IAnalysisSettings>;
-    let execFactory: TypeMoq.IMock<IPythonExecutionFactory>;
-    let exec: TypeMoq.IMock<IPythonExecutionService>;
+    let execFactory: TypeMoq.IMock<IProcessServiceFactory>;
+    let exec: TypeMoq.IMock<IProcessService>;
     let serviceManager: ServiceManager;
     let serviceContainer: ServiceContainer;
 
@@ -34,15 +34,15 @@ suite('Platform', () => {
         config = TypeMoq.Mock.ofType<IConfigurationService>();
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         analysisSettings = TypeMoq.Mock.ofType<IAnalysisSettings>();
-        execFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
-        exec = TypeMoq.Mock.ofType<IPythonExecutionService>();
+        execFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+        exec = TypeMoq.Mock.ofType<IProcessService>();
 
         pythonSettings.setup(x => x.analysis).returns(() => analysisSettings.object);
         config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         serviceManager.addSingletonInstance(IConfigurationService, config.object);
 
         execFactory.setup(x => x.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(exec.object));
-        serviceManager.addSingletonInstance(IPythonExecutionFactory, execFactory.object);
+        serviceManager.addSingletonInstance(IProcessServiceFactory, execFactory.object);
     });
     test('Windows platform check', async () => {
         const platform = setupWindows();
@@ -92,17 +92,33 @@ suite('Platform', () => {
         const platform = setupWindows();
         expect(platform.isNetCoreCompatible()).to.eventually.be.equal('', 'Windows must be .NET Core compatible');
     });
-    test('.NET Core compat (Mac 16)', async () => {
+    test('.NET Core compat (MacOS 10.12)', async () => {
         const platform = setupMac('16.1');
         expect(platform.isNetCoreCompatible()).to.eventually.be.equal('', 'Darwin 16.1 must be .NET Core compatible');
     });
-    test('.NET Core compat (Mac 17)', async () => {
+    test('.NET Core compat (MacOS 10.13)', async () => {
         const platform = setupMac('17.0');
         expect(platform.isNetCoreCompatible()).to.eventually.be.equal('', 'Darwin 17.0 must be .NET Core compatible');
     });
-    test('.NET Core compat (Mac 15)', async () => {
+    test('.NET Core compat (MacOS 10.11)', async () => {
         const platform = setupMac('15.1');
         expect(platform.isNetCoreCompatible()).to.eventually.be.equal('Microsoft Python Language Server does not support MacOS older than 10.12.', 'Darwin 15.1 must not be .NET Core compatible');
+    });
+    test('.NET Core compat (Ubuntu 18)', async () => {
+        const platform = setupLinux('Description:\t\tUbuntu 18\nRelease:\t18.04');
+        expect(platform.isNetCoreCompatible()).to.eventually.be.equal('', 'Ubuntu 18 must be .NET Core compatible');
+    });
+    test('.NET Core compat (Ubuntu 16)', async () => {
+        const platform = setupLinux('Description:\t\tUbuntu 16\nRelease:\t16.04');
+        expect(platform.isNetCoreCompatible()).to.eventually.be.equal('', 'Ubuntu 16 must be .NET Core compatible');
+    });
+    test('.NET Core compat (Ubuntu 14)', async () => {
+        const platform = setupLinux('Description:\t\tUbuntu 14\nRelease:\t14.04');
+        expect(platform.isNetCoreCompatible()).to.eventually.be.equal('', 'Ubuntu 14 must be .NET Core compatible');
+    });
+    test('.NET Core compat (Ubuntu 17)', async () => {
+        const platform = setupLinux('Description:\t\tUbuntu 17\nRelease:\t17.04');
+        expect(platform.isNetCoreCompatible()).to.eventually.be.equal('Microsoft Python Language Server only supports Ubuntu 18, 16 or 14.', 'Ubuntu 17 must be not .NET Core compatible');
     });
 
     function setupWindows(): IPlatformService {
@@ -117,6 +133,16 @@ suite('Platform', () => {
         if (release) {
             os.setup(x => x.release()).returns(() => release);
         }
+        serviceManager.addSingletonInstance(IOperatingSystem, os.object);
+        return new PlatformService(serviceContainer);
+    }
+    function setupLinux(version: string): IPlatformService {
+        const output: ExecutionResult<string> = {
+            stdout: version
+        };
+        exec.setup(x => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(output));
+        serviceManager.addSingletonInstance(ICurrentProcess, process.object);
         serviceManager.addSingletonInstance(IOperatingSystem, os.object);
         return new PlatformService(serviceContainer);
     }
