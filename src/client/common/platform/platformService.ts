@@ -4,10 +4,8 @@
 
 import { inject, injectable } from 'inversify';
 import { arch, release } from 'os';
-import { Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { IProcessService, IProcessServiceFactory } from '../process/types';
-import { IConfigurationService } from '../types';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
 import { IPlatformService, IVersion } from './types';
 
@@ -100,29 +98,20 @@ class LinuxVersion {
     private async checkLinux(process: IProcessService, command: string, args: string[], osName: string, key: string, values: string[]): Promise<OSCheckResult> {
         const result = await process.exec(command, args);
         const words = result.stdout.split(' \t\n');
-        if (words.indexOf(osName) <= 0) {
-            return Promise.resolve(OSCheckResult.Unknown);
-        }
-
-        const index = words.indexOf(key); // looking for 'release' variety
-        if (index >= 0 && index < words.length - 1) {
-            const version = words[index + 1];
-            const parts = version.split('.');
-            const major = parts[0];
-            const minor = parts.length > 1 ? parts[1] : undefined;
-            for (const v of values) {
-                if (v.indexOf('.') > 0 && minor) {
-                    // We need to check both major and minor
-                    const p = v.split('.');
-                    if (major === p[0] && minor && parseInt(minor, 10) >= parseInt(p[1], 10)) {
+        if (words.indexOf(osName) > 0) {
+            const index = words.indexOf(key);
+            if (index >= 0 && index < words.length - 1) {
+                const version = words[index + 1];
+                const major = version.split('.')[0];
+                for (const v of values) {
+                    if (major === v) {
                         return Promise.resolve(OSCheckResult.Compatible);
                     }
-                } else if (major === v) {
-                    return Promise.resolve(OSCheckResult.Compatible);
                 }
             }
+            return Promise.resolve(OSCheckResult.Incompatible);
         }
-        return Promise.resolve(OSCheckResult.Incompatible);
+        return Promise.resolve(OSCheckResult.Unknown);
     }
 }
 
@@ -154,12 +143,7 @@ export class PlatformService implements IPlatformService {
     public get virtualEnvBinName() {
         return this.isWindows ? 'scripts' : 'bin';
     }
-    public isNetCoreCompatibleOS(resource?: Uri): Promise<string> {
-        const config = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const settings = config.getSettings(resource);
-        if (settings && settings.analysis && !settings.analysis.checkOSVersion) {
-            return Promise.resolve('');
-        }
+    public isNetCoreCompatibleOS(): Promise<string> {
         if (this.isMac) {
             return new MacOSVersion().isCompatibleOS();
         }
