@@ -10,6 +10,7 @@ import { IApplicationEnvironment, IApplicationShell, IDebugService } from '../co
 import '../common/extensions';
 import { IBrowserService, IDisposableRegistry,
     ILogger, IPersistentStateFactory } from '../common/types';
+import { getRandomBetween } from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
 import { DebuggerTypeName } from './Common/constants';
 import { IDebuggerBanner } from './types';
@@ -20,6 +21,14 @@ export enum PersistentStateKeys {
     DebuggerLaunchThresholdCounter = 'DebuggerLaunchThresholdCounter'
 }
 
+type RandIntFunc = (min: number, max: number) => number;
+
+export class DebuggerBannerConfig {
+    public sampleSizePerHundred: number = 10;  // 10%
+}
+
+const defaultConfig = new DebuggerBannerConfig();
+
 @injectable()
 export class DebuggerBanner implements IDebuggerBanner {
     private initialized?: boolean;
@@ -28,7 +37,23 @@ export class DebuggerBanner implements IDebuggerBanner {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         return factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, true).value;
     }
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(DebuggerBannerConfig) private config: DebuggerBannerConfig = defaultConfig,
+        _randInt: RandIntFunc | null = getRandomBetween)
+    {
+        if (!this.enabled) {
+            return;
+        }
+
+        if (_randInt !== null) {
+            // Only show the banner to a subset of users.  (see GH-2300)
+            const randomSample: number = _randInt(0, 100);
+            if (randomSample >= this.config.sampleSizePerHundred) {
+                this.disable().ignoreErrors();
+            }
+        }
+    }
     public initialize() {
         if (this.initialized) {
             return;

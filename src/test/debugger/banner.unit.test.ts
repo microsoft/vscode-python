@@ -57,7 +57,7 @@ suite('Debugging - Banner', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
 
-        banner = new DebuggerBanner(serviceContainer.object);
+        banner = new DebuggerBanner(serviceContainer.object, undefined, null);
     });
     test('Browser is displayed when launching service along with debugger launch counter', async () => {
         const debuggerLaunchCounter = 1234;
@@ -113,7 +113,7 @@ suite('Debugging - Banner', () => {
     });
     test('shouldShowBanner must return false when Banner is disabled', async () => {
         showBannerState.setup(s => s.value).returns(() => false)
-            .verifiable(typemoq.Times.once());
+            .verifiable(typemoq.Times.atLeastOnce());
 
         expect(await banner.shouldShowBanner()).to.be.equal(false, 'Incorrect value');
 
@@ -121,7 +121,7 @@ suite('Debugging - Banner', () => {
     });
     test('shouldShowBanner must return false when Banner is enabled and debug counter is not same as threshold', async () => {
         showBannerState.setup(s => s.value).returns(() => true)
-            .verifiable(typemoq.Times.once());
+            .verifiable(typemoq.Times.atLeastOnce());
         launchCounterState.setup(l => l.value).returns(() => 1)
             .verifiable(typemoq.Times.once());
         launchThresholdCounterState.setup(t => t.value).returns(() => 10)
@@ -133,19 +133,37 @@ suite('Debugging - Banner', () => {
         launchCounterState.verifyAll();
         launchThresholdCounterState.verifyAll();
     });
-    test('shouldShowBanner must return true when Banner is enabled and debug counter is same as threshold', async () => {
-        showBannerState.setup(s => s.value).returns(() => true)
+    test('shouldShowBanner returns false if user not selected (90%)', async () => {
+        let enabled = true;
+        showBannerState.setup(s => s.value).returns(() => enabled);
+        showBannerState.setup(s => s.updateValue(typemoq.It.isAny())).returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
-        launchCounterState.setup(l => l.value).returns(() => 10)
-            .verifiable(typemoq.Times.once());
-        launchThresholdCounterState.setup(t => t.value).returns(() => 10)
-            .verifiable(typemoq.Times.atLeastOnce());
+        launchCounterState.setup(l => l.value).returns(() => 10);
+        launchThresholdCounterState.setup(t => t.value).returns(() => 10);
+        function randInt(min: number, max: number): number {
+            return Math.floor((max - min) / 10);
+        }
+        const banner2 = new DebuggerBanner(serviceContainer.object, undefined, randInt);
 
-        expect(await banner.shouldShowBanner()).to.be.equal(true, 'Incorrect value');
-
+        // The banner got disabled.
         showBannerState.verifyAll();
-        launchCounterState.verifyAll();
-        launchThresholdCounterState.verifyAll();
+        enabled = false;
+
+        const result = await banner2.shouldShowBanner();
+        expect(result).to.be.equal(false, 'Incorrect value');
+    });
+    test('shouldShowBanner returns true if user selected (10%)', async () => {
+        const enabled = true;
+        showBannerState.setup(s => s.value).returns(() => enabled);
+        launchCounterState.setup(l => l.value).returns(() => 10);
+        launchThresholdCounterState.setup(t => t.value).returns(() => 10);
+        function randInt(min: number, max: number): number {
+            return Math.floor((max - min) / 10) - 1;
+        }
+        const banner2 = new DebuggerBanner(serviceContainer.object, undefined, randInt);
+
+        const result = await banner2.shouldShowBanner();
+        expect(result).to.be.equal(true, 'Incorrect value');
     });
     test('showBanner must be invoked when shouldShowBanner returns true', async () => {
         let onDidTerminateDebugSessionCb: (e: DebugSession) => Promise<void>;
