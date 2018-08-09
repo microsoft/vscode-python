@@ -817,12 +817,6 @@
                     "description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory).",
                     "scope": "resource"
                 },
-                "python.analysis.checkOSVersion": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables checking of the OS version to determine if the Language Server will run.",
-                    "scope": "resource"
-                },
                 "python.analysis.openFilesOnly": {
                     "type": "boolean",
                     "default": true,

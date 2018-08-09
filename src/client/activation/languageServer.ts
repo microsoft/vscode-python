@@ -125,14 +125,15 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged.bind(this));
     }
 
-    private async checkSupportedPlatform(): Promise<boolean> {
+    private checkSupportedPlatform(): boolean {
         const platform = this.services.get<IPlatformService>(IPlatformService);
-        const message = await platform.isNetCoreCompatibleOS();
-        if (message && message.length > 0) {
+        if (!platform.isNetCoreCompatibleOS) {
             if (platform.isMac) {
-                this.services.get<ILogger>(ILogger).logError(message);
-                this.appShell.showErrorMessage(message);
+                this.services.get<ILogger>(ILogger).logError('Unsupported MacOS');
+                this.appShell.showErrorMessage('Microsoft Python Language Server does not support MacOS older than 10.12.');
             }
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Linux messages
             return false;
         }
         return true;

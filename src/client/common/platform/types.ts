@@ -27,7 +27,7 @@ export interface IPlatformService {
     is64bit: boolean;
     pathVariableName: 'Path' | 'PATH';
     virtualEnvBinName: 'bin' | 'scripts';
-    isNetCoreCompatibleOS(): Promise<string>;
+    isNetCoreCompatibleOS: boolean;
 }
 
 export type TemporaryFile = { filePath: string } & Disposable;
