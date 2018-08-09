@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-require-imports no-var-requires no-any unified-signatures
+// tslint:disable:no-require-imports no-var-requires
 const opn = require('opn');
 
 import { injectable } from 'inversify';
