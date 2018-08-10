@@ -262,7 +262,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 excludeFiles: this.excludedFiles,
                 testEnvironment: isTestExecution(),
                 analysisUpdates: true,
-                traceLogging
+                traceLogging,
+                asyncStartup: true
             },
             middleware: {
                 provideCompletionItem: (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
