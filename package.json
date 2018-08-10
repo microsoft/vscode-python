@@ -826,7 +826,7 @@
                 "python.analysis.diagnosticPublishDelay": {
                     "type": "integer",
                     "default": 1000,
-                    "description": "Delay before diagnostic messages are transferred to the problems list.",
+                    "description": "Delay before diagnostic messages are transferred to the problems list (in milliseconds).",
                     "scope": "resource"
                 },
                 "python.analysis.typeshedPaths": {

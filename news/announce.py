@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 """Generate the changelog.
 
 Usage: announce [--dry_run | --interim | --final] [<directory>]
@@ -16,7 +19,6 @@ import docopt
 
 
 FILENAME_RE = re.compile(r"(?P<issue>\d+)(?P<nonce>-\S+)?\.md")
-
 
 
 @dataclasses.dataclass
