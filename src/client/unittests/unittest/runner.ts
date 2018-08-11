@@ -1,5 +1,10 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 'use strict';
+
 import { inject, injectable } from 'inversify';
+import { Socket } from 'net';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { noop } from '../../common/core.utils';
@@ -7,7 +12,11 @@ import { ILogger } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { UNITTEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
-import { ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner, IUnitTestSocketServer, LaunchOptions, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
+import {
+    ITestDebugLauncher, ITestManager, ITestResultsService,
+    ITestRunner, IUnitTestSocketServer, LaunchOptions,
+    TestRunOptions, Tests, TestStatus
+} from '../common/types';
 import { IArgumentsHelper, ITestManagerRunner, IUnitTestHelper } from '../types';
 
 type TestStatusMap = {
@@ -42,7 +51,9 @@ export class TestManagerRunner implements ITestManagerRunner {
         this.logger = this.serviceContainer.get<ILogger>(ILogger);
         this.helper = this.serviceContainer.get<IUnitTestHelper>(IUnitTestHelper);
     }
-    public async  runTest(testResultsService: ITestResultsService, options: TestRunOptions, testManager: ITestManager): Promise<Tests> {
+
+    // tslint:disable-next-line:max-func-body-length
+    public async runTest(testResultsService: ITestResultsService, options: TestRunOptions, testManager: ITestManager): Promise<Tests> {
         options.tests.summary.errors = 0;
         options.tests.summary.failures = 0;
         options.tests.summary.passed = 0;
@@ -53,7 +64,6 @@ export class TestManagerRunner implements ITestManagerRunner {
         this.server.on('log', noop);
         this.server.on('connect', noop);
         this.server.on('start', noop);
-        this.server.on('socket.disconnected', noop);
         this.server.on('result', (data: ITestData) => {
             const test = options.tests.testFunctions.find(t => t.testFunction.nameToRun === data.test);
             const statusDetails = outcomeMapping.get(data.outcome)!;
@@ -71,6 +81,15 @@ export class TestManagerRunner implements ITestManagerRunner {
                     options.tests.summary[statusDetails.summaryProperty] += 1;
                 }
             }
+        });
+
+        this.server.on('socket.disconnected', (socket: Socket, isSocketDestroyed: boolean) => {
+            this.server.removeAllListeners('error');
+            this.server.removeAllListeners('log');
+            this.server.removeAllListeners('connect');
+            this.server.removeAllListeners('start');
+            this.server.removeAllListeners('result');
+            this.server.removeAllListeners('socket.disconnected');
         });
 
         const port = await this.server.start();
@@ -139,6 +158,7 @@ export class TestManagerRunner implements ITestManagerRunner {
         testResultsService.updateResults(options.tests);
         return options.tests;
     }
+
     private buildTestArgs(args: string[]): string[] {
         const startTestDiscoveryDirectory = this.helper.getStartDirectory(args);
         let pattern = 'test*.py';
