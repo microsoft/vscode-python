@@ -11,10 +11,18 @@ import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../client/common/application/types';
 import { IBrowserService, IDisposableRegistry,
     ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
-import { DebuggerBanner, PersistentStateKeys } from '../../client/debugger/banner';
+import { DebuggerBanner, isUserSelected, PersistentStateKeys } from '../../client/debugger/banner';
 import { DebuggerTypeName } from '../../client/debugger/Common/constants';
 import { IDebuggerBanner } from '../../client/debugger/types';
 import { IServiceContainer } from '../../client/ioc/types';
+
+function neverSelected(): boolean {
+    return false;
+}
+
+function alwaysSelected(): boolean {
+    return true;
+}
 
 suite('Debugging - Banner', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
@@ -57,10 +65,24 @@ suite('Debugging - Banner', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
 
-        function alwaysZero(min: number, max: number): number {
-            return 0;
+        banner = new DebuggerBanner(serviceContainer.object, alwaysSelected);
+    });
+    test('users are selected 10% of the time', async () => {
+        let randomSample: number = 0;
+        function randInt(min: number, max: number): number {
+            return randomSample;
         }
-        banner = new DebuggerBanner(serviceContainer.object, undefined, alwaysZero);
+        let i: number;
+        for (i = 0; i < 10; i = i + 1) {
+            randomSample = i;
+            const selected = isUserSelected(randInt);
+            expect(selected).to.be.equal(true, 'Incorrect value');
+        }
+        for (i = 10; i < 100; i = i + 1) {
+            randomSample = i;
+            const selected = isUserSelected(randInt);
+            expect(selected).to.be.equal(false, 'Incorrect value');
+        }
     });
     test('Browser is displayed when launching service along with debugger launch counter', async () => {
         const debuggerLaunchCounter = 1234;
@@ -143,10 +165,7 @@ suite('Debugging - Banner', () => {
             .verifiable(typemoq.Times.once());
         launchCounterState.setup(l => l.value).returns(() => 10);
         launchThresholdCounterState.setup(t => t.value).returns(() => 10);
-        function randInt(min: number, max: number): number {
-            return Math.floor((max - min) / 10);
-        }
-        const banner2 = new DebuggerBanner(serviceContainer.object, undefined, randInt);
+        const banner2 = new DebuggerBanner(serviceContainer.object, neverSelected);
 
         // The banner got disabled.
         showBannerState.verifyAll();
@@ -158,12 +177,14 @@ suite('Debugging - Banner', () => {
     test('shouldShowBanner returns true if user selected (10%)', async () => {
         const enabled = true;
         showBannerState.setup(s => s.value).returns(() => enabled);
+        showBannerState.setup(s => s.updateValue(typemoq.It.isAny())).returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.never());
         launchCounterState.setup(l => l.value).returns(() => 10);
         launchThresholdCounterState.setup(t => t.value).returns(() => 10);
-        function randInt(min: number, max: number): number {
-            return Math.floor((max - min) / 10) - 1;
-        }
-        const banner2 = new DebuggerBanner(serviceContainer.object, undefined, randInt);
+        const banner2 = new DebuggerBanner(serviceContainer.object, alwaysSelected);
+
+        // The banner was not disabled.
+        showBannerState.verifyAll();
 
         const result = await banner2.shouldShowBanner();
         expect(result).to.be.equal(true, 'Incorrect value');
@@ -228,7 +249,7 @@ suite('Debugging - Banner', () => {
     });
     test('Disabling banner must store value of \'false\' in global store', async () => {
         showBannerState.setup(s => s.updateValue(typemoq.It.isValue(false)))
-            .verifiable(typemoq.Times.once());
+            .verifiable(typemoq.Times.atLeastOnce());
 
         await banner.disable();
 

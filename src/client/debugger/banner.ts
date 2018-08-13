@@ -21,10 +21,14 @@ export enum PersistentStateKeys {
     DebuggerLaunchThresholdCounter = 'DebuggerLaunchThresholdCounter'
 }
 
+type IsUserSelectedFunc = () => boolean;
 type RandIntFunc = (min: number, max: number) => number;
 
-export class DebuggerBannerConfig {
-    public sampleSizePerHundred: number = 10;  // 10%
+const sampleSizePerHundred: number = 10;  // 10%
+
+export function isUserSelected(randInt: RandIntFunc = getRandomBetween): boolean {
+    const randomSample: number = randInt(0, 100);
+    return randomSample < sampleSizePerHundred;
 }
 
 @injectable()
@@ -34,18 +38,16 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        private config: DebuggerBannerConfig = new DebuggerBannerConfig(),
         // The following is only used during testing and will not be
         // passed in normally (hence the underscore).
-        _randInt: RandIntFunc = getRandomBetween)
+        _isUserSelected: IsUserSelectedFunc = isUserSelected)
     {
         if (!this.enabled) {
             return;
         }
 
         // Only show the banner to a subset of users.  (see GH-2300)
-        const randomSample: number = _randInt(0, 100);
-        if (randomSample >= this.config.sampleSizePerHundred) {
+        if (!_isUserSelected()) {
             this.disable().ignoreErrors();
         }
     }
