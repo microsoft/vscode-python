@@ -27,8 +27,6 @@ export class DebuggerBannerConfig {
     public sampleSizePerHundred: number = 10;  // 10%
 }
 
-const defaultConfig = new DebuggerBannerConfig();
-
 @injectable()
 export class DebuggerBanner implements IDebuggerBanner {
     private initialized?: boolean;
@@ -36,7 +34,7 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        private config: DebuggerBannerConfig = defaultConfig,
+        private config: DebuggerBannerConfig = new DebuggerBannerConfig(),
         // The following is only used during testing and will not be
         // passed in normally (hence the underscore).
         _randInt: RandIntFunc = getRandomBetween)
