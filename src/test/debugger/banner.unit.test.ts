@@ -57,7 +57,10 @@ suite('Debugging - Banner', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
 
-        banner = new DebuggerBanner(serviceContainer.object, undefined, null);
+        function alwaysZero(min: number, max: number): number {
+            return 0;
+        }
+        banner = new DebuggerBanner(serviceContainer.object, undefined, alwaysZero);
     });
     test('Browser is displayed when launching service along with debugger launch counter', async () => {
         const debuggerLaunchCounter = 1234;

@@ -37,18 +37,18 @@ export class DebuggerBanner implements IDebuggerBanner {
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         private config: DebuggerBannerConfig = defaultConfig,
-        _randInt: RandIntFunc | null = getRandomBetween)
+        // The following is only used during testing and will not be
+        // passed in normally (hence the underscore).
+        _randInt: RandIntFunc = getRandomBetween)
     {
         if (!this.enabled) {
             return;
         }
 
-        if (_randInt !== null) {
-            // Only show the banner to a subset of users.  (see GH-2300)
-            const randomSample: number = _randInt(0, 100);
-            if (randomSample >= this.config.sampleSizePerHundred) {
-                this.disable().ignoreErrors();
-            }
+        // Only show the banner to a subset of users.  (see GH-2300)
+        const randomSample: number = _randInt(0, 100);
+        if (randomSample >= this.config.sampleSizePerHundred) {
+            this.disable().ignoreErrors();
         }
     }
 
