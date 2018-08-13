@@ -102,4 +102,24 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(testRunResult.summary.passed, 1, `Only one test should have passed during our test run. Instead, ${testRunResult.summary.passed} passed.`);
         assert.equal(testRunResult.summary.skipped, 0, `Expected to have skipped 0 tests during this test-run. Instead, ${testRunResult.summary.skipped} where skipped.`);
     });
+
+    // test('Ensure correct test count for running a single test', async () => {
+    //     await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
+    //     const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
+    //     const testManager = factory('unittest', rootWorkspaceUri, UNITTEST_MULTI_TEST_FILE_PATH);
+    //     const testsDiscovered: Tests = await testManager.discoverTests(CommandSource.ui, true, true);
+    //     const testFile: TestFile | undefined = testsDiscovered.testFiles.find(
+    //         (value: TestFile) => value.nameToRun.endsWith('_3A')
+    //     );
+    //     assert.notEqual(testFile, undefined, 'No test file suffixed with _3A in test files.');
+    //     assert.equal(testFile!.suites.length, 1, 'Expected only 1 test suite in test file three.');
+    //     const testFunc: TestFunction | undefined = testFile!.suites[0].functions.find(
+    //         (value: TestFunction) => value.name === 'test_3A'
+    //     );
+    //     assert.notEqual(testFunc, undefined, 'No test in file test_three.py named test_3A');
+    //     const testsToRun: TestsToRun = {
+    //         testFunction: [testFunc!]
+    //     };
+    //     const testRunResult: Tests = await testManager.runTest(CommandSource.ui, testsToRun);
+    // });
 });
