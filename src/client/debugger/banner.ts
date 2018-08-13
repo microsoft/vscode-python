@@ -9,7 +9,7 @@ import { Disposable } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IDebugService } from '../common/application/types';
 import '../common/extensions';
 import { IBrowserService, IDisposableRegistry,
-    ILogger, IPersistentStateFactory } from '../common/types';
+    ILogger, IPersistentState, IPersistentStateFactory } from '../common/types';
 import { getRandomBetween } from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
 import { DebuggerTypeName } from './Common/constants';
@@ -17,18 +17,25 @@ import { IDebuggerBanner } from './types';
 
 export enum PersistentStateKeys {
     ShowBanner = 'ShowBanner',
+    DebuggerUserSelected = 'DebuggerUserSelected',
     DebuggerLaunchCounter = 'DebuggerLaunchCounter',
     DebuggerLaunchThresholdCounter = 'DebuggerLaunchThresholdCounter'
 }
 
-type IsUserSelectedFunc = () => boolean;
+type MaybeBool = boolean | undefined;
+type IsUserSelectedFunc = (state: IPersistentState<MaybeBool>) => boolean;
 type RandIntFunc = (min: number, max: number) => number;
 
 const sampleSizePerHundred: number = 10;  // 10%
 
-export function isUserSelected(randInt: RandIntFunc = getRandomBetween): boolean {
-    const randomSample: number = randInt(0, 100);
-    return randomSample < sampleSizePerHundred;
+export function isUserSelected(state: IPersistentState<MaybeBool>, randInt: RandIntFunc = getRandomBetween): boolean {
+    let selected: MaybeBool = state.value;
+    if (selected === undefined) {
+        const randomSample: number = randInt(0, 100);
+        selected = randomSample < sampleSizePerHundred;
+        state.updateValue(selected);
+    }
+    return selected;
 }
 
 @injectable()
@@ -47,7 +54,10 @@ export class DebuggerBanner implements IDebuggerBanner {
         }
 
         // Only show the banner to a subset of users.  (see GH-2300)
-        if (!_isUserSelected()) {
+        const persist = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const key = PersistentStateKeys.DebuggerUserSelected;
+        const state = persist.createGlobalPersistentState<MaybeBool>(key, undefined);
+        if (!_isUserSelected(state)) {
             this.disable().ignoreErrors();
         }
     }

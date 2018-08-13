@@ -16,11 +16,11 @@ import { DebuggerTypeName } from '../../client/debugger/Common/constants';
 import { IDebuggerBanner } from '../../client/debugger/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
-function neverSelected(): boolean {
+function neverSelected(p: IPersistentState<boolean | undefined>): boolean {
     return false;
 }
 
-function alwaysSelected(): boolean {
+function alwaysSelected(p: IPersistentState<boolean | undefined>): boolean {
     return true;
 }
 
@@ -68,21 +68,64 @@ suite('Debugging - Banner', () => {
         banner = new DebuggerBanner(serviceContainer.object, alwaysSelected);
     });
     test('users are selected 10% of the time', async () => {
-        let randomSample: number = 0;
-        function randInt(min: number, max: number): number {
-            return randomSample;
+        const state = typemoq.Mock.ofType<IPersistentState<boolean| undefined>>();
+        function reset(expected: boolean) {
+            state.reset();
+            state.setup(l => l.value).returns(() => undefined)
+                .verifiable(typemoq.Times.once());
+            state.setup(l => l.updateValue(typemoq.It.isValue(expected)))
+                .verifiable(typemoq.Times.once());
         }
-        let i: number;
-        for (i = 0; i < 10; i = i + 1) {
-            randomSample = i;
-            const selected = isUserSelected(randInt);
-            expect(selected).to.be.equal(true, 'Incorrect value');
+        function runTest(randomSample: number, expected: boolean) {
+            //console.log(`attempt for ${randomSample}`);
+            reset(expected);
+            function randInt(min: number, max: number): number {
+                expect(min).to.be.equal(0, 'Incorrect value');
+                expect(max).to.be.equal(100, 'Incorrect value');
+                return randomSample;
+            }
+
+            const selected = isUserSelected(state.object, randInt);
+
+            expect(selected).to.be.equal(expected, 'Incorrect value');
+            state.verifyAll();
         }
-        for (i = 10; i < 100; i = i + 1) {
-            randomSample = i;
-            const selected = isUserSelected(randInt);
-            expect(selected).to.be.equal(false, 'Incorrect value');
+
+        for (let i = 0; i < 10; i = i + 1) {
+            runTest(i, true);
         }
+        for (let i = 10; i < 100; i = i + 1) {
+            runTest(i, false);
+        }
+    });
+    test('user selection does not change', async () => {
+        const state = typemoq.Mock.ofType<IPersistentState<boolean| undefined>>();
+        let selected: boolean | undefined;
+        function reset(expected: boolean) {
+            selected = undefined;
+            state.setup(l => l.value).returns(() => selected)
+                .verifiable(typemoq.Times.exactly(2));
+            state.setup(l => l.updateValue(typemoq.It.isValue(expected)))
+                .verifiable(typemoq.Times.once());
+        }
+        function runTest(randomSample: number, expected: boolean) {
+            //console.log(`attempt for ${randomSample}`);
+            reset(expected);
+            function randInt(min: number, max: number): number {
+                return randomSample;
+            }
+
+            const result1 = isUserSelected(state.object, randInt);
+            selected = expected;
+            const result2 = isUserSelected(state.object, randInt);
+
+            expect(result1).to.be.equal(expected, 'Incorrect value');
+            expect(result2).to.be.equal(expected, 'Incorrect value');
+            state.verifyAll();
+        }
+
+        runTest(0, true);
+        runTest(10, false);
     });
     test('Browser is displayed when launching service along with debugger launch counter', async () => {
         const debuggerLaunchCounter = 1234;
