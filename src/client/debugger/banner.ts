@@ -33,7 +33,7 @@ export function isUserSelected(state: IPersistentState<MaybeBool>, randInt: Rand
     if (selected === undefined) {
         const randomSample: number = randInt(0, 100);
         selected = randomSample < sampleSizePerHundred;
-        state.updateValue(selected);
+        state.updateValue(selected).ignoreErrors();
     }
     return selected;
 }
@@ -54,6 +54,9 @@ export class DebuggerBanner implements IDebuggerBanner {
         }
 
         // Only show the banner to a subset of users.  (see GH-2300)
+        // In order to avoid selecting the user *every* time they start
+        // the extension, we store their selection in the persistence
+        // layer.
         const persist = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const key = PersistentStateKeys.DebuggerUserSelected;
         const state = persist.createGlobalPersistentState<MaybeBool>(key, undefined);
