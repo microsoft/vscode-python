@@ -24,6 +24,16 @@ function alwaysSelected(p: IPersistentState<boolean | undefined>): boolean {
     return true;
 }
 
+class StubUserSelectedState implements IPersistentState<boolean | undefined> {
+    public actual?: boolean | undefined;
+    public get value(): boolean | undefined {
+        return this.actual;
+    }
+    public async updateValue(value: boolean | undefined): Promise<void> {
+        this.actual = value;
+    }
+}
+
 suite('Debugging - Banner', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
     let browser: typemoq.IMock<IBrowserService>;
@@ -68,27 +78,19 @@ suite('Debugging - Banner', () => {
         banner = new DebuggerBanner(serviceContainer.object, alwaysSelected);
     });
     test('users are selected 10% of the time', async () => {
-        const state = typemoq.Mock.ofType<IPersistentState<boolean| undefined>>();
-        function reset(expected: boolean) {
-            state.reset();
-            state.setup(l => l.value).returns(() => undefined)
-                .verifiable(typemoq.Times.once());
-            state.setup(l => l.updateValue(typemoq.It.isValue(expected)))
-                .verifiable(typemoq.Times.once());
-        }
         function runTest(randomSample: number, expected: boolean) {
             //console.log(`attempt for ${randomSample}`);
-            reset(expected);
+            const state = new StubUserSelectedState();
             function randInt(min: number, max: number): number {
                 expect(min).to.be.equal(0, 'Incorrect value');
                 expect(max).to.be.equal(100, 'Incorrect value');
                 return randomSample;
             }
 
-            const selected = isUserSelected(state.object, randInt);
+            const selected = isUserSelected(state, randInt);
 
             expect(selected).to.be.equal(expected, 'Incorrect value');
-            state.verifyAll();
+            expect(state.actual).to.be.equal(expected, 'Incorrect value');
         }
 
         for (let i = 0; i < 10; i = i + 1) {
@@ -99,29 +101,20 @@ suite('Debugging - Banner', () => {
         }
     });
     test('user selection does not change', async () => {
-        const state = typemoq.Mock.ofType<IPersistentState<boolean| undefined>>();
-        let selected: boolean | undefined;
-        function reset(expected: boolean) {
-            selected = undefined;
-            state.setup(l => l.value).returns(() => selected)
-                .verifiable(typemoq.Times.exactly(2));
-            state.setup(l => l.updateValue(typemoq.It.isValue(expected)))
-                .verifiable(typemoq.Times.once());
-        }
         function runTest(randomSample: number, expected: boolean) {
             //console.log(`attempt for ${randomSample}`);
-            reset(expected);
+            const state = new StubUserSelectedState();
             function randInt(min: number, max: number): number {
                 return randomSample;
             }
 
-            const result1 = isUserSelected(state.object, randInt);
-            selected = expected;
-            const result2 = isUserSelected(state.object, randInt);
+            const result1 = isUserSelected(state, randInt);
+            const set = state.actual;
+            const result2 = isUserSelected(state, randInt);
 
             expect(result1).to.be.equal(expected, 'Incorrect value');
             expect(result2).to.be.equal(expected, 'Incorrect value');
-            state.verifyAll();
+            expect(set).to.be.equal(expected, 'Incorrect value');
         }
 
         runTest(0, true);
