@@ -12,6 +12,7 @@ from .. import npm
 @pytest.mark.asyncio
 async def test_projects():
     json_data = {
+        "lockfileVersion": 1,
         "dependencies": {
             "append-buffer": {
                 "version": "1.0.2",
@@ -48,7 +49,7 @@ async def test_projects():
                 "dev": True,
                 "requires": {"sprintf-js": "~1.0.2"},
             },
-        }
+        },
     }
     packages = await npm.projects_from_data(json.dumps(json_data))
     assert len(packages) == 2
@@ -64,6 +65,16 @@ async def test_projects():
         version="1.0.1",
         url="https://registry.npmjs.org/applicationinsights/-/applicationinsights-1.0.1.tgz",
     )
+
+    modified_data = json_data.copy()
+    del modified_data["lockfileVersion"]
+    with pytest.raises(ValueError):
+        await npm.projects_from_data(json.dumps(modified_data))
+
+    modified_data = json_data.copy()
+    modified_data["lockfileVersion"] = 0
+    with pytest.raises(ValueError):
+        await npm.projects_from_data(json.dumps(modified_data))
 
 
 def test_top_level_package_filenames():

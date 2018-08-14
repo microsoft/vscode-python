@@ -28,8 +28,13 @@ def _projects(package_data):
 
 
 async def projects_from_data(raw_data):
-    """Create the requested projects from the data string provided."""
+    """Create projects from the file contents of a package-lock.json."""
     json_data = json.loads(raw_data)
+    # "lockfileVersion": 1
+    if "lockfileVersion" not in json_data:
+        raise ValueError("npm data does not appear to be from a package-lock.json file")
+    elif json_data["lockfileVersion"] != 1:
+        raise ValueError("unsupported package-lock.json format")
     return _projects(json_data)
 
 
