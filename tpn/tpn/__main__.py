@@ -3,11 +3,11 @@
 
 """Third-party notices generation.
 
-Usage: tpn [--npm=<package-lock.json>] [--pypi=<requirements.txt>] --config=<TPN.toml> <tpn_path>
+Usage: tpn [--npm=<package-lock.json>] --config=<TPN.toml> <tpn_path>
 
 Options:
     --npm=<package.json>            Path to a package-lock.json for npm.
-    --pypi=<requirements.txt>       Path to a requirements.txt file for pip.
+    --config=<TPN.toml>             Path to the configuration file.
 
 """
 import asyncio
@@ -84,5 +84,4 @@ if __name__ == "__main__":
         arguments["<tpn_path>"],
         config_path=arguments["--config"],
         npm_path=arguments["--npm"],
-        pypi_path=arguments["--pypi"],
     )
