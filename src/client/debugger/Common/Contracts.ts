@@ -4,8 +4,9 @@
 import { ChildProcess } from 'child_process';
 import * as net from 'net';
 import { OutputEvent } from 'vscode-debugadapter';
-import { DebugProtocol } from 'vscode-debugprotocol';
+import { DebugProtocol } from 'vscode-debugprotocol/lib/debugProtocol';
 import { DebuggerPerformanceTelemetry, DebuggerTelemetry } from '../../telemetry/types';
+import { ExperimentalDebuggerType } from './constants';
 
 export class TelemetryEvent extends OutputEvent {
     body!: {
@@ -40,7 +41,8 @@ export enum DebugOptions {
     Sudo = 'Sudo',
     Pyramid = 'Pyramid',
     FixFilePathCase = 'FixFilePathCase',
-    WindowsClient = 'WindowsClient'
+    WindowsClient = 'WindowsClient',
+    UnixClient = 'UnixClient'
 }
 
 export interface ExceptionHandling {
@@ -49,11 +51,12 @@ export interface ExceptionHandling {
     unhandled: string[];
 }
 
-export type DebuggerType = 'python' | 'pythonExperimental';
+export type DebuggerType = 'python' | typeof ExperimentalDebuggerType;
 
 export interface AdditionalLaunchDebugOptions {
     redirectOutput?: boolean;
     django?: boolean;
+    gevent?: boolean;
     jinja?: boolean;
     debugStdLib?: boolean;
     sudo?: boolean;
@@ -63,6 +66,7 @@ export interface AdditionalLaunchDebugOptions {
 export interface AdditionalAttachDebugOptions {
     redirectOutput?: boolean;
     django?: boolean;
+    gevent?: boolean;
     jinja?: boolean;
     debugStdLib?: boolean;
 }

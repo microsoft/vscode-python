@@ -10,9 +10,11 @@ import { StopWatch } from './common/stopWatch';
 const stopWatch = new StopWatch();
 
 import { Container } from 'inversify';
-import { debug, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
+import { CodeActionKind, debug, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationService } from './activation/types';
+import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
+import { IApplicationDiagnostics } from './application/types';
 import { IWorkspaceService } from './common/application/types';
 import { PythonSettings } from './common/configSettings';
 import { PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
@@ -24,11 +26,14 @@ import { registerTypes as platformRegisterTypes } from './common/platform/servic
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { ITerminalHelper } from './common/terminal/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IExtensionContext, ILogger, IMemento, IOutputChannel, IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry,
+    IExperimentalDebuggerBanner, IExtensionContext, ILogger, IMemento, IOutputChannel,
+    IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
 import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
+import { registerTypes as debuggerRegisterTypes } from './debugger/serviceRegistry';
 import { IDebugConfigurationProvider } from './debugger/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
@@ -40,6 +45,7 @@ import { IServiceContainer, IServiceManager } from './ioc/types';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ILintingEngine } from './linters/types';
+import { PythonCodeActionProvider } from './providers/codeActionsProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { LinterProvider } from './providers/linterProvider';
 import { PythonRenameProvider } from './providers/renameProvider';
@@ -56,7 +62,6 @@ import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import { OnEnterFormatter } from './typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
-import { WorkspaceSymbols } from './workspaceSymbols/main';
 
 const activationDeferred = createDeferred<void>();
 export const activated = activationDeferred.promise;
@@ -67,6 +72,9 @@ export async function activate(context: ExtensionContext) {
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
     registerServices(context, serviceManager, serviceContainer);
+
+    const appDiagnostics = serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics);
+    await appDiagnostics.performPreStartupHealthCheck();
 
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     // This must be completed before we can continue as language server needs the interpreter path.
@@ -143,12 +151,15 @@ export async function activate(context: ExtensionContext) {
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
     context.subscriptions.push(new TerminalProvider(serviceContainer));
-    context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
+
+    context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), { providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports] }));
 
     type ConfigurationProvider = BaseConfigurationProvider<LaunchRequestArguments, AttachRequestArguments>;
     serviceContainer.getAll<ConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
         context.subscriptions.push(debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));
     });
+
+    serviceContainer.get<IExperimentalDebuggerBanner>(IExperimentalDebuggerBanner).initialize();
     activationDeferred.resolve();
 }
 
@@ -177,6 +188,8 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
+    debuggerRegisterTypes(serviceManager);
+    appRegisterTypes(serviceManager);
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {

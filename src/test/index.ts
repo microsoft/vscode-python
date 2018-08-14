@@ -3,7 +3,13 @@ if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
-import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER, IS_MULTI_ROOT_TEST } from './constants';
+
+import {
+    IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER,
+    IS_VSTS, MOCHA_CI_PROPERTIES, MOCHA_CI_REPORTER_ID,
+    MOCHA_CI_REPORTFILE, MOCHA_REPORTER_JUNIT
+} from './ciConstants';
+import { IS_MULTI_ROOT_TEST } from './constants';
 import * as testRunner from './testRunner';
 
 process.env.VSC_PYTHON_CI_TEST = '1';
@@ -13,7 +19,6 @@ process.env.IS_MULTI_ROOT_TEST = IS_MULTI_ROOT_TEST.toString();
 // We do this to ensure we only run debugger test, as debugger tests are very flaky on CI.
 // So the solution is to run them separately and first on CI.
 const grep = IS_CI_SERVER && IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : undefined;
-
 const testFilesSuffix = process.env.TEST_FILES_SUFFIX;
 
 // You can directly control Mocha options by uncommenting the following lines.
@@ -27,5 +32,34 @@ const options: testRunner.SetupOptions & { retries: number } = {
     grep,
     testFilesSuffix
 };
+
+// VSTS CI doesn't display colours correctly (yet).
+if (IS_VSTS) {
+    options.useColors = false;
+}
+
+// CI can ask for a JUnit reporter if the environment variable
+// 'MOCHA_REPORTER_JUNIT' is defined, further control is afforded
+// by other 'MOCHA_CI_...' variables. See constants.ts for info.
+if (MOCHA_REPORTER_JUNIT) {
+    options.reporter = MOCHA_CI_REPORTER_ID;
+    options.reporterOptions = {
+        mochaFile: MOCHA_CI_REPORTFILE,
+        properties: MOCHA_CI_PROPERTIES
+    };
+}
+
+process.on('unhandledRejection', (ex: string | Error, a) => {
+    const message = [`${ex}`];
+    if (typeof ex !== 'string' && ex && ex.message) {
+        message.push(ex.name);
+        message.push(ex.message);
+        if (ex.stack) {
+            message.push(ex.stack);
+        }
+    }
+    console.error(`Unhandled Promise Rejection with the message ${message.join(', ')}`);
+});
+
 testRunner.configure(options, { coverageConfig: '../coverconfig.json' });
 module.exports = testRunner;

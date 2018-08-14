@@ -57,7 +57,7 @@ export abstract class BaseFormatter {
         const executionInfo = this.helper.getExecutionInfo(this.product, args, document.uri);
         executionInfo.args.push(tempFile);
         const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
-        const promise = pythonToolsExecutionService.exec(executionInfo, { cwd, throwOnStdErr: true, token }, document.uri)
+        const promise = pythonToolsExecutionService.exec(executionInfo, { cwd, throwOnStdErr: false, token }, document.uri)
             .then(output => output.stdout)
             .then(data => {
                 if (this.checkCancellation(document.fileName, tempFile, token)) {

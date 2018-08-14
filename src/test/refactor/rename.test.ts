@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as typeMoq from 'typemoq';
 import { Range, TextEditorCursorStyle, TextEditorLineNumbersStyle, TextEditorOptions, window, workspace } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import '../../client/common/extensions';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
@@ -47,7 +48,8 @@ suite('Refactor Rename', () => {
 
     test('Rename function in source without a trailing empty line', async () => {
         const sourceFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'refactoring', 'source folder', 'without empty line.py');
-        const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(sourceFile)}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`;
+        const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(sourceFile)}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`
+            .splitLines({ removeEmptyEntries: false, trim: false });
 
         const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings.object, path.dirname(sourceFile), serviceContainer.object);
         const textDocument = await workspace.openTextDocument(sourceFile);
@@ -55,11 +57,12 @@ suite('Refactor Rename', () => {
 
         const response = await proxy.rename<RenameResponse>(textDocument, 'three', sourceFile, new Range(7, 20, 7, 23), options);
         expect(response.results).to.be.lengthOf(1);
-        expect(response.results[0].diff).to.be.equal(expectedDiff);
+        expect(response.results[0].diff.splitLines({ removeEmptyEntries: false, trim: false })).to.be.deep.equal(expectedDiff);
     });
     test('Rename function in source with a trailing empty line', async () => {
         const sourceFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'refactoring', 'source folder', 'with empty line.py');
-        const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(sourceFile)}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`;
+        const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(sourceFile)}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`
+            .splitLines({ removeEmptyEntries: false, trim: false });
 
         const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings.object, path.dirname(sourceFile), serviceContainer.object);
         const textDocument = await workspace.openTextDocument(sourceFile);
@@ -67,6 +70,6 @@ suite('Refactor Rename', () => {
 
         const response = await proxy.rename<RenameResponse>(textDocument, 'three', sourceFile, new Range(7, 20, 7, 23), options);
         expect(response.results).to.be.lengthOf(1);
-        expect(response.results[0].diff).to.be.equal(expectedDiff);
+        expect(response.results[0].diff.splitLines({ removeEmptyEntries: false, trim: false })).to.be.deep.equal(expectedDiff);
     });
 });

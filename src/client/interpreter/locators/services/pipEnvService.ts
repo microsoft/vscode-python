@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
-import { IFileSystem } from '../../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { ICurrentProcess, ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
@@ -126,7 +126,16 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             }
             // tslint:disable-next-line:no-empty
         } catch (error) {
+            const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
+            const currentProc = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
+            const enviromentVariableValues = {
+                LC_ALL: currentProc.env.LC_ALL,
+                LANG: currentProc.env.LANG
+            };
+            enviromentVariableValues[platformService.pathVariableName] = currentProc.env[platformService.pathVariableName];
+
             this.logger.logWarning('Error in invoking PipEnv', error);
+            this.logger.logWarning(`Relevant Environment Variables ${JSON.stringify(enviromentVariableValues, undefined, 4)}`);
             const errorMessage = error.message || error;
             const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
             appShell.showWarningMessage(`Workspace contains pipfile but attempt to run 'pipenv --venv' failed with '${errorMessage}'. Make sure pipenv is on the PATH.`);

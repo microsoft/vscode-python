@@ -14,6 +14,7 @@ import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
 import { SIGNATURE } from '../telemetry/constants';
 import * as proxy from './jediProxy';
+import { isPositionInsideStringOrComment } from './providerUtilities';
 
 const DOCSTRING_PARAM_PATTERNS = [
     '\\s*:type\\s*PARAMNAME:\\s*([^\\n, ]+)', // Sphinx
@@ -71,7 +72,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
 
                 if (validParamInfo) {
                     const docLines = def.docstring.splitLines();
-                    label = docLines.shift().trim();
+                    label = docLines.shift()!.trim();
                     documentation = docLines.join(EOL).trim();
                 } else {
                     if (def.params && def.params.length > 0) {
@@ -111,6 +112,13 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
     }
     @captureTelemetry(SIGNATURE)
     public provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken): Thenable<SignatureHelp> {
+        // early exit if we're in a string or comment (or in an undefined position)
+        if (position.character <= 0 ||
+            isPositionInsideStringOrComment(document, position))
+        {
+            return Promise.resolve(new SignatureHelp());
+        }
+
         const cmd: proxy.ICommand<proxy.IArgumentsResult> = {
             command: proxy.CommandType.Arguments,
             fileName: document.fileName,

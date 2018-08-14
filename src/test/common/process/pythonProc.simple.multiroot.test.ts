@@ -4,6 +4,7 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { execFile } from 'child_process';
+import * as fs from 'fs-extra';
 import { Container } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
@@ -114,11 +115,16 @@ suite('PythonExecutableService', () => {
 
     test('Ensure correct path to executable is returned', async () => {
         const pythonPath = PythonSettings.getInstance(workspace4Path).pythonPath;
-        const expectedExecutablePath = await new Promise<string>(resolve => {
-            execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_error, stdout, _stdErr) => {
-                resolve(stdout.trim());
+        let expectedExecutablePath: string;
+        if (await fs.pathExists(pythonPath)) {
+            expectedExecutablePath = pythonPath;
+        } else {
+            expectedExecutablePath = await new Promise<string>(resolve => {
+                execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_error, stdout, _stdErr) => {
+                    resolve(stdout.trim());
+                });
             });
-        });
+        }
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const executablePath = await pythonExecService.getExecutablePath();
         expect(executablePath).to.equal(expectedExecutablePath, 'Executable paths are not the same');

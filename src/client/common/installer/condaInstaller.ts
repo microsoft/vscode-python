@@ -61,8 +61,7 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
         args.push(moduleName);
         return {
             args,
-            execPath: condaFile,
-            moduleName: ''
+            execPath: condaFile
         };
     }
     private async isCurrentEnvironmentACondaEnvironment(resource?: Uri): Promise<boolean> {

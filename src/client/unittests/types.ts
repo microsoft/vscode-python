@@ -7,7 +7,7 @@ import { Disposable, Event, TextDocument, Uri } from 'vscode';
 import { Product } from '../common/types';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
 import { CommandSource } from './common/constants';
-import { FlattenedTestFunction, ITestManager, TestFile, TestFunction, Tests, TestsToRun, UnitTestProduct } from './common/types';
+import { FlattenedTestFunction, ITestManager, ITestResultsService, TestFile, TestFunction, TestRunOptions, Tests, TestsToRun, UnitTestProduct } from './common/types';
 
 export const IUnitTestConfigurationService = Symbol('IUnitTestConfigurationService');
 export interface IUnitTestConfigurationService {
@@ -66,4 +66,39 @@ export interface ITestConfigurationManager {
 export const ITestConfigurationManagerFactory = Symbol('ITestConfigurationManagerFactory');
 export interface ITestConfigurationManagerFactory {
     create(wkspace: Uri, product: Product): ITestConfigurationManager;
+}
+
+export enum TestFilter {
+    removeTests = 'removeTests',
+    discovery = 'discovery',
+    runAll = 'runAll',
+    runSpecific = 'runSpecific',
+    debugAll = 'debugAll',
+    debugSpecific = 'debugSpecific'
+}
+export const IArgumentsService = Symbol('IArgumentsService');
+export interface IArgumentsService {
+    getKnownOptions(): { withArgs: string[]; withoutArgs: string[] };
+    getOptionValue(args: string[], option: string): string | string[] | undefined;
+    filterArguments(args: string[], argumentToRemove: string[]): string[];
+    // tslint:disable-next-line:unified-signatures
+    filterArguments(args: string[], filter: TestFilter): string[];
+    getTestFolders(args: string[]): string[];
+}
+export const IArgumentsHelper = Symbol('IArgumentsHelper');
+export interface IArgumentsHelper {
+    getOptionValues(args: string[], option: string): string | string[] | undefined;
+    filterArguments(args: string[], optionsWithArguments?: string[], optionsWithoutArguments?: string[]): string[];
+    getPositionalArguments(args: string[], optionsWithArguments?: string[], optionsWithoutArguments?: string[]): string[];
+}
+
+export const ITestManagerRunner = Symbol('ITestManagerRunner');
+export interface ITestManagerRunner {
+    runTest(testResultsService: ITestResultsService, options: TestRunOptions, testManager: ITestManager): Promise<Tests>;
+}
+
+export const IUnitTestHelper = Symbol('IUnitTestHelper');
+export interface IUnitTestHelper {
+    getStartDirectory(args: string[]): string;
+    getIdsOfTestsToRun(tests: Tests, testsToRun: TestsToRun): string[];
 }

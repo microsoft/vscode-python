@@ -171,4 +171,39 @@ export class TestsHelper implements ITestsHelper {
             }
         });
     }
+    public mergeTests(items: Tests[]): Tests {
+        return items.reduce((tests, otherTests, index) => {
+            if (index === 0) {
+                return tests;
+            }
+
+            tests.summary.errors += otherTests.summary.errors;
+            tests.summary.failures += otherTests.summary.failures;
+            tests.summary.passed += otherTests.summary.passed;
+            tests.summary.skipped += otherTests.summary.skipped;
+            tests.rootTestFolders.push(...otherTests.rootTestFolders);
+            tests.testFiles.push(...otherTests.testFiles);
+            tests.testFolders.push(...otherTests.testFolders);
+            tests.testFunctions.push(...otherTests.testFunctions);
+            tests.testSuites.push(...otherTests.testSuites);
+
+            return tests;
+        }, items[0]);
+    }
+
+    public shouldRunAllTests(testsToRun?: TestsToRun) {
+        if (!testsToRun) {
+            return true;
+        }
+        if (
+            (Array.isArray(testsToRun.testFile) && testsToRun.testFile.length > 0) ||
+            (Array.isArray(testsToRun.testFolder) && testsToRun.testFolder.length > 0) ||
+            (Array.isArray(testsToRun.testFunction) && testsToRun.testFunction.length > 0) ||
+            (Array.isArray(testsToRun.testSuite) && testsToRun.testSuite.length > 0)
+        ) {
+            return false;
+        }
+
+        return true;
+    }
 }

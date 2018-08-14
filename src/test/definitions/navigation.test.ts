@@ -4,6 +4,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { isLanguageServerTest } from '../../client/common/constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 const decoratorsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'definition', 'navigation');
@@ -32,95 +33,102 @@ suite('Definition Navigation', () => {
         assert.equal(formatPosition(expectedRange.end), formatPosition(range.end), 'End position is incorrect');
     };
 
-    const buildTest = (startFile: string, startPosition: vscode.Position, expectedFile: string, expectedRange: vscode.Range) => {
+    const buildTest = (startFile: string, startPosition: vscode.Position, expectedFiles: string[], expectedRanges: vscode.Range[]) => {
         return async () => {
             const textDocument = await vscode.workspace.openTextDocument(startFile);
             await vscode.window.showTextDocument(textDocument);
             assert(vscode.window.activeTextEditor, 'No active editor');
 
             const locations = await vscode.commands.executeCommand<vscode.Location[]>('vscode.executeDefinitionProvider', textDocument.uri, startPosition);
-            assert.equal(1, locations!.length, 'Wrong number of results');
+            assert.equal(expectedFiles.length, locations!.length, 'Wrong number of results');
 
-            const def = locations![0];
-            assertFile(expectedFile, def.uri);
-            assertRange(expectedRange, def.range!);
+            for (let i = 0; i < locations!.length; i += 1) {
+                assertFile(expectedFiles[i], locations![i].uri);
+                assertRange(expectedRanges[i], locations![i].range!);
+            }
         };
     };
 
     test('From own definition', buildTest(
         fileDefinitions,
         new vscode.Position(2, 6),
-        fileDefinitions,
-        new vscode.Range(2, 0, 11, 17)
+        [fileDefinitions],
+        isLanguageServerTest() ? [new vscode.Range(2, 4, 2, 16)] : [new vscode.Range(2, 0, 11, 17)]
     ));
 
     test('Nested function', buildTest(
         fileDefinitions,
         new vscode.Position(11, 16),
-        fileDefinitions,
-        new vscode.Range(6, 4, 10, 16)
+        [fileDefinitions],
+        isLanguageServerTest() ? [new vscode.Range(6, 8, 6, 15)] : [new vscode.Range(6, 4, 10, 16)]
     ));
 
     test('Decorator usage', buildTest(
         fileDefinitions,
         new vscode.Position(13, 1),
-        fileDefinitions,
-        new vscode.Range(2, 0, 11, 17)
+        [fileDefinitions],
+        isLanguageServerTest() ? [new vscode.Range(2, 4, 2, 16)] : [new vscode.Range(2, 0, 11, 17)]
     ));
 
     test('Function decorated by stdlib', buildTest(
         fileDefinitions,
         new vscode.Position(29, 6),
-        fileDefinitions,
-        new vscode.Range(21, 0, 27, 17)
+        [fileDefinitions],
+        isLanguageServerTest() ? [new vscode.Range(21, 4, 21, 22)] : [new vscode.Range(21, 0, 27, 17)]
     ));
 
     test('Function decorated by local decorator', buildTest(
         fileDefinitions,
         new vscode.Position(30, 6),
-        fileDefinitions,
-        new vscode.Range(14, 0, 18, 7)
+        [fileDefinitions],
+        isLanguageServerTest() ? [new vscode.Range(14, 4, 14, 9)] : [new vscode.Range(14, 0, 18, 7)]
     ));
 
     test('Module imported decorator usage', buildTest(
         fileUsages,
         new vscode.Position(3, 15),
-        fileDefinitions,
-        new vscode.Range(2, 0, 11, 17)
+        [fileDefinitions],
+        isLanguageServerTest() ? [new vscode.Range(2, 4, 2, 16)] : [new vscode.Range(2, 0, 11, 17)]
     ));
 
     test('Module imported function decorated by stdlib', buildTest(
         fileUsages,
         new vscode.Position(11, 19),
-        fileDefinitions,
-        new vscode.Range(21, 0, 27, 17)
+        [fileDefinitions],
+        isLanguageServerTest() ? [new vscode.Range(21, 4, 21, 22)] : [new vscode.Range(21, 0, 27, 17)]
     ));
 
     test('Module imported function decorated by local decorator', buildTest(
         fileUsages,
         new vscode.Position(12, 19),
-        fileDefinitions,
-        new vscode.Range(14, 0, 18, 7)
+        [fileDefinitions],
+        isLanguageServerTest() ? [new vscode.Range(14, 4, 14, 9)] : [new vscode.Range(14, 0, 18, 7)]
     ));
 
     test('Specifically imported decorator usage', buildTest(
         fileUsages,
         new vscode.Position(7, 1),
-        fileDefinitions,
-        new vscode.Range(2, 0, 11, 17)
+        isLanguageServerTest() ? [fileDefinitions] : [fileDefinitions],
+        isLanguageServerTest()
+            ? [new vscode.Range(2, 4, 2, 16)]
+            : [new vscode.Range(2, 0, 11, 17)]
     ));
 
     test('Specifically imported function decorated by stdlib', buildTest(
         fileUsages,
         new vscode.Position(14, 6),
-        fileDefinitions,
-        new vscode.Range(21, 0, 27, 17)
+        isLanguageServerTest() ? [fileDefinitions] : [fileDefinitions],
+        isLanguageServerTest()
+            ? [new vscode.Range(21, 4, 21, 22)]
+            : [new vscode.Range(21, 0, 27, 17)]
     ));
 
     test('Specifically imported function decorated by local decorator', buildTest(
         fileUsages,
         new vscode.Position(15, 6),
-        fileDefinitions,
-        new vscode.Range(14, 0, 18, 7)
+        isLanguageServerTest() ? [fileDefinitions] : [fileDefinitions],
+        isLanguageServerTest()
+            ? [new vscode.Range(14, 4, 14, 9)]
+            : [new vscode.Range(14, 0, 18, 7)]
     ));
 });

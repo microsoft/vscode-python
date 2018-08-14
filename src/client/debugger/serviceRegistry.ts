@@ -9,10 +9,11 @@ import { FileSystem } from '../common/platform/fileSystem';
 import { PlatformService } from '../common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { CurrentProcess } from '../common/process/currentProcess';
-import { ICurrentProcess, ISocketServer } from '../common/types';
+import { ICurrentProcess, IExperimentalDebuggerBanner, ISocketServer } from '../common/types';
 import { ServiceContainer } from '../ioc/container';
 import { ServiceManager } from '../ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
+import { ExperimentalDebuggerBanner } from './banner';
 import { DebugStreamProvider } from './Common/debugStreamProvider';
 import { ProtocolLogger } from './Common/protocolLogger';
 import { ProtocolParser } from './Common/protocolParser';
@@ -24,11 +25,11 @@ export function initializeIoc(): IServiceContainer {
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
     serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
-    registerTypes(serviceManager);
+    registerDebuggerTypes(serviceManager);
     return serviceContainer;
 }
 
-function registerTypes(serviceManager: IServiceManager) {
+function registerDebuggerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
     serviceManager.addSingleton<IDebugStreamProvider>(IDebugStreamProvider, DebugStreamProvider);
     serviceManager.addSingleton<IProtocolLogger>(IProtocolLogger, ProtocolLogger);
@@ -37,4 +38,8 @@ function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
     serviceManager.addSingleton<ISocketServer>(ISocketServer, SocketServer);
     serviceManager.addSingleton<IProtocolMessageWriter>(IProtocolMessageWriter, ProtocolMessageWriter);
+}
+
+export function registerTypes(serviceManager: IServiceManager) {
+    serviceManager.addSingleton<IExperimentalDebuggerBanner>(IExperimentalDebuggerBanner, ExperimentalDebuggerBanner);
 }

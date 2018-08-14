@@ -38,32 +38,36 @@ class TestRunner {
         await del([path.join(tmpFolder, '**')]);
         await this.extractLatestExtension(publishedExtensionPath);
 
-        const timesToLoadEachVersion = 3;
+        const timesToLoadEachVersion = 2;
         const devLogFiles: string[] = [];
         const releaseLogFiles: string[] = [];
-        const newAnalysisEngineLogFiles: string[] = [];
+        const languageServerLogFiles: string[] = [];
 
         for (let i = 0; i < timesToLoadEachVersion; i += 1) {
-            await this.enableNewAnalysisEngine(false);
+            await this.enableLanguageServer(false);
 
             const devLogFile = path.join(logFilesPath, `dev_loadtimes${i}.txt`);
+            console.log(`Start Performance Tests: Counter ${i}, for Dev version with Jedi`);
             await this.capturePerfTimes(Version.Dev, devLogFile);
             devLogFiles.push(devLogFile);
 
             const releaseLogFile = path.join(logFilesPath, `release_loadtimes${i}.txt`);
+            console.log(`Start Performance Tests: Counter ${i}, for Release version with Jedi`);
             await this.capturePerfTimes(Version.Release, releaseLogFile);
             releaseLogFiles.push(releaseLogFile);
 
-            // New Analysis engine.
-            await this.enableNewAnalysisEngine(true);
-            const newAnalysisEngineLogFile = path.join(logFilesPath, `newAnalysisEngine_loadtimes${i}.txt`);
-            await this.capturePerfTimes(Version.Release, newAnalysisEngineLogFile);
-            newAnalysisEngineLogFiles.push(newAnalysisEngineLogFile);
+            // Language server.
+            await this.enableLanguageServer(true);
+            const languageServerLogFile = path.join(logFilesPath, `languageServer_loadtimes${i}.txt`);
+            console.log(`Start Performance Tests: Counter ${i}, for Release version with Language Server`);
+            await this.capturePerfTimes(Version.Release, languageServerLogFile);
+            languageServerLogFiles.push(languageServerLogFile);
         }
 
-        await this.runPerfTest(devLogFiles, releaseLogFiles, newAnalysisEngineLogFiles);
+        console.log('Compare Performance Results');
+        await this.runPerfTest(devLogFiles, releaseLogFiles, languageServerLogFiles);
     }
-    private async enableNewAnalysisEngine(enable: boolean) {
+    private async enableLanguageServer(enable: boolean) {
         const settings = `{ "python.jediEnabled": ${!enable} }`;
         await fs.writeFile(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'performance', 'settings.json'), settings);
     }
@@ -80,11 +84,11 @@ class TestRunner {
 
         await this.launchTest(env);
     }
-    private async  runPerfTest(devLogFiles: string[], releaseLogFiles: string[], newAnalysisEngineLogFiles: string[]) {
+    private async  runPerfTest(devLogFiles: string[], releaseLogFiles: string[], languageServerLogFiles: string[]) {
         const env: { [key: string]: {} } = {
             ACTIVATION_TIMES_DEV_LOG_FILE_PATHS: JSON.stringify(devLogFiles),
             ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS: JSON.stringify(releaseLogFiles),
-            ACTIVATION_TIMES_DEV_ANALYSIS_LOG_FILE_PATHS: JSON.stringify(newAnalysisEngineLogFiles)
+            ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS: JSON.stringify(languageServerLogFiles)
         };
 
         await this.launchTest(env);

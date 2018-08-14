@@ -36,6 +36,12 @@ export type ExecutionInfo = {
     product?: Product;
 };
 
+export enum LogLevel {
+    Information = 'Information',
+    Error = 'Error',
+    Warning = 'Warning'
+}
+
 export const ILogger = Symbol('ILogger');
 
 export interface ILogger {
@@ -48,6 +54,14 @@ export enum InstallerResponse {
     Installed,
     Disabled,
     Ignore
+}
+
+export enum ProductType {
+    Linter = 'Linter',
+    Formatter = 'Formatter',
+    TestFramework = 'TestFramework',
+    RefactoringLibrary = 'RefactoringLibrary',
+    WorkspaceSymbols = 'WorkspaceSymbols'
 }
 
 export enum Product {
@@ -86,6 +100,7 @@ export interface IInstaller {
 export const IPathUtils = Symbol('IPathUtils');
 
 export interface IPathUtils {
+    readonly delimiter: string;
     getPathVariableName(): 'Path' | 'PATH';
     basename(pathValue: string, ext?: string): string;
 }
@@ -103,7 +118,7 @@ export interface IPythonSettings {
     readonly pythonPath: string;
     readonly venvPath: string;
     readonly venvFolders: string[];
-    readonly downloadCodeAnalysis: boolean;
+    readonly downloadLanguageServer: boolean;
     readonly jediEnabled: boolean;
     readonly jediPath: string;
     readonly jediMemoryLimit: number;
@@ -118,6 +133,7 @@ export interface IPythonSettings {
     readonly envFile: string;
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
+    readonly analysis: IAnalysisSettings;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -137,6 +153,7 @@ export interface IUnitTestSettings {
     unittestArgs: string[];
     cwd?: string;
     readonly useExperimentalDebugger?: boolean;
+    readonly autoTestDiscoverOnSaveEnabled: boolean;
 }
 export interface IPylintCategorySeverity {
     readonly convention: DiagnosticSeverity;
@@ -205,6 +222,7 @@ export interface IAutoCompleteSettings {
     readonly extraPaths: string[];
     readonly preloadModules: string[];
     readonly showAdvancedMembers: boolean;
+    readonly typeshedPaths: string[];
 }
 export interface IWorkspaceSymbolSettings {
     readonly enabled: boolean;
@@ -219,12 +237,17 @@ export interface ITerminalSettings {
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
 }
-export interface IPythonAnalysisEngineSettings {
-    readonly showAdvancedMembers: boolean;
+export interface IAnalysisSettings {
+    readonly openFilesOnly: boolean;
+    readonly typeshedPaths: string[];
+    readonly errors: string[];
+    readonly warnings: string[];
+    readonly information: string[];
+    readonly disabled: string[];
+    readonly traceLogging: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
-
 export interface IConfigurationService {
     getSettings(resource?: Uri): IPythonSettings;
     isTestExecution(): boolean;
@@ -239,3 +262,28 @@ export interface ISocketServer extends Disposable {
 
 export const IExtensionContext = Symbol('ExtensionContext');
 export interface IExtensionContext extends ExtensionContext { }
+
+export const IBrowserService = Symbol('IBrowserService');
+export interface IBrowserService {
+    launch(url: string): void;
+}
+
+export const IExperimentalDebuggerBanner = Symbol('IExperimentalDebuggerBanner');
+export interface IExperimentalDebuggerBanner {
+    enabled: boolean;
+    initialize(): void;
+    showBanner(): Promise<void>;
+    shouldShowBanner(): Promise<boolean>;
+    disable(): Promise<void>;
+    launchSurvey(): Promise<void>;
+}
+
+export const IPythonExtensionBanner = Symbol('IPythonExtensionBanner');
+export interface IPythonExtensionBanner {
+    enabled: boolean;
+    shownCount: Promise<number>;
+    optionLabels: string[];
+    showBanner(): Promise<void>;
+}
+export const BANNER_NAME_LS_SURVEY: string = 'LSSurveyBanner';
+export const BANNER_NAME_PROPOSE_LS: string = 'ProposeLS';

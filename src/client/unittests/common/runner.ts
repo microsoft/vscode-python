@@ -1,3 +1,4 @@
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import { PythonSettings } from '../../common/configSettings';
@@ -13,15 +14,16 @@ import {
 import { ExecutionInfo, IPythonSettings } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';
-import { ITestsHelper, TestProvider } from './types';
+import { ITestRunner, ITestsHelper, Options, TestProvider } from './types';
+export { Options } from './types';
 
-export type Options = {
-    workspaceFolder: Uri;
-    cwd: string;
-    args: string[];
-    outChannel?: OutputChannel;
-    token: CancellationToken;
-};
+@injectable()
+export class TestRunner implements ITestRunner {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    public run(testProvider: TestProvider, options: Options): Promise<string> {
+        return run(this.serviceContainer, testProvider, options);
+    }
+}
 
 export async function run(serviceContainer: IServiceContainer, testProvider: TestProvider, options: Options): Promise<string> {
     const testExecutablePath = getExecutablePath(testProvider, PythonSettings.getInstance(options.workspaceFolder));

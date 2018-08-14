@@ -8,6 +8,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { COMPLETION_ADD_BRACKETS, FORMAT_ON_TYPE } from '../telemetry/constants';
 import { isTestExecution } from './constants';
 import {
+    IAnalysisSettings,
     IAutoCompleteSettings,
     IFormattingSettings,
     ILintingSettings,
@@ -27,7 +28,7 @@ export const IS_WINDOWS = /^win/.test(process.platform);
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
-    public downloadCodeAnalysis = true;
+    public downloadLanguageServer = true;
     public jediEnabled = true;
     public jediPath = '';
     public jediMemoryLimit = 1024;
@@ -44,6 +45,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     public workspaceSymbols!: IWorkspaceSymbolSettings;
     public disableInstallationChecks = false;
     public globalModuleInstallation = false;
+    public analysis!: IAnalysisSettings;
 
     private workspaceRoot: Uri;
     private disposables: Disposable[] = [];
@@ -71,7 +73,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         if (!PythonSettings.pythonSettings.has(workspaceFolderKey)) {
             const settings = new PythonSettings(workspaceFolderUri);
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
-            const formatOnType = workspace.getConfiguration('editor', resource).get('formatOnType', false);
+            const formatOnType = workspace.getConfiguration('editor', resource ? resource : null).get('formatOnType', false);
             sendTelemetryEvent(COMPLETION_ADD_BRACKETS, undefined, { enabled: settings.autoComplete.addBrackets });
             sendTelemetryEvent(FORMAT_ON_TYPE, undefined, { enabled: formatOnType });
         }
@@ -119,7 +121,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
 
-        this.downloadCodeAnalysis = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadCodeAnalysis', true))!;
+        this.downloadLanguageServer = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadLanguageServer', true))!;
         this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;
         if (this.jediEnabled) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
@@ -145,6 +147,14 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             Object.assign<ILintingSettings, ILintingSettings>(this.linting, lintingSettings);
         } else {
             this.linting = lintingSettings;
+        }
+
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        const analysisSettings = systemVariables.resolveAny(pythonSettings.get<IAnalysisSettings>('analysis'))!;
+        if (this.analysis) {
+            Object.assign<IAnalysisSettings, IAnalysisSettings>(this.analysis, analysisSettings);
+        } else {
+            this.analysis = analysisSettings;
         }
 
         this.disableInstallationChecks = pythonSettings.get<boolean>('disableInstallationCheck') === true;
@@ -233,7 +243,8 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             extraPaths: [],
             addBrackets: false,
             preloadModules: [],
-            showAdvancedMembers: false
+            showAdvancedMembers: false,
+            typeshedPaths: []
         };
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
@@ -267,7 +278,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                     nosetestArgs: [], pyTestArgs: [], unittestArgs: [],
                     promptToConfigure: true, debugPort: 3000,
                     nosetestsEnabled: false, pyTestEnabled: false, unittestEnabled: false,
-                    nosetestPath: 'nosetests', pyTestPath: 'pytest'
+                    nosetestPath: 'nosetests', pyTestPath: 'pytest', autoTestDiscoverOnSaveEnabled: true
                 } as IUnitTestSettings;
             }
         }
@@ -278,7 +289,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             debugPort: 3000,
             nosetestArgs: [], nosetestPath: 'nosetest', nosetestsEnabled: false,
             pyTestArgs: [], pyTestEnabled: false, pyTestPath: 'pytest',
-            unittestArgs: [], unittestEnabled: false
+            unittestArgs: [], unittestEnabled: false, autoTestDiscoverOnSaveEnabled: true
         };
         this.unitTest.pyTestPath = getAbsolutePath(systemVariables.resolveAny(this.unitTest.pyTestPath), workspaceRoot);
         this.unitTest.nosetestPath = getAbsolutePath(systemVariables.resolveAny(this.unitTest.nosetestPath), workspaceRoot);

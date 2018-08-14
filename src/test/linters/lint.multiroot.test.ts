@@ -2,15 +2,19 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { CancellationTokenSource, ConfigurationTarget, OutputChannel, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
-import { IConfigurationService, IOutputChannel, Product } from '../../client/common/types';
+import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
+import { ProductService } from '../../client/common/installer/productService';
+import { IProductPathService, IProductService } from '../../client/common/installer/types';
+import { IConfigurationService, IOutputChannel, Product, ProductType } from '../../client/common/types';
 import { ILinter, ILinterManager } from '../../client/linters/types';
 import { TEST_OUTPUT_CHANNEL } from '../../client/unittests/common/constants';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
+// tslint:disable:max-func-body-length no-invalid-this
+
 const multirootPath = path.join(__dirname, '..', '..', '..', 'src', 'testMultiRootWkspc');
 
-// tslint:disable-next-line:max-func-body-length
 suite('Multiroot Linting', () => {
     const pylintSetting = 'linting.pylintEnabled';
     const flake8Setting = 'linting.flake8Enabled';
@@ -18,7 +22,6 @@ suite('Multiroot Linting', () => {
     let ioc: UnitTestIocContainer;
     suiteSetup(function () {
         if (!IS_MULTI_ROOT_TEST) {
-            // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
         return initialize();
@@ -41,6 +44,13 @@ suite('Multiroot Linting', () => {
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
         ioc.registerPlatformTypes();
+        ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, FormatterProductPathService, ProductType.Formatter);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
+
     }
 
     async function createLinter(product: Product, resource?: Uri): Promise<ILinter> {

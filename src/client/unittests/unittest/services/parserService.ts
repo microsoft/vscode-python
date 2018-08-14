@@ -3,9 +3,9 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ITestsHelper, ITestsParser, TestDiscoveryOptions, TestFile, TestFunction, Tests, TestStatus, TestSuite } from '../../common/types';
-
-type UnitTestParserOptions = TestDiscoveryOptions & { startDirectory: string };
+import { ITestsHelper, ITestsParser, TestFile,
+    TestFunction, Tests, TestStatus,
+    UnitTestParserOptions } from '../../common/types';
 
 @injectable()
 export class TestsParser implements ITestsParser {
@@ -21,7 +21,7 @@ export class TestsParser implements ITestsParser {
     private getTestIds(content: string): string[] {
         let startedCollecting = false;
         return content.split(/\r?\n/g)
-            .map((line, index) => {
+            .map(line => {
                 if (!startedCollecting) {
                     if (line === 'start') {
                         startedCollecting = true;
@@ -34,13 +34,22 @@ export class TestsParser implements ITestsParser {
     }
     private parseTestIds(rootDirectory: string, testIds: string[]): Tests {
         const testFiles: TestFile[] = [];
-        testIds.forEach(testId => {
-            this.addTestId(rootDirectory, testId, testFiles);
-        });
+        testIds.forEach(testId => this.addTestId(rootDirectory, testId, testFiles));
 
         return this.testsHelper.flattenTestFiles(testFiles);
     }
 
+    /**
+     * Add the test Ids into the array provided.
+     * TestIds are fully qualified including the method names.
+     * E.g. tone_test.Failing2Tests.test_failure
+     * Where tone_test = folder, Failing2Tests = class/suite, test_failure = method.
+     * @private
+     * @param {string} rootDirectory
+     * @param {string[]} testIds
+     * @returns {Tests}
+     * @memberof TestsParser
+     */
     private addTestId(rootDirectory: string, testId: string, testFiles: TestFile[]) {
         const testIdParts = testId.split('.');
         // We must have a file, class and function name
@@ -51,6 +60,7 @@ export class TestsParser implements ITestsParser {
         const paths = testIdParts.slice(0, testIdParts.length - 2);
         const filePath = `${path.join(rootDirectory, ...paths)}.py`;
         const functionName = testIdParts.pop()!;
+        const suiteToRun = testIdParts.join('.');
         const className = testIdParts.pop()!;
 
         // Check if we already have this test file
@@ -59,11 +69,9 @@ export class TestsParser implements ITestsParser {
             testFile = {
                 name: path.basename(filePath),
                 fullPath: filePath,
-                // tslint:disable-next-line:prefer-type-cast
-                functions: [] as TestFunction[],
-                // tslint:disable-next-line:prefer-type-cast
-                suites: [] as TestSuite[],
-                nameToRun: `${className}.${functionName}`,
+                functions: [],
+                suites: [],
+                nameToRun: `${suiteToRun}.${functionName}`,
                 xmlName: '',
                 status: TestStatus.Idle,
                 time: 0
@@ -71,19 +79,17 @@ export class TestsParser implements ITestsParser {
             testFiles.push(testFile);
         }
 
-        // Check if we already have this test file
-        const classNameToRun = className;
-        let testSuite = testFile.suites.find(cls => cls.nameToRun === classNameToRun);
+        // Check if we already have this suite
+        // nameToRun = testId - method name
+        let testSuite = testFile.suites.find(cls => cls.nameToRun === suiteToRun);
         if (!testSuite) {
             testSuite = {
                 name: className,
-                // tslint:disable-next-line:prefer-type-cast
-                functions: [] as TestFunction[],
-                // tslint:disable-next-line:prefer-type-cast
-                suites: [] as TestSuite[],
+                functions: [],
+                suites: [],
                 isUnitTest: true,
                 isInstance: false,
-                nameToRun: `${path.parse(filePath).name}.${classNameToRun}`,
+                nameToRun: suiteToRun,
                 xmlName: '',
                 status: TestStatus.Idle,
                 time: 0

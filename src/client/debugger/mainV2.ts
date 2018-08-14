@@ -14,9 +14,8 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { PassThrough, Writable } from 'stream';
 import { Disposable } from 'vscode';
-import { DebugSession, ErrorDestination, logger, OutputEvent, TerminatedEvent } from 'vscode-debugadapter';
+import { DebugSession, ErrorDestination, Event, logger, OutputEvent, Response, TerminatedEvent } from 'vscode-debugadapter';
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
-import { Event } from 'vscode-debugadapter/lib/messages';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import '../../client/common/extensions';
 import { noop, sleep } from '../common/core.utils';
@@ -201,6 +200,9 @@ class DebugManager implements Disposable {
     private ptvsdProcessId?: number;
     private launchOrAttach?: 'launch' | 'attach';
     private terminatedEventSent: boolean = false;
+    private disconnectResponseSent: boolean = false;
+    private disconnectRequest?: DebugProtocol.DisconnectRequest;
+    private restart: boolean = false;
     private readonly initializeRequestDeferred: Deferred<DebugProtocol.InitializeRequest>;
     private get initializeRequest(): Promise<DebugProtocol.InitializeRequest> {
         return this.initializeRequestDeferred.promise;
@@ -245,6 +247,7 @@ class DebugManager implements Disposable {
         this.attachRequestDeferred = createDeferred<DebugProtocol.AttachRequest>();
     }
     public dispose() {
+        logger.verbose('main dispose');
         this.shutdown().ignoreErrors();
     }
     public async start() {
@@ -256,7 +259,11 @@ class DebugManager implements Disposable {
         this.inputStream.pause();
         if (!this.isServerMode) {
             const currentProcess = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
-            currentProcess.on('SIGTERM', this.shutdown);
+            currentProcess.on('SIGTERM', () => {
+                if (!this.restart) {
+                    this.shutdown().ignoreErrors();
+                }
+            });
         }
         this.interceptProtocolMessages();
         this.startDebugSession();
@@ -269,6 +276,7 @@ class DebugManager implements Disposable {
      * @private
      * @memberof DebugManager
      */
+    // tslint:disable-next-line:cyclomatic-complexity
     private shutdown = async () => {
         logger.verbose('check and shutdown');
         if (this.hasShutdown) {
@@ -277,13 +285,8 @@ class DebugManager implements Disposable {
         this.hasShutdown = true;
         logger.verbose('shutdown');
 
-        if (this.socket) {
-            this.throughInputStream.unpipe(this.socket);
-            this.socket.unpipe(this.throughOutputStream);
-        }
-
-        if (!this.terminatedEventSent) {
-            // Possible VS Code has closed its stream.
+        if (!this.terminatedEventSent && !this.restart) {
+            // Possible PTVSD died before sending message back.
             try {
                 logger.verbose('Sending Terminated Event');
                 this.sendMessage(new TerminatedEvent(), this.outputStream);
@@ -295,6 +298,19 @@ class DebugManager implements Disposable {
             this.terminatedEventSent = true;
         }
 
+        if (!this.disconnectResponseSent && this.restart && this.disconnectRequest) {
+            // This is a work around for PTVSD bug, else this entire block is unnecessary.
+            try {
+                logger.verbose('Sending Disconnect Response');
+                this.sendMessage(new Response(this.disconnectRequest, ''), this.outputStream);
+            } catch (err) {
+                const message = `Error in sending Disconnect Response: ${err && err.message ? err.message : err.toString()}`;
+                const details = [message, err && err.name ? err.name : '', err && err.stack ? err.stack : ''].join(EOL);
+                logger.error(`${message}${EOL}${details}`);
+            }
+            this.disconnectResponseSent = true;
+        }
+
         if (this.launchOrAttach === 'launch' && this.ptvsdProcessId) {
             logger.verbose('killing process');
             try {
@@ -303,20 +319,23 @@ class DebugManager implements Disposable {
                 // 2. Also, its possible we manually sent the `Terminated` event above.
                 // Hence we need to wait till VSC receives the above event.
                 await sleep(100);
+                logger.verbose('Kill process now');
                 killProcessTree(this.ptvsdProcessId!);
             } catch { }
             this.ptvsdProcessId = undefined;
         }
 
-        if (this.debugSession) {
-            logger.verbose('Shutting down debug session');
-            this.debugSession.shutdown();
-        }
+        if (!this.restart) {
+            if (this.debugSession) {
+                logger.verbose('Shutting down debug session');
+                this.debugSession.shutdown();
+            }
 
-        logger.verbose('disposing');
-        await sleep(100);
-        // Dispose last, we don't want to dispose the protocol loggers too early.
-        this.disposables.forEach(disposable => disposable.dispose());
+            logger.verbose('disposing');
+            await sleep(100);
+            // Dispose last, we don't want to dispose the protocol loggers too early.
+            this.disposables.forEach(disposable => disposable.dispose());
+        }
     }
     private sendMessage(message: DebugProtocol.ProtocolMessage, outputStream: Socket | PassThrough | NodeJS.WriteStream): void {
         this.protocolMessageWriter.write(outputStream, message);
@@ -344,6 +363,7 @@ class DebugManager implements Disposable {
         this.inputProtocolParser.once('request_initialize', this.onRequestInitialize);
         this.inputProtocolParser.once('request_launch', this.onRequestLaunch);
         this.inputProtocolParser.once('request_attach', this.onRequestAttach);
+        this.inputProtocolParser.once('request_disconnect', this.onRequestDisconnect);
 
         this.outputProtocolParser.once('event_terminated', this.onEventTerminated);
         this.outputProtocolParser.once('response_disconnect', this.onResponseDisconnect);
@@ -361,9 +381,14 @@ class DebugManager implements Disposable {
 
         // We need to handle both end and error, sometimes the socket will error out without ending (if debugee is killed).
         // Note, we need a handler for the error event, else nodejs complains when socket gets closed and there are no error handlers.
-        this.socket.on('end', this.shutdown);
-        this.socket.on('error', this.shutdown);
-
+        this.socket.on('end', () => {
+            logger.verbose('Socket End');
+            this.shutdown().ignoreErrors();
+        });
+        this.socket.on('error', () => {
+            logger.verbose('Socket Error');
+            this.shutdown().ignoreErrors();
+        });
         // Keep track of processid for killing it.
         if (this.launchOrAttach === 'launch') {
             const debugSoketProtocolParser = this.serviceContainer.get<IProtocolParser>(IProtocolParser);
@@ -377,9 +402,15 @@ class DebugManager implements Disposable {
         (this.inputStream as any as NodeJS.ReadStream).unpipe<Writable>(this.debugSessionInputStream);
         this.debugSessionOutputStream.unpipe(this.outputStream);
 
-        this.inputStream.pipe(this.socket!);
-        this.socket!.pipe(this.throughOutputStream);
-        this.socket!.pipe(this.outputStream);
+        // Do not pipe. When restarting the debugger, the socket gets closed,
+        // In which case, VSC will see this and shutdown the debugger completely.
+        (this.inputStream as any as NodeJS.ReadStream).on('data', data => {
+            this.socket.write(data);
+        });
+        this.socket.on('data', (data: string | Buffer) => {
+            this.throughOutputStream.write(data);
+            this.outputStream.write(data as string);
+        });
 
         // Send the launch/attach request to PTVSD and wait for it to reply back.
         this.sendMessage(attachOrLaunchRequest, this.socket);
@@ -388,6 +419,11 @@ class DebugManager implements Disposable {
         this.sendMessage(await this.initializeRequest, this.socket);
     }
     private onRequestInitialize = (request: DebugProtocol.InitializeRequest) => {
+        this.hasShutdown = false;
+        this.terminatedEventSent = false;
+        this.disconnectResponseSent = false;
+        this.restart = false;
+        this.disconnectRequest = undefined;
         this.initializeRequestDeferred.resolve(request);
     }
     private onRequestLaunch = (request: DebugProtocol.LaunchRequest) => {
@@ -400,6 +436,20 @@ class DebugManager implements Disposable {
         this.loggingEnabled = (request.arguments as AttachRequestArguments).logToFile === true;
         this.attachRequestDeferred.resolve(request);
     }
+    private onRequestDisconnect = (request: DebugProtocol.DisconnectRequest) => {
+        this.disconnectRequest = request;
+        if (this.launchOrAttach === 'attach') {
+            return;
+        }
+        const args = request.arguments as { restart: boolean } | undefined;
+        if (args && args.restart) {
+            this.restart = true;
+        }
+
+        // When VS Code sends a disconnect request, PTVSD replies back with a response.
+        // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
+        setTimeout(this.shutdown, 500);
+    }
     private onEventTerminated = async () => {
         logger.verbose('onEventTerminated');
         this.terminatedEventSent = true;
@@ -407,6 +457,7 @@ class DebugManager implements Disposable {
         setTimeout(this.shutdown, 300);
     }
     private onResponseDisconnect = async () => {
+        this.disconnectResponseSent = true;
         logger.verbose('onResponseDisconnect');
         // When VS Code sends a disconnect request, PTVSD replies back with a response, but its upto us to kill the process.
         // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).

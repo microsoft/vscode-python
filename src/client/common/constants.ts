@@ -73,8 +73,8 @@ export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
 export function isTestExecution(): boolean {
     return process.env.VSC_PYTHON_CI_TEST === '1';
 }
-export function isPythonAnalysisEngineTest(): boolean {
-    return process.env.VSC_PYTHON_ANALYSIS === '1';
+export function isLanguageServerTest(): boolean {
+    return process.env.VSC_PYTHON_LANGUAGE_SERVER === '1';
 }
 
 export const EXTENSION_ROOT_DIR = path.join(__dirname, '..', '..', '..');

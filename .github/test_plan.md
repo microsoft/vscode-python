@@ -15,6 +15,7 @@
 - Check the `Output` window under `Python` for logged errors
 - Have `Developer Tools` open to detect any errors
 - Consider running the tests in a multi-folder workspace
+- Focus on in-development features (i.e. experimental debugger and language server)
 
 <details>
   <summary>Scenarios</summary>
@@ -32,7 +33,7 @@
 - [ ] `Run Selection/Line in Python Terminal`
   - [ ] Right-click
   - [ ] Command
-  - [ ] `Ctrl-Enter`
+  - [ ] `Shift+Enter`
 
 #### Virtual environments
 
@@ -48,6 +49,7 @@
   - [ ] [`Create Terminal`](https://code.visualstudio.com/docs/python/environments#_activating-an-environment-in-the-terminal) works
     - [ ] Steals focus
     - [ ] `"python.terminal.activateEnvironment": false` deactivates automatically running the activation script in the terminal
+  - [ ] After the language server downloads it is able to complete its analysis of the environment w/o requiring a restart
 - [ ] Detect multiple virtual environments contained in the directory specified in `"python.venvPath"`
 - [ ] Detected all [conda environments created with an interpreter](https://code.visualstudio.com/docs/python/environments#_conda-environments)
   - [ ] Appropriate suffix label specified in status bar (e.g. `(condaenv)`)
@@ -56,11 +58,13 @@
     - [ ] Installs into environment
   - [ ] [`Create Terminal`](https://code.visualstudio.com/docs/python/environments#_activating-an-environment-in-the-terminal) works
     - [ ] `"python.terminal.activateEnvironment": false` deactivates automatically running the activation script in the terminal
+  - [ ] After the language server downloads it is able to complete its analysis of the environment w/o requiring a restart
 - [ ] (Linux/macOS until [`-m` is supported](https://github.com/Microsoft/vscode-python/issues/978)) Detected the virtual environment created by [pipenv](https://docs.pipenv.org/)
   - [ ] Appropriate suffix label specified in status bar (e.g. `(pipenv)`)
   - [ ] Prompt to install Pylint uses `pipenv install --dev`
   - [ ] [`Create Terminal`](https://code.visualstudio.com/docs/python/environments#_activating-an-environment-in-the-terminal) works
     - [ ] `"python.terminal.activateEnvironment": false` deactivates automatically running the activation script in the terminal
+  - [ ] After the language server downloads it is able to complete its analysis of the environment w/o requiring a restart
 - [ ] (Linux/macOS) Virtual environments created under `{workspaceFolder}/.direnv/python-{python_version}` are detected (for [direnv](https://direnv.net/) and its [`layout python3`](https://github.com/direnv/direnv/blob/master/stdlib.sh) support)
   - [ ] Appropriate suffix label specified in status bar (e.g. `(venv)`)
 
@@ -176,7 +180,7 @@ def foo():pass
 
 **ALWAYS**:
 - Test the current debugger
-- Text the experimental debugger (and note whether it is _at least_ as fast as the old debugger)
+- Test the experimental debugger (and note whether it is _at least_ as fast as the old debugger)
 
 - [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work
   - [ ] `Current File`
@@ -191,6 +195,7 @@ def foo():pass
   - [ ] `Scrapy`
   - [ ] `PySpark`
   - [ ] `All debug Options` with [appropriate values](https://code.visualstudio.com/docs/python/debugging#_standard-configuration-and-options) edited to make values valid
+- [ ] Running code from start to finish w/ no special debugging options (e.g. no breakpoints)
 - [ ] Breakpoints
   - [ ] Set
   - [ ] Hit

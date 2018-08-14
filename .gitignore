@@ -15,8 +15,9 @@ coverage/
 .venv
 pythonFiles/experimental/ptvsd/**
 debug_coverage*/**
-analysis/**
+languageServer/**
 bin/**
 obj/**
 .pytest_cache
 tmp/**
+.python-version

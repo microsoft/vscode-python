@@ -12,6 +12,8 @@ import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
+import { MOCHA_CI_REPORTER_ID, MOCHA_CI_REPORTFILE,
+    MOCHA_REPORTER_JUNIT } from './ciConstants';
 import * as vscodeMoscks from './vscode-mock';
 
 export function runTests(testOptions?: { grep?: string; timeout?: number }) {
@@ -19,13 +21,36 @@ export function runTests(testOptions?: { grep?: string; timeout?: number }) {
 
     const grep: string | undefined = testOptions ? testOptions.grep : undefined;
     const timeout: number | undefined = testOptions ? testOptions.timeout : undefined;
+
     const options: MochaSetupOptions = {
         ui: 'tdd',
         useColors: true,
         timeout,
         grep
     };
-    const mocha = new Mocha(options);
+
+    let temp_mocha: Mocha | undefined;
+
+    if (MOCHA_REPORTER_JUNIT === true) {
+        temp_mocha = new Mocha({
+            grep: undefined,
+            ui: 'tdd',
+            timeout,
+            reporter: MOCHA_CI_REPORTER_ID,
+            reporterOptions: {
+                useColors: false,
+                mochaFile: MOCHA_CI_REPORTFILE,
+                bail: false
+            },
+            slow: undefined
+        });
+    } else {
+        // we are running on the command line or debugger...
+        temp_mocha = new Mocha(options);
+    }
+
+    const mocha: Mocha = temp_mocha;
+
     require('source-map-support').install();
     const testsRoot = __dirname;
     glob('**/**.unit.test.js', { cwd: testsRoot }, (error, files) => {
@@ -66,7 +91,7 @@ if (require.main === module) {
     const timeoutArgIndex = args.findIndex(arg => arg.startsWith('timeout='));
     const grepArgIndex = args.findIndex(arg => arg.startsWith('grep='));
     const timeout: number | undefined = timeoutArgIndex >= 0 ? parseInt(args[timeoutArgIndex].split('=')[1].trim(), 10) : undefined;
-    let grep: string | undefined = timeoutArgIndex >= 0 ? args[grepArgIndex].split('=')[1].trim() : undefined;
+    let grep: string | undefined = grepArgIndex >= 0 ? args[grepArgIndex].split('=')[1].trim() : undefined;
     grep = grep && grep.length > 0 ? grep : undefined;
 
     runTests({ grep, timeout });

@@ -1,5 +1,279 @@
 # Changelog
 
+## 2018.7.0 (18 July 2018)
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort 4.3.4](https://pypi.org/project/isort/4.3.4/)
+- [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
+  and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
+- [ptvsd 3.0.0](https://pypi.org/project/ptvsd/3.0.0/) and [4.1.11a5](https://pypi.org/project/ptvsd/4.1.11a5/)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+### Enhancements
+
+1. Language server now reports code analysis progress in the status bar.
+   ([#1591](https://github.com/Microsoft/vscode-python/issues/1591))
+1. Only report Language Server download progress once.
+   ([#2000](https://github.com/Microsoft/vscode-python/issues/2000))
+1. Messages changes to reflect name of the language server: 'Microsoft Python Language Server';
+   folder name changed from `analysis` to `languageServer`.
+   ([#2107](https://github.com/Microsoft/vscode-python/issues/2107))
+1. Set default analysis for language server to open files only.
+   ([#2113](https://github.com/Microsoft/vscode-python/issues/2113))
+1. Add two popups to the extension: one to ask users to move to the new language server, the other to request feedback from users of that language server.
+   ([#2127](https://github.com/Microsoft/vscode-python/issues/2127))
+
+### Fixes
+
+1. Ensure dunder variables are always displayed in code completion when using the new language server.
+   ([#2013](https://github.com/Microsoft/vscode-python/issues/2013))
+1. Store testId for files & suites during unittest discovery.
+   ([#2044](https://github.com/Microsoft/vscode-python/issues/2044))
+1. `editor.formatOnType` no longer adds space after `*` in multi-line arguments.
+   ([#2048](https://github.com/Microsoft/vscode-python/issues/2048))
+1. Fix bug where tooltips would popup whenever a comma is typed within a string.
+   ([#2057](https://github.com/Microsoft/vscode-python/issues/2057))
+1. Change keyboard shortcut for `Run Selection/Line in Python Terminal` to not
+   interfere with the Find/Replace dialog box.
+   ([#2068](https://github.com/Microsoft/vscode-python/issues/2068))
+1. Relax validation of the environment `Path` variable.
+   ([#2076](https://github.com/Microsoft/vscode-python/issues/2076))
+1. `editor.formatOnType` is more reliable handling floating point numbers.
+   ([#2079](https://github.com/Microsoft/vscode-python/issues/2079))
+1. Change the default port used in remote debugging using `Experimental` debugger to `5678`.
+   ([#2146](https://github.com/Microsoft/vscode-python/issues/2146))
+1. Register test manager when using the new language server.
+   ([#2186](https://github.com/Microsoft/vscode-python/issues/2186))
+
+### Code Health
+
+1. Removed pre-commit hook that ran unit tests.
+   ([#1986](https://github.com/Microsoft/vscode-python/issues/1986))
+1. Pass OS type to the debugger.
+   ([#2128](https://github.com/Microsoft/vscode-python/issues/2128))
+1. Ensure 'languageServer' directory is excluded from the build output.
+   ([#2150](https://github.com/Microsoft/vscode-python/issues/2150))
+1. Change the download links of the language server files.
+   ([#2180](https://github.com/Microsoft/vscode-python/issues/2180))
+
+
+
+## 2018.6.0 (20 June 2018)
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort 4.3.4](https://pypi.org/project/isort/4.3.4/)
+- [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
+  and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
+- [ptvsd 3.0.0](https://pypi.org/project/ptvsd/3.0.0/) and [4.1.11a5](https://pypi.org/project/ptvsd/4.1.11a5/)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+### Enhancements
+
+1. Add setting to control automatic test discovery on save, `python.unitTest.autoTestDiscoverOnSaveEnabled`.
+   (thanks [Lingyu Li](http://github.com/lingyv-li/))
+   ([#1037](https://github.com/Microsoft/vscode-python/issues/1037))
+1. Add `gevent` launch configuration option to enable debugging of gevent monkey patched code.
+   (thanks [Bence Nagy](https://github.com/underyx))
+   ([#127](https://github.com/Microsoft/vscode-python/issues/127))
+1. Add support for the `"source.organizeImports"` setting for `"editor.codeActionsOnSave"` (thanks [Nathan Gaberel](https://github.com/n6g7)); you can turn this on just for Python using:
+   ```json
+   "[python]": {
+       "editor.codeActionsOnSave": {
+           "source.organizeImports": true
+       }
+   }
+   ```
+   ([#156](https://github.com/Microsoft/vscode-python/issues/156))
+1. Added Spanish translation.
+   (thanks [Mario Rubio](https://github.com/mario-mra/))
+   ([#1902](https://github.com/Microsoft/vscode-python/issues/1902))
+1. Add a French translation (thanks to [Jérémy](https://github.com/PixiBixi) for
+   the initial patch, and thanks to [Nathan Gaberel](https://github.com/n6g7),
+   [Bruno Alla](https://github.com/browniebroke), and
+   [Tarek Ziade](https://github.com/tarekziade) for reviews).
+   ([#1959](https://github.com/Microsoft/vscode-python/issues/1959))
+1. Add syntax highlighting for [Pipenv](http://pipenv.readthedocs.io/en/latest/)-related
+   files (thanks [Nathan Gaberel](https://github.com/n6g7)).
+   ([#995](https://github.com/Microsoft/vscode-python/issues/995))
+
+### Fixes
+
+1. Modified to change error message displayed when path to a tool (`linter`, `formatter`, etc) is invalid.
+   ([#1064](https://github.com/Microsoft/vscode-python/issues/1064))
+1. Improvements to the logic used to parse the arguments passed into the test frameworks.
+   ([#1070](https://github.com/Microsoft/vscode-python/issues/1070))
+1. Ensure navigation to definitons follows imports and is transparent to decoration.
+   (thanks [Peter Law](https://github.com/PeterJCLaw))
+   ([#1638](https://github.com/Microsoft/vscode-python/issues/1638))
+1. Fix for intellisense failing when using the new `Outline` feature.
+   ([#1721](https://github.com/Microsoft/vscode-python/issues/1721))
+1. When debugging unit tests, use the `env` file configured in `settings.json` under `python.envFile`.
+   ([#1759](https://github.com/Microsoft/vscode-python/issues/1759))
+1. Fix to display all interpreters in the interpreter list when a workspace contains a `Pipfile`.
+   ([#1800](https://github.com/Microsoft/vscode-python/issues/1800))
+1. Use file system API to perform file path comparisons when performing code navigation.
+   (thanks to [bstaint](https://github.com/bstaint) for the problem diagnosis)
+   ([#1811](https://github.com/Microsoft/vscode-python/issues/1811))
+1. Automatically add path mappings for remote debugging when attaching to the localhost.
+   ([#1829](https://github.com/Microsoft/vscode-python/issues/1829))
+1. Change keyboard shortcut for `Run Selection/Line in Python Terminal` to `Shift+Enter`.
+   ([#1875](https://github.com/Microsoft/vscode-python/issues/1875))
+1. Fix unhandled rejected promises in unit tests.
+   ([#1919](https://github.com/Microsoft/vscode-python/issues/1919))
+1. Fix debugger issue that causes the debugger to hang and silently exit stepping over a line of code instantiating an ITK vector object.
+   ([#459](https://github.com/Microsoft/vscode-python/issues/459))
+
+### Code Health
+
+1. Add telemetry to capture type of python interpreter used in workspace.
+   ([#1237](https://github.com/Microsoft/vscode-python/issues/1237))
+1. Enabled multi-thrreaded debugger tests for the `experimental` debugger.
+   ([#1250](https://github.com/Microsoft/vscode-python/issues/1250))
+1. Log relevant environment information when the existence of `pipenv` cannot be determined.
+   ([#1338](https://github.com/Microsoft/vscode-python/issues/1338))
+1. Use [dotenv](https://www.npmjs.com/package/dotenv) package to parse [environment variables definition files](https://code.visualstudio.com/docs/python/environments#_environment-variable-definitions-file).
+   ([#1376](https://github.com/Microsoft/vscode-python/issues/1376))
+1. Move from yarn to npm.
+   ([#1402](https://github.com/Microsoft/vscode-python/issues/1402))
+1. Fix django and flask debugger tests when using the experimental debugger.
+   ([#1407](https://github.com/Microsoft/vscode-python/issues/1407))
+1. Capture telemetry for the usage of the `Create Terminal` command along with other instances when a terminal is created implicitly.
+   ([#1542](https://github.com/Microsoft/vscode-python/issues/1542))
+1. Add telemetry to capture availability of Python 3, version of Python used in workspace and the number of workspace folders.
+   ([#1545](https://github.com/Microsoft/vscode-python/issues/1545))
+1. Ensure all CI tests (except for debugger) are no longer allowed to fail.
+   ([#1614](https://github.com/Microsoft/vscode-python/issues/1614))
+1. Capture telemetry for the usage of the feature that formats a line as you type (`editor.formatOnType`).
+   ([#1766](https://github.com/Microsoft/vscode-python/issues/1766))
+1. Capture telemetry for the new debugger.
+   ([#1767](https://github.com/Microsoft/vscode-python/issues/1767))
+1. Capture telemetry for usage of the setting `python.autocomplete.addBrackets`
+   ([#1770](https://github.com/Microsoft/vscode-python/issues/1770))
+1. Speed up githook by skipping commits not containing any `.ts` files.
+   ([#1803](https://github.com/Microsoft/vscode-python/issues/1803))
+1. Update typescript package to 2.9.1.
+   ([#1815](https://github.com/Microsoft/vscode-python/issues/1815))
+1. Log Conda not existing message as an information instead of an error.
+   ([#1817](https://github.com/Microsoft/vscode-python/issues/1817))
+1. Make use of `ILogger` to log messages instead of using `console.error`.
+   ([#1821](https://github.com/Microsoft/vscode-python/issues/1821))
+1. Update `parso` package to 0.2.1.
+   ([#1833](https://github.com/Microsoft/vscode-python/issues/1833))
+1. Update `isort` package to 4.3.4.
+   ([#1842](https://github.com/Microsoft/vscode-python/issues/1842))
+1. Add better exception handling when parsing responses received from the Jedi language service.
+   ([#1867](https://github.com/Microsoft/vscode-python/issues/1867))
+1. Resolve warnings in CI Tests and fix some broken CI tests.
+   ([#1885](https://github.com/Microsoft/vscode-python/issues/1885))
+1. Reduce sample count used to capture performance metrics in order to reduce time taken to complete the tests.
+   ([#1887](https://github.com/Microsoft/vscode-python/issues/1887))
+1. Ensure workspace information is passed into installer when determining whether a product/tool is installed.
+   ([#1893](https://github.com/Microsoft/vscode-python/issues/1893))
+1. Add JUnit file output to enable CI integration with VSTS.
+   ([#1897](https://github.com/Microsoft/vscode-python/issues/1897))
+1. Log unhandled rejected promises when running unit tests.
+   ([#1918](https://github.com/Microsoft/vscode-python/issues/1918))
+1. Add ability to run tests without having to launch VS Code.
+   ([#1922](https://github.com/Microsoft/vscode-python/issues/1922))
+1. Fix rename refactoring unit tests.
+   ([#1953](https://github.com/Microsoft/vscode-python/issues/1953))
+1. Fix failing test on Mac when validating the path of a python interperter.
+   ([#1957](https://github.com/Microsoft/vscode-python/issues/1957))
+1. Display banner prompting user to complete a survey for the use of the `Experimental Debugger`.
+   ([#1968](https://github.com/Microsoft/vscode-python/issues/1968))
+1. Use a glob pattern to look for `conda` executables.
+   ([#256](https://github.com/Microsoft/vscode-python/issues/256))
+1. Create tests to measure activation times for the extension.
+   ([#932](https://github.com/Microsoft/vscode-python/issues/932))
+
+
+
+
+
 ## 2018.5.0 (05 Jun 2018)
 
 Thanks to the following projects which we fully rely on to provide some of

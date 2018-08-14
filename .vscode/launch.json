@@ -104,7 +104,7 @@
             "preLaunchTask": "Compile"
         },
         {
-            "name": "Launch Analysis Engine Tests",
+            "name": "Launch Language Server Tests",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -120,7 +120,7 @@
             ],
             "preLaunchTask": "Compile",
             "env": {
-                "VSC_PYTHON_ANALYSIS": "1"
+                "VSC_PYTHON_LANGUAGE_SERVER": "1"
             }
         },
         {

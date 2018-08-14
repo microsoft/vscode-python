@@ -86,7 +86,7 @@ suite('Unit Tests - Debug Launcher', () => {
     const testProviders: TestProvider[] = ['nosetest', 'pytest', 'unittest'];
     testProviders.forEach(testProvider => {
         [true, false].forEach(useExperimentalDebugger => {
-            const testTitleSuffix = `(Test Framework '${testProvider}', and use experimental debugger = '${useExperimentalDebugger}'`;
+            const testTitleSuffix = `(Test Framework '${testProvider}', and use experimental debugger = '${useExperimentalDebugger}')`;
             const testLaunchScript = getTestLauncherScript(testProvider, useExperimentalDebugger);
             const debuggerType = useExperimentalDebugger ? 'pythonExperimental' : 'python';
 
@@ -131,7 +131,7 @@ suite('Unit Tests - Debug Launcher', () => {
                 const cancellationToken = new CancellationTokenSource();
                 cancellationToken.cancel();
                 const token = cancellationToken.token;
-                expect(debugLauncher.launchDebugger({ cwd: '', args: [], token, testProvider })).to.be.eventually.equal(undefined, 'not undefined');
+                await expect(debugLauncher.launchDebugger({ cwd: '', args: [], token, testProvider })).to.be.eventually.equal(undefined, 'not undefined');
                 debugService.verifyAll();
             });
             test(`Must throw an exception if there are no workspaces ${testTitleSuffix}`, async () => {
@@ -142,7 +142,7 @@ suite('Unit Tests - Debug Launcher', () => {
                     .returns(() => Promise.resolve(undefined as any))
                     .verifiable(TypeMoq.Times.never());
 
-                expect(debugLauncher.launchDebugger({ cwd: '', args: [], testProvider })).to.eventually.throw('Please open a workspace');
+                await expect(debugLauncher.launchDebugger({ cwd: '', args: [], testProvider })).to.eventually.rejectedWith('Please open a workspace');
                 debugService.verifyAll();
             });
         });

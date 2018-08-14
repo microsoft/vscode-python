@@ -91,6 +91,7 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
             if (this.testResultDisplay) {
                 this.testResultDisplay.enabled = false;
             }
+            // tslint:disable-next-line:no-suspicious-comment
             // TODO: Why are we disposing, what happens when tests are enabled.
             if (this.workspaceTestManagerService) {
                 this.workspaceTestManagerService.dispose();
@@ -308,10 +309,17 @@ export class UnitTestManagementService implements IUnitTestManagementService, Di
 
         disposablesRegistry.push(...disposables);
     }
+    private onDocumentSaved(doc: TextDocument) {
+        const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(doc.uri);
+        if (!settings.unitTest.autoTestDiscoverOnSaveEnabled) {
+            return;
+        }
+        this.discoverTestsForDocument(doc);
+    }
     private registerHandlers() {
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
 
-        this.disposableRegistry.push(documentManager.onDidSaveTextDocument(this.discoverTestsForDocument.bind(this)));
+        this.disposableRegistry.push(documentManager.onDidSaveTextDocument(this.onDocumentSaved.bind(this)));
         this.disposableRegistry.push(this.workspaceService.onDidChangeConfiguration(e => {
             if (this.configChangedTimer) {
                 clearTimeout(this.configChangedTimer);

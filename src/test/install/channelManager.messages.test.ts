@@ -6,6 +6,7 @@ import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell } from '../../client/common/application/types';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
+import { IModuleInstaller } from '../../client/common/installer/types';
 import { Architecture, IPlatformService } from '../../client/common/platform/types';
 import { Product } from '../../client/common/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
@@ -46,13 +47,15 @@ suite('Installation - channel messages', () => {
 
         interpreters = TypeMoq.Mock.ofType<IInterpreterService>();
         serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, interpreters.object);
+
+        const moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
+        serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, moduleInstaller.object);
     });
 
     test('No installers message: Unknown/Windows', async () => {
         platform.setup(x => x.isWindows).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Unknown,
-            async (channels: InstallationChannelManager, message: string, url: string) => {
-                await channels.showNoInstallersMessage();
+            async (message: string, url: string) => {
                 verifyMessage(message, ['Pip'], ['Conda']);
                 verifyUrl(url, ['Windows', 'Pip']);
             });
@@ -61,8 +64,7 @@ suite('Installation - channel messages', () => {
     test('No installers message: Conda/Windows', async () => {
         platform.setup(x => x.isWindows).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Conda,
-            async (channels: InstallationChannelManager, message: string, url: string) => {
-                await channels.showNoInstallersMessage();
+            async (message: string, url: string) => {
                 verifyMessage(message, ['Pip', 'Conda'], []);
                 verifyUrl(url, ['Windows', 'Pip', 'Conda']);
             });
@@ -72,8 +74,7 @@ suite('Installation - channel messages', () => {
         platform.setup(x => x.isWindows).returns(() => false);
         platform.setup(x => x.isMac).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Unknown,
-            async (channels: InstallationChannelManager, message: string, url: string) => {
-                await channels.showNoInstallersMessage();
+            async (message: string, url: string) => {
                 verifyMessage(message, ['Pip'], ['Conda']);
                 verifyUrl(url, ['Mac', 'Pip']);
             });
@@ -83,8 +84,7 @@ suite('Installation - channel messages', () => {
         platform.setup(x => x.isWindows).returns(() => false);
         platform.setup(x => x.isMac).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Conda,
-            async (channels: InstallationChannelManager, message: string, url: string) => {
-                await channels.showNoInstallersMessage();
+            async (message: string, url: string) => {
                 verifyMessage(message, ['Pip', 'Conda'], []);
                 verifyUrl(url, ['Mac', 'Pip', 'Conda']);
             });
@@ -95,8 +95,7 @@ suite('Installation - channel messages', () => {
         platform.setup(x => x.isMac).returns(() => false);
         platform.setup(x => x.isLinux).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Unknown,
-            async (channels: InstallationChannelManager, message: string, url: string) => {
-                await channels.showNoInstallersMessage();
+            async (message: string, url: string) => {
                 verifyMessage(message, ['Pip'], ['Conda']);
                 verifyUrl(url, ['Linux', 'Pip']);
             });
@@ -107,8 +106,7 @@ suite('Installation - channel messages', () => {
         platform.setup(x => x.isMac).returns(() => false);
         platform.setup(x => x.isLinux).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Conda,
-            async (channels: InstallationChannelManager, message: string, url: string) => {
-                await channels.showNoInstallersMessage();
+            async (message: string, url: string) => {
                 verifyMessage(message, ['Pip', 'Conda'], []);
                 verifyUrl(url, ['Linux', 'Pip', 'Conda']);
             });
@@ -117,11 +115,10 @@ suite('Installation - channel messages', () => {
     test('No channels message', async () => {
         platform.setup(x => x.isWindows).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Unknown,
-            async (channels: InstallationChannelManager, message: string, url: string) => {
-                await channels.getInstallationChannel(Product.pylint);
+            async (message: string, url: string) => {
                 verifyMessage(message, ['Pip'], ['Conda']);
                 verifyUrl(url, ['Windows', 'Pip']);
-            });
+            }, 'getInstallationChannel');
     });
 
     function verifyMessage(message: string, present: string[], missing: string[]) {
@@ -142,7 +139,8 @@ suite('Installation - channel messages', () => {
 
     async function testInstallerMissingMessage(
         interpreterType: InterpreterType,
-        verify: (c: InstallationChannelManager, m: string, u: string) => void): Promise<void> {
+        verify: (m: string, u: string) => Promise<void>,
+        methodType: 'showNoInstallersMessage' | 'getInstallationChannel' = 'showNoInstallersMessage'): Promise<void> {
 
         const activeInterpreter: PythonInterpreter = {
             ...info,
@@ -167,6 +165,11 @@ suite('Installation - channel messages', () => {
         appShell.setup(x => x.openUrl(TypeMoq.It.isAnyString())).callback((s: string) => {
             url = s;
         });
-        verify(channels, message, url);
+        if (methodType === 'showNoInstallersMessage') {
+            await channels.showNoInstallersMessage();
+        } else {
+            await channels.getInstallationChannel(Product.pylint);
+        }
+        await verify(message, url);
     }
 });

@@ -22,7 +22,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         if (!fs.lstatSync(filePath).isFile()) {
             return undefined;
         }
-        return dotenv.parse(filePath);
+        return dotenv.parse(await fs.readFile(filePath));
     }
     public mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables) {
         if (!target) {
