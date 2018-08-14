@@ -37,14 +37,14 @@ def example_config():
 
 
 def test_get_projects(example_config, example_data):
-    result = config.get_projects(example_config)
+    result = config.get_projects(example_config, {"npm", "explicit"})
     assert result == example_data
 
 
 def test_get_projects_key_check(example_config):
     del example_config["project"][0]["url"]
     with pytest.raises(KeyError):
-        config.get_projects(example_config)
+        config.get_projects(example_config, {"npm", "explicit"})
 
 
 def test_get_explicit_entries(example_data):
