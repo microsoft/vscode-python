@@ -3,7 +3,7 @@ header = """
 THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
 Do Not Translate or Localize
 
-The Microsoft Python extension for Visual Studio Code incorporates components from the projects listed below. Microsoft licenses these components to you under Microsoft's licensing terms for the Microsoft Python extension for Visual Studio Code.  The original copyright notices and the licenses under which Microsoft received such components are set forth below for informational purposes. Microsoft reserves all rights not expressly granted herein, whether by implication, estoppel or otherwise.
+Microsoft Python extension for Visual Studio Code incorporates third party material from the projects listed below.
 """
 
 [[project]]
