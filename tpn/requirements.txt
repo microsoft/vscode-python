@@ -1,0 +1,5 @@
+aiohttp~=3.3.2
+docopt~=0.6.2
+pytest~=3.6.0
+pytest-asyncio~=0.8.0
+pytoml~=0.1.15
