@@ -15,9 +15,16 @@ import { ExtensionActivators, IExtensionActivationService, IExtensionActivator }
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
 const LS_MIN_OS_VERSIONS: [OSType, OSDistro, string][] = [
-    [OSType.OSX, OSDistro.Unknown, '10.12']  // Sierra or higher
+    // See: https://code.visualstudio.com/docs/supporting/requirements
+    [OSType.OSX, OSDistro.Unknown, '10.12'],  // Sierra or higher
+    [OSType.Windows, OSDistro.Unknown, '6.1'],  // Win 7 or higher
     // tslint:disable-next-line: no-suspicious-comment
-    // TODO: add others
+    // TODO: Are these right?
+    [OSType.Linux, OSDistro.Ubuntu, '14.04'],  // "precise"
+    [OSType.Linux, OSDistro.Debian, '7'],
+    [OSType.Linux, OSDistro.RHEL, '7'],
+    [OSType.Linux, OSDistro.CentOS, '7'],
+    [OSType.Linux, OSDistro.Fedora, '23']
 ];
 
 type ActivatorInfo = { jedi: boolean; activator: IExtensionActivator };
