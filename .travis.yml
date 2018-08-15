@@ -129,6 +129,8 @@ script:
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.7" ]; then
         python3 -m pip install --upgrade -r news/requirements.txt;
         python3 news/announce.py --dry_run;
+        python3 -m pip install --upgrade -r tpn/requirements.txt;
+        python3 tpn --npm package-lock.json --config tpn/distribution.toml /dev/null;
     fi
   - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
