@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
+import * as os from 'os';
+import * as semver from 'semver';
 import { Disposable } from 'vscode';
 
 export enum Architecture {
@@ -15,7 +17,33 @@ export enum OSType {
     OSX,
     Linux
 }
-// Add "enum OSDistro" here if needed later.
+export enum OSDistro {
+    Unknown,
+    // linux:
+    Ubuntu,
+    Debian,
+    RHEL,
+    Fedora,
+    CentOS,
+    Suse,
+    Gentoo,
+    Arch
+}
+
+export class OSInfo {
+    constructor(
+        public readonly type: OSType,
+        // See:
+        //  https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/semver/index.d.ts#L152
+        public readonly version: semver.SemVer = new semver.SemVer('0.0.0'),
+        public readonly distro: OSDistro = OSDistro.Unknown,
+        public readonly arch: string = os.arch()) {}
+
+    public get is64bit(): boolean {
+        return this.arch === 'x64';
+    }
+}
+
 export enum RegistryHive {
     HKCU, HKLM
 }
@@ -28,16 +56,16 @@ export interface IRegistry {
 
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
-    osType: OSType;
-    osVersion: string;
-    is64bit: boolean;
+    os: OSInfo;
     pathVariableName: 'Path' | 'PATH';
     virtualEnvBinName: 'bin' | 'scripts';
 
-    // XXX Drop the following (in favor of osType).
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: Drop the following (in favor of osType).
     isWindows: boolean;
     isMac: boolean;
     isLinux: boolean;
+    is64bit: boolean;
 }
 
 export type TemporaryFile = { filePath: string } & Disposable;

@@ -4,20 +4,21 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as semver from 'semver';
 import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { isLanguageServerTest, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
-import { IPlatformService, OSType } from '../common/platform/types';
+import { IPlatformService, OSDistro, OSType } from '../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ExtensionActivators, IExtensionActivationService, IExtensionActivator } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
-const LS_MIN_OS_VERSIONS: Map<OSType, string> = new Map([
-    [OSType.OSX, '10.12.0']  // Sierra or higher
-]);
+const LS_MIN_OS_VERSIONS: [OSType, OSDistro, string][] = [
+    [OSType.OSX, OSDistro.Unknown, '10.12']  // Sierra or higher
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: add others
+];
 
 type ActivatorInfo = { jedi: boolean; activator: IExtensionActivator };
 
@@ -87,12 +88,15 @@ export class ExtensionActivationService implements IExtensionActivationService, 
 
 function isLSSupported(services: IServiceContainer): boolean {
     const platform = services.get<IPlatformService>(IPlatformService);
-    const minVer = LS_MIN_OS_VERSIONS[platform.osType];
-    if (minVer === undefined || minVer === null) {
+    let minVer = '';
+    for (const [osType, distro, ver] of LS_MIN_OS_VERSIONS) {
+        if (platform.os.type === osType && platform.os.distro === distro) {
+            minVer = ver;
+            break;
+        }
+    }
+    if (minVer === '') {
         return true;
     }
-    if (platform.osVersion === '') {
-        return false;
-    }
-    return semver.gte(platform.osVersion, minVer);
+    return platform.os.version.compare(minVer) >= 0;
 }
