@@ -25,6 +25,8 @@ export enum OSDistro {
     RHEL,
     Fedora,
     CentOS,
+    // The remainder aren't officially supported.
+    // See: https://code.visualstudio.com/docs/supporting/requirements
     Suse,
     Gentoo,
     Arch
@@ -33,11 +35,11 @@ export enum OSDistro {
 export class OSInfo {
     constructor(
         public readonly type: OSType,
+        public readonly arch: string = os.arch(),
         // See:
         //  https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/semver/index.d.ts#L152
         public readonly version: semver.SemVer = new semver.SemVer('0.0.0'),
-        public readonly distro: OSDistro = OSDistro.Unknown,
-        public readonly arch: string = os.arch()) {}
+        public readonly distro: OSDistro = OSDistro.Unknown) {}
 
     public get is64bit(): boolean {
         return this.arch === 'x64';
