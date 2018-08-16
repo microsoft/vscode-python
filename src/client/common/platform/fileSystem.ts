@@ -36,6 +36,7 @@ export class FileSystem implements IFileSystem {
     public fileExistsSync(filePath: string): boolean {
         return fs.existsSync(filePath);
     }
+
     /**
      * Reads the contents of the file using utf8 and returns the string contents.
      * @param {string} filePath
@@ -44,6 +45,16 @@ export class FileSystem implements IFileSystem {
      */
     public readFile(filePath: string): Promise<string> {
         return fs.readFile(filePath).then(buffer => buffer.toString());
+    }
+
+    /**
+     * Reads the contents of the file using utf8 and returns the string contents.
+     * @param {string} filePath
+     * @returns {string}
+     * @memberof FileSystem
+     */
+    public readFileSync(filePath: string): string {
+        return fs.readFileSync(filePath, 'utf8');
     }
 
     public directoryExists(filePath: string): Promise<boolean> {
