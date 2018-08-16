@@ -4,8 +4,8 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
+import { isWindows } from '../../../client/common/platform/osinfo';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
-import { PlatformService } from '../../../client/common/platform/platformService';
 import { IPathUtils } from '../../../client/common/types';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
@@ -19,7 +19,7 @@ suite('Environment Variables Service', () => {
     let pathUtils: IPathUtils;
     let variablesService: IEnvironmentVariablesService;
     setup(() => {
-        pathUtils = new PathUtils(new PlatformService().isWindows);
+        pathUtils = new PathUtils(isWindows());
         variablesService = new EnvironmentVariablesService(pathUtils);
     });
 
