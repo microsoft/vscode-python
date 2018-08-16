@@ -22,9 +22,11 @@ export function getOSType(platform: string = process.platform): OSType {
 }
 
 export function getOSInfo(
-    getArch: () => string = os.arch
+    getArch: () => string = os.arch,
+    readFile: (string) => string = (fn) => { return fs.readFileSync(fn, 'utf-8'); },
+    platform?: string
 ): OSInfo {
-    const osType = getOSType();
+    const osType = getOSType(platform);
     const arch = getArch();
     switch (osType) {
         case OSType.Windows:
@@ -32,7 +34,7 @@ export function getOSInfo(
         case OSType.OSX:
             return defaultOSInfo(osType, arch);
         case OSType.Linux:
-            return linuxInfoFromFile(arch);
+            return linuxInfoFromFile(arch, readFile);
         default:
             return new OSInfo(OSType.Unknown, arch);
     }
@@ -44,15 +46,23 @@ function defaultOSInfo(osType: OSType, arch: string): OSInfo {
 }
 
 // Inspired in part by: https://github.com/juju/os
-function linuxInfoFromFile(arch: string, filename: string = LINUX_OS_RELEASE_FILE): OSInfo {
-    if (!fs.existsSync(filename)) {
+function linuxInfoFromFile(
+    arch: string,
+    readFile: (filePath: string) => string
+): OSInfo {
+    const filename = LINUX_OS_RELEASE_FILE;
+    let data: string;
+    try {
+        data = readFile(filename);
+    } catch (exc) {
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: Only mask exception if file not found?
         return new OSInfo(OSType.Linux, arch);
     }
 
     let distroName = '';
     let distroLike: string[] = [];
     let rawVer = '';
-    const data = fs.readFileSync(filename, 'utf-8');
     for (const line of data.split(/\n/)) {
         const parts = line.split('=', 2);
         switch (parts[0]) {
