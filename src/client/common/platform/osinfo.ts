@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as fs from 'fs';
 import * as os from 'os';
 import * as semver from 'semver';
 import { LINUX_OS_RELEASE_FILE } from './constants';
@@ -22,8 +21,8 @@ export function getOSType(platform: string = process.platform): OSType {
 }
 
 export function getOSInfo(
+    readFile: (string) => string,
     getArch: () => string = os.arch,
-    readFile: (string) => string = (fn) => { return fs.readFileSync(fn, 'utf-8'); },
     platform?: string
 ): OSInfo {
     const osType = getOSType(platform);
