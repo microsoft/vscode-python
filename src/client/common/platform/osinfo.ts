@@ -3,10 +3,48 @@
 
 'use strict';
 
+import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as semver from 'semver';
 import { LINUX_OS_RELEASE_FILE } from './constants';
 import { OSDistro, OSInfo, OSType } from './types';
+
+let local: OSInfo;
+
+function getLocal(): OSInfo {
+    if (!local) {
+        local = getOSInfo();
+    }
+    return local;
+}
+
+export function isWindows(info?: OSInfo): boolean {
+    if (!info) {
+        info = getLocal();
+    }
+    return info.type === OSType.Windows;
+}
+
+export function isMac(info?: OSInfo): boolean {
+    if (!info) {
+        info = getLocal();
+    }
+    return info.type === OSType.OSX;
+}
+
+export function isLinux(info?: OSInfo): boolean {
+    if (!info) {
+        info = getLocal();
+    }
+    return info.type === OSType.Linux;
+}
+
+export function is64bit(info?: OSInfo): boolean {
+    if (!info) {
+        info = getLocal();
+    }
+    return info.arch === 'x64';
+}
 
 export function getOSType(platform: string = process.platform): OSType {
     if (/^win/.test(platform)) {
@@ -21,7 +59,9 @@ export function getOSType(platform: string = process.platform): OSType {
 }
 
 export function getOSInfo(
-    readFile: (string) => string,
+    readFile: (string) => string = (filename) => {
+        return fs.readFileSync(filename, 'utf8');
+    },
     getArch: () => string = os.arch,
     platform?: string
 ): OSInfo {

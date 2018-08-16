@@ -5,27 +5,27 @@
 import { inject, injectable } from 'inversify';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
 import { FileSystem } from './fileSystem';
-import { getOSInfo, getOSType } from './osinfo';
-import { IFileSystem, IPlatformService, OSInfo, OSType } from './types';
+import * as osinfo from './osinfo';
+import { IFileSystem, IPlatformService, OSInfo } from './types';
 
 @injectable()
 export class PlatformService implements IPlatformService {
     public readonly os: OSInfo;
 
     constructor(
-        osInfo?: OSInfo,
+        info?: OSInfo,
         @inject(IFileSystem) filesystem?: IFileSystem
     ) {
-        if (osInfo) {
-            this.os = osInfo;
+        if (info) {
+            this.os = info;
         } else {
             if (!filesystem) {
                 // Due to circular dependency between PlatformService and
                 // FileSystem, we must use a dummy OSInfo at first.
-                this.os = new OSInfo(getOSType());
+                this.os = new OSInfo(osinfo.getOSType());
                 filesystem = new FileSystem(this);
             }
-            this.os = getOSInfo(filesystem.readFileSync);
+            this.os = osinfo.getOSInfo(filesystem.readFileSync);
         }
     }
 
@@ -39,15 +39,15 @@ export class PlatformService implements IPlatformService {
     // tslint:disable-next-line: no-suspicious-comment
     // TODO: Drop the following (in favor of osType).
     public get isWindows(): boolean {
-        return this.os.type === OSType.Windows;
+        return osinfo.isWindows(this.os);
     }
     public get isMac(): boolean {
-        return this.os.type === OSType.OSX;
+        return osinfo.isMac(this.os);
     }
     public get isLinux(): boolean {
-        return this.os.type === OSType.Linux;
+        return osinfo.isLinux(this.os);
     }
     public get is64bit(): boolean {
-        return this.os.arch === 'x64';
+        return osinfo.is64bit(this.os);
     }
 }
