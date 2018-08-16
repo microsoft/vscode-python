@@ -13,17 +13,20 @@ export class PlatformService implements IPlatformService {
     public readonly os: OSInfo;
 
     constructor(
+        osInfo?: OSInfo,
         @inject(IFileSystem) filesystem?: IFileSystem
     ) {
-        if (!filesystem) {
-            // Due to circular dependency between PlatformService and
-            // FileSystem, we must use a dummy OSInfo at first.
-            this.os = new OSInfo(getOSType());
-            filesystem = new FileSystem(this);
+        if (osInfo) {
+            this.os = osInfo;
+        } else {
+            if (!filesystem) {
+                // Due to circular dependency between PlatformService and
+                // FileSystem, we must use a dummy OSInfo at first.
+                this.os = new OSInfo(getOSType());
+                filesystem = new FileSystem(this);
+            }
+            this.os = getOSInfo(filesystem.readFileSync);
         }
-
-        // XXX optionally pass in os info
-        this.os = getOSInfo(filesystem.readFileSync);
     }
 
     public get pathVariableName() {
