@@ -236,6 +236,7 @@ export interface ITerminalSettings {
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
 }
+
 export interface IAnalysisSettings {
     readonly openFilesOnly: boolean;
     readonly typeshedPaths: string[];
@@ -244,6 +245,7 @@ export interface IAnalysisSettings {
     readonly information: string[];
     readonly disabled: string[];
     readonly traceLogging: boolean;
+    readonly logLevel: LogLevel;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

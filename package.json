@@ -874,6 +874,23 @@
                     "description": "List of suppressed diagnostic messages.",
                     "scope": "resource"
                 },
+                "python.analysis.logLevel": {
+                    "type": "string",
+                    "enum": [
+                        "Error",
+                        "Warning",
+                        "Information"
+                    ],
+                    "default": "error",
+                    "description": "Defines type of log messages language server writes into the output window.",
+                    "scope": "resource"
+                },
+                "python.analysis.traceLogging": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables full diagnostic logging in the language server.",
+                    "scope": "resource"
+                },
                 "python.linting.enabled": {
                     "type": "boolean",
                     "default": true,
