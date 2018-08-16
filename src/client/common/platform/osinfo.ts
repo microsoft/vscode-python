@@ -6,7 +6,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as semver from 'semver';
-import { LINUX_INFO_FILE } from './constants';
+import { LINUX_OS_RELEASE_FILE } from './constants';
 import { OSDistro, OSInfo, OSType } from './types';
 
 export function getOSType(platform: string = process.platform): OSType {
@@ -44,7 +44,7 @@ function defaultOSInfo(osType: OSType, arch: string): OSInfo {
 }
 
 // Inspired in part by: https://github.com/juju/os
-function linuxInfoFromFile(arch: string, filename: string = LINUX_INFO_FILE): OSInfo {
+function linuxInfoFromFile(arch: string, filename: string = LINUX_OS_RELEASE_FILE): OSInfo {
     if (!fs.existsSync(filename)) {
         return new OSInfo(OSType.Linux, arch);
     }
