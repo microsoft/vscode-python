@@ -69,23 +69,23 @@ export function getOSInfo(
     const arch = getArch();
     switch (osType) {
         case OSType.Windows:
-            return defaultOSInfo(osType, arch);
+            return getDefaultOSInfo(osType, arch);
         case OSType.OSX:
-            return defaultOSInfo(osType, arch);
+            return getDefaultOSInfo(osType, arch);
         case OSType.Linux:
-            return linuxInfoFromFile(arch, readFile);
+            return getLinuxInfoFromFile(arch, readFile);
         default:
             return new OSInfo(OSType.Unknown, arch);
     }
 }
 
-function defaultOSInfo(osType: OSType, arch: string): OSInfo {
+function getDefaultOSInfo(osType: OSType, arch: string): OSInfo {
     const version = parseVersion(os.release());
     return new OSInfo(osType, arch, version);
 }
 
 // Inspired in part by: https://github.com/juju/os
-function linuxInfoFromFile(
+function getLinuxInfoFromFile(
     arch: string,
     readFile: (string) => string
 ): OSInfo {
@@ -106,7 +106,7 @@ function linuxInfoFromFile(
             break;
         }
         if (name !== '') {
-            distro = linuxDistroFromName(name);
+            distro = getLinuxDistroFromName(name);
         }
     }
 
@@ -160,7 +160,7 @@ function readOSReleaseFile(
     return [distroNames, rawVer];
 }
 
-function linuxDistroFromName(name: string): OSDistro {
+function getLinuxDistroFromName(name: string): OSDistro {
     name = name.toLowerCase();
     // See https://github.com/zyga/os-release-zoo.
     if (/ubuntu/.test(name)) {
