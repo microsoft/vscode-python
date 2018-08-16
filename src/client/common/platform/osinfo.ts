@@ -48,20 +48,40 @@ function defaultOSInfo(osType: OSType, arch: string): OSInfo {
 // Inspired in part by: https://github.com/juju/os
 function linuxInfoFromFile(
     arch: string,
-    readFile: (filePath: string) => string
+    readFile: (string) => string
 ): OSInfo {
-    const filename = LINUX_OS_RELEASE_FILE;
-    let data: string;
+    let distroNames: string[];
+    let rawVer: string;
     try {
-        data = readFile(filename);
+        [distroNames, rawVer] = readOSReleaseFile(readFile);
     } catch (exc) {
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: Only mask exception if file not found?
         return new OSInfo(OSType.Linux, arch);
     }
 
+    const version = parseVersion(rawVer);
+    let distro = OSDistro.Unknown;
+    for (const name of distroNames) {
+        if (distro !== OSDistro.Unknown) {
+            break;
+        }
+        if (name !== '') {
+            distro = linuxDistroFromName(name);
+        }
+    }
+
+    return new OSInfo(OSType.Linux, arch, version, distro);
+}
+
+function readOSReleaseFile(
+    readFile: (string) => string
+): [string[], string] {
+    const filename = LINUX_OS_RELEASE_FILE;
+    const data = readFile(filename);
+
     let distroName = '';
-    let distroLike: string[] = [];
+    let distroNames: string[] = [];
     let rawVer = '';
     for (const line of data.split(/\n/)) {
         const parts = line.split('=', 2);
@@ -82,7 +102,7 @@ function linuxInfoFromFile(
             case 'ID_LIKE':
                 const names = parts[1].split(/ /);
                 if (names) {
-                    distroLike = names;
+                    distroNames = names;
                 }
                 break;
             case 'VERSION':
@@ -93,15 +113,12 @@ function linuxInfoFromFile(
             default:
         }
     }
-    const version = parseVersion(rawVer);
-    let distro = linuxDistroFromName(distroName);
-    while (distro === OSDistro.Unknown && distroLike.length > 0) {
-        const name = distroLike.pop();
-        if (name) {
-            distro = linuxDistroFromName(name);
-        }
-    }
-    return new OSInfo(OSType.Linux, arch, version, distro);
+    // Insert at the front.  This guarantees that there is always at
+    // least one item in the array.  If no name was found then the empty
+    // string will indicate that to the caller.
+    distroNames.splice(0, 0, distroName);
+
+    return [distroNames, rawVer];
 }
 
 function linuxDistroFromName(name: string): OSDistro {
