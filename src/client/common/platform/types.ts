@@ -12,7 +12,7 @@ export enum Architecture {
     x64 = 3
 }
 export enum OSType {
-    Unsupported,
+    Unknown,
     Windows,
     OSX,
     Linux

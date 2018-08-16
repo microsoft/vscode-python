@@ -48,7 +48,7 @@ function getOSType(platform: string = process.platform): OSType {
     } else if (/^linux/.test(platform)) {
         return OSType.Linux;
     } else {
-        return OSType.Unsupported;
+        return OSType.Unknown;
     }
 }
 
@@ -63,7 +63,7 @@ function getOSInfo(): OSInfo {
         case OSType.Linux:
             return linuxInfoFromFile(arch);
         default:
-            return new OSInfo(OSType.Unsupported, arch);
+            return new OSInfo(OSType.Unknown, arch);
     }
 }
 
