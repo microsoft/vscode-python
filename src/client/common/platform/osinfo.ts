@@ -21,9 +21,11 @@ export function getOSType(platform: string = process.platform): OSType {
     }
 }
 
-export function getOSInfo(): OSInfo {
+export function getOSInfo(
+    getArch: () => string = os.arch
+): OSInfo {
     const osType = getOSType();
-    const arch = os.arch();
+    const arch = getArch();
     switch (osType) {
         case OSType.Windows:
             return defaultOSInfo(osType, arch);
