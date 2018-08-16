@@ -7,12 +7,11 @@ import * as fileSystem from 'fs';
 import * as path from 'path';
 import * as request from 'request';
 import * as requestProgress from 'request-progress';
-import { OutputChannel, ProgressLocation, window } from 'vscode';
-import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { ProgressLocation, window } from 'vscode';
+import { IWorkspaceService } from '../common/application/types';
 import { createDeferred } from '../common/helpers';
-import { IFileSystem, IPlatformService } from '../common/platform/types';
+import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
 import { PlatformData, PlatformName } from './platformData';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -31,20 +30,20 @@ export const DownloadLinks = {
 };
 
 export class LanguageServerDownloader {
-    private readonly output: OutputChannel;
-    private readonly platform: IPlatformService;
-    private readonly platformData: PlatformData;
-    private readonly fs: IFileSystem;
+    private readonly proxy: string;
 
-    constructor(private readonly services: IServiceContainer, private engineFolder: string) {
-        this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        this.fs = this.services.get<IFileSystem>(IFileSystem);
-        this.platform = this.services.get<IPlatformService>(IPlatformService);
-        this.platformData = new PlatformData(this.platform, this.fs);
+    constructor(
+        private readonly output: IOutputChannel,
+        private readonly fs: IFileSystem,
+        private readonly platformData: PlatformData,
+        readonly workspace: IWorkspaceService,
+        private engineFolder: string) {
+
+        this.proxy = workspace.getConfiguration('http').get('proxy', '');
     }
 
-    public async getDownloadUri() {
-        const platformString = await this.platformData.getPlatformName();
+    public getDownloadUri() {
+        const platformString = this.platformData.getPlatformName();
         return DownloadLinks[platformString];
     }
 
@@ -53,6 +52,7 @@ export class LanguageServerDownloader {
 
         let localTempFilePath = '';
         try {
+
             localTempFilePath = await this.downloadFile(downloadUri, 'Downloading Microsoft Python Language Server... ');
             await this.unpackArchive(context.extensionPath, localTempFilePath);
         } catch (err) {
@@ -65,6 +65,11 @@ export class LanguageServerDownloader {
             }
         }
     }
+
+    // fileSystem.createWriteStream(filePath: str): fileSystem.WriteStream
+    // requestProgress(req: request.Request): 
+    // request(uri: string, connectionOptions: request.CoreOptions);
+    // window
 
     private async downloadFile(uri: string, title: string): Promise<string> {
         this.output.append(`Downloading ${uri}... `);
@@ -83,7 +88,15 @@ export class LanguageServerDownloader {
             location: ProgressLocation.Window
         }, (progress) => {
 
-            requestProgress(request(uri))
+            // create request options if we need to handle proxy information.
+            let reqOpts: request.CoreOptions;
+            if (this.proxy && this.proxy.length > 0) {
+                reqOpts = {
+                    proxy: this.proxy
+                };
+            }
+
+            requestProgress(request(uri, reqOpts))
                 .on('progress', (state) => {
                     // https://www.npmjs.com/package/request-progress
                     const received = Math.round(state.size.transferred / 1024);
@@ -147,11 +160,10 @@ export class LanguageServerDownloader {
             return deferred.promise;
         });
 
-        // Set file to executable
-        if (!this.platform.isWindows) {
-            const executablePath = path.join(installFolder, this.platformData.getEngineExecutableName());
-            fileSystem.chmodSync(executablePath, '0764'); // -rwxrw-r--
-        }
+        // Set file to executable (nothing happens in Windows, as chmod has no definition there)
+        const executablePath = path.join(installFolder, this.platformData.getEngineExecutableName());
+        fileSystem.chmodSync(executablePath, '0764'); // -rwxrw-r--
+
         this.output.appendLine('done.');
     }
 }

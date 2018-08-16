@@ -137,7 +137,12 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
         const mscorlib = path.join(this.context.extensionPath, languageServerFolder, 'mscorlib.dll');
         if (!await this.fs.fileExists(mscorlib)) {
-            const downloader = new LanguageServerDownloader(this.services, languageServerFolder);
+            const downloader = new LanguageServerDownloader(
+                this.output,
+                this.fs,
+                this.platformData,
+                this.workspace,
+                languageServerFolder);
             await downloader.downloadLanguageServer(this.context);
             reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_DOWNLOADED);
         }

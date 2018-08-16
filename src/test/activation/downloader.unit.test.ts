@@ -7,27 +7,36 @@
 
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
+import { WorkspaceConfiguration } from 'vscode';
 import { DownloadLinks, LanguageServerDownloader } from '../../client/activation/downloader';
-import { PlatformName } from '../../client/activation/platformData';
+import { PlatformData, PlatformName } from '../../client/activation/platformData';
+import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IOutputChannel } from '../../client/common/types';
-import { IServiceContainer } from '../../client/ioc/types';
 
 suite('Activation - Downloader', () => {
     let languageServerDownloader: LanguageServerDownloader;
-    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let platformService: TypeMoq.IMock<IPlatformService>;
+    let proxyValue: string = '';
+
     setup(() => {
-        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         const fs = TypeMoq.Mock.ofType<IFileSystem>();
         const output = TypeMoq.Mock.ofType<IOutputChannel>();
+        const workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
+        const platformData: PlatformData = new PlatformData(platformService.object, fs.object);
+        const wsConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        workspace.setup(a => a.getConfiguration(TypeMoq.It.isValue('http'))).returns(() => wsConfig.object);
+        wsConfig.setup(a => a.get(TypeMoq.It.isValue('proxy'))).returns(() => proxyValue);
 
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny())).returns(() => output.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fs.object);
+        languageServerDownloader = new LanguageServerDownloader(
+            output.object,
+            fs.object,
+            platformData,
+            workspace.object,
+            ''
+        );
 
-        languageServerDownloader = new LanguageServerDownloader(serviceContainer.object, '');
     });
     type PlatformIdentifier = {
         windows?: boolean;
@@ -60,5 +69,10 @@ suite('Activation - Downloader', () => {
         setupPlatform({ linux: true, is64Bit: true });
         const link = await languageServerDownloader.getDownloadUri();
         assert.equal(link, DownloadLinks[PlatformName.Linux64Bit]);
+    });
+    test('Download via proxy', async () => {
+        setupPlatform({ linux: true, is64Bit: true });
+        proxyValue = 'https://dereksproxy:3333';
+        const link = await languageServerDownloader.getDownloadUri();
     });
 });

@@ -24,7 +24,7 @@ export enum PlatformLSExecutables {
 
 export class PlatformData {
     constructor(private platform: IPlatformService, fs: IFileSystem) { }
-    public async getPlatformName(): Promise<PlatformName> {
+    public getPlatformName(): PlatformName {
         if (this.platform.isWindows) {
             return this.platform.is64bit ? PlatformName.Windows64Bit : PlatformName.Windows32Bit;
         }
