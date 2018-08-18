@@ -3,6 +3,7 @@
 'use strict';
 
 import { createHash } from 'crypto';
+import * as fileSystem from 'fs';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
@@ -151,6 +152,9 @@ export class FileSystem implements IFileSystem {
                 resolve({ filePath: tmpFile, dispose: cleanupCallback });
             });
         });
+    }
 
+    public createWriteStream(filePath: string): fileSystem.WriteStream {
+        return fileSystem.createWriteStream(filePath);
     }
 }

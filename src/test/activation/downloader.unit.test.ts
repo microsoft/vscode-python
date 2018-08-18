@@ -34,6 +34,7 @@ suite('Activation - Downloader', () => {
             fs.object,
             platformData,
             workspace.object,
+            undefined,
             ''
         );
 
@@ -52,27 +53,27 @@ suite('Activation - Downloader', () => {
     }
     test('Windows 32Bit', async () => {
         setupPlatform({ windows: true });
-        const link = await languageServerDownloader.getDownloadUri();
+        const link = languageServerDownloader.getDownloadUri();
         assert.equal(link, DownloadLinks[PlatformName.Windows32Bit]);
     });
     test('Windows 64Bit', async () => {
         setupPlatform({ windows: true, is64Bit: true });
-        const link = await languageServerDownloader.getDownloadUri();
+        const link = languageServerDownloader.getDownloadUri();
         assert.equal(link, DownloadLinks[PlatformName.Windows64Bit]);
     });
     test('Mac 64Bit', async () => {
         setupPlatform({ mac: true, is64Bit: true });
-        const link = await languageServerDownloader.getDownloadUri();
+        const link = languageServerDownloader.getDownloadUri();
         assert.equal(link, DownloadLinks[PlatformName.Mac64Bit]);
     });
     test('Linux 64Bit', async () => {
         setupPlatform({ linux: true, is64Bit: true });
-        const link = await languageServerDownloader.getDownloadUri();
+        const link = languageServerDownloader.getDownloadUri();
         assert.equal(link, DownloadLinks[PlatformName.Linux64Bit]);
     });
     test('Download via proxy', async () => {
         setupPlatform({ linux: true, is64Bit: true });
         proxyValue = 'https://dereksproxy:3333';
-        const link = await languageServerDownloader.getDownloadUri();
+        const link = languageServerDownloader.getDownloadUri();
     });
 });

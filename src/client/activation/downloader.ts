@@ -29,6 +29,17 @@ export const DownloadLinks = {
     [PlatformName.Mac64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Mac64Bit}.${downloadVersion}${downloadFileExtension}`
 };
 
+export interface IRequestWrapper {
+    downloadFileRequest(uri: string, opts?: request.CoreOptions): request.Request;
+}
+
+class CoreNodeRequestWrapper implements IRequestWrapper {
+
+    public downloadFileRequest(uri: string, opts?: request.CoreOptions): request.Request {
+        return request(uri, opts);
+    }
+}
+
 export class LanguageServerDownloader {
     private readonly proxy: string;
 
@@ -37,8 +48,12 @@ export class LanguageServerDownloader {
         private readonly fs: IFileSystem,
         private readonly platformData: PlatformData,
         readonly workspace: IWorkspaceService,
+        private requestHandler: IRequestWrapper | undefined,
         private engineFolder: string) {
 
+        if (!this.requestHandler) {
+            this.requestHandler = new CoreNodeRequestWrapper();
+        }
         this.proxy = workspace.getConfiguration('http').get('proxy', '');
     }
 
@@ -48,7 +63,7 @@ export class LanguageServerDownloader {
     }
 
     public async downloadLanguageServer(context: IExtensionContext): Promise<void> {
-        const downloadUri = await this.getDownloadUri();
+        const downloadUri = this.getDownloadUri();
 
         let localTempFilePath = '';
         try {
@@ -66,11 +81,6 @@ export class LanguageServerDownloader {
         }
     }
 
-    // fileSystem.createWriteStream(filePath: str): fileSystem.WriteStream
-    // requestProgress(req: request.Request): 
-    // request(uri: string, connectionOptions: request.CoreOptions);
-    // window
-
     private async downloadFile(uri: string, title: string): Promise<string> {
         this.output.append(`Downloading ${uri}... `);
         const tempFile = await this.fs.createTemporaryFile(downloadFileExtension);
@@ -84,19 +94,19 @@ export class LanguageServerDownloader {
             deferred.reject(err);
         });
 
+        // create request options if we need to handle proxy information.
+        let reqOpts: request.CoreOptions;
+        if (this.proxy && this.proxy.length > 0) {
+            reqOpts = {
+                proxy: this.proxy
+            };
+        }
+
         await window.withProgress({
             location: ProgressLocation.Window
         }, (progress) => {
 
-            // create request options if we need to handle proxy information.
-            let reqOpts: request.CoreOptions;
-            if (this.proxy && this.proxy.length > 0) {
-                reqOpts = {
-                    proxy: this.proxy
-                };
-            }
-
-            requestProgress(request(uri, reqOpts))
+            requestProgress(this.requestHandler!.downloadFileRequest(uri, reqOpts))
                 .on('progress', (state) => {
                     // https://www.npmjs.com/package/request-progress
                     const received = Math.round(state.size.transferred / 1024);
