@@ -188,7 +188,8 @@ function getLinuxDistroFromName(name: string): OSDistro {
     }
 }
 
-function parseVersion(raw: string): semver.SemVer {
+export function parseVersion(raw: string): semver.SemVer {
+    raw = raw.replace(/\.00*(?=[1-9]|0\.)/, '.');
     const ver = semver.coerce(raw);
     if (ver === null || !semver.valid(ver)) {
         // tslint:disable-next-line: no-suspicious-comment

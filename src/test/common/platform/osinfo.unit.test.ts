@@ -5,45 +5,46 @@
 
 import { expect } from 'chai';
 import * as semver from 'semver';
-import { getOSInfo, getOSType, is64bit, isLinux, isMac, isWindows } from '../../../client/common/platform/osinfo';
+import { getOSInfo, getOSType, is64bit, isLinux, isMac, isWindows, parseVersion } from '../../../client/common/platform/osinfo';
 import { OSDistro, OSInfo, OSType } from '../../../client/common/platform/types';
 import { Stub } from '../../../test/stub';
 
 // Windows
-const WIN_10 = new OSInfo(
+export const WIN_10 = new OSInfo(
     OSType.Windows,
     'x64',
     new semver.SemVer('10.0.1'));
-const WIN_7 = new OSInfo(
+export const WIN_7 = new OSInfo(
     OSType.Windows,
     'x64',
     new semver.SemVer('6.1.3'));
-const WIN_XP = new OSInfo(
+export const WIN_XP = new OSInfo(
     OSType.Windows,
     'x64',
     new semver.SemVer('5.1.7'));
 // OS X
-const MAC_HIGH_SIERRA = new OSInfo(
+export const MAC_HIGH_SIERRA = new OSInfo(
     OSType.OSX,
     'x64',
     new semver.SemVer('10.13.1'));
-const MAC_SIERRA = new OSInfo(
+export const MAC_SIERRA = new OSInfo(
     OSType.OSX,
     'x64',
     new semver.SemVer('10.12.2'));
-const MAC_EL_CAPITAN = new OSInfo(
+export const MAC_EL_CAPITAN = new OSInfo(
     OSType.OSX,
     'x64',
     new semver.SemVer('10.11.5'));
 
 // Linux
-const UBUNTU_BIONIC = new OSInfo(
+export const UBUNTU_BIONIC = new OSInfo(
     OSType.Linux,
     'x64',
-    semver.coerce('18.04') || new semver.SemVer('0.0.0'),
+    parseVersion('18.04'),
+    //semver.coerce('18.04') || new semver.SemVer('0.0.0'),
     OSDistro.Ubuntu);
 // tslint:disable-next-line:no-multiline-string
-const UBUNTU_BIONIC_FILE = `
+export const UBUNTU_BIONIC_FILE = `
 NAME="Ubuntu"
 VERSION="18.04.1 LTS (Bionic Beaver)"
 ID=ubuntu
@@ -57,13 +58,14 @@ PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-poli
 VERSION_CODENAME=bionic
 UBUNTU_CODENAME=bionic
 `;
-const UBUNTU_PRECISE = new OSInfo(
+export const UBUNTU_PRECISE = new OSInfo(
     OSType.Linux,
     'x64',
-    semver.coerce('14.04') || new semver.SemVer('0.0.0'),
+    parseVersion('14.04'),
+    //semver.coerce('14.04') || new semver.SemVer('0.0.0'),
     OSDistro.Ubuntu);
 // tslint:disable-next-line:no-multiline-string
-const UBUNTU_PRECISE_FILE = `
+export const UBUNTU_PRECISE_FILE = `
 NAME="Ubuntu"
 VERSION="14.04.4 LTS, Trusty Tahr"
 ID=ubuntu
@@ -74,13 +76,14 @@ HOME_URL="http://www.ubuntu.com/"
 SUPPORT_URL="http://help.ubuntu.com/"
 BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"
 `;
-const FEDORA = new OSInfo(
+export const FEDORA = new OSInfo(
     OSType.Linux,
     'x64',
-    semver.coerce('24') || new semver.SemVer('0.0.0'),
+    parseVersion('24'),
+    //semver.coerce('24') || new semver.SemVer('0.0.0'),
     OSDistro.Fedora);
 // tslint:disable-next-line:no-multiline-string
-const FEDORA_FILE = `
+export const FEDORA_FILE = `
 NAME=Fedora
 VERSION="24 (Workstation Edition)"
 ID=fedora
@@ -97,13 +100,13 @@ PRIVACY_POLICY_URL=https://fedoraproject.org/wiki/Legal:PrivacyPolicy
 VARIANT="Workstation Edition"
 VARIANT_ID=workstation
 `;
-const ARCH = new OSInfo(
+export const ARCH = new OSInfo(
     OSType.Linux,
     'x64',
-    semver.coerce('') || new semver.SemVer('0.0.0'),  // rolling vs. 2018.08.01
+    new semver.SemVer('0.0.0'),  // rolling vs. 2018.08.01
     OSDistro.Arch);
 // tslint:disable-next-line:no-multiline-string
-const ARCH_FILE = `
+export const ARCH_FILE = `
 NAME="Arch Linux"
 PRETTY_NAME="Arch Linux"
 ID=arch
@@ -113,7 +116,7 @@ SUPPORT_URL="https://bbs.archlinux.org/"
 BUG_REPORT_URL="https://bugs.archlinux.org/"
 `;
 
-const OLD = new OSInfo(
+export const OLD = new OSInfo(
     OSType.Windows,
     'x86',
     new semver.SemVer('5.1.7'));
