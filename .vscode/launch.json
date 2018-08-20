@@ -61,7 +61,7 @@
             "sourceMaps": true,
             "args": [
                 "timeout=60000",
-                "grep=Activation - Downloader"
+                "grep="
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
