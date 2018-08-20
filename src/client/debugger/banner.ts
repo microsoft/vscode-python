@@ -22,14 +22,13 @@ export enum PersistentStateKeys {
     DebuggerLaunchThresholdCounter = 'DebuggerLaunchThresholdCounter'
 }
 
-type MaybeBool = boolean | undefined;
-type IsUserSelectedFunc = (state: IPersistentState<MaybeBool>) => boolean;
+type IsUserSelectedFunc = (state: IPersistentState<boolean | undefined>) => boolean;
 type RandIntFunc = (min: number, max: number) => number;
 
 const sampleSizePerHundred: number = 10;  // 10%
 
-export function isUserSelected(state: IPersistentState<MaybeBool>, randInt: RandIntFunc = getRandomBetween): boolean {
-    let selected: MaybeBool = state.value;
+export function isUserSelected(state: IPersistentState<boolean | undefined>, randInt: RandIntFunc = getRandomBetween): boolean {
+    let selected = state.value;
     if (selected === undefined) {
         const randomSample: number = randInt(0, 100);
         selected = randomSample < sampleSizePerHundred;
@@ -59,7 +58,7 @@ export class DebuggerBanner implements IDebuggerBanner {
         // layer.
         const persist = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const key = PersistentStateKeys.DebuggerUserSelected;
-        const state = persist.createGlobalPersistentState<MaybeBool>(key, undefined);
+        const state = persist.createGlobalPersistentState<boolean | undefined>(key, undefined);
         if (!_isUserSelected(state)) {
             this.disable().ignoreErrors();
         }
