@@ -63,15 +63,16 @@ export function getOSInfo(
         return fs.readFileSync(filename, 'utf8');
     },
     getArch: () => string = os.arch,
+    getRelease: () => string = os.release,
     platform?: string
 ): OSInfo {
     const osType = getOSType(platform);
     const arch = getArch();
     switch (osType) {
         case OSType.Windows:
-            return getDefaultOSInfo(osType, arch);
+            return getDefaultOSInfo(osType, arch, getRelease);
         case OSType.OSX:
-            return getDefaultOSInfo(osType, arch);
+            return getDefaultOSInfo(osType, arch, getRelease);
         case OSType.Linux:
             return getLinuxInfoFromFile(arch, readFile);
         default:
@@ -79,8 +80,8 @@ export function getOSInfo(
     }
 }
 
-function getDefaultOSInfo(osType: OSType, arch: string): OSInfo {
-    const version = parseVersion(os.release());
+function getDefaultOSInfo(osType: OSType, arch: string, getRelease: () => string): OSInfo {
+    const version = parseVersion(getRelease());
     return new OSInfo(osType, arch, version);
 }
 
