@@ -105,5 +105,17 @@ function isLSSupported(services: IServiceContainer): boolean {
     if (minVer === '') {
         return true;
     }
+    minVer = normalizeVersion(minVer);
     return platform.os.version.compare(minVer) >= 0;
+}
+
+function normalizeVersion(ver: string): string {
+    ver = ver.replace(/\.00*/, '.');
+    if (/^\d\d*$/.test(ver)) {
+        return `${ver}.0.0`;
+    } else if (/^\d\d*\.\d\d*$/.test(ver)) {
+        return `${ver}.0`;
+    } else {
+        return ver;
+    }
 }
