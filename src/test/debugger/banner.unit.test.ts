@@ -13,7 +13,6 @@ import { IBrowserService, IDisposableRegistry,
     ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { DebuggerBanner, isUserSelected, PersistentStateKeys } from '../../client/debugger/banner';
 import { DebuggerTypeName } from '../../client/debugger/Common/constants';
-import { IDebuggerBanner } from '../../client/debugger/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 function neverSelected(p: IPersistentState<boolean | undefined>): boolean {
@@ -42,7 +41,7 @@ suite('Debugging - Banner', () => {
     let showBannerState: typemoq.IMock<IPersistentState<boolean>>;
     let debugService: typemoq.IMock<IDebugService>;
     let appShell: typemoq.IMock<IApplicationShell>;
-    let banner: IDebuggerBanner;
+    let banner: DebuggerBanner;
     const message = 'Can you please take 2 minutes to tell us how the Debugger is working for you?';
     const yes = 'Yes, take survey now';
     const no = 'No thanks';
