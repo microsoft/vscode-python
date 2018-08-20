@@ -246,7 +246,7 @@ export const IUnitTestSocketServer = Symbol('IUnitTestSocketServer');
 export interface IUnitTestSocketServer extends Disposable {
     on(event: string | symbol, listener: Function): this;
     removeListener(event: string | symbol, listener: Function): this;
-    removeAllListeners(event: string | symbol): this;
+    removeAllListeners(event?: string | symbol): this;
     start(options?: { port?: number; host?: string }): Promise<number>;
     stop(): void;
 }
