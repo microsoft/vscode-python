@@ -81,12 +81,7 @@ export class TestManagerRunner implements ITestManagerRunner {
         });
 
         this.server.on('socket.disconnected', (socket: Socket, isSocketDestroyed: boolean) => {
-            this.server.removeAllListeners('error');
-            this.server.removeAllListeners('log');
-            this.server.removeAllListeners('connect');
-            this.server.removeAllListeners('start');
-            this.server.removeAllListeners('result');
-            this.server.removeAllListeners('socket.disconnected');
+            this.server.removeAllListeners();
         });
 
         const port = await this.server.start();
