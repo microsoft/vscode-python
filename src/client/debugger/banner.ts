@@ -5,7 +5,6 @@
 
 import * as crypto from 'crypto';
 import { inject, injectable } from 'inversify';
-import { Disposable } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IDebugService } from '../common/application/types';
 import '../common/extensions';
 import { IBrowserService, IDisposableRegistry,
@@ -39,7 +38,6 @@ export function isUserSelected(state: IPersistentState<boolean | undefined>, ran
 
 @injectable()
 export class DebuggerBanner implements IDebuggerBanner {
-    private initialized?: boolean;
     private disabledInCurrentSession?: boolean;
 
     constructor(
@@ -62,20 +60,6 @@ export class DebuggerBanner implements IDebuggerBanner {
         if (!_isUserSelected(state)) {
             this.disable().ignoreErrors();
         }
-    }
-
-    public initialize() {
-        if (this.initialized) {
-            return;
-        }
-        this.initialized = true;
-
-        // Don't even bother adding handlers if banner has been turned off.
-        if (!this.enabled) {
-            return;
-        }
-
-        this._initialize();
     }
 
     public async launchSurvey(): Promise<void> {
@@ -165,25 +149,14 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     // debugger-specific functionality
 
-    private _initialize() {
-        const debuggerService = this.serviceContainer.get<IDebugService>(IDebugService);
-        const disposable = debuggerService.onDidTerminateDebugSession(async e => {
-            if (e.type === DebuggerTypeName) {
-                const logger = this.serviceContainer.get<ILogger>(ILogger);
-                await this.onDidTerminateDebugSession()
-                    .catch(ex => logger.logError('Error in debugger Banner', ex));
-            }
-        });
-        this.serviceContainer.get<Disposable[]>(IDisposableRegistry).push(disposable);
-    }
-
     private async _action(): Promise<void> {
         const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
         const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
         browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
     }
 
-    private async onDidTerminateDebugSession(): Promise<void> {
+    // tslint:disable-next-line:member-ordering
+    public async onDidTerminateDebugSession(): Promise<void> {
         if (!this.enabled) {
             return;
         }
@@ -195,4 +168,24 @@ export class DebuggerBanner implements IDebuggerBanner {
 
         await this.showBanner();
     }
+}
+
+export function injectDebuggerBanner(
+    banner: IDebuggerBanner,
+    debuggerService: IDebugService,
+    disposables: IDisposableRegistry,
+    logger: ILogger
+) {
+    // Don't even bother adding handlers if banner has been turned off.
+    if (!banner.enabled) {
+        return;
+    }
+
+    const disposable = debuggerService.onDidTerminateDebugSession(async e => {
+        if (e.type === DebuggerTypeName) {
+            await banner.onDidTerminateDebugSession()
+                .catch(ex => logger.logError('Error in debugger Banner', ex));
+        }
+    });
+    disposables.push(disposable);
 }

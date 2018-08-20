@@ -11,7 +11,7 @@ import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../client/common/application/types';
 import { IBrowserService, IDisposableRegistry,
     ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
-import { DebuggerBanner, isUserSelected, PersistentStateKeys } from '../../client/debugger/banner';
+import { DebuggerBanner, injectDebuggerBanner, isUserSelected, PersistentStateKeys } from '../../client/debugger/banner';
 import { DebuggerTypeName } from '../../client/debugger/Common/constants';
 import { IServiceContainer } from '../../client/ioc/types';
 
@@ -41,6 +41,8 @@ suite('Debugging - Banner', () => {
     let showBannerState: typemoq.IMock<IPersistentState<boolean>>;
     let debugService: typemoq.IMock<IDebugService>;
     let appShell: typemoq.IMock<IApplicationShell>;
+    let disposables: typemoq.IMock<IDisposableRegistry>;
+    let logger: typemoq.IMock<ILogger>;
     let banner: DebuggerBanner;
     const message = 'Can you please take 2 minutes to tell us how the Debugger is working for you?';
     const yes = 'Yes, take survey now';
@@ -50,7 +52,8 @@ suite('Debugging - Banner', () => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         browser = typemoq.Mock.ofType<IBrowserService>();
         debugService = typemoq.Mock.ofType<IDebugService>();
-        const logger = typemoq.Mock.ofType<ILogger>();
+        disposables = typemoq.Mock.ofType<IDisposableRegistry>();
+        logger = typemoq.Mock.ofType<ILogger>();
 
         launchCounterState = typemoq.Mock.ofType<IPersistentState<number>>();
         showBannerState = typemoq.Mock.ofType<IPersistentState<boolean>>();
@@ -144,7 +147,7 @@ suite('Debugging - Banner', () => {
         showBannerState.setup(s => s.value).returns(() => true)
             .verifiable(typemoq.Times.atLeastOnce());
 
-        banner.initialize();
+        injectDebuggerBanner(banner, debugService.object, disposables.object, logger.object);
         await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
 
         launchCounterState.verifyAll();
@@ -164,7 +167,7 @@ suite('Debugging - Banner', () => {
         showBannerState.setup(s => s.value).returns(() => false)
             .verifiable(typemoq.Times.atLeastOnce());
 
-        banner.initialize();
+        injectDebuggerBanner(banner, debugService.object, disposables.object, logger.object);
 
         launchCounterState.verifyAll();
         browser.verifyAll();
@@ -243,7 +246,7 @@ suite('Debugging - Banner', () => {
 
         appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no)))
             .verifiable(typemoq.Times.once());
-        banner.initialize();
+        injectDebuggerBanner(banner, debugService.object, disposables.object, logger.object);
         await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
 
         appShell.verifyAll();
@@ -270,7 +273,7 @@ suite('Debugging - Banner', () => {
         appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no)))
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
-        banner.initialize();
+        injectDebuggerBanner(banner, debugService.object, disposables.object, logger.object);
         await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
         await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
         await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
