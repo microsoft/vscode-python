@@ -151,8 +151,8 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('z=foo (0 , x= 1, (3+7) , y , z )', 0, 'z = foo(0, x=1, (3 + 7), y, z)');
         testFormatMultiline('foo (0,\n x= 1,', 1, ' x=1,');
         testFormatMultiline(
-// tslint:disable-next-line:no-multiline-string
-`async def fetch():
+            // tslint:disable-next-line:no-multiline-string
+            `async def fetch():
   async with aiohttp.ClientSession() as session:
     async with session.ws_connect(
         "http://127.0.0.1:8000/", headers = cookie) as ws: # add unwanted spaces`, 3,
@@ -160,6 +160,12 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('def pos0key1(*, key): return key\npos0key1(key= 100)', 1, 'pos0key1(key=100)');
         testFormatMultiline('def test_string_literals(self):\n  x= 1; y =2; self.assertTrue(len(x) == 0 and x == y)', 1,
             '  x = 1; y = 2; self.assertTrue(len(x) == 0 and x == y)');
+    });
+    test('End of multiline string', () => {
+        testFormatLine('"""', '"""');
+        testFormatMultiline('"""\ntext "quoted"\n', 1, 'text "quoted"');
+        testFormatMultiline('"""string 1\nstring2""" ', 1, 'string2"""');
+        testFormatMultiline('"""string 1\nstring2""" +1 ', 1, 'string2""" + 1');
     });
     test('Grammar file', () => {
         const content = fs.readFileSync(grammarFile).toString('utf8');
@@ -188,7 +194,8 @@ suite('Formatting - line formatter', () => {
         document.setup(x => x.lineAt(TypeMoq.It.isAnyNumber())).returns(n => {
             const line = TypeMoq.Mock.ofType<TextLine>();
             line.setup(x => x.text).returns(() => lines[n]);
-            line.setup(x => x.range).returns(() => new Range(new Position(n, 0), new Position(n, lines[n].length)));
+            const range = new Range(new Position(n, 0), new Position(n, lines[n].length));
+            line.setup(x => x.range).returns(() => range);
             return line.object;
         });
         document.setup(x => x.getText(TypeMoq.It.isAny())).returns(o => {
@@ -203,7 +210,9 @@ suite('Formatting - line formatter', () => {
             for (let i = r.start.line + 1; i < r.end.line; i += 1) {
                 bits.push(lines[i]);
             }
-            bits.push(lines[r.end.line].substring(0, r.end.character));
+            if (r.end.line < lines.length) {
+                bits.push(lines[r.end.line].substring(0, r.end.character));
+            }
             return bits.join('\n');
         });
         document.setup(x => x.offsetAt(TypeMoq.It.isAny())).returns(o => {
@@ -214,6 +223,18 @@ suite('Formatting - line formatter', () => {
             }
             return offset + p.character;
         });
+        document.setup(x => x.positionAt(TypeMoq.It.isAnyNumber())).returns(n => {
+            let start = 0;
+            let end = 0;
+            for (let i = 0; i < lines.length; i += 1) {
+                end = start + lines[i].length;
+                if (n >= start && n < end + 1) {
+                    return new Position(i, n - start);
+                }
+                start = end + 1; // Accounting for the line break
+            }
+            throw new Error('Document position is out of range.');
+        });
 
         return formatter.formatLine(document.object, lineNumber);
     }
@@ -222,8 +243,12 @@ suite('Formatting - line formatter', () => {
         const line = TypeMoq.Mock.ofType<TextLine>();
         line.setup(x => x.text).returns(() => text);
 
+        const range = new Range(new Position(0, 0), new Position(0, text.length));
+        line.setup(x => x.range).returns(() => range);
+
         const document = TypeMoq.Mock.ofType<TextDocument>();
         document.setup(x => x.lineAt(TypeMoq.It.isAnyNumber())).returns(() => line.object);
+        document.setup(x => x.getText(TypeMoq.It.isAny())).returns(() => text);
 
         return formatter.formatLine(document.object, 0);
     }

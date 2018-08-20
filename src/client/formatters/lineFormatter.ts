@@ -152,7 +152,7 @@ export class LineFormatter {
                         this.builder.append('*');
                         return;
                     }
-                    if (prev && this.handleStarOperator(t, prev)) {
+                    if (this.handleStarOperator(t, prev)) {
                         return;
                     }
                     break;
@@ -160,7 +160,7 @@ export class LineFormatter {
                     break;
             }
         } else if (t.length === 2) {
-            if (prev && this.text.charCodeAt(t.start) === Char.Asterisk && this.text.charCodeAt(t.start + 1) === Char.Asterisk) {
+            if (this.text.charCodeAt(t.start) === Char.Asterisk && this.text.charCodeAt(t.start + 1) === Char.Asterisk) {
                 if (this.handleStarOperator(t, prev)) {
                     return;
                 }
@@ -185,7 +185,7 @@ export class LineFormatter {
         this.builder.softAppendSpace();
     }
 
-    private handleStarOperator(current: IToken, prev: IToken): boolean {
+    private handleStarOperator(current: IToken, prev: IToken | undefined): boolean {
         if (this.text.charCodeAt(current.start) === Char.Asterisk && this.text.charCodeAt(current.start + 1) === Char.Asterisk) {
             if (!prev || (prev.type !== TokenType.Identifier && prev.type !== TokenType.Number)) {
                 this.builder.append('**');
@@ -458,17 +458,33 @@ export class LineFormatter {
         const lineStart = document.offsetAt(line.range.start);
         const startToken = this.getLineStartToken(document, line.range.start);
         if (startToken && startToken.type === TokenType.String) {
-            if (startToken.length >= 6 && startToken.start < lineStart) {
+            if (startToken.length >= 6 && startToken.start < lineStart && startToken.end > lineStart) {
                 // Line start is in a multiline string. Get quotes and
                 // insert them in the beginning of the line so the fist token
                 // will be a correct string.
-                const quotes = this.text.substr(startToken.end - lineStart - 3, 3);
-                const tokens = new Tokenizer().tokenize(`${quotes}${this.text}`);
-                // Fix up token positions so they match the actual document.
-                const adjusted = [new Token(TokenType.String, 0, startToken.end - lineStart)];
-                for (let i = 1; i < tokens.count; i += 1) {
-                    const t = tokens.getItemAt(i);
-                    adjusted.push(new Token(t.type, t.start - quotes.length, t.length));
+                const startQuotePosition = document.positionAt(startToken.start);
+                const endQuotePosition = document.positionAt(startToken.start + 3);
+                const quoteString = document.getText(new Range(startQuotePosition, endQuotePosition));
+                const tokens = new Tokenizer().tokenize(`${quoteString}${this.text}`);
+                let adjusted: IToken[] = [];
+                if (tokens.count > 1) {
+                    // There is something that follows the end of the multiline string as in 'text """ + 1'
+                    // so when we inserted triple quote at the start we ended up with more than one token.
+                    // Fix up token positions so they match the actual document: first token must be string
+                    // with the remaining token follow. In the example above, String -> Operator -> Number.
+                    adjusted = [new Token(TokenType.String, 0, startToken.end - lineStart)];
+                    for (let i = 1; i < tokens.count; i += 1) {
+                        const t = tokens.getItemAt(i);
+                        adjusted.push(new Token(t.type, t.start - quoteString.length, t.length));
+                    }
+                } else {
+                    // The entire line is inside the multiline string such as in
+                    // """
+                    // text
+                    // """
+                    // or it is a string with a terminator but has trailing whitespace as in
+                    // text"""<whitespace>
+                    adjusted = [new Token(TokenType.String, 0, line.text.trimRight().length)];
                 }
                 return new TextRangeCollection(adjusted);
             }
