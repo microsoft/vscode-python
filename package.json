@@ -882,7 +882,7 @@
                         "Information",
                         "Trace"
                     ],
-                    "default": "error",
+                    "default": "Error",
                     "description": "Defines type of log messages language server writes into the output window.",
                     "scope": "resource"
                 },
