@@ -4,10 +4,10 @@
 
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
-import { isBinary, isDecimal, isHex, isIdentifierChar, isIdentifierStartChar, isOctal, isWhiteSpace } from './characters';
+import { isBinary, isDecimal, isHex, isIdentifierChar, isIdentifierStartChar, isOctal } from './characters';
 import { CharacterStream } from './characterStream';
 import { TextRangeCollection } from './textRangeCollection';
-import { ICharacterStream, ITextRangeCollection, IToken, ITokenizer, TextRange, TokenizerMode, TokenType } from './types';
+import { ICharacterStream, ITextRangeCollection, IToken, ITokenizer, Token, TokenizerMode, TokenType } from './types';
 
 enum QuoteType {
     None,
@@ -15,15 +15,6 @@ enum QuoteType {
     Double,
     TripleSingle,
     TripleDouble
-}
-
-class Token extends TextRange implements IToken {
-    public readonly type: TokenType;
-
-    constructor(type: TokenType, start: number, length: number) {
-        super(start, length);
-        this.type = type;
-    }
 }
 
 export class Tokenizer implements ITokenizer {

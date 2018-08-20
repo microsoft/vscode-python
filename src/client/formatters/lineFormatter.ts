@@ -3,12 +3,12 @@
 
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
-import { Position, Range, TextDocument } from 'vscode';
+import { Position, Range, TextDocument, TextLine } from 'vscode';
 import { BraceCounter } from '../language/braceCounter';
 import { TextBuilder } from '../language/textBuilder';
 import { TextRangeCollection } from '../language/textRangeCollection';
 import { Tokenizer } from '../language/tokenizer';
-import { ITextRangeCollection, IToken, TokenType } from '../language/types';
+import { ITextRangeCollection, IToken, Token, TokenizerMode, TokenType } from '../language/types';
 
 const keywordsWithSpaceBeforeBrace = [
     'and', 'as', 'assert', 'await',
@@ -35,10 +35,13 @@ export class LineFormatter {
 
     // tslint:disable-next-line:cyclomatic-complexity
     public formatLine(document: TextDocument, lineNumber: number): string {
+        const line = document.lineAt(lineNumber);
+
         this.document = document;
         this.lineNumber = lineNumber;
-        this.text = document.lineAt(lineNumber).text;
-        this.tokens = new Tokenizer().tokenize(this.text);
+        this.text = line.text;
+        this.tokens = this.getLineTokens(document, line);
+
         this.builder = new TextBuilder();
         this.braceCounter = new BraceCounter();
 
@@ -149,7 +152,7 @@ export class LineFormatter {
                         this.builder.append('*');
                         return;
                     }
-                    if (this.handleStarOperator(t, prev)) {
+                    if (prev && this.handleStarOperator(t, prev)) {
                         return;
                     }
                     break;
@@ -157,7 +160,7 @@ export class LineFormatter {
                     break;
             }
         } else if (t.length === 2) {
-            if (this.text.charCodeAt(t.start) === Char.Asterisk && this.text.charCodeAt(t.start + 1) === Char.Asterisk) {
+            if (prev && this.text.charCodeAt(t.start) === Char.Asterisk && this.text.charCodeAt(t.start + 1) === Char.Asterisk) {
                 if (this.handleStarOperator(t, prev)) {
                     return;
                 }
@@ -437,5 +440,39 @@ export class LineFormatter {
         }
         const line = this.document.lineAt(this.lineNumber - 1);
         return new Tokenizer().tokenize(line.text);
+    }
+
+    private getLineStartToken(document: TextDocument, position: Position): IToken | undefined {
+        const tokenizeTo = position.translate(1, 0);
+        const text = document.getText(new Range(new Position(0, 0), tokenizeTo));
+        const tokens = new Tokenizer().tokenize(text, 0, text.length, TokenizerMode.CommentsAndStrings);
+        const offset = document.offsetAt(position);
+        const index = tokens.getItemContaining(offset - 1);
+        return index >= 0 ? tokens.getItemAt(index) : undefined;
+    }
+
+    private getLineTokens(document: TextDocument, line: TextLine): ITextRangeCollection<IToken> {
+        // Check if line start is inside a multiline string.
+        // If so, make sure first token is string type so we don't
+        // tokenize content of the multiline string as a legal code.
+        const lineStart = document.offsetAt(line.range.start);
+        const startToken = this.getLineStartToken(document, line.range.start);
+        if (startToken && startToken.type === TokenType.String) {
+            if (startToken.length >= 6 && startToken.start < lineStart) {
+                // Line start is in a multiline string. Get quotes and
+                // insert them in the beginning of the line so the fist token
+                // will be a correct string.
+                const quotes = this.text.substr(startToken.end - lineStart - 3, 3);
+                const tokens = new Tokenizer().tokenize(`${quotes}${this.text}`);
+                // Fix up token positions so they match the actual document.
+                const adjusted = [new Token(TokenType.String, 0, startToken.end - lineStart)];
+                for (let i = 1; i < tokens.count; i += 1) {
+                    const t = tokens.getItemAt(i);
+                    adjusted.push(new Token(t.type, t.start - quotes.length, t.length));
+                }
+                return new TextRangeCollection(adjusted);
+            }
+        }
+        return new Tokenizer().tokenize(this.text);
     }
 }
