@@ -3,10 +3,10 @@
 
 'use strict';
 
-import * as fs from 'fs-extra';
+import * as getos from 'getos';
 import * as os from 'os';
 import * as semver from 'semver';
-import { LINUX_OS_RELEASE_FILE, NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
+import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
 import { IOSInfo, OSDistro, OSType } from './types';
 
 let local: OSInfo;
@@ -46,11 +46,9 @@ export class OSInfo implements IOSInfo {
 }
 
 export function getOSInfo(
-    readFile: (string) => string = (filename) => {
-        return fs.readFileSync(filename, 'utf8');
-    },
     getArch: () => string = os.arch,
     getRelease: () => string = os.release,
+    getDistro: () => [OSDistro, semver.SemVer] = getLinuxDistro,
     platform?: string
 ): OSInfo {
     const osType = getOSType(platform);
@@ -61,7 +59,7 @@ export function getOSInfo(
         case OSType.OSX:
             return getDefaultOSInfo(osType, arch, getRelease);
         case OSType.Linux:
-            return getLinuxInfoFromFile(arch, readFile);
+            return getLinuxInfo(arch, getDistro);
         default:
             return new OSInfo(OSType.Unknown, arch);
     }
@@ -72,80 +70,22 @@ function getDefaultOSInfo(osType: OSType, arch: string, getRelease: () => string
     return new OSInfo(osType, arch, version);
 }
 
-// Inspired in part by: https://github.com/juju/os
-function getLinuxInfoFromFile(
-    arch: string,
-    readFile: (string) => string
-): OSInfo {
-    let distroNames: string[];
-    let rawVer: string;
-    try {
-        [distroNames, rawVer] = readOSReleaseFile(readFile);
-    } catch (exc) {
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: Only mask exception if file not found?
-        return new OSInfo(OSType.Linux, arch);
-    }
-
-    const version = parseVersion(rawVer);
-    let distro = OSDistro.Unknown;
-    for (const name of distroNames) {
-        if (distro !== OSDistro.Unknown) {
-            break;
-        }
-        if (name !== '') {
-            distro = getLinuxDistroFromName(name);
-        }
-    }
-
+function getLinuxInfo(arch: string, getDistro: () => [OSDistro, semver.SemVer]): OSInfo {
+    const [distro, version] = getDistro();
     return new OSInfo(OSType.Linux, arch, version, distro);
 }
 
-function readOSReleaseFile(
-    readFile: (string) => string
-): [string[], string] {
-    const filename = LINUX_OS_RELEASE_FILE;
-    const data = readFile(filename);
-
-    let distroName = '';
-    let distroNames: string[] = [];
-    let rawVer = '';
-    for (const line of data.split(/\n/)) {
-        const parts = line.split('=', 2);
-        switch (parts[0]) {
-            case 'ID':
-                distroName = parts[1];
-                break;
-            case 'VERSION_ID':
-                rawVer = parts[1];
-                break;
-
-            // fallbacks
-            case 'NAME':
-                if (distroName === '') {
-                    distroName = parts[1];
-                }
-                break;
-            case 'ID_LIKE':
-                const names = parts[1].split(/ /);
-                if (names) {
-                    distroNames = names;
-                }
-                break;
-            case 'VERSION':
-                if (rawVer === '') {
-                    rawVer = parts[1];
-                }
-                break;
-            default:
+function getLinuxDistro(): [OSDistro, semver.SemVer] {
+    let distro: OSDistro = OSDistro.Unknown;
+    let version: semver.SemVer = new semver.SemVer('0.0.0');
+    getos((exc, info) => {
+        if (exc) {
+            throw exc;
         }
-    }
-    // Insert at the front.  This guarantees that there is always at
-    // least one item in the array.  If no name was found then the empty
-    // string will indicate that to the caller.
-    distroNames.splice(0, 0, distroName);
-
-    return [distroNames, rawVer];
+        distro = getLinuxDistroFromName(info.dist);
+        version = parseVersion(info.release);
+    });
+    return [distro, version];
 }
 
 function getLinuxDistroFromName(name: string): OSDistro {

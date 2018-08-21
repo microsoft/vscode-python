@@ -43,78 +43,23 @@ export const UBUNTU_BIONIC = new OSInfo(
     parseVersion('18.04'),
     //semver.coerce('18.04') || new semver.SemVer('0.0.0'),
     OSDistro.Ubuntu);
-// tslint:disable-next-line:no-multiline-string
-export const UBUNTU_BIONIC_FILE = `
-NAME="Ubuntu"
-VERSION="18.04.1 LTS (Bionic Beaver)"
-ID=ubuntu
-ID_LIKE=debian
-PRETTY_NAME="Ubuntu 18.04.1 LTS"
-VERSION_ID="18.04"
-HOME_URL="https://www.ubuntu.com/"
-SUPPORT_URL="https://help.ubuntu.com/"
-BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
-PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
-VERSION_CODENAME=bionic
-UBUNTU_CODENAME=bionic
-`;
 export const UBUNTU_PRECISE = new OSInfo(
     OSType.Linux,
     'x64',
     parseVersion('14.04'),
     //semver.coerce('14.04') || new semver.SemVer('0.0.0'),
     OSDistro.Ubuntu);
-// tslint:disable-next-line:no-multiline-string
-export const UBUNTU_PRECISE_FILE = `
-NAME="Ubuntu"
-VERSION="14.04.4 LTS, Trusty Tahr"
-ID=ubuntu
-ID_LIKE=debian
-PRETTY_NAME="Ubuntu 14.04.4 LTS"
-VERSION_ID="14.04"
-HOME_URL="http://www.ubuntu.com/"
-SUPPORT_URL="http://help.ubuntu.com/"
-BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"
-`;
 export const FEDORA = new OSInfo(
     OSType.Linux,
     'x64',
     parseVersion('24'),
     //semver.coerce('24') || new semver.SemVer('0.0.0'),
     OSDistro.Fedora);
-// tslint:disable-next-line:no-multiline-string
-export const FEDORA_FILE = `
-NAME=Fedora
-VERSION="24 (Workstation Edition)"
-ID=fedora
-VERSION_ID=24
-PRETTY_NAME="Fedora 24 (Workstation Edition)"
-CPE_NAME="cpe:/o:fedoraproject:fedora:24"
-HOME_URL="https://fedoraproject.org/"
-BUG_REPORT_URL="https://bugzilla.redhat.com/"
-REDHAT_BUGZILLA_PRODUCT="Fedora"
-REDHAT_BUGZILLA_PRODUCT_VERSION=24
-REDHAT_SUPPORT_PRODUCT="Fedora"
-REDHAT_SUPPORT_PRODUCT_VERSION=24
-PRIVACY_POLICY_URL=https://fedoraproject.org/wiki/Legal:PrivacyPolicy
-VARIANT="Workstation Edition"
-VARIANT_ID=workstation
-`;
 export const ARCH = new OSInfo(
     OSType.Linux,
     'x64',
     new semver.SemVer('0.0.0'),  // rolling vs. 2018.08.01
     OSDistro.Arch);
-// tslint:disable-next-line:no-multiline-string
-export const ARCH_FILE = `
-NAME="Arch Linux"
-PRETTY_NAME="Arch Linux"
-ID=arch
-ID_LIKE=archlinux
-HOME_URL="https://www.archlinux.org/"
-SUPPORT_URL="https://bbs.archlinux.org/"
-BUG_REPORT_URL="https://bugs.archlinux.org/"
-`;
 
 export const OLD = new OSInfo(
     OSType.Windows,
@@ -122,18 +67,12 @@ export const OLD = new OSInfo(
     new semver.SemVer('5.1.7'));
 
 class StubDeps {
-    public returnReadFile: string = '';
     public returnGetArch: string = '';
     public returnGetRelease: string = '';
+    public returnGetLinuxDistro: [OSDistro, semver.SemVer] = [OSDistro.Unknown, new semver.SemVer('0.0.0')];
 
     constructor(
         public stub: Stub = new Stub()) {}
-
-    public readFile(filename: string): string {
-        this.stub.addCall('readFile', filename);
-        this.stub.maybeErr();
-        return this.returnReadFile;
-    }
 
     public getArch(): string {
         this.stub.addCall('getArch');
@@ -146,6 +85,12 @@ class StubDeps {
         this.stub.maybeErr();
         return this.returnGetRelease;
     }
+
+    public getLinuxDistro(): [OSDistro, semver.SemVer] {
+        this.stub.addCall('getLinuxDistro');
+        this.stub.maybeErr();
+        return this.returnGetLinuxDistro;
+    }
 }
 
 suite('OS Info - getOSInfo()', () => {
@@ -157,36 +102,37 @@ suite('OS Info - getOSInfo()', () => {
         deps = new StubDeps(stub);
     });
 
-    const tests: [string, string, string, string, OSInfo][] = [
-        ['windows', 'x64', '10.0.1', '', WIN_10],
-        ['windows', 'x64', '6.1.3', '', WIN_7],
-        ['windows', 'x64', '5.1.7', '', WIN_XP],
+    const NOT_LINUX: [OSDistro, string] = [OSDistro.Unknown, ''];
+    const tests: [string, string, string, [OSDistro, string], OSInfo][] = [
+        ['windows', 'x64', '10.0.1', NOT_LINUX, WIN_10],
+        ['windows', 'x64', '6.1.3', NOT_LINUX, WIN_7],
+        ['windows', 'x64', '5.1.7', NOT_LINUX, WIN_XP],
 
-        ['darwin', 'x64', '10.13.1', '', MAC_HIGH_SIERRA],
-        ['darwin', 'x64', '10.12.2', '', MAC_SIERRA],
-        ['darwin', 'x64', '10.11.5', '', MAC_EL_CAPITAN],
+        ['darwin', 'x64', '10.13.1', NOT_LINUX, MAC_HIGH_SIERRA],
+        ['darwin', 'x64', '10.12.2', NOT_LINUX, MAC_SIERRA],
+        ['darwin', 'x64', '10.11.5', NOT_LINUX, MAC_EL_CAPITAN],
 
-        ['linux', 'x64', '4.1.4', UBUNTU_BIONIC_FILE, UBUNTU_BIONIC],
-        ['linux', 'x64', '4.1.4', UBUNTU_PRECISE_FILE, UBUNTU_PRECISE],
-        ['linux', 'x64', '4.1.4', FEDORA_FILE, FEDORA],
-        ['linux', 'x64', '4.1.4', ARCH_FILE, ARCH],
+        ['linux', 'x64', '4.1.4', [OSDistro.Ubuntu, '18.04'], UBUNTU_BIONIC],
+        ['linux', 'x64', '4.1.4', [OSDistro.Ubuntu, '14.04'], UBUNTU_PRECISE],
+        ['linux', 'x64', '4.1.4', [OSDistro.Fedora, '24'], FEDORA],
+        ['linux', 'x64', '4.1.4', [OSDistro.Arch, ''], ARCH],
 
-        ['windows', 'x86', '5.1.7', '', OLD]
+        ['windows', 'x86', '5.1.7', NOT_LINUX, OLD]  // WinXP
     ];
     let i = 0;
-    for (const [platform, arch, release, osFile, expected] of tests) {
+    for (const [platform, arch, release, [distro, version], expected] of tests) {
         test(`${i} - ${platform} ${arch} ${release}`, async () => {
             deps.returnGetArch = arch;
             deps.returnGetRelease = release;
-            deps.returnReadFile = osFile;
+            deps.returnGetLinuxDistro = [distro, parseVersion(version)];
             const result = getOSInfo(
-                (fn: string) => deps.readFile(fn),
                 () => deps.getArch(),
                 () => deps.getRelease(),
+                () => deps.getLinuxDistro(),
                 platform);
 
             expect(result).to.deep.equal(expected);
-            if (osFile === '') {
+            if (distro === OSDistro.Unknown) {
                 stub.checkCalls([
                     {funcName: 'getArch', args: []},
                     {funcName: 'getRelease', args: []}
@@ -194,7 +140,7 @@ suite('OS Info - getOSInfo()', () => {
             } else {
                 stub.checkCalls([
                     {funcName: 'getArch', args: []},
-                    {funcName: 'readFile', args: ['/etc/os-release']}
+                    {funcName: 'getLinuxDistro', args: []}
                 ]);
             }
         });
