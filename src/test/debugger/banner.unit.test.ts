@@ -29,6 +29,7 @@ suite('Debugging - Banner', () => {
     const message = 'Can you please take 2 minutes to tell us how the Debugger is working for you?';
     const yes = 'Yes, take survey now';
     const no = 'No thanks';
+    const later = 'Remind me Later';
 
     setup(() => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
@@ -67,7 +68,7 @@ suite('Debugging - Banner', () => {
         launchCounterState.setup(l => l.value).returns(() => debuggerLaunchCounter).verifiable(typemoq.Times.once());
         browser.setup(b => b.launch(typemoq.It.isValue(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`)))
             .verifiable(typemoq.Times.once());
-        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no)))
+        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
             .returns(() => Promise.resolve(yes));
 
         await banner.show();
@@ -169,7 +170,7 @@ suite('Debugging - Banner', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.atLeastOnce());
 
-        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no)))
+        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
             .verifiable(typemoq.Times.once());
         banner.initialize();
         await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
@@ -195,7 +196,7 @@ suite('Debugging - Banner', () => {
         launchCounterState.setup(l => l.updateValue(typemoq.It.isAny()))
             .callback(() => currentLaunchCounter = currentLaunchCounter + 1);
 
-        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no)))
+        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
         banner.initialize();

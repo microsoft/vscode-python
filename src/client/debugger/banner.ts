@@ -73,7 +73,8 @@ export class DebuggerBanner implements IDebuggerBanner {
         const msg = 'Can you please take 2 minutes to tell us how the Debugger is working for you?';
         const yes = 'Yes, take survey now';
         const no = 'No thanks';
-        const response = await appShell.showInformationMessage(msg, yes, no);
+        const later = 'Remind me Later';
+        const response = await appShell.showInformationMessage(msg, yes, no, later);
         switch (response) {
             case yes:
                 {
