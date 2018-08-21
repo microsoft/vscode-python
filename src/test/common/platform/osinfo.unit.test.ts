@@ -5,7 +5,7 @@
 
 import { expect } from 'chai';
 import * as semver from 'semver';
-import { getOSInfo, getOSType, is64bit, isLinux, isMac, isWindows, parseVersion } from '../../../client/common/platform/osinfo';
+import { getOSInfo, getOSType, getPathVariableName, getVirtualEnvBinName, is64bit, isLinux, isMac, isWindows, parseVersion } from '../../../client/common/platform/osinfo';
 import { OSDistro, OSInfo, OSType } from '../../../client/common/platform/types';
 import { Stub } from '../../../test/stub';
 
@@ -262,4 +262,41 @@ suite('OS Info - helpers', () => {
         expect(result1).to.be.equal(true, 'invalid value');
         expect(result2).to.be.equal(false, 'invalid value');
     });
+
+    test('getPathVariableName - Windows', async () => {
+        const result = getPathVariableName(WIN_10);
+
+        expect(result).to.be.equal('Path', 'invalid value');
+    });
+
+    test('getPathVariableName - Mac', async () => {
+        const result = getPathVariableName(MAC_HIGH_SIERRA);
+
+        expect(result).to.be.equal('PATH', 'invalid value');
+    });
+
+    test('getPathVariableName - Linux', async () => {
+        const result = getPathVariableName(UBUNTU_BIONIC);
+
+        expect(result).to.be.equal('PATH', 'invalid value');
+    });
+
+    test('getVirtualEnvBinName - Windows', async () => {
+        const result = getVirtualEnvBinName(WIN_10);
+
+        expect(result).to.be.equal('scripts', 'invalid value');
+    });
+
+    test('getVirtualEnvBinName - Mac', async () => {
+        const result = getVirtualEnvBinName(MAC_HIGH_SIERRA);
+
+        expect(result).to.be.equal('bin', 'invalid value');
+    });
+
+    test('getVirtualEnvBinName - Linux', async () => {
+        const result = getVirtualEnvBinName(UBUNTU_BIONIC);
+
+        expect(result).to.be.equal('bin', 'invalid value');
+    });
+
 });

@@ -6,7 +6,7 @@
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as semver from 'semver';
-import { LINUX_OS_RELEASE_FILE } from './constants';
+import { LINUX_OS_RELEASE_FILE, NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
 import { OSDistro, OSInfo, OSType } from './types';
 
 let local: OSInfo;
@@ -16,34 +16,6 @@ function getLocal(): OSInfo {
         local = getOSInfo();
     }
     return local;
-}
-
-export function isWindows(info?: OSInfo): boolean {
-    if (!info) {
-        info = getLocal();
-    }
-    return info.type === OSType.Windows;
-}
-
-export function isMac(info?: OSInfo): boolean {
-    if (!info) {
-        info = getLocal();
-    }
-    return info.type === OSType.OSX;
-}
-
-export function isLinux(info?: OSInfo): boolean {
-    if (!info) {
-        info = getLocal();
-    }
-    return info.type === OSType.Linux;
-}
-
-export function is64bit(info?: OSInfo): boolean {
-    if (!info) {
-        info = getLocal();
-    }
-    return info.arch === 'x64';
 }
 
 export function getOSType(platform: string = process.platform): OSType {
@@ -186,6 +158,44 @@ function getLinuxDistroFromName(name: string): OSDistro {
     } else {
         return OSDistro.Unknown;
     }
+}
+
+// helpers
+
+export function isWindows(info?: OSInfo): boolean {
+    if (!info) {
+        info = getLocal();
+    }
+    return info.type === OSType.Windows;
+}
+
+export function isMac(info?: OSInfo): boolean {
+    if (!info) {
+        info = getLocal();
+    }
+    return info.type === OSType.OSX;
+}
+
+export function isLinux(info?: OSInfo): boolean {
+    if (!info) {
+        info = getLocal();
+    }
+    return info.type === OSType.Linux;
+}
+
+export function is64bit(info?: OSInfo): boolean {
+    if (!info) {
+        info = getLocal();
+    }
+    return info.arch === 'x64';
+}
+
+export function getPathVariableName(info: OSInfo) {
+    return isWindows(info) ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
+}
+
+export function getVirtualEnvBinName(info: OSInfo) {
+    return isWindows(info) ? 'scripts' : 'bin';
 }
 
 export function parseVersion(raw: string): semver.SemVer {

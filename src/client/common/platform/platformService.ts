@@ -2,38 +2,28 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject, injectable } from 'inversify';
-import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
+import { injectable } from 'inversify';
 import { FileSystem } from './fileSystem';
 import * as osinfo from './osinfo';
-import { IFileSystem, IPlatformService, OSInfo } from './types';
+import { IPlatformService, OSInfo } from './types';
 
 @injectable()
 export class PlatformService implements IPlatformService {
     public readonly os: OSInfo;
 
-    constructor(
-        info?: OSInfo,
-        @inject(IFileSystem) filesystem?: IFileSystem
-    ) {
-        if (info) {
-            this.os = info;
-        } else {
-            if (!filesystem) {
-                // Due to circular dependency between PlatformService and
-                // FileSystem, we must use a dummy OSInfo at first.
-                this.os = new OSInfo(osinfo.getOSType());
-                filesystem = new FileSystem(this);
-            }
-            this.os = osinfo.getOSInfo(filesystem.readFileSync);
-        }
+    constructor() {
+        // Due to circular dependency between PlatformService and
+        // FileSystem, we must use a dummy OSInfo at first.
+        this.os = new OSInfo(osinfo.getOSType());
+        const filesystem = new FileSystem(this);
+        this.os = osinfo.getOSInfo(filesystem.readFileSync);
     }
 
     public get pathVariableName() {
-        return this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
+        return osinfo.getPathVariableName(this.os);
     }
     public get virtualEnvBinName() {
-        return this.isWindows ? 'scripts' : 'bin';
+        return osinfo.getVirtualEnvBinName(this.os);
     }
 
     // tslint:disable-next-line: no-suspicious-comment
