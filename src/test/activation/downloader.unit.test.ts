@@ -35,9 +35,7 @@ suite('Activation - Downloader', () => {
             fs.object,
             platformData,
             workspace.object,
-            undefined,
-            ''
-        );
+            '');
 
     });
     type PlatformIdentifier = {

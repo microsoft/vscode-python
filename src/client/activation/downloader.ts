@@ -36,8 +36,8 @@ export class LanguageServerDownloader {
         private readonly fs: IFileSystem,
         private readonly platformData: PlatformData,
         readonly workspace: IWorkspaceService,
-        private requestHandler: IRequestWrapper | undefined,
-        private engineFolder: string) {
+        private engineFolder: string,
+        private requestHandler?: IRequestWrapper) {
 
         if (!this.requestHandler) {
             this.requestHandler = new RequestWithProxy(workspace.getConfiguration('http').get('proxy', ''));

@@ -142,7 +142,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 this.fs,
                 this.platformData,
                 this.workspace,
-                undefined,
                 languageServerFolder);
             await downloader.downloadLanguageServer(this.context);
             reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_DOWNLOADED);
