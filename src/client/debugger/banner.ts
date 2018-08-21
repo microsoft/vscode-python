@@ -25,7 +25,9 @@ export class DebuggerBanner implements IDebuggerBanner {
     private initialized?: boolean;
     private disabledInCurrentSession?: boolean;
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer
+    ) { }
 
     public initialize() {
         if (this.initialized) {
@@ -45,12 +47,16 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     public isEnabled(): boolean {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        return factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, true).value;
+        const key = PersistentStateKeys.ShowBanner;
+        const state = factory.createGlobalPersistentState<boolean>(key, true);
+        return state.value;
     }
 
     public async disable(): Promise<void> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        await factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, false).updateValue(false);
+        const key = PersistentStateKeys.ShowBanner;
+        const state = factory.createGlobalPersistentState<boolean>(key, false);
+        await state.updateValue(false);
     }
 
     // showing banner
@@ -64,9 +70,10 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     public async show(): Promise<void> {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        const msg = 'Can you please take 2 minutes to tell us how the Debugger is working for you?';
         const yes = 'Yes, take survey now';
         const no = 'No thanks';
-        const response = await appShell.showInformationMessage('Can you please take 2 minutes to tell us how the Debugger is working for you?', yes, no);
+        const response = await appShell.showInformationMessage(msg, yes, no);
         switch (response) {
             case yes:
                 {
@@ -85,28 +92,40 @@ export class DebuggerBanner implements IDebuggerBanner {
         }
     }
 
+    private async action(): Promise<void> {
+        const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
+        const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
+        browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
+    }
+
     // persistent counter
 
     private async passedThreshold(): Promise<boolean> {
-        const [threshold, debuggerCounter] = await Promise.all([this.getDebuggerLaunchThresholdCounter(), this.getGetDebuggerLaunchCounter()]);
+        const [threshold, debuggerCounter] = await Promise.all([
+            this.getDebuggerLaunchThresholdCounter(),
+            this.getGetDebuggerLaunchCounter()
+        ]);
         return debuggerCounter >= threshold;
     }
 
     private async incrementDebuggerLaunchCounter(): Promise<void> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const state = factory.createGlobalPersistentState<number>(PersistentStateKeys.DebuggerLaunchCounter, 0);
+        const key = PersistentStateKeys.DebuggerLaunchCounter;
+        const state = factory.createGlobalPersistentState<number>(key, 0);
         await state.updateValue(state.value + 1);
     }
 
     private async getGetDebuggerLaunchCounter(): Promise<number> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const state = factory.createGlobalPersistentState<number>(PersistentStateKeys.DebuggerLaunchCounter, 0);
+        const key = PersistentStateKeys.DebuggerLaunchCounter;
+        const state = factory.createGlobalPersistentState<number>(key, 0);
         return state.value;
     }
 
     private async getDebuggerLaunchThresholdCounter(): Promise<number> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const state = factory.createGlobalPersistentState<number | undefined>(PersistentStateKeys.DebuggerLaunchThresholdCounter, undefined);
+        const key = PersistentStateKeys.DebuggerLaunchThresholdCounter;
+        const state = factory.createGlobalPersistentState<number | undefined>(key, undefined);
         if (state.value === undefined) {
             const hexValue = parseInt(`0x${this.getRandomHex()}`, 16);
             const randomNumber = Math.floor((10 * hexValue) / 16) + 1;
@@ -134,12 +153,6 @@ export class DebuggerBanner implements IDebuggerBanner {
             }
         });
         this.serviceContainer.get<Disposable[]>(IDisposableRegistry).push(disposable);
-    }
-
-    private async action(): Promise<void> {
-        const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
-        const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
-        browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
     }
 
     private async onDidTerminateDebugSession(): Promise<void> {
