@@ -40,7 +40,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.25.0"
+        "vscode": "^1.26.0"
     },
     "recommendations": [
         "donjayamanne.jupyter"
@@ -874,6 +874,24 @@
                     "description": "List of suppressed diagnostic messages.",
                     "scope": "resource"
                 },
+                "python.analysis.logLevel": {
+                    "type": "string",
+                    "enum": [
+                        "Error",
+                        "Warning",
+                        "Information",
+                        "Trace"
+                    ],
+                    "default": "Error",
+                    "description": "Defines type of log messages language server writes into the output window.",
+                    "scope": "resource"
+                },
+                "python.analysis.symbolsHierarchyDepthLimit": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Limits depth of the symbol tree in the document outline.",
+                    "scope": "resource"
+                },
                 "python.linting.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -1532,9 +1550,9 @@
         "vscode-debugadapter": "1.28.0",
         "vscode-debugprotocol": "1.28.0",
         "vscode-extension-telemetry": "0.0.15",
-        "vscode-languageclient": "4.3.0",
-        "vscode-languageserver": "4.3.0",
-        "vscode-languageserver-protocol": "3.9.0",
+        "vscode-languageclient": "4.4.0",
+        "vscode-languageserver": "4.4.0",
+        "vscode-languageserver-protocol": "3.10.3",
         "winreg": "1.2.4",
         "xml2js": "0.4.19"
     },
@@ -1605,7 +1623,7 @@
         "typescript": "^2.9.1",
         "typescript-formatter": "^7.1.0",
         "uuid": "^3.2.1",
-        "vscode": "^1.1.5",
+        "vscode": "^1.1.21",
         "vscode-debugadapter-testsupport": "^1.27.0"
     },
     "__metadata": {

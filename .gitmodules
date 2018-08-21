@@ -1,4 +1,0 @@
-[submodule "typeshed"]
-	path = typeshed
-	url = https://github.com/python/typeshed.git
-	branch = master

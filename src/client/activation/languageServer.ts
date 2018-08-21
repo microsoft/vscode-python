@@ -236,8 +236,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.excludedFiles = this.getExcludedFiles();
         this.typeshedPaths = this.getTypeshedPaths(settings);
 
-        const traceLogging = (settings.analysis && settings.analysis.traceLogging) ? settings.analysis.traceLogging : false;
-
         // Options to control the language client
         return {
             // Register the server for Python documents
@@ -262,7 +260,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 excludeFiles: this.excludedFiles,
                 testEnvironment: isTestExecution(),
                 analysisUpdates: true,
-                traceLogging,
+                traceLogging: true, // Max level, let LS decide through settings actual level of logging.
                 asyncStartup: true
             },
             middleware: {
@@ -308,7 +306,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private getTypeshedPaths(settings: IPythonSettings): string[] {
         return settings.analysis.typeshedPaths && settings.analysis.typeshedPaths.length > 0
             ? settings.analysis.typeshedPaths
-            : [path.join(this.context.extensionPath, 'typeshed')];
+            : [path.join(this.context.extensionPath, 'languageServer', 'Typeshed')];
     }
 
     private async onSettingsChanged(): Promise<void> {
