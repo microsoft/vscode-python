@@ -41,10 +41,6 @@ export class DebuggerBanner implements IDebuggerBanner {
         this.addCallback();
     }
 
-    public async launchSurvey(): Promise<void> {
-        return this.action();
-    }
-
     // "enabled" state
 
     public isEnabled(): boolean {

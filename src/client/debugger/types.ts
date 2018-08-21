@@ -45,5 +45,4 @@ export interface IDebuggerBanner {
     disable(): Promise<void>;
     shouldShow(): Promise<boolean>;
     show(): Promise<void>;
-    launchSurvey(): Promise<void>;
 }
