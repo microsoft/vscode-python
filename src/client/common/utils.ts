@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { Position, Range, TextDocument } from 'vscode';
+import { IRandom } from './types';
 
 export const IS_WINDOWS = /^win/.test(process.platform);
 export const Is_64Bit = os.arch() === 'x64';
@@ -126,4 +127,11 @@ function getRandom(): number {
 export function getRandomBetween(min: number = 0, max: number = 10): number {
     const randomVal: number = getRandom();
     return min + (randomVal * (max - min));
+}
+
+export class Random implements IRandom {
+
+    public getRandomInt(min: number = 0, max: number = 10): number {
+        return getRandomBetween(min, max);
+    }
 }

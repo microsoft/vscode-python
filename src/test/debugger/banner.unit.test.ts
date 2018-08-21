@@ -9,9 +9,8 @@ import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../client/common/application/types';
-import { IRuntime } from '../../client/common/platform/types';
 import { IBrowserService, IDisposableRegistry,
-    ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+    ILogger, IPersistentState, IPersistentStateFactory, IRandom } from '../../client/common/types';
 import { DebuggerBanner, PersistentStateKeys } from '../../client/debugger/banner';
 import { DebuggerTypeName } from '../../client/debugger/Common/constants';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -26,7 +25,7 @@ suite('Debugging - Banner', () => {
     let userSelectedState: typemoq.IMock<IPersistentState<boolean | undefined>>;
     let debugService: typemoq.IMock<IDebugService>;
     let appShell: typemoq.IMock<IApplicationShell>;
-    let runtime: typemoq.IMock<IRuntime>;
+    let runtime: typemoq.IMock<IRandom>;
     let banner: DebuggerBanner;
     const message = 'Can you please take 2 minutes to tell us how the debugger is working for you?';
     const yes = 'Yes, take survey now';
@@ -42,7 +41,7 @@ suite('Debugging - Banner', () => {
         launchCounterState = typemoq.Mock.ofType<IPersistentState<number>>();
         showBannerState = typemoq.Mock.ofType<IPersistentState<boolean>>();
         appShell = typemoq.Mock.ofType<IApplicationShell>();
-        runtime = typemoq.Mock.ofType<IRuntime>();
+        runtime = typemoq.Mock.ofType<IRandom>();
         launchThresholdCounterState = typemoq.Mock.ofType<IPersistentState<number | undefined>>();
         userSelected = true;
         userSelectedState = typemoq.Mock.ofType<IPersistentState<boolean | undefined>>();
@@ -66,7 +65,7 @@ suite('Debugging - Banner', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(ILogger))).returns(() => logger.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IRuntime))).returns(() => runtime.object);
+        serviceContainer.setup(s => s.get(typemoq.It.isValue(IRandom))).returns(() => runtime.object);
         userSelectedState.setup(s => s.value)
             .returns(() => userSelected);
 

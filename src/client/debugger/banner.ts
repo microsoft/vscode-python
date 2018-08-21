@@ -7,9 +7,8 @@ import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
 import { IApplicationShell, IDebugService } from '../common/application/types';
 import '../common/extensions';
-import { IRuntime } from '../common/platform/types';
 import { IBrowserService, IDisposableRegistry,
-    ILogger, IPersistentStateFactory } from '../common/types';
+    ILogger, IPersistentStateFactory, IRandom } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { DebuggerTypeName } from './Common/constants';
 import { IDebuggerBanner } from './types';
@@ -118,7 +117,7 @@ export class DebuggerBanner implements IDebuggerBanner {
         const state = factory.createGlobalPersistentState<boolean|undefined>(key, undefined);
         let selected = state.value;
         if (selected === undefined) {
-            const runtime = this.serviceContainer.get<IRuntime>(IRuntime);
+            const runtime = this.serviceContainer.get<IRandom>(IRandom);
             const randomSample = runtime.getRandomInt(0, 100);
             selected = randomSample < SAMPLE_SIZE_PER_HUNDRED;
             state.updateValue(selected).ignoreErrors();
@@ -156,7 +155,7 @@ export class DebuggerBanner implements IDebuggerBanner {
         const key = PersistentStateKeys.DebuggerLaunchThresholdCounter;
         const state = factory.createGlobalPersistentState<number | undefined>(key, undefined);
         if (state.value === undefined) {
-            const runtime = this.serviceContainer.get<IRuntime>(IRuntime);
+            const runtime = this.serviceContainer.get<IRandom>(IRandom);
             const randomNumber = runtime.getRandomInt(1, 11);
             await state.updateValue(randomNumber);
         }
