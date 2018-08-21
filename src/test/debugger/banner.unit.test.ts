@@ -127,8 +127,10 @@ suite('Debugging - Banner', () => {
         launchCounterState.setup(l => l.value).returns(() => debuggerLaunchCounter).verifiable(typemoq.Times.once());
         browser.setup(b => b.launch(typemoq.It.isValue(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`)))
             .verifiable(typemoq.Times.once());
+        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no)))
+            .returns(() => Promise.resolve(yes));
 
-        await banner.launchSurvey();
+        await banner.showBanner();
 
         launchCounterState.verifyAll();
         browser.verifyAll();

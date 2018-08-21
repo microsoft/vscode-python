@@ -62,10 +62,6 @@ export class DebuggerBanner implements IDebuggerBanner {
         }
     }
 
-    public async launchSurvey(): Promise<void> {
-        return this._action();
-    }
-
     // "enabled" state
 
     public get enabled(): boolean {
@@ -149,6 +145,7 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     // debugger-specific functionality
 
+    // Launch the survey.
     private async _action(): Promise<void> {
         const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
         const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
