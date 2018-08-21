@@ -23,7 +23,7 @@ export class RequestWithProxy implements IRequestWrapper {
     public downloadFileRequest(uri: string): request.Request {
         const requestOptions = this.getRequestOptions();
         if (requestOptions) {
-            return request(uri, requestOptions!);
+            return request(uri, requestOptions);
         }
         return request(uri);
     }
