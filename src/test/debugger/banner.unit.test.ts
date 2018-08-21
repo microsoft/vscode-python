@@ -22,6 +22,8 @@ suite('Debugging - Banner', () => {
     let launchCounterState: typemoq.IMock<IPersistentState<number>>;
     let launchThresholdCounterState: typemoq.IMock<IPersistentState<number | undefined>>;
     let showBannerState: typemoq.IMock<IPersistentState<boolean>>;
+    let userSelected: boolean | undefined;
+    let userSelectedState: typemoq.IMock<IPersistentState<boolean | undefined>>;
     let debugService: typemoq.IMock<IDebugService>;
     let appShell: typemoq.IMock<IApplicationShell>;
     let runtime: typemoq.IMock<IRuntime>;
@@ -42,6 +44,8 @@ suite('Debugging - Banner', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         runtime = typemoq.Mock.ofType<IRuntime>();
         launchThresholdCounterState = typemoq.Mock.ofType<IPersistentState<number | undefined>>();
+        userSelected = true;
+        userSelectedState = typemoq.Mock.ofType<IPersistentState<boolean | undefined>>();
         const factory = typemoq.Mock.ofType<IPersistentStateFactory>();
         factory
             .setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.DebuggerLaunchCounter), typemoq.It.isAny()))
@@ -52,6 +56,9 @@ suite('Debugging - Banner', () => {
         factory
             .setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.DebuggerLaunchThresholdCounter), typemoq.It.isAny()))
             .returns(() => launchThresholdCounterState.object);
+        factory
+            .setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.UserSelected), typemoq.It.isAny()))
+            .returns(() => userSelectedState.object);
 
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IBrowserService))).returns(() => browser.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IPersistentStateFactory))).returns(() => factory.object);
@@ -60,6 +67,8 @@ suite('Debugging - Banner', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IRuntime))).returns(() => runtime.object);
+        userSelectedState.setup(s => s.value)
+            .returns(() => userSelected);
 
         banner = new DebuggerBanner(serviceContainer.object);
     });
@@ -76,6 +85,48 @@ suite('Debugging - Banner', () => {
         launchCounterState.verifyAll();
         browser.verifyAll();
     });
+    for (let i = 0; i < 100; i = i + 1) {
+        const randomSample = i;
+        const expected = i < 10;
+        test(`users are selected 10% of the time (random: ${i})`, async () => {
+            showBannerState.setup(s => s.value).returns(() => true);
+            launchCounterState.setup(l => l.value).returns(() => 10);
+            launchThresholdCounterState.setup(t => t.value).returns(() => 10);
+            userSelected = undefined;
+            runtime.setup(r => r.getRandomInt(typemoq.It.isValue(0), typemoq.It.isValue(100)))
+                .returns(() => randomSample);
+            userSelectedState.setup(u => u.updateValue(typemoq.It.isValue(expected)))
+                .returns(() => Promise.resolve())
+                .verifiable(typemoq.Times.once());
+
+            const selected = await banner.shouldShow();
+
+            expect(selected).to.be.equal(expected, 'Incorrect value');
+            userSelectedState.verifyAll();
+        });
+    }
+    for (const randomSample of [0, 10]) {
+        const expected = randomSample < 10;
+        test(`user selection does not change (random: ${randomSample})`, async () => {
+            showBannerState.setup(s => s.value).returns(() => true);
+            launchCounterState.setup(l => l.value).returns(() => 10);
+            launchThresholdCounterState.setup(t => t.value).returns(() => 10);
+            userSelected = undefined;
+            runtime.setup(r => r.getRandomInt(typemoq.It.isValue(0), typemoq.It.isValue(100)))
+                .returns(() => randomSample);
+            userSelectedState.setup(u => u.updateValue(typemoq.It.isValue(expected)))
+                .returns(() => Promise.resolve())
+                .verifiable(typemoq.Times.once());
+
+            const result1 = await banner.shouldShow();
+            userSelected = expected;
+            const result2 = await banner.shouldShow();
+
+            expect(result1).to.be.equal(expected, `randomSample ${randomSample}`);
+            expect(result2).to.be.equal(expected, `randomSample ${randomSample}`);
+            userSelectedState.verifyAll();
+        });
+    }
     test('Increment Debugger Launch Counter when debug session starts', async () => {
         let onDidTerminateDebugSessionCb: (e: DebugSession) => Promise<void>;
         debugService.setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny()))

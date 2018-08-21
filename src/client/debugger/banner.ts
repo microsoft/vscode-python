@@ -14,16 +14,20 @@ import { IServiceContainer } from '../ioc/types';
 import { DebuggerTypeName } from './Common/constants';
 import { IDebuggerBanner } from './types';
 
+const SAMPLE_SIZE_PER_HUNDRED = 10;
+
 export enum PersistentStateKeys {
     ShowBanner = 'ShowBanner',
     DebuggerLaunchCounter = 'DebuggerLaunchCounter',
-    DebuggerLaunchThresholdCounter = 'DebuggerLaunchThresholdCounter'
+    DebuggerLaunchThresholdCounter = 'DebuggerLaunchThresholdCounter',
+    UserSelected = 'DebuggerUserSelected'
 }
 
 @injectable()
 export class DebuggerBanner implements IDebuggerBanner {
     private initialized?: boolean;
     private disabledInCurrentSession?: boolean;
+    private userSelected?: boolean;
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
@@ -65,7 +69,10 @@ export class DebuggerBanner implements IDebuggerBanner {
         if (!this.isEnabled() || this.disabledInCurrentSession) {
             return false;
         }
-        return this.passedThreshold();
+        if (! await this.passedThreshold()) {
+            return false;
+        }
+        return this.isUserSelected();
     }
 
     public async show(): Promise<void> {
@@ -97,6 +104,27 @@ export class DebuggerBanner implements IDebuggerBanner {
         const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
         const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
         browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
+    }
+
+    // user selection
+
+    private async isUserSelected(): Promise<boolean> {
+        if (this.userSelected !== undefined) {
+            return this.userSelected;
+        }
+
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const key = PersistentStateKeys.UserSelected;
+        const state = factory.createGlobalPersistentState<boolean|undefined>(key, undefined);
+        let selected = state.value;
+        if (selected === undefined) {
+            const runtime = this.serviceContainer.get<IRuntime>(IRuntime);
+            const randomSample = runtime.getRandomInt(0, 100);
+            selected = randomSample < SAMPLE_SIZE_PER_HUNDRED;
+            state.updateValue(selected).ignoreErrors();
+        }
+        this.userSelected = selected;
+        return selected;
     }
 
     // persistent counter
