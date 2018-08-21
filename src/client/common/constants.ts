@@ -31,7 +31,6 @@ export namespace Commands {
     export const Refactor_Extract_Variable = 'python.refactorExtractVariable';
     export const Refaactor_Extract_Method = 'python.refactorExtractMethod';
     export const Update_SparkLibrary = 'python.updateSparkLibrary';
-    export const Build_Workspace_Symbols = 'python.buildWorkspaceSymbols';
     export const Start_REPL = 'python.startREPL';
     export const Create_Terminal = 'python.createTerminal';
     export const Set_Linter = 'python.setLinter';

@@ -45,7 +45,7 @@ suite('Workspace Symbols', () => {
         settings.workspaceSymbols!.tagFilePath = path.join(workspaceUri.fsPath, '.vscode', 'tags');
 
         let generator = new Generator(workspaceUri, outputChannel, processServiceFactory);
-        let provider = new WorkspaceSymbolProvider([generator], outputChannel);
+        let provider = new WorkspaceSymbolProvider([generator]);
         let symbols = await provider.provideWorkspaceSymbols('', new CancellationTokenSource().token);
         assert.equal(symbols.length, 0, 'Symbols returned even when workspace symbols are turned off');
         generator.dispose();
@@ -58,7 +58,7 @@ suite('Workspace Symbols', () => {
         settings.workspaceSymbols!.tagFilePath = path.join(workspaceUri.fsPath, '.vscode', 'tags');
 
         generator = new Generator(workspaceUri, outputChannel, processServiceFactory);
-        provider = new WorkspaceSymbolProvider([generator], outputChannel);
+        provider = new WorkspaceSymbolProvider([generator]);
         symbols = await provider.provideWorkspaceSymbols('', new CancellationTokenSource().token);
         assert.notEqual(symbols.length, 0, 'Symbols should be returned when workspace symbols are turned on');
     });
@@ -73,7 +73,7 @@ suite('Workspace Symbols', () => {
         settings.workspaceSymbols!.tagFilePath = path.join(workspaceUri.fsPath, '.vscode', 'tags');
 
         const generators = [new Generator(workspaceUri, outputChannel, processServiceFactory)];
-        const provider = new WorkspaceSymbolProvider(generators, outputChannel);
+        const provider = new WorkspaceSymbolProvider(generators);
         const symbols = await provider.provideWorkspaceSymbols('meth1Of', new CancellationTokenSource().token);
 
         assert.equal(symbols.length >= 2, true, 'Incorrect number of symbols returned');

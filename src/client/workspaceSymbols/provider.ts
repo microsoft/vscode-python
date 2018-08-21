@@ -1,6 +1,7 @@
+'use strict';
+
 import * as _ from 'lodash';
 import * as vscode from 'vscode';
-import { Commands } from '../common/constants';
 import { fsExistsAsync } from '../common/utils';
 import { captureTelemetry } from '../telemetry';
 import { WORKSPACE_SYMBOLS_GO_TO } from '../telemetry/constants';
@@ -8,7 +9,7 @@ import { Generator } from './generator';
 import { parseTags } from './parser';
 
 export class WorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvider {
-    public constructor(private tagGenerators: Generator[], private outputChannel: vscode.OutputChannel) {
+    public constructor(private tagGenerators: Generator[]) {
     }
 
     @captureTelemetry(WORKSPACE_SYMBOLS_GO_TO)
@@ -16,11 +17,6 @@ export class WorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvider {
         if (this.tagGenerators.length === 0) {
             return [];
         }
-        const generatorsWithTagFiles = await Promise.all(this.tagGenerators.map(generator => fsExistsAsync(generator.tagFilePath)));
-        if (generatorsWithTagFiles.filter(exists => exists).length !== this.tagGenerators.length) {
-            await vscode.commands.executeCommand(Commands.Build_Workspace_Symbols, true, token);
-        }
-
         const generators = await Promise.all(this.tagGenerators.map(async generator => {
             const tagFileExists = await fsExistsAsync(generator.tagFilePath);
             return tagFileExists ? generator : undefined;
@@ -30,7 +26,7 @@ export class WorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvider {
             .filter(generator => generator !== undefined && generator.enabled)
             .map(async generator => {
                 // load tags
-                const items = await parseTags(generator.workspaceFolder.fsPath, generator.tagFilePath, query, token);
+                const items = await parseTags(generator!.workspaceFolder.fsPath, generator!.tagFilePath, query, token);
                 if (!Array.isArray(items)) {
                     return [];
                 }

@@ -26,9 +26,11 @@ import { registerTypes as platformRegisterTypes } from './common/platform/servic
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { ITerminalHelper } from './common/terminal/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry,
+import {
+    GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry,
     IExtensionContext, ILogger, IMemento, IOutputChannel,
-    IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
+    IPersistentStateFactory, WORKSPACE_MEMENTO
+} from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
 import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
@@ -142,9 +144,9 @@ export async function activate(context: ExtensionContext) {
     context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, new OnEnterFormatter(), '\n'));
 
     const persistentStateFactory = serviceManager.get<IPersistentStateFactory>(IPersistentStateFactory);
-    const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtension);
+    const deprecationMgr = new FeatureDeprecationManager(persistentStateFactory);
     deprecationMgr.initialize();
-    context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory, !!jupyterExtension));
+    context.subscriptions.push(new FeatureDeprecationManager(persistentStateFactory));
 
     context.subscriptions.push(serviceContainer.get<IInterpreterSelector>(IInterpreterSelector));
     context.subscriptions.push(activateUpdateSparkLibraryProvider());

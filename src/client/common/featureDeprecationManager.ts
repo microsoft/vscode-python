@@ -30,6 +30,12 @@ const deprecatedFeatures: deprecatedFeatureInfo[] = [
         message: 'The setting \'python.linting.lintOnTextChange\' is deprecated, please enable \'python.linting.lintOnSave\' and \'files.autoSave\'.',
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/313',
         setting: { setting: 'linting.lintOnTextChange', values: ['true', true] }
+    },
+    {
+        doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_BUILD_WORKSPACE_SYMBOLS',
+        message: 'The command \'Python: Build Workspace Symbols\' is deprecated as the new Python Language Server builds symbols in the workspace in the background.',
+        moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/2267#issuecomment-408996859',
+        commands: ['python.buildWorkspaceSymbols']
     }
 ];
 
@@ -39,7 +45,7 @@ export interface IFeatureDeprecationManager extends Disposable {
 
 export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     private disposables: Disposable[] = [];
-    constructor(private persistentStateFactory: IPersistentStateFactory, private jupyterExtensionInstalled: boolean) { }
+    constructor(private persistentStateFactory: IPersistentStateFactory) { }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
     }
