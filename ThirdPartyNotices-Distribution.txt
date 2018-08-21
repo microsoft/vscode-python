@@ -119,10 +119,10 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 112. vscode-debugprotocol 1.28.0 (https://registry.npmjs.org/vscode-debugprotocol/-/vscode-debugprotocol-1.28.0.tgz)
 113. vscode-extension-telemetry 0.0.15 (https://registry.npmjs.org/vscode-extension-telemetry/-/vscode-extension-telemetry-0.0.15.tgz)
 114. vscode-jsonrpc 3.6.2 (https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-3.6.2.tgz)
-115. vscode-languageclient 4.3.0 (https://registry.npmjs.org/vscode-languageclient/-/vscode-languageclient-4.3.0.tgz)
-116. vscode-languageserver 4.3.0 (https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-4.3.0.tgz)
-117. vscode-languageserver-protocol 3.9.0 (https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.9.0.tgz)
-118. vscode-languageserver-types 3.9.0 (https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.9.0.tgz)
+115. vscode-languageclient 4.4.0 (https://registry.npmjs.org/vscode-languageclient/-/vscode-languageclient-4.4.0.tgz)
+116. vscode-languageserver 4.4.0 (https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-4.4.0.tgz)
+117. vscode-languageserver-protocol 3.10.3 (https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.10.3.tgz)
+118. vscode-languageserver-types 3.10.1 (https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.10.1.tgz)
 119. vscode-uri 1.0.1 (https://registry.npmjs.org/vscode-uri/-/vscode-uri-1.0.1.tgz)
 120. webpack (for lodash 4) (https://webpack.js.org/)
 121. winreg 1.2.4 (https://github.com/fresc81/node-winreg/tree/v1.2.4)
@@ -3666,7 +3666,7 @@ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF vscode-jsonrpc NOTICES AND INFORMATION
 
-%% vscode-languageclient 4.3.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageclient/-/vscode-languageclient-4.3.0.tgz)
+%% vscode-languageclient 4.4.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageclient/-/vscode-languageclient-4.4.0.tgz)
 =========================================
 Copyright (c) Microsoft Corporation
 
@@ -3683,7 +3683,7 @@ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF vscode-languageclient NOTICES AND INFORMATION
 
-%% vscode-languageserver 4.3.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-4.3.0.tgz)
+%% vscode-languageserver 4.4.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-4.4.0.tgz)
 =========================================
 Copyright (c) Microsoft Corporation
 
@@ -3700,7 +3700,7 @@ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF vscode-languageserver NOTICES AND INFORMATION
 
-%% vscode-languageserver-protocol 3.9.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.9.0.tgz)
+%% vscode-languageserver-protocol 3.10.3 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.10.3.tgz)
 =========================================
 Copyright (c) Microsoft Corporation
 
@@ -3717,7 +3717,7 @@ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF vscode-languageserver-protocol NOTICES AND INFORMATION
 
-%% vscode-languageserver-types 3.9.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.9.0.tgz)
+%% vscode-languageserver-types 3.10.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.10.1.tgz)
 =========================================
 Copyright (c) Microsoft Corporation
 
