@@ -15,7 +15,7 @@ import { registerTypes as activationRegisterTypes } from './activation/serviceRe
 import { IExtensionActivationService } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
-import { IWorkspaceService } from './common/application/types';
+import { IDebugService, IWorkspaceService } from './common/application/types';
 import { PythonSettings } from './common/configSettings';
 import { PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { FeatureDeprecationManager } from './common/featureDeprecationManager';
@@ -30,11 +30,12 @@ import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry,
     IExtensionContext, ILogger, IMemento, IOutputChannel,
     IPersistentStateFactory, WORKSPACE_MEMENTO } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
+import { injectDebuggerBanner } from './debugger/banner';
 import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
 import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
 import { registerTypes as debuggerRegisterTypes } from './debugger/serviceRegistry';
-import { IDebugConfigurationProvider, IExperimentalDebuggerBanner } from './debugger/types';
+import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import { ICondaService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
@@ -159,7 +160,12 @@ export async function activate(context: ExtensionContext) {
         context.subscriptions.push(debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));
     });
 
-    serviceContainer.get<IExperimentalDebuggerBanner>(IExperimentalDebuggerBanner).initialize();
+    const banner = serviceContainer.get<IDebuggerBanner>(IDebuggerBanner);
+    const debuggerService = serviceContainer.get<IDebugService>(IDebugService);
+    const disposables = serviceContainer.get<Disposable[]>(IDisposableRegistry);
+    const logger = serviceContainer.get<ILogger>(ILogger);
+    injectDebuggerBanner(banner, debuggerService, disposables, logger);
+
     activationDeferred.resolve();
 }
 

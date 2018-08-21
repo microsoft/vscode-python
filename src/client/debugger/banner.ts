@@ -5,51 +5,84 @@
 
 import * as crypto from 'crypto';
 import { inject, injectable } from 'inversify';
-import { Disposable } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IDebugService } from '../common/application/types';
 import '../common/extensions';
 import { IBrowserService, IDisposableRegistry,
-    ILogger, IPersistentStateFactory } from '../common/types';
+    ILogger, IPersistentState, IPersistentStateFactory } from '../common/types';
+import { getRandomBetween } from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
 import { DebuggerTypeName } from './Common/constants';
-import { IExperimentalDebuggerBanner } from './types';
+import { IDebuggerBanner } from './types';
 
 export enum PersistentStateKeys {
     ShowBanner = 'ShowBanner',
+    DebuggerUserSelected = 'DebuggerUserSelected',
     DebuggerLaunchCounter = 'DebuggerLaunchCounter',
     DebuggerLaunchThresholdCounter = 'DebuggerLaunchThresholdCounter'
 }
 
+type IsUserSelectedFunc = (state: IPersistentState<boolean | undefined>) => boolean;
+type RandIntFunc = (min: number, max: number) => number;
+
+const sampleSizePerHundred: number = 10;  // 10%
+
+export function isUserSelected(state: IPersistentState<boolean | undefined>, randInt: RandIntFunc = getRandomBetween): boolean {
+    let selected = state.value;
+    if (selected === undefined) {
+        const randomSample: number = randInt(0, 100);
+        selected = randomSample < sampleSizePerHundred;
+        state.updateValue(selected).ignoreErrors();
+    }
+    return selected;
+}
+
 @injectable()
-export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
-    private initialized?: boolean;
+export class DebuggerBanner implements IDebuggerBanner {
     private disabledInCurrentSession?: boolean;
+
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        // The following is only used during testing and will not be
+        // passed in normally (hence the underscore).
+        _isUserSelected: IsUserSelectedFunc = isUserSelected)
+    {
+        if (!this.enabled) {
+            return;
+        }
+
+        // Only show the banner to a subset of users.  (see GH-2300)
+        // In order to avoid selecting the user *every* time they start
+        // the extension, we store their selection in the persistence
+        // layer.
+        const persist = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const key = PersistentStateKeys.DebuggerUserSelected;
+        const state = persist.createGlobalPersistentState<boolean | undefined>(key, undefined);
+        if (!_isUserSelected(state)) {
+            this.disable().ignoreErrors();
+        }
+    }
+
+    // "enabled" state
+
     public get enabled(): boolean {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         return factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, true).value;
     }
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
-    public initialize() {
-        if (this.initialized) {
-            return;
-        }
-        this.initialized = true;
 
-        // Don't even bother adding handlers if banner has been turned off.
-        if (!this.enabled) {
-            return;
-        }
-        const debuggerService = this.serviceContainer.get<IDebugService>(IDebugService);
-        const disposable = debuggerService.onDidTerminateDebugSession(async e => {
-            if (e.type === DebuggerTypeName) {
-                const logger = this.serviceContainer.get<ILogger>(ILogger);
-                await this.onDidTerminateDebugSession()
-                    .catch(ex => logger.logError('Error in debugger Banner', ex));
-            }
-        });
-
-        this.serviceContainer.get<Disposable[]>(IDisposableRegistry).push(disposable);
+    public async disable(): Promise<void> {
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        await factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, false).updateValue(false);
     }
+
+    // showing banner
+
+    public async shouldShowBanner(): Promise<boolean> {
+        if (!this.enabled || this.disabledInCurrentSession) {
+            return false;
+        }
+        return this.passedThreshold();
+    }
+
     public async showBanner(): Promise<void> {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const yes = 'Yes, take survey now';
@@ -58,7 +91,7 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
         switch (response) {
             case yes:
                 {
-                    await this.launchSurvey();
+                    await this._action();
                     await this.disable();
                     break;
                 }
@@ -72,33 +105,26 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
             }
         }
     }
-    public async shouldShowBanner(): Promise<boolean> {
-        if (!this.enabled || this.disabledInCurrentSession) {
-            return false;
-        }
+
+    // persistent counter
+
+    private async passedThreshold(): Promise<boolean> {
         const [threshold, debuggerCounter] = await Promise.all([this.getDebuggerLaunchThresholdCounter(), this.getGetDebuggerLaunchCounter()]);
         return debuggerCounter >= threshold;
     }
 
-    public async disable(): Promise<void> {
-        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        await factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, false).updateValue(false);
-    }
-    public async launchSurvey(): Promise<void> {
-        const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
-        const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
-        browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
-    }
     private async incrementDebuggerLaunchCounter(): Promise<void> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const state = factory.createGlobalPersistentState<number>(PersistentStateKeys.DebuggerLaunchCounter, 0);
         await state.updateValue(state.value + 1);
     }
+
     private async getGetDebuggerLaunchCounter(): Promise<number> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const state = factory.createGlobalPersistentState<number>(PersistentStateKeys.DebuggerLaunchCounter, 0);
         return state.value;
     }
+
     private async getDebuggerLaunchThresholdCounter(): Promise<number> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const state = factory.createGlobalPersistentState<number | undefined>(PersistentStateKeys.DebuggerLaunchThresholdCounter, undefined);
@@ -109,13 +135,25 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
         }
         return state.value!;
     }
+
     private getRandomHex() {
         const appEnv = this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
         const lastHexValue = appEnv.machineId.slice(-1);
         const num = parseInt(`0x${lastHexValue}`, 16);
         return isNaN(num) ? crypto.randomBytes(1).toString('hex').slice(-1) : lastHexValue;
     }
-    private async onDidTerminateDebugSession(): Promise<void> {
+
+    // debugger-specific functionality
+
+    // Launch the survey.
+    private async _action(): Promise<void> {
+        const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
+        const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
+        browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
+    }
+
+    // tslint:disable-next-line:member-ordering
+    public async onDidTerminateDebugSession(): Promise<void> {
         if (!this.enabled) {
             return;
         }
@@ -127,4 +165,24 @@ export class ExperimentalDebuggerBanner implements IExperimentalDebuggerBanner {
 
         await this.showBanner();
     }
+}
+
+export function injectDebuggerBanner(
+    banner: IDebuggerBanner,
+    debuggerService: IDebugService,
+    disposables: IDisposableRegistry,
+    logger: ILogger
+) {
+    // Don't even bother adding handlers if banner has been turned off.
+    if (!banner.enabled) {
+        return;
+    }
+
+    const disposable = debuggerService.onDidTerminateDebugSession(async e => {
+        if (e.type === DebuggerTypeName) {
+            await banner.onDidTerminateDebugSession()
+                .catch(ex => logger.logError('Error in debugger Banner', ex));
+        }
+    });
+    disposables.push(disposable);
 }

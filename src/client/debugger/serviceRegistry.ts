@@ -13,12 +13,12 @@ import { ICurrentProcess, ISocketServer } from '../common/types';
 import { ServiceContainer } from '../ioc/container';
 import { ServiceManager } from '../ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
-import { ExperimentalDebuggerBanner } from './banner';
+import { DebuggerBanner } from './banner';
 import { DebugStreamProvider } from './Common/debugStreamProvider';
 import { ProtocolLogger } from './Common/protocolLogger';
 import { ProtocolParser } from './Common/protocolParser';
 import { ProtocolMessageWriter } from './Common/protocolWriter';
-import { IDebugStreamProvider, IExperimentalDebuggerBanner, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
+import { IDebuggerBanner, IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
 
 export function initializeIoc(): IServiceContainer {
     const cont = new Container();
@@ -41,5 +41,5 @@ function registerDebuggerTypes(serviceManager: IServiceManager) {
 }
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IExperimentalDebuggerBanner>(IExperimentalDebuggerBanner, ExperimentalDebuggerBanner);
+    serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner);
 }
