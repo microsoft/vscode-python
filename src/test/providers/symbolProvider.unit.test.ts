@@ -12,7 +12,7 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { JediFactory } from '../../client/languageServices/jediProxyFactory';
 import { IDefinition, ISymbolResult, JediProxyHandler } from '../../client/providers/jediProxy';
-import { PythonSymbolProvider } from '../../client/providers/symbolProvider';
+import { ThrottledPythonSymbolProvider } from '../../client/providers/throttledSymbolProvider';
 
 const assertArrays = require('chai-arrays');
 use(assertArrays);
@@ -69,35 +69,35 @@ suite('Symbol Provider', () => {
     }
 
     test('Ensure symbols are returned', async () => {
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
         await testDocumentation(1, __filename, 1);
     });
     test('Ensure symbols are returned (for untitled documents)', async () => {
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
         await testDocumentation(1, __filename, 1, undefined, true);
     });
     test('Ensure symbols are returned with a debounce of 100ms', async () => {
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
         await testDocumentation(1, __filename, 1);
     });
     test('Ensure symbols are returned with a debounce of 100ms (for untitled documents)', async () => {
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
         await testDocumentation(1, __filename, 1, undefined, true);
     });
     test('Ensure symbols are not returned when cancelled', async () => {
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
         const tokenSource = new CancellationTokenSource();
         tokenSource.cancel();
         await testDocumentation(1, __filename, 0, tokenSource.token);
     });
     test('Ensure symbols are not returned when cancelled (for untitled documents)', async () => {
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
         const tokenSource = new CancellationTokenSource();
         tokenSource.cancel();
         await testDocumentation(1, __filename, 0, tokenSource.token, true);
     });
     test('Ensure symbols are returned only for the last request', async () => {
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 100);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 100);
         await Promise.all([
             testDocumentation(1, __filename, 0),
             testDocumentation(2, __filename, 0),
@@ -105,7 +105,7 @@ suite('Symbol Provider', () => {
         ]);
     });
     test('Ensure symbols are returned for all the requests when the doc is untitled', async () => {
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 100);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 100);
         await Promise.all([
             testDocumentation(1, __filename, 1, undefined, true),
             testDocumentation(2, __filename, 1, undefined, true),
@@ -113,28 +113,28 @@ suite('Symbol Provider', () => {
         ]);
     });
     test('Ensure symbols are returned for multiple documents', async () => {
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
         await Promise.all([
             testDocumentation(1, 'file1', 1),
             testDocumentation(2, 'file2', 1)
         ]);
     });
     test('Ensure symbols are returned for multiple untitled documents ', async () => {
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
         await Promise.all([
             testDocumentation(1, 'file1', 1, undefined, true),
             testDocumentation(2, 'file2', 1, undefined, true)
         ]);
     });
     test('Ensure symbols are returned for multiple documents with a debounce of 100ms', async () => {
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 100);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 100);
         await Promise.all([
             testDocumentation(1, 'file1', 1),
             testDocumentation(2, 'file2', 1)
         ]);
     });
     test('Ensure symbols are returned for multiple untitled documents with a debounce of 100ms', async () => {
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 100);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 100);
         await Promise.all([
             testDocumentation(1, 'file1', 1, undefined, true),
             testDocumentation(2, 'file2', 1, undefined, true)
@@ -170,7 +170,7 @@ suite('Symbol Provider', () => {
             .returns(() => Promise.resolve(symbols.object))
             .verifiable(TypeMoq.Times.once());
 
-        provider = new PythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
+        provider = new ThrottledPythonSymbolProvider(serviceContainer.object, jediFactory.object, 0);
         await provider.provideDocumentSymbols(doc.object, new CancellationTokenSource().token);
 
         doc.verifyAll();

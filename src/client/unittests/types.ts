@@ -3,9 +3,8 @@
 
 'use strict';
 
-import { Disposable, Event, TextDocument, Uri } from 'vscode';
+import { Disposable, DocumentSymbolProvider, Event, TextDocument, Uri } from 'vscode';
 import { Product } from '../common/types';
-import { PythonSymbolProvider } from '../providers/symbolProvider';
 import { CommandSource } from './common/constants';
 import { FlattenedTestFunction, ITestManager, ITestResultsService, TestFile, TestFunction, TestRunOptions, Tests, TestsToRun, UnitTestProduct } from './common/types';
 
@@ -37,7 +36,7 @@ export interface ITestDisplay {
 export const IUnitTestManagementService = Symbol('IUnitTestManagementService');
 export interface IUnitTestManagementService {
     activate(): Promise<void>;
-    activateCodeLenses(symboldProvider: PythonSymbolProvider): Promise<void>;
+    activateCodeLenses(symboldProvider: DocumentSymbolProvider): Promise<void>;
     getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void>;
     discoverTestsForDocument(doc: TextDocument): Promise<void>;
     autoDiscoverTests(): Promise<void>;

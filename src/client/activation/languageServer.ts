@@ -33,6 +33,7 @@ import { LanguageServerDownloader } from './downloader';
 import { InterpreterData, InterpreterDataService } from './interpreterDataService';
 import { PlatformData } from './platformData';
 import { ProgressReporting } from './progress';
+import { SymbolProvider } from './symbolProvider';
 import { IExtensionActivator } from './types';
 
 const PYTHON = 'python';
@@ -103,9 +104,12 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             return false;
         }
 
-        const testManagementService = this.services.get<IUnitTestManagementService>(IUnitTestManagementService);
-        testManagementService.activate()
-            .catch(ex => this.services.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
+        this.startupCompleted.promise.then(() => {
+            const testManagementService = this.services.get<IUnitTestManagementService>(IUnitTestManagementService);
+            testManagementService.activate()
+                .then(() => testManagementService.activateCodeLenses(new SymbolProvider(this.languageClient!)))
+                .catch(ex => this.services.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
+        }).ignoreErrors();
 
         return this.startLanguageServer(clientOptions);
     }
