@@ -34,7 +34,7 @@ export class DebuggerBanner implements IDebuggerBanner {
         this.initialized = true;
 
         // Don't even bother adding handlers if banner has been turned off.
-        if (!this.enabled) {
+        if (!this.isEnabled()) {
             return;
         }
 
@@ -47,7 +47,7 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     // "enabled" state
 
-    public get enabled(): boolean {
+    public isEnabled(): boolean {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         return factory.createGlobalPersistentState<boolean>(PersistentStateKeys.ShowBanner, true).value;
     }
@@ -59,14 +59,14 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     // showing banner
 
-    public async shouldShowBanner(): Promise<boolean> {
-        if (!this.enabled || this.disabledInCurrentSession) {
+    public async shouldShow(): Promise<boolean> {
+        if (!this.isEnabled() || this.disabledInCurrentSession) {
             return false;
         }
         return this.passedThreshold();
     }
 
-    public async showBanner(): Promise<void> {
+    public async show(): Promise<void> {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const yes = 'Yes, take survey now';
         const no = 'No thanks';
@@ -147,15 +147,15 @@ export class DebuggerBanner implements IDebuggerBanner {
     }
 
     private async onDidTerminateDebugSession(): Promise<void> {
-        if (!this.enabled) {
+        if (!this.isEnabled()) {
             return;
         }
         await this.incrementDebuggerLaunchCounter();
-        const show = await this.shouldShowBanner();
+        const show = await this.shouldShow();
         if (!show) {
             return;
         }
 
-        await this.showBanner();
+        await this.show();
     }
 }

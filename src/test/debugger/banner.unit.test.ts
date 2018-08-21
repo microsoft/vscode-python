@@ -111,15 +111,15 @@ suite('Debugging - Banner', () => {
         debugService.verifyAll();
         showBannerState.verifyAll();
     });
-    test('shouldShowBanner must return false when Banner is disabled', async () => {
+    test('shouldShow must return false when Banner is disabled', async () => {
         showBannerState.setup(s => s.value).returns(() => false)
             .verifiable(typemoq.Times.once());
 
-        expect(await banner.shouldShowBanner()).to.be.equal(false, 'Incorrect value');
+        expect(await banner.shouldShow()).to.be.equal(false, 'Incorrect value');
 
         showBannerState.verifyAll();
     });
-    test('shouldShowBanner must return false when Banner is enabled and debug counter is not same as threshold', async () => {
+    test('shouldShow must return false when Banner is enabled and debug counter is not same as threshold', async () => {
         showBannerState.setup(s => s.value).returns(() => true)
             .verifiable(typemoq.Times.once());
         launchCounterState.setup(l => l.value).returns(() => 1)
@@ -127,13 +127,13 @@ suite('Debugging - Banner', () => {
         launchThresholdCounterState.setup(t => t.value).returns(() => 10)
             .verifiable(typemoq.Times.atLeastOnce());
 
-        expect(await banner.shouldShowBanner()).to.be.equal(false, 'Incorrect value');
+        expect(await banner.shouldShow()).to.be.equal(false, 'Incorrect value');
 
         showBannerState.verifyAll();
         launchCounterState.verifyAll();
         launchThresholdCounterState.verifyAll();
     });
-    test('shouldShowBanner must return true when Banner is enabled and debug counter is same as threshold', async () => {
+    test('shouldShow must return true when Banner is enabled and debug counter is same as threshold', async () => {
         showBannerState.setup(s => s.value).returns(() => true)
             .verifiable(typemoq.Times.once());
         launchCounterState.setup(l => l.value).returns(() => 10)
@@ -141,13 +141,13 @@ suite('Debugging - Banner', () => {
         launchThresholdCounterState.setup(t => t.value).returns(() => 10)
             .verifiable(typemoq.Times.atLeastOnce());
 
-        expect(await banner.shouldShowBanner()).to.be.equal(true, 'Incorrect value');
+        expect(await banner.shouldShow()).to.be.equal(true, 'Incorrect value');
 
         showBannerState.verifyAll();
         launchCounterState.verifyAll();
         launchThresholdCounterState.verifyAll();
     });
-    test('showBanner must be invoked when shouldShowBanner returns true', async () => {
+    test('show must be invoked when shouldShow returns true', async () => {
         let onDidTerminateDebugSessionCb: (e: DebugSession) => Promise<void>;
         const currentLaunchCounter = 50;
 
@@ -174,7 +174,7 @@ suite('Debugging - Banner', () => {
         launchCounterState.verifyAll();
         launchThresholdCounterState.verifyAll();
     });
-    test('showBanner must not be invoked the second time after dismissing the message', async () => {
+    test('show must not be invoked the second time after dismissing the message', async () => {
         let onDidTerminateDebugSessionCb: (e: DebugSession) => Promise<void>;
         let currentLaunchCounter = 50;
 
