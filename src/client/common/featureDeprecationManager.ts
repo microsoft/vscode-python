@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { commands, Disposable, window, workspace, WorkspaceConfiguration } from 'vscode';
+import { inject, injectable, optional } from 'inversify';
+import { Disposable, window, workspace, WorkspaceConfiguration } from 'vscode';
+import { ICommandManager } from './application/types';
 import { launch } from './net/browser';
+import { IFeatureDeprecationManager } from './terminal/types';
 import { IPersistentStateFactory } from './types';
 
 type deprecatedFeatureInfo = {
@@ -39,13 +42,29 @@ const deprecatedFeatures: deprecatedFeatureInfo[] = [
     }
 ];
 
-export interface IFeatureDeprecationManager extends Disposable {
-    initialize(): void;
+export interface IPopupService {
+    showInformationMessage(message: string, ...items: string[]): Thenable<string | undefined>;
 }
 
+const IPopupService = Symbol('IPopupService');
+
+class PopupService implements IPopupService {
+    public showInformationMessage(message: string, ...items: string[]): Thenable<string | undefined> {
+        return window.showInformationMessage(message, ...items);
+    }
+}
+@injectable()
 export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     private disposables: Disposable[] = [];
-    constructor(private persistentStateFactory: IPersistentStateFactory) { }
+    constructor(
+        @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
+        @inject(ICommandManager) private cmdMgr: ICommandManager,
+        @inject(IPopupService) @optional() private popupService?: IPopupService
+    ) {
+        if (!this.popupService) {
+            this.popupService = new PopupService();
+        }
+    }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
     }
@@ -55,7 +74,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     private registerDeprecation(deprecatedInfo: deprecatedFeatureInfo) {
         if (Array.isArray(deprecatedInfo.commands)) {
             deprecatedInfo.commands.forEach(cmd => {
-                this.disposables.push(commands.registerCommand(cmd, () => this.notifyDeprecation(deprecatedInfo), this));
+                this.disposables.push(this.cmdMgr.registerCommand(cmd, () => this.notifyDeprecation(deprecatedInfo), this));
             });
         }
         if (deprecatedInfo.setting) {
@@ -96,7 +115,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         }
         const moreInfo = 'Learn more';
         const doNotShowAgain = 'Never show again';
-        const option = await window.showInformationMessage(deprecatedInfo.message, moreInfo, doNotShowAgain);
+        const option = await this.popupService!.showInformationMessage(deprecatedInfo.message, moreInfo, doNotShowAgain);
         if (!option) {
             return;
         }
