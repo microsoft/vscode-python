@@ -28,10 +28,10 @@ suite('Debugging - Banner', () => {
     let appShell: typemoq.IMock<IApplicationShell>;
     let runtime: typemoq.IMock<IRuntime>;
     let banner: DebuggerBanner;
-    const message = 'Can you please take 2 minutes to tell us how the Debugger is working for you?';
+    const message = 'Can you please take 2 minutes to tell us how the debugger is working for you?';
     const yes = 'Yes, take survey now';
     const no = 'No thanks';
-    const later = 'Remind me Later';
+    const later = 'Remind me later';
 
     setup(() => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();

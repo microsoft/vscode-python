@@ -77,10 +77,10 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     public async show(): Promise<void> {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const msg = 'Can you please take 2 minutes to tell us how the Debugger is working for you?';
+        const msg = 'Can you please take 2 minutes to tell us how the debugger is working for you?';
         const yes = 'Yes, take survey now';
         const no = 'No thanks';
-        const later = 'Remind me Later';
+        const later = 'Remind me later';
         const response = await appShell.showInformationMessage(msg, yes, no, later);
         switch (response) {
             case yes:
