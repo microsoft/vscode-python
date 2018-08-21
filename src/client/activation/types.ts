@@ -21,6 +21,6 @@ export interface IExtensionActivator {
   deactivate(): Promise<void>;
 }
 
-export interface IRequestWrapper {
-  downloadFileRequest(uri: string): RequestResult;
+export interface IDownloadFileService {
+  downloadFile(uri: string): RequestResult;
 }

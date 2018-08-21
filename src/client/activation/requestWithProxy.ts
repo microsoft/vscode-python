@@ -4,11 +4,11 @@
 'use strict';
 
 import * as request from 'request';
-import { IRequestWrapper } from './types';
+import { IDownloadFileService } from './types';
 
 // Simple wrapper for request to allow for the use of a proxy server being
 // specified in the request options.
-export class RequestWithProxy implements IRequestWrapper {
+export class RequestWithProxy implements IDownloadFileService {
     constructor(private proxyUri: string) { }
 
     public getRequestOptions(): request.CoreOptions | undefined {
@@ -20,7 +20,7 @@ export class RequestWithProxy implements IRequestWrapper {
         return;
     }
 
-    public downloadFileRequest(uri: string): request.Request {
+    public downloadFile(uri: string): request.Request {
         const requestOptions = this.getRequestOptions();
         if (requestOptions) {
             return request(uri, requestOptions);

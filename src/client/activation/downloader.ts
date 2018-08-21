@@ -12,7 +12,7 @@ import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
 import { PlatformData, PlatformName } from './platformData';
 import { RequestWithProxy } from './requestWithProxy';
-import { IRequestWrapper } from './types';
+import { IDownloadFileService } from './types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const StreamZip = require('node-stream-zip');
@@ -36,7 +36,7 @@ export class LanguageServerDownloader {
         private readonly platformData: PlatformData,
         readonly workspace: IWorkspaceService,
         private engineFolder: string,
-        private requestHandler?: IRequestWrapper) {
+        private requestHandler?: IDownloadFileService) {
 
         if (!this.requestHandler) {
             this.requestHandler = new RequestWithProxy(workspace.getConfiguration('http').get('proxy', ''));
@@ -84,7 +84,7 @@ export class LanguageServerDownloader {
             location: ProgressLocation.Window
         }, (progress) => {
 
-            requestProgress(this.requestHandler!.downloadFileRequest(uri))
+            requestProgress(this.requestHandler!.downloadFile(uri))
                 .on('progress', (state) => {
                     // https://www.npmjs.com/package/request-progress
                     const received = Math.round(state.size.transferred / 1024);
