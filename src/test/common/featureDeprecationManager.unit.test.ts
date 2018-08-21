@@ -4,8 +4,8 @@
 'use strict';
 
 import * as TypeMoq from 'typemoq';
-import { Disposable } from 'vscode';
-import { ICommandManager } from '../../client/common/application/types';
+import { Disposable, WorkspaceConfiguration } from 'vscode';
+import { ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { FeatureDeprecationManager, IPopupService } from '../../client/common/featureDeprecationManager';
 import { IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 
@@ -26,11 +26,19 @@ suite('Feature Deprecation Manager Tests', () => {
         cmdManager.setup(c => c.registerCommand(TypeMoq.It.isValue('python.buildWorkspaceSymbols'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => cmdDisposable.object)
             .verifiable(TypeMoq.Times.atLeastOnce());
-
+        const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        workspaceConfig.setup(ws => ws.has(TypeMoq.It.isAnyString()))
+            .returns(() => false)
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        const workspace: TypeMoq.IMock<IWorkspaceService> = TypeMoq.Mock.ofType<IWorkspaceService>();
+        workspace.setup(w => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isAny()))
+            .returns(() => workspaceConfig.object);
         const featureDepMgr: FeatureDeprecationManager = new FeatureDeprecationManager(
             persistentState.object,
             cmdManager.object,
+            workspace.object,
             popupMgr.object);
+
         featureDepMgr.initialize();
     });
 });

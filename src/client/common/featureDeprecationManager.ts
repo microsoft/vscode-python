@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
-import { Disposable, window, workspace, WorkspaceConfiguration } from 'vscode';
-import { ICommandManager } from './application/types';
+import { Disposable, window, WorkspaceConfiguration } from 'vscode';
+import { ICommandManager, IWorkspaceService } from './application/types';
 import { launch } from './net/browser';
 import { IFeatureDeprecationManager } from './terminal/types';
 import { IPersistentStateFactory } from './types';
@@ -59,6 +59,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     constructor(
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
         @inject(ICommandManager) private cmdMgr: ICommandManager,
+        @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IPopupService) @optional() private popupService?: IPopupService
     ) {
         if (!this.popupService) {
@@ -83,15 +84,15 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     }
     private checkAndNotifyDeprecatedSetting(deprecatedInfo: deprecatedFeatureInfo) {
         let notify = false;
-        if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
-            workspace.workspaceFolders.forEach(workspaceFolder => {
+        if (Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders.length > 0) {
+            this.workspace.workspaceFolders.forEach(workspaceFolder => {
                 if (notify) {
                     return;
                 }
-                notify = this.isDeprecatedSettingAndValueUsed(workspace.getConfiguration('python', workspaceFolder.uri), deprecatedInfo.setting!);
+                notify = this.isDeprecatedSettingAndValueUsed(this.workspace.getConfiguration('python', workspaceFolder.uri), deprecatedInfo.setting!);
             });
         } else {
-            notify = this.isDeprecatedSettingAndValueUsed(workspace.getConfiguration('python'), deprecatedInfo.setting!);
+            notify = this.isDeprecatedSettingAndValueUsed(this.workspace.getConfiguration('python'), deprecatedInfo.setting!);
         }
 
         if (notify) {
