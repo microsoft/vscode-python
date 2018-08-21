@@ -9,14 +9,17 @@ import { IPlatformService } from './types';
 
 @injectable()
 export class PlatformService implements IPlatformService {
-    public readonly os: osinfo.OSInfo;
+    private info?: osinfo.OSInfo;
 
-    constructor() {
-        // Due to circular dependency between PlatformService and
-        // FileSystem, we must use a dummy OSInfo at first.
-        this.os = new osinfo.OSInfo(osinfo.getOSType());
-        const filesystem = new FileSystem(this);
-        this.os = osinfo.getOSInfo(filesystem.readFileSync);
+    public get os(): osinfo.OSInfo {
+        if (!this.info) {
+            // Due to circular dependency between PlatformService and
+            // FileSystem, we must use a dummy OSInfo at first.
+            this.info = new osinfo.OSInfo(osinfo.getOSType());
+            const filesystem = new FileSystem(this);
+            this.info = osinfo.getOSInfo(filesystem.readFileSync);
+        }
+        return this.info;
     }
 
     public get pathVariableName() {
