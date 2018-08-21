@@ -9,7 +9,7 @@ our features:
 - [isort 4.3.4](https://pypi.org/project/isort/4.3.4/)
 - [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
   and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
-- [ptvsd 3.0.0](https://pypi.org/project/ptvsd/3.0.0/) and [4.1.11a5](https://pypi.org/project/ptvsd/4.1.11a5/)
+- [ptvsd 3.0.0](https://pypi.org/project/ptvsd/3.0.0/) and [4.1.1a11](https://pypi.org/project/ptvsd/4.1.1a11/)
 - [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
 - [rope](https://pypi.org/project/rope/) (user-installed)
 
