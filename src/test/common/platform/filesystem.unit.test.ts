@@ -94,18 +94,15 @@ suite('FileSystem', () => {
         expect(tempFile.filePath).to.not.equal(tempFile2.filePath, 'Temp files must be unique, implementation of createTemporaryFile is off.');
     });
     test('Ensure writing to a temp file is supported via file stream', async () => {
-        const tempFile = await fileSystem.createTemporaryFile('.tmp');
-        expect(tempFile).to.be.an('TemporaryFile');
-        const writeStream = fileSystem.createWriteStream(tempFile.filePath);
-        const asyncPromise = new Promise<void>((resolve, reject) => {
+        await fileSystem.createTemporaryFile('.tmp').then((tf: TemporaryFile) => {
+            expect(tf).to.not.equal(undefined, 'Error trying to create a temporary file');
+            const writeStream = fileSystem.createWriteStream(tf.filePath);
             writeStream.write('hello', 'utf8', (err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
+                expect(err).to.equal(undefined, `Failed to write to a temp file, error is ${err}`);
             });
+        }, (failReason) => {
+            expect(failReason).to.equal('No errors occured', `Failed to create a temporary file with error ${failReason}`);
         });
-        await asyncPromise;
     });
     test('Ensure chmod works against a temporary file', async () => {
         await fileSystem.createTemporaryFile('.tmp').then(async (fl: TemporaryFile) => {
