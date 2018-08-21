@@ -62,6 +62,7 @@ export class MockTestManagerWithRunningTests extends BaseTestManager {
         super(testProvider, product, workspaceFolder, rootDirectory, serviceContainer);
     }
     protected getDiscoveryOptions(ignoreCache: boolean) {
+        // tslint:disable-next-line:no-object-literal-type-assertion
         return {} as TestDiscoveryOptions;
     }
     // tslint:disable-next-line:no-any
