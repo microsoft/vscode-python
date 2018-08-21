@@ -3,11 +3,11 @@
 
 'use strict';
 
-import * as crypto from 'crypto';
 import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell, IDebugService } from '../common/application/types';
+import { IApplicationShell, IDebugService } from '../common/application/types';
 import '../common/extensions';
+import { IRuntime } from '../common/platform/types';
 import { IBrowserService, IDisposableRegistry,
     ILogger, IPersistentStateFactory } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -127,18 +127,11 @@ export class DebuggerBanner implements IDebuggerBanner {
         const key = PersistentStateKeys.DebuggerLaunchThresholdCounter;
         const state = factory.createGlobalPersistentState<number | undefined>(key, undefined);
         if (state.value === undefined) {
-            const hexValue = parseInt(`0x${this.getRandomHex()}`, 16);
-            const randomNumber = Math.floor((10 * hexValue) / 16) + 1;
+            const runtime = this.serviceContainer.get<IRuntime>(IRuntime);
+            const randomNumber = runtime.getRandomInt(1, 11);
             await state.updateValue(randomNumber);
         }
         return state.value!;
-    }
-
-    private getRandomHex() {
-        const appEnv = this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
-        const lastHexValue = appEnv.machineId.slice(-1);
-        const num = parseInt(`0x${lastHexValue}`, 16);
-        return isNaN(num) ? crypto.randomBytes(1).toString('hex').slice(-1) : lastHexValue;
     }
 
     // debugger-specific functionality

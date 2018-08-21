@@ -9,6 +9,7 @@ import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../client/common/application/types';
+import { IRuntime } from '../../client/common/platform/types';
 import { IBrowserService, IDisposableRegistry,
     ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { DebuggerBanner, PersistentStateKeys } from '../../client/debugger/banner';
@@ -23,6 +24,7 @@ suite('Debugging - Banner', () => {
     let showBannerState: typemoq.IMock<IPersistentState<boolean>>;
     let debugService: typemoq.IMock<IDebugService>;
     let appShell: typemoq.IMock<IApplicationShell>;
+    let runtime: typemoq.IMock<IRuntime>;
     let banner: DebuggerBanner;
     const message = 'Can you please take 2 minutes to tell us how the Debugger is working for you?';
     const yes = 'Yes, take survey now';
@@ -37,6 +39,7 @@ suite('Debugging - Banner', () => {
         launchCounterState = typemoq.Mock.ofType<IPersistentState<number>>();
         showBannerState = typemoq.Mock.ofType<IPersistentState<boolean>>();
         appShell = typemoq.Mock.ofType<IApplicationShell>();
+        runtime = typemoq.Mock.ofType<IRuntime>();
         launchThresholdCounterState = typemoq.Mock.ofType<IPersistentState<number | undefined>>();
         const factory = typemoq.Mock.ofType<IPersistentStateFactory>();
         factory
@@ -55,6 +58,7 @@ suite('Debugging - Banner', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(ILogger))).returns(() => logger.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
+        serviceContainer.setup(s => s.get(typemoq.It.isValue(IRuntime))).returns(() => runtime.object);
 
         banner = new DebuggerBanner(serviceContainer.object);
     });

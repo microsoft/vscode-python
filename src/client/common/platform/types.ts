@@ -53,3 +53,8 @@ export interface IFileSystem {
     search(globPattern: string): Promise<string[]>;
     createTemporaryFile(extension: string): Promise<TemporaryFile>;
 }
+
+export const IRuntime = Symbol('IRuntime');
+export interface IRuntime {
+    getRandomInt(min?: number, max?: number): number;
+}
