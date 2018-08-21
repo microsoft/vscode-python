@@ -41,8 +41,4 @@ export const IDebugConfigurationProvider = Symbol('DebugConfigurationProvider');
 export const IDebuggerBanner = Symbol('IDebuggerBanner');
 export interface IDebuggerBanner {
     initialize(): void;
-    isEnabled(): boolean;
-    disable(): Promise<void>;
-    shouldShow(): Promise<boolean>;
-    show(): Promise<void>;
 }
