@@ -32,7 +32,7 @@ const OptionsWithoutArguments = ['--cache-clear', '--cache-show', '--collect-in-
     '--no-print-logs', '--noconftest', '--old-summary', '--pdb', '--pyargs', '-PyTest, Unittest-pyargs',
     '--quiet', '--runxfail', '--setup-only', '--setup-plan', '--setup-show', '--showlocals',
     '--strict', '--trace-config', '--verbose', '--version', '-h', '-l', '-q', '-s', '-v', '-x',
-    '--boxed', '--forked', '--looponfail', '--tx', '-d'];
+    '--boxed', '--forked', '--looponfail', '--trace', '--tx', '-d'];
 
 @injectable()
 export class ArgumentsService implements IArgumentsService {
@@ -92,7 +92,7 @@ export class ArgumentsService implements IArgumentsService {
                         '-l', '--showlocals',
                         '--no-print-logs',
                         '--debug',
-                        '--setup-only', '--setup-show', '--setup-plan'
+                        '--setup-only', '--setup-show', '--setup-plan', '--trace'
                     ]);
                     optionsWithArgsToRemove.push(...[
                         '-m', '--maxfail',
@@ -111,7 +111,7 @@ export class ArgumentsService implements IArgumentsService {
                 }
                 case TestFilter.debugAll:
                 case TestFilter.runAll: {
-                    optionsWithoutArgsToRemove.push('--collect-only');
+                    optionsWithoutArgsToRemove.push(...['--collect-only', '--trace']);
                     break;
                 }
                 case TestFilter.debugSpecific:
@@ -120,7 +120,8 @@ export class ArgumentsService implements IArgumentsService {
                         '--collect-only',
                         '--lf', '--last-failed',
                         '--ff', '--failed-first',
-                        '--nf', '--new-first'
+                        '--nf', '--new-first',
+                        '--trace'
                     ]);
                     optionsWithArgsToRemove.push(...[
                         '-k', '-m',

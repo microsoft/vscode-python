@@ -182,27 +182,22 @@ def foo():pass
 - Test the current debugger
 - Test the experimental debugger (and note whether it is _at least_ as fast as the old debugger)
 
-- [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work
-  - [ ] `Current File`
-  - [ ] `Module`
-  - [ ] `Attach`
-  - [ ] `Terminal (integrated)`
-  - [ ] `Terminal (external)`
-  - [ ] `Django`
-  - [ ] `Flask`
-  - [ ] `Pyramid`
-  - [ ] `Watson`
-  - [ ] `Scrapy`
-  - [ ] `PySpark`
-  - [ ] `All debug Options` with [appropriate values](https://code.visualstudio.com/docs/python/debugging#_standard-configuration-and-options) edited to make values valid
+- [ ] [Configurations](https://code.visualstudio.com/docs/python/debugging#_debugging-specific-app-types) work (see [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) and the `"configurationSnippets"` section for all of the possible configurations)
 - [ ] Running code from start to finish w/ no special debugging options (e.g. no breakpoints)
-- [ ] Breakpoints
-  - [ ] Set
-  - [ ] Hit
-  - [ ] Conditional
+- [ ] Breakpoint-like things
+  - [ ] Breakpoint
+    - [ ] Set
+    - [ ] Hit
+  - [ ] Conditional breakpoint
     - [ ] Expression
+      - [ ] Set
+      - [ ] Hit
     - [ ] Hit count
-  - [ ] Log points (experimental debugger only)
+      - [ ] Set
+      - [ ] Hit
+  - [ ] Logpoint
+    - [ ] Set
+    - [ ] Hit
 - [ ] Stepping
   - [ ] Over
   - [ ] Into
@@ -239,6 +234,10 @@ class FailingTests(unittest.TestCase):
 ```
 - [ ] `Run All Unit Tests` triggers the prompt to configure the test runner
 - [ ] Tests are discovered (as shown by code lenses on each test)
+  - [ ] Code lens for a class runs all tests for that class
+  - [ ] Code lens for a method runs just that test
+    - [ ] `Run Test` works
+    - [ ] `Debug Test` works
 
 #### [`pytest`](https://code.visualstudio.com/docs/python/unit-testing#_pytest-configuration-settings)
 ```python
@@ -252,6 +251,8 @@ def test_failure():
 - [ ] `Run All Unit Tests` triggers the prompt to configure the test runner
   - [ ] `pytest` gets installed
 - [ ] Tests are discovered (as shown by code lenses on each test)
+  - [ ] `Run Test` works
+  - [ ] `Debug Test` works
 
 #### [`nose`](https://code.visualstudio.com/docs/python/unit-testing#_nose-configuration-settings)
 ```python
@@ -265,6 +266,8 @@ def test_failure():
 - [ ] `Run All Unit Tests` triggers the prompt to configure the test runner
   - [ ] Nose gets installed
 - [ ] Tests are discovered (as shown by code lenses on each test)
+  - [ ] `Run Test` works
+  - [ ] `Debug Test` works
 
 #### General
 

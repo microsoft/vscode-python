@@ -1,10 +1,9 @@
 import { inject, injectable, named } from 'inversify';
-import { TestResultResetVisitor } from './../testVisitors/resultResetVisitor';
 import { ITestResultsService, ITestVisitor, TestFile, TestFolder, Tests, TestStatus, TestSuite } from './../types';
 
 @injectable()
 export class TestResultsService implements ITestResultsService {
-    constructor( @inject(ITestVisitor) @named('TestResultResetVisitor') private resultResetVisitor: ITestVisitor) { }
+    constructor(@inject(ITestVisitor) @named('TestResultResetVisitor') private resultResetVisitor: ITestVisitor) { }
     public resetResults(tests: Tests): void {
         tests.testFolders.forEach(f => this.resultResetVisitor.visitTestFolder(f));
         tests.testFunctions.forEach(fn => this.resultResetVisitor.visitTestFunction(fn.testFunction));

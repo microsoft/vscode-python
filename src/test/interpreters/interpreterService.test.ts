@@ -24,6 +24,7 @@ import {
     WorkspacePythonPath
 } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
+import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 
@@ -255,4 +256,35 @@ suite('Interpreters service', () => {
 
         interpreterDisplay.verify(i => i.refresh(TypeMoq.It.isValue(undefined)), TypeMoq.Times.never());
     });
+    [undefined, Uri.file('some workspace')]
+        .forEach(resource => {
+            test(`Ensure undefined is returned if we're unable to retrieve interpreter info (Resource is ${resource})`, async () => {
+                const pythonPath = 'SOME VALUE';
+                const service = new InterpreterService(serviceContainer);
+                locator
+                    .setup(l => l.getInterpreters(TypeMoq.It.isValue(resource)))
+                    .returns(() => Promise.resolve([]))
+                    .verifiable(TypeMoq.Times.once());
+                helper
+                    .setup(h => h.getInterpreterInformation(TypeMoq.It.isValue(pythonPath)))
+                    .returns(() => Promise.resolve(undefined))
+                    .verifiable(TypeMoq.Times.once());
+                const virtualEnvMgr = TypeMoq.Mock.ofType<IVirtualEnvironmentManager>();
+                serviceManager.addSingletonInstance(IVirtualEnvironmentManager, virtualEnvMgr.object);
+                virtualEnvMgr
+                    .setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath)))
+                    .returns(() => Promise.resolve(''))
+                    .verifiable(TypeMoq.Times.once());
+                virtualEnvMgr
+                    .setup(v => v.getEnvironmentType(TypeMoq.It.isValue(pythonPath)))
+                    .returns(() => Promise.resolve(InterpreterType.Unknown))
+                    .verifiable(TypeMoq.Times.once());
+
+                const details = await service.getInterpreterDetails(pythonPath, resource);
+
+                locator.verifyAll();
+                helper.verifyAll();
+                expect(details).to.be.equal(undefined, 'Not undefined');
+            });
+        });
 });

@@ -112,47 +112,43 @@ suite('Module Installer', () => {
                             moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource)), TypeMoq.Times.once());
                         }
                     });
-                    test(`Ensure the prompt is displayed only once, untill the prompt is closed, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async function () {
-                        if (product.value === Product.unittest) {
-                            return this.skip();
-                        }
-                        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
-                            .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
-                            .verifiable(TypeMoq.Times.exactly(resource ? 5 : 0));
-                        app.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                            .returns(() => promptDeferred.promise)
-                            .verifiable(TypeMoq.Times.once());
+                    if (product.value !== Product.unittest) {
+                        test(`Ensure the prompt is displayed only once, untill the prompt is closed, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                            workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
+                                .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
+                                .verifiable(TypeMoq.Times.exactly(resource ? 5 : 0));
+                            app.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                                .returns(() => promptDeferred.promise)
+                                .verifiable(TypeMoq.Times.once());
 
-                        // Display first prompt.
-                        installer.promptToInstall(product.value, resource).ignoreErrors();
+                            // Display first prompt.
+                            installer.promptToInstall(product.value, resource).ignoreErrors();
 
-                        // Display a few more prompts.
-                        installer.promptToInstall(product.value, resource).ignoreErrors();
-                        installer.promptToInstall(product.value, resource).ignoreErrors();
-                        installer.promptToInstall(product.value, resource).ignoreErrors();
-                        installer.promptToInstall(product.value, resource).ignoreErrors();
+                            // Display a few more prompts.
+                            installer.promptToInstall(product.value, resource).ignoreErrors();
+                            installer.promptToInstall(product.value, resource).ignoreErrors();
+                            installer.promptToInstall(product.value, resource).ignoreErrors();
+                            installer.promptToInstall(product.value, resource).ignoreErrors();
 
-                        app.verifyAll();
-                        workspaceService.verifyAll();
-                    });
-                    test(`Ensure the prompt is displayed again when previous prompt has been closed, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async function () {
-                        if (product.value === Product.unittest) {
-                            return this.skip();
-                        }
-                        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
-                            .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
-                            .verifiable(TypeMoq.Times.exactly(resource ? 3 : 0));
-                        app.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                            .returns(() => Promise.resolve(undefined))
-                            .verifiable(TypeMoq.Times.exactly(3));
+                            app.verifyAll();
+                            workspaceService.verifyAll();
+                        });
+                        test(`Ensure the prompt is displayed again when previous prompt has been closed, ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                            workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
+                                .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
+                                .verifiable(TypeMoq.Times.exactly(resource ? 3 : 0));
+                            app.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                                .returns(() => Promise.resolve(undefined))
+                                .verifiable(TypeMoq.Times.exactly(3));
 
-                        await installer.promptToInstall(product.value, resource);
-                        await installer.promptToInstall(product.value, resource);
-                        await installer.promptToInstall(product.value, resource);
+                            await installer.promptToInstall(product.value, resource);
+                            await installer.promptToInstall(product.value, resource);
+                            await installer.promptToInstall(product.value, resource);
 
-                        app.verifyAll();
-                        workspaceService.verifyAll();
-                    });
+                            app.verifyAll();
+                            workspaceService.verifyAll();
+                        });
+                    }
                 }
             }
         });

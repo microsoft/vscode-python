@@ -16,7 +16,7 @@ import '../../client/common/extensions';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { IPlatformService } from '../../client/common/platform/types';
 import { PythonV2DebugConfigurationProvider } from '../../client/debugger';
-import { PTVSD_PATH } from '../../client/debugger/Common/constants';
+import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/Common/constants';
 import { AttachRequestArguments, DebugOptions } from '../../client/debugger/Common/Contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { PYTHON_PATH, sleep } from '../common';
@@ -25,7 +25,7 @@ import { continueDebugging, createDebugAdapter } from './utils';
 
 const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd.py');
 
-suite('Attach Debugger - Experimental', () => {
+suite('Attach Debugger', () => {
     let debugClient: DebugClient;
     let proc: ChildProcess;
     suiteSetup(initialize);
@@ -64,7 +64,7 @@ suite('Attach Debugger - Experimental', () => {
 
         // Send initialize, attach
         const initializePromise = debugClient.initializeRequest({
-            adapterID: 'pythonExperimental',
+            adapterID: DebuggerTypeName,
             linesStartAt1: true,
             columnsStartAt1: true,
             supportsRunInTerminalRequest: true,
@@ -77,7 +77,7 @@ suite('Attach Debugger - Experimental', () => {
             request: 'attach',
             localRoot,
             remoteRoot,
-            type: 'pythonExperimental',
+            type: DebuggerTypeName,
             port: port,
             host: 'localhost',
             logToFile: false,
@@ -127,11 +127,5 @@ suite('Attach Debugger - Experimental', () => {
     }
     test('Confirm we are able to attach to a running program', async () => {
         await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
-    });
-    test('Confirm local and remote paths are translated', async () => {
-        // If tests are running on windows, then treat debug client as a unix client and remote process as current OS.
-        const isLocalHostWindows = !IS_WINDOWS;
-        const localWorkspace = isLocalHostWindows ? 'C:\\Project\\src' : '/home/user/Desktop/project/src';
-        await testAttachingToRemoteProcess(localWorkspace, path.dirname(fileToDebug), isLocalHostWindows);
     });
 });

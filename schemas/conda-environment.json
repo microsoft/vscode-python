@@ -27,7 +27,23 @@
         "dependencies": {
             "type": "array",
             "items": {
-                "$ref": "#/definitions/package"
+                "anyOf": [
+                    {
+                        "$ref": "#/definitions/package"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "pip": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/package"
+                                }
+                            }
+                        },
+                        "required": [ "pip" ]
+                    }
+                ]
             }
         },
         "prefix": {

@@ -2,6 +2,7 @@ import { ChildProcess, spawn } from 'child_process';
 import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { noop } from '../../common/core.utils';
 import { open } from '../../common/open';
 import { PathUtils } from '../../common/platform/pathUtils';
 import { CurrentProcess } from '../../common/process/currentProcess';
@@ -11,7 +12,6 @@ import { PTVSD_PATH } from '../Common/constants';
 import { DebugOptions, IDebugServer, IPythonProcess, LaunchRequestArguments } from '../Common/Contracts';
 import { IS_WINDOWS } from '../Common/Utils';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
-import { LocalDebugServer } from '../DebugServers/LocalDebugServer';
 import { LocalDebugServerV2 } from '../DebugServers/LocalDebugServerV2';
 import { IDebugLauncherScriptProvider } from '../types';
 import { DebugClient, DebugType } from './DebugClient';
@@ -20,6 +20,7 @@ import { DebugClientHelper } from './helper';
 const VALID_DEBUG_OPTIONS = [
     'RedirectOutput',
     'DebugStdLib',
+    'stopOnEntry',
     'BreakOnSystemExitZero',
     'DjangoDebugging',
     'Django'];
@@ -48,13 +49,8 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         super(args, debugSession);
     }
 
-    public CreateDebugServer(pythonProcess?: IPythonProcess, serviceContainer?: IServiceContainer): BaseDebugServer {
-        if (this.args.type === 'pythonExperimental') {
-            this.debugServer = new LocalDebugServerV2(this.debugSession, this.args, serviceContainer!);
-        } else {
-            this.pythonProcess = pythonProcess!;
-            this.debugServer = new LocalDebugServer(this.debugSession, this.pythonProcess!, this.args);
-        }
+    public CreateDebugServer(_pythonProcess?: IPythonProcess, serviceContainer?: IServiceContainer): BaseDebugServer {
+        this.debugServer =  new LocalDebugServerV2(this.debugSession, this.args, serviceContainer!);
         return this.debugServer;
     }
 
@@ -86,10 +82,8 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         const environmentVariablesService = new EnvironmentVariablesService(pathUtils);
         const helper = new DebugClientHelper(environmentVariablesService, pathUtils, currentProcess);
         const environmentVariables = await helper.getEnvironmentVariables(this.args);
-        if (this.args.type === 'pythonExperimental') {
-            // Import the PTVSD debugger, allowing users to use their own latest copies.
-            environmentVariablesService.appendPythonPath(environmentVariables, PTVSD_PATH);
-        }
+        // Import the PTVSD debugger, allowing users to use their own latest copies.
+        environmentVariablesService.appendPythonPath(environmentVariables, PTVSD_PATH);
         // tslint:disable-next-line:max-func-body-length cyclomatic-complexity no-any
         return new Promise<any>((resolve, reject) => {
             const fileDir = this.args && this.args.program ? path.dirname(this.args.program) : '';
@@ -138,19 +132,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
             this.displayError(error);
         });
         proc.stderr.setEncoding('utf8');
-        proc.stderr.on('data', error => {
-            if (this.args.type === 'pythonExperimental') {
-                return;
-            }
-            // We generally don't need to display the errors as stderr output is being captured by debugger
-            // and it gets sent out to the debug client.
-
-            // Either way, we need some code in here so we read the stdout of the python process,
-            // Else it just keep building up (related to issue #203 and #52).
-            if (this.debugServerStatus === DebugServerStatus.NotRunning) {
-                return failedToLaunch(error);
-            }
-        });
+        proc.stderr.on('data', noop);
         proc.stdout.on('data', d => {
             // This is necessary so we read the stdout of the python process,
             // Else it just keep building up (related to issue #203 and #52).

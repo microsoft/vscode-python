@@ -80,8 +80,6 @@ suite('Interpreters - selector', () => {
         const initial: PythonInterpreter[] = [
             { displayName: '1', path: 'c:/path1/path1', type: InterpreterType.Unknown },
             { displayName: '2', path: 'c:/path1/path1', type: InterpreterType.Unknown },
-            { displayName: '1', path: 'c:/path1/path1', type: InterpreterType.Unknown },
-            { displayName: '2', path: 'c:/path2/path2', type: InterpreterType.Unknown },
             { displayName: '2', path: 'c:/path2/path2', type: InterpreterType.Unknown },
             { displayName: '2 (virtualenv)', path: 'c:/path2/path2', type: InterpreterType.VirtualEnv },
             { displayName: '3', path: 'c:/path2/path2', type: InterpreterType.Unknown },

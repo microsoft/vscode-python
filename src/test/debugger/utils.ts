@@ -14,9 +14,10 @@ import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { DEBUGGER_TIMEOUT } from './common/constants';
 import { DebugClientEx } from './debugClient';
+import { DebuggerTypeName } from '../../client/debugger/Common/constants';
 
 const testAdapterFilePath = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'debugger', 'mainV2.js');
-const debuggerType = 'pythonExperimental';
+const debuggerType = DebuggerTypeName;
 
 /**
  * Creates the debug adapter.

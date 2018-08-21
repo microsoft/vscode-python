@@ -3,18 +3,24 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CompletionContext, OutputChannel, Position,
-     TextDocument, Uri } from 'vscode';
-import { Disposable, LanguageClient, LanguageClientOptions,
-    ProvideCompletionItemsSignature, ServerOptions } from 'vscode-languageclient';
+import {
+    CancellationToken, CompletionContext, OutputChannel, Position,
+    TextDocument, Uri
+} from 'vscode';
+import {
+    Disposable, LanguageClient, LanguageClientOptions,
+    ProvideCompletionItemsSignature, ServerOptions
+} from 'vscode-languageclient';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
-import { BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, ILogger,
-    IOutputChannel, IPythonExtensionBanner, IPythonSettings } from '../common/types';
+import {
+    BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, ILogger,
+    IOutputChannel, IPythonExtensionBanner, IPythonSettings
+} from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
@@ -87,7 +93,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
         this.surveyBanner = services.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_LS_SURVEY);
 
-        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
+        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged.bind(this));
     }
 
     public async activate(): Promise<boolean> {
@@ -112,7 +118,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         for (const d of this.disposables) {
             d.dispose();
         }
-        (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged);
+        (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged.bind(this));
     }
 
     private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
@@ -256,7 +262,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 excludeFiles: this.excludedFiles,
                 testEnvironment: isTestExecution(),
                 analysisUpdates: true,
-                traceLogging
+                traceLogging,
+                asyncStartup: true
             },
             middleware: {
                 provideCompletionItem: (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {

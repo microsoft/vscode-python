@@ -38,3 +38,12 @@ export interface IProtocolMessageWriter {
 }
 
 export const IDebugConfigurationProvider = Symbol('DebugConfigurationProvider');
+export const IExperimentalDebuggerBanner = Symbol('IExperimentalDebuggerBanner');
+export interface IExperimentalDebuggerBanner {
+    enabled: boolean;
+    initialize(): void;
+    showBanner(): Promise<void>;
+    shouldShowBanner(): Promise<boolean>;
+    disable(): Promise<void>;
+    launchSurvey(): Promise<void>;
+}

@@ -3,12 +3,11 @@ import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
-import { sleep } from './core';
+import { sleep } from '../client/common/core.utils';
 import { IS_MULTI_ROOT_TEST } from './initialize';
+export { sleep } from './core';
 
-export * from './core';
-
-// tslint:disable:no-non-null-assertion no-unsafe-any await-promise no-any no-use-before-declare no-string-based-set-timeout no-unsafe-any no-any no-invalid-this
+// tslint:disable:no-invalid-this no-any
 
 const fileInNonRootWorkspace = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'dummy.py');
 export const rootWorkspaceUri = getWorkspaceRoot();
@@ -35,9 +34,25 @@ export async function updateSetting(setting: PythonSettingKeys, value: {} | unde
         return;
     }
     await settings.update(setting, value, configTarget);
+
+    // We've experienced trouble with .update in the past, where VSC returns stale data even
+    // after invoking the update method. This issue has regressed a few times as well. This
+    // delay is merely a backup to ensure it extension doesn't break the tests due to similar
+    // regressions in VSC:
     await sleep(2000);
+    // ... please see issue #2356 and PR #2332 for a discussion on the matter
+
     PythonSettings.dispose();
 }
+
+// In some tests we will be mocking VS Code API (mocked classes)
+const globalPythonPathSetting = workspace.getConfiguration('python') ? workspace.getConfiguration('python').inspect('pythonPath')!.globalValue : 'python';
+
+export const clearPythonPathInWorkspaceFolder = async (resource: string | Uri) => retryAsync(setPythonPathInWorkspace)(resource, ConfigurationTarget.WorkspaceFolder);
+
+export const setPythonPathInWorkspaceRoot = async (pythonPath: string) => retryAsync(setPythonPathInWorkspace)(undefined, ConfigurationTarget.Workspace, pythonPath);
+
+export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
 function getWorkspaceRoot() {
     if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
@@ -107,12 +122,6 @@ export async function deleteFile(file: string) {
         await fs.remove(file);
     }
 }
-
-// In some tests we will be mocking VS Code API (mocked classes)
-const globalPythonPathSetting = workspace.getConfiguration('python') ? workspace.getConfiguration('python').inspect('pythonPath')!.globalValue : 'python';
-export const clearPythonPathInWorkspaceFolder = async (resource: string | Uri) => retryAsync(setPythonPathInWorkspace)(resource, ConfigurationTarget.WorkspaceFolder);
-export const setPythonPathInWorkspaceRoot = async (pythonPath: string) => retryAsync(setPythonPathInWorkspace)(undefined, ConfigurationTarget.Workspace, pythonPath);
-export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {

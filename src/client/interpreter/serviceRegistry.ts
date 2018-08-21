@@ -15,6 +15,7 @@ import {
     ICondaService,
     IInterpreterDisplay,
     IInterpreterHelper,
+    IInterpreterLocatorHelper,
     IInterpreterLocatorService,
     IInterpreterService,
     IInterpreterVersionService,
@@ -33,6 +34,7 @@ import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
 import { InterpreterHelper } from './helpers';
 import { InterpreterService } from './interpreterService';
 import { InterpreterVersionService } from './interpreterVersion';
+import { InterpreterLocatorHelper } from './locators/helpers';
 import { PythonInterpreterLocatorService } from './locators/index';
 import { CondaEnvFileService } from './locators/services/condaEnvFileService';
 import { CondaEnvService } from './locators/services/condaEnvService';
@@ -79,4 +81,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
     serviceManager.addSingleton<IShebangCodeLensProvider>(IShebangCodeLensProvider, ShebangCodeLensProvider);
     serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
+    serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
 }

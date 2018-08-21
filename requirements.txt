@@ -4,12 +4,12 @@ flake8
 autopep8
 black ; python_version>='3.6'
 yapf
-pylint<2.0.0
+pylint
 pep8
 prospector
 pydocstyle
 nose
-pytest
+pytest==3.6.3
 rope
 flask
 django

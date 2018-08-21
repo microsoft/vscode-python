@@ -3,11 +3,11 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length no-any no-conditional-assignment no-increment-decrement no-invalid-this insecure-random
+// tslint:disable:max-func-body-length
+
 import { fail } from 'assert';
 import { expect } from 'chai';
 import { spawnSync } from 'child_process';
-import * as path from 'path';
 import * as typeMoq from 'typemoq';
 import { EnumEx } from '../../client/common/enumUtils';
 import { ILogger, Product } from '../../client/common/types';
@@ -19,7 +19,7 @@ import { IArgumentsHelper, IArgumentsService } from '../../client/unittests/type
 import { ArgumentsService as UnitTestArgumentsService } from '../../client/unittests/unittest/services/argsService';
 import { PYTHON_PATH } from '../common';
 
-suite('Unit Tests - argsService', () => {
+suite('ArgsService: Common', () => {
     [Product.unittest, Product.nosetest, Product.pytest]
         .forEach(product => {
             const productNames = EnumEx.getNamesAndValues(Product);
@@ -99,136 +99,6 @@ suite('Unit Tests - argsService', () => {
                         expect(value).to.deep.equal(['abcd', 'xyz']);
                     }
                 });
-                test('Test getting the test folder in unittest with -s', function () {
-                    if (product !== Product.unittest) {
-                        return this.skip();
-                    }
-                    const dir = path.join('a', 'b', 'c');
-                    const args = ['anzy', '--one', '--three', '-s', dir];
-                    const testDirs = argumentsService.getTestFolders(args);
-                    expect(testDirs).to.be.lengthOf(1);
-                    expect(testDirs[0]).to.equal(dir);
-                });
-                test('Test getting the test folder in unittest with -s in the middle', function () {
-                    if (product !== Product.unittest) {
-                        return this.skip();
-                    }
-                    const dir = path.join('a', 'b', 'c');
-                    const args = ['anzy', '--one', '--three', '-s', dir, 'some other', '--value', '1234'];
-                    const testDirs = argumentsService.getTestFolders(args);
-                    expect(testDirs).to.be.lengthOf(1);
-                    expect(testDirs[0]).to.equal(dir);
-                });
-                test('Test getting the test folder in unittest with --start-directory', function () {
-                    if (product !== Product.unittest) {
-                        return this.skip();
-                    }
-                    const dir = path.join('a', 'b', 'c');
-                    const args = ['anzy', '--one', '--three', '--start-directory', dir];
-                    const testDirs = argumentsService.getTestFolders(args);
-                    expect(testDirs).to.be.lengthOf(1);
-                    expect(testDirs[0]).to.equal(dir);
-                });
-                test('Test getting the test folder in unittest with --start-directory in the middle', function () {
-                    if (product !== Product.unittest) {
-                        return this.skip();
-                    }
-                    const dir = path.join('a', 'b', 'c');
-                    const args = ['anzy', '--one', '--three', '--start-directory', dir, 'some other', '--value', '1234'];
-                    const testDirs = argumentsService.getTestFolders(args);
-                    expect(testDirs).to.be.lengthOf(1);
-                    expect(testDirs[0]).to.equal(dir);
-                });
-                test('Test getting the test folder in nosetest', function () {
-                    if (product !== Product.nosetest) {
-                        return this.skip();
-                    }
-                    const dir = path.join('a', 'b', 'c');
-                    const args = ['anzy', '--one', '--three', dir];
-                    const testDirs = argumentsService.getTestFolders(args);
-                    expect(testDirs).to.be.lengthOf(1);
-                    expect(testDirs[0]).to.equal(dir);
-                });
-                test('Test getting the test folder in nosetest (with multiple dirs)', function () {
-                    if (product !== Product.nosetest) {
-                        return this.skip();
-                    }
-                    const dir = path.join('a', 'b', 'c');
-                    const dir2 = path.join('a', 'b', '2');
-                    const args = ['anzy', '--one', '--three', dir, dir2];
-                    const testDirs = argumentsService.getTestFolders(args);
-                    expect(testDirs).to.be.lengthOf(2);
-                    expect(testDirs[0]).to.equal(dir);
-                    expect(testDirs[1]).to.equal(dir2);
-                });
-                test('Test getting the test folder in pytest', function () {
-                    if (product !== Product.pytest) {
-                        return this.skip();
-                    }
-                    const dir = path.join('a', 'b', 'c');
-                    const args = ['anzy', '--one', '--rootdir', dir];
-                    const testDirs = argumentsService.getTestFolders(args);
-                    expect(testDirs).to.be.lengthOf(1);
-                    expect(testDirs[0]).to.equal(dir);
-                });
-                test('Test getting the test folder in pytest (with multiple dirs)', function () {
-                    if (product !== Product.pytest) {
-                        return this.skip();
-                    }
-                    const dir = path.join('a', 'b', 'c');
-                    const dir2 = path.join('a', 'b', '2');
-                    const args = ['anzy', '--one', '--rootdir', dir, '--rootdir', dir2];
-                    const testDirs = argumentsService.getTestFolders(args);
-                    expect(testDirs).to.be.lengthOf(2);
-                    expect(testDirs[0]).to.equal(dir);
-                    expect(testDirs[1]).to.equal(dir2);
-                });
-                test('Test getting the test folder in pytest (with multiple dirs in the middle)', function () {
-                    if (product !== Product.pytest) {
-                        return this.skip();
-                    }
-                    const dir = path.join('a', 'b', 'c');
-                    const dir2 = path.join('a', 'b', '2');
-                    const args = ['anzy', '--one', '--rootdir', dir, '--rootdir', dir2, '-xyz'];
-                    const testDirs = argumentsService.getTestFolders(args);
-                    expect(testDirs).to.be.lengthOf(2);
-                    expect(testDirs[0]).to.equal(dir);
-                    expect(testDirs[1]).to.equal(dir2);
-                });
-                test('Test getting the test folder in pytest (with single positional dir)', function () {
-                    if (product !== Product.pytest) {
-                        return this.skip();
-                    }
-                    const dir = path.join('a', 'b', 'c');
-                    const args = ['anzy', '--one', dir];
-                    const testDirs = argumentsService.getTestFolders(args);
-                    expect(testDirs).to.be.lengthOf(1);
-                    expect(testDirs[0]).to.equal(dir);
-                });
-                test('Test getting the test folder in pytest (with multiple positional dirs)', function () {
-                    if (product !== Product.pytest) {
-                        return this.skip();
-                    }
-                    const dir = path.join('a', 'b', 'c');
-                    const dir2 = path.join('a', 'b', '2');
-                    const args = ['anzy', '--one', dir, dir2];
-                    const testDirs = argumentsService.getTestFolders(args);
-                    expect(testDirs).to.be.lengthOf(2);
-                    expect(testDirs[0]).to.equal(dir);
-                    expect(testDirs[1]).to.equal(dir2);
-                });
-                test('Test getting the test folder in pytest (with multiple dirs excluding python files)', function () {
-                    if (product !== Product.pytest) {
-                        return this.skip();
-                    }
-                    const dir = path.join('a', 'b', 'c');
-                    const dir2 = path.join('a', 'b', '2');
-                    const args = ['anzy', '--one', dir, dir2, path.join(dir, 'one.py')];
-                    const testDirs = argumentsService.getTestFolders(args);
-                    expect(testDirs).to.be.lengthOf(2);
-                    expect(testDirs[0]).to.equal(dir);
-                    expect(testDirs[1]).to.equal(dir2);
-                });
                 test('Test filtering of arguments', () => {
                     const args: string[] = [];
                     const knownOptions = argumentsService.getKnownOptions();
@@ -255,7 +125,6 @@ suite('Unit Tests - argsService', () => {
 });
 
 function getOptions(product: Product, moduleName: string, withValues: boolean) {
-    // const result = spawnSync('/Users/donjayamanne/Desktop/Development/PythonStuff/vscodePythonTesting/testingFolder/venv/bin/python', ['-m', moduleName, '-h']);
     const result = spawnSync(PYTHON_PATH, ['-m', moduleName, '-h']);
     const output = result.stdout.toString();
 
@@ -291,12 +160,13 @@ function getOptionsWithArguments(output: string) {
 function getMatches(pattern, str) {
     const matches: string[] = [];
     const regex = new RegExp(pattern, 'gm');
-    let result;
-    while ((result = regex.exec(str)) !== null) {
+    let result: RegExpExecArray | null = regex.exec(str);
+    while (result !== null) {
         if (result.index === regex.lastIndex) {
-            regex.lastIndex++;
+            regex.lastIndex += 1;
         }
         matches.push(result[1].trim());
+        result = regex.exec(str);
     }
     return matches
         .sort()

@@ -7,15 +7,11 @@
 
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
-import { LanguageServerDownloader } from '../../client/activation/downloader';
+import { DownloadLinks, LanguageServerDownloader } from '../../client/activation/downloader';
+import { PlatformName } from '../../client/activation/platformData';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IOutputChannel } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
-
-const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-language-server';
-const downloadBaseFileName = 'Python-Language-Server';
-const downloadVersion = '0.1.0';
-const downloadFileExtension = '.nupkg';
 
 suite('Activation - Downloader', () => {
     let languageServerDownloader: LanguageServerDownloader;
@@ -48,21 +44,21 @@ suite('Activation - Downloader', () => {
     test('Windows 32Bit', async () => {
         setupPlatform({ windows: true });
         const link = await languageServerDownloader.getDownloadUri();
-        assert.equal(link, `${downloadUriPrefix}/${downloadBaseFileName}-win-x86.${downloadVersion}${downloadFileExtension}`);
+        assert.equal(link, DownloadLinks[PlatformName.Windows32Bit]);
     });
     test('Windows 64Bit', async () => {
         setupPlatform({ windows: true, is64Bit: true });
         const link = await languageServerDownloader.getDownloadUri();
-        assert.equal(link, `${downloadUriPrefix}/${downloadBaseFileName}-win-x64.${downloadVersion}${downloadFileExtension}`);
+        assert.equal(link, DownloadLinks[PlatformName.Windows64Bit]);
     });
     test('Mac 64Bit', async () => {
         setupPlatform({ mac: true, is64Bit: true });
         const link = await languageServerDownloader.getDownloadUri();
-        assert.equal(link, `${downloadUriPrefix}/${downloadBaseFileName}-osx-x64.${downloadVersion}${downloadFileExtension}`);
+        assert.equal(link, DownloadLinks[PlatformName.Mac64Bit]);
     });
     test('Linux 64Bit', async () => {
         setupPlatform({ linux: true, is64Bit: true });
         const link = await languageServerDownloader.getDownloadUri();
-        assert.equal(link, `${downloadUriPrefix}/${downloadBaseFileName}-linux-x64.${downloadVersion}${downloadFileExtension}`);
+        assert.equal(link, DownloadLinks[PlatformName.Linux64Bit]);
     });
 });

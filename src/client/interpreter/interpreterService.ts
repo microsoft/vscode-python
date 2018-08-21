@@ -53,7 +53,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (!activeWorkspace) {
             return;
         }
-        // Check pipenv first
+        // Check pipenv first.
         const pipenvService = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
         let interpreters = await pipenvService.getInterpreters(activeWorkspace.folderUri);
         if (interpreters.length > 0) {
@@ -102,7 +102,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         return this.getInterpreterDetails(fullyQualifiedPath, resource);
     }
-    public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<PythonInterpreter> {
+    public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<PythonInterpreter | undefined> {
         const interpreters = await this.getInterpreters(resource);
         const interpreter = interpreters.find(i => utils.arePathsSame(i.path, pythonPath));
 
@@ -116,7 +116,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             virtualEnvManager.getEnvironmentName(pythonPath),
             virtualEnvManager.getEnvironmentType(pythonPath)
         ]);
-        if (details) {
+        if (!details) {
             return;
         }
         const dislayNameSuffix = virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';

@@ -4,7 +4,6 @@ import { Uri } from 'vscode';
 import { IDebugService, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { IConfigurationService } from '../../common/types';
-import { ExperimentalDebuggerType } from '../../debugger/Common/constants';
 import { DebugOptions } from '../../debugger/Common/Contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ITestDebugLauncher, LaunchOptions, TestProvider } from './types';
@@ -28,14 +27,12 @@ export class DebugLauncher implements ITestDebugLauncher {
 
         const cwd = cwdUri ? cwdUri.fsPath : workspaceFolder.uri.fsPath;
         const configSettings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(Uri.file(cwd));
-        const useExperimentalDebugger = configSettings.unitTest.useExperimentalDebugger === true;
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
-        const debuggerType = useExperimentalDebugger ? ExperimentalDebuggerType : 'python';
-        const debugArgs = this.fixArgs(options.args, options.testProvider, useExperimentalDebugger);
-        const program = this.getTestLauncherScript(options.testProvider, useExperimentalDebugger);
+        const debugArgs = this.fixArgs(options.args, options.testProvider);
+        const program = this.getTestLauncherScript(options.testProvider);
         return debugManager.startDebugging(workspaceFolder, {
             name: 'Debug Unit Test',
-            type: debuggerType,
+            type: 'python',
             request: 'launch',
             program,
             cwd,
@@ -45,26 +42,21 @@ export class DebugLauncher implements ITestDebugLauncher {
             debugOptions: [DebugOptions.RedirectOutput]
         }).then(() => void (0));
     }
-    private fixArgs(args: string[], testProvider: TestProvider, useExperimentalDebugger: boolean): string[] {
-        if (testProvider === 'unittest' && useExperimentalDebugger) {
+    private fixArgs(args: string[], testProvider: TestProvider): string[] {
+        if (testProvider === 'unittest') {
             return args.filter(item => item !== '--debug');
         } else {
             return args;
         }
     }
-    private getTestLauncherScript(testProvider: TestProvider, useExperimentalDebugger: boolean) {
+    private getTestLauncherScript(testProvider: TestProvider) {
         switch (testProvider) {
             case 'unittest': {
                 return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'PythonTools', 'visualstudio_py_testlauncher.py');
             }
             case 'pytest':
             case 'nosetest': {
-                if (useExperimentalDebugger) {
-                    return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'testlauncher.py');
-                } else {
-                    return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'PythonTools', 'testlauncher.py');
-                }
-
+                return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'testlauncher.py');
             }
             default: {
                 throw new Error(`Unknown test provider '${testProvider}'`);

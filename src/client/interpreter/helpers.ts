@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
-import { IPythonExecutionFactory } from '../common/process/types';
+import { InterpreterInfomation, IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { IInterpreterHelper, PythonInterpreter, WorkspacePythonPath } from './contracts';
@@ -33,7 +33,7 @@ export class InterpreterHelper implements IInterpreterHelper {
         if (!workspaceService.hasWorkspaceFolders) {
             return;
         }
-        if (workspaceService.workspaceFolders.length === 1) {
+        if (Array.isArray(workspaceService.workspaceFolders) && workspaceService.workspaceFolders.length === 1) {
             return { folderUri: workspaceService.workspaceFolders[0].uri, configTarget: ConfigurationTarget.Workspace };
         }
         if (documentManager.activeTextEditor) {
@@ -44,15 +44,16 @@ export class InterpreterHelper implements IInterpreterHelper {
         }
     }
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>> {
-        const fileHash = await this.fs.getFileHash(pythonPath).catch(() => '');
+        let fileHash = await this.fs.getFileHash(pythonPath).catch(() => '');
+        fileHash = fileHash ? fileHash : '';
         const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(pythonPath, undefined, EXPITY_DURATION);
-        if (store.value && store.value.fileHash === fileHash) {
+        if (store.value && (!fileHash || store.value.fileHash === fileHash)) {
             return store.value;
         }
         const processService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ pythonPath });
 
         try {
-            const info = await processService.getInterpreterInformation().catch(() => undefined);
+            const info = await processService.getInterpreterInformation().catch<InterpreterInfomation | undefined>(() => undefined);
             if (!info) {
                 return;
             }
@@ -66,5 +67,8 @@ export class InterpreterHelper implements IInterpreterHelper {
             console.error(`Failed to get interpreter information for '${pythonPath}'`, ex);
             return {};
         }
+    }
+    public isMacDefaultPythonPath(pythonPath: string) {
+        return pythonPath === 'python' || pythonPath === '/usr/bin/python';
     }
 }
