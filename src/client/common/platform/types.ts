@@ -87,4 +87,5 @@ export interface IFileSystem {
     search(globPattern: string): Promise<string[]>;
     createTemporaryFile(extension: string): Promise<TemporaryFile>;
     createWriteStream(path: string): fs.WriteStream;
+    chmod(path: string, mode: string): Promise<void>;
 }

@@ -157,4 +157,15 @@ export class FileSystem implements IFileSystem {
     public createWriteStream(filePath: string): fileSystem.WriteStream {
         return fileSystem.createWriteStream(filePath);
     }
+
+    public chmod(filePath: string, mode: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            fileSystem.chmod(filePath, mode, (err: NodeJS.ErrnoException) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            });
+        });
+    }
 }

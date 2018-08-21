@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as fileSystem from 'fs';
 import * as path from 'path';
 import * as requestProgress from 'request-progress';
 import { ProgressLocation, window } from 'vscode';
@@ -151,7 +150,7 @@ export class LanguageServerDownloader {
 
         // Set file to executable (nothing happens in Windows, as chmod has no definition there)
         const executablePath = path.join(installFolder, this.platformData.getEngineExecutableName());
-        fileSystem.chmodSync(executablePath, '0764'); // -rwxrw-r--
+        await this.fs.chmod(executablePath, '0764'); // -rwxrw-r--
 
         this.output.appendLine('done.');
     }
