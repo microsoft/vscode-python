@@ -11,7 +11,8 @@ import { ExtensionActivationService } from '../../client/activation/activationSe
 import { ExtensionActivators, IExtensionActivationService, IExtensionActivator } from '../../client/activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { isLanguageServerTest } from '../../client/common/constants';
-import { IPlatformService, OSInfo } from '../../client/common/platform/types';
+import { OSInfo } from '../../client/common/platform/osinfo';
+import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import * as testOSInfos from '../common/platform/osinfo.unit.test';

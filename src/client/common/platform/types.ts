@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
-import * as os from 'os';
 import * as semver from 'semver';
 import { Disposable } from 'vscode';
 
@@ -32,18 +31,12 @@ export enum OSDistro {
     Arch
 }
 
-export class OSInfo {
-    constructor(
-        public readonly type: OSType,
-        public readonly arch: string = os.arch(),
-        // See:
-        //  https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/semver/index.d.ts#L152
-        public readonly version: semver.SemVer = new semver.SemVer('0.0.0'),
-        public readonly distro: OSDistro = OSDistro.Unknown) {}
-
-    public get is64bit(): boolean {
-        return this.arch === 'x64';
-    }
+export const IOSInfo = Symbol('IOSInfo');
+export interface IOSInfo {
+    readonly type: OSType;
+    readonly arch: string;
+    readonly version: semver.SemVer;
+    readonly distro: OSDistro;
 }
 
 export enum RegistryHive {
@@ -58,7 +51,7 @@ export interface IRegistry {
 
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
-    os: OSInfo;
+    os: IOSInfo;
     pathVariableName: 'Path' | 'PATH';
     virtualEnvBinName: 'bin' | 'scripts';
 

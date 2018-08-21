@@ -5,8 +5,8 @@
 
 import { expect } from 'chai';
 import * as semver from 'semver';
-import { getOSInfo, getOSType, getPathVariableName, getVirtualEnvBinName, is64bit, isLinux, isMac, isWindows, parseVersion } from '../../../client/common/platform/osinfo';
-import { OSDistro, OSInfo, OSType } from '../../../client/common/platform/types';
+import { getOSInfo, getOSType, getPathVariableName, getVirtualEnvBinName, is64bit, isLinux, isMac, isWindows, OSInfo, parseVersion } from '../../../client/common/platform/osinfo';
+import { OSDistro, OSType } from '../../../client/common/platform/types';
 import { Stub } from '../../../test/stub';
 
 // Windows

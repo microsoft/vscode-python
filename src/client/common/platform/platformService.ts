@@ -5,16 +5,16 @@
 import { injectable } from 'inversify';
 import { FileSystem } from './fileSystem';
 import * as osinfo from './osinfo';
-import { IPlatformService, OSInfo } from './types';
+import { IPlatformService } from './types';
 
 @injectable()
 export class PlatformService implements IPlatformService {
-    public readonly os: OSInfo;
+    public readonly os: osinfo.OSInfo;
 
     constructor() {
         // Due to circular dependency between PlatformService and
         // FileSystem, we must use a dummy OSInfo at first.
-        this.os = new OSInfo(osinfo.getOSType());
+        this.os = new osinfo.OSInfo(osinfo.getOSType());
         const filesystem = new FileSystem(this);
         this.os = osinfo.getOSInfo(filesystem.readFileSync);
     }

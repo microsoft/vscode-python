@@ -7,7 +7,7 @@ import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as semver from 'semver';
 import { LINUX_OS_RELEASE_FILE, NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
-import { OSDistro, OSInfo, OSType } from './types';
+import { IOSInfo, OSDistro, OSType } from './types';
 
 let local: OSInfo;
 
@@ -27,6 +27,21 @@ export function getOSType(platform: string = process.platform): OSType {
         return OSType.Linux;
     } else {
         return OSType.Unknown;
+    }
+}
+
+export class OSInfo implements IOSInfo {
+    constructor(
+        public readonly type: OSType,
+        public readonly arch: string = os.arch(),
+        // See:
+        //  https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/semver/index.d.ts#L152
+        public readonly version: semver.SemVer = new semver.SemVer('0.0.0'),
+        public readonly distro: OSDistro = OSDistro.Unknown
+    ) {}
+
+    public get is64bit(): boolean {
+        return this.arch === 'x64';
     }
 }
 
@@ -162,39 +177,39 @@ function getLinuxDistroFromName(name: string): OSDistro {
 
 // helpers
 
-export function isWindows(info?: OSInfo): boolean {
+export function isWindows(info?: IOSInfo): boolean {
     if (!info) {
         info = getLocal();
     }
     return info.type === OSType.Windows;
 }
 
-export function isMac(info?: OSInfo): boolean {
+export function isMac(info?: IOSInfo): boolean {
     if (!info) {
         info = getLocal();
     }
     return info.type === OSType.OSX;
 }
 
-export function isLinux(info?: OSInfo): boolean {
+export function isLinux(info?: IOSInfo): boolean {
     if (!info) {
         info = getLocal();
     }
     return info.type === OSType.Linux;
 }
 
-export function is64bit(info?: OSInfo): boolean {
+export function is64bit(info?: IOSInfo): boolean {
     if (!info) {
         info = getLocal();
     }
     return info.arch === 'x64';
 }
 
-export function getPathVariableName(info: OSInfo) {
+export function getPathVariableName(info: IOSInfo) {
     return isWindows(info) ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
 }
 
-export function getVirtualEnvBinName(info: OSInfo) {
+export function getVirtualEnvBinName(info: IOSInfo) {
     return isWindows(info) ? 'scripts' : 'bin';
 }
 
