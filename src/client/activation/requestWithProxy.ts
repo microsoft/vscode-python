@@ -17,7 +17,7 @@ export class RequestWithProxy implements IRequestWrapper {
                 proxy: this.proxyUri
             };
         }
-        return undefined;
+        return;
     }
 
     public downloadFileRequest(uri: string): request.Request {
