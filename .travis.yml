@@ -92,7 +92,7 @@ script:
         bash <(curl -s https://codecov.io/bash);
     fi
   - npm run clean:ptvsd
-  - pip install -t ./pythonFiles/experimental/ptvsd ptvsd --pre --no-cache-dir;
+  - pip install -t ./pythonFiles/experimental/ptvsd ptvsd --no-cache-dir;
   - if [ $DEBUGGER_TEST_RELEASE == "true" ]; then
         npm run clean;
         npm run vscode:prepublish;
