@@ -147,15 +147,17 @@ export class TestManagerRunner implements ITestManagerRunner {
         return options.tests;
     }
 
-    // remove all the listeners from the server after all tests are complete
+    // remove all the listeners from the server after all tests are complete,
+    // and just pass the promise `after` through as we do not want to get in
+    // the way here.
     // tslint:disable-next-line:no-any
-    private async removeListenersAfter(after: Promise<any>): Promise<void> {
+    private async removeListenersAfter(after: Promise<any>): Promise<any> {
         return after.then(() => {
             this.server.removeAllListeners();
-            return;
-        }, (_) => {
+            return after;
+        }, (reason) => {
             this.server.removeAllListeners();
-            return;
+            return after;
         });
     }
 
