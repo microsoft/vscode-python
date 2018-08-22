@@ -10,7 +10,7 @@ import { FeatureDeprecationManager, IPopupService } from '../../client/common/fe
 import { IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 
 suite('Feature Deprecation Manager Tests', () => {
-    test('Should redirect command to build workspace symbols into a popup', () => {
+    test('Ensure deprecated command Build_Workspace_Symbols registers its popup', () => {
         const persistentState: TypeMoq.IMock<IPersistentStateFactory> = TypeMoq.Mock.ofType<IPersistentStateFactory>();
         const persistentBool: TypeMoq.IMock<IPersistentState<boolean>> = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         persistentBool.setup(a => a.value).returns(() => true);
