@@ -127,4 +127,27 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(testRunResult.summary.failures, 2, 'This test was written assuming there was 2 tests run that would fail. (iteration 2)');
         assert.equal(testRunResult.summary.passed, 2, 'This test was written assuming there was 2 tests run that would succeed. (iteration 2)');
     });
+
+    test('Re-run failed tests results in the correct number of tests counted', async () => {
+        await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
+        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
+        const testManager = factory('unittest', rootWorkspaceUri, UNITTEST_COUNTS_TEST_FILE_PATH);
+        const testsDiscovered: Tests = await testManager.discoverTests(CommandSource.ui, true, true);
+        const testsFile: TestFile | undefined = testsDiscovered.testFiles.find(
+            (value: TestFile) => value.name.startsWith('test_unit_test_counter')
+        );
+        assert.notEqual(testsFile, undefined, `No test file suffixed with _counter in test files. Looked in ${UNITTEST_COUNTS_TEST_FILE_PATH}.`);
+        assert.equal(testsFile!.suites.length, 1, 'Expected only 1 test suite in counter test file.');
+        const testsToRun: TestsToRun = {
+            testFolder: [testsDiscovered.testFolders[0]]
+        };
+
+        // ensure that each re-run of the unit tests in question result in the same summary count information.
+        let testRunResult: Tests = await testManager.runTest(CommandSource.ui, testsToRun);
+        assert.equal(testRunResult.summary.failures, 2, 'This test was written assuming there was 2 tests run that would fail. (iteration 1)');
+        assert.equal(testRunResult.summary.passed, 2, 'This test was written assuming there was 2 tests run that would succeed. (iteration 1)');
+
+        testRunResult = await testManager.runTest(CommandSource.ui, testsToRun, true);
+        assert.equal(testRunResult.summary.failures, 2, 'This test was written assuming there was 2 tests run that would fail. (iteration 2)');
+    });
 });
