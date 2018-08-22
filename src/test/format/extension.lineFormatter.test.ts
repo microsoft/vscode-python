@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Position, Range, TextDocument, TextLine } from 'vscode';
 import '../../client/common/extensions';
+import { createDeferred } from '../../client/common/helpers';
 import { LineFormatter } from '../../client/formatters/lineFormatter';
 
 const formatFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'formatting');
@@ -167,16 +168,47 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('"""string 1\nstring2""" ', 1, 'string2"""');
         testFormatMultiline('"""string 1\nstring2""" +1 ', 1, 'string2""" + 1');
     });
-    test('Grammar file', function () {
-        // tslint:disable-next-line:no-invalid-this
-        this.timeout(50000);
-        const content = fs.readFileSync(grammarFile).toString('utf8');
-        const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
-        for (let i = 0; i < lines.length; i += 1) {
-            const line = lines[i];
-            const actual = formatMultiline(content, i);
-            assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
-        }
+    test('Grammar file part 1', async () => {
+        const d = createDeferred();
+        fs.readFile(grammarFile, {}, (err, data) => {
+            const content = data.toString('utf-8');
+            const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
+            for (let i = 0; i < 500; i += 1) {
+                const line = lines[i];
+                const actual = formatMultiline(content, i);
+                assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
+            }
+            d.resolve();
+        });
+        return d.promise;
+    });
+    test('Grammar file part 2', async () => {
+        const d = createDeferred();
+        fs.readFile(grammarFile, {}, (err, data) => {
+            const content = data.toString('utf-8');
+            const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
+            for (let i = 501; i < 1000; i += 1) {
+                const line = lines[i];
+                const actual = formatMultiline(content, i);
+                assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
+            }
+            d.resolve();
+        });
+        return d.promise;
+    });
+    test('Grammar file part 3', async () => {
+        const d = createDeferred();
+        fs.readFile(grammarFile, {}, (err, data) => {
+            const content = data.toString('utf-8');
+            const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
+            for (let i = 1001; i < lines.length; i += 1) {
+                const line = lines[i];
+                const actual = formatMultiline(content, i);
+                assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
+            }
+            d.resolve();
+        });
+        return d.promise;
     });
 
     function testFormatLine(text: string, expected: string): void {
