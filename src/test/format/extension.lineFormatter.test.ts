@@ -167,7 +167,9 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('"""string 1\nstring2""" ', 1, 'string2"""');
         testFormatMultiline('"""string 1\nstring2""" +1 ', 1, 'string2""" + 1');
     });
-    test('Grammar file', () => {
+    test('Grammar file', function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(50000);
         const content = fs.readFileSync(grammarFile).toString('utf8');
         const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
         for (let i = 0; i < lines.length; i += 1) {
