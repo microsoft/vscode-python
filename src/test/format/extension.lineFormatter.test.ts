@@ -18,7 +18,18 @@ const grammarFile = path.join(formatFilesPath, 'pythonGrammar.py');
 // tslint:disable-next-line:max-func-body-length
 suite('Formatting - line formatter', () => {
     const formatter = new LineFormatter();
+    let grammarContent = '';
+    let grammarLines: string[] = [];
 
+    suiteSetup(async () => {
+        const d = createDeferred();
+        fs.readFile(grammarFile, {}, (err, data) => {
+            grammarContent = data.toString('utf-8');
+            grammarLines = grammarContent.splitLines({ trim: false, removeEmptyEntries: false });
+            d.resolve();
+        });
+        await d.promise;
+    });
     test('Operator spacing', () => {
         testFormatLine('( x  +1 )*y/ 3', '(x + 1) * y / 3');
     });
@@ -168,47 +179,29 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('"""string 1\nstring2""" ', 1, 'string2"""');
         testFormatMultiline('"""string 1\nstring2""" +1 ', 1, 'string2""" + 1');
     });
-    test('Grammar file part 1', async () => {
-        const d = createDeferred();
-        fs.readFile(grammarFile, {}, (err, data) => {
-            const content = data.toString('utf-8');
-            const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
-            for (let i = 0; i < 500; i += 1) {
-                const line = lines[i];
-                const actual = formatMultiline(content, i);
-                assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
-            }
-            d.resolve();
-        });
-        return d.promise;
+    test('Grammar file part 1', () => {
+        testLines(grammarContent, grammarLines, 0, 200);
     });
     test('Grammar file part 2', async () => {
-        const d = createDeferred();
-        fs.readFile(grammarFile, {}, (err, data) => {
-            const content = data.toString('utf-8');
-            const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
-            for (let i = 501; i < 1000; i += 1) {
-                const line = lines[i];
-                const actual = formatMultiline(content, i);
-                assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
-            }
-            d.resolve();
-        });
-        return d.promise;
+        testLines(grammarContent, grammarLines, 201, 200);
     });
     test('Grammar file part 3', async () => {
-        const d = createDeferred();
-        fs.readFile(grammarFile, {}, (err, data) => {
-            const content = data.toString('utf-8');
-            const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
-            for (let i = 1001; i < lines.length; i += 1) {
-                const line = lines[i];
-                const actual = formatMultiline(content, i);
-                assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
-            }
-            d.resolve();
-        });
-        return d.promise;
+        testLines(grammarContent, grammarLines, 401, 200);
+    });
+    test('Grammar file part 4', async () => {
+        testLines(grammarContent, grammarLines, 601, 200);
+    });
+    test('Grammar file part 5', async () => {
+        testLines(grammarContent, grammarLines, 801, 200);
+    });
+    test('Grammar file part 6', async () => {
+        testLines(grammarContent, grammarLines, 1001, 200);
+    });
+    test('Grammar file part 7', async () => {
+        testLines(grammarContent, grammarLines, 1201, 200);
+    });
+    test('Grammar file part 8', async () => {
+        testLines(grammarContent, grammarLines, 1401);
     });
 
     function testFormatLine(text: string, expected: string): void {
@@ -219,6 +212,15 @@ suite('Formatting - line formatter', () => {
     function testFormatMultiline(content: string, lineNumber: number, expected: string): void {
         const actual = formatMultiline(content, lineNumber);
         assert.equal(actual, expected);
+    }
+
+    function testLines(content: string, lines: string[], startLine: number, count?: number) {
+        count = count ? count : lines.length - startLine;
+        for (let i = startLine; i < startLine + count; i += 1) {
+            const line = lines[i];
+            const actual = formatMultiline(content, i);
+            assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
+        }
     }
 
     function formatMultiline(content: string, lineNumber: number): string {
