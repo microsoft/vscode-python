@@ -152,13 +152,9 @@ export class TestManagerRunner implements ITestManagerRunner {
     private async removeListenersAfter(after: Promise<any>): Promise<void> {
         return after.then(() => {
             this.server.removeAllListeners();
-            // tslint:disable-next-line:no-console
-            console.log('Removing listeners');
             return;
         }, (_) => {
             this.server.removeAllListeners();
-            // tslint:disable-next-line:no-console
-            console.log('Removing listeners (ERRPATH)');
             return;
         });
     }
