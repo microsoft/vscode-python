@@ -116,7 +116,8 @@ export class TestManagerRunner implements ITestManagerRunner {
 
         // Test everything.
         if (testPaths.length === 0) {
-            await this.removeListenersAfter(runTestInternal());
+            const runTestPromise: Promise<void> = runTestInternal();
+            await this.removeListenersAfter(runTestPromise);
         }
 
         // Ok, the test runner can only work with one test at a time.
