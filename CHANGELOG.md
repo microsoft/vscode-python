@@ -1,5 +1,133 @@
 # Changelog
 
+## 2018.8.0-beta (21 August 2018)
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort 4.3.4](https://pypi.org/project/isort/4.3.4/)
+- [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
+  and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
+- [ptvsd 3.0.0](https://pypi.org/project/ptvsd/3.0.0/) and [4.1.1a11](https://pypi.org/project/ptvsd/4.1.1a11/)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+### Enhancements
+
+1. Improved language server startup time by 40%.
+   ([#1865](https://github.com/Microsoft/vscode-python/issues/1865))
+1. Add pip dependency support to the conda `environment.yml` YAML schema support
+   (thanks [Mark Edwards](https://github.com/markedwards)).
+   ([#2119](https://github.com/Microsoft/vscode-python/issues/2119))
+1. Added a German translation. (thanks to [bschley](https://github.com/bschley) and by means of [berndverst](https://github.com/berndverst) and [croth1](https://github.com/croth1) for the reviews)
+   ([#2203](https://github.com/Microsoft/vscode-python/issues/2203))
+1. The new setting `python.analysis.diagnosticPublishDelay` allows you to control
+   when language server publishes diagnostics. Default is 1 second after the user
+   activity, such a typing, ceases. If diagnostic is clear (i.e. errors got fixed),
+   the publishing is immediate.
+   ([#2270](https://github.com/Microsoft/vscode-python/issues/2270))
+
+### Fixes
+
+1. Fix debugger issue that prevented users from copying the value of a variable from the Variables debugger window.
+   ([#1398](https://github.com/Microsoft/vscode-python/issues/1398))
+1. Fix null reference exception in the language server causing server initialization to fail. The exception happened when search paths contained a folder that did not exist.
+   ([#2017](https://github.com/Microsoft/vscode-python/issues/2017))
+1. Language server now populates document outline with all symbols instead of just top-level ones.
+   ([#2050](https://github.com/Microsoft/vscode-python/issues/2050))
+1. Ensure test count values in the status bar represent the correct number of tests that were discovered and run.
+   ([#2143](https://github.com/Microsoft/vscode-python/issues/2143))
+1. Fixed issue in the language server when documentation for a function always produced "Documentation is still being calculated, please try again soon".
+   ([#2179](https://github.com/Microsoft/vscode-python/issues/2179))
+1. Fixed language server issue when it could enter infinite loop reloading modules.
+   ([#2207](https://github.com/Microsoft/vscode-python/issues/2207))
+1. Ensure workspace `pipenv` environment is not labeled as a `virtual env`.
+   ([#2223](https://github.com/Microsoft/vscode-python/issues/2223))
+1. Language server now correctly handles `with` statement when `__enter__` is
+   declared in a base class.
+   ([#2240](https://github.com/Microsoft/vscode-python/issues/2240))
+1. Fix `visualstudio_py_testLauncher` to stop breaking out of test discovery too soon.
+   ([#2241](https://github.com/Microsoft/vscode-python/issues/2241))
+1. Fix issue with survey not opening in a browser for Windows users.
+   ([#2252](https://github.com/Microsoft/vscode-python/issues/2252))
+1. Correct banner survey question text to reference the Python Language Server.
+   ([#2253](https://github.com/Microsoft/vscode-python/issues/2253))
+1. Fixed issue in the language server when typing dot under certain conditions produced null reference exception.
+   ([#2262](https://github.com/Microsoft/vscode-python/issues/2262))
+1. Fix error when switching from new language server to the old `Jedi` language server.
+   ([#2281](https://github.com/Microsoft/vscode-python/issues/2281))
+1. Unpin Pylint from < 2.0 (prospector was upgraded and isn't stuck on that any longer)
+   ([#2284](https://github.com/Microsoft/vscode-python/issues/2284))
+1. Add support for breaking into the first line of code in the new debugger.
+   ([#2299](https://github.com/Microsoft/vscode-python/issues/2299))
+1. Ensure Flask debug configuration launches flask in a debug environment with the Flask debug mode disabled.
+   This is necessary to ensure the custom debugger takes precedence over the interactive debugger, and live reloading is disabled.
+   http://flask.pocoo.org/docs/1.0/api/#flask.Flask.debug
+   ([#2309](https://github.com/Microsoft/vscode-python/issues/2309))
+1. Language server now correctly merges data from typeshed and the Python library.
+   ([#2345](https://github.com/Microsoft/vscode-python/issues/2345))
+1. Update the downloaded Python language server nuget package filename to
+   `Python-Language-Server-{OSType}.beta.nupkg`.
+   ([#2362](https://github.com/Microsoft/vscode-python/issues/2362))
+1. Fix `experimental` debugger when debugging Python files with Unicode characters in the file path.
+   ([#688](https://github.com/Microsoft/vscode-python/issues/688))
+1. Ensure stepping out of debugged code does not take user into `PTVSD` debugger code.
+   ([#767](https://github.com/Microsoft/vscode-python/issues/767))
+
+### Code Health
+
+1. Revert change that moved IExperimentalDebuggerBanner into a common location.
+   ([#2195](https://github.com/Microsoft/vscode-python/issues/2195))
+1. Decorate `EventEmitter` within a `try..catch` to play nice with other extensions performing the same operation.
+   ([#2196](https://github.com/Microsoft/vscode-python/issues/2196))
+1. Pin version of `pylint` to `3.6.3` to allow ensure `pylint` gets installed on Travis with Pytnon2.7.
+   ([#2305](https://github.com/Microsoft/vscode-python/issues/2305))
+1. Remove some of the debugger tests and fix some minor debugger issues.
+   ([#2307](https://github.com/Microsoft/vscode-python/issues/2307))
+
+
+
+
+
 ## 2018.7.1 (23 July 2018)
 
 ### Fixes

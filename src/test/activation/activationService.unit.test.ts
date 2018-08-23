@@ -11,8 +11,11 @@ import { ExtensionActivationService } from '../../client/activation/activationSe
 import { ExtensionActivators, IExtensionActivationService, IExtensionActivator } from '../../client/activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { isLanguageServerTest } from '../../client/common/constants';
+import { OSInfo } from '../../client/common/platform/osinfo';
+import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
+import * as testOSInfos from '../common/platform/osinfo.unit.test';
 
 suite('Activation - ActivationService', () => {
     [true, false].forEach(jediIsEnabled => {
@@ -22,6 +25,7 @@ suite('Activation - ActivationService', () => {
             let appShell: TypeMoq.IMock<IApplicationShell>;
             let cmdManager: TypeMoq.IMock<ICommandManager>;
             let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+            let platformService: TypeMoq.IMock<IPlatformService>;
             setup(function () {
                 if (isLanguageServerTest()) {
                     // tslint:disable-next-line:no-invalid-this
@@ -31,6 +35,7 @@ suite('Activation - ActivationService', () => {
                 appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                 workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
                 cmdManager = TypeMoq.Mock.ofType<ICommandManager>();
+                platformService = TypeMoq.Mock.ofType<IPlatformService>();
                 const configService = TypeMoq.Mock.ofType<IConfigurationService>();
                 pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
 
@@ -45,13 +50,17 @@ suite('Activation - ActivationService', () => {
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => []);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICommandManager))).returns(() => cmdManager.object);
+                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
             });
 
-            async function testActivation(activationService: IExtensionActivationService, activator: TypeMoq.IMock<IExtensionActivator>) {
+            async function testActivation(activationService: IExtensionActivationService, activator: TypeMoq.IMock<IExtensionActivator>, lsSupported: boolean = true) {
                 activator
                     .setup(a => a.activate()).returns(() => Promise.resolve(true))
                     .verifiable(TypeMoq.Times.once());
-                const activatorName = jediIsEnabled ? ExtensionActivators.Jedi : ExtensionActivators.DotNet;
+                let activatorName = ExtensionActivators.Jedi;
+                if (lsSupported && !jediIsEnabled) {
+                    activatorName = ExtensionActivators.DotNet;
+                }
                 serviceContainer
                     .setup(c => c.get(TypeMoq.It.isValue(IExtensionActivator), TypeMoq.It.isValue(activatorName)))
                     .returns(() => activator.object)
@@ -62,6 +71,43 @@ suite('Activation - ActivationService', () => {
                 activator.verifyAll();
                 serviceContainer.verifyAll();
             }
+
+            const supportedTests: [string, OSInfo][] = [
+                ['win10', testOSInfos.WIN_10],
+                ['win7', testOSInfos.WIN_7],
+                ['high sierra', testOSInfos.MAC_HIGH_SIERRA],
+                ['sierra', testOSInfos.MAC_SIERRA],
+                ['ubuntu 18.04', testOSInfos.UBUNTU_BIONIC],
+                ['ubuntu 14.04', testOSInfos.UBUNTU_PRECISE],
+                ['fedora 24', testOSInfos.FEDORA],
+                ['arch', testOSInfos.ARCH]
+             ];
+             for (const [osID, info] of supportedTests) {
+                test(`LS is supported (${osID})`, async () => {
+                    pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
+                    platformService.setup(p => p.os).returns(() => info);
+                    const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
+                    const activationService = new ExtensionActivationService(serviceContainer.object);
+
+                    await testActivation(activationService, activator, true);
+                });
+            }
+
+            const unsupportedTests: [string, OSInfo][] = [
+                ['winXP', testOSInfos.WIN_XP],
+                ['el capitan', testOSInfos.MAC_EL_CAPITAN]
+            ];
+            for (const [osID, info] of unsupportedTests) {
+                test(`LS is not supported (${osID})`, async () => {
+                    pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
+                    platformService.setup(p => p.os).returns(() => info);
+                    const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
+                    const activationService = new ExtensionActivationService(serviceContainer.object);
+
+                    await testActivation(activationService, activator, false);
+                });
+            }
+
             test('Activatory must be activated', async () => {
                 pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<IExtensionActivator>();

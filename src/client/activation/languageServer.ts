@@ -3,18 +3,24 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CompletionContext, OutputChannel, Position,
-     TextDocument, Uri } from 'vscode';
-import { Disposable, LanguageClient, LanguageClientOptions,
-    ProvideCompletionItemsSignature, ServerOptions } from 'vscode-languageclient';
+import {
+    CancellationToken, CompletionContext, OutputChannel, Position,
+    TextDocument, Uri
+} from 'vscode';
+import {
+    Disposable, LanguageClient, LanguageClientOptions,
+    ProvideCompletionItemsSignature, ServerOptions
+} from 'vscode-languageclient';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
-import { BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, ILogger,
-    IOutputChannel, IPythonExtensionBanner, IPythonSettings } from '../common/types';
+import {
+    BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, ILogger,
+    IOutputChannel, IPythonExtensionBanner, IPythonSettings
+} from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
@@ -230,8 +236,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.excludedFiles = this.getExcludedFiles();
         this.typeshedPaths = this.getTypeshedPaths(settings);
 
-        const traceLogging = (settings.analysis && settings.analysis.traceLogging) ? settings.analysis.traceLogging : false;
-
         // Options to control the language client
         return {
             // Register the server for Python documents
@@ -256,7 +260,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 excludeFiles: this.excludedFiles,
                 testEnvironment: isTestExecution(),
                 analysisUpdates: true,
-                traceLogging
+                traceLogging: true, // Max level, let LS decide through settings actual level of logging.
+                asyncStartup: true
             },
             middleware: {
                 provideCompletionItem: (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
@@ -301,7 +306,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private getTypeshedPaths(settings: IPythonSettings): string[] {
         return settings.analysis.typeshedPaths && settings.analysis.typeshedPaths.length > 0
             ? settings.analysis.typeshedPaths
-            : [path.join(this.context.extensionPath, 'typeshed')];
+            : [path.join(this.context.extensionPath, 'languageServer', 'Typeshed')];
     }
 
     private async onSettingsChanged(): Promise<void> {

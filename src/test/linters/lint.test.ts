@@ -23,6 +23,7 @@ const pep8ConfigPath = path.join(pythoFilesPath, 'pep8config');
 const pydocstyleConfigPath27 = path.join(pythoFilesPath, 'pydocstyleconfig27');
 const pylintConfigPath = path.join(pythoFilesPath, 'pylintconfig');
 const fileToLint = path.join(pythoFilesPath, 'file.py');
+const threeLinLintsPath = path.join(pythoFilesPath, 'threeLineLints.py');
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
     { line: 24, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
@@ -278,5 +279,23 @@ suite('Linting - General Tests', () => {
         assert.notEqual(messages!.length, 0, 'No diagnostic messages.');
         assert.notEqual(messages!.filter(x => x.source === 'pylint').length, 0, 'No pylint messages.');
         assert.notEqual(messages!.filter(x => x.source === 'flake8').length, 0, 'No flake8 messages.');
+    });
+    // tslint:disable-next-line:no-any
+    async function testLinterMessageCount(product: Product, pythonFile: string, messageCountToBeReceived: number): Promise<any> {
+        const outputChannel = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        const cancelToken = new CancellationTokenSource();
+        const document = await workspace.openTextDocument(pythonFile);
+
+        await linterManager.setActiveLintersAsync([product], document.uri);
+        const linter = linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
+
+        const messages = await linter.lint(document, cancelToken.token);
+        assert.equal(messages.length, messageCountToBeReceived, 'Expected number of lint errors does not match lint error count');
+    }
+    test('Three line output counted as one message', async () => {
+        const maxErrors = 5;
+        const target = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
+        await configService.updateSettingAsync('linting.maxNumberOfProblems', maxErrors, rootWorkspaceUri, target);
+        await testLinterMessageCount(Product.pylint, threeLinLintsPath, maxErrors);
     });
 });

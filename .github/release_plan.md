@@ -36,7 +36,7 @@
 
 ## Legal
 - [ ] Announce the lock-down of dependencies for this release
-- [ ] Notify CELA of all changes to the [repository](https://github.com/Microsoft/vscode-python/tree/master/pythonFiles), [distribution dependencies](https://github.com/Microsoft/vscode-python/blob/master/package.json) (including [ptvsd](https://pypi.org/project/ptvsd/), and [git submodules](https://github.com/Microsoft/vscode-python) (e.g. Typeshed) 
+- [ ] Notify CELA of all changes to the [repository](https://github.com/Microsoft/vscode-python/tree/master/pythonFiles), [distribution dependencies](https://github.com/Microsoft/vscode-python/blob/master/package.json) (including [ptvsd](https://pypi.org/project/ptvsd/) as necessary
 
 ## Release a beta version for testing
 - [ ] Update the [version](https://github.com/Microsoft/vscode-python/blob/master/package.json) to be a `beta` & update the [changelog](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)

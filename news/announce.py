@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 """Generate the changelog.
 
 Usage: announce [--dry_run | --interim | --final] [<directory>]
@@ -20,7 +21,6 @@ import docopt
 FILENAME_RE = re.compile(r"(?P<issue>\d+)(?P<nonce>-\S+)?\.md")
 
 
-
 @dataclasses.dataclass
 class NewsEntry:
     """Representation of a news entry."""
@@ -39,7 +39,12 @@ def news_entries(directory):
         if match is None:
             raise ValueError(f"{path} has a bad file name")
         issue = int(match.group("issue"))
-        entry = path.read_text("utf-8")
+        try:
+            entry = path.read_text("utf-8")
+        except UnicodeDecodeError as exc:
+            raise ValueError(f"'{path}' is not encoded as UTF-8") from exc
+        if "\ufeff" in entry:
+            raise ValueError(f"'{path}' contains the BOM")
         yield NewsEntry(issue, entry, path)
 
 
@@ -141,7 +146,6 @@ def main(run_type, directory):
     data = gather(directory)
     markdown = changelog_markdown(data)
     if run_type != RunType.dry_run:
-        # XXX This can lead to mojibake; hopefully Python 3.7 will resolve this.
         print(markdown)
     if run_type == RunType.final:
         cleanup(data)

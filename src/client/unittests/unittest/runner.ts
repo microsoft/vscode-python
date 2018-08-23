@@ -1,4 +1,5 @@
 'use strict';
+
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
@@ -7,7 +8,11 @@ import { ILogger } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { UNITTEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
-import { ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner, IUnitTestSocketServer, LaunchOptions, TestRunOptions, Tests, TestStatus, TestsToRun } from '../common/types';
+import {
+    ITestDebugLauncher, ITestManager, ITestResultsService,
+    ITestRunner, IUnitTestSocketServer, LaunchOptions,
+    TestRunOptions, Tests, TestStatus
+} from '../common/types';
 import { IArgumentsHelper, ITestManagerRunner, IUnitTestHelper } from '../types';
 
 type TestStatusMap = {
@@ -42,7 +47,9 @@ export class TestManagerRunner implements ITestManagerRunner {
         this.logger = this.serviceContainer.get<ILogger>(ILogger);
         this.helper = this.serviceContainer.get<IUnitTestHelper>(IUnitTestHelper);
     }
-    public async  runTest(testResultsService: ITestResultsService, options: TestRunOptions, testManager: ITestManager): Promise<Tests> {
+
+    // tslint:disable-next-line:max-func-body-length
+    public async runTest(testResultsService: ITestResultsService, options: TestRunOptions, testManager: ITestManager): Promise<Tests> {
         options.tests.summary.errors = 0;
         options.tests.summary.failures = 0;
         options.tests.summary.passed = 0;
@@ -53,7 +60,6 @@ export class TestManagerRunner implements ITestManagerRunner {
         this.server.on('log', noop);
         this.server.on('connect', noop);
         this.server.on('start', noop);
-        this.server.on('socket.disconnected', noop);
         this.server.on('result', (data: ITestData) => {
             const test = options.tests.testFunctions.find(t => t.testFunction.nameToRun === data.test);
             const statusDetails = outcomeMapping.get(data.outcome)!;
@@ -110,7 +116,8 @@ export class TestManagerRunner implements ITestManagerRunner {
 
         // Test everything.
         if (testPaths.length === 0) {
-            await runTestInternal();
+            const runTestPromise: Promise<void> = runTestInternal();
+            await this.removeListenersAfter(runTestPromise);
         }
 
         // Ok, the test runner can only work with one test at a time.
@@ -133,12 +140,28 @@ export class TestManagerRunner implements ITestManagerRunner {
                     promise = promise.then(() => runTestInternal(testFileName, testFn.nameToRun));
                 });
             }
-            await promise;
+
+            await this.removeListenersAfter(promise);
         }
 
         testResultsService.updateResults(options.tests);
         return options.tests;
     }
+
+    // remove all the listeners from the server after all tests are complete,
+    // and just pass the promise `after` through as we do not want to get in
+    // the way here.
+    // tslint:disable-next-line:no-any
+    private async removeListenersAfter(after: Promise<any>): Promise<any> {
+        return after.then(() => {
+            this.server.removeAllListeners();
+            return after;
+        }, (reason) => {
+            this.server.removeAllListeners();
+            return after;
+        });
+    }
+
     private buildTestArgs(args: string[]): string[] {
         const startTestDiscoveryDirectory = this.helper.getStartDirectory(args);
         let pattern = 'test*.py';

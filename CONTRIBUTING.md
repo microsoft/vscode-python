@@ -126,6 +126,8 @@ tagged, so no history is lost).
 
 ### Issue triaging
 
+#### Classifying issues
+
 To help actively track what stage
 [issues](https://github.com/Microsoft/vscode-python/issues)
 are at, various labels are used. The following label types are expected to
@@ -136,9 +138,15 @@ be set on all open issues (otherwise the issue is not considered triaged):
 1. `type`
 
 These labels cover what is blocking the issue from closing, what is affected by
-the issue, and what kind of issue it is.
+the issue, and what kind of issue it is. Typically, on new issues, the `needs` label is either `needs verification` or `needs more info`. The `feature` label should be `feature-*` if the issue doesn't fit into any other `feature` label appropriately.
 
-It is also important to make the title accurate. People often write very brief, quick titles or ones that describe what they think the problem is. By updating the title to be appropriately descriptive for what _you_ think the issue is, you not only make finding older issues easier, but you also help make sure that you and the original reporter agree on what the issue is.
+It is also very important to make the title accurate. People often write very brief, quick titles or ones that describe what they think the problem is. By updating the title to be appropriately descriptive for what _you_ think the issue is, you not only make finding older issues easier, but you also help make sure that you and the original reporter agree on what the issue is.
+
+#### Post-classification
+
+Once an issue has been appropriately classified, there are two keys ways to help out. One is to go through open issues that [`needs verification`](https://github.com/Microsoft/vscode-python/labels/needs%20verification). Issues with this label have not been verified to be an actual problem (e.g. making sure the reported issue is not caused by the user's configuration or machine).
+
+The other way to help is to go through issues that are labeled as [`validate fix`](https://github.com/Microsoft/vscode-python/labels/validate%20fix). These issues are believed to be fixed, but having an independent validation is always appreciated.
 
 #### Closed issues
 
@@ -147,14 +155,10 @@ When an issue is closed  by a pull request we add a
 label in order to request people help us test the fix to validate the issue was
 resolved successfully. Once the fix has been manually validated we remove the label.
 
-### Pull request workflow
+### Pull requests
 
 Key details that all pull requests are expected to handle should be
-in the PR template. The only key detail not covered in that template is
-that any change in our dependencies must be properly reflected in our
-third-party notices file and registered with the OSPO internally at
-Microsoft (obviously external developers do not need to concern themselves
-with these legal/technical issues).
+in the [pull request template](https://github.com/Microsoft/vscode-python/blob/master/.github/PULL_REQUEST_TEMPLATE.md). We do expect CI to be passing for a pull request before we will consider merging it.
 
 ### Versioning
 
