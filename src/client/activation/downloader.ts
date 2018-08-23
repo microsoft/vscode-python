@@ -6,12 +6,10 @@
 import * as path from 'path';
 import * as requestProgress from 'request-progress';
 import { ProgressLocation, window } from 'vscode';
-import { IWorkspaceService } from '../common/application/types';
 import { createDeferred } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
 import { PlatformData, PlatformName } from './platformData';
-import { RequestWithProxy } from './requestWithProxy';
 import { IDownloadFileService } from './types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -34,14 +32,9 @@ export class LanguageServerDownloader {
         private readonly output: IOutputChannel,
         private readonly fs: IFileSystem,
         private readonly platformData: PlatformData,
-        readonly workspace: IWorkspaceService,
-        private engineFolder: string,
-        private requestHandler?: IDownloadFileService) {
-
-        if (!this.requestHandler) {
-            this.requestHandler = new RequestWithProxy(workspace.getConfiguration('http').get('proxy', ''));
-        }
-    }
+        private requestHandler: IDownloadFileService,
+        private engineFolder: string
+    ) { }
 
     public getDownloadUri() {
         const platformString = this.platformData.getPlatformName();
@@ -53,7 +46,6 @@ export class LanguageServerDownloader {
 
         let localTempFilePath = '';
         try {
-
             localTempFilePath = await this.downloadFile(downloadUri, 'Downloading Microsoft Python Language Server... ');
             await this.unpackArchive(context.extensionPath, localTempFilePath);
         } catch (err) {
@@ -84,7 +76,8 @@ export class LanguageServerDownloader {
             location: ProgressLocation.Window
         }, (progress) => {
 
-            requestProgress(this.requestHandler!.downloadFile(uri))
+            requestProgress(
+                this.requestHandler!.downloadFile(uri))
                 .on('progress', (state) => {
                     // https://www.npmjs.com/package/request-progress
                     const received = Math.round(state.size.transferred / 1024);

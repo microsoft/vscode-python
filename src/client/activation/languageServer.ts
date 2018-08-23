@@ -33,6 +33,7 @@ import { LanguageServerDownloader } from './downloader';
 import { InterpreterData, InterpreterDataService } from './interpreterDataService';
 import { PlatformData } from './platformData';
 import { ProgressReporting } from './progress';
+import { RequestWithProxy } from './requestWithProxy';
 import { IExtensionActivator } from './types';
 
 const PYTHON = 'python';
@@ -141,7 +142,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 this.output,
                 this.fs,
                 this.platformData,
-                this.workspace,
+                new RequestWithProxy(this.workspace.getConfiguration('http').get('proxy', '')),
                 languageServerFolder);
             await downloader.downloadLanguageServer(this.context);
             reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_DOWNLOADED);

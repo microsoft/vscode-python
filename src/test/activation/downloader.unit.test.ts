@@ -34,7 +34,7 @@ suite('Activation - Downloader', () => {
             output.object,
             fs.object,
             platformData,
-            workspace.object,
+            new RequestWithProxy(''),
             '');
 
     });
@@ -73,13 +73,13 @@ suite('Activation - Downloader', () => {
     test('Supports download via proxy', async () => {
         let proxyValue: string = 'https://myproxy.net:4242';
         let requestWithProxy: RequestWithProxy = new RequestWithProxy(proxyValue);
-        let opts: request.CoreOptions | undefined = requestWithProxy.getRequestOptions();
+        let opts: request.CoreOptions | undefined = requestWithProxy.requestOptions;
         assert.notEqual(opts, undefined, 'Expected to get options back from .getRequestOptions but got undefined');
         assert.equal(opts!.proxy, proxyValue, `Expected to see proxy service uri set to "${proxyValue}" but got "${opts!.proxy}" instead.`);
 
         proxyValue = '';
         requestWithProxy = new RequestWithProxy(proxyValue);
-        opts = requestWithProxy.getRequestOptions();
+        opts = requestWithProxy.requestOptions;
         assert.equal(opts, undefined, 'Expected to get no options back from .getRequestOptions but got some options anyway!');
     });
 });

@@ -11,20 +11,22 @@ import { IDownloadFileService } from './types';
 export class RequestWithProxy implements IDownloadFileService {
     constructor(private proxyUri: string) { }
 
-    public getRequestOptions(): request.CoreOptions | undefined {
+    public get requestOptions(): request.CoreOptions {
         if (this.proxyUri && this.proxyUri.length > 0) {
             return {
                 proxy: this.proxyUri
             };
+        } else {
+            return {};
         }
-        return;
     }
 
     public downloadFile(uri: string): request.Request {
-        const requestOptions = this.getRequestOptions();
+        const requestOptions = this.requestOptions;
         if (requestOptions) {
             return request(uri, requestOptions);
+        } else {
+            return request(uri);
         }
-        return request(uri);
     }
 }
