@@ -24,11 +24,11 @@ import { registerTypes as installerRegisterTypes } from './common/installer/serv
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
-import { IFeatureDeprecationManager, ITerminalHelper } from './common/terminal/types';
+import { ITerminalHelper } from './common/terminal/types';
 import {
     GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry,
-    IExtensionContext, ILogger, IMemento, IOutputChannel,
-    WORKSPACE_MEMENTO
+    IExtensionContext, IFeatureDeprecationManager, ILogger,
+    IMemento, IOutputChannel, WORKSPACE_MEMENTO
 } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';

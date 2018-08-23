@@ -11,15 +11,19 @@ import {
     Disposable, LanguageClient, LanguageClientOptions,
     ProvideCompletionItemsSignature, ServerOptions
 } from 'vscode-languageclient';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
+import {
+    IApplicationShell, ICommandManager, IWorkspaceService
+} from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
+// tslint:disable-next-line:ordered-imports
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
 import {
-    BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, ILogger,
-    IOutputChannel, IPythonExtensionBanner, IPythonSettings
+    BANNER_NAME_LS_SURVEY, DeprecatedFeatureInfo, IConfigurationService,
+    IExtensionContext, IFeatureDeprecationManager, ILogger, IOutputChannel,
+    IPythonExtensionBanner, IPythonSettings
 } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import {
@@ -41,6 +45,12 @@ const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 const languageServerFolder = 'languageServer';
 const loadExtensionCommand = 'python._loadLanguageServerExtension';
+const buildSymbolsCmdDeprecatedInfo: DeprecatedFeatureInfo = {
+    doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_BUILD_WORKSPACE_SYMBOLS',
+    message: 'The command \'Python: Build Workspace Symbols\' is deprecated when using the Python Language Server. The Python Language Server builds symbols in the workspace in the background.',
+    moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/2267#issuecomment-408996859',
+    commands: ['python.buildWorkspaceSymbols']
+};
 
 @injectable()
 export class LanguageServerExtensionActivator implements IExtensionActivator {
@@ -73,6 +83,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.fs = this.services.get<IFileSystem>(IFileSystem);
         this.platformData = new PlatformData(services.get<IPlatformService>(IPlatformService), this.fs);
         this.workspace = this.services.get<IWorkspaceService>(IWorkspaceService);
+        const deprecationManager: IFeatureDeprecationManager =
+            this.services.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
 
         // Currently only a single root. Multi-root support is future.
         this.root = this.workspace && this.workspace.hasWorkspaceFolders
@@ -91,6 +103,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 }
             }
         ));
+
+        deprecationManager.registerDeprecation(buildSymbolsCmdDeprecatedInfo);
 
         this.surveyBanner = services.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_LS_SURVEY);
 

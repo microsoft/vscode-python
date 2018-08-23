@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, Event, Terminal, Uri } from 'vscode';
+import { Event, Terminal, Uri } from 'vscode';
 
 export enum TerminalShellType {
     powershell = 'powershell',
@@ -56,10 +56,4 @@ export const ITerminalActivationCommandProvider = Symbol('ITerminalActivationCom
 export interface ITerminalActivationCommandProvider {
     isShellSupported(targetShell: TerminalShellType): boolean;
     getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined>;
-}
-
-export const IFeatureDeprecationManager = Symbol('IFeatureDeprecationManager');
-
-export interface IFeatureDeprecationManager extends Disposable {
-    initialize(): void;
 }

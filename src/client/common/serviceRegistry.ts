@@ -24,12 +24,13 @@ import { CommandPromptAndPowerShell } from './terminal/environmentActivationProv
 import { TerminalServiceFactory } from './terminal/factory';
 import { TerminalHelper } from './terminal/helper';
 import {
-    IFeatureDeprecationManager, ITerminalActivationCommandProvider,
+    ITerminalActivationCommandProvider,
     ITerminalHelper, ITerminalServiceFactory
 } from './terminal/types';
 import {
-    IBrowserService, IConfigurationService, ICurrentProcess, IInstaller,
-    ILogger, IPathUtils, IPersistentStateFactory, IRandom, Is64Bit, IsWindows
+    IBrowserService, IConfigurationService, ICurrentProcess,
+    IFeatureDeprecationManager, IInstaller, ILogger,
+    IPathUtils, IPersistentStateFactory, IRandom, Is64Bit, IsWindows
 } from './types';
 import { Random } from './utils';
 

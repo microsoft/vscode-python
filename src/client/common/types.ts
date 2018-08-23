@@ -283,3 +283,23 @@ export interface IPythonExtensionBanner {
 }
 export const BANNER_NAME_LS_SURVEY: string = 'LSSurveyBanner';
 export const BANNER_NAME_PROPOSE_LS: string = 'ProposeLS';
+
+export type DeprecatedSettingAndValue = {
+    setting: string;
+    values?: {}[];
+};
+
+export type DeprecatedFeatureInfo = {
+    doNotDisplayPromptStateKey: string;
+    message: string;
+    moreInfoUrl: string;
+    commands?: string[];
+    setting?: DeprecatedSettingAndValue;
+};
+
+export const IFeatureDeprecationManager = Symbol('IFeatureDeprecationManager');
+
+export interface IFeatureDeprecationManager extends Disposable {
+    initialize(): void;
+    registerDeprecation(deprecatedInfo: DeprecatedFeatureInfo): void;
+}
