@@ -580,18 +580,6 @@ export namespace vscMockExtHostedTypes {
             return edits ? edits.slice() : undefined;
         }
 
-        createFile(uri: vscUri.URI, options?: { overwrite?: boolean, ignoreIfExists?: boolean }): void {
-            return;
-        }
-
-        deleteFile(uri: vscUri.URI, options?: { recursive?: boolean, ignoreIfNotExists?: boolean }): void {
-            return;
-        }
-
-        renameFile(oldUri: vscUri.URI, newUri: vscUri.URI, options?: { overwrite?: boolean, ignoreIfExists?: boolean }): void {
-            return;
-        }
-
         entries(): [vscUri.URI, TextEdit[]][] {
             const res: [vscUri.URI, TextEdit[]][] = [];
             this._textEdits.forEach(value => res.push([value.uri, value.edits]));
