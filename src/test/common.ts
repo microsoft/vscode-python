@@ -3,7 +3,6 @@ import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
-import { sleep } from '../client/common/core.utils';
 import { IS_MULTI_ROOT_TEST } from './initialize';
 export { sleep } from './core';
 
@@ -39,7 +38,7 @@ export async function updateSetting(setting: PythonSettingKeys, value: {} | unde
     // after invoking the update method. This issue has regressed a few times as well. This
     // delay is merely a backup to ensure it extension doesn't break the tests due to similar
     // regressions in VSC:
-    await sleep(2000);
+    // await sleep(2000);
     // ... please see issue #2356 and PR #2332 for a discussion on the matter
 
     PythonSettings.dispose();

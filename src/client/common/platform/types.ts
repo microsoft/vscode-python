@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
+import * as semver from 'semver';
 import { Disposable } from 'vscode';
 
 export enum Architecture {
@@ -9,6 +10,35 @@ export enum Architecture {
     x86 = 2,
     x64 = 3
 }
+export enum OSType {
+    Unknown,
+    Windows,
+    OSX,
+    Linux
+}
+export enum OSDistro {
+    Unknown,
+    // linux:
+    Ubuntu,
+    Debian,
+    RHEL,
+    Fedora,
+    CentOS,
+    // The remainder aren't officially supported.
+    // See: https://code.visualstudio.com/docs/supporting/requirements
+    Suse,
+    Gentoo,
+    Arch
+}
+
+export const IOSInfo = Symbol('IOSInfo');
+export interface IOSInfo {
+    readonly type: OSType;
+    readonly arch: string;
+    readonly version: semver.SemVer;
+    readonly distro: OSDistro;
+}
+
 export enum RegistryHive {
     HKCU, HKLM
 }
@@ -21,12 +51,16 @@ export interface IRegistry {
 
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
+    os: IOSInfo;
+    pathVariableName: 'Path' | 'PATH';
+    virtualEnvBinName: 'bin' | 'scripts';
+
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: Drop the following (in favor of osType).
     isWindows: boolean;
     isMac: boolean;
     isLinux: boolean;
     is64bit: boolean;
-    pathVariableName: 'Path' | 'PATH';
-    virtualEnvBinName: 'bin' | 'scripts';
 }
 
 export type TemporaryFile = { filePath: string } & Disposable;

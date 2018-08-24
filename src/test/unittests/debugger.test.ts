@@ -36,10 +36,8 @@ const defaultUnitTestArgs = [
 suite('Unit Tests - debugging', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
-    suiteSetup(async function () {
+    suiteSetup(async () => {
         // Test disvovery is where the delay is, hence give 10 seconds (as we discover tests at least twice in each test).
-        // tslint:disable-next-line:no-invalid-this
-        this.timeout(10000);
         await initialize();
         await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
         await updateSetting('unitTest.nosetestArgs', [], rootWorkspaceUri, configTarget);

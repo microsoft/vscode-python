@@ -105,6 +105,11 @@ export interface IPathUtils {
     basename(pathValue: string, ext?: string): string;
 }
 
+export const IRandom = Symbol('IRandom');
+export interface IRandom {
+    getRandomInt(min?: number, max?: number): number;
+}
+
 export const ICurrentProcess = Symbol('ICurrentProcess');
 export interface ICurrentProcess {
     readonly env: EnvironmentVariables;

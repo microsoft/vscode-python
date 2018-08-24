@@ -4,8 +4,7 @@ Do Not Translate or Localize
 
 Microsoft Python extension for Visual Studio Code incorporates third party material from the projects listed below. The original copyright notice and the license under which Microsoft received such third party material are set forth below. Microsoft reserves all other rights not expressly granted, whether by implication, estoppel or otherwise.
 
-1.
-Go for Visual Studio Code (https://github.com/Microsoft/vscode-go)
+1.	Go for Visual Studio Code (https://github.com/Microsoft/vscode-go)
 2.	Files from the Python Project (https://www.python.org/)
 3.	Google Diff Match and Patch  (https://github.com/GerHobbelt/google-diff-match-patch)
 4.	isort (https://github.com/timothycrosley/isort)

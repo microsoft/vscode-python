@@ -40,7 +40,7 @@
 **ALWAYS**:
 - Use the latest version of Anaconda
 - Realize that `conda` is slow
-- Create an environment with a space in their path somewhere
+- Create an environment with a space in their path somewhere as well as upper and lowercase characters
 - Make sure that you do not have `python.pythonPath` specified in your `settings.json` when testing automatic detection
 - Do note that the `Select Interpreter` drop-down window scrolls
 

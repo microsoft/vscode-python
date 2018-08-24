@@ -1,7 +1,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Socket } from 'net';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { noop } from '../../common/core.utils';
@@ -80,10 +79,6 @@ export class TestManagerRunner implements ITestManagerRunner {
             }
         });
 
-        this.server.on('socket.disconnected', (socket: Socket, isSocketDestroyed: boolean) => {
-            this.server.removeAllListeners();
-        });
-
         const port = await this.server.start();
         const testPaths: string[] = this.helper.getIdsOfTestsToRun(options.tests, options.testsToRun!);
         for (let counter = 0; counter < testPaths.length; counter += 1) {
@@ -121,7 +116,8 @@ export class TestManagerRunner implements ITestManagerRunner {
 
         // Test everything.
         if (testPaths.length === 0) {
-            await runTestInternal();
+            const runTestPromise: Promise<void> = runTestInternal();
+            await this.removeListenersAfter(runTestPromise);
         }
 
         // Ok, the test runner can only work with one test at a time.
@@ -144,11 +140,26 @@ export class TestManagerRunner implements ITestManagerRunner {
                     promise = promise.then(() => runTestInternal(testFileName, testFn.nameToRun));
                 });
             }
-            await promise;
+
+            await this.removeListenersAfter(promise);
         }
 
         testResultsService.updateResults(options.tests);
         return options.tests;
+    }
+
+    // remove all the listeners from the server after all tests are complete,
+    // and just pass the promise `after` through as we do not want to get in
+    // the way here.
+    // tslint:disable-next-line:no-any
+    private async removeListenersAfter(after: Promise<any>): Promise<any> {
+        return after.then(() => {
+            this.server.removeAllListeners();
+            return after;
+        }, (reason) => {
+            this.server.removeAllListeners();
+            return after;
+        });
     }
 
     private buildTestArgs(args: string[]): string[] {
