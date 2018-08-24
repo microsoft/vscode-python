@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable, optional } from 'inversify';
-import { Disposable, window, WorkspaceConfiguration } from 'vscode';
-import { ICommandManager, IWorkspaceService } from './application/types';
+import { inject, injectable } from 'inversify';
+import { Disposable, WorkspaceConfiguration } from 'vscode';
+import {
+    IApplicationShell, ICommandManager, IWorkspaceService
+} from './application/types';
 import { launch } from './net/browser';
 import {
     DeprecatedFeatureInfo, DeprecatedSettingAndValue,
@@ -25,17 +27,6 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
     }
 ];
 
-export interface IPopupService {
-    showInformationMessage(message: string, ...items: string[]): Thenable<string | undefined>;
-}
-
-const IPopupService = Symbol('IPopupService');
-
-class PopupService implements IPopupService {
-    public showInformationMessage(message: string, ...items: string[]): Thenable<string | undefined> {
-        return window.showInformationMessage(message, ...items);
-    }
-}
 @injectable()
 export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     private disposables: Disposable[] = [];
@@ -43,15 +34,13 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
         @inject(ICommandManager) private cmdMgr: ICommandManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
-        @inject(IPopupService) @optional() private popupService?: IPopupService
-    ) {
-        if (!this.popupService) {
-            this.popupService = new PopupService();
-        }
-    }
+        @inject(IApplicationShell) private appShell: IApplicationShell
+    ) { }
+
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
     }
+
     public initialize() {
         deprecatedFeatures.forEach(this.registerDeprecation.bind(this));
     }
@@ -74,7 +63,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         }
         const moreInfo = 'Learn more';
         const doNotShowAgain = 'Never show again';
-        const option = await this.popupService!.showInformationMessage(deprecatedInfo.message, moreInfo, doNotShowAgain);
+        const option = await this.appShell.showInformationMessage(deprecatedInfo.message, moreInfo, doNotShowAgain);
         if (!option) {
             return;
         }
@@ -112,6 +101,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
                 .catch(ex => console.error('Python Extension: notifyDeprecation', ex));
         }
     }
+
     private isDeprecatedSettingAndValueUsed(pythonConfig: WorkspaceConfiguration, deprecatedSetting: DeprecatedSettingAndValue) {
         if (!pythonConfig.has(deprecatedSetting.setting)) {
             return false;
