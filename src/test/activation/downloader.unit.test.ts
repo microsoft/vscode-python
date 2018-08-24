@@ -12,6 +12,7 @@ import { WorkspaceConfiguration } from 'vscode';
 import { DownloadLinks, LanguageServerDownloader } from '../../client/activation/downloader';
 import { PlatformData, PlatformName } from '../../client/activation/platformData';
 import { RequestWithProxy } from '../../client/activation/requestWithProxy';
+import { IDownloadFileService } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IOutputChannel } from '../../client/common/types';
@@ -69,17 +70,5 @@ suite('Activation - Downloader', () => {
         setupPlatform({ linux: true, is64Bit: true });
         const link = languageServerDownloader.getDownloadUri();
         assert.equal(link, DownloadLinks[PlatformName.Linux64Bit]);
-    });
-    test('Supports download via proxy', async () => {
-        let proxyValue: string = 'https://myproxy.net:4242';
-        let requestWithProxy: RequestWithProxy = new RequestWithProxy(proxyValue);
-        let opts: request.CoreOptions | undefined = requestWithProxy.requestOptions;
-        assert.notEqual(opts, undefined, 'Expected to get options back from .getRequestOptions but got undefined');
-        assert.equal(opts!.proxy, proxyValue, `Expected to see proxy service uri set to "${proxyValue}" but got "${opts!.proxy}" instead.`);
-
-        proxyValue = '';
-        requestWithProxy = new RequestWithProxy(proxyValue);
-        opts = requestWithProxy.requestOptions;
-        assert.equal(opts, undefined, 'Expected to get no options back from .getRequestOptions but got some options anyway!');
     });
 });
