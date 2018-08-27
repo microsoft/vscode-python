@@ -13,7 +13,7 @@ import { CacheableLocatorService } from './cacheableLocatorService';
  * Locates the currently configured Python interpreter.
  *
  * If no interpreter is configured then it falls back to the system
- * Python (2 then 3).
+ * Python (3 then 2).
  */
 @injectable()
 export class CurrentPathService extends CacheableLocatorService {
@@ -52,10 +52,10 @@ export class CurrentPathService extends CacheableLocatorService {
     private async suggestionsFromKnownPaths(resource?: Uri) {
         const configSettings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource);
         const currentPythonInterpreter = this.getInterpreter(configSettings.pythonPath, '').then(interpreter => [interpreter]);
-        const python = this.getInterpreter('python', '').then(interpreter => [interpreter]);
-        const python2 = this.getInterpreter('python2', '').then(interpreter => [interpreter]);
         const python3 = this.getInterpreter('python3', '').then(interpreter => [interpreter]);
-        return Promise.all<string[]>([currentPythonInterpreter, python, python2, python3])
+        const python2 = this.getInterpreter('python2', '').then(interpreter => [interpreter]);
+        const python = this.getInterpreter('python', '').then(interpreter => [interpreter]);
+        return Promise.all<string[]>([currentPythonInterpreter, python3, python2, python])
             // tslint:disable-next-line:underscore-consistent-invocation
             .then(listOfInterpreters => _.flatten(listOfInterpreters))
             .then(interpreters => interpreters.filter(item => item.length > 0))
