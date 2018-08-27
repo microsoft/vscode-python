@@ -48,9 +48,7 @@ import { ILintingEngine } from './linters/types';
 import { PythonCodeActionProvider } from './providers/codeActionsProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { LinterProvider } from './providers/linterProvider';
-import { PythonRenameProvider } from './providers/renameProvider';
 import { ReplProvider } from './providers/replProvider';
-import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { TerminalProvider } from './providers/terminalProvider';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
 import * as sortImports from './sortImports';
@@ -84,13 +82,10 @@ export async function activate(context: ExtensionContext) {
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 
-    const standardOutputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    context.subscriptions.push(languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceManager)));
-    activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceManager);
-
     const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
     await activationService.activate();
 
+    const standardOutputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     sortImports.activate(context, standardOutputChannel, serviceManager);
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
