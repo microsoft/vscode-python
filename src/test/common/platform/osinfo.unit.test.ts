@@ -5,7 +5,7 @@
 
 import { expect } from 'chai';
 import * as semver from 'semver';
-import { getOSInfo, getOSType, getPathVariableName, getVirtualEnvBinName, is64bit, isLinux, isMac, isWindows, OSInfo, parseVersion } from '../../../client/common/platform/osinfo';
+import { getOSInfo, getOSType, getPathVariableName, getVirtualEnvBinName, is64bit, isLinux, isMac, isWindows, matchPlatform, OSInfo, parseVersion } from '../../../client/common/platform/osinfo';
 import { OSDistro, OSType } from '../../../client/common/platform/types';
 import { Stub } from '../../../test/stub';
 
@@ -167,6 +167,7 @@ suite('OS Info - getOSType()', () => {
     }
 });
 
+// tslint:disable-next-line:max-func-body-length
 suite('OS Info - helpers', () => {
     test('isWindows', async () => {
         for (const info of [WIN_10]) {
@@ -245,4 +246,175 @@ suite('OS Info - helpers', () => {
         expect(result).to.be.equal('bin', 'invalid value');
     });
 
+    test('matchPlatform - any', async () => {
+        const cases: [string, OSInfo, boolean][] = [
+            ['', WIN_10, true],
+            ['', MAC_HIGH_SIERRA, true],
+            ['', UBUNTU_BIONIC, true],
+            ['', FEDORA, true],
+            ['', ARCH, true]
+        ];
+        for (const [names, info, expected] of cases) {
+            const result = matchPlatform(names, info);
+
+            expect(result).to.be.equal(expected);
+        }
+    });
+
+    test('matchPlatform - Windows', async () => {
+        const cases: [string, OSInfo, boolean][] = [
+            ['win', WIN_10, true],
+            ['win', MAC_HIGH_SIERRA, false],
+            ['win', UBUNTU_BIONIC, false],
+            ['win', FEDORA, false],
+            ['win', ARCH, false],
+
+            ['-win', WIN_10, false],
+            ['-win', MAC_HIGH_SIERRA, true],
+            ['-win', UBUNTU_BIONIC, true],
+            ['-win', FEDORA, true],
+            ['-win', ARCH, true]
+        ];
+        for (const [names, info, expected] of cases) {
+            const result = matchPlatform(names, info);
+
+            expect(result).to.be.equal(expected);
+        }
+    });
+
+    test('matchPlatform - OSX', async () => {
+        const cases: [string, OSInfo, boolean][] = [
+            ['osx', MAC_HIGH_SIERRA, true],
+            ['mac', MAC_HIGH_SIERRA, true],
+            ['osx', WIN_10, false],
+            ['osx', UBUNTU_BIONIC, false],
+            ['osx', FEDORA, false],
+            ['osx', ARCH, false],
+
+            ['-osx', MAC_HIGH_SIERRA, false],
+            ['-mac', MAC_HIGH_SIERRA, false],
+            ['-osx', WIN_10, true],
+            ['-osx', UBUNTU_BIONIC, true],
+            ['-osx', FEDORA, true],
+            ['-osx', ARCH, true]
+        ];
+        for (const [names, info, expected] of cases) {
+            const result = matchPlatform(names, info);
+
+            expect(result).to.be.equal(expected);
+        }
+    });
+
+    test('matchPlatform - Linux', async () => {
+        const cases: [string, OSInfo, boolean][] = [
+            ['linux', UBUNTU_BIONIC, true],
+            ['linux', FEDORA, true],
+            ['linux', ARCH, true],
+            ['linux', WIN_10, false],
+            ['linux', MAC_HIGH_SIERRA, false],
+
+            ['-linux', UBUNTU_BIONIC, false],
+            ['-linux', FEDORA, false],
+            ['-linux', ARCH, false],
+            ['-linux', WIN_10, true],
+            ['-linux', MAC_HIGH_SIERRA, true]
+        ];
+        for (const [names, info, expected] of cases) {
+            const result = matchPlatform(names, info);
+
+            expect(result).to.be.equal(expected, `${names} ${info.type} ${info.distro}`);
+        }
+    });
+
+    test('matchPlatform - ubuntu', async () => {
+        const cases: [string, OSInfo, boolean][] = [
+            ['ubuntu', UBUNTU_BIONIC, true],
+            ['ubuntu', FEDORA, false],
+            ['ubuntu', ARCH, false],
+            ['ubuntu', WIN_10, false],
+            ['ubuntu', MAC_HIGH_SIERRA, false],
+
+            ['-ubuntu', UBUNTU_BIONIC, false],
+            ['-ubuntu', FEDORA, true],
+            ['-ubuntu', ARCH, true],
+            ['-ubuntu', WIN_10, true],
+            ['-ubuntu', MAC_HIGH_SIERRA, true]
+        ];
+        for (const [names, info, expected] of cases) {
+            const result = matchPlatform(names, info);
+
+            expect(result).to.be.equal(expected, `${names} ${info.type} ${info.distro}`);
+        }
+    });
+
+    test('matchPlatform - fedora', async () => {
+        const cases: [string, OSInfo, boolean][] = [
+            ['fedora', FEDORA, true],
+            ['fedora', UBUNTU_BIONIC, false],
+            ['fedora', ARCH, false],
+            ['fedora', WIN_10, false],
+            ['fedora', MAC_HIGH_SIERRA, false],
+
+            ['-fedora', FEDORA, false],
+            ['-fedora', UBUNTU_BIONIC, true],
+            ['-fedora', ARCH, true],
+            ['-fedora', WIN_10, true],
+            ['-fedora', MAC_HIGH_SIERRA, true]
+        ];
+        for (const [names, info, expected] of cases) {
+            const result = matchPlatform(names, info);
+
+            expect(result).to.be.equal(expected, `${names} ${info.type} ${info.distro}`);
+        }
+    });
+
+    test('matchPlatform - arch', async () => {
+        const cases: [string, OSInfo, boolean][] = [
+            ['arch', ARCH, true],
+            ['arch', UBUNTU_BIONIC, false],
+            ['arch', FEDORA, false],
+            ['arch', WIN_10, false],
+            ['arch', MAC_HIGH_SIERRA, false],
+
+            ['-arch', ARCH, false],
+            ['-arch', UBUNTU_BIONIC, true],
+            ['-arch', FEDORA, true],
+            ['-arch', WIN_10, true],
+            ['-arch', MAC_HIGH_SIERRA, true]
+        ];
+        for (const [names, info, expected] of cases) {
+            const result = matchPlatform(names, info);
+
+            expect(result).to.be.equal(expected, `${names} ${info.type} ${info.distro}`);
+        }
+    });
+
+    test('matchPlatform - multi', async () => {
+        function runTest(names: string, cases: [OSInfo, boolean][]) {
+            for (const [info, expected] of cases) {
+                const result = matchPlatform(names, info);
+
+                expect(result).to.be.equal(expected);
+            }
+        }
+
+        runTest('win|osx|linux', [
+            [WIN_10, true],
+            [MAC_HIGH_SIERRA, true],
+            [UBUNTU_BIONIC, true],
+            [ARCH, true]
+        ]);
+        runTest('win|osx', [
+            [WIN_10, true],
+            [MAC_HIGH_SIERRA, true],
+            [UBUNTU_BIONIC, false],
+            [ARCH, false]
+        ]);
+        runTest('osx|linux', [
+            [WIN_10, false],
+            [MAC_HIGH_SIERRA, true],
+            [UBUNTU_BIONIC, true],
+            [ARCH, true]
+        ]);
+    });
 });

@@ -37,6 +37,8 @@ export interface IOSInfo {
     readonly arch: string;
     readonly version: semver.SemVer;
     readonly distro: OSDistro;
+
+    matchPlatform(names: string): boolean;
 }
 
 export enum RegistryHive {
