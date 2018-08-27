@@ -8,7 +8,16 @@ class Foo(object):
         pass
 
     def meth1(self,arg):
-        """missing a space after the comma in args"""
+        """missing a space between 'self' and 'arg'. This should trigger the
+        following three line lint warning:
+
+        C: 10, 0: Exactly one space required after comma
+            def meth1(self,arg):
+                        ^ (bad-whitespace)
+
+        The following three lines should also cause three line lint errors
+        due to "Exactly one space required after comma"
+        """
         a = (1,2)
         b = (1,2)
         c = (1,2)
