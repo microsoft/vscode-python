@@ -23,7 +23,7 @@ const pep8ConfigPath = path.join(pythoFilesPath, 'pep8config');
 const pydocstyleConfigPath27 = path.join(pythoFilesPath, 'pydocstyleconfig27');
 const pylintConfigPath = path.join(pythoFilesPath, 'pylintconfig');
 const fileToLint = path.join(pythoFilesPath, 'file.py');
-const threeLinLintsPath = path.join(pythoFilesPath, 'threeLineLints.py');
+const threeLineLintsPath = path.join(pythoFilesPath, 'threeLineLints.py');
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
     { line: 24, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: '' },
@@ -296,6 +296,6 @@ suite('Linting - General Tests', () => {
         const maxErrors = 5;
         const target = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
         await configService.updateSettingAsync('linting.maxNumberOfProblems', maxErrors, rootWorkspaceUri, target);
-        await testLinterMessageCount(Product.pylint, threeLinLintsPath, maxErrors);
+        await testLinterMessageCount(Product.pylint, threeLineLintsPath, maxErrors);
     });
 });
