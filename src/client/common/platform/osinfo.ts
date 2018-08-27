@@ -43,6 +43,10 @@ export class OSInfo implements IOSInfo {
     public get is64bit(): boolean {
         return this.arch === 'x64';
     }
+
+    public matchPlatform(names: string): boolean {
+        return matchPlatform(names, this);
+    }
 }
 
 export function getOSInfo(
@@ -162,4 +166,67 @@ export function parseVersion(raw: string): semver.SemVer {
         return new semver.SemVer('0.0.0');
     }
     return ver;
+}
+
+// Match the platform string to the given OS info.
+export function matchPlatform(names: string, info: OSInfo = getOSInfo()): boolean {
+    if (info.type === OSType.Unknown) {
+        return false;
+    }
+    names = names.trim();
+    if (names === '') {
+        return true;
+    }
+    for (let name of names.split('|')) {
+        name = name.trim();
+        if (matchOnePlatform(name, info)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function matchOnePlatform(name: string, info: OSInfo): boolean {
+    if (name === '' || name === '-') {
+        return false;
+    }
+    const negate = name[0] === '-';
+    if (negate) {
+        name = name.replace(/^-/, '');
+    }
+
+    const [osType, distro] = identifyOS(name);
+    if (osType === OSType.Unknown) {
+        return false;
+    }
+
+    let result = false;
+    if (osType === info.type) {
+        result = true;
+        if (osType === OSType.Linux) {
+            if (distro !== OSDistro.Unknown) {
+                result = distro === info.distro;
+            }
+        }
+    }
+    return negate ? !result : result;
+}
+
+function identifyOS(name: string): [OSType, OSDistro] {
+    name = name.toLowerCase();
+    if (/win/.test(name)) {
+        return [OSType.Windows, OSDistro.Unknown];
+    } else if (/darwin|mac|osx/.test(name)) {
+        return [OSType.OSX, OSDistro.Unknown];
+    } else if (/linux/.test(name)) {
+        return [OSType.Linux, OSDistro.Unknown];
+    }
+
+    // Try linux distros.
+    const distro = getLinuxDistroFromName(name);
+    if (distro !== OSDistro.Unknown) {
+        return [OSType.Linux, distro];
+    } else {
+        return [OSType.Unknown, OSDistro.Unknown];
+    }
 }

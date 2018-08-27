@@ -12,20 +12,41 @@ import {
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName } from './conda';
 
+/**
+ * Locate conda env interpreters based on the "conda environments file".
+ */
 @injectable()
 export class CondaEnvFileService extends CacheableLocatorService {
-    constructor(@inject(IInterpreterHelper) private helperService: IInterpreterHelper,
+    constructor(
+        @inject(IInterpreterHelper) private helperService: IInterpreterHelper,
         @inject(ICondaService) private condaService: ICondaService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(ILogger) private logger: ILogger) {
+        @inject(ILogger) private logger: ILogger
+    ) {
         super('CondaEnvFileService', serviceContainer);
     }
+
+    /**
+     * Release any held resources.
+     *
+     * Called by VS Code to indicate it is done with the resource.
+     */
     // tslint:disable-next-line:no-empty
     public dispose() { }
+
+    /**
+     * Return the located interpreters.
+     *
+     * This is used by CacheableLocatorService.getInterpreters().
+     */
     protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
         return this.getSuggestionsFromConda();
     }
+
+    /**
+     * Return the list of interpreters identified by the "conda environments file".
+     */
     private async getSuggestionsFromConda(): Promise<PythonInterpreter[]> {
         if (!this.condaService.condaEnvironmentsFile) {
             return [];
@@ -33,6 +54,10 @@ export class CondaEnvFileService extends CacheableLocatorService {
         return this.fileSystem.fileExists(this.condaService.condaEnvironmentsFile!)
             .then(exists => exists ? this.getEnvironmentsFromFile(this.condaService.condaEnvironmentsFile!) : Promise.resolve([]));
     }
+
+    /**
+     * Return the list of environments identified in the given file.
+     */
     private async getEnvironmentsFromFile(envFile: string) {
         try {
             const fileContents = await this.fileSystem.readFile(envFile);
@@ -63,6 +88,10 @@ export class CondaEnvFileService extends CacheableLocatorService {
             return [] as PythonInterpreter[];
         }
     }
+
+    /**
+     * Return the interpreter info for the given anaconda environment.
+     */
     private async getInterpreterDetails(environmentPath: string): Promise<PythonInterpreter | undefined> {
         const interpreter = this.condaService.getInterpreterPath(environmentPath);
         if (!interpreter || !await this.fileSystem.fileExists(interpreter)) {
@@ -83,6 +112,10 @@ export class CondaEnvFileService extends CacheableLocatorService {
             envPath: environmentPath
         };
     }
+
+    /**
+     * Remove the Anaconda company name from the given string.
+     */
     private stripCompanyName(content: string) {
         // Strip company name from version.
         const startOfCompanyName = AnacondaCompanyNames.reduce((index, companyName) => {

@@ -10,13 +10,25 @@ import { IPlatformService } from '../../platform/types';
 import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
+/**
+ * Support conda env activation (in the terminal).
+ */
 @injectable()
 export class CondaActivationCommandProvider implements ITerminalActivationCommandProvider {
-    constructor(private readonly serviceContainer: IServiceContainer) { }
+    constructor(
+        private readonly serviceContainer: IServiceContainer
+    ) { }
 
+    /**
+     * Is the given shell supported for activating a conda env?
+     */
     public isShellSupported(_targetShell: TerminalShellType): boolean {
         return true;
     }
+
+    /**
+     * Return the command needed to activate the conda env.
+     */
     public async getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
         const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;

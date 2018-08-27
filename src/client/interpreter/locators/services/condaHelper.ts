@@ -8,7 +8,14 @@ import { AnacondaDisplayName, AnacondaIdentfiers } from './conda';
 export type EnvironmentPath = string;
 export type EnvironmentName = string;
 
+/**
+ * Helpers for conda.
+ */
 export class CondaHelper {
+
+    /**
+     * Return the string to display for the conda interpreter.
+     */
     public getDisplayName(condaInfo: CondaInfo = {}): string {
         // Samples.
         // "3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]".
@@ -22,11 +29,16 @@ export class CondaHelper {
         const sysVersionParts = sysVersion.split('|', 2);
         if (sysVersionParts.length === 2) {
             const displayName = sysVersionParts[1].trim();
-            return this.isIdentifiableAsAnaconda(displayName) ? displayName : `${displayName} : ${AnacondaDisplayName}`;
+            if (this.isIdentifiableAsAnaconda(displayName)) {
+               return displayName;
+            } else {
+               return `${displayName} : ${AnacondaDisplayName}`;
+            }
         } else {
             return AnacondaDisplayName;
         }
     }
+
     /**
      * Parses output returned by the command `conda env list`.
      * Sample output is as follows:
@@ -43,14 +55,14 @@ export class CondaHelper {
      * @returns {{ name: string, path: string }[] | undefined}
      * @memberof CondaHelper
      */
-    public parseCondaEnvironmentNames(condaEnvironmentList: string): { name: string, path: string }[] | undefined {
+    public parseCondaEnvironmentNames(condaEnvironmentList: string): { name: string; path: string }[] | undefined {
         const environments = condaEnvironmentList.splitLines();
         const baseEnvironmentLine = environments.filter(line => line.indexOf('*') > 0);
         if (baseEnvironmentLine.length === 0) {
             return;
         }
         const pathStartIndex = baseEnvironmentLine[0].indexOf(baseEnvironmentLine[0].split('*')[1].trim());
-        const envs: { name: string, path: string }[] = [];
+        const envs: { name: string; path: string }[] = [];
         environments.forEach(line => {
             if (line.length <= pathStartIndex) {
                 return;
@@ -68,6 +80,10 @@ export class CondaHelper {
 
         return envs;
     }
+
+    /**
+     * Does the given string match a known Anaconda identifier.
+     */
     private isIdentifiableAsAnaconda(value: string) {
         const valueToSearch = value.toLowerCase();
         return AnacondaIdentfiers.some(item => valueToSearch.indexOf(item.toLowerCase()) !== -1);
