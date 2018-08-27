@@ -33,6 +33,7 @@ import { LanguageServerDownloader } from './downloader';
 import { InterpreterData, InterpreterDataService } from './interpreterDataService';
 import { PlatformData } from './platformData';
 import { ProgressReporting } from './progress';
+import { RequestWithProxy } from './requestWithProxy';
 import { IExtensionActivator } from './types';
 
 const PYTHON = 'python';
@@ -137,7 +138,12 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
         const mscorlib = path.join(this.context.extensionPath, languageServerFolder, 'mscorlib.dll');
         if (!await this.fs.fileExists(mscorlib)) {
-            const downloader = new LanguageServerDownloader(this.services, languageServerFolder);
+            const downloader = new LanguageServerDownloader(
+                this.output,
+                this.fs,
+                this.platformData,
+                new RequestWithProxy(this.workspace.getConfiguration('http').get('proxy', '')),
+                languageServerFolder);
             await downloader.downloadLanguageServer(this.context);
             reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_DOWNLOADED);
         }

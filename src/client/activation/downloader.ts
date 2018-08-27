@@ -3,17 +3,14 @@
 
 'use strict';
 
-import * as fileSystem from 'fs';
 import * as path from 'path';
-import * as request from 'request';
 import * as requestProgress from 'request-progress';
-import { OutputChannel, ProgressLocation, window } from 'vscode';
-import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { ProgressLocation, window } from 'vscode';
 import { createDeferred } from '../common/helpers';
-import { IFileSystem, IPlatformService } from '../common/platform/types';
+import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
 import { PlatformData, PlatformName } from './platformData';
+import { IDownloadFileService } from './types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const StreamZip = require('node-stream-zip');
@@ -31,25 +28,21 @@ export const DownloadLinks = {
 };
 
 export class LanguageServerDownloader {
-    private readonly output: OutputChannel;
-    private readonly platform: IPlatformService;
-    private readonly platformData: PlatformData;
-    private readonly fs: IFileSystem;
+    constructor(
+        private readonly output: IOutputChannel,
+        private readonly fs: IFileSystem,
+        private readonly platformData: PlatformData,
+        private requestHandler: IDownloadFileService,
+        private engineFolder: string
+    ) { }
 
-    constructor(private readonly services: IServiceContainer, private engineFolder: string) {
-        this.output = this.services.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        this.fs = this.services.get<IFileSystem>(IFileSystem);
-        this.platform = this.services.get<IPlatformService>(IPlatformService);
-        this.platformData = new PlatformData(this.platform, this.fs);
-    }
-
-    public async getDownloadUri() {
-        const platformString = await this.platformData.getPlatformName();
+    public getDownloadUri() {
+        const platformString = this.platformData.getPlatformName();
         return DownloadLinks[platformString];
     }
 
     public async downloadLanguageServer(context: IExtensionContext): Promise<void> {
-        const downloadUri = await this.getDownloadUri();
+        const downloadUri = this.getDownloadUri();
 
         let localTempFilePath = '';
         try {
@@ -71,7 +64,7 @@ export class LanguageServerDownloader {
         const tempFile = await this.fs.createTemporaryFile(downloadFileExtension);
 
         const deferred = createDeferred();
-        const fileStream = fileSystem.createWriteStream(tempFile.filePath);
+        const fileStream = this.fs.createWriteStream(tempFile.filePath);
         fileStream.on('finish', () => {
             fileStream.close();
         }).on('error', (err) => {
@@ -83,7 +76,8 @@ export class LanguageServerDownloader {
             location: ProgressLocation.Window
         }, (progress) => {
 
-            requestProgress(request(uri))
+            requestProgress(
+                this.requestHandler!.downloadFile(uri))
                 .on('progress', (state) => {
                     // https://www.npmjs.com/package/request-progress
                     const received = Math.round(state.size.transferred / 1024);
@@ -147,11 +141,10 @@ export class LanguageServerDownloader {
             return deferred.promise;
         });
 
-        // Set file to executable
-        if (!this.platform.isWindows) {
-            const executablePath = path.join(installFolder, this.platformData.getEngineExecutableName());
-            fileSystem.chmodSync(executablePath, '0764'); // -rwxrw-r--
-        }
+        // Set file to executable (nothing happens in Windows, as chmod has no definition there)
+        const executablePath = path.join(installFolder, this.platformData.getEngineExecutableName());
+        await this.fs.chmod(executablePath, '0764'); // -rwxrw-r--
+
         this.output.appendLine('done.');
     }
 }
