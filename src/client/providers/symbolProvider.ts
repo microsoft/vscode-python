@@ -9,15 +9,27 @@ import { captureTelemetry } from '../telemetry';
 import { SYMBOL } from '../telemetry/constants';
 import * as proxy from './jediProxy';
 
-export class PythonSymbolProvider implements DocumentSymbolProvider {
+/**
+ * Provides Python symbols to VS Code (from Jedi).
+ *
+ * See:
+ *   https://code.visualstudio.com/docs/extensionAPI/vscode-api#DocumentSymbolProvider
+ */
+export class JediSymbolProvider implements DocumentSymbolProvider {
     private debounceRequest: Map<string, { timer: NodeJS.Timer; deferred: Deferred<SymbolInformation[]> }>;
     private readonly fs: IFileSystem;
+
     public constructor(serviceContainer: IServiceContainer, private jediFactory: JediFactory, private readonly debounceTimeoutMs = 500) {
         this.debounceRequest = new Map<string, { timer: NodeJS.Timer; deferred: Deferred<SymbolInformation[]> }>();
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
+
     @captureTelemetry(SYMBOL)
     public provideDocumentSymbols(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
+        return this.provideDocumentSymbolsThrottled(document, token);
+    }
+
+    private provideDocumentSymbolsThrottled(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
         const key = `${document.uri.fsPath}`;
         if (this.debounceRequest.has(key)) {
             const item = this.debounceRequest.get(key)!;
@@ -63,7 +75,10 @@ export class PythonSymbolProvider implements DocumentSymbolProvider {
 
         return deferred.promise;
     }
-    public provideDocumentSymbolsForInternalUse(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
+
+    // This does not appear to be used anywhere currently...
+    // tslint:disable-next-line:no-unused-variable
+    private provideDocumentSymbolsUnthrottled(document: TextDocument, token: CancellationToken): Thenable<SymbolInformation[]> {
         const filename = document.fileName;
 
         const cmd: proxy.ICommand<proxy.ISymbolResult> = {
@@ -80,6 +95,7 @@ export class PythonSymbolProvider implements DocumentSymbolProvider {
         return this.jediFactory.getJediProxyHandler<proxy.ISymbolResult>(document.uri).sendCommandNonCancellableCommand(cmd, token)
             .then(data => this.parseData(document, data));
     }
+
     private parseData(document: TextDocument, data?: proxy.ISymbolResult): SymbolInformation[] {
         if (data) {
             const symbols = data.definitions.filter(sym => this.fs.arePathsSame(sym.fileName, document.fileName));
