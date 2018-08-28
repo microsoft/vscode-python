@@ -1,6 +1,7 @@
 'use strict';
 
 import { CancellationToken, DocumentSymbolProvider, Location, Range, SymbolInformation, TextDocument, Uri } from 'vscode';
+import { LanguageClient } from 'vscode-languageclient';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
 import { IServiceContainer } from '../ioc/types';
@@ -8,6 +9,23 @@ import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
 import { SYMBOL } from '../telemetry/constants';
 import * as proxy from './jediProxy';
+
+/**
+ * Provides Python symbols to VS Code (from the language server).
+ *
+ * See:
+ *   https://code.visualstudio.com/docs/extensionAPI/vscode-api#DocumentSymbolProvider
+ */
+export class LanguageServerSymbolProvider implements DocumentSymbolProvider {
+    constructor(
+        private readonly languageClient: LanguageClient
+    ) { }
+
+    public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<SymbolInformation[]> {
+        const args = { textDocument: { uri: document.uri.toString() } };
+        return this.languageClient.sendRequest<SymbolInformation[]>('textDocument/documentSymbol', args, token);
+    }
+}
 
 /**
  * Provides Python symbols to VS Code (from Jedi).
