@@ -22,7 +22,7 @@ import { WorkspaceSymbols } from '../workspaceSymbols/main';
 import { IExtensionActivator } from './types';
 
 @injectable()
-export class ClassicExtensionActivator implements IExtensionActivator {
+export class JediExtensionActivator implements IExtensionActivator {
     private readonly context: IExtensionContext;
     private jediFactory?: JediFactory;
     private readonly documentSelector: DocumentFilter[];
