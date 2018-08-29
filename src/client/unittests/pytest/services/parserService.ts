@@ -28,13 +28,25 @@ export class TestsParser implements ITestsParser {
 
         let haveErrors = false;
 
+        let packagePrefix: string = '';
         content.split(/\r?\n/g).forEach((line, index, lines) => {
             if (options.token && options.token.isCancellationRequested) {
                 return;
             }
-            if (line.trim().startsWith('<Module \'') || index === lines.length - 1) {
+
+            const trimmedLine: string = line.trim();
+
+            if (trimmedLine.startsWith('<Package \'')) {
                 // process the previous lines
-                this.parsePyTestModuleCollectionResult(options.cwd, logOutputLines, testFiles, parentNodes);
+                this.parsePyTestModuleCollectionResult(options.cwd, logOutputLines, testFiles, parentNodes, packagePrefix);
+                logOutputLines = [''];
+
+                packagePrefix = this.extractPackageName(trimmedLine, options.cwd);
+            }
+
+            if (trimmedLine.startsWith('<Module \'') || index === lines.length - 1) {
+                // process the previous lines
+                this.parsePyTestModuleCollectionResult(options.cwd, logOutputLines, testFiles, parentNodes, packagePrefix);
                 logOutputLines = [''];
             }
             if (errorLine.test(line)) {
@@ -98,15 +110,44 @@ export class TestsParser implements ITestsParser {
         return;
 
     }
-    private parsePyTestModuleCollectionResult(rootDirectory: string, lines: string[], testFiles: TestFile[], parentNodes: { indent: number; item: TestFile | TestSuite }[]) {
+
+    // extract the 'package' name from a given PyTest (>= 3.7) output line
+    private extractPackageName(packageLine: string, rootDir: string): string {
+        const packagePath: string = extractBetweenDelimiters(packageLine, DELIMITER, DELIMITER);
+        let packageName: string = path.normalize(packagePath);
+        const tmpRoot: string = path.normalize(rootDir);
+        if (packageName.indexOf(tmpRoot) === 0) {
+            packageName = packageName.substring(tmpRoot.length);
+            if (packageName.startsWith(path.sep)) {
+                packageName = packageName.substring(1);
+            }
+            if (packageName.endsWith(path.sep)) {
+                packageName = packageName.substring(0, packageName.length - 1);
+            }
+            packageName = packageName.replace('\\', '/');
+        }
+        return packageName;
+    }
+
+    private parsePyTestModuleCollectionResult(
+        rootDirectory: string,
+        lines: string[],
+        testFiles: TestFile[],
+        parentNodes: { indent: number; item: TestFile | TestSuite }[],
+        packagePrefix: string = ''
+    ) {
+
         let currentPackage: string = '';
 
         lines.forEach(line => {
             const trimmedLine = line.trim();
-            const name = extractBetweenDelimiters(trimmedLine, DELIMITER, DELIMITER);
+            let name: string = extractBetweenDelimiters(trimmedLine, DELIMITER, DELIMITER);
             const indent = line.indexOf('<');
 
             if (trimmedLine.startsWith('<Module \'')) {
+                if (packagePrefix && packagePrefix.length > 0) {
+                    name = packagePrefix.concat('/', name);
+                }
                 currentPackage = convertFileToPackage(name);
                 const fullyQualifiedName = path.isAbsolute(name) ? name : path.resolve(rootDirectory, name);
                 const testFile = {
