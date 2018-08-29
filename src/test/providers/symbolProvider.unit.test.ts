@@ -7,12 +7,14 @@
 
 import { expect, use } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { CancellationToken, CancellationTokenSource, CompletionItemKind, DocumentSymbolProvider, SymbolKind, TextDocument, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, CompletionItemKind, DocumentSymbolProvider, Location, SymbolInformation, SymbolKind, TextDocument, Uri } from 'vscode';
+import { LanguageClient } from 'vscode-languageclient';
 import { IFileSystem } from '../../client/common/platform/types';
+import { parseRange, splitFullName } from '../../client/common/utils';
 import { IServiceContainer } from '../../client/ioc/types';
 import { JediFactory } from '../../client/languageServices/jediProxyFactory';
 import { IDefinition, ISymbolResult, JediProxyHandler } from '../../client/providers/jediProxy';
-import { JediSymbolProvider } from '../../client/providers/symbolProvider';
+import { JediSymbolProvider, LanguageServerSymbolProvider } from '../../client/providers/symbolProvider';
 
 const assertArrays = require('chai-arrays');
 use(assertArrays);
@@ -179,3 +181,76 @@ suite('Jedi Symbol Provider', () => {
         jediHandler.verifyAll();
     });
 });
+
+suite('Language Server Symbol Provider', () => {
+
+    function prep(
+        filename: string,
+        symbols: [string, SymbolKind, string | number][],
+        isUntitled: boolean = false,
+        text: string = ''
+    ): [Uri, TypeMoq.IMock<TextDocument>, SymbolInformation[]] {
+        const uri = Uri.file(filename);
+
+        const doc = TypeMoq.Mock.ofType<TextDocument>();
+        doc.setup(d => d.uri).returns(() => uri);
+        doc.setup(d => d.fileName).returns(() => filename);
+        doc.setup(d => d.isUntitled).returns(() => isUntitled);
+        doc.setup(d => d.getText(TypeMoq.It.isAny())).returns(() => text);
+
+        const expected = newSymbols(uri, symbols);
+
+        return [uri, doc, expected];
+    }
+
+    test('Ensure symbols are returned', async () => {
+        const [uri, doc, expected] = prep(__filename, [
+            ['spam', SymbolKind.Array, 0]
+        ]);
+        const token = new CancellationTokenSource().token;
+        const langClient = TypeMoq.Mock.ofType<LanguageClient>();
+        langClient.setup(l => l.sendRequest(
+            TypeMoq.It.isValue('textDocument/documentSymbol'),
+            TypeMoq.It.isValue({ textDocument: { uri: uri.toString() } }),
+            TypeMoq.It.isValue(token)
+        )).returns(() => Promise.resolve(expected))
+            .verifiable(TypeMoq.Times.once());
+        const provider = new LanguageServerSymbolProvider(langClient.object);
+
+        const items = await provider.provideDocumentSymbols(doc.object, token);
+
+        expect(items).to.deep.equal(expected);
+        doc.verify(d => d.uri, TypeMoq.Times.once());
+        doc.verify(d => d.fileName, TypeMoq.Times.never());
+        doc.verify(d => d.isUntitled, TypeMoq.Times.never());
+        doc.verify(d => d.getText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+        langClient.verifyAll();
+    });
+});
+
+//################################
+// helpers
+
+function newSymbols(
+    uri: Uri,
+    info: [string, SymbolKind, string | number][]
+): SymbolInformation[] {
+    const symbols: SymbolInformation[] = [];
+    for (const [fullName, kind, range] of info) {
+        const symbol = newSymbol(uri, fullName, kind, range);
+        symbols.push(symbol);
+    }
+    return symbols;
+}
+
+function newSymbol(
+    uri: Uri,
+    fullName: string,
+    kind: SymbolKind,
+    rawRange: string | number = ''
+): SymbolInformation {
+    const [containerName, name] = splitFullName(fullName);
+    const range = parseRange(rawRange);
+    const loc = new Location(uri, range);
+    return new SymbolInformation(name, kind, containerName, loc);
+}
