@@ -182,48 +182,73 @@ suite('Jedi Symbol Provider', () => {
     });
 });
 
+function newDoc(
+    uri?: Uri,
+    filename?: string,
+    isUntitled?: boolean,
+    text?: string
+): TypeMoq.IMock<TextDocument> {
+    const doc = TypeMoq.Mock.ofType<TextDocument>(undefined, TypeMoq.MockBehavior.Strict);
+    if (uri !== undefined) {
+        doc.setup(d => d.uri).returns(() => uri);
+    }
+    if (filename !== undefined) {
+        doc.setup(d => d.fileName).returns(() => filename);
+    }
+    if (isUntitled !== undefined) {
+        doc.setup(d => d.isUntitled).returns(() => isUntitled);
+    }
+    if (text !== undefined) {
+        doc.setup(d => d.getText(TypeMoq.It.isAny())).returns(() => text);
+    }
+    return doc;
+}
+
 suite('Language Server Symbol Provider', () => {
 
-    function prep(
-        filename: string,
-        symbols: [string, SymbolKind, string | number][],
-        isUntitled: boolean = false,
-        text: string = ''
-    ): [Uri, TypeMoq.IMock<TextDocument>, SymbolInformation[]] {
-        const uri = Uri.file(filename);
+    function newLanguageClient(
+        token: CancellationToken,
+        results: [any, SymbolInformation[]][]
+    ): TypeMoq.IMock<LanguageClient> {
+        const langClient = TypeMoq.Mock.ofType<LanguageClient>(undefined, TypeMoq.MockBehavior.Strict);
+        for (const [doc, symbols] of results) {
+            langClient.setup(l => l.sendRequest(
+                TypeMoq.It.isValue('textDocument/documentSymbol'),
+                TypeMoq.It.isValue(doc),
+                TypeMoq.It.isValue(token)
+            ))
+                .returns(() => Promise.resolve(symbols))
+                .verifiable(TypeMoq.Times.once());
+        }
+        return langClient;
+    }
 
-        const doc = TypeMoq.Mock.ofType<TextDocument>();
-        doc.setup(d => d.uri).returns(() => uri);
-        doc.setup(d => d.fileName).returns(() => filename);
-        doc.setup(d => d.isUntitled).returns(() => isUntitled);
-        doc.setup(d => d.getText(TypeMoq.It.isAny())).returns(() => text);
-
-        const expected = newSymbols(uri, symbols);
-
-        return [uri, doc, expected];
+    function getRawDoc(
+        uri: Uri
+    ) {
+        return {
+            textDocument: {
+                uri: uri.toString()
+            }
+        };
     }
 
     test('Ensure symbols are returned', async () => {
-        const [uri, doc, expected] = prep(__filename, [
+        const uri = Uri.file(__filename);
+        const expected = newSymbols(uri, [
             ['spam', SymbolKind.Array, 0]
         ]);
+        const doc = newDoc(uri);
         const token = new CancellationTokenSource().token;
-        const langClient = TypeMoq.Mock.ofType<LanguageClient>();
-        langClient.setup(l => l.sendRequest(
-            TypeMoq.It.isValue('textDocument/documentSymbol'),
-            TypeMoq.It.isValue({ textDocument: { uri: uri.toString() } }),
-            TypeMoq.It.isValue(token)
-        )).returns(() => Promise.resolve(expected))
-            .verifiable(TypeMoq.Times.once());
+        const langClient = newLanguageClient(token, [
+            [getRawDoc(uri), expected]
+        ]);
         const provider = new LanguageServerSymbolProvider(langClient.object);
 
         const items = await provider.provideDocumentSymbols(doc.object, token);
 
         expect(items).to.deep.equal(expected);
-        doc.verify(d => d.uri, TypeMoq.Times.once());
-        doc.verify(d => d.fileName, TypeMoq.Times.never());
-        doc.verify(d => d.isUntitled, TypeMoq.Times.never());
-        doc.verify(d => d.getText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+        doc.verifyAll();
         langClient.verifyAll();
     });
 });
