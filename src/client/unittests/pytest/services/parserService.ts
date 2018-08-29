@@ -11,7 +11,9 @@ const DELIMITER = '\'';
 
 @injectable()
 export class TestsParser implements ITestsParser {
+
     constructor(@inject(ITestsHelper) private testsHelper: ITestsHelper) { }
+
     public parse(content: string, options: ParserOptions): Tests {
         const testFiles = this.getTestFiles(content, options);
         return this.testsHelper.flattenTestFiles(testFiles);
@@ -111,7 +113,12 @@ export class TestsParser implements ITestsParser {
 
     }
 
-    // extract the 'package' name from a given PyTest (>= 3.7) output line
+    /**
+     * Extract the 'package' name from a given PyTest (>= 3.7) output line
+     *
+     * @param packageLine A single line of output from pytest that starts with `<Package` (may have leading white space).
+     * @param rootDir Value is pytest's `--rootdir=` parameter.
+     */
     private extractPackageName(packageLine: string, rootDir: string): string {
         const packagePath: string = extractBetweenDelimiters(packageLine, DELIMITER, DELIMITER);
         let packageName: string = path.normalize(packagePath);

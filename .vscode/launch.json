@@ -129,7 +129,7 @@
             "name": "Extension + Debugger",
             "configurations": [
                 "Launch Extension",
-                "Launch Extension as debugServer"
+                "Launch Debugger as debugServer"
             ]
         }
     ]
