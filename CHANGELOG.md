@@ -1,6 +1,6 @@
 # Changelog
 
-## 2018.8.0-beta (21 August 2018)
+## 2018.8.0-rc (30 August 2018)
 
 ### Thanks
 
