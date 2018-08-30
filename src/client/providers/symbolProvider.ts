@@ -1,6 +1,6 @@
 'use strict';
 
-import { CancellationToken, DocumentSymbolProvider, Location, Range, SymbolInformation, TextDocument, Uri } from 'vscode';
+import { CancellationToken, DocumentSymbolProvider, Location, Range, SymbolInformation, SymbolKind, TextDocument, Uri } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
@@ -9,6 +9,62 @@ import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
 import { SYMBOL } from '../telemetry/constants';
 import * as proxy from './jediProxy';
+
+/**
+ * A representation of the symbol data the language server provides.
+ */
+interface ILSSymbolTree {
+    name: string;
+    kind: SymbolKind;
+    range: IRange;
+    children?: ILSSymbolTree[];
+    // We don't care about the rest.
+    selectionRange?: IRange;
+    _functionKind?: string;
+    deprecated?: boolean;
+    detail?: string;
+}
+interface IRange {
+    start: IPosition;
+    end: IPosition;
+}
+interface IPosition {
+    line: number;
+    character: number;
+}
+
+function flattenSymbolTree(tree: ILSSymbolTree, uri: Uri, containerName: string = ''): SymbolInformation[] {
+    const flattened: SymbolInformation[] = [];
+
+    const range = new Range(
+        tree.range.start.line,
+        tree.range.start.character,
+        tree.range.end.line,
+        tree.range.end.character
+    );
+    const info = new SymbolInformation(
+        tree.name,
+        // For whatever reason, the values of VS Code's SymbolKind enum
+        // are off-by-one relative to the LSP:
+        //  https://microsoft.github.io/language-server-protocol/specification#document-symbols-request-leftwards_arrow_with_hook
+        tree.kind - 1,
+        containerName,
+        new Location(uri, range)
+    );
+    flattened.push(info);
+
+    if (tree.children && tree.children.length > 0) {
+        // FYI: Jedi doesn't fully-qualify the container name so we
+        // don't bother here either.
+        //const fullName = `${containerName}.${tree.name}`;
+        for (const child of tree.children) {
+            const flattenedChild = flattenSymbolTree(child, uri, tree.name);
+            flattened.push(...flattenedChild);
+        }
+    }
+
+    return flattened;
+}
 
 /**
  * Provides Python symbols to VS Code (from the language server).
@@ -22,8 +78,19 @@ export class LanguageServerSymbolProvider implements DocumentSymbolProvider {
     ) { }
 
     public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<SymbolInformation[]> {
-        const args = { textDocument: { uri: document.uri.toString() } };
-        return this.languageClient.sendRequest<SymbolInformation[]>('textDocument/documentSymbol', args, token);
+        const uri = document.uri;
+        const args = { textDocument: { uri: uri.toString() } };
+        const raw = await this.languageClient.sendRequest<ILSSymbolTree[]>(
+            'textDocument/documentSymbol',
+            args,
+            token
+        );
+        const symbols: SymbolInformation[] = [];
+        for (const tree of raw) {
+            const flattened = flattenSymbolTree(tree, uri);
+            symbols.push(...flattened);
+        }
+        return Promise.resolve(symbols);
     }
 }
 

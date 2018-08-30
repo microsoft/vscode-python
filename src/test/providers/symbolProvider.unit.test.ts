@@ -7,7 +7,11 @@
 
 import { expect, use } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { CancellationToken, CancellationTokenSource, CompletionItemKind, DocumentSymbolProvider, Location, SymbolInformation, SymbolKind, TextDocument, Uri } from 'vscode';
+import {
+    CancellationToken, CancellationTokenSource, CompletionItemKind,
+    DocumentSymbolProvider, Location, Range, SymbolInformation, SymbolKind,
+    TextDocument, Uri
+} from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { IFileSystem } from '../../client/common/platform/types';
 import { parseRange, splitFullName } from '../../client/common/utils';
@@ -208,7 +212,7 @@ suite('Language Server Symbol Provider', () => {
 
     function newLanguageClient(
         token: CancellationToken,
-        results: [any, SymbolInformation[]][]
+        results: [any, any[]][]
     ): TypeMoq.IMock<LanguageClient> {
         const langClient = TypeMoq.Mock.ofType<LanguageClient>(undefined, TypeMoq.MockBehavior.Strict);
         for (const [doc, symbols] of results) {
@@ -233,7 +237,16 @@ suite('Language Server Symbol Provider', () => {
         };
     }
 
-    test('Ensure symbols are returned', async () => {
+    test('Ensure symbols are returned - simple', async () => {
+        const raw = [{
+            name: 'spam',
+            kind: SymbolKind.Array + 1,
+            range: {
+                start: {line: 0, character: 0},
+                end: {line: 0, character: 0}
+            },
+            children: []
+        }];
         const uri = Uri.file(__filename);
         const expected = newSymbols(uri, [
             ['spam', SymbolKind.Array, 0]
@@ -241,7 +254,7 @@ suite('Language Server Symbol Provider', () => {
         const doc = newDoc(uri);
         const token = new CancellationTokenSource().token;
         const langClient = newLanguageClient(token, [
-            [getRawDoc(uri), expected]
+            [getRawDoc(uri), raw]
         ]);
         const provider = new LanguageServerSymbolProvider(langClient.object);
 
@@ -250,6 +263,160 @@ suite('Language Server Symbol Provider', () => {
         expect(items).to.deep.equal(expected);
         doc.verifyAll();
         langClient.verifyAll();
+    });
+    test('Ensure symbols are returned - minimal', async () => {
+        const uri = Uri.file(__filename);
+
+        // The test data is loosely based on the "full" test.
+        const raw = [{
+            name: 'SpamTests',
+            kind: 5,
+            range: {
+                start: {line: 2, character: 6},
+                end: {line: 2, character: 15}
+            },
+            children: [
+                 {
+                     name: 'test_all',
+                     kind: 12,
+                     range: {
+                         start: {line: 3, character: 8},
+                         end: {line: 3, character: 16}
+                     },
+                     children: [{
+                         name: 'self',
+                         kind: 13,
+                         range: {
+                             start: {line: 3, character: 17},
+                             end: {line: 3, character: 21}
+                         },
+                         children: []
+                     }]
+                 }, {
+                     name: 'assertTrue',
+                     kind: 13,
+                     range: {
+                         start: {line: 0, character: 0},
+                         end: {line: 0, character: 0}
+                     },
+                     children: []
+                 }
+            ]
+        }];
+        const expected = [
+            new SymbolInformation(
+                'SpamTests',
+                SymbolKind.Class,
+                '',
+                new Location(
+                    uri,
+                    new Range(2, 6, 2, 15)
+                )
+            ),
+            new SymbolInformation(
+                'test_all',
+                SymbolKind.Function,
+                'SpamTests',
+                new Location(
+                    uri,
+                    new Range(3, 8, 3, 16)
+                )
+            ),
+            new SymbolInformation(
+                'self',
+                SymbolKind.Variable,
+                'test_all',
+                new Location(
+                    uri,
+                    new Range(3, 17, 3, 21)
+                )
+            ),
+            new SymbolInformation(
+                'assertTrue',
+                SymbolKind.Variable,
+                'SpamTests',
+                new Location(
+                    uri,
+                    new Range(0, 0, 0, 0)
+                )
+            )
+        ];
+
+        const doc = newDoc(uri);
+        const token = new CancellationTokenSource().token;
+        const langClient = newLanguageClient(token, [
+            [getRawDoc(uri), raw]
+        ]);
+        const provider = new LanguageServerSymbolProvider(langClient.object);
+
+        const items = await provider.provideDocumentSymbols(doc.object, token);
+
+        expect(items).to.deep.equal(expected);
+    });
+    test('Ensure symbols are returned - full', async () => {
+        const uri = Uri.file(__filename);
+
+        // This is the raw symbol data returned by the language server which
+        // gets converted to SymbolInformation[].  It was captured from an
+        // actual VS Code session for a file with the following code:
+        //
+        //   import unittest
+        //
+        //   class SpamTests(unittest.TestCase):
+        //       def test_all(self):
+        //           self.assertTrue(False)
+        //
+        // See: LanguageServerSymbolProvider.provideDocumentSymbols()
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: Change "raw" once the following issues are resolved:
+        //  * https://github.com/Microsoft/python-language-server/issues/1
+        //  * https://github.com/Microsoft/python-language-server/issues/2
+        const raw = JSON.parse('[{"name":"SpamTests","detail":"SpamTests","kind":5,"deprecated":false,"range":{"start":{"line":2,"character":6},"end":{"line":2,"character":15}},"selectionRange":{"start":{"line":2,"character":6},"end":{"line":2,"character":15}},"children":[{"name":"test_all","detail":"test_all","kind":12,"deprecated":false,"range":{"start":{"line":3,"character":4},"end":{"line":4,"character":30}},"selectionRange":{"start":{"line":3,"character":4},"end":{"line":4,"character":30}},"children":[{"name":"self","detail":"self","kind":13,"deprecated":false,"range":{"start":{"line":3,"character":17},"end":{"line":3,"character":21}},"selectionRange":{"start":{"line":3,"character":17},"end":{"line":3,"character":21}},"children":[],"_functionKind":""}],"_functionKind":"function"},{"name":"assertTrue","detail":"assertTrue","kind":13,"deprecated":false,"range":{"start":{"line":0,"character":0},"end":{"line":0,"character":0}},"selectionRange":{"start":{"line":0,"character":0},"end":{"line":0,"character":0}},"children":[],"_functionKind":""}],"_functionKind":"class"}]');
+        raw[0].children[0].range.start.character = 8;
+        raw[0].children[0].range.end.line = 3;
+        raw[0].children[0].range.end.character = 16;
+
+        // This is the data from Jedi corresponding to same Python code
+        // for which the raw data above was generated.
+        // See: JediSymbolProvider.provideDocumentSymbols()
+        const expectedRaw = JSON.parse(`[{"name":"unittest","kind":1,"location":{"uri":{"$mid":1,"path":"${__filename}","scheme":"file"},"range":[{"line":0,"character":7},{"line":0,"character":15}]},"containerName":""},{"name":"SpamTests","kind":4,"location":{"uri":{"$mid":1,"path":"${__filename}","scheme":"file"},"range":[{"line":2,"character":0},{"line":4,"character":29}]},"containerName":""},{"name":"test_all","kind":11,"location":{"uri":{"$mid":1,"path":"${__filename}","scheme":"file"},"range":[{"line":3,"character":4},{"line":4,"character":29}]},"containerName":"SpamTests"},{"name":"self","kind":12,"location":{"uri":{"$mid":1,"path":"${__filename}","scheme":"file"},"range":[{"line":3,"character":17},{"line":3,"character":21}]},"containerName":"test_all"}]`);
+        expectedRaw[1].location.range[0].character = 6;
+        expectedRaw[1].location.range[1].line = 2;
+        expectedRaw[1].location.range[1].character = 15;
+        expectedRaw[2].location.range[0].character = 8;
+        expectedRaw[2].location.range[1].line = 3;
+        expectedRaw[2].location.range[1].character = 16;
+        for (const symbol of expectedRaw) {
+            symbol.location.uri = uri;
+            symbol.location.range = new Range(
+                symbol.location.range[0].line,
+                symbol.location.range[0].character,
+                symbol.location.range[1].line,
+                symbol.location.range[1].character
+            );
+        }
+        const expected = expectedRaw as SymbolInformation[];
+        expected.shift();  // For now, drop the "unittest" symbol.
+        expected.push(new SymbolInformation(
+            'assertTrue',
+            SymbolKind.Variable,
+            'SpamTests',
+            new Location(
+                uri,
+                new Range(0, 0, 0, 0)
+            )
+        ));
+
+        const doc = newDoc(uri);
+        const token = new CancellationTokenSource().token;
+        const langClient = newLanguageClient(token, [
+            [getRawDoc(uri), raw]
+        ]);
+        const provider = new LanguageServerSymbolProvider(langClient.object);
+
+        const items = await provider.provideDocumentSymbols(doc.object, token);
+
+        expect(items).to.deep.equal(expected);
     });
 });
 
