@@ -49,6 +49,7 @@ import { PythonCodeActionProvider } from './providers/codeActionsProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { LinterProvider } from './providers/linterProvider';
 import { ReplProvider } from './providers/replProvider';
+import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { TerminalProvider } from './providers/terminalProvider';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
 import * as sortImports from './sortImports';
