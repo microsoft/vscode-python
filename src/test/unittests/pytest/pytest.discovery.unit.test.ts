@@ -10,7 +10,9 @@ import * as chaipromise from 'chai-as-promised';
 import * as path from 'path';
 import * as typeMoq from 'typemoq';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
+import { getOSType } from '../../..//client/common/platform/osinfo';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
+import { OSType } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { PYTEST_PROVIDER } from '../../../client/unittests/common/constants';
 import { TestsHelper } from '../../../client/unittests/common/testUtils';
@@ -19,7 +21,6 @@ import { FlattenedTestFunction, ITestDiscoveryService, ITestRunner, ITestsHelper
 import { TestDiscoveryService } from '../../../client/unittests/pytest/services/discoveryService';
 import { TestsParser as PyTestsParser } from '../../../client/unittests/pytest/services/parserService';
 import { IArgumentsService, TestFilter } from '../../../client/unittests/types';
-
 use(chaipromise);
 
 suite('Unit Tests - PyTest - Discovery', () => {
@@ -181,7 +182,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         runner.verifyAll();
         testParser.verifyAll();
     });
-    test('PyTest <= 3.6.3 identifies tests in files', async () => {
+    test('PyTest < 3.7 identifies tests in files', async () => {
         const testHelper = typeMoq.Mock.ofType<TestsHelper>();
         testHelper.setup(h => h.flattenTestFiles(typeMoq.It.isAny()))
             .returns((v) => v);
@@ -211,7 +212,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             // tslint:disable-next-line:quotemark
             " ============================= test session starts =============================\n \
     platform linux-- Python 3.5.2, pytest - 3.6.3, py - 1.6.0, pluggy - 0.6.0\n \
-    rootdir: /home/dekeeler/dev/github/d3r3kk/test/2347_pytest_codelens, inifile:\n \
+    rootdir: /home/user/dev/github/user/test/pytest_codelens, inifile:\n \
     collected 4 items\n \
     <Module 'tests/test_more_multiply.py' >\n \
       <Function 'test_times_100' >\n \
@@ -240,61 +241,73 @@ suite('Unit Tests - PyTest - Discovery', () => {
         const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         const appShell = typeMoq.Mock.ofType<IApplicationShell>();
         const cmdMgr = typeMoq.Mock.ofType<ICommandManager>();
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IApplicationShell), typeMoq.It.isAny())).returns(() => appShell.object);
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ICommandManager), typeMoq.It.isAny())).returns(() => cmdMgr.object);
+        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IApplicationShell), typeMoq.It.isAny()))
+            .returns(() => {
+                return appShell.object;
+            });
+        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ICommandManager), typeMoq.It.isAny()))
+            .returns(() => {
+                return cmdMgr.object;
+            });
         const forRealzTestHelper: TestsHelper = new TestsHelper(testFlattener, serviceContainer.object);
         const parser = new PyTestsParser(forRealzTestHelper);
         const outChannel = typeMoq.Mock.ofType<OutputChannel>();
         const cancelToken = typeMoq.Mock.ofType<CancellationToken>();
         cancelToken.setup(c => c.isCancellationRequested).returns(() => false);
         const wsFolder = typeMoq.Mock.ofType<Uri>();
+        const running_windows: boolean = getOSType() === OSType.Windows;
 
         const options: TestDiscoveryOptions = {
             args: [],
-            cwd: 'd:\\dev\\github\\d3r3kk\\test\\2347_pytest_codelens',
+            cwd: running_windows ? 'd:\\dev\\github\\user\\test\\pytest_codelens' : '/home/user/dev/github/user/test/pytest_codelens',
             ignoreCache: true,
             outChannel: outChannel.object,
             token: cancelToken.object,
             workspaceFolder: wsFolder.object
         };
 
-        //         const content: string =
-        //             // tslint:disable-next-line:quotemark
-        //             "============================= test session starts =============================\n \
-        // platform win32 -- Python 3.7.0, pytest-3.7.3, py-1.6.0, pluggy-0.7.1\n \
-        // rootdir: d:\\dev\\github\\d3r3kk\\test\\2347_pytest_codelens, inifile:\n \
-        // collected 4 items\n \
-        // <Package 'd:\\\\dev\\\\github\\\\d3r3kk\\\\test\\\\2347_pytest_codelens'>\n \
-        //   <Package 'd:\\\\dev\\\\github\\\\d3r3kk\\\\test\\\\2347_pytest_codelens\\\\tests'>\n \
-        //     <Module 'test_more_multiply.py'>\n \
-        //       <Function 'test_times_100'>\n \
-        //       <Function 'test_times_negative_1'>\n \
-        //     <Module 'test_multiply.py'>\n \
-        //       <Function 'test_times_10'>\n \
-        //       <Function 'test_times_2'>\n \
-        // \n \
-        // ======================== no tests ran in 0.03 seconds =========================\n";
-        const content: string =
+        const content_win: string =
             // tslint:disable-next-line:quotemark
             "============================= test session starts =============================\n \
 platform win32 -- Python 3.7.0, pytest-3.7.3, py-1.6.0, pluggy-0.7.1\n \
-rootdir: d:\\dev\\github\\d3r3kk\\test\\2347_pytest_codelens, inifile:\n \
+rootdir: d:\\dev\\github\\user\\test\\pytest_codelens, inifile:\n \
 collected 6 items\n \
-<Package 'd:\\\\dev\\\\github\\\\d3r3kk\\\\test\\\\2347_pytest_codelens'>\n \
-  <Package 'd:\\\\dev\\\\github\\\\d3r3kk\\\\test\\\\2347_pytest_codelens\\\\tests'>\n \
+<Package 'd:\\\\dev\\\\github\\\\user\\\\test\\\\pytest_codelens'>\n \
+  <Package 'd:\\\\dev\\\\github\\\\user\\\\test\\\\pytest_codelens\\\\tests'>\n \
     <Module 'test_more_multiply.py'>\n \
       <Function 'test_times_100'>\n \
       <Function 'test_times_negative_1'>\n \
-      <Function 'test_derek_is_cool'>\n \
+      <Function 'test_nothing_here'>\n \
     <Module 'test_multiply.py'>\n \
       <Function 'test_times_10'>\n \
       <Function 'test_times_2'>\n \
-    <Package 'd:\\\\dev\\\\github\\\\d3r3kk\\\\test\\\\2347_pytest_codelens\\\\tests\\\\further_tests'>\n \
+    <Package 'd:\\\\dev\\\\github\\\\user\\\\test\\\\pytest_codelens\\\\tests\\\\further_tests'>\n \
+      <Module 'test_gimme_5.py'>\n \
+        <Function 'test_gimme_5'>\n \
+\n \
+======================== no tests ran in 0.05 seconds =========================\n";
+        const content_nonwin: string =
+            // tslint:disable-next-line:quotemark
+            "============================= test session starts =============================\n \
+platform linux -- Python 3.7.0+, pytest-3.7.4, py-1.6.0, pluggy-0.7.1\n \
+rootdir: /home/user/dev/github/user/test/pytest_codelens, inifile:\n \
+collected 6 items\n \
+<Package '/home/user/dev/github/user/test/pytest_codelens'>\n \
+  <Package '/home/user/dev/github/user/test/pytest_codelens/tests'>\n \
+    <Module 'test_more_multiply.py'>\n \
+      <Function 'test_times_100'>\n \
+      <Function 'test_times_negative_1'>\n \
+      <Function 'test_nothing_here'>\n \
+    <Module 'test_multiply.py'>\n \
+      <Function 'test_times_10'>\n \
+      <Function 'test_times_2'>\n \
+    <Package '/home/user/dev/github/user/test/pytest_codelens/tests/further_tests'>\n \
       <Module 'test_gimme_5.py'>\n \
         <Function 'test_gimme_5'>\n \
 \n \
 ======================== no tests ran in 0.05 seconds =========================\n";
 
+        const content: string = running_windows ? content_win : content_nonwin;
         const parsedTests: Tests = parser.parse(content, options);
         expect(parsedTests).is.not.equal(undefined, 'Should have gotten tests extracted from the parsed pytest result content.');
         expect(parsedTests.testFiles.length).equals(3, 'Parsed pytest summary contained 2 test files.');

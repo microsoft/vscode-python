@@ -123,6 +123,7 @@ export class TestsParser implements ITestsParser {
         const packagePath: string = extractBetweenDelimiters(packageLine, DELIMITER, DELIMITER);
         let packageName: string = path.normalize(packagePath);
         const tmpRoot: string = path.normalize(rootDir);
+
         if (packageName.indexOf(tmpRoot) === 0) {
             packageName = packageName.substring(tmpRoot.length);
             if (packageName.startsWith(path.sep)) {
@@ -131,8 +132,8 @@ export class TestsParser implements ITestsParser {
             if (packageName.endsWith(path.sep)) {
                 packageName = packageName.substring(0, packageName.length - 1);
             }
-            packageName = packageName.replace('\\', '/');
         }
+        packageName = packageName.replace('\\', '/');
         return packageName;
     }
 
