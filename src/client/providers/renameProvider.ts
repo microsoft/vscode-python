@@ -1,6 +1,9 @@
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { OutputChannel, ProviderResult } from 'vscode';
+import {
+    CancellationToken, OutputChannel,
+    Position, ProviderResult, RenameProvider,
+    TextDocument, window, workspace, WorkspaceEdit
+} from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
@@ -15,19 +18,19 @@ type RenameResponse = {
     results: [{ diff: string }];
 };
 
-export class PythonRenameProvider implements vscode.RenameProvider {
+export class PythonRenameProvider implements RenameProvider {
     private readonly outputChannel: OutputChannel;
     constructor(private serviceContainer: IServiceContainer) {
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     }
     @captureTelemetry(REFACTOR_RENAME)
-    public provideRenameEdits(document: vscode.TextDocument, position: vscode.Position, newName: string, token: vscode.CancellationToken): ProviderResult<vscode.WorkspaceEdit> {
-        return vscode.workspace.saveAll(false).then(() => {
+    public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
+        return workspace.saveAll(false).then(() => {
             return this.doRename(document, position, newName, token);
         });
     }
 
-    private doRename(document: vscode.TextDocument, position: vscode.Position, newName: string, token: vscode.CancellationToken): ProviderResult<vscode.WorkspaceEdit> {
+    private doRename(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
         if (document.lineAt(position.line).text.match(/^\s*\/\//)) {
             return;
         }
@@ -44,9 +47,9 @@ export class PythonRenameProvider implements vscode.RenameProvider {
             return;
         }
 
-        let workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
-        if (!workspaceFolder && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
-            workspaceFolder = vscode.workspace.workspaceFolders[0];
+        let workspaceFolder = workspace.getWorkspaceFolder(document.uri);
+        if (!workspaceFolder && Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
+            workspaceFolder = workspace.workspaceFolders[0];
         }
         const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
         const pythonSettings = PythonSettings.getInstance(workspaceFolder ? workspaceFolder.uri : undefined);
@@ -62,7 +65,7 @@ export class PythonRenameProvider implements vscode.RenameProvider {
                     .catch(ex => console.error('Python Extension: promptToInstall', ex));
                 return Promise.reject('');
             } else {
-                vscode.window.showErrorMessage(reason);
+                window.showErrorMessage(reason);
                 this.outputChannel.appendLine(reason);
             }
             return Promise.reject(reason);

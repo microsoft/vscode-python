@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { DocumentFilter, languages, OutputChannel } from 'vscode';
-import { PYTHON, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { IConfigurationService, IExtensionContext, ILogger, IOutputChannel } from '../common/types';
+import { DocumentFilter, languages } from 'vscode';
+import { PYTHON } from '../common/constants';
+import { IConfigurationService, IExtensionContext, ILogger } from '../common/types';
 import { IShebangCodeLensProvider } from '../interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
@@ -15,7 +15,6 @@ import { activateGoToObjectDefinitionProvider } from '../providers/objectDefinit
 import { PythonReferenceProvider } from '../providers/referenceProvider';
 import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
-import { activateSimplePythonRefactorProvider } from '../providers/simpleRefactorProvider';
 import { PythonSymbolProvider } from '../providers/symbolProvider';
 import { IUnitTestManagementService } from '../unittests/types';
 import { WorkspaceSymbols } from '../workspaceSymbols/main';
@@ -59,11 +58,9 @@ export class JediExtensionActivator implements IExtensionActivator {
             context.subscriptions.push(languages.registerSignatureHelpProvider(this.documentSelector, new PythonSignatureProvider(jediFactory), '(', ','));
         }
 
-        const standardOutputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         context.subscriptions.push(languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer)));
-        activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 
-            const testManagementService = this.serviceManager.get<IUnitTestManagementService>(IUnitTestManagementService);
+        const testManagementService = this.serviceManager.get<IUnitTestManagementService>(IUnitTestManagementService);
         testManagementService.activate()
             .then(() => testManagementService.activateCodeLenses(symbolProvider))
             .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
