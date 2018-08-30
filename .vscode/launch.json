@@ -61,7 +61,7 @@
             "sourceMaps": true,
             "args": [
                 "timeout=60000",
-                "grep=Unit Tests \\- PyTest \\- Discovery"
+                "grep="
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
