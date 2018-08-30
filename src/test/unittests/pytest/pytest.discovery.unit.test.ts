@@ -21,6 +21,8 @@ import { FlattenedTestFunction, ITestDiscoveryService, ITestRunner, ITestsHelper
 import { TestDiscoveryService } from '../../../client/unittests/pytest/services/discoveryService';
 import { TestsParser as PyTestsParser } from '../../../client/unittests/pytest/services/parserService';
 import { IArgumentsService, TestFilter } from '../../../client/unittests/types';
+import { PytestDataPlatformType, pytestScenarioData } from './pytest_unittest_parser_data';
+
 use(chaipromise);
 
 suite('Unit Tests - PyTest - Discovery', () => {
@@ -29,6 +31,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
     let testParser: typeMoq.IMock<ITestsParser>;
     let runner: typeMoq.IMock<ITestRunner>;
     let helper: typeMoq.IMock<ITestsHelper>;
+
     setup(() => {
         const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         argsService = typeMoq.Mock.ofType<IArgumentsService>();
@@ -182,146 +185,59 @@ suite('Unit Tests - PyTest - Discovery', () => {
         runner.verifyAll();
         testParser.verifyAll();
     });
-    test('PyTest < 3.7 identifies tests in files', async () => {
-        const testHelper = typeMoq.Mock.ofType<TestsHelper>();
-        testHelper.setup(h => h.flattenTestFiles(typeMoq.It.isAny()))
-            .returns((v) => v);
-        const testFlattener: TestFlatteningVisitor = new TestFlatteningVisitor();
-        const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
-        const appShell = typeMoq.Mock.ofType<IApplicationShell>();
-        const cmdMgr = typeMoq.Mock.ofType<ICommandManager>();
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IApplicationShell), typeMoq.It.isAny())).returns(() => appShell.object);
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ICommandManager), typeMoq.It.isAny())).returns(() => cmdMgr.object);
-        const forRealzTestHelper: TestsHelper = new TestsHelper(testFlattener, serviceContainer.object);
-        const parser = new PyTestsParser(forRealzTestHelper);
-        const outChannel = typeMoq.Mock.ofType<OutputChannel>();
-        const cancelToken = typeMoq.Mock.ofType<CancellationToken>();
-        cancelToken.setup(c => c.isCancellationRequested).returns(() => false);
-        const wsFolder = typeMoq.Mock.ofType<Uri>();
+    // build tests for the test data that is relevant for this platform.
+    pytestScenarioData.forEach((testScenario) => {
+        const testPlatformType: PytestDataPlatformType =
+            getOSType() === OSType.Windows ?
+                PytestDataPlatformType.Windows : PytestDataPlatformType.NonWindows;
 
-        const options: TestDiscoveryOptions = {
-            args: [],
-            cwd: '/home/dekeeler/dev/github/d3r3kk/test/2347_pytest_codelens',
-            ignoreCache: true,
-            outChannel: outChannel.object,
-            token: cancelToken.object,
-            workspaceFolder: wsFolder.object
-        };
+        // tslint:disable-next-line:no-invalid-this
+        if (testPlatformType === testScenario.platform) {
+            const testDescription: string = 'PyTest '.concat('[', testScenario.pytest_version_spec, '] ', testScenario.description);
+            test(testDescription, async () => {
+                const testHelper = typeMoq.Mock.ofType<TestsHelper>();
+                testHelper.setup(h => h.flattenTestFiles(typeMoq.It.isAny()))
+                    .returns((v) => v);
+                const testFlattener: TestFlatteningVisitor = new TestFlatteningVisitor();
+                const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
+                const appShell = typeMoq.Mock.ofType<IApplicationShell>();
+                const cmdMgr = typeMoq.Mock.ofType<ICommandManager>();
+                serviceContainer.setup(s => s.get(typeMoq.It.isValue(IApplicationShell), typeMoq.It.isAny()))
+                    .returns(() => {
+                        return appShell.object;
+                    });
+                serviceContainer.setup(s => s.get(typeMoq.It.isValue(ICommandManager), typeMoq.It.isAny()))
+                    .returns(() => {
+                        return cmdMgr.object;
+                    });
+                const forRealzTestHelper: TestsHelper = new TestsHelper(testFlattener, serviceContainer.object);
+                const parser = new PyTestsParser(forRealzTestHelper);
+                const outChannel = typeMoq.Mock.ofType<OutputChannel>();
+                const cancelToken = typeMoq.Mock.ofType<CancellationToken>();
+                cancelToken.setup(c => c.isCancellationRequested).returns(() => false);
+                const wsFolder = typeMoq.Mock.ofType<Uri>();
 
-        const content: string =
-            // tslint:disable-next-line:quotemark
-            " ============================= test session starts =============================\n \
-    platform linux-- Python 3.5.2, pytest - 3.6.3, py - 1.6.0, pluggy - 0.6.0\n \
-    rootdir: /home/user/dev/github/user/test/pytest_codelens, inifile:\n \
-    collected 4 items\n \
-    <Module 'tests/test_more_multiply.py' >\n \
-      <Function 'test_times_100' >\n \
-      <Function 'test_times_negative_1' >\n \
-    <Module 'tests/test_multiply.py' >\n \
-      <Function 'test_times_10' >\n \
-      <Function 'test_times_2' >\n \
-    \n \
-    ======================== no tests ran in 0.14 seconds =========================\n";
+                const options: TestDiscoveryOptions = {
+                    args: [],
+                    cwd: testScenario.rootdir,
+                    ignoreCache: true,
+                    outChannel: outChannel.object,
+                    token: cancelToken.object,
+                    workspaceFolder: wsFolder.object
+                };
+                const parsedTests: Tests = parser.parse(testScenario.stdout.join('\n'), options);
+                expect(parsedTests).is.not.equal(undefined, 'Should have gotten tests extracted from the parsed pytest result content.');
+                expect(parsedTests.testFunctions.length).equals(testScenario.functionCount, `Parsed pytest summary contained ${testScenario.functionCount} test functions.`);
+                testScenario.test_functions.forEach((funcName: string) => {
+                    const findOneTest: FlattenedTestFunction | undefined = parsedTests.testFunctions.find(
+                        (tstFunc: FlattenedTestFunction) => {
+                            return tstFunc.testFunction.nameToRun === funcName;
+                        });
+                    expect(findOneTest).is.not.equal(undefined, `Could not find "${funcName}" in tests.`);
+                });
 
-        const parsedTests: Tests = parser.parse(content, options);
-        expect(parsedTests).is.not.equal(undefined, 'Should have gotten tests extracted from the parsed pytest result content.');
-        expect(parsedTests.testFiles.length).equals(2, 'Parsed pytest summary contained 2 test files.');
-        expect(parsedTests.testFunctions.length).equals(4, 'Parsed pytest summary contained 4 test functions.');
-        const findOneTest: FlattenedTestFunction | undefined = parsedTests.testFunctions.find(
-            (tstFunc: FlattenedTestFunction) => {
-                return tstFunc.testFunction.nameToRun === 'tests/test_more_multiply.py::test_times_100';
             });
-        expect(findOneTest).is.not.equal(undefined, 'Could not find "tests/test_more_multiply.py::test_times_100" in tests.');
-    });
-    test('PyTest >= 3.7 identifies tests in files', async () => {
-        const testHelper = typeMoq.Mock.ofType<TestsHelper>();
-        testHelper.setup(h => h.flattenTestFiles(typeMoq.It.isAny()))
-            .returns((v) => v);
-        const testFlattener: TestFlatteningVisitor = new TestFlatteningVisitor();
-        const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
-        const appShell = typeMoq.Mock.ofType<IApplicationShell>();
-        const cmdMgr = typeMoq.Mock.ofType<ICommandManager>();
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IApplicationShell), typeMoq.It.isAny()))
-            .returns(() => {
-                return appShell.object;
-            });
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ICommandManager), typeMoq.It.isAny()))
-            .returns(() => {
-                return cmdMgr.object;
-            });
-        const forRealzTestHelper: TestsHelper = new TestsHelper(testFlattener, serviceContainer.object);
-        const parser = new PyTestsParser(forRealzTestHelper);
-        const outChannel = typeMoq.Mock.ofType<OutputChannel>();
-        const cancelToken = typeMoq.Mock.ofType<CancellationToken>();
-        cancelToken.setup(c => c.isCancellationRequested).returns(() => false);
-        const wsFolder = typeMoq.Mock.ofType<Uri>();
-        const running_windows: boolean = getOSType() === OSType.Windows;
-
-        const options: TestDiscoveryOptions = {
-            args: [],
-            cwd: running_windows ? 'd:\\dev\\github\\user\\test\\pytest_codelens' : '/home/user/dev/github/user/test/pytest_codelens',
-            ignoreCache: true,
-            outChannel: outChannel.object,
-            token: cancelToken.object,
-            workspaceFolder: wsFolder.object
-        };
-
-        const content_win: string =
-            // tslint:disable-next-line:quotemark
-            "============================= test session starts =============================\n \
-platform win32 -- Python 3.7.0, pytest-3.7.3, py-1.6.0, pluggy-0.7.1\n \
-rootdir: d:\\dev\\github\\user\\test\\pytest_codelens, inifile:\n \
-collected 6 items\n \
-<Package 'd:\\\\dev\\\\github\\\\user\\\\test\\\\pytest_codelens'>\n \
-  <Package 'd:\\\\dev\\\\github\\\\user\\\\test\\\\pytest_codelens\\\\tests'>\n \
-    <Module 'test_more_multiply.py'>\n \
-      <Function 'test_times_100'>\n \
-      <Function 'test_times_negative_1'>\n \
-      <Function 'test_nothing_here'>\n \
-    <Module 'test_multiply.py'>\n \
-      <Function 'test_times_10'>\n \
-      <Function 'test_times_2'>\n \
-    <Package 'd:\\\\dev\\\\github\\\\user\\\\test\\\\pytest_codelens\\\\tests\\\\further_tests'>\n \
-      <Module 'test_gimme_5.py'>\n \
-        <Function 'test_gimme_5'>\n \
-\n \
-======================== no tests ran in 0.05 seconds =========================\n";
-        const content_nonwin: string =
-            // tslint:disable-next-line:quotemark
-            "============================= test session starts =============================\n \
-platform linux -- Python 3.7.0+, pytest-3.7.4, py-1.6.0, pluggy-0.7.1\n \
-rootdir: /home/user/dev/github/user/test/pytest_codelens, inifile:\n \
-collected 6 items\n \
-<Package '/home/user/dev/github/user/test/pytest_codelens'>\n \
-  <Package '/home/user/dev/github/user/test/pytest_codelens/tests'>\n \
-    <Module 'test_more_multiply.py'>\n \
-      <Function 'test_times_100'>\n \
-      <Function 'test_times_negative_1'>\n \
-      <Function 'test_nothing_here'>\n \
-    <Module 'test_multiply.py'>\n \
-      <Function 'test_times_10'>\n \
-      <Function 'test_times_2'>\n \
-    <Package '/home/user/dev/github/user/test/pytest_codelens/tests/further_tests'>\n \
-      <Module 'test_gimme_5.py'>\n \
-        <Function 'test_gimme_5'>\n \
-\n \
-======================== no tests ran in 0.05 seconds =========================\n";
-
-        const content: string = running_windows ? content_win : content_nonwin;
-        const parsedTests: Tests = parser.parse(content, options);
-        expect(parsedTests).is.not.equal(undefined, 'Should have gotten tests extracted from the parsed pytest result content.');
-        expect(parsedTests.testFiles.length).equals(3, 'Parsed pytest summary contained 2 test files.');
-        expect(parsedTests.testFunctions.length).equals(6, 'Parsed pytest summary contained 4 test functions.');
-        const findOneTest: FlattenedTestFunction | undefined = parsedTests.testFunctions.find(
-            (tstFunc: FlattenedTestFunction) => {
-                return tstFunc.testFunction.nameToRun === 'tests/test_more_multiply.py::test_times_100';
-            });
-        expect(findOneTest).is.not.equal(undefined, 'Could not find "tests/test_more_multiply.py::test_times_100" in tests.');
-        const findTwoTest: FlattenedTestFunction | undefined = parsedTests.testFunctions.find(
-            (tstFunc: FlattenedTestFunction) => {
-                return tstFunc.testFunction.nameToRun === 'tests/further_tests/test_gimme_5.py::test_gimme_5';
-            });
-        expect(findTwoTest).is.not.equal(undefined, 'Could not find "tests/further_tests/test_gimme_5.py::test_gimme_5" in tests.');
+        }
     });
 
 });
