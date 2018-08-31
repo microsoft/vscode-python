@@ -186,31 +186,9 @@ suite('Jedi Symbol Provider', () => {
     });
 });
 
-function newDoc(
-    uri?: Uri,
-    filename?: string,
-    isUntitled?: boolean,
-    text?: string
-): TypeMoq.IMock<TextDocument> {
-    const doc = TypeMoq.Mock.ofType<TextDocument>(undefined, TypeMoq.MockBehavior.Strict);
-    if (uri !== undefined) {
-        doc.setup(d => d.uri).returns(() => uri);
-    }
-    if (filename !== undefined) {
-        doc.setup(d => d.fileName).returns(() => filename);
-    }
-    if (isUntitled !== undefined) {
-        doc.setup(d => d.isUntitled).returns(() => isUntitled);
-    }
-    if (text !== undefined) {
-        doc.setup(d => d.getText(TypeMoq.It.isAny())).returns(() => text);
-    }
-    return doc;
-}
-
 suite('Language Server Symbol Provider', () => {
 
-    function newLanguageClient(
+    function createLanguageClient(
         token: CancellationToken,
         results: [any, any[]][]
     ): TypeMoq.IMock<LanguageClient> {
@@ -248,12 +226,12 @@ suite('Language Server Symbol Provider', () => {
             children: []
         }];
         const uri = Uri.file(__filename);
-        const expected = newSymbols(uri, [
+        const expected = createSymbols(uri, [
             ['spam', SymbolKind.Array, 0]
         ]);
-        const doc = newDoc(uri);
+        const doc = createDoc(uri);
         const token = new CancellationTokenSource().token;
-        const langClient = newLanguageClient(token, [
+        const langClient = createLanguageClient(token, [
             [getRawDoc(uri), raw]
         ]);
         const provider = new LanguageServerSymbolProvider(langClient.object);
@@ -342,9 +320,9 @@ suite('Language Server Symbol Provider', () => {
             )
         ];
 
-        const doc = newDoc(uri);
+        const doc = createDoc(uri);
         const token = new CancellationTokenSource().token;
-        const langClient = newLanguageClient(token, [
+        const langClient = createLanguageClient(token, [
             [getRawDoc(uri), raw]
         ]);
         const provider = new LanguageServerSymbolProvider(langClient.object);
@@ -398,9 +376,9 @@ suite('Language Server Symbol Provider', () => {
             )
         ));
 
-        const doc = newDoc(uri);
+        const doc = createDoc(uri);
         const token = new CancellationTokenSource().token;
-        const langClient = newLanguageClient(token, [
+        const langClient = createLanguageClient(token, [
             [getRawDoc(uri), raw]
         ]);
         const provider = new LanguageServerSymbolProvider(langClient.object);
@@ -414,19 +392,41 @@ suite('Language Server Symbol Provider', () => {
 //################################
 // helpers
 
-function newSymbols(
+function createDoc(
+    uri?: Uri,
+    filename?: string,
+    isUntitled?: boolean,
+    text?: string
+): TypeMoq.IMock<TextDocument> {
+    const doc = TypeMoq.Mock.ofType<TextDocument>(undefined, TypeMoq.MockBehavior.Strict);
+    if (uri !== undefined) {
+        doc.setup(d => d.uri).returns(() => uri);
+    }
+    if (filename !== undefined) {
+        doc.setup(d => d.fileName).returns(() => filename);
+    }
+    if (isUntitled !== undefined) {
+        doc.setup(d => d.isUntitled).returns(() => isUntitled);
+    }
+    if (text !== undefined) {
+        doc.setup(d => d.getText(TypeMoq.It.isAny())).returns(() => text);
+    }
+    return doc;
+}
+
+function createSymbols(
     uri: Uri,
     info: [string, SymbolKind, string | number][]
 ): SymbolInformation[] {
     const symbols: SymbolInformation[] = [];
     for (const [fullName, kind, range] of info) {
-        const symbol = newSymbol(uri, fullName, kind, range);
+        const symbol = createSymbol(uri, fullName, kind, range);
         symbols.push(symbol);
     }
     return symbols;
 }
 
-function newSymbol(
+function createSymbol(
     uri: Uri,
     fullName: string,
     kind: SymbolKind,
