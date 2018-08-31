@@ -162,6 +162,9 @@ export function splitParent(fullName: string): [string, string] {
 /**
  * Return the range represented by the given string.
  *
+ * If a number is provided then it is used as both lines and the
+ * character are set to 0.
+ *
  * Examples:
  *  '1:5-3:5' -> Range(1, 5, 3, 5)
  *  '1-3'     -> Range(1, 0, 3, 0)
@@ -197,12 +200,18 @@ export function parseRange(raw: string | number): Range {
 /**
  * Return the line/column represented by the given string.
  *
+ * If a number is provided then it is used as the line and the character
+ * is set to 0.
+ *
  * Examples:
  *  '1:5' -> Position(1, 5)
  *  '1'   -> Position(1, 0)
  *  ''    -> Position(0, 0)
  */
-export function parsePosition(raw: string): Position {
+export function parsePosition(raw: string | number): Position {
+    if (isNumber(raw)) {
+        return new Position(raw, 0);
+    }
     if (raw === '') {
         return new Position(0, 0);
     }
