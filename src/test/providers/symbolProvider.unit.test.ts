@@ -386,16 +386,7 @@ suite('Language Server Symbol Provider', () => {
         expectedRaw[2].location.range[0].character = 8;
         expectedRaw[2].location.range[1].line = 3;
         expectedRaw[2].location.range[1].character = 16;
-        for (const symbol of expectedRaw) {
-            symbol.location.uri = uri;
-            symbol.location.range = new Range(
-                symbol.location.range[0].line,
-                symbol.location.range[0].character,
-                symbol.location.range[1].line,
-                symbol.location.range[1].character
-            );
-        }
-        const expected = expectedRaw as SymbolInformation[];
+        const expected = normalizeSymbols(uri, expectedRaw);
         expected.shift();  // For now, drop the "unittest" symbol.
         expected.push(new SymbolInformation(
             'assertTrue',
@@ -445,4 +436,28 @@ function newSymbol(
     const range = parseRange(rawRange);
     const loc = new Location(uri, range);
     return new SymbolInformation(name, kind, containerName, loc);
+}
+
+function normalizeSymbols(uri: Uri, raw: any[]): SymbolInformation[] {
+    const symbols: SymbolInformation[] = [];
+    for (const item of raw) {
+        const symbol = new SymbolInformation(
+            item.name,
+            // Type coercion is a bit fuzzy when it comes to enums, so we
+            // play it safe by explicitly converting.
+            SymbolKind[SymbolKind[item.kind]],
+            item.containerName,
+            new Location(
+                uri,
+                new Range(
+                    item.location.range[0].line,
+                    item.location.range[0].character,
+                    item.location.range[1].line,
+                    item.location.range[1].character
+                )
+            )
+        );
+        symbols.push(symbol);
+    }
+    return symbols;
 }

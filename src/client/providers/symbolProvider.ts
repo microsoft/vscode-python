@@ -42,12 +42,15 @@ function flattenSymbolTree(tree: ILSSymbolTree, uri: Uri, containerName: string 
         tree.range.end.line,
         tree.range.end.character
     );
+    // For whatever reason, the values of VS Code's SymbolKind enum
+    // are off-by-one relative to the LSP:
+    //  https://microsoft.github.io/language-server-protocol/specification#document-symbols-request-leftwards_arrow_with_hook
+    const kind: SymbolKind = tree.kind - 1;
     const info = new SymbolInformation(
         tree.name,
-        // For whatever reason, the values of VS Code's SymbolKind enum
-        // are off-by-one relative to the LSP:
-        //  https://microsoft.github.io/language-server-protocol/specification#document-symbols-request-leftwards_arrow_with_hook
-        tree.kind - 1,
+        // Type coercion is a bit fuzzy when it comes to enums, so we
+        // play it safe by explicitly converting.
+        SymbolKind[SymbolKind[kind]],
         containerName,
         new Location(uri, range)
     );
