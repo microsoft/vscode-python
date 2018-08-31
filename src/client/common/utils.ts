@@ -138,7 +138,7 @@ export class Random implements IRandom {
 }
 
 /**
- * Return [parent name, name] for the given qualified name.
+ * Return [parent name, name] for the given qualified (dotted) name.
  *
  * Examples:
  *  'x.y'   -> ['x', 'y']
@@ -146,7 +146,7 @@ export class Random implements IRandom {
  *  'x.y.z' -> ['x.y', 'z']
  *  ''      -> ['', '']
  */
-export function splitFullName(fullName: string): [string, string] {
+export function splitParent(fullName: string): [string, string] {
     if (fullName.length === 0) {
         return ['', ''];
     }

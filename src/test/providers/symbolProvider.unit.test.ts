@@ -14,7 +14,7 @@ import {
 } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { IFileSystem } from '../../client/common/platform/types';
-import { parseRange, splitFullName } from '../../client/common/utils';
+import { parseRange, splitParent } from '../../client/common/utils';
 import { IServiceContainer } from '../../client/ioc/types';
 import { JediFactory } from '../../client/languageServices/jediProxyFactory';
 import { IDefinition, ISymbolResult, JediProxyHandler } from '../../client/providers/jediProxy';
@@ -432,7 +432,7 @@ function createSymbol(
     kind: SymbolKind,
     rawRange: string | number = ''
 ): SymbolInformation {
-    const [containerName, name] = splitFullName(fullName);
+    const [containerName, name] = splitParent(fullName);
     const range = parseRange(rawRange);
     const loc = new Location(uri, range);
     return new SymbolInformation(name, kind, containerName, loc);
