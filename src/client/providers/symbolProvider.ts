@@ -1,6 +1,9 @@
 'use strict';
 
-import { CancellationToken, DocumentSymbolProvider, Location, Range, SymbolInformation, SymbolKind, TextDocument, Uri } from 'vscode';
+import {
+    CancellationToken, DocumentSymbol, DocumentSymbolProvider,
+    Location, Range, SymbolInformation, SymbolKind, TextDocument, Uri
+} from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
@@ -10,30 +13,7 @@ import { captureTelemetry } from '../telemetry';
 import { SYMBOL } from '../telemetry/constants';
 import * as proxy from './jediProxy';
 
-/**
- * A representation of the symbol data the language server provides.
- */
-interface ILSSymbolTree {
-    name: string;
-    kind: SymbolKind;
-    range: IRange;
-    children?: ILSSymbolTree[];
-    // We don't care about the rest.
-    selectionRange?: IRange;
-    _functionKind?: string;
-    deprecated?: boolean;
-    detail?: string;
-}
-interface IRange {
-    start: IPosition;
-    end: IPosition;
-}
-interface IPosition {
-    line: number;
-    character: number;
-}
-
-function flattenSymbolTree(tree: ILSSymbolTree, uri: Uri, containerName: string = ''): SymbolInformation[] {
+function flattenSymbolTree(tree: DocumentSymbol, uri: Uri, containerName: string = ''): SymbolInformation[] {
     const flattened: SymbolInformation[] = [];
 
     const range = new Range(
@@ -83,7 +63,7 @@ export class LanguageServerSymbolProvider implements DocumentSymbolProvider {
     public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<SymbolInformation[]> {
         const uri = document.uri;
         const args = { textDocument: { uri: uri.toString() } };
-        const raw = await this.languageClient.sendRequest<ILSSymbolTree[]>(
+        const raw = await this.languageClient.sendRequest<DocumentSymbol[]>(
             'textDocument/documentSymbol',
             args,
             token
