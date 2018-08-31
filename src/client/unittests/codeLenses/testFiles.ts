@@ -72,7 +72,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
             if (!symbols) {
                 return [];
             }
-            return symbols!
+            return symbols
                 .filter(symbol => symbol.kind === SymbolKind.Function ||
                     symbol.kind === SymbolKind.Method ||
                     symbol.kind === SymbolKind.Class)
