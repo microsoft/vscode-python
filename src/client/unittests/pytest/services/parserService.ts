@@ -133,7 +133,7 @@ export class TestsParser implements ITestsParser {
                 packageName = packageName.substring(0, packageName.length - 1);
             }
         }
-        packageName = packageName.replace('\\', '/');
+        packageName = packageName.replace(/\\/g, '/');
         return packageName;
     }
 
