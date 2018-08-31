@@ -223,10 +223,16 @@ export function parsePosition(raw: string | number): Position {
 
     let line = 0;
     if (parts[0] !== '') {
+        if (!/^\d+$/.test(parts[0])) {
+            throw new Error(`invalid position ${raw}`);
+        }
         line = +parts[0];
     }
     let col = 0;
     if (parts.length === 2 && parts[1] !== '') {
+        if (!/^\d+$/.test(parts[1])) {
+            throw new Error(`invalid position ${raw}`);
+        }
         col = +parts[1];
     }
     return new Position(line, col);
