@@ -31,19 +31,22 @@ use(chaipromise);
 // However, to test all of the various layouts that are available, we have
 // created a JSON structure that defines all the tests - see file
 // `pytest_unittest_parser_data.ts` in this folder.
-
 suite('Unit Tests - PyTest - Test Parser used in discovery', () => {
-    // build tests for the test data that is relevant for this platform.
-    pytestScenarioData.forEach((testScenario) => {
-        const testPlatformType: PytestDataPlatformType =
-            getOSType() === OSType.Windows ?
-                PytestDataPlatformType.Windows : PytestDataPlatformType.NonWindows;
 
+    // Build tests for the test data that is relevant for this platform.
+    const testPlatformType: PytestDataPlatformType =
+        getOSType() === OSType.Windows ?
+            PytestDataPlatformType.Windows : PytestDataPlatformType.NonWindows;
+
+    pytestScenarioData.forEach((testScenario) => {
         // tslint:disable-next-line:no-invalid-this
         if (testPlatformType === testScenario.platform) {
-            const testDescription: string = 'PyTest '.concat('[', testScenario.pytest_version_spec, '] ', testScenario.description);
+
+            const testDescription: string =
+                `PyTest${testScenario.pytest_version_spec}: ${testScenario.description}`;
+
             test(testDescription, async () => {
-                // setup the service container for use by the parser.
+                // Setup the service container for use by the parser.
                 const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
                 const appShell = typeMoq.Mock.ofType<IApplicationShell>();
                 const cmdMgr = typeMoq.Mock.ofType<ICommandManager>();
@@ -56,12 +59,14 @@ suite('Unit Tests - PyTest - Test Parser used in discovery', () => {
                         return cmdMgr.object;
                     });
 
-                // related mocks used in the test discovery setup
+                // Create mocks used in the test discovery setup.
                 const outChannel = typeMoq.Mock.ofType<OutputChannel>();
                 const cancelToken = typeMoq.Mock.ofType<CancellationToken>();
                 cancelToken.setup(c => c.isCancellationRequested).returns(() => false);
                 const wsFolder = typeMoq.Mock.ofType<Uri>();
 
+                // Create the test options for the mocked-up test. All data is either
+                // mocked or is taken from the JSON test data itself.
                 const options: TestDiscoveryOptions = {
                     args: [],
                     cwd: testScenario.rootdir,
@@ -71,18 +76,19 @@ suite('Unit Tests - PyTest - Test Parser used in discovery', () => {
                     workspaceFolder: wsFolder.object
                 };
 
-                // setup the parser itself, using the service container mocks but otherwise the real thing
+                // Setup the parser.
                 const testFlattener: TestFlatteningVisitor = new TestFlatteningVisitor();
                 const testHlp: TestsHelper = new TestsHelper(testFlattener, serviceContainer.object);
                 const parser = new PyTestsParser(testHlp);
 
-                // each test scenario has a 'stdout' member that is an array of stdout lines. Join them here
-                // such that the parser can operate on stdout-like data.
+                // Each test scenario has a 'stdout' member that is an array of
+                // stdout lines. Join them here such that the parser can operate
+                // on stdout-like data.
                 const stdout: string = testScenario.stdout.join('\n');
 
                 const parsedTests: Tests = parser.parse(stdout, options);
 
-                // tests
+                // Now we can actually perform tests.
                 expect(parsedTests).is.not.equal(
                     undefined,
                     'Should have gotten tests extracted from the parsed pytest result content.');
@@ -96,7 +102,7 @@ suite('Unit Tests - PyTest - Test Parser used in discovery', () => {
                         (tstFunc: FlattenedTestFunction) => {
                             return tstFunc.testFunction.nameToRun === funcName;
                         });
-                    // each test identified in the testScenario should exist
+                    // Each test identified in the testScenario should exist once and only once.
                     expect(findAllTests).is.not.equal(undefined, `Could not find "${funcName}" in tests.`);
                     expect(findAllTests.length).is.equal(1, 'There should be exactly one instance of each test.');
                 });

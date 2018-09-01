@@ -39,7 +39,7 @@ export class TestsParser implements ITestsParser {
             const trimmedLine: string = line.trim();
 
             if (trimmedLine.startsWith('<Package \'')) {
-                // process the previous lines
+                // Process the previous lines.
                 this.parsePyTestModuleCollectionResult(options.cwd, logOutputLines, testFiles, parentNodes, packagePrefix);
                 logOutputLines = [''];
 
@@ -47,7 +47,7 @@ export class TestsParser implements ITestsParser {
             }
 
             if (trimmedLine.startsWith('<Module \'') || index === lines.length - 1) {
-                // process the previous lines
+                // Process the previous lines.
                 this.parsePyTestModuleCollectionResult(options.cwd, logOutputLines, testFiles, parentNodes, packagePrefix);
                 logOutputLines = [''];
             }
@@ -114,7 +114,7 @@ export class TestsParser implements ITestsParser {
     }
 
     /**
-     * Extract the 'package' name from a given PyTest (>= 3.7) output line
+     * Extract the 'package' name from a given PyTest (>= 3.7) output line.
      *
      * @param packageLine A single line of output from pytest that starts with `<Package` (may have leading white space).
      * @param rootDir Value is pytest's `--rootdir=` parameter.
