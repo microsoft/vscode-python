@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
-
 import { expect, use } from 'chai';
 import * as chaipromise from 'chai-as-promised';
 import * as typeMoq from 'typemoq';
@@ -39,7 +37,6 @@ suite('Unit Tests - PyTest - Test Parser used in discovery', () => {
             PytestDataPlatformType.Windows : PytestDataPlatformType.NonWindows;
 
     pytestScenarioData.forEach((testScenario) => {
-        // tslint:disable-next-line:no-invalid-this
         if (testPlatformType === testScenario.platform) {
 
             const testDescription: string =
