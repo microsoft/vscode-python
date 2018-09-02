@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Position, Range, TextDocument, TextLine } from 'vscode';
 import '../../client/common/extensions';
+import { createDeferred } from '../../client/common/helpers';
 import { LineFormatter } from '../../client/formatters/lineFormatter';
 
 const formatFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'formatting');
@@ -17,7 +18,18 @@ const grammarFile = path.join(formatFilesPath, 'pythonGrammar.py');
 // tslint:disable-next-line:max-func-body-length
 suite('Formatting - line formatter', () => {
     const formatter = new LineFormatter();
+    let grammarContent = '';
+    let grammarLines: string[] = [];
 
+    suiteSetup(async () => {
+        const d = createDeferred();
+        fs.readFile(grammarFile, {}, (err, data) => {
+            grammarContent = data.toString('utf-8');
+            grammarLines = grammarContent.splitLines({ trim: false, removeEmptyEntries: false });
+            d.resolve();
+        });
+        await d.promise;
+    });
     test('Operator spacing', () => {
         testFormatLine('( x  +1 )*y/ 3', '(x + 1) * y / 3');
     });
@@ -151,8 +163,8 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('z=foo (0 , x= 1, (3+7) , y , z )', 0, 'z = foo(0, x=1, (3 + 7), y, z)');
         testFormatMultiline('foo (0,\n x= 1,', 1, ' x=1,');
         testFormatMultiline(
-// tslint:disable-next-line:no-multiline-string
-`async def fetch():
+            // tslint:disable-next-line:no-multiline-string
+            `async def fetch():
   async with aiohttp.ClientSession() as session:
     async with session.ws_connect(
         "http://127.0.0.1:8000/", headers = cookie) as ws: # add unwanted spaces`, 3,
@@ -161,14 +173,35 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('def test_string_literals(self):\n  x= 1; y =2; self.assertTrue(len(x) == 0 and x == y)', 1,
             '  x = 1; y = 2; self.assertTrue(len(x) == 0 and x == y)');
     });
-    test('Grammar file', () => {
-        const content = fs.readFileSync(grammarFile).toString('utf8');
-        const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
-        for (let i = 0; i < lines.length; i += 1) {
-            const line = lines[i];
-            const actual = formatMultiline(content, i);
-            assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
-        }
+    test('End of multiline string', () => {
+        testFormatLine('"""', '"""');
+        testFormatMultiline('"""\ntext "quoted"\n', 1, 'text "quoted"');
+        testFormatMultiline('"""string 1\nstring2""" ', 1, 'string2"""');
+        testFormatMultiline('"""string 1\nstring2""" +1 ', 1, 'string2""" + 1');
+    });
+    test('Grammar file part 1', () => {
+        testLines(grammarContent, grammarLines, 0, 200);
+    });
+    test('Grammar file part 2', async () => {
+        testLines(grammarContent, grammarLines, 201, 200);
+    });
+    test('Grammar file part 3', async () => {
+        testLines(grammarContent, grammarLines, 401, 200);
+    });
+    test('Grammar file part 4', async () => {
+        testLines(grammarContent, grammarLines, 601, 200);
+    });
+    test('Grammar file part 5', async () => {
+        testLines(grammarContent, grammarLines, 801, 200);
+    });
+    test('Grammar file part 6', async () => {
+        testLines(grammarContent, grammarLines, 1001, 200);
+    });
+    test('Grammar file part 7', async () => {
+        testLines(grammarContent, grammarLines, 1201, 200);
+    });
+    test('Grammar file part 8', async () => {
+        testLines(grammarContent, grammarLines, 1401);
     });
 
     function testFormatLine(text: string, expected: string): void {
@@ -181,6 +214,15 @@ suite('Formatting - line formatter', () => {
         assert.equal(actual, expected);
     }
 
+    function testLines(content: string, lines: string[], startLine: number, count?: number) {
+        count = count ? count : lines.length - startLine;
+        for (let i = startLine; i < startLine + count; i += 1) {
+            const line = lines[i];
+            const actual = formatMultiline(content, i);
+            assert.equal(actual, line, `Line ${i + 1} changed: '${line.trim()}' to '${actual.trim()}'`);
+        }
+    }
+
     function formatMultiline(content: string, lineNumber: number): string {
         const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
 
@@ -188,7 +230,8 @@ suite('Formatting - line formatter', () => {
         document.setup(x => x.lineAt(TypeMoq.It.isAnyNumber())).returns(n => {
             const line = TypeMoq.Mock.ofType<TextLine>();
             line.setup(x => x.text).returns(() => lines[n]);
-            line.setup(x => x.range).returns(() => new Range(new Position(n, 0), new Position(n, lines[n].length)));
+            const range = new Range(new Position(n, 0), new Position(n, lines[n].length));
+            line.setup(x => x.range).returns(() => range);
             return line.object;
         });
         document.setup(x => x.getText(TypeMoq.It.isAny())).returns(o => {
@@ -203,7 +246,9 @@ suite('Formatting - line formatter', () => {
             for (let i = r.start.line + 1; i < r.end.line; i += 1) {
                 bits.push(lines[i]);
             }
-            bits.push(lines[r.end.line].substring(0, r.end.character));
+            if (r.end.line < lines.length) {
+                bits.push(lines[r.end.line].substring(0, r.end.character));
+            }
             return bits.join('\n');
         });
         document.setup(x => x.offsetAt(TypeMoq.It.isAny())).returns(o => {
@@ -214,6 +259,18 @@ suite('Formatting - line formatter', () => {
             }
             return offset + p.character;
         });
+        document.setup(x => x.positionAt(TypeMoq.It.isAnyNumber())).returns(n => {
+            let start = 0;
+            let end = 0;
+            for (let i = 0; i < lines.length; i += 1) {
+                end = start + lines[i].length;
+                if (n >= start && n < end + 1) {
+                    return new Position(i, n - start);
+                }
+                start = end + 1; // Accounting for the line break
+            }
+            throw new Error('Document position is out of range.');
+        });
 
         return formatter.formatLine(document.object, lineNumber);
     }
@@ -222,8 +279,12 @@ suite('Formatting - line formatter', () => {
         const line = TypeMoq.Mock.ofType<TextLine>();
         line.setup(x => x.text).returns(() => text);
 
+        const range = new Range(new Position(0, 0), new Position(0, text.length));
+        line.setup(x => x.range).returns(() => range);
+
         const document = TypeMoq.Mock.ofType<TextDocument>();
         document.setup(x => x.lineAt(TypeMoq.It.isAnyNumber())).returns(() => line.object);
+        document.setup(x => x.getText(TypeMoq.It.isAny())).returns(() => text);
 
         return formatter.formatLine(document.object, 0);
     }

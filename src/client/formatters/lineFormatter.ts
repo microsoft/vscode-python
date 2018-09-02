@@ -3,12 +3,12 @@
 
 // tslint:disable-next-line:import-name
 import Char from 'typescript-char';
-import { Position, Range, TextDocument } from 'vscode';
+import { Position, Range, TextDocument, TextLine } from 'vscode';
 import { BraceCounter } from '../language/braceCounter';
 import { TextBuilder } from '../language/textBuilder';
 import { TextRangeCollection } from '../language/textRangeCollection';
 import { Tokenizer } from '../language/tokenizer';
-import { ITextRangeCollection, IToken, TokenType } from '../language/types';
+import { ITextRangeCollection, IToken, Token, TokenizerMode, TokenType } from '../language/types';
 
 const keywordsWithSpaceBeforeBrace = [
     'and', 'as', 'assert', 'await',
@@ -35,10 +35,13 @@ export class LineFormatter {
 
     // tslint:disable-next-line:cyclomatic-complexity
     public formatLine(document: TextDocument, lineNumber: number): string {
+        const line = document.lineAt(lineNumber);
+
         this.document = document;
         this.lineNumber = lineNumber;
-        this.text = document.lineAt(lineNumber).text;
-        this.tokens = new Tokenizer().tokenize(this.text);
+        this.text = line.text;
+        this.tokens = this.getLineTokens(document, line);
+
         this.builder = new TextBuilder();
         this.braceCounter = new BraceCounter();
 
@@ -182,7 +185,7 @@ export class LineFormatter {
         this.builder.softAppendSpace();
     }
 
-    private handleStarOperator(current: IToken, prev: IToken): boolean {
+    private handleStarOperator(current: IToken, prev: IToken | undefined): boolean {
         if (this.text.charCodeAt(current.start) === Char.Asterisk && this.text.charCodeAt(current.start + 1) === Char.Asterisk) {
             if (!prev || (prev.type !== TokenType.Identifier && prev.type !== TokenType.Number)) {
                 this.builder.append('**');
@@ -437,5 +440,55 @@ export class LineFormatter {
         }
         const line = this.document.lineAt(this.lineNumber - 1);
         return new Tokenizer().tokenize(line.text);
+    }
+
+    private getLineStartToken(document: TextDocument, position: Position): IToken | undefined {
+        const tokenizeTo = position.translate(1, 0);
+        const text = document.getText(new Range(new Position(0, 0), tokenizeTo));
+        const tokens = new Tokenizer().tokenize(text, 0, text.length, TokenizerMode.CommentsAndStrings);
+        const offset = document.offsetAt(position);
+        const index = tokens.getItemContaining(offset - 1);
+        return index >= 0 ? tokens.getItemAt(index) : undefined;
+    }
+
+    private getLineTokens(document: TextDocument, line: TextLine): ITextRangeCollection<IToken> {
+        // Check if line start is inside a multiline string.
+        // If so, make sure first token is string type so we don't
+        // tokenize content of the multiline string as a legal code.
+        const lineStart = document.offsetAt(line.range.start);
+        const startToken = this.getLineStartToken(document, line.range.start);
+        if (startToken && startToken.type === TokenType.String) {
+            if (startToken.length >= 6 && startToken.start < lineStart && startToken.end > lineStart) {
+                // Line start is in a multiline string. Get quotes and
+                // insert them in the beginning of the line so the fist token
+                // will be a correct string.
+                const startQuotePosition = document.positionAt(startToken.start);
+                const endQuotePosition = document.positionAt(startToken.start + 3);
+                const quoteString = document.getText(new Range(startQuotePosition, endQuotePosition));
+                const tokens = new Tokenizer().tokenize(`${quoteString}${this.text}`);
+                let adjusted: IToken[] = [];
+                if (tokens.count > 1) {
+                    // There is something that follows the end of the multiline string as in 'text """ + 1'
+                    // so when we inserted triple quote at the start we ended up with more than one token.
+                    // Fix up token positions so they match the actual document: first token must be string
+                    // with the remaining token follow. In the example above, String -> Operator -> Number.
+                    adjusted = [new Token(TokenType.String, 0, startToken.end - lineStart)];
+                    for (let i = 1; i < tokens.count; i += 1) {
+                        const t = tokens.getItemAt(i);
+                        adjusted.push(new Token(t.type, t.start - quoteString.length, t.length));
+                    }
+                } else {
+                    // The entire line is inside the multiline string such as in
+                    // """
+                    // text
+                    // """
+                    // or it is a string with a terminator but has trailing whitespace as in
+                    // text"""<whitespace>
+                    adjusted = [new Token(TokenType.String, 0, line.text.trimRight().length)];
+                }
+                return new TextRangeCollection(adjusted);
+            }
+        }
+        return new Tokenizer().tokenize(this.text);
     }
 }

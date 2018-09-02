@@ -94,6 +94,14 @@ export interface IToken extends ITextRange {
     readonly type: TokenType;
 }
 
+export class Token extends TextRange implements IToken {
+    public readonly type: TokenType;
+
+    constructor(type: TokenType, start: number, length: number) {
+        super(start, length);
+        this.type = type;
+    }
+}
 export enum TokenizerMode {
     CommentsAndStrings,
     Full
