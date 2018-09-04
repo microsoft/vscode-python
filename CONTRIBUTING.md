@@ -191,8 +191,8 @@ To create a release _build_, the following steps should be followed:
    is up-to-date (the only update should be the version number if
    `package-lock.json` has been kept up-to-date otherwise)
 1. Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
-   - If this is the first release after a final release, then create a new section,
-     Otherwise update version and date in section header
+   - If this is the first release **after** a final release, then create a new section,
+     otherwise update the version and date in section header
    - Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news)
      (typically `python3 news | code-insiders -`; add `--final` if this
      is a final release)
@@ -207,7 +207,8 @@ To create a release _build_, the following steps should be followed:
 1. Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt)
    and register any changes with OSPO
 
-You can then download the development build `.vsix` for releasing.
+Once the above changes have been merged into `master` you can then download the
+development build `.vsix` for releasing.
 
 ## Development Build
 
