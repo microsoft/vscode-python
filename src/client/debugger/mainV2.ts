@@ -18,10 +18,11 @@ import { DebugSession, ErrorDestination, Event, logger, OutputEvent, Response, T
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import '../../client/common/extensions';
-import { noop, sleep } from '../common/core.utils';
+import { noop } from '../common/core.utils';
 import { createDeferred, Deferred, isNotInstalledError } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
 import { ICurrentProcess } from '../common/types';
+import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from './Common/Contracts';
 import { CreateAttachDebugClient, CreateLaunchDebugClient } from './DebugClients/DebugFactory';
