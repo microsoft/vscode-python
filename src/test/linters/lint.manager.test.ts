@@ -4,8 +4,8 @@
 import * as assert from 'assert';
 import { Container } from 'inversify';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { EnumEx } from '../../client/common/enumUtils';
 import { IConfigurationService, ILintingSettings, IPythonSettings, Product } from '../../client/common/types';
+import * as EnumEx from '../../client/common/utils/enum';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';

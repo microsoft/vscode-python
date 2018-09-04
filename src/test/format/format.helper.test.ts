@@ -1,8 +1,8 @@
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
 import { PythonSettings } from '../../client/common/configSettings';
-import { EnumEx } from '../../client/common/enumUtils';
 import { IConfigurationService, IFormattingSettings, Product } from '../../client/common/types';
+import * as EnumEx from '../../client/common/utils/enum';
 import { FormatterHelper } from '../../client/formatters/helper';
 import { FormatterId } from '../../client/formatters/types';
 import { initialize } from '../initialize';

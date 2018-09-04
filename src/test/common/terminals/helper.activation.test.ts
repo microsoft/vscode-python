@@ -5,13 +5,13 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
-import { EnumEx } from '../../../client/common/enumUtils';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -76,7 +76,7 @@ suite('Terminal Service helpers', () => {
     });
 });
 
-EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(terminalShell => {
+getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(terminalShell => {
     suite(`Terminal Service helpers (${terminalShell.name})`, () => {
         let helper: ITerminalHelper;
         let terminalManager: TypeMoq.IMock<ITerminalManager>;

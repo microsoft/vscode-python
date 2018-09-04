@@ -9,8 +9,8 @@ import { fail } from 'assert';
 import { expect } from 'chai';
 import { spawnSync } from 'child_process';
 import * as typeMoq from 'typemoq';
-import { EnumEx } from '../../client/common/enumUtils';
 import { ILogger, Product } from '../../client/common/types';
+import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ArgumentsHelper } from '../../client/unittests/common/argumentsHelper';
 import { ArgumentsService as NoseTestArgumentsService } from '../../client/unittests/nosetest/services/argsService';
@@ -22,7 +22,7 @@ import { PYTHON_PATH } from '../common';
 suite('ArgsService: Common', () => {
     [Product.unittest, Product.nosetest, Product.pytest]
         .forEach(product => {
-            const productNames = EnumEx.getNamesAndValues(Product);
+            const productNames = getNamesAndValues(Product);
             const productName = productNames.find(item => item.value === product)!.name;
             suite(productName, () => {
                 let argumentsService: IArgumentsService;

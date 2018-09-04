@@ -10,7 +10,6 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, OutputChannel, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { noop } from '../../../client/common/core.utils';
-import { EnumEx } from '../../../client/common/enumUtils';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { PipEnvInstaller, pipenvName } from '../../../client/common/installer/pipEnvInstaller';
 import { PipInstaller } from '../../../client/common/installer/pipInstaller';
@@ -19,6 +18,7 @@ import { IInstallationChannelManager, IModuleInstaller } from '../../../client/c
 import { PythonVersionInfo } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings, ModuleNamePurpose, Product } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { ICondaService, IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -252,7 +252,7 @@ function generatePythonInterpreterVersions() {
 }
 
 function getModuleNamesForTesting(): { name: string; value: Product; moduleName: string }[] {
-    return EnumEx.getNamesAndValues<Product>(Product)
+    return getNamesAndValues<Product>(Product)
         .map(product => {
             let moduleName = '';
             const mockSvc = TypeMoq.Mock.ofType<IServiceContainer>().object;

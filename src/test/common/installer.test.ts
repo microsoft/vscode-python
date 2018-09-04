@@ -3,7 +3,6 @@ import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { EnumEx } from '../../client/common/enumUtils';
 import { createDeferred } from '../../client/common/helpers';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
@@ -16,6 +15,7 @@ import { PathUtils } from '../../client/common/platform/pathUtils';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessServiceFactory } from '../../client/common/process/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product, ProductType } from '../../client/common/types';
+import { getNamesAndValues } from '../../client/common/utils/enum';
 import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
@@ -92,7 +92,7 @@ suite('Installer', () => {
         await installer.isInstalled(product, resource);
         await checkInstalledDef.promise;
     }
-    EnumEx.getNamesAndValues<Product>(Product).forEach(prod => {
+    getNamesAndValues<Product>(Product).forEach(prod => {
         test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));
@@ -118,7 +118,7 @@ suite('Installer', () => {
         await installer.install(product);
         await checkInstalledDef.promise;
     }
-    EnumEx.getNamesAndValues<Product>(Product).forEach(prod => {
+    getNamesAndValues<Product>(Product).forEach(prod => {
         test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));

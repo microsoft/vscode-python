@@ -10,10 +10,10 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-import { EnumEx } from '../../client/common/enumUtils';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { ICurrentProcess, ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterHelper, IInterpreterLocatorService } from '../../client/interpreter/contracts';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
@@ -25,7 +25,7 @@ enum OS {
 
 suite('Interpreters - PipEnv', () => {
     const rootWorkspace = Uri.file(path.join('usr', 'desktop', 'wkspc1')).fsPath;
-    EnumEx.getNamesAndValues(OS).forEach(os => {
+    getNamesAndValues(OS).forEach(os => {
         [undefined, Uri.file(path.join(rootWorkspace, 'one.py'))].forEach(resource => {
             const testSuffix = ` (${os.name}, ${resource ? 'with' : 'without'} a workspace)`;
 

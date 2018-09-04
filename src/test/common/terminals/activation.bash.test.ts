@@ -4,12 +4,12 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { EnumEx } from '../../../client/common/enumUtils';
 import '../../../client/common/extensions';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { TerminalShellType } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
@@ -34,7 +34,7 @@ suite('Terminal Environment Activation (bash)', () => {
                         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
                     });
 
-                    EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
+                    getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
                         let isScriptFileSupported = false;
                         switch (shellType.value) {
                             case TerminalShellType.zsh:

@@ -7,11 +7,11 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
-import { EnumEx } from '../../../client/common/enumUtils';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import { TerminalShellType } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Terminal Environment Activation (cmd/powershell)', () => {
@@ -38,7 +38,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                             configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
                         });
 
-                        EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
+                        getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
                             const isScriptFileSupported = ['activate.bat', 'activate.ps1'].indexOf(scriptFileName) >= 0;
                             const titleTitle = isScriptFileSupported ? `Ensure terminal type is supported (Shell: ${shellType.name})` :
                                 `Ensure terminal type is not supported (Shell: ${shellType.name})`;

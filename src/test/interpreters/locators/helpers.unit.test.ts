@@ -8,9 +8,9 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { EnumEx } from '../../../client/common/enumUtils';
 import { Architecture, IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { PythonVersionInfo } from '../../../client/common/process/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IInterpreterHelper, IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorHelper } from '../../../client/interpreter/locators/helpers';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -81,7 +81,7 @@ suite('Interpreters - Locators Helper', () => {
         expect(items).to.be.lengthOf(3);
         expect(items).to.be.deep.equal(expectedInterpreters);
     });
-    EnumEx.getNamesAndValues<OS>(OS).forEach(os => {
+    getNamesAndValues<OS>(OS).forEach(os => {
         test(`Ensure duplicates are removed (same version and same interpreter directory on ${os.name})`, async () => {
             interpreterServiceHelper
                 .setup(i => i.isMacDefaultPythonPath(TypeMoq.It.isAny()))
@@ -151,7 +151,7 @@ suite('Interpreters - Locators Helper', () => {
             expect(items).to.be.deep.equal(expectedInterpreters);
         });
     });
-    EnumEx.getNamesAndValues<OS>(OS).forEach(os => {
+    getNamesAndValues<OS>(OS).forEach(os => {
         test(`Ensure interpreter types are identified from other locators (${os.name})`, async () => {
             interpreterServiceHelper
                 .setup(i => i.isMacDefaultPythonPath(TypeMoq.It.isAny()))

@@ -8,10 +8,10 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
-import { EnumEx } from '../../../client/common/enumUtils';
 import { OSInfo } from '../../../client/common/platform/osinfo';
 import { Architecture, IPlatformService, OSType } from '../../../client/common/platform/types';
 import { IDisposableRegistry } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { CONDA_ENV_FILE_SERVICE, CONDA_ENV_SERVICE, CURRENT_PATH_SERVICE, GLOBAL_VIRTUAL_ENV_SERVICE, IInterpreterLocatorHelper, IInterpreterLocatorService, InterpreterType, KNOWN_PATH_SERVICE, PIPENV_SERVICE, PythonInterpreter, WINDOWS_REGISTRY_SERVICE, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../client/interpreter/contracts';
 import { PythonInterpreterLocatorService } from '../../../client/interpreter/locators';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -33,7 +33,7 @@ suite('Interpreters - Locators Index', () => {
         locator = new PythonInterpreterLocatorService(serviceContainer.object);
     });
     [undefined, Uri.file('Something')].forEach(resource => {
-        EnumEx.getNamesAndValues<OSType>(OSType).forEach(osType => {
+        getNamesAndValues<OSType>(OSType).forEach(osType => {
             if (osType.value === OSType.Unknown) {
                 return;
             }
