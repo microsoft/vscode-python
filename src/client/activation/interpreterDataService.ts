@@ -7,9 +7,9 @@ import * as path from 'path';
 import { ExtensionContext, Uri } from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
-import { createDeferred } from '../common/helpers';
 import { IPlatformService } from '../common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
+import { createDeferred } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 
 const DataVersion = 1;

@@ -2,7 +2,7 @@ import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
-import { createDeferred } from '../../client/common/helpers';
+import { createDeferred } from '../../client/common/utils/async';
 import { TestManagerRunner as NoseTestManagerRunner } from '../../client/unittests//nosetest/runner';
 import { TestManagerRunner as PytestManagerRunner } from '../../client/unittests//pytest/runner';
 import { TestManagerRunner as UnitTestTestManagerRunner } from '../../client/unittests//unittest/runner';

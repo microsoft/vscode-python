@@ -11,10 +11,10 @@ import { CancellationToken, CancellationTokenSource, CompletionItemKind,
 import { PythonSettings } from '../common/configSettings';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
-import { createDeferred, Deferred } from '../common/helpers';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
 import { BANNER_NAME_PROPOSE_LS, ILogger, IPythonExtensionBanner } from '../common/types';
+import { createDeferred, Deferred } from '../common/utils/async';
 import { debounce, swallowExceptions } from '../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';

@@ -5,6 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as tmp from 'tmp';
 import { IS_WINDOWS } from '../util';
 
 export const PATH_VARIABLE_NAME = IS_WINDOWS ? 'Path' : 'PATH';
@@ -58,4 +59,21 @@ export function arePathsSame(path1: string, path2: string) {
     } else {
         return path1 === path2;
     }
+}
+
+export function createTemporaryFile(extension: string, temporaryDirectory?: string): Promise<{ filePath: string; cleanupCallback: Function }> {
+    // tslint:disable-next-line:no-any
+    const options: any = { postfix: extension };
+    if (temporaryDirectory) {
+        options.dir = temporaryDirectory;
+    }
+
+    return new Promise<{ filePath: string; cleanupCallback: Function }>((resolve, reject) => {
+        tmp.file(options, (err, tmpFile, fd, cleanupCallback) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve({ filePath: tmpFile, cleanupCallback: cleanupCallback });
+        });
+    });
 }

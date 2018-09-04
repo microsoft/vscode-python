@@ -17,7 +17,6 @@ import {
 import { PythonSettings } from '../common/configSettings';
 // tslint:disable-next-line:ordered-imports
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { createDeferred, Deferred } from '../common/helpers';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { StopWatch } from '../common/stopWatch';
 import {
@@ -25,6 +24,7 @@ import {
     IExtensionContext, IFeatureDeprecationManager, ILogger, IOutputChannel,
     IPythonExtensionBanner, IPythonSettings
 } from '../common/types';
+import { createDeferred, Deferred } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { LanguageServerSymbolProvider } from '../providers/symbolProvider';
 import {

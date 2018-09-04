@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { OutputChannel, QuickPickItem, Uri, window } from 'vscode';
-import { createDeferred } from '../../../common/helpers';
 import { IInstaller, IOutputChannel, Product } from '../../../common/types';
+import { createDeferred } from '../../../common/utils/async';
 import { getSubDirectories } from '../../../common/utils/fs';
 import { IServiceContainer } from '../../../ioc/types';
 import { ITestConfigurationManager } from '../../types';
