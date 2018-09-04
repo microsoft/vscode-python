@@ -28,31 +28,6 @@ export function fsReaddirAsync(root: string): Promise<string[]> {
     });
 }
 
-export function formatErrorForLogging(error: Error | string): string {
-    let message: string = '';
-    if (typeof error === 'string') {
-        message = error;
-    }
-    else {
-        if (error.message) {
-            message = `Error Message: ${error.message}`;
-        }
-        if (error.name && error.message.indexOf(error.name) === -1) {
-            message += `, (${error.name})`;
-        }
-        const innerException = (error as any).innerException;
-        if (innerException && (innerException.message || innerException.name)) {
-            if (innerException.message) {
-                message += `, Inner Error Message: ${innerException.message}`;
-            }
-            if (innerException.name && innerException.message.indexOf(innerException.name) === -1) {
-                message += `, (${innerException.name})`;
-            }
-        }
-    }
-    return message;
-}
-
 export function getSubDirectories(rootDir: string): Promise<string[]> {
     return new Promise<string[]>(resolve => {
         fs.readdir(rootDir, (error, files) => {
