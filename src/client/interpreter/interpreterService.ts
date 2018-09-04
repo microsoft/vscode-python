@@ -5,7 +5,7 @@ import { IDocumentManager, IWorkspaceService } from '../common/application/types
 import { PythonSettings } from '../common/configSettings';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../common/types';
-import * as utils from '../common/util';
+import * as utils from '../common/utils/fs';
 import { IServiceContainer } from '../ioc/types';
 import { IPythonPathUpdaterServiceManager } from './configuration/types';
 import {

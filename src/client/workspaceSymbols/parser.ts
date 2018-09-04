@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { fsExistsAsync } from '../common/util';
+import { fsExistsAsync } from '../common/utils/fs';
 import { Tag } from './contracts';
 
 // tslint:disable:no-require-imports no-var-requires no-suspicious-comment
