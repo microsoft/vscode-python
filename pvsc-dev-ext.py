@@ -90,7 +90,7 @@ def build(checkout):
 def setup(install_type):
     """Set up a clone of PVSC."""
     checkout = checkout_directory(install_type)
-    print(f"Cloning {REPO_URL} ...")
+    print("Cloning {REPO_URL} ...")
     clone_repo(checkout)
     build(checkout)
 
