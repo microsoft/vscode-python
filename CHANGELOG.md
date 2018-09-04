@@ -1,6 +1,6 @@
 # Changelog
 
-## 2018.8.0-rc (30 August 2018)
+## 2018.8.0 (04 September 2018)
 
 ### Thanks
 
@@ -74,6 +74,8 @@ part of!
 
 1. Fix debugger issue that prevented users from copying the value of a variable from the Variables debugger window.
    ([#1398](https://github.com/Microsoft/vscode-python/issues/1398))
+1. Enable code lenses for tests when using the new language server.
+   ([#1948](https://github.com/Microsoft/vscode-python/issues/1948))
 1. Fix null reference exception in the language server causing server initialization to fail. The exception happened when search paths contained a folder that did not exist.
    ([#2017](https://github.com/Microsoft/vscode-python/issues/2017))
 1. Language server now populates document outline with all symbols instead of just top-level ones.
@@ -118,6 +120,8 @@ part of!
    ([#2309](https://github.com/Microsoft/vscode-python/issues/2309))
 1. Language server now correctly merges data from typeshed and the Python library.
    ([#2345](https://github.com/Microsoft/vscode-python/issues/2345))
+1. Fix pytest >= 3.7 test discovery.
+   ([#2347](https://github.com/Microsoft/vscode-python/issues/2347))
 1. Update the downloaded Python language server nuget package filename to
    `Python-Language-Server-{OSType}.beta.nupkg`.
    ([#2362](https://github.com/Microsoft/vscode-python/issues/2362))
@@ -144,11 +148,6 @@ part of!
    ([#2307](https://github.com/Microsoft/vscode-python/issues/2307))
 1. Only use the current stable version of PTVSD in CI builds/releases.
    ([#2432](https://github.com/Microsoft/vscode-python/issues/2432))
-
-
-
-
-
 
 
 ## 2018.7.1 (23 July 2018)
