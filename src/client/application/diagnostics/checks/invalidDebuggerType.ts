@@ -34,10 +34,12 @@ const CommandName = 'python.debugger.replaceExperimental';
 @injectable()
 export class InvalidDebuggerTypeDiagnosticsService extends BaseDiagnosticsService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
+    protected readonly fs: IFileSystem;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer);
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId);
         const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
+        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         cmdManager.registerCommand(CommandName, this.fixLaunchJson, this);
     }
     public async diagnose(): Promise<IDiagnostic[]> {
@@ -75,14 +77,16 @@ export class InvalidDebuggerTypeDiagnosticsService extends BaseDiagnosticsServic
         const results = await Promise.all(workspaceService.workspaceFolders!.map(workspaceFolder => this.isExperimentalDebuggerUsedInWorkspace(workspaceFolder)));
         return results.filter(used => used === true).length > 0;
     }
+    private getLaunchJsonFile(workspaceFolder: WorkspaceFolder){
+        return path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
+    }
     private async isExperimentalDebuggerUsedInWorkspace(workspaceFolder: WorkspaceFolder) {
-        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        const launchJson = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
-        if (!await fs.fileExists(launchJson)) {
+        const launchJson = this.getLaunchJsonFile(workspaceFolder);
+        if (!await this.fs.fileExists(launchJson)) {
             return false;
         }
 
-        const fileContents = await fs.readFile(launchJson);
+        const fileContents = await this.fs.readFile(launchJson);
         return fileContents.indexOf('"pythonExperimental"') > 0;
     }
     private async fixLaunchJson() {
@@ -98,15 +102,14 @@ export class InvalidDebuggerTypeDiagnosticsService extends BaseDiagnosticsServic
             return;
         }
 
-        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        const launchJson = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
-        let fileContents = await fs.readFile(launchJson);
+        const launchJson = this.getLaunchJsonFile(workspaceFolder);
+        let fileContents = await this.fs.readFile(launchJson);
         const debuggerType = new RegExp('"pythonExperimental"', 'g');
         const debuggerLabel = new RegExp('"Python Experimental:', 'g');
 
         fileContents = fileContents.replace(debuggerType, '"python"');
         fileContents = fileContents.replace(debuggerLabel, '"Python:');
 
-        await fs.writeFile(launchJson, fileContents);
+        await this.fs.writeFile(launchJson, fileContents);
     }
 }
