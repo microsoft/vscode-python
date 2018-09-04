@@ -3,9 +3,10 @@
 
 'use strict';
 
-// tslint:disable: no-any one-line no-suspicious-comment prefer-template prefer-const no-unnecessary-callback-wrapper no-function-expression no-string-literal no-control-regex no-shadowed-variable
-
 import * as os from 'os';
 
+// tslint:disable-next-line: no-suspicious-comment
+// TODO: Usage of these should be replaced by OSInfo.* or
+// IPlatformService.* (from src/client/common/platform).
 export const IS_WINDOWS = /^win/.test(process.platform);
 export const Is_64Bit = os.arch() === 'x64';
