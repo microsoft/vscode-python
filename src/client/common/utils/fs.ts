@@ -6,9 +6,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as tmp from 'tmp';
-import { IS_WINDOWS } from '../util';
-
-export const PATH_VARIABLE_NAME = IS_WINDOWS ? 'Path' : 'PATH';
 
 export function fsExistsAsync(filePath: string): Promise<boolean> {
     return new Promise<boolean>(resolve => {
@@ -49,16 +46,6 @@ export function getSubDirectories(rootDir: string): Promise<string[]> {
             resolve(subDirs);
         });
     });
-}
-
-export function arePathsSame(path1: string, path2: string) {
-    path1 = path.normalize(path1);
-    path2 = path.normalize(path2);
-    if (IS_WINDOWS) {
-        return path1.toUpperCase() === path2.toUpperCase();
-    } else {
-        return path1 === path2;
-    }
 }
 
 export function createTemporaryFile(extension: string, temporaryDirectory?: string): Promise<{ filePath: string; cleanupCallback: Function }> {

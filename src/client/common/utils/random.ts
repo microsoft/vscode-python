@@ -3,8 +3,6 @@
 
 'use strict';
 
-import { IRandom } from '../types';
-
 import * as crypto from 'crypto';
 
 function getRandom(): number {
@@ -22,7 +20,7 @@ export function getRandomBetween(min: number = 0, max: number = 10): number {
     return min + (randomVal * (max - min));
 }
 
-export class Random implements IRandom {
+export class Random {
 
     public getRandomInt(min: number = 0, max: number = 10): number {
         return getRandomBetween(min, max);
