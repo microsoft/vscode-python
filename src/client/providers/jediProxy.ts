@@ -10,12 +10,12 @@ import { CancellationToken, CancellationTokenSource, CompletionItemKind,
     Disposable, SymbolKind, Uri } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { isTestExecution } from '../common/constants';
-import { debounce, swallowExceptions } from '../common/decorators';
 import '../common/extensions';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { StopWatch } from '../common/stopWatch';
 import { BANNER_NAME_PROPOSE_LS, ILogger, IPythonExtensionBanner } from '../common/types';
+import { debounce, swallowExceptions } from '../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import * as logger from './../common/logger';
