@@ -3,7 +3,7 @@ import * as path from 'path';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { ILogger, IPersistentStateFactory } from '../../../common/types';
-import { VersionUtils } from '../../../common/versionUtils';
+import { compareVersion } from '../../../common/utils/version';
 import { IServiceContainer } from '../../../ioc/types';
 import { CondaInfo, ICondaService, IInterpreterLocatorService, PythonInterpreter, WINDOWS_REGISTRY_SERVICE } from '../../contracts';
 import { CondaHelper } from './condaHelper';
@@ -211,7 +211,7 @@ export class CondaService implements ICondaService {
     private getLatestVersion(interpreters: PythonInterpreter[]) {
         const sortedInterpreters = interpreters.filter(interpreter => interpreter.version && interpreter.version.length > 0);
         // tslint:disable-next-line:no-non-null-assertion
-        sortedInterpreters.sort((a, b) => VersionUtils.compareVersion(a.version!, b.version!));
+        sortedInterpreters.sort((a, b) => compareVersion(a.version!, b.version!));
         if (sortedInterpreters.length > 0) {
             return sortedInterpreters[sortedInterpreters.length - 1];
         }
