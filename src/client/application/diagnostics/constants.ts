@@ -4,5 +4,6 @@
 'use strict';
 
 export enum DiagnosticCodes {
-    InvalidEnvironmentPathVariableDiagnostic = 'InvalidEnvironmentPathVariableDiagnostic'
+    InvalidEnvironmentPathVariableDiagnostic = 'InvalidEnvironmentPathVariableDiagnostic',
+    InvalidDebuggerTypeDiagnostic = 'InvalidDebuggerTypeDiagnostic'
 }

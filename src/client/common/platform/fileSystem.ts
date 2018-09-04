@@ -168,4 +168,8 @@ export class FileSystem implements IFileSystem {
             });
         });
     }
+
+    public writeFile(filePath: string, data: {}): Promise<void> {
+        return fs.writeFile(filePath, data);
+    }
 }

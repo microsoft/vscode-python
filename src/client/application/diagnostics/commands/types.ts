@@ -8,7 +8,8 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticCommand } from '../types';
 export type CommandOption<Type, Option> = { type: Type; options: Option };
 export type LaunchBrowserOption = CommandOption<'launch', string>;
 export type IgnoreDiagnostOption = CommandOption<'ignore', DiagnosticScope>;
-export type CommandOptions = LaunchBrowserOption | IgnoreDiagnostOption;
+export type ExecuteVSCCommandOption = CommandOption<'executeVSCCommand', string>;
+export type CommandOptions = LaunchBrowserOption | IgnoreDiagnostOption | ExecuteVSCCommandOption;
 
 export const IDiagnosticsCommandFactory = Symbol('IDiagnosticsCommandFactory');
 
