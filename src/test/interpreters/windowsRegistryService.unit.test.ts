@@ -1,8 +1,9 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Architecture, RegistryHive } from '../../client/common/platform/types';
+import { RegistryHive } from '../../client/common/platform/types';
 import { IPathUtils, IPersistentStateFactory } from '../../client/common/types';
+import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
 import { IServiceContainer } from '../../client/ioc/types';

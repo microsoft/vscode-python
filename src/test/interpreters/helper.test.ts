@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, TextDocument, TextEditor, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
-import { Architecture } from '../../client/common/platform/types';
+import { Architecture } from '../../client/common/utils/platform';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { fixInterpreterDisplayName } from '../../client/interpreter/locators/helpers';

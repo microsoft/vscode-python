@@ -8,9 +8,10 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Architecture, IFileSystem, IPlatformService } from '../../../client/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { PythonVersionInfo } from '../../../client/common/process/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { Architecture } from '../../../client/common/utils/platform';
 import { IInterpreterHelper, IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorHelper } from '../../../client/interpreter/locators/helpers';
 import { IServiceContainer } from '../../../client/ioc/types';

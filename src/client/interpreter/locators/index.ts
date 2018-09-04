@@ -96,7 +96,7 @@ function getLocators(
 ): IInterpreterLocatorService[] {
     const locators: IInterpreterLocatorService[] = [];
     for (const [key, platformName] of keys) {
-        if (!platform.os.matchPlatform(platformName)) {
+        if (!platform.info.matchPlatform(platformName)) {
             continue;
         }
         const locator = getService(key);
