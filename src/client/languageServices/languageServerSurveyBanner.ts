@@ -8,7 +8,7 @@ import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import { IBrowserService, IPersistentStateFactory,
     IPythonExtensionBanner } from '../common/types';
-import { getRandomBetween } from '../common/util';
+import { getRandomBetween } from '../common/utils/random';
 
 // persistent state names, exported to make use of in testing
 export enum LSSurveyStateKeys {

@@ -38,7 +38,7 @@ import {
     IPathUtils, IPersistentStateFactory,
     IRandom, Is64Bit, IsWindows
 } from './types';
-import { Random } from './util';
+import { Random } from './utils/random';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
