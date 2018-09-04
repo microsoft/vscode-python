@@ -27,7 +27,7 @@ export class InvalidDebuggerTypeDiagnostic extends BaseDiagnostic {
     }
 }
 
-export const DebuggerTypeDiagnosticsServiceId = 'DebuggerTypeDiagnosticsServiceId';
+export const InvalidDebuggerTypeDiagnosticsServiceId = 'InvalidDebuggerTypeDiagnosticsServiceId';
 
 const CommandName = 'python.debugger.replaceExperimental';
 
