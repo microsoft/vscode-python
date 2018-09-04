@@ -77,7 +77,7 @@ export class InvalidDebuggerTypeDiagnosticsService extends BaseDiagnosticsServic
         const results = await Promise.all(workspaceService.workspaceFolders!.map(workspaceFolder => this.isExperimentalDebuggerUsedInWorkspace(workspaceFolder)));
         return results.filter(used => used === true).length > 0;
     }
-    private getLaunchJsonFile(workspaceFolder: WorkspaceFolder){
+    private getLaunchJsonFile(workspaceFolder: WorkspaceFolder) {
         return path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
     }
     private async isExperimentalDebuggerUsedInWorkspace(workspaceFolder: WorkspaceFolder) {
@@ -98,7 +98,7 @@ export class InvalidDebuggerTypeDiagnosticsService extends BaseDiagnosticsServic
         await Promise.all(workspaceService.workspaceFolders!.map(workspaceFolder => this.fixLaunchJsonInWorkspace(workspaceFolder)));
     }
     private async fixLaunchJsonInWorkspace(workspaceFolder: WorkspaceFolder) {
-        if (!await this.isExperimentalDebuggerUsedInWorkspace(workspaceFolder)){
+        if (!await this.isExperimentalDebuggerUsedInWorkspace(workspaceFolder)) {
             return;
         }
 
