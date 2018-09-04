@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { fsExistsAsync, IS_WINDOWS } from '../../../common/utils';
+import { fsExistsAsync, IS_WINDOWS } from '../../../common/util';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';

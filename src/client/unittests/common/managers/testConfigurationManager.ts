@@ -2,7 +2,7 @@ import * as path from 'path';
 import { OutputChannel, QuickPickItem, Uri, window } from 'vscode';
 import { createDeferred } from '../../../common/helpers';
 import { IInstaller, IOutputChannel, Product } from '../../../common/types';
-import { getSubDirectories } from '../../../common/utils';
+import { getSubDirectories } from '../../../common/util';
 import { IServiceContainer } from '../../../ioc/types';
 import { ITestConfigurationManager } from '../../types';
 import { TEST_OUTPUT_CHANNEL } from '../constants';

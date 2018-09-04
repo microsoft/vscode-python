@@ -9,9 +9,8 @@ import * as path from 'path';
 import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
 import { createDeferred } from '../../../client/common/helpers';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../../../client/common/platform/constants';
-import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
-import { IsWindows } from '../../../client/common/types';
-import { IS_WINDOWS } from '../../../client/common/utils';
+import { IDisposableRegistry, IPathUtils, IsWindows } from '../../../client/common/types';
+import { IS_WINDOWS } from '../../../client/common/util';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { EnvironmentVariables } from '../../../client/common/variables/types';
@@ -55,7 +54,16 @@ suite('Multiroot Environment Variables Provider', () => {
         await initializeTest();
     });
 
-    function getVariablesProvider(mockVariables: EnvironmentVariables = { ...process.env }) {
+    function getVariablesProvider(envVars: {[key: string]: string | undefined} = process.env): EnvironmentVariablesProvider {
+        const mockVariables: EnvironmentVariables = {};
+        if (envVars) {
+            for (const [key, value] of envVars.entries!) {
+                if (value === undefined) {
+                    continue;
+                }
+                mockVariables[key] = value;
+            }
+        }
         const pathUtils = ioc.serviceContainer.get<IPathUtils>(IPathUtils);
         const mockProcess = new MockProcess(mockVariables);
         const variablesService = new EnvironmentVariablesService(pathUtils);

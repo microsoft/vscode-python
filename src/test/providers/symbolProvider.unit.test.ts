@@ -14,7 +14,7 @@ import {
 } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { IFileSystem } from '../../client/common/platform/types';
-import { parseRange, splitParent } from '../../client/common/utils';
+import { parseRange, splitParent } from '../../client/common/util';
 import { IServiceContainer } from '../../client/ioc/types';
 import { JediFactory } from '../../client/languageServices/jediProxyFactory';
 import { IDefinition, ISymbolResult, JediProxyHandler } from '../../client/providers/jediProxy';

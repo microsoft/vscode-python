@@ -7,7 +7,7 @@
 
 import { expect } from 'chai';
 import { Position, Range } from 'vscode';
-import { parsePosition, parseRange, splitParent } from '../../client/common/utils';
+import { parsePosition, parseRange, splitParent } from '../../client/common/util';
 
 suite('splitParent()', () => {
     test('valid values', async () => {

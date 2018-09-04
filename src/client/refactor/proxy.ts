@@ -7,7 +7,7 @@ import '../common/extensions';
 import { createDeferred, Deferred } from '../common/helpers';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IPythonSettings } from '../common/types';
-import { getWindowsLineEndingCount, IS_WINDOWS } from '../common/utils';
+import { getWindowsLineEndingCount, IS_WINDOWS } from '../common/util';
 import { IServiceContainer } from '../ioc/types';
 
 export class RefactorProxy extends Disposable {
