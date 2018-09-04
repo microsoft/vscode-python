@@ -7,7 +7,7 @@ import * as getFreePort from 'get-port';
 import * as net from 'net';
 import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
-import { noop } from '../../client/common/core.utils';
+import { noop } from '../../client/common/utils/misc';
 import { DebuggerTypeName } from '../../client/debugger/Common/constants';
 import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { PYTHON_PATH } from '../common';

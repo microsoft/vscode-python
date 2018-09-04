@@ -9,7 +9,6 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, OutputChannel, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
-import { noop } from '../../../client/common/core.utils';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { PipEnvInstaller, pipenvName } from '../../../client/common/installer/pipEnvInstaller';
 import { PipInstaller } from '../../../client/common/installer/pipInstaller';
@@ -19,6 +18,7 @@ import { PythonVersionInfo } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings, ModuleNamePurpose, Product } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { noop } from '../../../client/common/utils/misc';
 import { ICondaService, IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 

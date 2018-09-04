@@ -8,9 +8,9 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Disposable, TextDocument, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
-import { noop } from '../../client/common/core.utils';
 import { Architecture, IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../client/common/types';
+import { noop } from '../../client/common/utils/misc';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
     IInterpreterDisplay,

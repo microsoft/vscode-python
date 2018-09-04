@@ -6,8 +6,8 @@
 import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { noop } from '../../client/common/core.utils';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
+import { noop } from '../../client/common/utils/misc';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/Common/constants';
 import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
 import { PYTHON_PATH, sleep } from '../common';

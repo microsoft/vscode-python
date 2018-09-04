@@ -3,7 +3,7 @@ import * as path from 'path';
 import { commands, QuickPickItem, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import * as constants from '../../common/constants';
-import { noop } from '../../common/core.utils';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { CommandSource } from '../common/constants';
 import { FlattenedTestFunction, ITestCollectionStorageService, TestFile, TestFunction, Tests, TestStatus, TestsToRun } from '../common/types';
