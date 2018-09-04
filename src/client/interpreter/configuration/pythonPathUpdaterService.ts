@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, window } from 'vscode';
 import { InterpreterInfomation, IPythonExecutionFactory } from '../../common/process/types';
-import { StopWatch } from '../../common/stopWatch';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { PYTHON_INTERPRETER } from '../../telemetry/constants';
@@ -43,10 +43,11 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         };
         if (!failed) {
             const processService = await this.executionFactory.create({ pythonPath });
-            const infoPromise = processService.getInterpreterInformation().catch<InterpreterInfomation>(() => undefined);
+            const infoPromise = processService.getInterpreterInformation()
+                .catch<InterpreterInfomation | undefined>(() => undefined);
             const pipVersionPromise = this.interpreterVersionService.getPipVersion(pythonPath)
                 .then(value => value.length === 0 ? undefined : value)
-                .catch<string>(() => undefined);
+                .catch<string>(() => '');
             const [info, pipVersion] = await Promise.all([infoPromise, pipVersionPromise]);
             if (info) {
                 telemtryProperties.version = info.version;

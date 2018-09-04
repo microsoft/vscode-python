@@ -5,7 +5,7 @@ if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
-import { StopWatch } from './common/stopWatch';
+import { StopWatch } from './common/utils/stopWatch';
 // Do not move this linne of code (used to measure extension load times).
 const stopWatch = new StopWatch();
 

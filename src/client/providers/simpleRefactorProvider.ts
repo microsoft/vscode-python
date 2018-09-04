@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { getTextEditsFromPatch } from '../common/editor';
-import { StopWatch } from '../common/stopWatch';
 import { IInstaller, Product } from '../common/types';
+import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
 import { sendTelemetryWhenDone } from '../telemetry';
