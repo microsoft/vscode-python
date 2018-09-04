@@ -131,6 +131,8 @@ part of!
    ([#688](https://github.com/Microsoft/vscode-python/issues/688))
 1. Ensure stepping out of debugged code does not take user into `PTVSD` debugger code.
    ([#767](https://github.com/Microsoft/vscode-python/issues/767))
+1. Upgrade `pythonExperimental` to `python` in `launch.json`.
+   ([#2478](https://github.com/Microsoft/vscode-python/issues/2478))
 
 ### Code Health
 
