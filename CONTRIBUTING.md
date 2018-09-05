@@ -89,6 +89,19 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
 1. Run the Tests via the `Launch Test` and `Launch Multiroot Tests`  launch options.
+1. **Note** you will be running tests under the default Python interpreter for the system.
+
+*Change the version of python the tests are executed with by setting the `CI_PYTHON_PATH`.*
+
+Tests will be executed using the system default interpreter (whatever that is for your local machine), unless you explicitly set the `CI_PYTHON_PATH` environment variable. To test against different versions of Python you *must* use this.
+
+In the launch.json file, you can add the following to the `Launch Tests` setting to easily change the interpreter used during testing:
+
+```js
+    "env":{
+        "CI_PYTHON_PATH": "/path/to/interpreter/of/choice/python"
+    }
+```
 
 You can also run them from the command-line (after compiling):
 
@@ -96,6 +109,7 @@ You can also run them from the command-line (after compiling):
 npm run testSingleWorkspace  # will launch the VSC UI
 npm run testMultiWorkspace  # will launch the VSC UI
 ```
+...note this will use the Python interpreter that your current shell is making use of, no need to set `CI_PYTHON_PATH` here.
 
 *To limit system tests to a specific suite*
 
