@@ -15,7 +15,7 @@ export abstract class BaseDebugServer extends EventEmitter {
     protected pythonProcess: IPythonProcess;
     protected debugSession: DebugSession;
 
-    protected isRunning?: boolean;
+    protected isRunning: boolean = false;
     public get IsRunning(): boolean {
         if (this.isRunning === undefined) {
             return false;
