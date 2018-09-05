@@ -9,12 +9,12 @@ import { IApplicationShell } from '../../client/common/application/types';
 import { PythonInstaller } from '../../client/common/installer/pythonInstallation';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
-import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterHelper, IInterpreterLocatorService, IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
+import { Architecture } from '../../utils/platform';
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,

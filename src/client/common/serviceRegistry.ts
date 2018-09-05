@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Random } from '../../utils/random';
 import { IServiceManager } from '../ioc/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
@@ -38,7 +39,6 @@ import {
     IPathUtils, IPersistentStateFactory,
     IRandom, Is64Bit, IsWindows
 } from './types';
-import { Random } from './utils/random';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as platform from '../utils/platform';
+import * as platform from '../../../utils/platform';
 import {
     NON_WINDOWS_PATH_VARIABLE_NAME,
     WINDOWS_PATH_VARIABLE_NAME

@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Terminal, Uri } from 'vscode';
+import { sleep } from '../../../utils/async';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -10,7 +11,6 @@ import { captureTelemetry } from '../../telemetry';
 import { TERMINAL_CREATE } from '../../telemetry/constants';
 import { ITerminalManager } from '../application/types';
 import { IConfigurationService, IDisposableRegistry } from '../types';
-import { sleep } from '../utils/async';
 import { ITerminalHelper, ITerminalService, TerminalShellType } from './types';
 
 @injectable()

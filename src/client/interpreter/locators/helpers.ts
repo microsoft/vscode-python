@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { fsReaddirAsync } from '../../../utils/fs';
 import { getArchitectureDislayName } from '../../common/platform/registry';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IS_WINDOWS } from '../../common/util';
-import { fsReaddirAsync } from '../../common/utils/fs';
 import { IServiceContainer } from '../../ioc/types';
 import { IInterpreterHelper, IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../contracts';
 

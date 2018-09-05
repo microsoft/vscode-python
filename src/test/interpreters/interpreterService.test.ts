@@ -10,8 +10,6 @@ import { ConfigurationTarget, Disposable, TextDocument, TextEditor, Uri, Workspa
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../client/common/types';
-import { noop } from '../../client/common/utils/misc';
-import { Architecture } from '../../client/common/utils/platform';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
     IInterpreterDisplay,
@@ -28,6 +26,8 @@ import { InterpreterService } from '../../client/interpreter/interpreterService'
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
+import { noop } from '../../utils/misc';
+import { Architecture } from '../../utils/platform';
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,

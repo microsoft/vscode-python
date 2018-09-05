@@ -13,9 +13,9 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../cli
 import { isLanguageServerTest } from '../../client/common/constants';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../../client/common/types';
-import * as platform from '../../client/common/utils/platform';
 import { IServiceContainer } from '../../client/ioc/types';
-import * as testOSInfos from '../common/utils/platform.unit.test';
+import * as platform from '../../utils/platform';
+import * as testOSInfos from '../utils/platform.unit.test';
 
 suite('Activation - ActivationService', () => {
     [true, false].forEach(jediIsEnabled => {

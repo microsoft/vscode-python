@@ -6,9 +6,9 @@
 import * as path from 'path';
 import * as requestProgress from 'request-progress';
 import { ProgressLocation, window } from 'vscode';
+import { createDeferred } from '../../utils/async';
 import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
-import { createDeferred } from '../common/utils/async';
 import { PlatformData, PlatformName } from './platformData';
 import { IDownloadFileService } from './types';
 

@@ -1,9 +1,9 @@
 import { inject, injectable, named, optional } from 'inversify';
 import * as path from 'path';
+import { compareVersion } from '../../../../utils/version';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { ILogger, IPersistentStateFactory } from '../../../common/types';
-import { compareVersion } from '../../../common/utils/version';
 import { IServiceContainer } from '../../../ioc/types';
 import { CondaInfo, ICondaService, IInterpreterLocatorService, PythonInterpreter, WINDOWS_REGISTRY_SERVICE } from '../../contracts';
 import { CondaHelper } from './condaHelper';

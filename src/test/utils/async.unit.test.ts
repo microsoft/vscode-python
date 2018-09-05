@@ -4,7 +4,7 @@
 'use strict';
 
 import * as assert from 'assert';
-import { createDeferred } from '../../../client/common/utils/async';
+import { createDeferred } from '../../utils/async';
 
 suite('Deferred', () => {
     test('Resolve', done => {
