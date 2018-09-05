@@ -4,7 +4,7 @@
 import { Event, Uri } from 'vscode';
 
 export type EnvironmentVariables = Object & {
-    [key: string]: string;
+    [key: string]: string | undefined;
 };
 
 export const IEnvironmentVariablesService = Symbol('IEnvironmentVariablesService');
