@@ -41,6 +41,16 @@ You may see warnings that ```The engine "vscode" appears to be invalid.```, you 
 
 Run the `Compile` and `Hygiene` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
 
+You can also compile from the command-line:
+
+```shell
+tsc -p ./  # full compile
+tsc --watch -p ./  # incremental
+```
+
+Sometimes you will need to run `npm run clean` and even `rm -r out`.
+This is especially true if you have added or removed files.
+
 ### Errors and Warnings
 
 TypeScript errors and warnings will be displayed in the `Problems` window of Visual Studio Code:
@@ -54,7 +64,21 @@ Use the `Launch Extension` launch option.
 
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
-1. Run the Unit Tests via the `Launch Test` and `Launch Multiroot Tests`  launch options.
+1. Run the Tests via the `Launch Test` and `Launch Multiroot Tests`  launch options.
+
+You can also run them from the command-line (after compiling):
+
+```shell
+npm run test:unittests  # runs all unit tests
+npm run test:unittests grep='<NAME-OF-SUITE>'
+npm run testSingleWorkspace  # will launch the VSC UI
+npm run testMultiWorkspace  # will launch the VSC UI
+```
+
+To run only some tests (for `testSingleWorkspace` and `testMultiWorkspace`)
+you must temporarily change the `const grep` line in src/test/index.ts.
+
+Also see: https://github.com/Microsoft/vscode-python/pull/2208#issuecomment-414918160
 
 ### Standard Debugging
 
