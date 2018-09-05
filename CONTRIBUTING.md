@@ -60,7 +60,31 @@ TypeScript errors and warnings will be displayed in the `Problems` window of Vis
 To test the changes you launch a development version of VS Code on the workspace vscode, which you are currently editing.
 Use the `Launch Extension` launch option.
 
-### Unit Tests
+### Debugging Unit Tests
+
+1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
+1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
+1. Run the Tests via the `Debug Unit Tests`  launch options.
+
+You can also run them from the command-line (after compiling):
+
+```shell
+npm run test:unittests  # runs all unit tests
+npm run test:unittests grep='<NAME-OF-SUITE>'
+```
+
+*To run only a specific test suite for unit tests:*
+Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the `grep` field:
+
+```js
+    "args": [
+        "timeout=60000",
+        "grep=[The suite name of your unit test file]"
+    ],
+```
+...this will only run the suite with the tests you care about during a test run (be sure to set the debugger to run the `Debug Unit Tests` launcher).
+
+### Debugging System Tests
 
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
@@ -69,21 +93,28 @@ Use the `Launch Extension` launch option.
 You can also run them from the command-line (after compiling):
 
 ```shell
-npm run test:unittests  # runs all unit tests
-npm run test:unittests grep='<NAME-OF-SUITE>'
 npm run testSingleWorkspace  # will launch the VSC UI
 npm run testMultiWorkspace  # will launch the VSC UI
 ```
 
-To run only some tests (for `testSingleWorkspace` and `testMultiWorkspace`)
-you must temporarily change the `const grep` line in src/test/index.ts.
+*To limit system tests to a specific suite*
 
-Also see: https://github.com/Microsoft/vscode-python/pull/2208#issuecomment-414918160
+If you are running system tests (we call them *system* tests, others call them *integration* or otherwise) and you wish to run a specific test suite, edit the `src/test/index.ts` file here:
+
+https://github.com/Microsoft/vscode-python/blob/b328ba12331ed34a267e32e77e3e4b1eff235c13/src/test/index.ts#L21
+
+...and identify the test suite you want to run/debug like this:
+
+```ts
+const grep = '[The suite name of your *test.ts file]'; // IS_CI_SERVER &&...
+```
+...and then use the `Launch Tests` debugger launcher. This will run only the suite you name in the grep.
+
+And be sure to escape any grep-sensitive characters in your suite name (and to remove the change from src/test/index.ts before you submit).
 
 ### Standard Debugging
 
-Clone the repo into any directory and start debugging.
-From there use the `Launch Extension` launch option.
+Clone the repo into any directory, open that directory in VSCode, and use the `Launch Extension` launch option within VSCode.
 
 ### Debugging the Python Extension Debugger
 
