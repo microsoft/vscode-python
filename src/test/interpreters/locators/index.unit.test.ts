@@ -14,11 +14,11 @@ import { CONDA_ENV_FILE_SERVICE, CONDA_ENV_SERVICE, CURRENT_PATH_SERVICE, GLOBAL
 import { PythonInterpreterLocatorService } from '../../../client/interpreter/locators';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { getNamesAndValues } from '../../../utils/enum';
-import * as platform from '../../../utils/platform';
+import { Architecture, Info as PlatformInfo, OSType } from '../../../utils/platform';
 
 suite('Interpreters - Locators Index', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-    let info: platform.Info;
+    let info: PlatformInfo;
     let platformSvc: TypeMoq.IMock<IPlatformService>;
     let helper: TypeMoq.IMock<IInterpreterLocatorHelper>;
     let locator: IInterpreterLocatorService;
@@ -33,21 +33,21 @@ suite('Interpreters - Locators Index', () => {
         locator = new PythonInterpreterLocatorService(serviceContainer.object);
     });
     [undefined, Uri.file('Something')].forEach(resource => {
-        getNamesAndValues<platform.OSType>(platform.OSType).forEach(osType => {
-            if (osType.value === platform.OSType.Unknown) {
+        getNamesAndValues<OSType>(OSType).forEach(osType => {
+            if (osType.value === OSType.Unknown) {
                 return;
             }
             const testSuffix = `(on ${osType.name}, with${resource ? '' : 'out'} a resource)`;
             test(`All Interpreter Sources are used ${testSuffix}`, async () => {
                 const locatorsTypes: string[] = [];
-                if (osType.value === platform.OSType.Windows) {
+                if (osType.value === OSType.Windows) {
                     locatorsTypes.push(WINDOWS_REGISTRY_SERVICE);
                 }
-                info = new platform.Info(osType.value);
+                info = new PlatformInfo(osType.value);
                 platformSvc.setup(p => p.info).returns(() => info);
-                platformSvc.setup(p => p.isWindows).returns(() => osType.value === platform.OSType.Windows);
-                platformSvc.setup(p => p.isLinux).returns(() => osType.value === platform.OSType.Linux);
-                platformSvc.setup(p => p.isMac).returns(() => osType.value === platform.OSType.OSX);
+                platformSvc.setup(p => p.isWindows).returns(() => osType.value === OSType.Windows);
+                platformSvc.setup(p => p.isLinux).returns(() => osType.value === OSType.Linux);
+                platformSvc.setup(p => p.isMac).returns(() => osType.value === OSType.OSX);
 
                 locatorsTypes.push(CONDA_ENV_SERVICE);
                 locatorsTypes.push(CONDA_ENV_FILE_SERVICE);
@@ -55,14 +55,14 @@ suite('Interpreters - Locators Index', () => {
                 locatorsTypes.push(GLOBAL_VIRTUAL_ENV_SERVICE);
                 locatorsTypes.push(WORKSPACE_VIRTUAL_ENV_SERVICE);
 
-                if (osType.value !== platform.OSType.Windows) {
+                if (osType.value !== OSType.Windows) {
                     locatorsTypes.push(KNOWN_PATH_SERVICE);
                 }
                 locatorsTypes.push(CURRENT_PATH_SERVICE);
 
                 const locatorsWithInterpreters = locatorsTypes.map(typeName => {
                     const interpreter: PythonInterpreter = {
-                        architecture: platform.Architecture.Unknown,
+                        architecture: Architecture.Unknown,
                         displayName: typeName,
                         path: typeName,
                         sysPrefix: typeName,
@@ -101,14 +101,14 @@ suite('Interpreters - Locators Index', () => {
             });
             test(`Interpreter Sources are sorted correctly and merged ${testSuffix}`, async () => {
                 const locatorsTypes: string[] = [];
-                if (osType.value === platform.OSType.Windows) {
+                if (osType.value === OSType.Windows) {
                     locatorsTypes.push(WINDOWS_REGISTRY_SERVICE);
                 }
-                info = new platform.Info(osType.value);
+                info = new PlatformInfo(osType.value);
                 platformSvc.setup(p => p.info).returns(() => info);
-                platformSvc.setup(p => p.isWindows).returns(() => osType.value === platform.OSType.Windows);
-                platformSvc.setup(p => p.isLinux).returns(() => osType.value === platform.OSType.Linux);
-                platformSvc.setup(p => p.isMac).returns(() => osType.value === platform.OSType.OSX);
+                platformSvc.setup(p => p.isWindows).returns(() => osType.value === OSType.Windows);
+                platformSvc.setup(p => p.isLinux).returns(() => osType.value === OSType.Linux);
+                platformSvc.setup(p => p.isMac).returns(() => osType.value === OSType.OSX);
 
                 locatorsTypes.push(CONDA_ENV_SERVICE);
                 locatorsTypes.push(CONDA_ENV_FILE_SERVICE);
@@ -116,14 +116,14 @@ suite('Interpreters - Locators Index', () => {
                 locatorsTypes.push(GLOBAL_VIRTUAL_ENV_SERVICE);
                 locatorsTypes.push(WORKSPACE_VIRTUAL_ENV_SERVICE);
 
-                if (osType.value !== platform.OSType.Windows) {
+                if (osType.value !== OSType.Windows) {
                     locatorsTypes.push(KNOWN_PATH_SERVICE);
                 }
                 locatorsTypes.push(CURRENT_PATH_SERVICE);
 
                 const locatorsWithInterpreters = locatorsTypes.map(typeName => {
                     const interpreter: PythonInterpreter = {
-                        architecture: platform.Architecture.Unknown,
+                        architecture: Architecture.Unknown,
                         displayName: typeName,
                         path: typeName,
                         sysPrefix: typeName,

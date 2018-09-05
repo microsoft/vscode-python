@@ -14,7 +14,7 @@ import { isLanguageServerTest } from '../../client/common/constants';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
-import * as platform from '../../utils/platform';
+import { Info as PlatformInfo } from '../../utils/platform';
 import * as testOSInfos from '../utils/platform.unit.test';
 
 suite('Activation - ActivationService', () => {
@@ -72,7 +72,7 @@ suite('Activation - ActivationService', () => {
                 serviceContainer.verifyAll();
             }
 
-            const supportedTests: [string, platform.Info][] = [
+            const supportedTests: [string, PlatformInfo][] = [
                 ['win10', testOSInfos.WIN_10],
                 ['win7', testOSInfos.WIN_7],
                 ['high sierra', testOSInfos.MAC_HIGH_SIERRA],
@@ -93,7 +93,7 @@ suite('Activation - ActivationService', () => {
                 });
             }
 
-            const unsupportedTests: [string, platform.Info][] = [
+            const unsupportedTests: [string, PlatformInfo][] = [
                 ['winXP', testOSInfos.WIN_XP],
                 ['el capitan', testOSInfos.MAC_EL_CAPITAN]
             ];
