@@ -56,8 +56,9 @@ suite('Multiroot Environment Variables Provider', () => {
 
     function getVariablesProvider(envVars: {[key: string]: string | undefined} = process.env): EnvironmentVariablesProvider {
         const mockVariables: EnvironmentVariables = {};
-        if (envVars) {
-            for (const [key, value] of envVars.entries!) {
+        if (envVars && envVars.keys) {
+            for (const key of envVars.keys) {
+                const value = envVars[key];
                 if (value === undefined) {
                     continue;
                 }
