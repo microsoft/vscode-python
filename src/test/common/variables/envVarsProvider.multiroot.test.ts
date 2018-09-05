@@ -54,15 +54,11 @@ suite('Multiroot Environment Variables Provider', () => {
         await initializeTest();
     });
 
-    function getVariablesProvider(envVars: {[key: string]: string | undefined} = process.env): EnvironmentVariablesProvider {
+    function getVariablesProvider(envVars: {[key: string]: string | undefined} = { ...process.env }) {
         const mockVariables: EnvironmentVariables = {};
         if (envVars && envVars.keys) {
             for (const key of envVars.keys) {
-                const value = envVars[key];
-                if (value === undefined) {
-                    continue;
-                }
-                mockVariables[key] = value;
+                mockVariables[key] = envVars[key] || '';
             }
         }
         const pathUtils = ioc.serviceContainer.get<IPathUtils>(IPathUtils);
