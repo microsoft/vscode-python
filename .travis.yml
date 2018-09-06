@@ -19,6 +19,8 @@ before_install: |
   npm install npm@latest -g
   npm install -g vsce
   npm install -g azure-cli
+  node --version
+  npm --version
   export CI_PYTHON_PATH=`which python`
 install:
   - npm ci
