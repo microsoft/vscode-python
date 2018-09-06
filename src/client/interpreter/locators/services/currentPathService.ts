@@ -70,7 +70,7 @@ export class CurrentPathService extends CacheableLocatorService {
     private async getInterpreterDetails(interpreter: string, resource?: Uri): Promise<PythonInterpreter | undefined> {
         return Promise.all([
             this.helper.getInterpreterInformation(interpreter),
-            this.virtualEnvMgr.getEnvironmentName(interpreter),
+            this.virtualEnvMgr.getEnvironmentName(interpreter, resource),
             this.virtualEnvMgr.getEnvironmentType(interpreter, resource)
         ]).
             then(([details, virtualEnvName, type]) => {

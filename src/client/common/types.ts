@@ -101,6 +101,7 @@ export const IPathUtils = Symbol('IPathUtils');
 
 export interface IPathUtils {
     readonly delimiter: string;
+    readonly home: string;
     getPathVariableName(): 'Path' | 'PATH';
     basename(pathValue: string, ext?: string): string;
 }

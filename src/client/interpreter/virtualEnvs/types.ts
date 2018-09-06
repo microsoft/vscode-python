@@ -6,6 +6,6 @@ import { Uri } from 'vscode';
 import { InterpreterType } from '../contracts';
 export const IVirtualEnvironmentManager = Symbol('VirtualEnvironmentManager');
 export interface IVirtualEnvironmentManager {
-    getEnvironmentName(pythonPath: string): Promise<string>;
+    getEnvironmentName(pythonPath: string, resource?: Uri): Promise<string>;
     getEnvironmentType(pythonPath: string, resource?: Uri): Promise<InterpreterType>;
 }

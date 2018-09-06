@@ -1,4 +1,5 @@
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
+import { PythonInterpreter } from '../contracts';
 
 export interface IPythonPathUpdaterService {
     updatePythonPath(pythonPath: string): Promise<void>;
@@ -19,4 +20,9 @@ export interface IPythonPathUpdaterServiceManager {
 export const IInterpreterSelector = Symbol('IInterpreterSelector');
 export interface IInterpreterSelector extends Disposable {
 
+}
+
+export const IInterpreterComparer = Symbol('IInterpreterComparer');
+export interface IInterpreterComparer {
+    compare(a: PythonInterpreter, b: PythonInterpreter): number;
 }

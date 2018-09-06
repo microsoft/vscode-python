@@ -1,6 +1,4 @@
 import { inject, injectable } from 'inversify';
-import { EOL } from 'os';
-import * as path from 'path';
 import { Disposable, StatusBarAlignment, StatusBarItem, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
@@ -56,20 +54,18 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         if (interpreter) {
             // tslint:disable-next-line:no-non-null-assertion
             this.statusBar.text = interpreter.displayName!;
-            if (interpreter.companyDisplayName) {
-                const toolTipSuffix = `${EOL}${interpreter.companyDisplayName}`;
-                this.statusBar.tooltip += toolTipSuffix;
-            }
+            this.statusBar.tooltip = pythonPath;
         } else {
             await Promise.all([
                 this.fileSystem.fileExists(pythonPath),
-                this.helper.getInterpreterInformation(pythonPath).catch<Partial<PythonInterpreter>>(() => undefined),
-                this.getVirtualEnvironmentName(pythonPath).catch<string>(() => '')
+                this.helper.getInterpreterInformation(pythonPath).catch<Partial<PythonInterpreter> | undefined>(() => undefined),
+                this.getVirtualEnvironmentName(pythonPath, workspaceFolder).catch<string>(() => '')
             ])
                 .then(([interpreterExists, details, virtualEnvName]) => {
-                    const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
-                    const dislayNameSuffix = virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
-                    this.statusBar.text = `${details ? details.version : defaultDisplayName}${dislayNameSuffix}`;
+                    if (details) {
+                        const displayName = this.interpreterService.getDisplayName({ ...details, envName: virtualEnvName });
+                        this.statusBar.text = displayName;
+                    }
 
                     if (!interpreterExists && !details && interpreters.length > 0) {
                         this.statusBar.color = 'yellow';
@@ -79,7 +75,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         }
         this.statusBar.show();
     }
-    private async getVirtualEnvironmentName(pythonPath: string): Promise<string> {
-        return this.virtualEnvMgr.getEnvironmentName(pythonPath);
+    private async getVirtualEnvironmentName(pythonPath: string, resource?: Uri): Promise<string> {
+        return this.virtualEnvMgr.getEnvironmentName(pythonPath, resource);
     }
 }

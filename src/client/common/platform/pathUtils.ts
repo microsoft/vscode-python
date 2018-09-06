@@ -2,10 +2,15 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IPathUtils, IsWindows } from '../types';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
+// tslint:disable-next-line:no-var-requires no-require-imports
+const untildify = require('untildify');
 
 @injectable()
 export class PathUtils implements IPathUtils {
-    constructor(@inject(IsWindows) private isWindows: boolean) { }
+    public readonly home = '';
+    constructor(@inject(IsWindows) private isWindows: boolean) {
+        this.home = untildify('~');
+    }
     public get delimiter(): string {
         return path.delimiter;
     }
