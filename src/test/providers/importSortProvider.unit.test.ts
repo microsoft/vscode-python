@@ -308,6 +308,10 @@ suite('Import Sort Provider', () => {
             .returns(() => expectedEdit)
             .verifiable(TypeMoq.Times.once());
 
+        const x = await processServiceFactory.object.create(uri);
+        console.log('x');
+        console.log(x);
+        console.log(x.exec);
         const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
 
         expect(edit).to.be.equal(expectedEdit);
