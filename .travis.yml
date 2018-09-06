@@ -24,59 +24,9 @@ install:
   - npm ci
 
 script:
-  - if [ $DEBUGGER_TEST == "true" ]; then
-        npm run clean;
-        npm run vscode:prepublish;
-        npm run cover:enable;
-        npm run testDebugger --silent;
-    fi
-  - npm run debugger-coverage
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
-  - npm run clean:ptvsd
-  - pip install -t ./pythonFiles/experimental/ptvsd ptvsd --no-cache-dir;
-  - if [ $DEBUGGER_TEST_RELEASE == "true" ]; then
-        npm run clean;
-        npm run vscode:prepublish;
-        npm run cover:enable;
-        npm run testDebugger --silent;
-    fi
-  - npm run debugger-coverage
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then
         npm run clean;
         npm run vscode:prepublish;
         npm run cover:enable;
         npm run testSingleWorkspace --silent;
-    fi
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
-  - if [ $MULTIROOT_WORKSPACE_TEST == "true" ]; then
-        npm run clean;
-        npm run vscode:prepublish;
-        npm run cover:enable;
-        npm run testMultiWorkspace --silent;
-    fi
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
-  - if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" && "$PERFORMANCE_TEST" == "true" ]]; then
-        yarn run clean;
-        yarn run vscode:prepublish;
-        yarn run testPerformance --silent;
-    fi
-  - if [ "$TRAVIS_PYTHON_VERSION" == "3.7" ]; then
-        python3 -m pip install --upgrade -r news/requirements.txt;
-        python3 news/announce.py --dry_run;
-        python3 -m pip install --upgrade -r tpn/requirements.txt;
-        python3 tpn --npm package-lock.json --config tpn/distribution.toml /dev/null;
-    fi
-  - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
-        npm run clean;
-        vsce package;
-        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
