@@ -289,18 +289,22 @@ suite('Import Sort Provider', () => {
         pythonSettings.setup(s => s.sortImports)
             .returns(() => { return { path: 'CUSTOM_ISORT', args: ['1', '2'] } as any as ISortImportSettings; })
             .verifiable(TypeMoq.Times.once());
-        processServiceFactory.setup(p => p.create(TypeMoq.It.isAny()))
-            .returns(() => {
-                console.log('created');
-                console.log(processService.object);
-                return Promise.resolve(processService.object);
-            })
-            .verifiable(TypeMoq.Times.once());
 
         const expectedArgs = [tmpFile.filePath, '--diff', '1', '2'];
         processService
             .setup(p => p.exec(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined })))
             .returns(() => Promise.resolve({ stdout: 'DIFF' }))
+            .verifiable(TypeMoq.Times.once());
+        console.log('setup');
+        console.log(processService.object);
+        console.log(processService.object.exec);
+        processServiceFactory.setup(p => p.create(TypeMoq.It.isAny()))
+            .returns(() => {
+                console.log('created');
+                console.log(processService.object);
+                console.log(processService.object.exec);
+                return Promise.resolve(processService.object);
+            })
             .verifiable(TypeMoq.Times.once());
         const expectedEdit = new WorkspaceEdit();
         editorUtils
