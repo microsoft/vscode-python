@@ -45,15 +45,15 @@ suite('Import Sort Provider', () => {
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         editorUtils = TypeMoq.Mock.ofType<IEditorUtils>();
         fs = TypeMoq.Mock.ofType<IFileSystem>();
-        serviceContainer.setup(c => c.get(ICommandManager)).returns(() => commandManager.object);
-        serviceContainer.setup(c => c.get(IDocumentManager)).returns(() => documentManager.object);
-        serviceContainer.setup(c => c.get(IApplicationShell)).returns(() => shell.object);
-        serviceContainer.setup(c => c.get(IConfigurationService)).returns(() => configurationService.object);
-        serviceContainer.setup(c => c.get(IPythonExecutionFactory)).returns(() => pythonExecFactory.object);
-        serviceContainer.setup(c => c.get(IProcessServiceFactory)).returns(() => processServiceFactory.object);
-        serviceContainer.setup(c => c.get(IEditorUtils)).returns(() => editorUtils.object);
-        serviceContainer.setup(c => c.get(IDisposableRegistry)).returns(() => []);
-        serviceContainer.setup(c => c.get(IFileSystem)).returns(() => fs.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICommandManager))).returns(() => commandManager.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDocumentManager))).returns(() => documentManager.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => shell.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configurationService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory))).returns(() => pythonExecFactory.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory))).returns(() => processServiceFactory.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEditorUtils))).returns(() => editorUtils.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => []);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fs.object);
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 
         sortProvider = new SortImportsEditingProvider(serviceContainer.object);
