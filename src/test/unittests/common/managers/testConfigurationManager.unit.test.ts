@@ -7,12 +7,12 @@
 
 import * as TypeMoq from 'typemoq';
 import { OutputChannel, Uri } from 'vscode';
-import { EnumEx } from '../../../../client/common/enumUtils';
 import { IInstaller, IOutputChannel, Product } from '../../../../client/common/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { TEST_OUTPUT_CHANNEL } from '../../../../client/unittests/common/constants';
 import { TestConfigurationManager } from '../../../../client/unittests/common/managers/testConfigurationManager';
 import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/unittests/common/types';
+import { getNamesAndValues } from '../../../../utils/enum';
 
 class MockTestConfigurationManager extends TestConfigurationManager {
     public requiresUserToConfigure(wkspace: Uri): Promise<boolean> {
@@ -25,7 +25,7 @@ class MockTestConfigurationManager extends TestConfigurationManager {
 
 suite('Unit Test Configuration Manager (unit)', () => {
     [Product.pytest, Product.unittest, Product.nosetest].forEach(product => {
-        const prods = EnumEx.getNamesAndValues(Product);
+        const prods = getNamesAndValues(Product);
         const productName = prods.filter(item => item.value === product)[0];
         suite(productName.name, () => {
             const workspaceUri = Uri.file(__dirname);

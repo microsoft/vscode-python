@@ -5,13 +5,13 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Disposable, WorkspaceConfiguration } from 'vscode';
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
-import { EnumEx } from '../../../client/common/enumUtils';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { getNamesAndValues } from '../../../utils/enum';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Service helpers', () => {
@@ -99,7 +99,7 @@ suite('Terminal Service helpers', () => {
     });
 
     test('Ensure spaces in command is quoted', async () => {
-        EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
+        getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
             const command = 'c:\\python 3.7.exe';
             const args = ['1', '2'];
             const commandPrefix = (item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore) ? '& ' : '';
@@ -111,7 +111,7 @@ suite('Terminal Service helpers', () => {
     });
 
     test('Ensure empty args are ignored', async () => {
-        EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
+        getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
             const command = 'python3.7.exe';
             const args = [];
             const commandPrefix = (item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore) ? '& ' : '';
@@ -123,7 +123,7 @@ suite('Terminal Service helpers', () => {
     });
 
     test('Ensure empty args are ignored with s in command', async () => {
-        EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
+        getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
             const command = 'c:\\python 3.7.exe';
             const args = [];
             const commandPrefix = (item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore) ? '& ' : '';

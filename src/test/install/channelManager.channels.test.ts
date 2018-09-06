@@ -8,12 +8,12 @@ import { QuickPickOptions } from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IModuleInstaller } from '../../client/common/installer/types';
-import { Architecture } from '../../client/common/platform/types';
 import { Product } from '../../client/common/types';
 import { IInterpreterLocatorService, InterpreterType, PIPENV_SERVICE, PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
+import { Architecture } from '../../utils/platform';
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,

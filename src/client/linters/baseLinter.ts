@@ -149,21 +149,21 @@ export abstract class BaseLinter implements ILinter {
     }
 
     private parseLines(outputLines: string[], regEx: string): ILintMessage[] {
-        return outputLines
-            .filter((value, index) => index <= this.pythonSettings.linting.maxNumberOfProblems)
-            .map(line => {
-                try {
-                    const msg = this.parseLine(line, regEx);
-                    if (msg) {
-                        return msg;
+        const messages: ILintMessage[] = [];
+        for (const line of outputLines) {
+            try {
+                const msg = this.parseLine(line, regEx);
+                if (msg) {
+                    messages.push(msg);
+                    if (messages.length >= this.pythonSettings.linting.maxNumberOfProblems) {
+                        break;
                     }
-                } catch (ex) {
-                    this.logger.logError(`Linter '${this.info.id}' failed to parse the line '${line}.`, ex);
                 }
-                return;
-            })
-            .filter(item => item !== undefined)
-            .map(item => item!);
+            } catch (ex) {
+                this.logger.logError(`Linter '${this.info.id}' failed to parse the line '${line}.`, ex);
+            }
+        }
+        return messages;
     }
 
     private displayLinterResultHeader(data: string) {

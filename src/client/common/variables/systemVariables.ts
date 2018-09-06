@@ -1,5 +1,12 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+'use strict';
+
 import * as Path from 'path';
-import * as Types from './sysTypes';
+import * as Types from '../../../utils/sysTypes';
 import { IStringDictionary, ISystemVariables } from './types';
 /* tslint:disable:rule1 no-any no-unnecessary-callback-wrapper jsdoc-format no-for-in prefer-const no-increment-decrement */
 
@@ -92,7 +99,7 @@ export class SystemVariables extends AbstractSystemVariables {
         this._workspaceFolder = typeof workspaceFolder === 'string' ? workspaceFolder : __dirname;
         this._workspaceFolderName = Path.basename(this._workspaceFolder);
         Object.keys(process.env).forEach(key => {
-            (this as any as { [key: string]: string })[`env:${key}`] = (this as any as { [key: string]: string })[`env.${key}`] = process.env[key];
+            (this as any as { [key: string]: string | undefined })[`env:${key}`] = (this as any as { [key: string]: string | undefined })[`env.${key}`] = process.env[key];
         });
     }
 

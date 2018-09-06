@@ -8,20 +8,20 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
 import { Disposable, OutputChannel, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
-import { EnumEx } from '../../../client/common/enumUtils';
 import '../../../client/common/extensions';
-import { createDeferred, Deferred } from '../../../client/common/helpers';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import { ProductService } from '../../../client/common/installer/productService';
 import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from '../../../client/common/installer/types';
 import { IDisposableRegistry, ILogger, InstallerResponse, ModuleNamePurpose, Product } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { createDeferred, Deferred } from '../../../utils/async';
+import { getNamesAndValues } from '../../../utils/enum';
 
 use(chaiAsPromised);
 
 suite('Module Installer', () => {
     [undefined, Uri.file('resource')].forEach(resource => {
-        EnumEx.getNamesAndValues<Product>(Product).forEach(product => {
+        getNamesAndValues<Product>(Product).forEach(product => {
             let disposables: Disposable[] = [];
             let installer: ProductInstaller;
             let installationChannel: TypeMoq.IMock<IInstallationChannelManager>;

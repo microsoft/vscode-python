@@ -18,11 +18,13 @@ tsconfig.json
 tsfmt.json
 tslint.json
 typings.json
+vsc-extension-quickstart.md
 vscode-python-signing.*
 webpack.config.js
 yarn.lock
 
 .github/**
+.mocha-reporter/**
 .nvm/**
 .vscode/**
 .vscode-test/**
@@ -46,13 +48,5 @@ scripts/**
 src/**
 test/**
 tmp/**
-typeshed/tests/**
-typeshed/.flake8
-typeshed/.git
-typeshed/.gitignore
-typeshed/.travis.yml
-typeshed/CONTRIBUTING.md
-typeshed/README.md
-typeshed/*.txt
+tpn/**
 typings/**
-vsc-extension-quickstart.md

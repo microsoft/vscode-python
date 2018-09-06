@@ -11,11 +11,11 @@ import { ExtensionActivationService } from '../../client/activation/activationSe
 import { ExtensionActivators, IExtensionActivationService, IExtensionActivator } from '../../client/activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { isLanguageServerTest } from '../../client/common/constants';
-import { OSInfo } from '../../client/common/platform/osinfo';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
-import * as testOSInfos from '../common/platform/osinfo.unit.test';
+import { Info as PlatformInfo } from '../../utils/platform';
+import * as testOSInfos from '../utils/platform.unit.test';
 
 suite('Activation - ActivationService', () => {
     [true, false].forEach(jediIsEnabled => {
@@ -72,7 +72,7 @@ suite('Activation - ActivationService', () => {
                 serviceContainer.verifyAll();
             }
 
-            const supportedTests: [string, OSInfo][] = [
+            const supportedTests: [string, PlatformInfo][] = [
                 ['win10', testOSInfos.WIN_10],
                 ['win7', testOSInfos.WIN_7],
                 ['high sierra', testOSInfos.MAC_HIGH_SIERRA],
@@ -85,7 +85,7 @@ suite('Activation - ActivationService', () => {
              for (const [osID, info] of supportedTests) {
                 test(`LS is supported (${osID})`, async () => {
                     pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
-                    platformService.setup(p => p.os).returns(() => info);
+                    platformService.setup(p => p.info).returns(() => info);
                     const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
                     const activationService = new ExtensionActivationService(serviceContainer.object);
 
@@ -93,14 +93,14 @@ suite('Activation - ActivationService', () => {
                 });
             }
 
-            const unsupportedTests: [string, OSInfo][] = [
+            const unsupportedTests: [string, PlatformInfo][] = [
                 ['winXP', testOSInfos.WIN_XP],
                 ['el capitan', testOSInfos.MAC_EL_CAPITAN]
             ];
             for (const [osID, info] of unsupportedTests) {
                 test(`LS is not supported (${osID})`, async () => {
                     pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
-                    platformService.setup(p => p.os).returns(() => info);
+                    platformService.setup(p => p.info).returns(() => info);
                     const activator = TypeMoq.Mock.ofType<IExtensionActivator>();
                     const activationService = new ExtensionActivationService(serviceContainer.object);
 

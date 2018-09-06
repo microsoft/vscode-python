@@ -2,7 +2,8 @@ import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { fsExistsAsync, IS_WINDOWS } from '../../../common/utils';
+import { fsExistsAsync } from '../../../../utils/fs';
+import { IS_WINDOWS } from '../../../common/util';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
@@ -11,18 +12,39 @@ import { CacheableLocatorService } from './cacheableLocatorService';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify = require('untildify');
 
+/**
+ * Locates "known" paths.
+ */
 @injectable()
 export class KnownPathsService extends CacheableLocatorService {
-    public constructor(@inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: string[],
+    public constructor(
+        @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: string[],
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
+    ) {
         super('KnownPathsService', serviceContainer);
     }
+
+    /**
+     * Release any held resources.
+     *
+     * Called by VS Code to indicate it is done with the resource.
+     */
     // tslint:disable-next-line:no-empty
     public dispose() { }
+
+    /**
+     * Return the located interpreters.
+     *
+     * This is used by CacheableLocatorService.getInterpreters().
+     */
     protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
         return this.suggestionsFromKnownPaths();
     }
+
+    /**
+     * Return the located interpreters.
+     */
     private suggestionsFromKnownPaths() {
         const promises = this.knownSearchPaths.map(dir => this.getInterpretersInDirectory(dir));
         return Promise.all<string[]>(promises)
@@ -32,6 +54,10 @@ export class KnownPathsService extends CacheableLocatorService {
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))))
             .then(interpreters => interpreters.filter(interpreter => !!interpreter).map(interpreter => interpreter!));
     }
+
+    /**
+     * Return the information about the identified interpreter binary.
+     */
     private async getInterpreterDetails(interpreter: string) {
         const details = await this.helper.getInterpreterInformation(interpreter);
         if (!details) {
@@ -43,12 +69,19 @@ export class KnownPathsService extends CacheableLocatorService {
             type: InterpreterType.Unknown
         };
     }
+
+    /**
+     * Return the interpreters in the given directory.
+     */
     private getInterpretersInDirectory(dir: string) {
         return fsExistsAsync(dir)
             .then(exists => exists ? lookForInterpretersInDirectory(dir) : Promise.resolve<string[]>([]));
     }
 }
 
+/**
+ * Return the paths where Python interpreters might be found.
+ */
 export function getKnownSearchPathsForInterpreters(): string[] {
     if (IS_WINDOWS) {
         return [];

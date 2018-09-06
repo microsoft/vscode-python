@@ -2,7 +2,7 @@ import { ChildProcess, spawn } from 'child_process';
 import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { noop } from '../../common/core.utils';
+import { noop } from '../../../utils/misc';
 import { open } from '../../common/open';
 import { PathUtils } from '../../common/platform/pathUtils';
 import { CurrentProcess } from '../../common/process/currentProcess';

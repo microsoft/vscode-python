@@ -5,12 +5,13 @@ import * as assert from 'assert';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
-import { Architecture, IFileSystem } from '../../client/common/platform/types';
+import { IFileSystem } from '../../client/common/platform/types';
 import { IInterpreterQuickPickItem, InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
+import { Architecture } from '../../utils/platform';
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,

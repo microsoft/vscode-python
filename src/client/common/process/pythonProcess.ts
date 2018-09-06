@@ -3,20 +3,23 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { Architecture } from '../../../utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
-import { Architecture, IFileSystem } from '../platform/types';
-import { EnvironmentVariables } from '../variables/types';
+import { IFileSystem } from '../platform/types';
 import { ExecutionResult, InterpreterInfomation, IProcessService, IPythonExecutionService, ObservableExecutionResult, PythonVersionInfo, SpawnOptions } from './types';
 
 @injectable()
 export class PythonExecutionService implements IPythonExecutionService {
     private readonly fileSystem: IFileSystem;
 
-    constructor(private serviceContainer: IServiceContainer, private readonly procService: IProcessService, private readonly pythonPath: string) {
+    constructor(
+        serviceContainer: IServiceContainer,
+        private readonly procService: IProcessService,
+        private readonly pythonPath: string
+    ) {
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 

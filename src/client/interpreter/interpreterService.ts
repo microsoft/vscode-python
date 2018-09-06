@@ -3,9 +3,9 @@ import * as path from 'path';
 import { ConfigurationTarget, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
+import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../common/types';
-import * as utils from '../common/utils';
 import { IServiceContainer } from '../ioc/types';
 import { IPythonPathUpdaterServiceManager } from './configuration/types';
 import {
@@ -103,8 +103,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.getInterpreterDetails(fullyQualifiedPath, resource);
     }
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<PythonInterpreter | undefined> {
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         const interpreters = await this.getInterpreters(resource);
-        const interpreter = interpreters.find(i => utils.arePathsSame(i.path, pythonPath));
+        const interpreter = interpreters.find(i => fs.arePathsSame(i.path, pythonPath));
 
         if (interpreter) {
             return interpreter;

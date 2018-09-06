@@ -5,6 +5,7 @@
 
 import { IServiceManager } from '../../ioc/types';
 import { EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId } from './checks/envPathVariable';
+import { InvalidDebuggerTypeDiagnosticsService, InvalidDebuggerTypeDiagnosticsServiceId } from './checks/invalidDebuggerType';
 import { DiagnosticsCommandFactory } from './commands/factory';
 import { IDiagnosticsCommandFactory } from './commands/types';
 import { DiagnosticFilterService } from './filter';
@@ -15,5 +16,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService);
     serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerService, DiagnosticCommandPromptHandlerServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId);
+    serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidDebuggerTypeDiagnosticsService, InvalidDebuggerTypeDiagnosticsServiceId);
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);
 }

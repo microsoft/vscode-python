@@ -9,18 +9,27 @@ import { ExecutionInfo, IConfigurationService } from '../types';
 import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller } from './types';
 
+/**
+ * A Python module installer for a conda environment.
+ */
 @injectable()
 export class CondaInstaller extends ModuleInstaller implements IModuleInstaller {
     private isCondaAvailable: boolean | undefined;
+
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
+    ) {
+        super(serviceContainer);
+    }
+
     public get displayName() {
         return 'Conda';
     }
+
     public get priority(): number {
         return 0;
     }
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer);
-    }
+
     /**
      * Checks whether we can use Conda as module installer for a given resource.
      * We need to perform two checks:
@@ -41,6 +50,10 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
         // Now we need to check if the current environment is a conda environment or not.
         return this.isCurrentEnvironmentACondaEnvironment(resource);
     }
+
+    /**
+     * Return the commandline args needed to install the module.
+     */
     protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
         const condaFile = await condaService.getCondaFile();
@@ -64,6 +77,10 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
             execPath: condaFile
         };
     }
+
+    /**
+     * Is anaconda the current interpreter?
+     */
     private async isCurrentEnvironmentACondaEnvironment(resource?: Uri): Promise<boolean> {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
         const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;

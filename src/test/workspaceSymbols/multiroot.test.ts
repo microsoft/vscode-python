@@ -1,6 +1,8 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import { CancellationTokenSource, ConfigurationTarget, Uri } from 'vscode';
+import { ICommandManager } from '../../client/common/application/types';
+import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../client/common/process/types';
 import { Generator } from '../../client/workspaceSymbols/generator';
 import { WorkspaceSymbolProvider } from '../../client/workspaceSymbols/provider';
@@ -47,7 +49,10 @@ suite('Multiroot Workspace Symbols', () => {
         await updateSetting('workspaceSymbols.enabled', false, childWorkspaceUri, ConfigurationTarget.WorkspaceFolder);
 
         let generator = new Generator(childWorkspaceUri, outputChannel, processServiceFactory);
-        let provider = new WorkspaceSymbolProvider([generator], outputChannel);
+        let provider = new WorkspaceSymbolProvider(
+            ioc.serviceContainer.get<IFileSystem>(IFileSystem),
+            ioc.serviceContainer.get<ICommandManager>(ICommandManager),
+            [generator]);
         let symbols = await provider.provideWorkspaceSymbols('', new CancellationTokenSource().token);
         assert.equal(symbols.length, 0, 'Symbols returned even when workspace symbols are turned off');
         generator.dispose();
@@ -55,7 +60,10 @@ suite('Multiroot Workspace Symbols', () => {
         await updateSetting('workspaceSymbols.enabled', true, childWorkspaceUri, ConfigurationTarget.WorkspaceFolder);
 
         generator = new Generator(childWorkspaceUri, outputChannel, processServiceFactory);
-        provider = new WorkspaceSymbolProvider([generator], outputChannel);
+        provider = new WorkspaceSymbolProvider(
+            ioc.serviceContainer.get<IFileSystem>(IFileSystem),
+            ioc.serviceContainer.get<ICommandManager>(ICommandManager),
+            [generator]);
         symbols = await provider.provideWorkspaceSymbols('', new CancellationTokenSource().token);
         assert.notEqual(symbols.length, 0, 'Symbols should be returned when workspace symbols are turned on');
     });
@@ -70,7 +78,10 @@ suite('Multiroot Workspace Symbols', () => {
         const generators = [
             new Generator(childWorkspaceUri, outputChannel, processServiceFactory),
             new Generator(workspace2Uri, outputChannel, processServiceFactory)];
-        const provider = new WorkspaceSymbolProvider(generators, outputChannel);
+        const provider = new WorkspaceSymbolProvider(
+            ioc.serviceContainer.get<IFileSystem>(IFileSystem),
+            ioc.serviceContainer.get<ICommandManager>(ICommandManager),
+            generators);
         const symbols = await provider.provideWorkspaceSymbols('meth1Of', new CancellationTokenSource().token);
 
         assert.equal(symbols.length, 2, 'Incorrect number of symbols returned');

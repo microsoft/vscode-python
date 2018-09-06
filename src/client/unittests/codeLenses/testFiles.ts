@@ -2,9 +2,8 @@
 
 // tslint:disable:no-object-literal-type-assertion
 
-import { CancellationToken, CancellationTokenSource, CodeLens, CodeLensProvider, Event, EventEmitter, Position, Range, SymbolInformation, SymbolKind, TextDocument, Uri, workspace } from 'vscode';
+import { CancellationToken, CancellationTokenSource, CodeLens, CodeLensProvider, DocumentSymbolProvider, Event, EventEmitter, Position, Range, SymbolInformation, SymbolKind, TextDocument, Uri, workspace } from 'vscode';
 import * as constants from '../../common/constants';
-import { PythonSymbolProvider } from '../../providers/symbolProvider';
 import { CommandSource } from '../common/constants';
 import { ITestCollectionStorageService, TestFile, TestFunction, TestStatus, TestsToRun, TestSuite } from '../common/types';
 
@@ -16,7 +15,7 @@ type FunctionsAndSuites = {
 export class TestFileCodeLensProvider implements CodeLensProvider {
     // tslint:disable-next-line:variable-name
     constructor(private _onDidChange: EventEmitter<void>,
-        private symbolProvider: PythonSymbolProvider,
+        private symbolProvider: DocumentSymbolProvider,
         private testCollectionStorage: ITestCollectionStorageService) {
     }
 
@@ -45,7 +44,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
             }
         }, constants.Delays.MaxUnitTestCodeLensDelay);
 
-        return this.getCodeLenses(document, token, this.symbolProvider);
+        return this.getCodeLenses(document, cancelTokenSrc.token, this.symbolProvider);
     }
 
     public resolveCodeLens(codeLens: CodeLens, token: CancellationToken): CodeLens | Thenable<CodeLens> {
@@ -53,7 +52,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
         return Promise.resolve(codeLens);
     }
 
-    private async getCodeLenses(document: TextDocument, token: CancellationToken, symbolProvider: PythonSymbolProvider) {
+    private async getCodeLenses(document: TextDocument, token: CancellationToken, symbolProvider: DocumentSymbolProvider) {
         const wkspace = workspace.getWorkspaceFolder(document.uri);
         if (!wkspace) {
             return [];
@@ -68,13 +67,16 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
         }
         const allFuncsAndSuites = getAllTestSuitesAndFunctionsPerFile(file);
 
-        return symbolProvider.provideDocumentSymbolsForInternalUse(document, token)
-            .then((symbols: SymbolInformation[]) => {
-                return symbols.filter(symbol => {
-                    return symbol.kind === SymbolKind.Function ||
-                        symbol.kind === SymbolKind.Method ||
-                        symbol.kind === SymbolKind.Class;
-                }).map(symbol => {
+        try {
+            const symbols = (await symbolProvider.provideDocumentSymbols(document, token)) as SymbolInformation[];
+            if (!symbols) {
+                return [];
+            }
+            return symbols
+                .filter(symbol => symbol.kind === SymbolKind.Function ||
+                    symbol.kind === SymbolKind.Method ||
+                    symbol.kind === SymbolKind.Class)
+                .map(symbol => {
                     // This is bloody crucial, if the start and end columns are the same
                     // then vscode goes bonkers when ever you edit a line (start scrolling magically).
                     const range = new Range(symbol.location.range.start,
@@ -83,13 +85,15 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
 
                     return this.getCodeLens(document.uri, allFuncsAndSuites,
                         range, symbol.name, symbol.kind, symbol.containerName);
-                }).reduce((previous, current) => previous.concat(current), []).filter(codeLens => codeLens !== null);
-            }, reason => {
-                if (token.isCancellationRequested) {
-                    return [];
-                }
-                return Promise.reject(reason);
-            });
+                })
+                .reduce((previous, current) => previous.concat(current), [])
+                .filter(codeLens => codeLens !== null);
+        } catch (reason) {
+            if (token.isCancellationRequested) {
+                return [];
+            }
+            return Promise.reject(reason);
+        }
     }
 
     private getCodeLens(file: Uri, allFuncsAndSuites: FunctionsAndSuites,
@@ -103,7 +107,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
             case SymbolKind.Class: {
                 const cls = allFuncsAndSuites.suites.find(item => item.name === symbolName);
                 if (!cls) {
-                    return null;
+                    return [];
                 }
                 return [
                     new CodeLens(range, {
@@ -242,7 +246,7 @@ function getAllTestSuitesAndFunctionsPerFile(testFile: TestFile): FunctionsAndSu
     return all;
 }
 function getAllTestSuitesAndFunctions(testSuite: TestSuite): FunctionsAndSuites {
-    const all = { functions: [], suites: [] };
+    const all: { functions: TestFunction[]; suites: TestSuite[] } = { functions: [], suites: [] };
     testSuite.functions.forEach(fn => {
         all.functions.push(fn);
     });

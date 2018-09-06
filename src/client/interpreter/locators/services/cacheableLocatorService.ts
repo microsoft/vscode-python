@@ -6,8 +6,8 @@
 import { injectable, unmanaged } from 'inversify';
 import * as md5 from 'md5';
 import { Uri } from 'vscode';
+import { createDeferred, Deferred } from '../../../../utils/async';
 import { IWorkspaceService } from '../../../common/application/types';
-import { createDeferred, Deferred } from '../../../common/helpers';
 import { IPersistentStateFactory } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';

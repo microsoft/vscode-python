@@ -1,9 +1,9 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, StatusBarAlignment, StatusBarItem } from 'vscode';
+import { noop } from '../../../utils/misc';
 import { IApplicationShell } from '../../common/application/types';
 import * as constants from '../../common/constants';
-import { noop } from '../../common/core.utils';
 import { isNotInstalledError } from '../../common/helpers';
 import { IConfigurationService } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';

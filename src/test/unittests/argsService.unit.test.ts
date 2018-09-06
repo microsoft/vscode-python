@@ -9,7 +9,6 @@ import { fail } from 'assert';
 import { expect } from 'chai';
 import { spawnSync } from 'child_process';
 import * as typeMoq from 'typemoq';
-import { EnumEx } from '../../client/common/enumUtils';
 import { ILogger, Product } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ArgumentsHelper } from '../../client/unittests/common/argumentsHelper';
@@ -17,12 +16,13 @@ import { ArgumentsService as NoseTestArgumentsService } from '../../client/unitt
 import { ArgumentsService as PyTestArgumentsService } from '../../client/unittests/pytest/services/argsService';
 import { IArgumentsHelper, IArgumentsService } from '../../client/unittests/types';
 import { ArgumentsService as UnitTestArgumentsService } from '../../client/unittests/unittest/services/argsService';
+import { getNamesAndValues } from '../../utils/enum';
 import { PYTHON_PATH } from '../common';
 
 suite('ArgsService: Common', () => {
     [Product.unittest, Product.nosetest, Product.pytest]
         .forEach(product => {
-            const productNames = EnumEx.getNamesAndValues(Product);
+            const productNames = getNamesAndValues(Product);
             const productName = productNames.find(item => item.value === product)!.name;
             suite(productName, () => {
                 let argumentsService: IArgumentsService;

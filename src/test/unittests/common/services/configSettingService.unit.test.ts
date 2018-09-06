@@ -10,11 +10,11 @@ import * as chaiPromise from 'chai-as-promised';
 import * as typeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
-import { EnumEx } from '../../../../client/common/enumUtils';
 import { Product } from '../../../../client/common/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { TestConfigSettingsService } from '../../../../client/unittests/common/services/configSettingService';
 import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/unittests/common/types';
+import { getNamesAndValues } from '../../../../utils/enum';
 
 use(chaiPromise);
 
@@ -23,7 +23,7 @@ const updateMethods: (keyof ITestConfigSettingsService)[] = ['updateTestArgs', '
 suite('Unit Tests - ConfigSettingsService', () => {
     [Product.pytest, Product.unittest, Product.nosetest].forEach(prodItem => {
         const product = prodItem as any as UnitTestProduct;
-        const prods = EnumEx.getNamesAndValues(Product);
+        const prods = getNamesAndValues(Product);
         const productName = prods.filter(item => item.value === product)[0];
         const workspaceUri = Uri.file(__filename);
         updateMethods.forEach(updateMethod => {

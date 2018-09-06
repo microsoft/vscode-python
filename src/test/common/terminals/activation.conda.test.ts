@@ -7,7 +7,6 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
-import { EnumEx } from '../../../client/common/enumUtils';
 import '../../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
@@ -17,6 +16,7 @@ import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../
 import { IConfigurationService, IDisposableRegistry, IPythonSettings, ITerminalSettings } from '../../../\client/common/types';
 import { ICondaService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { getNamesAndValues } from '../../../utils/enum';
 
 suite('Terminal Environment Activation conda', () => {
     let terminalHelper: TerminalHelper;
@@ -104,7 +104,7 @@ suite('Terminal Environment Activation conda', () => {
         }
         expect(activationCommands).to.deep.equal(expectedActivationCommamnd, 'Incorrect Activation command');
     }
-    EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
+    getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
         test(`Conda activation command for shell ${shellType.name} on (windows)`, async () => {
             const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
             await expectNoCondaActivationCommandForPowershell(true, false, false, pythonPath, shellType.value);
@@ -120,7 +120,7 @@ suite('Terminal Environment Activation conda', () => {
             await expectNoCondaActivationCommandForPowershell(false, true, false, pythonPath, shellType.value);
         });
     });
-    EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
+    getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
         test(`Conda activation command for shell ${shellType.name} on (windows), containing spaces in environment name`, async () => {
             const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
             await expectNoCondaActivationCommandForPowershell(true, false, false, pythonPath, shellType.value, true);

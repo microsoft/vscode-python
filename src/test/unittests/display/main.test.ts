@@ -10,13 +10,13 @@ import * as typeMoq from 'typemoq';
 import { StatusBarItem, Uri } from 'vscode';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
-import { noop } from '../../../client/common/core.utils';
-import { createDeferred } from '../../../client/common/helpers';
 import { IConfigurationService, IPythonSettings, IUnitTestSettings } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../../client/unittests/common/constants';
 import { ITestsHelper, Tests } from '../../../client/unittests/common/types';
 import { TestResultDisplay } from '../../../client/unittests/display/main';
+import { createDeferred } from '../../../utils/async';
+import { noop } from '../../../utils/misc';
 import { sleep } from '../../core';
 
 suite('Unit Tests - TestResultDisplay', () => {

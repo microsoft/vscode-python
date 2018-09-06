@@ -3,7 +3,7 @@
 
 import { Progress, ProgressLocation, window } from 'vscode';
 import { Disposable, LanguageClient } from 'vscode-languageclient';
-import { createDeferred, Deferred } from '../common/helpers';
+import { createDeferred, Deferred } from '../../utils/async';
 
 export class ProgressReporting {
   private statusBarMessage: Disposable | undefined;

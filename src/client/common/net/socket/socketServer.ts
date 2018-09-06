@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import * as net from 'net';
-import { noop } from '../../core.utils';
-import { createDeferred, Deferred } from '../../helpers';
+import { createDeferred, Deferred } from '../../../../utils/async';
+import { noop } from '../../../../utils/misc';
 import { ISocketServer } from '../../types';
 
 @injectable()

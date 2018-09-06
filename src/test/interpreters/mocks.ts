@@ -1,12 +1,13 @@
 import { injectable } from 'inversify';
-import { Architecture, IRegistry, RegistryHive } from '../../client/common/platform/types';
+import { IRegistry, RegistryHive } from '../../client/common/platform/types';
 import { IPersistentState } from '../../client/common/types';
 import { IInterpreterVersionService } from '../../client/interpreter/contracts';
+import { Architecture } from '../../utils/platform';
 
 @injectable()
 export class MockRegistry implements IRegistry {
-    constructor(private keys: { key: string, hive: RegistryHive, arch?: Architecture, values: string[] }[],
-        private values: { key: string, hive: RegistryHive, arch?: Architecture, value: string, name?: string }[]) {
+    constructor(private keys: { key: string; hive: RegistryHive; arch?: Architecture; values: string[] }[],
+        private values: { key: string; hive: RegistryHive; arch?: Architecture; value: string; name?: string }[]) {
     }
     public async getKeys(key: string, hive: RegistryHive, arch?: Architecture): Promise<string[]> {
         const items = this.keys.find(item => {

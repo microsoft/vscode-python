@@ -5,7 +5,6 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
-import { EnumEx } from '../../../client/common/enumUtils';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
@@ -14,6 +13,7 @@ import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType 
 import { IConfigurationService, IDisposableRegistry, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { getNamesAndValues } from '../../../utils/enum';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Service helpers', () => {
@@ -76,7 +76,7 @@ suite('Terminal Service helpers', () => {
     });
 });
 
-EnumEx.getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(terminalShell => {
+getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(terminalShell => {
     suite(`Terminal Service helpers (${terminalShell.name})`, () => {
         let helper: ITerminalHelper;
         let terminalManager: TypeMoq.IMock<ITerminalManager>;

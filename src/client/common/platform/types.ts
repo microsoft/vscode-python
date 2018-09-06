@@ -4,39 +4,16 @@
 import * as fs from 'fs';
 import * as semver from 'semver';
 import { Disposable } from 'vscode';
+import { Architecture, OSDistro, OSType } from '../../../utils/platform';
 
-export enum Architecture {
-    Unknown = 1,
-    x86 = 2,
-    x64 = 3
-}
-export enum OSType {
-    Unknown,
-    Windows,
-    OSX,
-    Linux
-}
-export enum OSDistro {
-    Unknown,
-    // linux:
-    Ubuntu,
-    Debian,
-    RHEL,
-    Fedora,
-    CentOS,
-    // The remainder aren't officially supported.
-    // See: https://code.visualstudio.com/docs/supporting/requirements
-    Suse,
-    Gentoo,
-    Arch
-}
-
-export const IOSInfo = Symbol('IOSInfo');
-export interface IOSInfo {
+export const IPlatformInfo = Symbol('IPlatformInfo');
+export interface IPlatformInfo {
     readonly type: OSType;
     readonly arch: string;
     readonly version: semver.SemVer;
     readonly distro: OSDistro;
+
+    matchPlatform(names: string): boolean;
 }
 
 export enum RegistryHive {
@@ -51,16 +28,15 @@ export interface IRegistry {
 
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
-    os: IOSInfo;
-    pathVariableName: 'Path' | 'PATH';
-    virtualEnvBinName: 'bin' | 'scripts';
+    readonly info: IPlatformInfo;
+    readonly pathVariableName: 'Path' | 'PATH';
+    readonly virtualEnvBinName: 'bin' | 'scripts';
 
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: Drop the following (in favor of osType).
-    isWindows: boolean;
-    isMac: boolean;
-    isLinux: boolean;
-    is64bit: boolean;
+    // convenience methods
+    readonly isWindows: boolean;
+    readonly isMac: boolean;
+    readonly isLinux: boolean;
+    readonly is64bit: boolean;
 }
 
 export type TemporaryFile = { filePath: string } & Disposable;
@@ -76,6 +52,7 @@ export interface IFileSystem {
     getSubDirectories(rootDir: string): Promise<string[]>;
     arePathsSame(path1: string, path2: string): boolean;
     readFile(filePath: string): Promise<string>;
+    writeFile(filePath: string, data: {}): Promise<void>;
     appendFileSync(filename: string, data: {}, encoding: string): void;
     appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
     // tslint:disable-next-line:unified-signatures

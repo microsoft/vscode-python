@@ -3,7 +3,7 @@
 
 import { createHash } from 'crypto';
 import * as fs from 'fs';
-import { createDeferred } from '../common/helpers';
+import { createDeferred } from '../../utils/async';
 
 export class HashVerifier {
     public async verifyHash(filePath: string, platformString: string, expectedDigest: string): Promise<boolean> {

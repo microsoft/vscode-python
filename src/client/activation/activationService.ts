@@ -5,10 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
+import { OSDistro, OSType } from '../../utils/platform';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { isLanguageServerTest, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
-import { IPlatformService, OSDistro, OSType } from '../common/platform/types';
+import { IPlatformService } from '../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED } from '../telemetry/constants';
@@ -103,7 +104,7 @@ function isLSSupported(services: IServiceContainer): boolean {
     const platform = services.get<IPlatformService>(IPlatformService);
     let minVer = '';
     for (const [osType, distro, ver] of LS_MIN_OS_VERSIONS) {
-        if (platform.os.type === osType && platform.os.distro === distro) {
+        if (platform.info.type === osType && platform.info.distro === distro) {
             minVer = ver;
             break;
         }
@@ -112,7 +113,7 @@ function isLSSupported(services: IServiceContainer): boolean {
         return true;
     }
     minVer = normalizeVersion(minVer);
-    return platform.os.version.compare(minVer) >= 0;
+    return platform.info.version.compare(minVer) >= 0;
 }
 
 function normalizeVersion(ver: string): string {

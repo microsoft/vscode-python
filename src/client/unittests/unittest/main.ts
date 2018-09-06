@@ -1,5 +1,5 @@
 import { Uri } from 'vscode';
-import { noop } from '../../common/core.utils';
+import { noop } from '../../../utils/misc';
 import { Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { UNITTEST_PROVIDER } from '../common/constants';

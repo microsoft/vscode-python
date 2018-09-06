@@ -10,7 +10,6 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
 import { OutputChannel, Uri } from 'vscode';
-import { EnumEx } from '../../../client/common/enumUtils';
 import '../../../client/common/extensions';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../../client/common/installer/productPath';
@@ -21,12 +20,13 @@ import { IFormatterHelper } from '../../../client/formatters/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ILinterInfo, ILinterManager } from '../../../client/linters/types';
 import { ITestsHelper } from '../../../client/unittests/common/types';
+import { getNamesAndValues } from '../../../utils/enum';
 
 use(chaiAsPromised);
 
 suite('Product Path', () => {
     [undefined, Uri.file('resource')].forEach(resource => {
-        EnumEx.getNamesAndValues<Product>(Product).forEach(product => {
+        getNamesAndValues<Product>(Product).forEach(product => {
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
             let formattingSettings: TypeMoq.IMock<IFormattingSettings>;
             let unitTestSettings: TypeMoq.IMock<IUnitTestSettings>;

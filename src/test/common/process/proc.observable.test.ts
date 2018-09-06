@@ -5,9 +5,9 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { CancellationTokenSource } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
-import { createDeferred } from '../../../client/common/helpers';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
+import { createDeferred } from '../../../utils/async';
 import { initialize } from './../../initialize';
 
 use(chaiAsPromised);

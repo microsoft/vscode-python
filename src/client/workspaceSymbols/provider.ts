@@ -1,28 +1,38 @@
+'use strict';
+
 import * as _ from 'lodash';
-import * as vscode from 'vscode';
+import {
+    CancellationToken, Location, SymbolInformation,
+    Uri, WorkspaceSymbolProvider as IWorspaceSymbolProvider
+} from 'vscode';
+import { ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
-import { fsExistsAsync } from '../common/utils';
+import { IFileSystem } from '../common/platform/types';
 import { captureTelemetry } from '../telemetry';
 import { WORKSPACE_SYMBOLS_GO_TO } from '../telemetry/constants';
 import { Generator } from './generator';
 import { parseTags } from './parser';
 
-export class WorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvider {
-    public constructor(private tagGenerators: Generator[], private outputChannel: vscode.OutputChannel) {
+export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
+    public constructor(
+        private fs: IFileSystem,
+        private commands: ICommandManager,
+        private tagGenerators: Generator[]
+    ) {
     }
 
     @captureTelemetry(WORKSPACE_SYMBOLS_GO_TO)
-    public async provideWorkspaceSymbols(query: string, token: vscode.CancellationToken): Promise<vscode.SymbolInformation[]> {
+    public async provideWorkspaceSymbols(query: string, token: CancellationToken): Promise<SymbolInformation[]> {
         if (this.tagGenerators.length === 0) {
             return [];
         }
-        const generatorsWithTagFiles = await Promise.all(this.tagGenerators.map(generator => fsExistsAsync(generator.tagFilePath)));
+        const generatorsWithTagFiles = await Promise.all(this.tagGenerators.map(generator => this.fs.fileExists(generator.tagFilePath)));
         if (generatorsWithTagFiles.filter(exists => exists).length !== this.tagGenerators.length) {
-            await vscode.commands.executeCommand(Commands.Build_Workspace_Symbols, true, token);
+            await this.commands.executeCommand(Commands.Build_Workspace_Symbols, true, token);
         }
 
         const generators = await Promise.all(this.tagGenerators.map(async generator => {
-            const tagFileExists = await fsExistsAsync(generator.tagFilePath);
+            const tagFileExists = await this.fs.fileExists(generator.tagFilePath);
             return tagFileExists ? generator : undefined;
         }));
 
@@ -30,13 +40,13 @@ export class WorkspaceSymbolProvider implements vscode.WorkspaceSymbolProvider {
             .filter(generator => generator !== undefined && generator.enabled)
             .map(async generator => {
                 // load tags
-                const items = await parseTags(generator.workspaceFolder.fsPath, generator.tagFilePath, query, token);
+                const items = await parseTags(generator!.workspaceFolder.fsPath, generator!.tagFilePath, query, token);
                 if (!Array.isArray(items)) {
                     return [];
                 }
-                return items.map(item => new vscode.SymbolInformation(
+                return items.map(item => new SymbolInformation(
                     item.symbolName, item.symbolKind, '',
-                    new vscode.Location(vscode.Uri.file(item.fileName), item.position)
+                    new Location(Uri.file(item.fileName), item.position)
                 ));
             });
 

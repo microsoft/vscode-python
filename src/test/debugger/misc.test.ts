@@ -6,10 +6,10 @@
 import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { noop } from '../../client/common/core.utils';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/Common/constants';
 import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
+import { noop } from '../../utils/misc';
 import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { DEBUGGER_TIMEOUT } from './common/constants';

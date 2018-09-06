@@ -9,7 +9,7 @@ import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as tmp from 'tmp';
-import { createDeferred } from '../helpers';
+import { createDeferred } from '../../../utils/async';
 import { IFileSystem, IPlatformService, TemporaryFile } from './types';
 
 @injectable()
@@ -167,5 +167,9 @@ export class FileSystem implements IFileSystem {
                 resolve();
             });
         });
+    }
+
+    public writeFile(filePath: string, data: {}): Promise<void> {
+        return fs.writeFile(filePath, data);
     }
 }

@@ -2,8 +2,8 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { noop } from '../../../utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { noop } from '../../common/core.utils';
 import { ILogger } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { UNITTEST_PROVIDER } from '../common/constants';

@@ -41,6 +41,16 @@ You may see warnings that ```The engine "vscode" appears to be invalid.```, you 
 
 Run the `Compile` and `Hygiene` build Tasks from the [Command Palette](https://code.visualstudio.com/docs/editor/tasks) (short cut `CTRL+SHIFT+B` or `⇧⌘B`)
 
+You can also compile from the command-line:
+
+```shell
+tsc -p ./  # full compile
+tsc --watch -p ./  # incremental
+```
+
+Sometimes you will need to run `npm run clean` and even `rm -r out`.
+This is especially true if you have added or removed files.
+
 ### Errors and Warnings
 
 TypeScript errors and warnings will be displayed in the `Problems` window of Visual Studio Code:
@@ -50,16 +60,75 @@ TypeScript errors and warnings will be displayed in the `Problems` window of Vis
 To test the changes you launch a development version of VS Code on the workspace vscode, which you are currently editing.
 Use the `Launch Extension` launch option.
 
-### Unit Tests
+### Debugging Unit Tests
 
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
-1. Run the Unit Tests via the `Launch Test` and `Launch Multiroot Tests`  launch options.
+1. Run the Tests via the `Debug Unit Tests`  launch options.
+
+You can also run them from the command-line (after compiling):
+
+```shell
+npm run test:unittests  # runs all unit tests
+npm run test:unittests grep='<NAME-OF-SUITE>'
+```
+
+*To run only a specific test suite for unit tests:*
+Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the `grep` field:
+
+```js
+    "args": [
+        "timeout=60000",
+        "grep=[The suite name of your unit test file]"
+    ],
+```
+...this will only run the suite with the tests you care about during a test run (be sure to set the debugger to run the `Debug Unit Tests` launcher).
+
+### Debugging System Tests
+
+1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
+1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
+1. Run the Tests via the `Launch Test` and `Launch Multiroot Tests`  launch options.
+1. **Note** you will be running tests under the default Python interpreter for the system.
+
+*Change the version of python the tests are executed with by setting the `CI_PYTHON_PATH`.*
+
+Tests will be executed using the system default interpreter (whatever that is for your local machine), unless you explicitly set the `CI_PYTHON_PATH` environment variable. To test against different versions of Python you *must* use this.
+
+In the launch.json file, you can add the following to the `Launch Tests` setting to easily change the interpreter used during testing:
+
+```js
+    "env":{
+        "CI_PYTHON_PATH": "/path/to/interpreter/of/choice/python"
+    }
+```
+
+You can also run them from the command-line (after compiling):
+
+```shell
+npm run testSingleWorkspace  # will launch the VSC UI
+npm run testMultiWorkspace  # will launch the VSC UI
+```
+...note this will use the Python interpreter that your current shell is making use of, no need to set `CI_PYTHON_PATH` here.
+
+*To limit system tests to a specific suite*
+
+If you are running system tests (we call them *system* tests, others call them *integration* or otherwise) and you wish to run a specific test suite, edit the `src/test/index.ts` file here:
+
+https://github.com/Microsoft/vscode-python/blob/b328ba12331ed34a267e32e77e3e4b1eff235c13/src/test/index.ts#L21
+
+...and identify the test suite you want to run/debug like this:
+
+```ts
+const grep = '[The suite name of your *test.ts file]'; // IS_CI_SERVER &&...
+```
+...and then use the `Launch Tests` debugger launcher. This will run only the suite you name in the grep.
+
+And be sure to escape any grep-sensitive characters in your suite name (and to remove the change from src/test/index.ts before you submit).
 
 ### Standard Debugging
 
-Clone the repo into any directory and start debugging.
-From there use the `Launch Extension` launch option.
+Clone the repo into any directory, open that directory in VSCode, and use the `Launch Extension` launch option within VSCode.
 
 ### Debugging the Python Extension Debugger
 
@@ -173,6 +242,43 @@ the release made when we reach feature freeze in July 2018
 would be `2018.7.0`, and if a second release was necessary to fix a
 critical bug it would be `2018.7.1`.
 
+## Releasing
+
+Overall steps for releasing are covered in the
+[release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan)
+([template](https://github.com/Microsoft/vscode-python/blob/master/.github/release_plan.md)).
+
+
+### Building a release
+
+To create a release _build_, the following steps should be followed:
+
+1. Update the version in
+   [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json)
+1. Run `npm install` to make sure
+   [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json)
+   is up-to-date (the only update should be the version number if
+   `package-lock.json` has been kept up-to-date otherwise)
+1. Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
+   - If this is the first release **after** a final release, then create a new section,
+     otherwise update the version and date in section header
+   - Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news)
+     (typically `python3 news | code-insiders -`; add `--final` if this
+     is a final release)
+   - Touch up news entries (if a non-final release then also touch up news entry
+     files as appropriate)
+   - Check that the "thank you" section is up-to-date
+1. Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt)
+   - Run [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn)
+     (typically
+     `python3 tpn --npm package-lock.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`)
+   - Register any version changes or new dependencies with [OSPO](https://opensource.microsoft.com/)
+1. Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt)
+   and register any changes with OSPO
+
+Once the above changes have been merged into `master` you can then download the
+development build `.vsix` for releasing.
+
 ## Development Build
 
 We publish the latest development
@@ -195,3 +301,19 @@ The development build of the extension:
   test a newer development build, uninstall the old version of the
   extension and then install the new version)
 * Is built everytime a PR is commited into the [`master` branch](https://github.com/Microsoft/vscode-python).
+
+### Installing the extension from a git clone
+
+If you would like to have a copy of the extension installed from a git clone so it can be refreshed regularly, the [`pvsc-dev-ext.py` script](https://github.com/Microsoft/vscode-python/blob/master/pvsc-dev-ext.py) will help facilitate that. The script provides two commands.
+
+To create the git clone and do the initial build, use the `setup` command:
+```
+$ python3 pvsc-dev-ext.py setup stable
+```
+You may choose to have the script set up either a stable or insiders install of VS Code.
+
+Once the extension is set up with a dev install, you can update it at any time to match what is in the `master` branch by using the `update` command:
+```
+$ python3 pvsc-dev-ext.py update
+```
+This will update stable and/or insiders installs of the extension. You can run this command at e.g. startup of your computer to make sure you are always using the latest version of the extension in VS Code.

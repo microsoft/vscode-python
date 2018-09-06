@@ -4,12 +4,13 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Disposable, StatusBarAlignment, StatusBarItem, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-import { Architecture, IFileSystem } from '../../client/common/platform/types';
+import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../../client/common/types';
 import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
+import { Architecture } from '../../utils/platform';
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,

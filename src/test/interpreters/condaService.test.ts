@@ -5,12 +5,13 @@ import { EOL } from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { FileSystem } from '../../client/common/platform/fileSystem';
-import { Architecture, IFileSystem, IPlatformService } from '../../client/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { ILogger, IPersistentStateFactory } from '../../client/common/types';
 import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { IServiceContainer } from '../../client/ioc/types';
+import { Architecture } from '../../utils/platform';
 import { MockState } from './mocks';
 
 const untildify: (value: string) => string = require('untildify');

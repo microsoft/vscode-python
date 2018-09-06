@@ -3,13 +3,14 @@
 import { expect } from 'chai';
 import * as getFreePort from 'get-port';
 import * as net from 'net';
-import { createDeferred, Deferred } from '../../client/common/helpers';
 import { SocketCallbackHandler } from '../../client/common/net/socket/socketCallbackHandler';
 import { SocketServer } from '../../client/common/net/socket/socketServer';
 import { SocketStream } from '../../client/common/net/socket/SocketStream';
+import { createDeferred, Deferred } from '../../utils/async';
 
 const uint64be = require('uint64be');
 
+// tslint:disable-next-line:no-unnecessary-class
 class Commands {
     public static ExitCommandBytes: Buffer = new Buffer('exit');
     public static PingBytes: Buffer = new Buffer('ping');
@@ -25,8 +26,8 @@ const GUID = 'This is the Guid';
 const PID = 1234;
 
 class MockSocketCallbackHandler extends SocketCallbackHandler {
-    private pid: number;
-    private guid: string;
+    private pid?: number;
+    private guid?: string;
     constructor(socketServer: SocketServer) {
         super(socketServer);
         this.registerCommandHandler(ResponseCommands.Pong, this.onPong.bind(this));
@@ -82,17 +83,26 @@ class MockSocketCallbackHandler extends SocketCallbackHandler {
     }
 }
 class MockSocketClient {
-    public SocketStream: SocketStream;
-    private socket: net.Socket;
-    private def: Deferred<any>;
+    private socket?: net.Socket;
+    private socketStream?: SocketStream;
+    private def?: Deferred<any>;
     constructor(private port: number) { }
+    public get SocketStream(): SocketStream {
+        if (this.socketStream === undefined) {
+            throw Error('not listening');
+        }
+        return this.socketStream;
+    }
     public start(): Promise<any> {
         this.def = createDeferred<any>();
         this.socket = net.connect(this.port, this.connectionListener.bind(this));
         return this.def.promise;
     }
     private connectionListener() {
-        this.SocketStream = new SocketStream(this.socket, new Buffer(''));
+        if (this.socket === undefined || this.def === undefined) {
+            throw Error('not started');
+        }
+        this.socketStream = new SocketStream(this.socket, new Buffer(''));
         this.def.resolve();
         this.socket.on('error', () => { });
         this.socket.on('data', (data: Buffer) => {

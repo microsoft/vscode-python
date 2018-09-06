@@ -3,39 +3,40 @@
 'use strict';
 
 import { injectable } from 'inversify';
+import * as platform from '../../../utils/platform';
 import * as osinfo from './osinfo';
 import { IPlatformService } from './types';
 
 @injectable()
 export class PlatformService implements IPlatformService {
-    private info?: osinfo.OSInfo;
+    private cached?: platform.Info;
 
-    public get os(): osinfo.OSInfo {
-        if (!this.info) {
-            this.info = osinfo.getOSInfo();
+    public get info(): platform.Info {
+        if (!this.cached) {
+            this.cached = platform.getInfo();
         }
-        return this.info;
+        return this.cached;
     }
 
     public get pathVariableName() {
-        return osinfo.getPathVariableName(this.os);
+        return osinfo.getPathVariableName(this.info);
     }
     public get virtualEnvBinName() {
-        return osinfo.getVirtualEnvBinName(this.os);
+        return osinfo.getVirtualEnvBinName(this.info);
     }
 
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: Drop the following (in favor of osType).
+    // convenience methods
+
     public get isWindows(): boolean {
-        return osinfo.isWindows(this.os);
+        return platform.isWindows(this.info);
     }
     public get isMac(): boolean {
-        return osinfo.isMac(this.os);
+        return platform.isMac(this.info);
     }
     public get isLinux(): boolean {
-        return osinfo.isLinux(this.os);
+        return platform.isLinux(this.info);
     }
     public get is64bit(): boolean {
-        return osinfo.is64bit(this.os);
+        return platform.is64bit(this.info);
     }
 }

@@ -9,28 +9,53 @@ import { IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../co
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
+/**
+ * Locates the currently configured Python interpreter.
+ *
+ * If no interpreter is configured then it falls back to the system
+ * Python (3 then 2).
+ */
 @injectable()
 export class CurrentPathService extends CacheableLocatorService {
     private readonly fs: IFileSystem;
-    public constructor(@inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
+
+    public constructor(
+        @inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
+    ) {
         super('CurrentPathService', serviceContainer);
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
+
+    /**
+     * Release any held resources.
+     *
+     * Called by VS Code to indicate it is done with the resource.
+     */
     // tslint:disable-next-line:no-empty
     public dispose() { }
+
+    /**
+     * Return the located interpreters.
+     *
+     * This is used by CacheableLocatorService.getInterpreters().
+     */
     protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
         return this.suggestionsFromKnownPaths();
     }
+
+    /**
+     * Return the located interpreters.
+     */
     private async suggestionsFromKnownPaths(resource?: Uri) {
         const configSettings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource);
         const currentPythonInterpreter = this.getInterpreter(configSettings.pythonPath, '').then(interpreter => [interpreter]);
-        const python = this.getInterpreter('python', '').then(interpreter => [interpreter]);
-        const python2 = this.getInterpreter('python2', '').then(interpreter => [interpreter]);
         const python3 = this.getInterpreter('python3', '').then(interpreter => [interpreter]);
-        return Promise.all<string[]>([currentPythonInterpreter, python, python2, python3])
+        const python2 = this.getInterpreter('python2', '').then(interpreter => [interpreter]);
+        const python = this.getInterpreter('python', '').then(interpreter => [interpreter]);
+        return Promise.all<string[]>([currentPythonInterpreter, python3, python2, python])
             // tslint:disable-next-line:underscore-consistent-invocation
             .then(listOfInterpreters => _.flatten(listOfInterpreters))
             .then(interpreters => interpreters.filter(item => item.length > 0))
@@ -38,6 +63,10 @@ export class CurrentPathService extends CacheableLocatorService {
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter, resource))))
             .then(interpreters => interpreters.filter(item => !!item).map(item => item!));
     }
+
+    /**
+     * Return the information about the identified interpreter binary.
+     */
     private async getInterpreterDetails(interpreter: string, resource?: Uri): Promise<PythonInterpreter | undefined> {
         return Promise.all([
             this.helper.getInterpreterInformation(interpreter),
@@ -58,6 +87,10 @@ export class CurrentPathService extends CacheableLocatorService {
                 };
             });
     }
+
+    /**
+     * Return the path to the interpreter (or the default if not found).
+     */
     private async getInterpreter(pythonPath: string, defaultValue: string) {
         try {
             const processService = await this.processServiceFactory.create();

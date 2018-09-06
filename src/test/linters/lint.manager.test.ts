@@ -4,13 +4,13 @@
 import * as assert from 'assert';
 import { Container } from 'inversify';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { EnumEx } from '../../client/common/enumUtils';
 import { IConfigurationService, ILintingSettings, IPythonSettings, Product } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager, LinterId } from '../../client/linters/types';
+import * as EnumEx from '../../utils/enum';
 import { initialize } from '../initialize';
 
 // tslint:disable-next-line:max-func-body-length

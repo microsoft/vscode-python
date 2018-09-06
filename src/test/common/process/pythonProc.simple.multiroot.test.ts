@@ -19,7 +19,7 @@ import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
 import { IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
 import { IConfigurationService, ICurrentProcess, IDisposableRegistry, IPathUtils, IsWindows } from '../../../client/common/types';
-import { IS_WINDOWS } from '../../../client/common/utils';
+import { IS_WINDOWS } from '../../../client/common/util';
 import { registerTypes as variablesRegisterTypes } from '../../../client/common/variables/serviceRegistry';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';

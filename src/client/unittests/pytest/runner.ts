@@ -1,6 +1,6 @@
 'use strict';
 import { inject, injectable } from 'inversify';
-import { noop } from '../../common/core.utils';
+import { noop } from '../../../utils/misc';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
 import { PYTEST_PROVIDER } from '../common/constants';

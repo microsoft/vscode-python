@@ -10,8 +10,8 @@ import { DiagnosticSeverity } from 'vscode';
 import { DiagnosticCommandPromptHandlerService, MessageCommandPrompt } from '../../../client/application/diagnostics/promptHandler';
 import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService } from '../../../client/application/diagnostics/types';
 import { IApplicationShell } from '../../../client/common/application/types';
-import { EnumEx } from '../../../client/common/enumUtils';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { getNamesAndValues } from '../../../utils/enum';
 
 suite('Application Diagnostics - PromptHandler', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
@@ -28,7 +28,7 @@ suite('Application Diagnostics - PromptHandler', () => {
         promptHandler = new DiagnosticCommandPromptHandlerService(serviceContainer.object);
     });
 
-    EnumEx.getNamesAndValues<DiagnosticSeverity>(DiagnosticSeverity).forEach(severity => {
+    getNamesAndValues<DiagnosticSeverity>(DiagnosticSeverity).forEach(severity => {
         test(`Handling a diagnositic of severity '${severity.name}' should display a message without any buttons`, async () => {
             const diagnostic: IDiagnostic = { code: '1', message: 'one', scope: DiagnosticScope.Global, severity: severity.value };
             switch (severity.value) {

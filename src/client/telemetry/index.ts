@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { StopWatch } from '../common/stopWatch';
+import { StopWatch } from '../../utils/stopWatch';
 import { getTelemetryReporter } from './telemetry';
 import { TelemetryProperties } from './types';
 

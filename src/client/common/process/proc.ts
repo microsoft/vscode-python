@@ -6,7 +6,7 @@
 import { spawn } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import { Disposable } from 'vscode';
-import { createDeferred } from '../helpers';
+import { createDeferred } from '../../../utils/async';
 import { EnvironmentVariables } from '../variables/types';
 import { DEFAULT_ENCODING } from './constants';
 import { ExecutionResult, IBufferDecoder, IProcessService, ObservableExecutionResult, Output, SpawnOptions, StdErrError } from './types';

@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, CodeLens, Command, Event, Position, Range, TextDocument, Uri, workspace } from 'vscode';
 import * as settings from '../../common/configSettings';
 import { IProcessServiceFactory } from '../../common/process/types';
-import { IS_WINDOWS } from '../../common/utils';
+import { IS_WINDOWS } from '../../common/util';
 import { IServiceContainer } from '../../ioc/types';
 import { IShebangCodeLensProvider } from '../contracts';
 

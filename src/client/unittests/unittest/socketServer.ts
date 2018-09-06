@@ -2,7 +2,7 @@
 import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import * as net from 'net';
-import { createDeferred, Deferred } from '../../common/helpers';
+import { createDeferred, Deferred } from '../../../utils/async';
 import { IUnitTestSocketServer } from '../common/types';
 
 // tslint:disable-next-line:variable-name

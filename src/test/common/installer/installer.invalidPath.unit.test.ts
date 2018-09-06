@@ -9,13 +9,13 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { OutputChannel, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
-import { EnumEx } from '../../../client/common/enumUtils';
 import '../../../client/common/extensions';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../../client/common/installer/types';
 import { Product } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { getNamesAndValues } from '../../../utils/enum';
 
 use(chaiAsPromised);
 
@@ -24,7 +24,7 @@ suite('Module Installer - Invalid Paths', () => {
         ['moduleName', path.join('users', 'dev', 'tool', 'executable')].forEach(pathToExecutable => {
             const isExecutableAModule = path.basename(pathToExecutable) === pathToExecutable;
 
-            EnumEx.getNamesAndValues<Product>(Product).forEach(product => {
+            getNamesAndValues<Product>(Product).forEach(product => {
                 let installer: ProductInstaller;
                 let serviceContainer: TypeMoq.IMock<IServiceContainer>;
                 let app: TypeMoq.IMock<IApplicationShell>;

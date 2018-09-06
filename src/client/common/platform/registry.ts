@@ -1,6 +1,7 @@
 import { injectable } from 'inversify';
 import * as Registry from 'winreg';
-import { Architecture, IRegistry, RegistryHive } from './types';
+import { Architecture } from '../../../utils/platform';
+import { IRegistry, RegistryHive } from './types';
 
 enum RegistryArchitectures {
     x86 = 'x86',

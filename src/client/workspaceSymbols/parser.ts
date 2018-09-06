@@ -1,9 +1,11 @@
-import * as vscode from 'vscode';
-import { Tag } from './contracts';
 import * as path from 'path';
-import { fsExistsAsync } from '../common/utils';
+import * as vscode from 'vscode';
+import { fsExistsAsync } from '../../utils/fs';
+import { Tag } from './contracts';
 
-const LineByLineReader = require("line-by-line");
+// tslint:disable:no-require-imports no-var-requires no-suspicious-comment
+// TODO: Turn these into imports.
+const LineByLineReader = require('line-by-line');
 const NamedRegexp = require('named-js-regexp');
 const fuzzy = require('fuzzy');
 
@@ -18,9 +20,9 @@ export interface IRegexGroup {
     line: number;
 }
 
-export function matchNamedRegEx(data, regex): IRegexGroup {
-    let compiledRegexp = NamedRegexp(regex, 'g');
-    let rawMatch = compiledRegexp.exec(data);
+export function matchNamedRegEx(data, regex): IRegexGroup | null {
+    const compiledRegexp = NamedRegexp(regex, 'g');
+    const rawMatch = compiledRegexp.exec(data);
     if (rawMatch !== null) {
         return <IRegexGroup>rawMatch.groups();
     }
@@ -100,23 +102,29 @@ Object.keys(newValuesAndKeys).forEach(key => {
     CTagKinMapping.set(key, newValuesAndKeys[key]);
 });
 
-export function parseTags(workspaceFolder: string, tagFile: string, query: string, token: vscode.CancellationToken, maxItems: number = 200): Promise<Tag[]> {
+export function parseTags(
+    workspaceFolder: string,
+    tagFile: string,
+    query: string,
+    token: vscode.CancellationToken,
+    maxItems: number = 200
+): Promise<Tag[]> {
     return fsExistsAsync(tagFile).then(exists => {
         if (!exists) {
-            return null;
+            return Promise.resolve([]);
         }
 
         return new Promise<Tag[]>((resolve, reject) => {
-            let lr = new LineByLineReader(tagFile);
+            const lr = new LineByLineReader(tagFile);
             let lineNumber = 0;
-            let tags: Tag[] = [];
+            const tags: Tag[] = [];
 
-            lr.on("error", function (err) {
+            lr.on('error', (err) => {
                 reject(err);
             });
 
-            lr.on("line", function (line) {
-                lineNumber++;
+            lr.on('line', (line) => {
+                lineNumber = lineNumber + 1;
                 if (token.isCancellationRequested) {
                     lr.close();
                     return;
@@ -130,17 +138,17 @@ export function parseTags(workspaceFolder: string, tagFile: string, query: strin
                 }
             });
 
-            lr.on("end", function () {
+            lr.on('end', () => {
                 resolve(tags);
             });
         });
     });
 }
-function parseTagsLine(workspaceFolder: string, line: string, searchPattern: string): Tag {
+function parseTagsLine(workspaceFolder: string, line: string, searchPattern: string): Tag | undefined {
     if (IsFileRegEx.test(line)) {
         return;
     }
-    let match = matchNamedRegEx(line, LINE_REGEX);
+    const match = matchNamedRegEx(line, LINE_REGEX);
     if (!match) {
         return;
     }
@@ -152,13 +160,12 @@ function parseTagsLine(workspaceFolder: string, line: string, searchPattern: str
         file = path.resolve(workspaceFolder, '.vscode', file);
     }
 
-    const symbolKind = CTagKinMapping.has(match.type) ? CTagKinMapping.get(match.type) : vscode.SymbolKind.Null;
-    const tag: Tag = {
+    const symbolKind = CTagKinMapping.get(match.type) || vscode.SymbolKind.Null;
+    return {
         fileName: file,
         code: match.code,
         position: new vscode.Position(Number(match.line) - 1, 0),
         symbolName: match.name,
         symbolKind: symbolKind
     };
-    return tag;
 }

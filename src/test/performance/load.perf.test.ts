@@ -10,7 +10,7 @@ import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
 import { commands, extensions } from 'vscode';
-import { StopWatch } from '../../client/common/stopWatch';
+import { StopWatch } from '../../utils/stopWatch';
 
 const AllowedIncreaseInActivationDelayInMS = 500;
 

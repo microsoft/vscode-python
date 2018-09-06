@@ -5,15 +5,15 @@
 
 import { expect } from 'chai';
 import * as os from 'os';
-import { getOSInfo } from '../../../client/common/platform/osinfo';
 import { PlatformService } from '../../../client/common/platform/platformService';
+import { getInfo } from '../../../utils/platform';
 
 // tslint:disable-next-line:max-func-body-length
 suite('PlatformService', () => {
     test('local info', async () => {
-        const expected = getOSInfo();
+        const expected = getInfo();
         const svc = new PlatformService();
-        const info = svc.os;
+        const info = svc.info;
 
         expect(info).to.deep.equal(expected, 'invalid value');
     });

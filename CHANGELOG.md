@@ -1,6 +1,6 @@
 # Changelog
 
-## 2018.8.0-beta (21 August 2018)
+## 2018.8.0 (04 September 2018)
 
 ### Thanks
 
@@ -9,7 +9,7 @@ our features:
 - [isort 4.3.4](https://pypi.org/project/isort/4.3.4/)
 - [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
   and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
-- [ptvsd 3.0.0](https://pypi.org/project/ptvsd/3.0.0/) and [4.1.1a11](https://pypi.org/project/ptvsd/4.1.1a11/)
+- [4.1.1](https://pypi.org/project/ptvsd/4.1.1/)
 - [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
 - [rope](https://pypi.org/project/rope/) (user-installed)
 
@@ -65,11 +65,17 @@ part of!
    activity, such a typing, ceases. If diagnostic is clear (i.e. errors got fixed),
    the publishing is immediate.
    ([#2270](https://github.com/Microsoft/vscode-python/issues/2270))
+1. Language server now supports hierarchical document outline per language server protocol 4.4+ and VS Code 1.26+.
+   ([#2384](https://github.com/Microsoft/vscode-python/issues/2384))
+1. Make use of the `http.proxy` field in `settings.json` when downloading the Python Language Server.
+   ([#2385](https://github.com/Microsoft/vscode-python/issues/2385))
 
 ### Fixes
 
 1. Fix debugger issue that prevented users from copying the value of a variable from the Variables debugger window.
    ([#1398](https://github.com/Microsoft/vscode-python/issues/1398))
+1. Enable code lenses for tests when using the new language server.
+   ([#1948](https://github.com/Microsoft/vscode-python/issues/1948))
 1. Fix null reference exception in the language server causing server initialization to fail. The exception happened when search paths contained a folder that did not exist.
    ([#2017](https://github.com/Microsoft/vscode-python/issues/2017))
 1. Language server now populates document outline with all symbols instead of just top-level ones.
@@ -78,15 +84,22 @@ part of!
    ([#2143](https://github.com/Microsoft/vscode-python/issues/2143))
 1. Fixed issue in the language server when documentation for a function always produced "Documentation is still being calculated, please try again soon".
    ([#2179](https://github.com/Microsoft/vscode-python/issues/2179))
+1. Change linter message parsing so it respects `python.linting.maxNumberOfProblems`.
+   (thanks [Scott Saponas](https://github.com/saponas/))
+   ([#2198](https://github.com/Microsoft/vscode-python/issues/2198))
 1. Fixed language server issue when it could enter infinite loop reloading modules.
    ([#2207](https://github.com/Microsoft/vscode-python/issues/2207))
 1. Ensure workspace `pipenv` environment is not labeled as a `virtual env`.
    ([#2223](https://github.com/Microsoft/vscode-python/issues/2223))
+1. Improve reliability of document outline population with language server.
+   ([#2224](https://github.com/Microsoft/vscode-python/issues/2224))
 1. Language server now correctly handles `with` statement when `__enter__` is
    declared in a base class.
    ([#2240](https://github.com/Microsoft/vscode-python/issues/2240))
 1. Fix `visualstudio_py_testLauncher` to stop breaking out of test discovery too soon.
    ([#2241](https://github.com/Microsoft/vscode-python/issues/2241))
+1. Notify the user when the language server does not support their platform.
+   ([#2245](https://github.com/Microsoft/vscode-python/issues/2245))
 1. Fix issue with survey not opening in a browser for Windows users.
    ([#2252](https://github.com/Microsoft/vscode-python/issues/2252))
 1. Correct banner survey question text to reference the Python Language Server.
@@ -99,19 +112,27 @@ part of!
    ([#2284](https://github.com/Microsoft/vscode-python/issues/2284))
 1. Add support for breaking into the first line of code in the new debugger.
    ([#2299](https://github.com/Microsoft/vscode-python/issues/2299))
+1. Show the debugger survey banner for only a subset of users.
+   ([#2300](https://github.com/Microsoft/vscode-python/issues/2300))
 1. Ensure Flask debug configuration launches flask in a debug environment with the Flask debug mode disabled.
    This is necessary to ensure the custom debugger takes precedence over the interactive debugger, and live reloading is disabled.
    http://flask.pocoo.org/docs/1.0/api/#flask.Flask.debug
    ([#2309](https://github.com/Microsoft/vscode-python/issues/2309))
 1. Language server now correctly merges data from typeshed and the Python library.
    ([#2345](https://github.com/Microsoft/vscode-python/issues/2345))
+1. Fix pytest >= 3.7 test discovery.
+   ([#2347](https://github.com/Microsoft/vscode-python/issues/2347))
 1. Update the downloaded Python language server nuget package filename to
    `Python-Language-Server-{OSType}.beta.nupkg`.
    ([#2362](https://github.com/Microsoft/vscode-python/issues/2362))
+1. Added setting to control language server log output. Default is now 'error' so there should be much less noise in the output.
+   ([#2405](https://github.com/Microsoft/vscode-python/issues/2405))
 1. Fix `experimental` debugger when debugging Python files with Unicode characters in the file path.
    ([#688](https://github.com/Microsoft/vscode-python/issues/688))
 1. Ensure stepping out of debugged code does not take user into `PTVSD` debugger code.
    ([#767](https://github.com/Microsoft/vscode-python/issues/767))
+1. Upgrade `pythonExperimental` to `python` in `launch.json`.
+   ([#2478](https://github.com/Microsoft/vscode-python/issues/2478))
 
 ### Code Health
 
@@ -119,13 +140,16 @@ part of!
    ([#2195](https://github.com/Microsoft/vscode-python/issues/2195))
 1. Decorate `EventEmitter` within a `try..catch` to play nice with other extensions performing the same operation.
    ([#2196](https://github.com/Microsoft/vscode-python/issues/2196))
+1. Change the default interpreter to favor Python 3 over Python 2.
+   ([#2266](https://github.com/Microsoft/vscode-python/issues/2266))
+1. Deprecate command `Python: Build Workspace Symbols` when using the language server.
+   ([#2267](https://github.com/Microsoft/vscode-python/issues/2267))
 1. Pin version of `pylint` to `3.6.3` to allow ensure `pylint` gets installed on Travis with Pytnon2.7.
    ([#2305](https://github.com/Microsoft/vscode-python/issues/2305))
 1. Remove some of the debugger tests and fix some minor debugger issues.
    ([#2307](https://github.com/Microsoft/vscode-python/issues/2307))
-
-
-
+1. Only use the current stable version of PTVSD in CI builds/releases.
+   ([#2432](https://github.com/Microsoft/vscode-python/issues/2432))
 
 
 ## 2018.7.1 (23 July 2018)

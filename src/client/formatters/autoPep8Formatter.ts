@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
+import { StopWatch } from '../../utils/stopWatch';
 import { Product } from '../common/installer/productInstaller';
-import { StopWatch } from '../common/stopWatch';
 import { IConfigurationService } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryWhenDone } from '../telemetry';

@@ -12,7 +12,10 @@ import * as typeMoq from 'typemoq';
 import { CancellationToken } from 'vscode';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { PYTEST_PROVIDER } from '../../../client/unittests/common/constants';
-import { ITestDiscoveryService, ITestRunner, ITestsHelper, ITestsParser, Options, TestDiscoveryOptions, Tests } from '../../../client/unittests/common/types';
+import {
+    ITestDiscoveryService, ITestRunner, ITestsHelper,
+    ITestsParser, Options, TestDiscoveryOptions, Tests
+} from '../../../client/unittests/common/types';
 import { TestDiscoveryService } from '../../../client/unittests/pytest/services/discoveryService';
 import { IArgumentsService, TestFilter } from '../../../client/unittests/types';
 
@@ -24,6 +27,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
     let testParser: typeMoq.IMock<ITestsParser>;
     let runner: typeMoq.IMock<ITestRunner>;
     let helper: typeMoq.IMock<ITestsHelper>;
+
     setup(() => {
         const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         argsService = typeMoq.Mock.ofType<IArgumentsService>();

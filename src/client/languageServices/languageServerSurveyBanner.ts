@@ -4,11 +4,11 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { getRandomBetween } from '../../utils/random';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import { IBrowserService, IPersistentStateFactory,
     IPythonExtensionBanner } from '../common/types';
-import { getRandomBetween } from '../common/utils';
 
 // persistent state names, exported to make use of in testing
 export enum LSSurveyStateKeys {

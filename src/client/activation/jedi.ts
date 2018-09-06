@@ -15,7 +15,7 @@ import { activateGoToObjectDefinitionProvider } from '../providers/objectDefinit
 import { PythonReferenceProvider } from '../providers/referenceProvider';
 import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
-import { PythonSymbolProvider } from '../providers/symbolProvider';
+import { JediSymbolProvider } from '../providers/symbolProvider';
 import { IUnitTestManagementService } from '../unittests/types';
 import { WorkspaceSymbols } from '../workspaceSymbols/main';
 import { IExtensionActivator } from './types';
@@ -50,7 +50,7 @@ export class JediExtensionActivator implements IExtensionActivator {
         const serviceContainer = this.serviceManager.get<IServiceContainer>(IServiceContainer);
         context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
 
-        const symbolProvider = new PythonSymbolProvider(serviceContainer, jediFactory);
+        const symbolProvider = new JediSymbolProvider(serviceContainer, jediFactory);
         context.subscriptions.push(languages.registerDocumentSymbolProvider(this.documentSelector, symbolProvider));
 
         const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();

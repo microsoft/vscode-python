@@ -4,6 +4,7 @@ Fixes #
   If an item below does not apply to you, then go ahead and check it off as "done" and strikethrough the text, e.g.:
     - [x] ~Has unit tests & system/integration tests~
 -->
+- [ ] Pull request represents a single change (i.e. not fixing disparate/unrelated things in a single PR)
 - [ ] Title summarizes what is changing
 - [ ] Has a [news entry](https://github.com/Microsoft/vscode-python/tree/master/news) file (remember to thank yourself!)
 - [ ] Has unit tests & system/integration tests

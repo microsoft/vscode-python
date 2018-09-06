@@ -1,12 +1,12 @@
 import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import { CancellationToken, Disposable, Uri } from 'vscode';
-import { createDeferred, Deferred } from '../../client/common/helpers';
 import { Product } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../client/unittests/common/constants';
 import { BaseTestManager } from '../../client/unittests/common/managers/baseTestManager';
 import { ITestDebugLauncher, ITestDiscoveryService, IUnitTestSocketServer, LaunchOptions, TestDiscoveryOptions, TestProvider, Tests, TestsToRun } from '../../client/unittests/common/types';
+import { createDeferred, Deferred } from '../../utils/async';
 
 @injectable()
 export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
@@ -18,6 +18,9 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
         return this._promise!;
     }
     public get cancellationToken(): CancellationToken {
+        if (this._token === undefined) {
+            throw Error('debugger not launched');
+        }
         return this._token;
     }
     // tslint:disable-next-line:variable-name
@@ -25,11 +28,11 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
     // tslint:disable-next-line:variable-name
     private _promise?: Deferred<Tests>;
     // tslint:disable-next-line:variable-name
-    private _token: CancellationToken;
+    private _token?: CancellationToken;
     constructor() {
         this._launched = createDeferred<boolean>();
     }
-    public async getLaunchOptions(resource?: Uri): Promise<{ port: number, host: string }> {
+    public async getLaunchOptions(resource?: Uri): Promise<{ port: number; host: string }> {
         return { port: 0, host: 'localhost' };
     }
     public async launchDebugger(options: LaunchOptions): Promise<void> {
@@ -100,7 +103,7 @@ export class MockUnitTestSocketServer extends EventEmitter implements IUnitTestS
     public addResults(results: {}[]) {
         this.results.push(...results);
     }
-    public async start(options: { port: number, host: string } = { port: 0, host: 'localhost' }): Promise<number> {
+    public async start(options: { port: number; host: string } = { port: 0, host: 'localhost' }): Promise<number> {
         this.results.forEach(result => {
             this.emit('result', result);
         });
