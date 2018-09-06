@@ -1,26 +1,32 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-multiline-string no-trailing-whitespace max-func-body-length no-any
+// tslint:disable:max-func-body-length
+// tslint:disable:no-any
 
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Range, Selection, TextDocument, TextEditor, TextLine, Uri } from 'vscode';
+import {
+    Range, Selection, TextDocument, TextEditor, TextLine, Uri
+} from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { createDeferred } from '../../../client/common/helpers';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
-import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
+import {
+    ExecutionResult, IProcessService, IProcessServiceFactory
+} from '../../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
+import { createDeferred } from '../../../utils/async';
 import { PYTHON_PATH } from '../../common';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
@@ -33,7 +39,14 @@ suite('Terminal - Code Execution Helper', () => {
     let editor: TypeMoq.IMock<TextEditor>;
     let processService: TypeMoq.IMock<IProcessService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
-    setup(function () {
+    const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
+    let isPython2: boolean;
+
+    suiteSetup(async () => {
+        isPython2 = await isPy2(PYTHON_PATH);
+    });
+
+    setup(() => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -65,13 +78,16 @@ suite('Terminal - Code Execution Helper', () => {
     async function ensureBlankLinesAreRemoved(source: string, expectedSource: string) {
         const actualProcessService = new ProcessService(new BufferDecoder());
         processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((file, args, options) => {
+            .returns(async (file, args, options) => {
                 return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
             });
-        const normalizedZCode = await helper.normalizeLines(source);
-        // In case file has been saved with different line endings.
-        expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join(EOL);
-        expect(normalizedZCode).to.be.equal(expectedSource);
+        const normalizedCode = await helper.normalizeLines(source);
+
+        const joiner: string = isPython2 ? '\n' : EOL; // python 2 will add /r/n to line endings
+        expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join(joiner);
+
+        expect(normalizedCode.length).to.be.equal(expectedSource.length);
+        expect(normalizedCode).to.be.equal(expectedSource);
     }
     test('Ensure blank lines are NOT removed when code is not indented (simple)', async () => {
         const code = ['import sys', '', '', '', 'print(sys.executable)', '', 'print("1234")', '', '', 'print(1)', 'print(2)'];
@@ -234,7 +250,7 @@ suite('Terminal - Code Execution Helper', () => {
             pythonPath,
             ['-c', 'import sys; print(sys.version_info.major)'],
             { mergeStdOutErr: true }
-            );
+        );
 
         const verMajor: string = execResult.stdout.trim();
         deferral.resolve(verMajor === '2');
