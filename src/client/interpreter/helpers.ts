@@ -5,7 +5,7 @@ import { IFileSystem } from '../common/platform/types';
 import { InterpreterInfomation, IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { IInterpreterHelper, PythonInterpreter, WorkspacePythonPath } from './contracts';
+import { IInterpreterHelper, InterpreterType, PythonInterpreter, WorkspacePythonPath } from './contracts';
 
 const EXPITY_DURATION = 24 * 60 * 60 * 1000;
 type CachedPythonInterpreter = Partial<PythonInterpreter> & { fileHash: string };
@@ -46,7 +46,7 @@ export class InterpreterHelper implements IInterpreterHelper {
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>> {
         let fileHash = await this.fs.getFileHash(pythonPath).catch(() => '');
         fileHash = fileHash ? fileHash : '';
-        const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(pythonPath, undefined, EXPITY_DURATION);
+        const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(`${pythonPath}.1`, undefined, EXPITY_DURATION);
         if (store.value && (!fileHash || store.value.fileHash === fileHash)) {
             return store.value;
         }
@@ -70,5 +70,27 @@ export class InterpreterHelper implements IInterpreterHelper {
     }
     public isMacDefaultPythonPath(pythonPath: string) {
         return pythonPath === 'python' || pythonPath === '/usr/bin/python';
+    }
+    public getInterpreterTypeDisplayName(interpreterType: InterpreterType) {
+        switch (interpreterType) {
+            case InterpreterType.Conda: {
+                return 'conda';
+            }
+            case InterpreterType.PipEnv: {
+                return 'pipenv';
+            }
+            case InterpreterType.Pyenv: {
+                return 'pyenv';
+            }
+            case InterpreterType.Venv: {
+                return 'venv';
+            }
+            case InterpreterType.VirtualEnv: {
+                return 'virtualEnv';
+            }
+            default: {
+                return '';
+            }
+        }
     }
 }

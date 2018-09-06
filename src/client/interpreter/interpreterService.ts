@@ -3,6 +3,7 @@ import * as path from 'path';
 import { ConfigurationTarget, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
+import { getArchitectureDisplayName } from '../common/platform/registry';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../common/types';
@@ -41,8 +42,10 @@ export class InterpreterService implements Disposable, IInterpreterService {
         (configService.getSettings() as PythonSettings).addListener('change', this.onConfigChanged);
     }
 
-    public getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
-        return this.locator.getInterpreters(resource);
+    public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
+        const interpreters = await this.locator.getInterpreters(resource);
+        interpreters.forEach(item => item.displayName = this.getDisplayName(item));
+        return interpreters;
     }
 
     public async autoSetInterpreter(): Promise<void> {
@@ -112,23 +115,58 @@ export class InterpreterService implements Disposable, IInterpreterService {
         }
         const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         const virtualEnvManager = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
-        const [details, virtualEnvName, type] = await Promise.all([
+        const [info, type] = await Promise.all([
             interpreterHelper.getInterpreterInformation(pythonPath),
-            virtualEnvManager.getEnvironmentName(pythonPath),
             virtualEnvManager.getEnvironmentType(pythonPath)
         ]);
-        if (!details) {
+        if (!info) {
             return;
         }
+        const details: Partial<PythonInterpreter> = {
+            ...(info as PythonInterpreter),
+            path: pythonPath,
+            type: type
+        };
+
+        const virtualEnvName = await virtualEnvManager.getEnvironmentName(pythonPath, resource);
         const dislayNameSuffix = virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
         const displayName = `${details.version!}${dislayNameSuffix}`;
         return {
             ...(details as PythonInterpreter),
-            displayName,
-            path: pythonPath,
             envName: virtualEnvName,
-            type: type
+            displayName
         };
+    }
+    public getDisplayName(info: Partial<PythonInterpreter>): string {
+        const displayNameParts: string[] = [];
+        const envSuffixParts: string[] = [];
+
+        if (info.companyDisplayName && info.companyDisplayName.length > 0) {
+            displayNameParts.push(info.companyDisplayName.trim());
+        } else {
+            displayNameParts.push('Python');
+        }
+
+        if (info.version_info && info.version_info.length > 0) {
+            displayNameParts.push(info.version_info.slice(0, 3).join('.'));
+        }
+        if (info.version_info) {
+            displayNameParts.push(getArchitectureDisplayName(info.architecture));
+        }
+        if (info.envName && info.envName.length > 0) {
+            envSuffixParts.push(info.envName);
+        }
+        if (info.type) {
+            const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
+            const name = interpreterHelper.getInterpreterTypeDisplayName(info.type);
+            if (name) {
+                envSuffixParts.push(name);
+            }
+        }
+
+        const envSuffix = envSuffixParts.length === 0 ? '' :
+            `(${envSuffixParts.join(': ')})`;
+        return `${displayNameParts.join(' ')} ${envSuffix}`.trim();
     }
     private async shouldAutoSetInterpreter(): Promise<boolean> {
         const activeWorkspace = this.helper.getActiveWorkspaceUri();
