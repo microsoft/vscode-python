@@ -57,12 +57,15 @@ export abstract class BaseInstaller {
 
         const channels = this.serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager);
         const installer = await channels.getInstallationChannel(product, resource);
+        console.log('installer');
+        console.log(installer);
         if (!installer) {
             return InstallerResponse.Ignore;
         }
 
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         const logger = this.serviceContainer.get<ILogger>(ILogger);
+        console.log(installer.installModule);
         await installer.installModule(moduleName, resource)
             .catch(logger.logError.bind(logger, `Error in installing the module '${moduleName}'`));
 
