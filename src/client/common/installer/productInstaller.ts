@@ -66,6 +66,10 @@ export abstract class BaseInstaller {
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         const logger = this.serviceContainer.get<ILogger>(ILogger);
         console.log(installer.installModule);
+        console.log(installer.isSupported);
+        const x = await installer.isSupported();
+        console.log('is supported');
+        console.log(x);
         await installer.installModule(moduleName, resource)
             .catch(logger.logError.bind(logger, `Error in installing the module '${moduleName}'`));
 

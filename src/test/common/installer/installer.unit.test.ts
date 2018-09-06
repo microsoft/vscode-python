@@ -48,6 +48,7 @@ suite('Module Installer', () => {
                 moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
                 // tslint:disable-next-line:no-any
                 moduleInstaller.setup((x: any) => x.then).returns(() => undefined);
+                moduleInstaller.setup(m => m.isSupported(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
                 installationChannel.setup(i => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(moduleInstaller.object));
                 installationChannel.setup(i => i.getInstallationChannel(TypeMoq.It.isAny())).returns(() => Promise.resolve(moduleInstaller.object));
 
