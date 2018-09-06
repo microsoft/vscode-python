@@ -3,7 +3,7 @@ import * as path from 'path';
 import { compareVersion } from '../../../../utils/version';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
-import { ILogger, IPersistentStateFactory } from '../../../common/types';
+import { IConfigurationService, ILogger, IPersistentStateFactory } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { CondaInfo, ICondaService, IInterpreterLocatorService, InterpreterType, PythonInterpreter, WINDOWS_REGISTRY_SERVICE } from '../../contracts';
 import { CondaHelper } from './condaHelper';
@@ -223,6 +223,12 @@ export class CondaService implements ICondaService {
      * Return the path to the "conda file", if there is one (in known locations).
      */
     private async getCondaFileImpl() {
+        const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings();
+        const setting = settings.condaPath;
+        if (setting && setting !== '') {
+            return setting;
+        }
+
         const isAvailable = await this.isCondaInCurrentPath();
         if (isAvailable) {
             return 'conda';
