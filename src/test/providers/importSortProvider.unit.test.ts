@@ -12,7 +12,6 @@ import * as TypeMoq from 'typemoq';
 import { Range, TextDocument, TextEditor, TextLine, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../client/common/application/types';
 import { Commands, EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { noop } from '../../client/common/core.utils';
 import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
 import { ProcessService } from '../../client/common/process/proc';
 import { IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
@@ -20,6 +19,7 @@ import { IConfigurationService, IDisposableRegistry, IEditorUtils, IPythonSettin
 import { IServiceContainer } from '../../client/ioc/types';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
 import { ISortImportsEditingProvider } from '../../client/providers/types';
+import { noop } from '../../utils/misc';
 
 suite('Import Sort Provider', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

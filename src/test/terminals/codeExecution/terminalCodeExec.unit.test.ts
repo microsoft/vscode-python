@@ -8,7 +8,6 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
-import { noop } from '../../../client/common/core.utils';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
@@ -16,6 +15,7 @@ import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/code
 import { ReplProvider } from '../../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExecution/terminalCodeExecution';
 import { ICodeExecutionService } from '../../../client/terminals/types';
+import { noop } from '../../../utils/misc';
 import { PYTHON_PATH } from '../../common';
 
 suite('Terminal - Code Execution', () => {
