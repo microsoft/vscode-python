@@ -84,7 +84,10 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "env":{
+                "CI_PYTHON_PATH": "C:\\Python\\Versions\\2.7.9\\python.exe"
+            }
         },
         {
             "name": "Launch Multiroot Tests",

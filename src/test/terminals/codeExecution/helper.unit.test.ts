@@ -12,6 +12,7 @@ import { Range, Selection, TextDocument, TextEditor, TextLine, Uri } from 'vscod
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import '../../../client/common/extensions';
+import { createDeferred } from '../../../client/common/helpers';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
@@ -225,4 +226,19 @@ suite('Terminal - Code Execution Helper', () => {
         documentManager.verifyAll();
         document.verify(doc => doc.save(), TypeMoq.Times.never());
     });
+
+    async function isPy2(pythonPath: string): Promise<boolean> {
+        const deferral = createDeferred<boolean>();
+        const proc: ProcessService = new ProcessService(new BufferDecoder());
+        const execResult: ExecutionResult<string> = await proc.exec(
+            pythonPath,
+            ['-c', 'import sys; print(sys.version_info.major)'],
+            { mergeStdOutErr: true }
+            );
+
+        const verMajor: string = execResult.stdout.trim();
+        deferral.resolve(verMajor === '2');
+
+        return deferral.promise;
+    }
 });
