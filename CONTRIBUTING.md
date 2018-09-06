@@ -13,7 +13,8 @@
 
 ---
 
-[[Contributing to Python Analysis Engine](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING%20-%20PYTHON_ANALYSIS.md) is covered in a separate document.]
+[Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) is located in its own repo
+[Contributing to Microsoft Python Language Server](https://github.com/Microsoft/python-language-server/blob/master/CONTRIBUTING.md)
 
 ## Contributing a pull request
 
