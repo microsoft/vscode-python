@@ -3,6 +3,19 @@
     "version": "0.1.0",
     "configurations": [
         {
+            "name": "Python File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "import sys\n\n\nprint(sys.executable)\n\nprint(\"1234\")\n\nprint(1)\nprint(2)\n"
+            ],
+            "env": {
+                "PYTHONIOENCODING": "utf8",
+            }
+        },
+        {
             "name": "Launch Extension",
             "type": "extensionHost",
             "request": "launch",
@@ -50,7 +63,12 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "env": {
+                //"CI_PYTHON_PATH": "C:\\Python\\Versions\\2.7.15\\python.exe"
+                //"CI_PYTHON_PATH": "C:\\Python\\Versions\\3.7.0\\python.exe"
+                "CI_PYTHON_PATH": "C:\\Python\\Versions\\3.6.6\\python.exe"
+            }
         },
         {
             "name": "Debug Unit Tests",
@@ -61,7 +79,7 @@
             "sourceMaps": true,
             "args": [
                 "timeout=60000",
-                "grep="
+                "grep=Terminal - Code Execution Helper"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
