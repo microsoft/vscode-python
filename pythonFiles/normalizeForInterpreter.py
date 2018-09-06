@@ -101,7 +101,7 @@ def normalize_lines(source):
     # Step 2: Add blank lines between each global statement block.
     # A consequtive single lines blocks of code will be treated as a single statement,
     # just to ensure we do not unnecessarily add too many blank lines.
-    source = '\n'.join(lines)
+    source = os.linesep.join(lines)
     tokens = _tokenize(source)
     dedent_indexes = (spos[0] for (toknum, tokval, spos, epos, line) in tokens
                                 if toknum == token.DEDENT and _indent_size(line) == 0)
@@ -111,7 +111,7 @@ def normalize_lines(source):
     for line_number in filter(lambda x: x > 1, start_positions):
         lines.insert(line_number-1, '')
 
-    sys.stdout.write('\n'.join(lines) + trailing_newline)
+    sys.stdout.write(os.linesep.join(lines) + trailing_newline)
     sys.stdout.flush()
 
 
