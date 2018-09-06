@@ -293,7 +293,7 @@ suite('Import Sort Provider', () => {
             .returns(() => {
                 console.log('created');
                 console.log(processService.object);
-                return processService.object;
+                return Promise.resolve(processService.object);
             })
             .verifiable(TypeMoq.Times.once());
 
