@@ -60,14 +60,8 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         try {
             if (typeof isort === 'string' && isort.length > 0) {
                 // Lets just treat this as a standard tool.
-                console.log(document.uri);
                 const processService = await this.processServiceFactory.create(document.uri);
-                console.log('1');
-                console.log(processService);
-                console.log(processService.exec);
                 diffPatch = (await processService.exec(isort, args, { throwOnStdErr: true, token })).stdout;
-                console.log('diffPatch');
-                console.log(diffPatch);
             } else {
                 const processExeService = await this.pythonExecutionFactory.create({ resource: document.uri });
                 diffPatch = (await processExeService.exec([importScript].concat(args), { throwOnStdErr: true, token })).stdout;
