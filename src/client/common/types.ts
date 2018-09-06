@@ -3,7 +3,7 @@
 // Licensed under the MIT License.
 
 import { Socket } from 'net';
-import { ConfigurationTarget, DiagnosticSeverity, Disposable, ExtensionContext, OutputChannel, Uri } from 'vscode';
+import { ConfigurationTarget, DiagnosticSeverity, Disposable, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
@@ -12,7 +12,7 @@ export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export const IsWindows = Symbol('IS_WINDOWS');
 export const Is64Bit = Symbol('Is64Bit');
 export const IDisposableRegistry = Symbol('IDiposableRegistry');
-export type IDisposableRegistry = Disposable[];
+export type IDisposableRegistry = { push(disposable: Disposable): void };
 export const IMemento = Symbol('IGlobalMemento');
 export const GLOBAL_MEMENTO = Symbol('IGlobalMemento');
 export const WORKSPACE_MEMENTO = Symbol('IWorkspaceMemento');
@@ -302,4 +302,10 @@ export const IFeatureDeprecationManager = Symbol('IFeatureDeprecationManager');
 export interface IFeatureDeprecationManager extends Disposable {
     initialize(): void;
     registerDeprecation(deprecatedInfo: DeprecatedFeatureInfo): void;
+}
+
+export const IEditorUtils = Symbol('IEditorUtils');
+export interface IEditorUtils {
+    // getTextEditor(uri: Uri): Promise<{ editor: TextEditor; dispose?(): void }>;
+    getWorkspaceEditsFromPatch(originalContents: string, patch: string, uri: Uri): WorkspaceEdit;
 }

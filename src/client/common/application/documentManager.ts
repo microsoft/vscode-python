@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-any
+// tslint:disable:no-any unified-signatures
 
 import { injectable } from 'inversify';
-import { Event, TextDocument, TextDocumentShowOptions, TextEditor, TextEditorOptionsChangeEvent, TextEditorSelectionChangeEvent, TextEditorViewColumnChangeEvent, Uri, ViewColumn, window, workspace } from 'vscode';
+import { Event, TextDocument, TextDocumentShowOptions, TextEditor, TextEditorOptionsChangeEvent, TextEditorSelectionChangeEvent, TextEditorViewColumnChangeEvent, Uri, ViewColumn, window, workspace, WorkspaceEdit } from 'vscode';
 import { IDocumentManager } from './types';
 
 @injectable()
@@ -18,7 +18,7 @@ export class DocumentManager implements IDocumentManager {
     public get visibleTextEditors(): TextEditor[] {
         return window.visibleTextEditors;
     }
-    public get onDidChangeActiveTextEditor(): Event<TextEditor> {
+    public get onDidChangeActiveTextEditor(): Event<TextEditor | undefined> {
         return window.onDidChangeActiveTextEditor;
     }
     public get onDidChangeVisibleTextEditors(): Event<TextEditor[]> {
@@ -46,5 +46,15 @@ export class DocumentManager implements IDocumentManager {
     public showTextDocument(document: TextDocument | Uri, options?: TextDocumentShowOptions): Thenable<TextEditor>;
     public showTextDocument(uri: any, options?: any, preserveFocus?: any): Thenable<TextEditor> {
         return window.showTextDocument(uri, options, preserveFocus);
+    }
+
+    public openTextDocument(uri: Uri): Thenable<TextDocument>;
+    public openTextDocument(fileName: string): Thenable<TextDocument>;
+    public openTextDocument(options?: { language?: string; content?: string }): Thenable<TextDocument>;
+    public openTextDocument(arg?: any): Thenable<TextDocument> {
+        return workspace.openTextDocument(arg);
+    }
+    public applyEdit(edit: WorkspaceEdit): Thenable<boolean> {
+        return workspace.applyEdit(edit);
     }
 }

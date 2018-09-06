@@ -51,10 +51,11 @@ import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { LinterProvider } from './providers/linterProvider';
 import { PythonRenameProvider } from './providers/renameProvider';
 import { ReplProvider } from './providers/replProvider';
+import { registerTypes as providersRegisterTypes } from './providers/serviceRegistry';
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { TerminalProvider } from './providers/terminalProvider';
+import { ISortImportsEditingProvider } from './providers/types';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
-import * as sortImports from './sortImports';
 import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
@@ -92,7 +93,8 @@ export async function activate(context: ExtensionContext) {
     const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
     await activationService.activate();
 
-    sortImports.activate(context, standardOutputChannel, serviceManager);
+    const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
+    sortImports.registerCommands();
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
     sendStartupTelemetry(activated, serviceContainer).ignoreErrors();
@@ -190,6 +192,7 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     debugConfigurationRegisterTypes(serviceManager);
     debuggerRegisterTypes(serviceManager);
     appRegisterTypes(serviceManager);
+    providersRegisterTypes(serviceManager);
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {

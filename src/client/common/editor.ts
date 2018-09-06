@@ -1,10 +1,11 @@
 import * as dmp from 'diff-match-patch';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
+import { injectable } from 'inversify';
 import * as md5 from 'md5';
 import { EOL } from 'os';
 import * as path from 'path';
-import { Position, Range, TextDocument, TextEdit, WorkspaceEdit } from 'vscode';
-import * as vscode from 'vscode';
+import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit } from 'vscode';
+import { IEditorUtils } from './types';
 
 // Code borrowed from goFormat.ts (Go Extension for VS Code)
 enum EditAction {
@@ -16,17 +17,17 @@ enum EditAction {
 const NEW_LINE_LENGTH = EOL.length;
 
 class Patch {
-    public diffs: dmp.Diff[];
-    public start1: number;
-    public start2: number;
-    public length1: number;
-    public length2: number;
+    public diffs!: dmp.Diff[];
+    public start1!: number;
+    public start2!: number;
+    public length1!: number;
+    public length2!: number;
 }
 
 class Edit {
     public action: EditAction;
     public start: Position;
-    public end: Position;
+    public end!: Position;
     public text: string;
 
     constructor(action: number, start: Position) {
@@ -120,7 +121,7 @@ export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?
         }
 
         const fileSource = fs.readFileSync(fileName).toString('utf8');
-        const fileUri = vscode.Uri.file(fileName);
+        const fileUri = Uri.file(fileName);
 
         // Add line feeds and build the text edits
         patches.forEach(p => {
@@ -321,4 +322,51 @@ function patch_fromText(textline): Patch[] {
         }
     }
     return patches;
+}
+
+@injectable()
+export class EditorUtils implements IEditorUtils {
+    public getWorkspaceEditsFromPatch(originalContents: string, patch: string, uri: Uri): WorkspaceEdit {
+        const workspaceEdit = new WorkspaceEdit();
+        if (patch.startsWith('---')) {
+            // Strip the first two lines
+            patch = patch.substring(patch.indexOf('@@'));
+        }
+        if (patch.length === 0) {
+            return workspaceEdit;
+        }
+        // Remove the text added by unified_diff
+        // # Work around missing newline (http://bugs.python.org/issue2142).
+        patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
+
+        const d = new dmp.diff_match_patch();
+        const patches = patch_fromText.call(d, patch);
+        if (!Array.isArray(patches) || patches.length === 0) {
+            throw new Error('Unable to parse Patch string');
+        }
+
+        // Add line feeds and build the text edits
+        patches.forEach(p => {
+            p.diffs.forEach(diff => {
+                diff[1] += EOL;
+            });
+            getTextEditsInternal(originalContents, p.diffs, p.start1).forEach(edit => {
+                switch (edit.action) {
+                    case EditAction.Delete:
+                        workspaceEdit.delete(uri, new Range(edit.start, edit.end));
+                        break;
+                    case EditAction.Insert:
+                        workspaceEdit.insert(uri, edit.start, edit.text);
+                        break;
+                    case EditAction.Replace:
+                        workspaceEdit.replace(uri, new Range(edit.start, edit.end), edit.text);
+                        break;
+                    default:
+                        break;
+                }
+            });
+        });
+
+        return workspaceEdit;
+    }
 }

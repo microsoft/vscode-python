@@ -47,6 +47,10 @@ export class FileSystem implements IFileSystem {
         return fs.readFile(filePath).then(buffer => buffer.toString());
     }
 
+    public async writeFile(filePath: string, data: {}): Promise<void> {
+        await fs.writeFile(filePath, data, { encoding: 'utf8' });
+    }
+
     public directoryExists(filePath: string): Promise<boolean> {
         return this.objectExists(filePath, (stats) => stats.isDirectory());
     }
@@ -167,9 +171,5 @@ export class FileSystem implements IFileSystem {
                 resolve();
             });
         });
-    }
-
-    public writeFile(filePath: string, data: {}): Promise<void> {
-        return fs.writeFile(filePath, data);
     }
 }

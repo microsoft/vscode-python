@@ -65,6 +65,8 @@ mockedVSCode.ConfigurationTarget = vscodeMocks.vscMockExtHostedTypes.Configurati
 mockedVSCode.StatusBarAlignment = vscodeMocks.vscMockExtHostedTypes.StatusBarAlignment;
 mockedVSCode.SignatureHelp = vscodeMocks.vscMockExtHostedTypes.SignatureHelp;
 mockedVSCode.DocumentLink = vscodeMocks.vscMockExtHostedTypes.DocumentLink;
+mockedVSCode.TextEdit = vscodeMocks.vscMockExtHostedTypes.TextEdit;
+mockedVSCode.WorkspaceEdit = vscodeMocks.vscMockExtHostedTypes.WorkspaceEdit;
 
 // This API is used in src/client/telemetry/telemetry.ts
 const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();

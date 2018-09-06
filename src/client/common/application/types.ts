@@ -8,8 +8,8 @@ import {
     CancellationToken, ConfigurationChangeEvent, DebugConfiguration, DebugSession, Disposable, Event, FileSystemWatcher, GlobPattern, InputBoxOptions, MessageItem,
     MessageOptions, OpenDialogOptions, QuickPickItem, QuickPickOptions, SaveDialogOptions,
     StatusBarAlignment, StatusBarItem, Terminal, TerminalOptions, TextDocument, TextDocumentShowOptions, TextEditor,
-    TextEditorEdit, TextEditorOptionsChangeEvent, TextEditorSelectionChangeEvent, TextEditorViewColumnChangeEvent, Uri, ViewColumn, WorkspaceConfiguration, WorkspaceFolder,
-    WorkspaceFolderPickOptions, WorkspaceFoldersChangeEvent
+    TextEditorEdit, TextEditorOptionsChangeEvent, TextEditorSelectionChangeEvent, TextEditorViewColumnChangeEvent, Uri, ViewColumn, WorkspaceConfiguration, WorkspaceEdit,
+    WorkspaceFolder, WorkspaceFolderPickOptions, WorkspaceFoldersChangeEvent
 } from 'vscode';
 
 export const IApplicationShell = Symbol('IApplicationShell');
@@ -336,7 +336,7 @@ export interface IDocumentManager {
      * has changed. *Note* that the event also fires when the active editor changes
      * to `undefined`.
      */
-    readonly onDidChangeActiveTextEditor: Event<TextEditor>;
+    readonly onDidChangeActiveTextEditor: Event<TextEditor | undefined>;
 
     /**
      * An [event](#Event) which fires when the array of [visible editors](#window.visibleTextEditors)
@@ -405,6 +405,55 @@ export interface IDocumentManager {
      * @return A promise that resolves to an [editor](#TextEditor).
      */
     showTextDocument(uri: Uri, options?: TextDocumentShowOptions): Thenable<TextEditor>;
+    /**
+     * Opens a document. Will return early if this document is already open. Otherwise
+     * the document is loaded and the [didOpen](#workspace.onDidOpenTextDocument)-event fires.
+     *
+     * The document is denoted by an [uri](#Uri). Depending on the [scheme](#Uri.scheme) the
+     * following rules apply:
+     * * `file`-scheme: Open a file on disk, will be rejected if the file does not exist or cannot be loaded.
+     * * `untitled`-scheme: A new file that should be saved on disk, e.g. `untitled:c:\frodo\new.js`. The language
+     * will be derived from the file name.
+     * * For all other schemes the registered text document content [providers](#TextDocumentContentProvider) are consulted.
+     *
+     * *Note* that the lifecycle of the returned document is owned by the editor and not by the extension. That means an
+     * [`onDidClose`](#workspace.onDidCloseTextDocument)-event can occur at any time after opening it.
+     *
+     * @param uri Identifies the resource to open.
+     * @return A promise that resolves to a [document](#TextDocument).
+     */
+    openTextDocument(uri: Uri): Thenable<TextDocument>;
+
+    /**
+     * A short-hand for `openTextDocument(Uri.file(fileName))`.
+     *
+     * @see [openTextDocument](#openTextDocument)
+     * @param fileName A name of a file on disk.
+     * @return A promise that resolves to a [document](#TextDocument).
+     */
+    openTextDocument(fileName: string): Thenable<TextDocument>;
+
+    /**
+     * Opens an untitled text document. The editor will prompt the user for a file
+     * path when the document is to be saved. The `options` parameter allows to
+     * specify the *language* and/or the *content* of the document.
+     *
+     * @param options Options to control how the document will be created.
+     * @return A promise that resolves to a [document](#TextDocument).
+     */
+    openTextDocument(options?: { language?: string; content?: string }): Thenable<TextDocument>;
+    /**
+     * Make changes to one or many resources as defined by the given
+     * [workspace edit](#WorkspaceEdit).
+     *
+     * When applying a workspace edit, the editor implements an 'all-or-nothing'-strategy,
+     * that means failure to load one document or make changes to one document will cause
+     * the edit to be rejected.
+     *
+     * @param edit A workspace edit.
+     * @return A thenable that resolves when the edit could be applied.
+     */
+    applyEdit(edit: WorkspaceEdit): Thenable<boolean>;
 }
 
 export const IWorkspaceService = Symbol('IWorkspaceService');
