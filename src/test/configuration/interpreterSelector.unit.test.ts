@@ -5,12 +5,14 @@ import * as assert from 'assert';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import { PathUtils } from '../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../client/common/platform/types';
+import { IPathUtils } from '../../client/common/types';
 import { IInterpreterQuickPickItem, InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
-import { IServiceContainer } from '../../client/ioc/types';
+import { IServiceContainer, IServiceManager } from '../../client/ioc/types';
 import { Architecture } from '../../utils/platform';
 
 const info: PythonInterpreter = {
@@ -45,10 +47,10 @@ suite('Interpreters - selector', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-
+    let serviceManager: IServiceManager;
     setup(() => {
         const cont = new Container();
-        const serviceManager = new ServiceManager(cont);
+        serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
 
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -77,37 +79,40 @@ suite('Interpreters - selector', () => {
         serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, commandManager.object);
     });
 
-    test('Suggestions', async () => {
-        const initial: PythonInterpreter[] = [
-            { displayName: '1', path: 'c:/path1/path1', type: InterpreterType.Unknown },
-            { displayName: '2', path: 'c:/path1/path1', type: InterpreterType.Unknown },
-            { displayName: '2', path: 'c:/path2/path2', type: InterpreterType.Unknown },
-            { displayName: '2 (virtualenv)', path: 'c:/path2/path2', type: InterpreterType.VirtualEnv },
-            { displayName: '3', path: 'c:/path2/path2', type: InterpreterType.Unknown },
-            { displayName: '4', path: 'c:/path4/path4', type: InterpreterType.Conda }
-        ].map(item => { return { ...info, ...item }; });
-        interpreterService
-            .setup(x => x.getInterpreters(TypeMoq.It.isAny()))
-            .returns(() => new Promise((resolve) => resolve(initial)));
+    [true, false].forEach(isWindows => {
+        test(`Suggestions (${isWindows} ? 'Windows' : 'Non-Windows')`, async () => {
+            serviceManager.addSingletonInstance<IPathUtils>(IPathUtils, new PathUtils(isWindows));
+            const initial: PythonInterpreter[] = [
+                { displayName: '1', path: 'c:/path1/path1', type: InterpreterType.Unknown },
+                { displayName: '2', path: 'c:/path1/path1', type: InterpreterType.Unknown },
+                { displayName: '2', path: 'c:/path2/path2', type: InterpreterType.Unknown },
+                { displayName: '2 (virtualenv)', path: 'c:/path2/path2', type: InterpreterType.VirtualEnv },
+                { displayName: '3', path: 'c:/path2/path2', type: InterpreterType.Unknown },
+                { displayName: '4', path: 'c:/path4/path4', type: InterpreterType.Conda }
+            ].map(item => { return { ...info, ...item }; });
+            interpreterService
+                .setup(x => x.getInterpreters(TypeMoq.It.isAny()))
+                .returns(() => new Promise((resolve) => resolve(initial)));
 
-        const selector = new InterpreterSelector(serviceContainer);
-        const actual = await selector.getSuggestions();
+            const selector = new InterpreterSelector(serviceContainer);
+            const actual = await selector.getSuggestions();
 
-        const expected: InterpreterQuickPickItem[] = [
-            new InterpreterQuickPickItem('1', 'c:/path1/path1'),
-            new InterpreterQuickPickItem('2', 'c:/path1/path1'),
-            new InterpreterQuickPickItem('2', 'c:/path2/path2'),
-            new InterpreterQuickPickItem('2 (virtualenv)', 'c:/path2/path2'),
-            new InterpreterQuickPickItem('3', 'c:/path2/path2'),
-            new InterpreterQuickPickItem('4', 'c:/path4/path4')
-        ];
+            const expected: InterpreterQuickPickItem[] = [
+                new InterpreterQuickPickItem('1', 'c:/path1/path1'),
+                new InterpreterQuickPickItem('2', 'c:/path1/path1'),
+                new InterpreterQuickPickItem('2', 'c:/path2/path2'),
+                new InterpreterQuickPickItem('2 (virtualenv)', 'c:/path2/path2'),
+                new InterpreterQuickPickItem('3', 'c:/path2/path2'),
+                new InterpreterQuickPickItem('4', 'c:/path4/path4')
+            ];
 
-        assert.equal(actual.length, expected.length, 'Suggestion lengths are different.');
-        for (let i = 0; i < expected.length; i += 1) {
-            assert.equal(actual[i].label, expected[i].label,
-                `Suggestion label is different at ${i}: exected '${expected[i].label}', found '${actual[i].label}'.`);
-            assert.equal(actual[i].path, expected[i].path,
-                `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${actual[i].path}'.`);
-        }
+            assert.equal(actual.length, expected.length, 'Suggestion lengths are different.');
+            for (let i = 0; i < expected.length; i += 1) {
+                assert.equal(actual[i].label, expected[i].label,
+                    `Suggestion label is different at ${i}: exected '${expected[i].label}', found '${actual[i].label}'.`);
+                assert.equal(actual[i].path, expected[i].path,
+                    `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${actual[i].path}'.`);
+            }
+        });
     });
 });
