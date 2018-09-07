@@ -296,7 +296,7 @@ suite('Import Sort Provider', () => {
             .verifiable(TypeMoq.Times.once());
         const expectedEdit = new WorkspaceEdit();
         editorUtils
-            .setup(e => e.getWorkspaceEditsFromPatch(TypeMoq.It.isValue('Hello'), TypeMoq.It.isValue('DIFF'), TypeMoq.It.isValue(uri)))
+            .setup(e => e.getWorkspaceEditsFromPatch(TypeMoq.It.isValue('Hello'), TypeMoq.It.isValue('DIFF'), TypeMoq.It.isAny()))
             .returns(() => {
                 console.log('yaya');
                 return expectedEdit;
