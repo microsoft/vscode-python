@@ -8,23 +8,20 @@ import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { AnacondaCompanyName, AnacondaDisplayName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvService, parseCondaInfo } from '../../client/interpreter/locators/services/condaEnvService';
 import { IServiceContainer } from '../../client/ioc/types';
-import { initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockState } from './mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 
 // tslint:disable-next-line:max-func-body-length
-suite('Interpreters from Conda Environmentsx', () => {
+suite('Interpreters from Conda Environments', () => {
     let ioc: UnitTestIocContainer;
     let logger: TypeMoq.IMock<ILogger>;
     let condaProvider: CondaEnvService;
     let condaService: TypeMoq.IMock<ICondaService>;
     let interpreterHelper: TypeMoq.IMock<InterpreterHelper>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-    suiteSetup(initialize);
-    setup(async () => {
-        await initializeTest();
+    setup(() => {
         initializeDI();
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
