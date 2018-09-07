@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import * as settings from '../../common/configSettings';
@@ -59,13 +58,7 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 
     private async suggestionToQuickPickItem(suggestion: PythonInterpreter, workspaceUri?: Uri): Promise<IInterpreterQuickPickItem> {
-        let detail = suggestion.path;
-        if (suggestion.path.startsWith(this.pathUtils.home)) {
-            detail = `~${path.sep}${path.relative(this.pathUtils.home, suggestion.path)}`;
-        }
-        if (workspaceUri && suggestion.path.startsWith(workspaceUri.fsPath)) {
-            detail = `.${path.sep}${path.relative(workspaceUri.fsPath, suggestion.path)}`;
-        }
+        const detail = this.pathUtils.getDisplayName(suggestion.path, this.pathUtils.home, workspaceUri ? workspaceUri.fsPath : undefined);
         const cachedPrefix = suggestion.cachedEntry ? '(cached) ' : '';
         return {
             // tslint:disable-next-line:no-non-null-assertion
@@ -89,13 +82,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         }
 
         const suggestions = await this.getSuggestions(wkspace);
-        let currentPythonPath = settings.PythonSettings.getInstance().pythonPath;
-        if (currentPythonPath.startsWith(this.pathUtils.home)) {
-            currentPythonPath = `~${path.sep}${path.relative(this.pathUtils.home, currentPythonPath)}`;
-        }
-        if (wkspace && currentPythonPath.startsWith(wkspace.fsPath)) {
-            currentPythonPath = `.${path.sep}${path.relative(wkspace.fsPath, currentPythonPath)}`;
-        }
+        const currentPythonPath = this.pathUtils.getDisplayName(settings.PythonSettings.getInstance().pythonPath, this.pathUtils.home, wkspace ? wkspace.fsPath : undefined);
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,

@@ -21,5 +21,14 @@ export class PathUtils implements IPathUtils {
     public basename(pathValue: string, ext?: string): string {
         return path.basename(pathValue, ext);
     }
+    public getDisplayName(pathValue: string, home?: string, cwd?: string): string {
+        if (home && pathValue.startsWith(home)) {
+            pathValue = `~${path.sep}${path.relative(home, pathValue)}`;
+        }
+        if (cwd && pathValue.startsWith(cwd)) {
+            pathValue = `.${path.sep}${path.relative(cwd, pathValue)}`;
+        }
+        return pathValue;
+    }
 
 }
