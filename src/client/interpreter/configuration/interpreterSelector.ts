@@ -58,7 +58,7 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 
     private async suggestionToQuickPickItem(suggestion: PythonInterpreter, workspaceUri?: Uri): Promise<IInterpreterQuickPickItem> {
-        const detail = this.pathUtils.getDisplayName(suggestion.path, this.pathUtils.home, workspaceUri ? workspaceUri.fsPath : undefined);
+        const detail = this.pathUtils.getDisplayName(suggestion.path, workspaceUri ? workspaceUri.fsPath : undefined);
         const cachedPrefix = suggestion.cachedEntry ? '(cached) ' : '';
         return {
             // tslint:disable-next-line:no-non-null-assertion
@@ -82,7 +82,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         }
 
         const suggestions = await this.getSuggestions(wkspace);
-        const currentPythonPath = this.pathUtils.getDisplayName(settings.PythonSettings.getInstance().pythonPath, this.pathUtils.home, wkspace ? wkspace.fsPath : undefined);
+        const currentPythonPath = this.pathUtils.getDisplayName(settings.PythonSettings.getInstance().pythonPath, wkspace ? wkspace.fsPath : undefined);
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
