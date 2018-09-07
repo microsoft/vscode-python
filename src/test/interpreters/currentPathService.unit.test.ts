@@ -57,7 +57,7 @@ suite('Interpreters CurrentPath Service', () => {
         const version = 'mockVersion';
         const envName = 'mockEnvName';
         interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version }));
-        virtualEnvironmentManager.setup(v => v.getEnvironmentName(TypeMoq.It.isAny())).returns(() => Promise.resolve(envName));
+        virtualEnvironmentManager.setup(v => v.getEnvironmentName(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(envName));
         virtualEnvironmentManager.setup(v => v.getEnvironmentType(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(InterpreterType.VirtualEnv));
 
         const execArgs = ['-c', 'import sys;print(sys.executable)'];
