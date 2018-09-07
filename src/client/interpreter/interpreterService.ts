@@ -12,7 +12,7 @@ import { IPythonPathUpdaterServiceManager } from './configuration/types';
 import {
     IInterpreterDisplay, IInterpreterHelper, IInterpreterLocatorService,
     IInterpreterService, INTERPRETER_LOCATOR_SERVICE,
-    PIPENV_SERVICE, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE
+    InterpreterType, PIPENV_SERVICE, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE
 } from './contracts';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
@@ -22,11 +22,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager;
     private readonly helper: IInterpreterHelper;
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
+    private readonly virtualEnvMgr: IVirtualEnvironmentManager;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         this.pythonPathUpdaterService = this.serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager);
+        this.virtualEnvMgr = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
     }
 
     public async refresh(resource?: Uri) {
@@ -44,7 +46,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
         const interpreters = await this.locator.getInterpreters(resource);
-        interpreters.forEach(item => item.displayName = this.getDisplayName(item));
+        await Promise.all(interpreters.map(async item => item.displayName = await this.getDisplayName(item, resource)));
         return interpreters;
     }
 
@@ -146,7 +148,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
      * @returns {string}
      * @memberof InterpreterService
      */
-    public getDisplayName(info: Partial<PythonInterpreter>): string {
+    public async getDisplayName(info: Partial<PythonInterpreter>, resource?: Uri): Promise<string> {
         const displayNameParts: string[] = ['Python'];
         const envSuffixParts: string[] = [];
 
@@ -155,6 +157,12 @@ export class InterpreterService implements Disposable, IInterpreterService {
         }
         if (info.version_info) {
             displayNameParts.push(getArchitectureDisplayName(info.architecture));
+        }
+        if (!info.envName && info.path && info.type && info.type === InterpreterType.PipEnv) {
+            // If we do not have the name of the environment, then try to get it again.
+            // This can happen based on the context (i.e. resource).
+            // I.e. we can determine if an environment is PipEnv only when giving it the right workspacec path (i.e. resource).
+            info.envName = await this.virtualEnvMgr.getEnvironmentName(info.path, resource);
         }
         if (info.envName && info.envName.length > 0) {
             envSuffixParts.push(info.envName);

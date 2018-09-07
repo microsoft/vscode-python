@@ -43,7 +43,7 @@ export class CurrentPathService extends CacheableLocatorService {
      * This is used by CacheableLocatorService.getInterpreters().
      */
     protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
-        return this.suggestionsFromKnownPaths();
+        return this.suggestionsFromKnownPaths(resource);
     }
 
     /**

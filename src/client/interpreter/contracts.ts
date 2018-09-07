@@ -81,7 +81,7 @@ export interface IInterpreterService {
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonInterpreter>;
     refresh(): Promise<void>;
     initialize(): void;
-    getDisplayName(interpreter: Partial<PythonInterpreter>): string;
+    getDisplayName(interpreter: Partial<PythonInterpreter>): Promise<string>;
 }
 
 export const IInterpreterDisplay = Symbol('IInterpreterDisplay');
