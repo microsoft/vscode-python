@@ -297,8 +297,13 @@ suite('Import Sort Provider', () => {
         const expectedEdit = new WorkspaceEdit();
         editorUtils
             .setup(e => e.getWorkspaceEditsFromPatch(TypeMoq.It.isValue('Hello'), TypeMoq.It.isValue('DIFF'), TypeMoq.It.isValue(uri)))
-            .returns(() => expectedEdit)
+            .returns(() => {
+                console.log('yaya');
+                return expectedEdit;
+            })
             .verifiable(TypeMoq.Times.once());
+        console.log('uri');
+        console.log(uri);
 
         const resp = await processService.object.exec('CUSTOM_ISORT', expectedArgs, { throwOnStdErr: true, token: undefined });
         console.log('resp');

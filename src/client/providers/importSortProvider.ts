@@ -72,7 +72,10 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             console.log(diffPatch);
             console.log(document.uri);
             console.log('document.uri');
-            return this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri);
+            const r = this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri);
+            console.log('r');
+            console.log(r);
+            return r;
         } finally {
             if (tmpFile) {
                 tmpFile.dispose();
