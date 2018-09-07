@@ -330,7 +330,7 @@
                             "name": "Python: Module",
                             "type": "python",
                             "request": "launch",
-                            "module": "module.name",
+                            "module": "enter-your-module-name-here",
                             "console": "integratedTerminal"
 
                         }
@@ -660,7 +660,7 @@
                         "name": "Python: Module",
                         "type": "python",
                         "request": "launch",
-                        "module": "module.name",
+                        "module": "enter-your-module-name-here",
                         "console": "integratedTerminal"
                     },
                     {
