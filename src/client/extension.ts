@@ -83,7 +83,7 @@ export async function activate(context: ExtensionContext) {
     interpreterManager.initialize();
     await interpreterManager.autoSetInterpreter();
 
-    serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).initilialize();
+    serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 

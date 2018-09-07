@@ -127,7 +127,7 @@ export class TerminalHelper implements ITerminalHelper {
                 terminal.sendText(command);
 
                 // Give the command some time to complete.
-                // Its been observed that sending commands too early will strip some text off.
+                // Its been observed that sending commands too early will strip some text off in VS Terminal.
                 const delay = (terminalShellType === TerminalShellType.powershell || TerminalShellType.powershellCore) ? 1000 : 500;
                 await sleep(delay);
             }

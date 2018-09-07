@@ -17,13 +17,13 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
     constructor(@inject(IServiceContainer) private container: IServiceContainer) {
         this.helper = container.get<ITerminalHelper>(ITerminalHelper);
     }
-    public initilialize() {
+    public register() {
         const manager = this.container.get<ITerminalManager>(ITerminalManager);
         const disposables = this.container.get<Disposable[]>(IDisposableRegistry);
         const disposable = manager.onDidOpenTerminal(this.activateTerminal, this);
         disposables.push(disposable);
     }
-    public activateTerminal(terminal: Terminal): Promise<void> {
+    private activateTerminal(terminal: Terminal): Promise<void> {
         return this.helper.activateEnvironmentInTerminal(terminal);
     }
 }
