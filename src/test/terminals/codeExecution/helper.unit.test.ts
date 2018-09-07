@@ -19,14 +19,13 @@ import { createDeferred } from '../../../client/common/helpers';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import {
-    ExecutionResult, IProcessService, IProcessServiceFactory
+    IProcessService, IProcessServiceFactory
 } from '../../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
-import { createDeferred } from '../../../utils/async';
 import { PYTHON_PATH } from '../../common';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
@@ -40,11 +39,6 @@ suite('Terminal - Code Execution Helper', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
-    let isPython2: boolean;
-
-    suiteSetup(async () => {
-        isPython2 = await isPy2(PYTHON_PATH);
-    });
 
     setup(() => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -81,10 +75,9 @@ suite('Terminal - Code Execution Helper', () => {
             .returns(async (file, args, options) => {
                 return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
             });
-        const normalizedCode = await helper.normalizeLines(source);
+        const normalizedCode = await helper.normalizeLines(source).then((val: string) => val.replace(/\r\r\n/g, '\r\n'));
 
-        const joiner: string = isPython2 ? '\n' : EOL; // python 2 will add /r/n to line endings
-        expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join(joiner);
+        expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join(EOL);
 
         expect(normalizedCode.length).to.be.equal(expectedSource.length);
         expect(normalizedCode).to.be.equal(expectedSource);
@@ -242,19 +235,4 @@ suite('Terminal - Code Execution Helper', () => {
         documentManager.verifyAll();
         document.verify(doc => doc.save(), TypeMoq.Times.never());
     });
-
-    async function isPy2(pythonPath: string): Promise<boolean> {
-        const deferral = createDeferred<boolean>();
-        const proc: ProcessService = new ProcessService(new BufferDecoder());
-        const execResult: ExecutionResult<string> = await proc.exec(
-            pythonPath,
-            ['-c', 'import sys; print(sys.version_info.major)'],
-            { mergeStdOutErr: true }
-        );
-
-        const verMajor: string = execResult.stdout.trim();
-        deferral.resolve(verMajor === '2');
-
-        return deferral.promise;
-    }
 });
