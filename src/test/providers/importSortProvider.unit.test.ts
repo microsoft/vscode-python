@@ -59,254 +59,263 @@ suite('Import Sort Provider', () => {
         sortProvider = new SortImportsEditingProvider(serviceContainer.object);
     });
 
-    test('Ensure command is registered', () => {
-        commandManager
-            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Sort_Imports), TypeMoq.It.isAny(), TypeMoq.It.isValue(sortProvider)))
-            .verifiable(TypeMoq.Times.once());
+    // test('Ensure command is registered', () => {
+    //     commandManager
+    //         .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Sort_Imports), TypeMoq.It.isAny(), TypeMoq.It.isValue(sortProvider)))
+    //         .verifiable(TypeMoq.Times.once());
 
-        sortProvider.registerCommands();
-        commandManager.verifyAll();
-    });
-    test('Ensure message is displayed when no doc is opened and uri isn\'t provided', async () => {
-        documentManager
-            .setup(d => d.activeTextEditor).returns(() => undefined)
-            .verifiable(TypeMoq.Times.once());
-        shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isValue('Please open a Python file to sort the imports.')))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.once());
-        await sortProvider.sortImports();
+    //     sortProvider.registerCommands();
+    //     commandManager.verifyAll();
+    // });
+    // test('Ensure message is displayed when no doc is opened and uri isn\'t provided', async () => {
+    //     documentManager
+    //         .setup(d => d.activeTextEditor).returns(() => undefined)
+    //         .verifiable(TypeMoq.Times.once());
+    //     shell
+    //         .setup(s => s.showErrorMessage(TypeMoq.It.isValue('Please open a Python file to sort the imports.')))
+    //         .returns(() => Promise.resolve(undefined))
+    //         .verifiable(TypeMoq.Times.once());
+    //     await sortProvider.sortImports();
 
-        shell.verifyAll();
-        documentManager.verifyAll();
-    });
-    test('Ensure message is displayed when uri isn\'t provided and current doc is non-python', async () => {
-        const mockEditor = TypeMoq.Mock.ofType<TextEditor>();
-        const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-        mockDoc.setup(d => d.languageId)
-            .returns(() => 'xyz')
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        mockEditor.setup(d => d.document)
-            .returns(() => mockDoc.object)
-            .verifiable(TypeMoq.Times.atLeastOnce());
-
-        documentManager
-            .setup(d => d.activeTextEditor)
-            .returns(() => mockEditor.object)
-            .verifiable(TypeMoq.Times.once());
-        shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isValue('Please open a Python file to sort the imports.')))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.once());
-        await sortProvider.sortImports();
-
-        mockEditor.verifyAll();
-        mockDoc.verifyAll();
-        shell.verifyAll();
-        documentManager.verifyAll();
-    });
-    test('Ensure document is opened', async () => {
-        const uri = Uri.file('TestDoc');
-
-        documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        documentManager
-            .setup(d => d.activeTextEditor)
-            .verifiable(TypeMoq.Times.never());
-        shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.never());
-        await sortProvider.sortImports(uri).catch(noop);
-
-        shell.verifyAll();
-        documentManager.verifyAll();
-    });
-    test('Ensure no edits are provided when there is only one line', async () => {
-        const uri = Uri.file('TestDoc');
-        const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-        // tslint:disable-next-line:no-any
-        mockDoc.setup((d: any) => d.then).returns(() => undefined);
-        mockDoc.setup(d => d.lineCount)
-            .returns(() => 1)
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
-            .returns(() => Promise.resolve(mockDoc.object))
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.never());
-        const edit = await sortProvider.sortImports(uri);
-
-        expect(edit).to.be.equal(undefined, 'not undefined');
-        shell.verifyAll();
-        documentManager.verifyAll();
-    });
-    test('Ensure no edits are provided when there are no lines', async () => {
-        const uri = Uri.file('TestDoc');
-        const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-        // tslint:disable-next-line:no-any
-        mockDoc.setup((d: any) => d.then).returns(() => undefined);
-        mockDoc.setup(d => d.lineCount)
-            .returns(() => 0)
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
-            .returns(() => Promise.resolve(mockDoc.object))
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.never());
-        const edit = await sortProvider.sortImports(uri);
-
-        expect(edit).to.be.equal(undefined, 'not undefined');
-        shell.verifyAll();
-        documentManager.verifyAll();
-    });
-    test('Ensure empty line is added when line does not end with an empty line', async () => {
-        const uri = Uri.file('TestDoc');
-        const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-        mockDoc.setup((d: any) => d.then).returns(() => undefined);
-        mockDoc.setup(d => d.lineCount)
-            .returns(() => 10)
-            .verifiable(TypeMoq.Times.atLeastOnce());
-
-        const lastLine = TypeMoq.Mock.ofType<TextLine>();
-        let editApplied: WorkspaceEdit | undefined;
-        lastLine.setup(l => l.text)
-            .returns(() => '1234')
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        lastLine.setup(l => l.range)
-            .returns(() => new Range(1, 0, 10, 1))
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        mockDoc.setup(d => d.lineAt(TypeMoq.It.isValue(9)))
-            .returns(() => lastLine.object)
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        documentManager
-            .setup(d => d.applyEdit(TypeMoq.It.isAny()))
-            .callback(e => editApplied = e)
-            .returns(() => Promise.resolve(true))
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
-            .returns(() => Promise.resolve(mockDoc.object))
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.never());
-
-        sortProvider.provideDocumentSortImportsEdits = () => Promise.resolve(undefined);
-        await sortProvider.sortImports(uri);
-
-        expect(editApplied).not.to.be.equal(undefined, 'Applied edit is undefined');
-        expect(editApplied!.entries()).to.be.lengthOf(1);
-        expect(editApplied!.entries()[0][1]).to.be.lengthOf(1);
-        expect(editApplied!.entries()[0][1][0].newText).to.be.equal(EOL);
-        shell.verifyAll();
-        documentManager.verifyAll();
-    });
-    test('Ensure no edits are provided when there is only one line (when using provider method)', async () => {
-        const uri = Uri.file('TestDoc');
-        const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-        mockDoc.setup((d: any) => d.then).returns(() => undefined);
-        mockDoc.setup(d => d.lineCount)
-            .returns(() => 1)
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
-            .returns(() => Promise.resolve(mockDoc.object))
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.never());
-        const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
-
-        expect(edit).to.be.equal(undefined, 'not undefined');
-        shell.verifyAll();
-        documentManager.verifyAll();
-    });
-    test('Ensure no edits are provided when there are no lines (when using provider method)', async () => {
-        const uri = Uri.file('TestDoc');
-        const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-        mockDoc.setup((d: any) => d.then).returns(() => undefined);
-        mockDoc.setup(d => d.lineCount)
-            .returns(() => 0)
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
-            .returns(() => Promise.resolve(mockDoc.object))
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.never());
-        const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
-
-        expect(edit).to.be.equal(undefined, 'not undefined');
-        shell.verifyAll();
-        documentManager.verifyAll();
-    });
-    // test('Ensure temporary file is created for sorting when document is dirty', async () => {
-    //     const uri = Uri.file('something.py');
+    //     shell.verifyAll();
+    //     documentManager.verifyAll();
+    // });
+    // test('Ensure message is displayed when uri isn\'t provided and current doc is non-python', async () => {
+    //     const mockEditor = TypeMoq.Mock.ofType<TextEditor>();
     //     const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-    //     let tmpFileDisposed = false;
-    //     const tmpFile: TemporaryFile = { filePath: 'TmpFile', dispose: () => tmpFileDisposed = true };
-    //     const processService = TypeMoq.Mock.ofType<ProcessService>();
-    //     processService.setup((d: any) => d.then).returns(() => undefined);
+    //     mockDoc.setup(d => d.languageId)
+    //         .returns(() => 'xyz')
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     mockEditor.setup(d => d.document)
+    //         .returns(() => mockDoc.object)
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+
+    //     documentManager
+    //         .setup(d => d.activeTextEditor)
+    //         .returns(() => mockEditor.object)
+    //         .verifiable(TypeMoq.Times.once());
+    //     shell
+    //         .setup(s => s.showErrorMessage(TypeMoq.It.isValue('Please open a Python file to sort the imports.')))
+    //         .returns(() => Promise.resolve(undefined))
+    //         .verifiable(TypeMoq.Times.once());
+    //     await sortProvider.sortImports();
+
+    //     mockEditor.verifyAll();
+    //     mockDoc.verifyAll();
+    //     shell.verifyAll();
+    //     documentManager.verifyAll();
+    // });
+    // test('Ensure document is opened', async () => {
+    //     const uri = Uri.file('TestDoc');
+
+    //     documentManager
+    //         .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     documentManager
+    //         .setup(d => d.activeTextEditor)
+    //         .verifiable(TypeMoq.Times.never());
+    //     shell
+    //         .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
+    //         .returns(() => Promise.resolve(undefined))
+    //         .verifiable(TypeMoq.Times.never());
+    //     await sortProvider.sortImports(uri).catch(noop);
+
+    //     shell.verifyAll();
+    //     documentManager.verifyAll();
+    // });
+    // test('Ensure no edits are provided when there is only one line', async () => {
+    //     const uri = Uri.file('TestDoc');
+    //     const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
+    //     // tslint:disable-next-line:no-any
     //     mockDoc.setup((d: any) => d.then).returns(() => undefined);
     //     mockDoc.setup(d => d.lineCount)
-    //         .returns(() => 10)
-    //         .verifiable(TypeMoq.Times.atLeastOnce());
-    //     mockDoc.setup(d => d.getText(TypeMoq.It.isAny()))
-    //         .returns(() => 'Hello')
-    //         .verifiable(TypeMoq.Times.atLeastOnce());
-    //     mockDoc.setup(d => d.isDirty)
-    //         .returns(() => true)
-    //         .verifiable(TypeMoq.Times.atLeastOnce());
-    //     mockDoc.setup(d => d.uri)
-    //         .returns(() => uri)
+    //         .returns(() => 1)
     //         .verifiable(TypeMoq.Times.atLeastOnce());
     //     documentManager
     //         .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
     //         .returns(() => Promise.resolve(mockDoc.object))
     //         .verifiable(TypeMoq.Times.atLeastOnce());
-    //     fs.setup(f => f.createTemporaryFile(TypeMoq.It.isValue('.py')))
-    //         .returns(() => Promise.resolve(tmpFile))
-    //         .verifiable(TypeMoq.Times.once());
-    //     fs.setup(f => f.writeFile(TypeMoq.It.isValue(tmpFile.filePath), TypeMoq.It.isValue('Hello')))
+    //     shell
+    //         .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
     //         .returns(() => Promise.resolve(undefined))
-    //         .verifiable(TypeMoq.Times.once());
-    //     pythonSettings.setup(s => s.sortImports)
-    //         .returns(() => { return { path: 'CUSTOM_ISORT', args: ['1', '2'] } as any as ISortImportSettings; })
-    //         .verifiable(TypeMoq.Times.once());
-    //     processServiceFactory.setup(p => p.create(TypeMoq.It.isAny()))
-    //         .returns(() => Promise.resolve(processService.object))
-    //         .verifiable(TypeMoq.Times.once());
+    //         .verifiable(TypeMoq.Times.never());
+    //     const edit = await sortProvider.sortImports(uri);
 
-    //     const expectedArgs = [tmpFile.filePath, '--diff', '1', '2'];
-    //     processService
-    //         .setup(p => p.exec(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined })))
-    //         .returns(() => Promise.resolve({ stdout: 'DIFF' }))
-    //         .verifiable(TypeMoq.Times.once());
-    //     const expectedEdit = new WorkspaceEdit();
-    //     editorUtils
-    //         .setup(e => e.getWorkspaceEditsFromPatch(TypeMoq.It.isValue('Hello'), TypeMoq.It.isValue('DIFF'), TypeMoq.It.isValue(uri)))
-    //         .returns(() => expectedEdit)
-    //         .verifiable(TypeMoq.Times.once());
-
-    //     const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
-
-    //     expect(edit).to.be.equal(expectedEdit);
-    //     expect(tmpFileDisposed).to.be.equal(true, 'Temporary file not disposed');
+    //     expect(edit).to.be.equal(undefined, 'not undefined');
     //     shell.verifyAll();
     //     documentManager.verifyAll();
     // });
+    // test('Ensure no edits are provided when there are no lines', async () => {
+    //     const uri = Uri.file('TestDoc');
+    //     const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
+    //     // tslint:disable-next-line:no-any
+    //     mockDoc.setup((d: any) => d.then).returns(() => undefined);
+    //     mockDoc.setup(d => d.lineCount)
+    //         .returns(() => 0)
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     documentManager
+    //         .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+    //         .returns(() => Promise.resolve(mockDoc.object))
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     shell
+    //         .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
+    //         .returns(() => Promise.resolve(undefined))
+    //         .verifiable(TypeMoq.Times.never());
+    //     const edit = await sortProvider.sortImports(uri);
+
+    //     expect(edit).to.be.equal(undefined, 'not undefined');
+    //     shell.verifyAll();
+    //     documentManager.verifyAll();
+    // });
+    // test('Ensure empty line is added when line does not end with an empty line', async () => {
+    //     const uri = Uri.file('TestDoc');
+    //     const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
+    //     mockDoc.setup((d: any) => d.then).returns(() => undefined);
+    //     mockDoc.setup(d => d.lineCount)
+    //         .returns(() => 10)
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+
+    //     const lastLine = TypeMoq.Mock.ofType<TextLine>();
+    //     let editApplied: WorkspaceEdit | undefined;
+    //     lastLine.setup(l => l.text)
+    //         .returns(() => '1234')
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     lastLine.setup(l => l.range)
+    //         .returns(() => new Range(1, 0, 10, 1))
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     mockDoc.setup(d => d.lineAt(TypeMoq.It.isValue(9)))
+    //         .returns(() => lastLine.object)
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     documentManager
+    //         .setup(d => d.applyEdit(TypeMoq.It.isAny()))
+    //         .callback(e => editApplied = e)
+    //         .returns(() => Promise.resolve(true))
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     documentManager
+    //         .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+    //         .returns(() => Promise.resolve(mockDoc.object))
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     shell
+    //         .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
+    //         .returns(() => Promise.resolve(undefined))
+    //         .verifiable(TypeMoq.Times.never());
+
+    //     sortProvider.provideDocumentSortImportsEdits = () => Promise.resolve(undefined);
+    //     await sortProvider.sortImports(uri);
+
+    //     expect(editApplied).not.to.be.equal(undefined, 'Applied edit is undefined');
+    //     expect(editApplied!.entries()).to.be.lengthOf(1);
+    //     expect(editApplied!.entries()[0][1]).to.be.lengthOf(1);
+    //     expect(editApplied!.entries()[0][1][0].newText).to.be.equal(EOL);
+    //     shell.verifyAll();
+    //     documentManager.verifyAll();
+    // });
+    // test('Ensure no edits are provided when there is only one line (when using provider method)', async () => {
+    //     const uri = Uri.file('TestDoc');
+    //     const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
+    //     mockDoc.setup((d: any) => d.then).returns(() => undefined);
+    //     mockDoc.setup(d => d.lineCount)
+    //         .returns(() => 1)
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     documentManager
+    //         .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+    //         .returns(() => Promise.resolve(mockDoc.object))
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     shell
+    //         .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
+    //         .returns(() => Promise.resolve(undefined))
+    //         .verifiable(TypeMoq.Times.never());
+    //     const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
+
+    //     expect(edit).to.be.equal(undefined, 'not undefined');
+    //     shell.verifyAll();
+    //     documentManager.verifyAll();
+    // });
+    // test('Ensure no edits are provided when there are no lines (when using provider method)', async () => {
+    //     const uri = Uri.file('TestDoc');
+    //     const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
+    //     mockDoc.setup((d: any) => d.then).returns(() => undefined);
+    //     mockDoc.setup(d => d.lineCount)
+    //         .returns(() => 0)
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     documentManager
+    //         .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+    //         .returns(() => Promise.resolve(mockDoc.object))
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
+    //     shell
+    //         .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
+    //         .returns(() => Promise.resolve(undefined))
+    //         .verifiable(TypeMoq.Times.never());
+    //     const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
+
+    //     expect(edit).to.be.equal(undefined, 'not undefined');
+    //     shell.verifyAll();
+    //     documentManager.verifyAll();
+    // });
+    test('Ensure temporary file is created for sorting when document is dirty', async () => {
+        const uri = Uri.file('something.py');
+        const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
+        let tmpFileDisposed = false;
+        const tmpFile: TemporaryFile = { filePath: 'TmpFile', dispose: () => tmpFileDisposed = true };
+        const processService = TypeMoq.Mock.ofType<ProcessService>();
+        processService.setup((d: any) => d.then).returns(() => undefined);
+        mockDoc.setup((d: any) => d.then).returns(() => undefined);
+        mockDoc.setup(d => d.lineCount)
+            .returns(() => 10)
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        mockDoc.setup(d => d.getText(TypeMoq.It.isAny()))
+            .returns(() => 'Hello')
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        mockDoc.setup(d => d.isDirty)
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        mockDoc.setup(d => d.uri)
+            .returns(() => uri)
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        documentManager
+            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+            .returns(() => Promise.resolve(mockDoc.object))
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        fs.setup(f => f.createTemporaryFile(TypeMoq.It.isValue('.py')))
+            .returns(() => Promise.resolve(tmpFile))
+            .verifiable(TypeMoq.Times.once());
+        fs.setup(f => f.writeFile(TypeMoq.It.isValue(tmpFile.filePath), TypeMoq.It.isValue('Hello')))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.once());
+        pythonSettings.setup(s => s.sortImports)
+            .returns(() => { return { path: 'CUSTOM_ISORT', args: ['1', '2'] } as any as ISortImportSettings; })
+            .verifiable(TypeMoq.Times.once());
+        processServiceFactory.setup(p => p.create(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(processService.object))
+            .verifiable(TypeMoq.Times.once());
+
+        const expectedArgs = [tmpFile.filePath, '--diff', '1', '2'];
+        processService
+            .setup(p => p.exec(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined })))
+            .returns(() => Promise.resolve({ stdout: 'DIFF' }))
+            .verifiable(TypeMoq.Times.once());
+        const expectedEdit = new WorkspaceEdit();
+        editorUtils
+            .setup(e => e.getWorkspaceEditsFromPatch(TypeMoq.It.isValue('Hello'), TypeMoq.It.isValue('DIFF'), TypeMoq.It.isValue(uri)))
+            .returns(() => expectedEdit)
+            .verifiable(TypeMoq.Times.once());
+
+        const resp = await processService.object.exec('CUSTOM_ISORT', expectedArgs, { throwOnStdErr: true, token: undefined });
+        console.log('resp');
+        console.log(resp);
+        const ps = await processServiceFactory.object.create();
+        console.log('ps');
+        console.log(ps);
+        const resp2 = await ps.exec('CUSTOM_ISORT', expectedArgs, { throwOnStdErr: true, token: undefined });
+        console.log('resp2');
+        console.log(resp2);
+        const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
+
+        expect(edit).to.be.equal(expectedEdit);
+        expect(tmpFileDisposed).to.be.equal(true, 'Temporary file not disposed');
+        shell.verifyAll();
+        documentManager.verifyAll();
+    });
     // test('Ensure temporary file is created for sorting when document is dirty (with custom isort path)', async () => {
     //     const uri = Uri.file('something.py');
     //     const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
