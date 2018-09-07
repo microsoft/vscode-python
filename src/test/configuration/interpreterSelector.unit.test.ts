@@ -2,17 +2,15 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPathUtils } from '../../client/common/types';
 import { IInterpreterQuickPickItem, InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
+import { IInterpreterComparer } from '../../client/interpreter/configuration/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
-import { ServiceContainer } from '../../client/ioc/container';
-import { ServiceManager } from '../../client/ioc/serviceManager';
-import { IServiceContainer, IServiceManager } from '../../client/ioc/types';
+import { IServiceContainer } from '../../client/ioc/types';
 import { Architecture } from '../../utils/platform';
 
 const info: PythonInterpreter = {
@@ -41,30 +39,21 @@ class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
 
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters - selector', () => {
-    let serviceContainer: IServiceContainer;
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-    let serviceManager: IServiceManager;
     setup(() => {
-        const cont = new Container();
-        serviceManager = new ServiceManager(cont);
-        serviceContainer = new ServiceContainer(cont);
+        const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+        const comparer = TypeMoq.Mock.ofType<IInterpreterComparer>();
+        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
-        serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
-
-        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
-
-        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
-
-        documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
-        serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, documentManager.object);
-
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         fileSystem
             .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
@@ -73,15 +62,23 @@ suite('Interpreters - selector', () => {
             .setup(x => x.getRealPath(TypeMoq.It.isAnyString()))
             .returns((a: string) => new Promise(resolve => resolve(a)));
 
-        serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
+        comparer.setup(c => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => 0);
 
-        const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
-        serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, commandManager.object);
+        serviceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspace.object);
+        serviceContainer.setup(c => c.get(IApplicationShell)).returns(() => appShell.object);
+        serviceContainer.setup(c => c.get(IInterpreterService)).returns(() => interpreterService.object);
+        serviceContainer.setup(c => c.get(IDocumentManager)).returns(() => documentManager.object);
+        serviceContainer.setup(c => c.get(IFileSystem)).returns(() => fileSystem.object);
+        serviceContainer.setup(c => c.get(IInterpreterComparer)).returns(() => comparer.object);
+        serviceContainer.setup(c => c.get(ICommandManager)).returns(() => commandManager.object);
     });
 
     [true, false].forEach(isWindows => {
         test(`Suggestions (${isWindows} ? 'Windows' : 'Non-Windows')`, async () => {
-            serviceManager.addSingletonInstance<IPathUtils>(IPathUtils, new PathUtils(isWindows));
+            serviceContainer
+                .setup(c => c.get(IPathUtils))
+                .returns(() => new PathUtils(isWindows));
+
             const initial: PythonInterpreter[] = [
                 { displayName: '1', path: 'c:/path1/path1', type: InterpreterType.Unknown },
                 { displayName: '2', path: 'c:/path1/path1', type: InterpreterType.Unknown },
@@ -94,7 +91,7 @@ suite('Interpreters - selector', () => {
                 .setup(x => x.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() => new Promise((resolve) => resolve(initial)));
 
-            const selector = new InterpreterSelector(serviceContainer);
+            const selector = new InterpreterSelector(serviceContainer.object);
             const actual = await selector.getSuggestions();
 
             const expected: InterpreterQuickPickItem[] = [
