@@ -104,6 +104,7 @@ export interface IPathUtils {
     readonly home: string;
     getPathVariableName(): 'Path' | 'PATH';
     basename(pathValue: string, ext?: string): string;
+    getDisplayName(pathValue: string, home?: string, cwd?: string): string;
 }
 
 export const IRandom = Symbol('IRandom');
