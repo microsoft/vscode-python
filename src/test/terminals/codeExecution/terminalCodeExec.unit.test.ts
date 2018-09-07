@@ -85,7 +85,6 @@ suite('Terminal - Code Execution', () => {
                     break;
                 }
             }
-            // replExecutor = new TerminalCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, disposables, platform.object);
         });
 
         suite(`${testSuiteName} (validation of title)`, () => {
@@ -116,7 +115,9 @@ suite('Terminal - Code Execution', () => {
             });
         });
 
-        suite(testSuiteName, () => {
+        suite(testSuiteName, async function () {
+            // tslint:disable-next-line:no-invalid-this
+            this.timeout(5000); // Activation of terminals take some time (there's a delay in the code to account for VSC Terminal issues).
             setup(() => {
                 terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => terminalService.object);
             });
@@ -308,7 +309,7 @@ suite('Terminal - Code Execution', () => {
                 terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.once());
             });
 
-            test('Ensure repl is re-initialized when temrinal is closed', async () => {
+            test('Ensure repl is re-initialized when terminal is closed', async () => {
                 const pythonPath = 'usr/bin/python1234';
                 const terminalArgs = ['-a', 'b', 'c'];
                 platform.setup(p => p.isWindows).returns(() => false);
