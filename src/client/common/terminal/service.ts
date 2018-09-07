@@ -20,7 +20,7 @@ export class TerminalService implements ITerminalService, Disposable {
     private terminalManager: ITerminalManager;
     private terminalHelper: ITerminalHelper;
     public get onDidCloseTerminal(): Event<void> {
-        return this.terminalClosed.event;
+        return this.terminalClosed.event.bind(this.terminalClosed);
     }
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         private resource?: Uri,

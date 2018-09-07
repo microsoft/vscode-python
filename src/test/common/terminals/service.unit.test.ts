@@ -126,36 +126,47 @@ suite('Terminal Service', () => {
 
     test('Ensure terminal is activated once after creation', async () => {
         service = new TerminalService(mockServiceContainer.object);
-        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
-        terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
-        terminalHelper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(['activation Command']));
-        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+        terminalHelper
+            .setup(h => h.getTerminalShellPath()).returns(() => '')
+            .verifiable(TypeMoq.Times.once());
+        terminalHelper
+            .setup(h => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
+        terminalManager
+            .setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object)
+            .verifiable(TypeMoq.Times.atLeastOnce());
 
         await service.show();
         await service.show();
         await service.show();
         await service.show();
 
-        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(6));
-        terminal.verify(t => t.sendText(TypeMoq.It.isValue('activation Command')), TypeMoq.Times.exactly(1));
+        terminalHelper.verifyAll();
+        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
     });
 
     test('Ensure terminal is activated once before sending text', async () => {
         service = new TerminalService(mockServiceContainer.object);
         const textToSend = 'Some Text';
-        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
-        terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
-        terminalHelper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(['activation Command']));
-        terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+        terminalHelper
+            .setup(h => h.getTerminalShellPath()).returns(() => '')
+            .verifiable(TypeMoq.Times.once());
+        terminalHelper
+            .setup(h => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
+        terminalManager
+            .setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object)
+            .verifiable(TypeMoq.Times.atLeastOnce());
 
         await service.sendText(textToSend);
         await service.sendText(textToSend);
         await service.sendText(textToSend);
         await service.sendText(textToSend);
 
-        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(6));
-        terminal.verify(t => t.sendText(TypeMoq.It.isValue('activation Command')), TypeMoq.Times.exactly(1));
-        terminal.verify(t => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(4));
+        terminalHelper.verifyAll();
+        terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
     });
 
     test('Ensure close event is not fired when another terminal is closed', async () => {
@@ -168,7 +179,7 @@ suite('Terminal Service', () => {
             return { dispose: () => { } };
         });
         service = new TerminalService(mockServiceContainer.object);
-        service.onDidCloseTerminal(() => eventFired = true);
+        service.onDidCloseTerminal(() => eventFired = true, service);
         terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
         terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
