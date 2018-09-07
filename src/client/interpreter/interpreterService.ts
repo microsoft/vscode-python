@@ -137,15 +137,18 @@ export class InterpreterService implements Disposable, IInterpreterService {
             displayName
         };
     }
-    public getDisplayName(info: Partial<PythonInterpreter>): string {
-        const displayNameParts: string[] = [];
-        const envSuffixParts: string[] = [];
 
-        if (info.companyDisplayName && info.companyDisplayName.length > 0) {
-            displayNameParts.push(info.companyDisplayName.trim());
-        } else {
-            displayNameParts.push('Python');
-        }
+    /**
+     * Gets the display name of an interpreter.
+     * The format is `Python <Version> <bitness> (<env name>: <env type>)`
+     * E.g. `Python 3.5.1 32-bit (myenv2: virtualenv)`
+     * @param {Partial<PythonInterpreter>} info
+     * @returns {string}
+     * @memberof InterpreterService
+     */
+    public getDisplayName(info: Partial<PythonInterpreter>): string {
+        const displayNameParts: string[] = ['Python'];
+        const envSuffixParts: string[] = [];
 
         if (info.version_info && info.version_info.length > 0) {
             displayNameParts.push(info.version_info.slice(0, 3).join('.'));

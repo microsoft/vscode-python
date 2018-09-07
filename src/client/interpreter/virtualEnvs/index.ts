@@ -32,8 +32,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
         const grandParentDirName = path.basename(path.dirname(path.dirname(pythonPath)));
         if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(pythonPath, workspaceUri.fsPath)) {
-            // In pipenv, the folder name is suffixed with `-<some hash>`.
-            // So, to get the environment name, just drop the suffix starting with `-`.
+            // In pipenv, return the folder name of the environment.
             return grandParentDirName;
         }
 
