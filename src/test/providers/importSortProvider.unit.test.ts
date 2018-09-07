@@ -310,7 +310,8 @@ suite('Import Sort Provider', () => {
         console.log('resp2');
         console.log(resp2);
         const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
-
+        console.log('edit');
+        console.log(edit);
         expect(edit).to.be.equal(expectedEdit);
         expect(tmpFileDisposed).to.be.equal(true, 'Temporary file not disposed');
         shell.verifyAll();

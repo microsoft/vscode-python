@@ -66,7 +66,12 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
                 const processExeService = await this.pythonExecutionFactory.create({ resource: document.uri });
                 diffPatch = (await processExeService.exec([importScript].concat(args), { throwOnStdErr: true, token })).stdout;
             }
-
+            console.log('document.getText()');
+            console.log(document.getText());
+            console.log('diffPatch');
+            console.log(diffPatch);
+            console.log(document.uri);
+            console.log('document.uri');
             return this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri);
         } finally {
             if (tmpFile) {
