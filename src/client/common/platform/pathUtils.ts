@@ -22,11 +22,11 @@ export class PathUtils implements IPathUtils {
         return path.basename(pathValue, ext);
     }
     public getDisplayName(pathValue: string, cwd?: string): string {
-        if (pathValue.startsWith(this.home)) {
-            pathValue = `~${path.sep}${path.relative(this.home, pathValue)}`;
-        }
         if (cwd && pathValue.startsWith(cwd)) {
             pathValue = `.${path.sep}${path.relative(cwd, pathValue)}`;
+        }
+        if (pathValue.startsWith(this.home)) {
+            pathValue = `~${path.sep}${path.relative(this.home, pathValue)}`;
         }
         return pathValue;
     }

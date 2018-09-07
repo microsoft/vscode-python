@@ -31,9 +31,9 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
         const grandParentDirName = path.basename(path.dirname(path.dirname(pythonPath)));
-        if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(pythonPath, workspaceUri.fsPath)) {
-            // In pipenv, return the folder name of the environment.
-            return grandParentDirName;
+        if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath)) {
+            // In pipenv, return the folder name of the workspace.
+            return path.basename(workspaceUri.fsPath);
         }
 
         // https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
@@ -70,7 +70,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders![0].uri : undefined;
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
-        if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(pythonPath, workspaceUri.fsPath)) {
+        if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath)) {
             return InterpreterType.PipEnv;
         }
 
