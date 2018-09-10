@@ -68,7 +68,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         interpreters = await virtualEnvInterpreterProvider.getInterpreters(activeWorkspace.folderUri);
         const workspacePathUpper = activeWorkspace.folderUri.fsPath.toUpperCase();
 
-        const interpretersInWorkspace = interpreters.filter(interpreter => interpreter.path.toUpperCase().startsWith(workspacePathUpper));
+        const interpretersInWorkspace = interpreters.filter(interpreter => Uri.file(interpreter.path).fsPath.toUpperCase().startsWith(workspacePathUpper));
         if (interpretersInWorkspace.length === 0) {
             return;
         }

@@ -192,7 +192,7 @@ suite('Interpreters service', () => {
         expect(pp!).to.be.equal(pythonPath, 'invalid Python path');
         expect(confTarget).to.be.equal(target, 'invalid configuration target');
         expect(trigger).to.be.equal('load', 'invalid trigger');
-        expect(wks.fsPath).to.be.equal(wksFolder, 'invalid workspace Uri');
+        expect(wks.fsPath).to.be.equal(Uri.file(wksFolder).fsPath, 'invalid workspace Uri');
     }
 
     function setupWorkspace(folder: string) {
