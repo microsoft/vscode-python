@@ -83,7 +83,7 @@ suite('Virtual environments', () => {
         const paths = pathProvider.getSearchPaths(Uri.file(''));
 
         const homedir = os.homedir();
-        const expected = [path.join(homedir, 'foo'), 'root', path.join('root', '.direnv')];
+        const expected = [path.join(homedir, 'foo'), 'root', path.join('root', '.direnv')].map(item => Uri.file(item).fsPath);
         expect(paths).to.deep.equal(expected, 'Workspace venv folder search list does not match.');
     });
 });
