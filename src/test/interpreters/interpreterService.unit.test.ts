@@ -101,7 +101,7 @@ suite('Interpreters service', () => {
         });
         const interpreter: PythonInterpreter = {
             ...info,
-            path: path.join(path.sep, 'folder', 'py1', 'bin', 'python.exe'),
+            path: path.join('folder', 'py1', 'bin', 'python.exe'),
             type: InterpreterType.Unknown
         };
         setupLocators([interpreter], []);
@@ -151,7 +151,7 @@ suite('Interpreters service', () => {
         config.setup(x => x.inspect('pythonPath')).returns(() => {
             return { key: 'python' };
         });
-        const intPath = path.join(path.sep, 'root', 'under', 'bin', 'python.exe');
+        const intPath = path.join('root', 'under', 'bin', 'python.exe');
         const interpreter: PythonInterpreter = {
             ...info,
             path: intPath,
@@ -192,7 +192,7 @@ suite('Interpreters service', () => {
         expect(pp!).to.be.equal(pythonPath, 'invalid Python path');
         expect(confTarget).to.be.equal(target, 'invalid configuration target');
         expect(trigger).to.be.equal('load', 'invalid trigger');
-        expect(wks.fsPath).to.be.equal(`${path.sep}${wksFolder}`, 'invalid workspace Uri');
+        expect(wks.fsPath).to.be.equal(wksFolder, 'invalid workspace Uri');
     }
 
     function setupWorkspace(folder: string) {
