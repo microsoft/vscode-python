@@ -5,19 +5,20 @@
 
 import { inject, injectable } from 'inversify';
 import { getArchitectureDisplayName } from '../../common/platform/registry';
-import { IServiceContainer } from '../../ioc/types';
 import { IInterpreterHelper, PythonInterpreter } from '../contracts';
 import { IInterpreterComparer } from './types';
 
 @injectable()
 export class InterpreterComparer implements IInterpreterComparer {
-    private readonly interpreterHelper: IInterpreterHelper;
-
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-        this.interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
+    constructor(@inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper) {
     }
     public compare(a: PythonInterpreter, b: PythonInterpreter): number {
-        return this.getSortName(a) > this.getSortName(b) ? 1 : -1;
+        const nameA = this.getSortName(a);
+        const nameB = this.getSortName(b);
+        if (nameA === nameB) {
+            return 0;
+        }
+        return nameA > nameB ? 1 : -1;
     }
     private getSortName(info: PythonInterpreter): string {
         const sortNameParts: string[] = [];
@@ -31,7 +32,7 @@ export class InterpreterComparer implements IInterpreterComparer {
         if (info.version_info && info.version_info.length > 0) {
             sortNameParts.push(info.version_info.slice(0, 3).join('.'));
         }
-        if (info.version_info) {
+        if (info.architecture) {
             sortNameParts.push(getArchitectureDisplayName(info.architecture));
         }
         if (info.companyDisplayName && info.companyDisplayName.length > 0) {
