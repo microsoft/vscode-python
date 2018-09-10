@@ -14,7 +14,11 @@ import { ITestResultDisplay } from '../types';
 @injectable()
 export class TestResultDisplay implements ITestResultDisplay {
     private statusBar: StatusBarItem;
+    private discoverCounter = 0;
+    private ticker = ['|', '/', '-', '|', '/', '-', '\\'];
+    private progressTimeout;
     private _enabled: boolean = false;
+    private progressPrefix!: string;
     private readonly didChange = new EventEmitter<void>();
     private readonly appShell: IApplicationShell;
     private readonly testsHelper: ITestsHelper;
@@ -29,6 +33,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.testsHelper = serviceContainer.get<ITestsHelper>(ITestsHelper);
     }
     public dispose() {
+        this.clearProgressTicker();
         this.statusBar.dispose();
     }
     public get enabled() {
@@ -62,6 +67,8 @@ export class TestResultDisplay implements ITestResultDisplay {
     }
 
     private updateTestRunWithSuccess(tests: Tests, debug: boolean = false): Tests {
+        this.clearProgressTicker();
+
         // Treat errors as a special case, as we generally wouldn't have any errors
         const statusText: string[] = [];
         const toolTip: string[] = [];
@@ -100,6 +107,7 @@ export class TestResultDisplay implements ITestResultDisplay {
 
     // tslint:disable-next-line:no-any
     private updateTestRunWithFailure(reason: any): Promise<any> {
+        this.clearProgressTicker();
         this.statusBar.command = constants.Commands.Tests_View_UI;
         if (reason === CANCELLATION_REASON) {
             this.statusBar.text = '$(zap) Run Tests';
@@ -113,10 +121,24 @@ export class TestResultDisplay implements ITestResultDisplay {
     }
 
     private displayProgress(message: string, tooltip: string, command: string) {
-        this.statusBar.text = `$(stop) ${message} '$(icon~spin)'`;
+        this.progressPrefix = this.statusBar.text = `$(stop) ${message}`;
         this.statusBar.command = command;
         this.statusBar.tooltip = tooltip;
         this.statusBar.show();
+        this.clearProgressTicker();
+        this.progressTimeout = setInterval(() => this.updateProgressTicker(), 150);
+    }
+    private updateProgressTicker() {
+        const text = `${this.progressPrefix} ${this.ticker[this.discoverCounter % 7]}`;
+        this.discoverCounter += 1;
+        this.statusBar.text = text;
+    }
+    private clearProgressTicker() {
+        if (this.progressTimeout) {
+            clearInterval(this.progressTimeout);
+        }
+        this.progressTimeout = null;
+        this.discoverCounter = 0;
     }
 
     // tslint:disable-next-line:no-any
@@ -131,6 +153,7 @@ export class TestResultDisplay implements ITestResultDisplay {
     }
 
     private updateWithDiscoverSuccess(tests: Tests, quietMode: boolean = false) {
+        this.clearProgressTicker();
         const haveTests = tests && (tests.testFunctions.length > 0);
         this.statusBar.text = '$(zap) Run Tests';
         this.statusBar.tooltip = 'Run Tests';
@@ -152,6 +175,7 @@ export class TestResultDisplay implements ITestResultDisplay {
 
     // tslint:disable-next-line:no-any
     private updateWithDiscoverFailure(reason: any) {
+        this.clearProgressTicker();
         this.statusBar.text = '$(zap) Discover Tests';
         this.statusBar.tooltip = 'Discover Tests';
         this.statusBar.command = constants.Commands.Tests_Discover;
