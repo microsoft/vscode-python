@@ -75,12 +75,16 @@ suite('Terminal - Code Execution Helper', () => {
             .returns(async (file, args, options) => {
                 return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
             });
-        const normalizedCode = await helper.normalizeLines(source).then((val: string) => val.replace(/\r\r\n/g, '\r\n'));
+        const normalizedCode = await helper.normalizeLines(source);
 
         expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join(EOL);
 
-        expect(normalizedCode.length).to.be.equal(expectedSource.length);
-        expect(normalizedCode).to.be.equal(expectedSource);
+        expect(normalizedCode)
+            .to.be.equal(
+                expectedSource,
+                `Normalized code doesn't match.
+                Normalized length = ${normalizedCode.length},
+                expected length = ${expectedSource.length}`);
     }
     test('Ensure blank lines are NOT removed when code is not indented (simple)', async () => {
         const code = ['import sys', '', '', '', 'print(sys.executable)', '', 'print("1234")', '', '', 'print(1)', 'print(2)'];
