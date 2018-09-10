@@ -52,11 +52,10 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         const pythonPath = interpreter ? interpreter.path : this.configurationService.getSettings(workspaceFolder).pythonPath;
 
         this.statusBar.color = '';
-        this.statusBar.tooltip = pythonPath;
+        this.statusBar.tooltip = this.pathUtils.getDisplayName(pythonPath, workspaceFolder ? workspaceFolder.fsPath : undefined);
         if (interpreter) {
             // tslint:disable-next-line:no-non-null-assertion
             this.statusBar.text = interpreter.displayName!;
-            this.statusBar.tooltip = this.pathUtils.getDisplayName(pythonPath, workspaceFolder ? workspaceFolder.fsPath : undefined);
             this.statusBar.show();
             return;
         }
@@ -72,6 +71,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         }
 
         if (!interpreterExists && !details && interpreters.length > 0) {
+            this.statusBar.tooltip = '';
             this.statusBar.color = 'yellow';
             this.statusBar.text = '$(alert) Select Python Environment';
         }
