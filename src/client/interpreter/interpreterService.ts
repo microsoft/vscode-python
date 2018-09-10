@@ -153,7 +153,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (info.version_info && info.version_info.length > 0) {
             displayNameParts.push(info.version_info.slice(0, 3).join('.'));
         }
-        if (info.version_info) {
+        if (info.architecture) {
             displayNameParts.push(getArchitectureDisplayName(info.architecture));
         }
         if (!info.envName && info.path && info.type && info.type === InterpreterType.PipEnv) {
@@ -178,7 +178,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             `(${envSuffixParts.join(': ')})`;
         return `${displayNameParts.join(' ')} ${envSuffix}`.trim();
     }
-    private async shouldAutoSetInterpreter(): Promise<boolean> {
+    public async shouldAutoSetInterpreter(): Promise<boolean> {
         const activeWorkspace = this.helper.getActiveWorkspaceUri();
         if (!activeWorkspace) {
             return false;
