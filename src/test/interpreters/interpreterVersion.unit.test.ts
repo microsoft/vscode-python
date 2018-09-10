@@ -8,18 +8,13 @@ import { IProcessServiceFactory } from '../../client/common/process/types';
 import { IInterpreterVersionService } from '../../client/interpreter/contracts';
 import { PIP_VERSION_REGEX } from '../../client/interpreter/interpreterVersion';
 import { PYTHON_PATH } from '../common';
-import { initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 use(chaiAsPromised);
 
 suite('Interpreters display version', () => {
     let ioc: UnitTestIocContainer;
-    suiteSetup(initialize);
-    setup(async () => {
-        initializeDI();
-        await initializeTest();
-    });
+    setup(initializeDI);
     teardown(() => ioc.dispose());
 
     function initializeDI() {
