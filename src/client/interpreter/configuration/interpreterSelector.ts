@@ -1,12 +1,12 @@
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import * as settings from '../../common/configSettings';
 import { Commands } from '../../common/constants';
+import { IPathUtils } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IInterpreterService, IShebangCodeLensProvider, PythonInterpreter, WorkspacePythonPath } from '../contracts';
-import { IInterpreterSelector, IPythonPathUpdaterServiceManager } from './types';
+import { IInterpreterComparer, IInterpreterSelector, IPythonPathUpdaterServiceManager } from './types';
 
 export interface IInterpreterQuickPickItem extends QuickPickItem {
     path: string;
@@ -19,12 +19,16 @@ export class InterpreterSelector implements IInterpreterSelector {
     private readonly workspaceService: IWorkspaceService;
     private readonly applicationShell: IApplicationShell;
     private readonly documentManager: IDocumentManager;
+    private readonly pathUtils: IPathUtils;
+    private readonly interpreterComparer: IInterpreterComparer;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.applicationShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
+        this.pathUtils = this.serviceContainer.get<IPathUtils>(IPathUtils);
+        this.interpreterComparer = this.serviceContainer.get<IInterpreterComparer>(IInterpreterComparer);
 
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
         this.disposables.push(commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this)));
@@ -36,11 +40,9 @@ export class InterpreterSelector implements IInterpreterSelector {
 
     public async getSuggestions(resourceUri?: Uri) {
         const interpreters = await this.interpreterManager.getInterpreters(resourceUri);
-        // tslint:disable-next-line:no-non-null-assertion
-        interpreters.sort((a, b) => a.displayName! > b.displayName! ? 1 : -1);
+        interpreters.sort(this.interpreterComparer.compare.bind(this.interpreterComparer));
         return Promise.all(interpreters.map(item => this.suggestionToQuickPickItem(item, resourceUri)));
     }
-
     private async getWorkspaceToSetPythonPath(): Promise<WorkspacePythonPath | undefined> {
         if (!Array.isArray(this.workspaceService.workspaceFolders) || this.workspaceService.workspaceFolders.length === 0) {
             return undefined;
@@ -56,15 +58,11 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 
     private async suggestionToQuickPickItem(suggestion: PythonInterpreter, workspaceUri?: Uri): Promise<IInterpreterQuickPickItem> {
-        let detail = suggestion.path;
-        if (workspaceUri && suggestion.path.startsWith(workspaceUri.fsPath)) {
-            detail = `.${path.sep}${path.relative(workspaceUri.fsPath, suggestion.path)}`;
-        }
+        const detail = this.pathUtils.getDisplayName(suggestion.path, workspaceUri ? workspaceUri.fsPath : undefined);
         const cachedPrefix = suggestion.cachedEntry ? '(cached) ' : '';
         return {
             // tslint:disable-next-line:no-non-null-assertion
             label: suggestion.displayName!,
-            description: suggestion.companyDisplayName || '',
             detail: `${cachedPrefix}${detail}`,
             path: suggestion.path
         };
@@ -84,10 +82,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         }
 
         const suggestions = await this.getSuggestions(wkspace);
-        let currentPythonPath = settings.PythonSettings.getInstance().pythonPath;
-        if (wkspace && currentPythonPath.startsWith(wkspace.fsPath)) {
-            currentPythonPath = `.${path.sep}${path.relative(wkspace.fsPath, currentPythonPath)}`;
-        }
+        const currentPythonPath = this.pathUtils.getDisplayName(settings.PythonSettings.getInstance().pythonPath, wkspace ? wkspace.fsPath : undefined);
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,

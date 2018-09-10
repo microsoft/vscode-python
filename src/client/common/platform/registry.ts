@@ -18,7 +18,7 @@ export class RegistryImplementation implements IRegistry {
     }
 }
 
-export function getArchitectureDislayName(arch?: Architecture) {
+export function getArchitectureDisplayName(arch?: Architecture) {
     switch (arch) {
         case Architecture.x64:
             return '64-bit';

@@ -23,7 +23,7 @@ suite('Virtual environments', () => {
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let process: TypeMoq.IMock<ICurrentProcess>;
 
-    setup(async () => {
+    setup(() => {
         const cont = new Container();
         serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
@@ -68,7 +68,7 @@ suite('Virtual environments', () => {
     });
 
     test('Workspace search paths', async () => {
-        settings.setup(x => x.venvPath).returns(() => `~${path.sep}foo`);
+        settings.setup(x => x.venvPath).returns(() => path.join('~', 'foo'));
 
         const wsRoot = TypeMoq.Mock.ofType<WorkspaceFolder>();
         wsRoot.setup(x => x.uri).returns(() => Uri.file('root'));
@@ -83,7 +83,7 @@ suite('Virtual environments', () => {
         const paths = pathProvider.getSearchPaths(Uri.file(''));
 
         const homedir = os.homedir();
-        const expected = [path.join(homedir, 'foo'), `${path.sep}root`, `${path.sep}root${path.sep}.direnv`];
+        const expected = [path.join(homedir, 'foo'), 'root', path.join('root', '.direnv')].map(item => Uri.file(item).fsPath);
         expect(paths).to.deep.equal(expected, 'Workspace venv folder search list does not match.');
     });
 });

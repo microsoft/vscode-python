@@ -5,7 +5,7 @@
 import * as assert from 'assert';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
-import { IApplicationShell } from '../../client/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { PythonInstaller } from '../../client/common/installer/pythonInstallation';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
@@ -53,6 +53,7 @@ class TestContext {
             type: InterpreterType.Unknown,
             path: ''
         };
+        const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         interpreterService
             .setup(x => x.getActiveInterpreter(TypeMoq.It.isAny()))
@@ -65,10 +66,12 @@ class TestContext {
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, this.appShell.object);
         this.serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, this.locator.object);
         this.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
+        this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
         this.pythonInstaller = new PythonInstaller(this.serviceContainer);
 
         this.platform.setup(x => x.isMac).returns(() => isMac);
         this.platform.setup(x => x.isWindows).returns(() => !isMac);
+        workspaceService.setup(w => w.hasWorkspaceFolders).returns(() => false);
     }
 }
 
@@ -100,7 +103,7 @@ suite('Installation', () => {
             openUrlCalled = true;
             url = s;
         });
-        c.locator.setup(x => x.getInterpreters()).returns(() => Promise.resolve([]));
+        c.locator.setup(x => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
         const passed = await c.pythonInstaller.checkPythonInstallation(c.settings.object);
         assert.equal(passed, false, 'Python reported as present');
@@ -130,7 +133,7 @@ suite('Installation', () => {
             path: 'python',
             type: InterpreterType.Unknown
         };
-        c.locator.setup(x => x.getInterpreters()).returns(() => Promise.resolve([interpreter]));
+        c.locator.setup(x => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([interpreter]));
 
         const passed = await c.pythonInstaller.checkPythonInstallation(c.settings.object);
         assert.equal(passed, true, 'Default MacOS Python not accepted');

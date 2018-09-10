@@ -1,10 +1,8 @@
 import { inject, injectable } from 'inversify';
-import { EOL } from 'os';
-import * as path from 'path';
 import { Disposable, StatusBarAlignment, StatusBarItem, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IPathUtils } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, PythonInterpreter } from '../contracts';
 import { IVirtualEnvironmentManager } from '../virtualEnvs/types';
@@ -19,6 +17,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     private readonly configurationService: IConfigurationService;
     private readonly helper: IInterpreterHelper;
     private readonly workspaceService: IWorkspaceService;
+    private readonly pathUtils: IPathUtils;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -27,6 +26,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);
 
         const application = serviceContainer.get<IApplicationShell>(IApplicationShell);
         const disposableRegistry = serviceContainer.get<Disposable[]>(IDisposableRegistry);
@@ -52,34 +52,32 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         const pythonPath = interpreter ? interpreter.path : this.configurationService.getSettings(workspaceFolder).pythonPath;
 
         this.statusBar.color = '';
-        this.statusBar.tooltip = pythonPath;
+        this.statusBar.tooltip = this.pathUtils.getDisplayName(pythonPath, workspaceFolder ? workspaceFolder.fsPath : undefined);
         if (interpreter) {
             // tslint:disable-next-line:no-non-null-assertion
             this.statusBar.text = interpreter.displayName!;
-            if (interpreter.companyDisplayName) {
-                const toolTipSuffix = `${EOL}${interpreter.companyDisplayName}`;
-                this.statusBar.tooltip += toolTipSuffix;
-            }
-        } else {
-            await Promise.all([
-                this.fileSystem.fileExists(pythonPath),
-                this.helper.getInterpreterInformation(pythonPath).catch<Partial<PythonInterpreter>>(() => undefined),
-                this.getVirtualEnvironmentName(pythonPath).catch<string>(() => '')
-            ])
-                .then(([interpreterExists, details, virtualEnvName]) => {
-                    const defaultDisplayName = `${path.basename(pythonPath)} [Environment]`;
-                    const dislayNameSuffix = virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
-                    this.statusBar.text = `${details ? details.version : defaultDisplayName}${dislayNameSuffix}`;
+            this.statusBar.show();
+            return;
+        }
 
-                    if (!interpreterExists && !details && interpreters.length > 0) {
-                        this.statusBar.color = 'yellow';
-                        this.statusBar.text = '$(alert) Select Python Environment';
-                    }
-                });
+        const [interpreterExists, details, virtualEnvName] = await Promise.all([
+            this.fileSystem.fileExists(pythonPath),
+            this.helper.getInterpreterInformation(pythonPath).catch<Partial<PythonInterpreter> | undefined>(() => undefined),
+            this.getVirtualEnvironmentName(pythonPath, workspaceFolder).catch<string>(() => '')
+        ]);
+        if (details) {
+            const displayName = await this.interpreterService.getDisplayName({ ...details, envName: virtualEnvName });
+            this.statusBar.text = displayName;
+        }
+
+        if (!interpreterExists && !details && interpreters.length > 0) {
+            this.statusBar.tooltip = '';
+            this.statusBar.color = 'yellow';
+            this.statusBar.text = '$(alert) Select Python Environment';
         }
         this.statusBar.show();
     }
-    private async getVirtualEnvironmentName(pythonPath: string): Promise<string> {
-        return this.virtualEnvMgr.getEnvironmentName(pythonPath);
+    private async getVirtualEnvironmentName(pythonPath: string, resource?: Uri): Promise<string> {
+        return this.virtualEnvMgr.getEnvironmentName(pythonPath, resource);
     }
 }
