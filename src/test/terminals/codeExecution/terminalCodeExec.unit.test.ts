@@ -263,7 +263,7 @@ suite('Terminal - Code Execution', () => {
             });
 
             test('Ensure python path is returned as is, when building repl args on Windows', () => {
-                const pythonPath = PYTHON_PATH;
+                const pythonPath = PYTHON_PATH.replace(/\\/g, '/'); // replace all backslashes with forward slashes
                 const terminalArgs = ['-a', 'b', 'c'];
 
                 testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs);
