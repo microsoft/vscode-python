@@ -76,7 +76,7 @@ suite('Interpreters CurrentPath Service', () => {
         processService.verifyAll();
         fileSystem.verifyAll();
         expect(interpreters).to.be.of.length(2);
-        expect(interpreters).to.deep.include({ version, envName, displayName: `${version} (${envName})`, path: 'c:/root:python', type: InterpreterType.VirtualEnv });
-        expect(interpreters).to.deep.include({ version, envName, displayName: `${version} (${envName})`, path: 'c:/python3', type: InterpreterType.VirtualEnv });
+        expect(interpreters).to.deep.include({ version, envName, path: 'c:/root:python', type: InterpreterType.VirtualEnv });
+        expect(interpreters).to.deep.include({ version, envName, path: 'c:/python3', type: InterpreterType.VirtualEnv });
     });
 });

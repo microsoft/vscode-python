@@ -5,7 +5,7 @@ import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../client/common/platform/types';
 import { ILogger, IPersistentStateFactory } from '../../client/common/types';
 import { ICondaService, IInterpreterHelper, IInterpreterLocatorService, InterpreterType } from '../../client/interpreter/contracts';
-import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName } from '../../client/interpreter/locators/services/conda';
+import { AnacondaCompanyName, AnacondaCompanyNames } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import { IServiceContainer } from '../../client/ioc/types';
 import { MockState } from './mocks';
@@ -84,7 +84,6 @@ suite('Interpreters from Conda Environments Text File', () => {
 
         const expectedPythonPath = isWindows ? path.join(validPaths[0], 'python.exe') : path.join(validPaths[0], 'bin', 'python');
         assert.equal(interpreters.length, 2, 'Incorrect number of entries');
-        assert.equal(interpreters[0].displayName, `${AnacondaDisplayName} Mock Name (numpy)`, 'Incorrect display name');
         assert.equal(interpreters[0].companyDisplayName, AnacondaCompanyName, 'Incorrect display name');
         assert.equal(interpreters[0].path, expectedPythonPath, 'Incorrect path');
         assert.equal(interpreters[0].envPath, validPaths[0], 'Incorrect envpath');
@@ -114,7 +113,6 @@ suite('Interpreters from Conda Environments Text File', () => {
             const interpreters = await condaFileProvider.getInterpreters();
 
             assert.equal(interpreters.length, 1, 'Incorrect number of entries');
-            assert.equal(interpreters[0].displayName, `${AnacondaDisplayName} Mock Version`, 'Incorrect display name');
         }
     });
 });

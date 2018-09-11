@@ -11,6 +11,8 @@ import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs
 import { IServiceContainer } from '../../client/ioc/types';
 import { Architecture } from '../../utils/platform';
 
+// tslint:disable:no-any max-func-body-length
+
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,
     companyDisplayName: '',
@@ -24,7 +26,6 @@ const info: PythonInterpreter = {
     sysVersion: ''
 };
 
-// tslint:disable-next-line:max-func-body-length
 suite('Interpreters Display', () => {
     let applicationShell: TypeMoq.IMock<IApplicationShell>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
@@ -107,13 +108,11 @@ suite('Interpreters Display', () => {
         const displayName = 'This is the display name';
 
         setupWorkspaceFolder(resource, workspaceFolder);
-        interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve([]));
-        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(undefined));
-        interpreterService.setup(i => i.getDisplayName(TypeMoq.It.isAny())).returns(() => Promise.resolve(displayName));
-        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-        pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
-        virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
-        interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve({}));
+        const pythonInterpreter: PythonInterpreter = {
+            displayName,
+            path: pythonPath
+        } as any as PythonInterpreter;
+        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(pythonInterpreter));
 
         await interpreterDisplay.refresh(resource);
 
@@ -152,10 +151,6 @@ suite('Interpreters Display', () => {
         };
         fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
         virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
-        interpreterService
-            .setup(i => i.getInterpreters(TypeMoq.It.isValue(resource)))
-            .returns(() => Promise.resolve([]))
-            .verifiable(TypeMoq.Times.once());
         interpreterService
             .setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(resource)))
             .returns(() => Promise.resolve(activeInterpreter))

@@ -15,7 +15,8 @@ import { ConfigurationTarget, Disposable, TextDocument, TextEditor, Uri, Workspa
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { getArchitectureDisplayName } from '../../client/common/platform/registry';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../client/common/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../client/common/types';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
     IInterpreterDisplay,
@@ -65,6 +66,9 @@ suite('Interpreters service', () => {
     let interpreterDisplay: TypeMoq.IMock<IInterpreterDisplay>;
     let workspacePythonPath: TypeMoq.IMock<WorkspacePythonPath>;
     let virtualEnvMgr: TypeMoq.IMock<IVirtualEnvironmentManager>;
+    let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
+    let pythonExecutionFactory: TypeMoq.IMock<IPythonExecutionFactory>;
+    let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
     type ConfigValue<T> = { key: string; defaultValue?: T; globalValue?: T; workspaceValue?: T; workspaceFolderValue?: T };
 
     function setupSuite() {
@@ -81,8 +85,23 @@ suite('Interpreters service', () => {
         interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
         workspacePythonPath = TypeMoq.Mock.ofType<WorkspacePythonPath>();
         virtualEnvMgr = TypeMoq.Mock.ofType<IVirtualEnvironmentManager>();
+        persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
+        pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
+        pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
 
+        pythonExecutionService.setup((p: any) => p.then).returns(() => undefined);
         workspace.setup(x => x.getConfiguration('python', TypeMoq.It.isAny())).returns(() => config.object);
+        pythonExecutionFactory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
+        fileSystem.setup(fs => fs.getFileHash(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+        persistentStateFactory
+            .setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => {
+                const state = {
+                    updateValue: () => Promise.resolve()
+                };
+                return state as any;
+            });
+
         serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, []);
         serviceManager.addSingletonInstance<IInterpreterHelper>(IInterpreterHelper, helper.object);
         serviceManager.addSingletonInstance<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager, updater.object);
@@ -91,6 +110,9 @@ suite('Interpreters service', () => {
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
         serviceManager.addSingletonInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
         serviceManager.addSingletonInstance<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, virtualEnvMgr.object);
+        serviceManager.addSingletonInstance<IPersistentStateFactory>(IPersistentStateFactory, persistentStateFactory.object);
+        serviceManager.addSingletonInstance<IPythonExecutionFactory>(IPythonExecutionFactory, pythonExecutionFactory.object);
+        serviceManager.addSingletonInstance<IPythonExecutionService>(IPythonExecutionService, pythonExecutionService.object);
 
         pipenvLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         wksLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
@@ -199,10 +221,15 @@ suite('Interpreters service', () => {
                         .setup(v => v.getEnvironmentType(TypeMoq.It.isValue(pythonPath)))
                         .returns(() => Promise.resolve(InterpreterType.Unknown))
                         .verifiable(TypeMoq.Times.once());
+                    pythonExecutionService
+                        .setup(p => p.getExecutablePath())
+                        .returns(() => Promise.resolve(pythonPath))
+                        .verifiable(TypeMoq.Times.once());
 
                     const details = await service.getInterpreterDetails(pythonPath, resource);
 
                     locator.verifyAll();
+                    pythonExecutionService.verifyAll();
                     helper.verifyAll();
                     expect(details).to.be.equal(undefined, 'Not undefined');
                 });
