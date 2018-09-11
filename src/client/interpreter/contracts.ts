@@ -85,6 +85,13 @@ export interface IInterpreterService {
     shouldAutoSetInterpreter(): Promise<boolean>;
 }
 
+export const IActiveInterpreterService = Symbol('IActiveInterpreterService');
+export interface IActiveInterpreterService {
+    isValid(resource?: Uri): Promise<boolean>;
+    getPythonPath(resource?: Uri): Promise<string>;
+    getInterpreterDetails(resource?: Uri): Promise<PythonInterpreter | undefined>;
+    getDisplayName(resource?: Uri): Promise<string | undefined>;
+}
 export const IInterpreterDisplay = Symbol('IInterpreterDisplay');
 export interface IInterpreterDisplay {
     refresh(resource?: Uri): Promise<void>;
