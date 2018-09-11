@@ -6,7 +6,7 @@ import { PythonSettings } from '../common/configSettings';
 import { getArchitectureDisplayName } from '../common/platform/registry';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
-import { IConfigurationService, IDisposableRegistry } from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { IPythonPathUpdaterServiceManager } from './configuration/types';
 import {
@@ -16,10 +16,14 @@ import {
 } from './contracts';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
+const EXPITY_DURATION = 24 * 60 * 60 * 1000;
+
 @injectable()
 export class InterpreterService implements Disposable, IInterpreterService {
     private readonly locator: IInterpreterLocatorService;
     private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager;
+    private readonly fs: IFileSystem;
+    private readonly persistentStateFactory: IPersistentStateFactory;
     private readonly helper: IInterpreterHelper;
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
 
@@ -27,6 +31,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         this.pythonPathUpdaterService = this.serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager);
+        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
 
     public async refresh(resource?: Uri) {
@@ -44,7 +50,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
         const interpreters = await this.locator.getInterpreters(resource);
-        await Promise.all(interpreters.map(async item => item.displayName = await this.getDisplayName(item, resource)));
+        await Promise.all(interpreters
+            .filter(item => !item.displayName)
+            .map(async item => item.displayName = await this.getDisplayName(item, resource)));
         return interpreters;
     }
 
@@ -106,35 +114,52 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.getInterpreterDetails(fullyQualifiedPath, resource);
     }
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<PythonInterpreter | undefined> {
+        // If we don't have the fully qualified path, then get it.
+        if (path.basename(pythonPath) === pythonPath) {
+            const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            const pythonExecutionService = await pythonExecutionFactory.create({ resource });
+            pythonPath = await pythonExecutionService.getExecutablePath().catch(() => '');
+            // Python path is invalid or python isn't installed.
+            if (!pythonPath) {
+                return;
+            }
+        }
+
+        let fileHash = await this.fs.getFileHash(pythonPath).catch(() => '');
+        fileHash = fileHash ? fileHash : '';
+        const store = this.persistentStateFactory.createGlobalPersistentState<PythonInterpreter & { fileHash: string }>(`${pythonPath}.interpreter.details.v1`, undefined, EXPITY_DURATION);
+        if (store.value && fileHash && store.value.fileHash === fileHash) {
+            return store.value;
+        }
+
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         const interpreters = await this.getInterpreters(resource);
-        const interpreter = interpreters.find(i => fs.arePathsSame(i.path, pythonPath));
+        let interpreterInfo = interpreters.find(i => fs.arePathsSame(i.path, pythonPath));
+        if (!interpreterInfo) {
+            const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
+            const virtualEnvManager = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
+            const [info, type] = await Promise.all([
+                interpreterHelper.getInterpreterInformation(pythonPath),
+                virtualEnvManager.getEnvironmentType(pythonPath)
+            ]);
+            if (!info) {
+                return;
+            }
+            const details: Partial<PythonInterpreter> = {
+                ...(info as PythonInterpreter),
+                path: pythonPath,
+                type: type
+            };
 
-        if (interpreter) {
-            return interpreter;
+            const virtualEnvName = await virtualEnvManager.getEnvironmentName(pythonPath, resource);
+            interpreterInfo = {
+                ...(details as PythonInterpreter),
+                envName: virtualEnvName
+            };
+            interpreterInfo.displayName = await this.getDisplayName(interpreterInfo, resource);
         }
-        const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
-        const virtualEnvManager = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
-        const [info, type] = await Promise.all([
-            interpreterHelper.getInterpreterInformation(pythonPath),
-            virtualEnvManager.getEnvironmentType(pythonPath)
-        ]);
-        if (!info) {
-            return;
-        }
-        const details: Partial<PythonInterpreter> = {
-            ...(info as PythonInterpreter),
-            path: pythonPath,
-            type: type
-        };
 
-        const virtualEnvName = await virtualEnvManager.getEnvironmentName(pythonPath, resource);
-        const interpreterInfo = {
-            ...(details as PythonInterpreter),
-            envName: virtualEnvName
-        };
-
-        interpreterInfo.displayName = await this.getDisplayName(interpreterInfo, resource);
+        await store.updateValue({ ...interpreterInfo, path: pythonPath, fileHash });
         return interpreterInfo;
     }
 
@@ -147,6 +172,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
      * @memberof InterpreterService
      */
     public async getDisplayName(info: Partial<PythonInterpreter>, resource?: Uri): Promise<string> {
+        const store = this.persistentStateFactory.createGlobalPersistentState<string>(`${info.path}.interpreter.displayName.v1`, undefined, EXPITY_DURATION);
+        if (store.value) {
+            return store.value;
+        }
+
         const displayNameParts: string[] = ['Python'];
         const envSuffixParts: string[] = [];
 
@@ -176,7 +206,14 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         const envSuffix = envSuffixParts.length === 0 ? '' :
             `(${envSuffixParts.join(': ')})`;
-        return `${displayNameParts.join(' ')} ${envSuffix}`.trim();
+        const displayName = `${displayNameParts.join(' ')} ${envSuffix}`.trim();
+
+        // If dealing with cached entry, then do not store the display name in cache.
+        if (!info.cachedEntry) {
+            await store.updateValue(displayName);
+        }
+
+        return displayName;
     }
     public async shouldAutoSetInterpreter(): Promise<boolean> {
         const activeWorkspace = this.helper.getActiveWorkspaceUri();

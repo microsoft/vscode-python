@@ -10,7 +10,7 @@ import {
     PythonInterpreter
 } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
-import { AnacondaCompanyName, AnacondaCompanyNames, AnacondaDisplayName } from './conda';
+import { AnacondaCompanyName } from './conda';
 
 /**
  * Locate conda env interpreters based on the "conda environments file".
@@ -77,7 +77,6 @@ export class CondaEnvFileService extends CacheableLocatorService {
                         const environment = environments.find(item => this.fileSystem.arePathsSame(item.path, interpreter!.envPath!));
                         if (environment) {
                             interpreter.envName = environment!.name;
-                            interpreter.displayName = `${interpreter.displayName} (${environment!.name})`;
                         }
                     });
             }
@@ -102,29 +101,12 @@ export class CondaEnvFileService extends CacheableLocatorService {
         if (!details) {
             return;
         }
-        const versionWithoutCompanyName = this.stripCompanyName(details.version!);
         return {
-            displayName: `${AnacondaDisplayName} ${versionWithoutCompanyName}`,
             ...(details as PythonInterpreter),
             path: interpreter,
             companyDisplayName: AnacondaCompanyName,
             type: InterpreterType.Conda,
             envPath: environmentPath
         };
-    }
-
-    /**
-     * Remove the Anaconda company name from the given string.
-     */
-    private stripCompanyName(content: string) {
-        // Strip company name from version.
-        const startOfCompanyName = AnacondaCompanyNames.reduce((index, companyName) => {
-            if (index > 0) {
-                return index;
-            }
-            return content.indexOf(`:: ${companyName}`);
-        }, -1);
-
-        return startOfCompanyName > 0 ? content.substring(0, startOfCompanyName).trim() : content;
     }
 }

@@ -77,10 +77,8 @@ export class CurrentPathService extends CacheableLocatorService {
                 if (!details) {
                     return;
                 }
-                const displayName = `${details.version ? details.version : ''}${virtualEnvName.length > 0 ? ` (${virtualEnvName})` : ''}`;
                 return {
                     ...(details as PythonInterpreter),
-                    displayName,
                     envName: virtualEnvName,
                     path: interpreter,
                     type: type ? type : InterpreterType.Unknown

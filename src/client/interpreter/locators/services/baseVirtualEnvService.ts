@@ -75,17 +75,11 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
                 if (!details) {
                     return;
                 }
-                const virtualEnvSuffix = virtualEnvName.length ? virtualEnvName : this.getVirtualEnvironmentRootDirectory(interpreter);
                 return {
                     ...(details as PythonInterpreter),
-                    displayName: `${details.version!} (${virtualEnvSuffix})`.trim(),
                     envName: virtualEnvName,
                     type: type
                 };
             });
-    }
-    private getVirtualEnvironmentRootDirectory(interpreter: string) {
-        // Python interperters are always in a subdirectory of the environment folder.
-        return path.basename(path.dirname(path.dirname(interpreter)));
     }
 }
