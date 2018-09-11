@@ -8,12 +8,11 @@ import { commands, ConfigurationTarget, languages, Position, TextDocument, windo
 import { ConfigurationService } from '../../client/common/configuration/service';
 import '../../client/common/extensions';
 import { IConfigurationService } from '../../client/common/types';
-import { activated } from '../../client/extension';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../../client/ioc/types';
 import { IsLanguageServerTest } from '../constants';
-import { closeActiveWindows } from '../initialize';
+import { activateExtension, closeActiveWindows } from '../initialize';
 
 const wksPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'exclusions');
 const fileOne = path.join(wksPath, 'one.py');
@@ -43,8 +42,8 @@ suite('Exclude files (Language Server)', () => {
     teardown(closeActiveWindows);
 
     async function openFile(file: string): Promise<void> {
+        await activateExtension();
         textDocument = await workspace.openTextDocument(file);
-        await activated;
         await window.showTextDocument(textDocument);
         // Make sure LS completes file loading and analysis.
         // In test mode it awaits for the completion before trying

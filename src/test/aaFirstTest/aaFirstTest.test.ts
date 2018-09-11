@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { activated } from '../../client/extension';
+import { expect } from 'chai';
+import { extensions } from 'vscode';
 import { initialize } from '../initialize';
 
 // NOTE:
@@ -16,6 +17,6 @@ suite('Activate Extension', () => {
         await initialize();
     });
     test('Python extension has activated', async () => {
-        await activated;
+        expect(extensions.getExtension('ms-python.python')!.isActive).to.equal(true, 'Extension has not been activated');
     });
 });

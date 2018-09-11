@@ -2,8 +2,8 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { IExtensionApi } from '../client/api';
 import { PythonSettings } from '../client/common/configSettings';
-import { activated } from '../client/extension';
 import { clearPythonPathInWorkspaceFolder, PYTHON_PATH, resetGlobalPythonPathSetting, setPythonPathInWorkspaceRoot } from './common';
 
 export * from './constants';
@@ -27,11 +27,18 @@ export async function initializePython() {
 // tslint:disable-next-line:no-any
 export async function initialize(): Promise<any> {
     await initializePython();
-    // Opening a python file activates the extension.
-    await vscode.workspace.openTextDocument(dummyPythonFile);
-    await activated;
+    await activateExtension();
     // Dispose any cached python settings (used only in test env).
     PythonSettings.dispose();
+}
+export async function activateExtension() {
+    const extension = vscode.extensions.getExtension<IExtensionApi>('ms-python.python')!;
+    if (extension.isActive) {
+        return;
+    }
+    const api = await extension.activate();
+    // Wait untill its ready to use.
+    await api.ready;
 }
 // tslint:disable-next-line:no-any
 export async function initializeTest(): Promise<any> {
