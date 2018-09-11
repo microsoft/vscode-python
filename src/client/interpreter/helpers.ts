@@ -47,7 +47,7 @@ export class InterpreterHelper implements IInterpreterHelper {
         let fileHash = await this.fs.getFileHash(pythonPath).catch(() => '');
         fileHash = fileHash ? fileHash : '';
         const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(`${pythonPath}.v1`, undefined, EXPITY_DURATION);
-        if (store.value && (!fileHash || store.value.fileHash === fileHash)) {
+        if (store.value && fileHash && store.value.fileHash === fileHash) {
             return store.value;
         }
         const processService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ pythonPath });
