@@ -129,13 +129,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
         };
 
         const virtualEnvName = await virtualEnvManager.getEnvironmentName(pythonPath, resource);
-        const dislayNameSuffix = virtualEnvName.length > 0 ? ` (${virtualEnvName})` : '';
-        const displayName = `${details.version!}${dislayNameSuffix}`;
-        return {
+        const interpreterInfo = {
             ...(details as PythonInterpreter),
-            envName: virtualEnvName,
-            displayName
+            envName: virtualEnvName
         };
+
+        interpreterInfo.displayName = await this.getDisplayName(interpreterInfo, resource);
+        return interpreterInfo;
     }
 
     /**
