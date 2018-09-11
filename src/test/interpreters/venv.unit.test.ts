@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
+import { PlatformService } from '../../client/common/platform/platformService';
 import { IConfigurationService, ICurrentProcess, IPythonSettings } from '../../client/common/types';
 import { EnvironmentVariables } from '../../client/common/variables/types';
 import { GlobalVirtualEnvironmentsSearchPathProvider } from '../../client/interpreter/locators/services/globalVirtualEnvService';
@@ -83,7 +84,11 @@ suite('Virtual environments', () => {
         const paths = pathProvider.getSearchPaths(Uri.file(''));
 
         const homedir = os.homedir();
-        const expected = [path.join(homedir, 'foo'), 'root', path.join('root', '.direnv')].map(item => Uri.file(item).fsPath);
-        expect(paths).to.deep.equal(expected, 'Workspace venv folder search list does not match.');
+        const isWindows = new PlatformService();
+        const fixCase = (item: string) => isWindows ? item.toUpperCase() : item;
+        const expected = [path.join(homedir, 'foo'), 'root', path.join('root', '.direnv')]
+            .map(item => Uri.file(item).fsPath)
+            .map(fixCase);
+        expect(paths.map(fixCase)).to.deep.equal(expected, 'Workspace venv folder search list does not match.');
     });
 });
