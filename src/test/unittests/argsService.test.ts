@@ -30,7 +30,10 @@ suite('ArgsService: Common', () => {
                 let expectedWithArgs: string[] = [];
                 let expectedWithoutArgs: string[] = [];
 
-                suiteSetup(() => {
+                setup(function ()  {
+                    // Take the spawning of process into account.
+                    // tslint:disable-next-line:no-invalid-this
+                    this.timeout(5000);
                     const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
                     const logger = typeMoq.Mock.ofType<ILogger>();
 
