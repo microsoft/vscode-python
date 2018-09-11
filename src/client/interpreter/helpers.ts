@@ -65,7 +65,7 @@ export class InterpreterHelper implements IInterpreterHelper {
             return details;
         } catch (ex) {
             console.error(`Failed to get interpreter information for '${pythonPath}'`, ex);
-            return {};
+            return;
         }
     }
     public isMacDefaultPythonPath(pythonPath: string) {
