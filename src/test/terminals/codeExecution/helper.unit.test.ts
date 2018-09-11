@@ -15,7 +15,6 @@ import {
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import '../../../client/common/extensions';
-import { createDeferred } from '../../../client/common/helpers';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import {
@@ -27,8 +26,6 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { PYTHON_PATH } from '../../common';
-
-const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
 
 suite('Terminal - Code Execution Helper', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
@@ -64,9 +61,6 @@ suite('Terminal - Code Execution Helper', () => {
         document = TypeMoq.Mock.ofType<TextDocument>();
         editor = TypeMoq.Mock.ofType<TextEditor>();
         editor.setup(e => e.document).returns(() => document.object);
-
-        // tslint:disable-next-line:no-invalid-this
-        this.skip();
     });
 
     async function ensureBlankLinesAreRemoved(source: string, expectedSource: string) {
