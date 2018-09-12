@@ -129,7 +129,6 @@ export class WindowsRegistryService extends CacheableLocatorService {
                 // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
                 return {
                     ...(details as PythonInterpreter),
-                    architecture: arch,
                     path: executablePath,
                     version,
                     companyDisplayName: interpreterInfo.companyDisplayName,
