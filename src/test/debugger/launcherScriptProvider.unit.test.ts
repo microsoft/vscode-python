@@ -15,7 +15,11 @@ suite('Debugger - Launcher Script Provider', () => {
         console.log(launcherPath);
         console.log(EXTENSION_ROOT_DIR);
         const files = fs.readdirSync(path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental'), 'utf8');
-        files.forEach(item => console.log(item));
+        files.forEach(item => {
+            console.log(item);
+            const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', item);
+            console.log(fs.existsSync(file));
+        });
         expect(fs.existsSync(launcherPath)).to.be.equal(true, 'file does not exist');
     });
     test('Ensure debugger gets the non debug launcher from PythonTools directory', () => {
