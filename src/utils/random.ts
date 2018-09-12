@@ -4,6 +4,7 @@
 'use strict';
 
 import * as crypto from 'crypto';
+import { injectable } from 'inversify';
 
 function getRandom(): number {
     let num: number = 0;
@@ -20,8 +21,8 @@ export function getRandomBetween(min: number = 0, max: number = 10): number {
     return min + (randomVal * (max - min));
 }
 
+@injectable()
 export class Random {
-
     public getRandomInt(min: number = 0, max: number = 10): number {
         return getRandomBetween(min, max);
     }
