@@ -12,6 +12,10 @@ suite('Debugger - Launcher Script Provider', () => {
         const launcherPath = new DebuggerLauncherScriptProvider().getLauncherFilePath();
         const expectedPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd_launcher.py');
         expect(launcherPath).to.be.equal(expectedPath);
+        console.log(launcherPath);
+        console.log(EXTENSION_ROOT_DIR);
+        const files = fs.readdirSync(path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental'), 'utf8');
+        files.forEach(item => console.log(item));
         expect(fs.existsSync(launcherPath)).to.be.equal(true, 'file does not exist');
     });
     test('Ensure debugger gets the non debug launcher from PythonTools directory', () => {
