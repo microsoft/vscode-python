@@ -18,6 +18,7 @@ suite('Debugger - Launcher Script Provider', () => {
         files.forEach(item => {
             console.log(item);
             const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', item);
+            console.log(file);
             console.log(fs.existsSync(file));
         });
         expect(fs.existsSync(launcherPath)).to.be.equal(true, 'file does not exist');
