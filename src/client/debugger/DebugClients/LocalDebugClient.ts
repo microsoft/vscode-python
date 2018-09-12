@@ -43,7 +43,6 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         }
         return DebugServerStatus.Unknown;
     }
-    // tslint:disable-next-line:no-any
     constructor(args: LaunchRequestArguments, debugSession: DebugSession, private canLaunchTerminal: boolean, protected launcherScriptProvider: IDebugLauncherScriptProvider) {
         super(args, debugSession);
     }
