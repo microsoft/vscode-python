@@ -10,12 +10,12 @@ import { IDebugLauncherScriptProvider } from '../types';
 
 export class NoDebugLauncherScriptProvider implements IDebugLauncherScriptProvider {
     public getLauncherFilePath(): string {
-        return path.join(path.dirname(__dirname), '..', '..', '..', 'pythonFiles', 'PythonTools', 'visualstudio_py_launcher_nodebug.py');
+        return path.join(path.dirname(__dirname), '..', '..', '..', 'pythonFiles', 'experimental', 'ptvsd_launcher.py');
     }
 }
 
 export class DebuggerLauncherScriptProvider implements IDebugLauncherScriptProvider {
     public getLauncherFilePath(): string {
-        return path.join(path.dirname(__dirname), '..', '..', '..', 'pythonFiles', 'PythonTools', 'visualstudio_py_launcher.py');
+        return path.join(path.dirname(__dirname), '..', '..', '..', 'pythonFiles', 'experimental', 'ptvsd_launcher.py');
     }
 }
