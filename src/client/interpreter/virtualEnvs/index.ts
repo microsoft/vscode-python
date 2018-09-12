@@ -36,22 +36,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
             return path.basename(workspaceUri.fsPath);
         }
 
-        // https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
-        // hasattr(sys, 'real_prefix') works for virtualenv while
-        // '(hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))' works for venv
-        try {
-            const processService = await this.processServiceFactory.create();
-            const code = 'import sys\nif hasattr(sys, "real_prefix"):\n  print("virtualenv")\nelif hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix:\n  print("venv")';
-            const output = await processService.exec(pythonPath, ['-c', code]);
-            const envName = output.stdout.trim();
-            if (envName.length === 0) {
-                return '';
-            }
-            return envName.toUpperCase() === 'VIRTUALENV' ? grandParentDirName : envName;
-        } catch {
-            // do nothing.
-        }
-        return '';
+        return grandParentDirName;
     }
     public async getEnvironmentType(pythonPath: string, resource?: Uri): Promise<InterpreterType> {
         const dir = path.dirname(pythonPath);
