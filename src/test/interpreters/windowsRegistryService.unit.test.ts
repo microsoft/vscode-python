@@ -14,10 +14,11 @@ const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', '
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters from Windows Registry (unit)', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+    let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
-        const interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
+        interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         const pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper))).returns(() => interpreterHelper.object);
@@ -57,6 +58,9 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const registry = new MockRegistry(registryKeys, registryValues);
         const winRegistry = new WindowsRegistryService(registry, false, serviceContainer.object);
 
+        interpreterHelper.reset();
+        interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
+
         const interpreters = await winRegistry.getInterpreters();
 
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
@@ -75,6 +79,9 @@ suite('Interpreters from Windows Registry (unit)', () => {
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
         const winRegistry = new WindowsRegistryService(registry, false, serviceContainer.object);
+
+        interpreterHelper.reset();
+        interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
         const interpreters = await winRegistry.getInterpreters();
 
@@ -109,6 +116,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
         const winRegistry = new WindowsRegistryService(registry, false, serviceContainer.object);
+        interpreterHelper.reset();
+        interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
         const interpreters = await winRegistry.getInterpreters();
 
@@ -150,6 +159,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
         const winRegistry = new WindowsRegistryService(registry, false, serviceContainer.object);
+        interpreterHelper.reset();
+        interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
         const interpreters = await winRegistry.getInterpreters();
 
@@ -206,6 +217,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
         const winRegistry = new WindowsRegistryService(registry, false, serviceContainer.object);
+        interpreterHelper.reset();
+        interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
         const interpreters = await winRegistry.getInterpreters();
 
@@ -262,6 +275,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
         ];
         const registry = new MockRegistry(registryKeys, registryValues);
         const winRegistry = new WindowsRegistryService(registry, false, serviceContainer.object);
+        interpreterHelper.reset();
+        interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
         const interpreters = await winRegistry.getInterpreters();
 
