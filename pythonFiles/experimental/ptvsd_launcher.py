@@ -49,7 +49,7 @@ if sys.argv and sys.argv[0] == '-g':
 # Use bundled ptvsd or not?
 no_debug = False
 if sys.argv and sys.argv[0] == '--nodebug':
-    no_debug = False
+    no_debug = True
     del sys.argv[0]
 
 # set run_as mode appropriately
@@ -112,7 +112,7 @@ finally:
         sys.path.remove(ptvs_lib_path)
 
 if no_debug:
+    vspd.run(filename, port_num, run_as, *sys.argv[1:])
+else:
     # and start debugging
     vspd.debug(filename, port_num, '', '', run_as)
-else:
-    vspd.run(filename, port_num, run_as)
