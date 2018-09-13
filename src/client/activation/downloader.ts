@@ -7,8 +7,15 @@ import * as path from 'path';
 import * as requestProgress from 'request-progress';
 import { ProgressLocation, window } from 'vscode';
 import { createDeferred } from '../../utils/async';
+import { StopWatch } from '../../utils/stopWatch';
 import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
+import { sendTelemetryEvent, sendTelemetryWhenDone } from '../telemetry';
+import {
+    PYTHON_LANGUAGE_SERVER_DOWNLOADED, PYTHON_LANGUAGE_SERVER_ERROR,
+    PYTHON_LANGUAGE_SERVER_EXTRACT
+} from '../telemetry/constants';
+import { LanguageServerInstallTelemetry } from '../telemetry/types';
 import { PlatformData, PlatformName } from './platformData';
 import { IDownloadFileService } from './types';
 
@@ -27,6 +34,18 @@ export const DownloadLinks = {
     [PlatformName.Mac64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Mac64Bit}.${downloadVersion}${downloadFileExtension}`
 };
 
+export class LanguageServerDownloadResult {
+    public downloadTimeMs: number;
+    public unpackTimeMs: number;
+    public installTimeMs: number;
+
+    constructor() {
+        this.downloadTimeMs = 0;
+        this.unpackTimeMs = 0;
+        this.installTimeMs = 0;
+    }
+}
+
 export class LanguageServerDownloader {
     constructor(
         private readonly output: IOutputChannel,
@@ -42,16 +61,45 @@ export class LanguageServerDownloader {
     }
 
     public async downloadLanguageServer(context: IExtensionContext): Promise<void> {
+        const timer: StopWatch = new StopWatch();
+        const telemetryProps: LanguageServerInstallTelemetry = {
+            downloadSuccess: false,
+            extractSuccess: false
+        };
         const downloadUri = this.getDownloadUri();
-
         let localTempFilePath = '';
         try {
-            localTempFilePath = await this.downloadFile(downloadUri, 'Downloading Microsoft Python Language Server... ');
-            await this.unpackArchive(context.extensionPath, localTempFilePath);
-        } catch (err) {
-            this.output.appendLine('failed.');
-            this.output.appendLine(err);
-            throw new Error(err);
+            try {
+                await sendTelemetryWhenDone(
+                    PYTHON_LANGUAGE_SERVER_DOWNLOADED,
+                    this.downloadFile(downloadUri, 'Downloading Microsoft Python Language Server... ')
+                        .then((tmpFilePath: string) => {
+                            localTempFilePath = tmpFilePath;
+                            telemetryProps.downloadSuccess = true;
+                        }),
+                    timer,
+                    telemetryProps);
+            } catch (err) {
+                this.output.appendLine('failed.');
+                this.output.appendLine(err);
+                throw new Error(err);
+            }
+
+            timer.reset();
+            try {
+                await sendTelemetryWhenDone(
+                    PYTHON_LANGUAGE_SERVER_EXTRACT,
+                    this.unpackArchive(context.extensionPath, localTempFilePath)
+                        .then(() => {
+                            telemetryProps.extractSuccess = true;
+                        }),
+                    timer,
+                    telemetryProps);
+            } catch (err) {
+                this.output.appendLine('failed.');
+                this.output.appendLine(err);
+                throw new Error(err);
+            }
         } finally {
             if (localTempFilePath.length > 0) {
                 await this.fs.deleteFile(localTempFilePath);
