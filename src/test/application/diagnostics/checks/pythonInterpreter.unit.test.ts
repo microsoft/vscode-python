@@ -273,7 +273,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
         commandFactory.setup(f => f.createCommand(typemoq.It.isAny(),
-            typemoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch', options: 'code.visualstudio.com/docs/python/python-tutorial#_prerequisites' })))
+            typemoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch', options: 'https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites' })))
             .returns(() => cmdLearn)
             .verifiable(typemoq.Times.once());
         commandFactory.setup(f => f.createCommand(typemoq.It.isAny(),
