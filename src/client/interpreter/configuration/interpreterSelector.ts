@@ -1,6 +1,5 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
-import { noop } from '../../../utils/misc';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import * as settings from '../../common/configSettings';
 import { Commands } from '../../common/constants';
@@ -30,17 +29,15 @@ export class InterpreterSelector implements IInterpreterSelector {
         this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.pathUtils = this.serviceContainer.get<IPathUtils>(IPathUtils);
         this.interpreterComparer = this.serviceContainer.get<IInterpreterComparer>(IInterpreterComparer);
-
-        const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-        this.disposables.push(commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this)));
-        this.disposables.push(commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this)));
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
     }
 
     public initialize() {
-        noop();
+        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+        this.disposables.push(commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this)));
+        this.disposables.push(commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this)));
     }
 
     public async getSuggestions(resourceUri?: Uri) {
