@@ -166,6 +166,7 @@ export class PythonDebugger extends LoggingDebugSession {
     private onPythonProcessLoaded(pyThread?: IPythonThread) {
         if (this.entryResponse) {
             this.sendResponse(this.entryResponse);
+            this.entryResponse = undefined;
         }
         this.debuggerLoadedPromiseResolve();
         if (this.launchArgs && !this.launchArgs.console) {
