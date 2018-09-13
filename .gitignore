@@ -12,7 +12,7 @@ npm-debug.log
 !yarn.lock
 coverage/
 .vscode-test/**
-.venv
+.venv*/
 pythonFiles/experimental/ptvsd/**
 debug_coverage*/**
 languageServer/**
