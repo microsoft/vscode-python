@@ -6,5 +6,8 @@
 export enum DiagnosticCodes {
     InvalidEnvironmentPathVariableDiagnostic = 'InvalidEnvironmentPathVariableDiagnostic',
     InvalidDebuggerTypeDiagnostic = 'InvalidDebuggerTypeDiagnostic',
-    InvalidPythonPathInDebuggerDiagnostic = 'InvalidPythonPathInDebuggerDiagnostic'
+    InvalidPythonPathInDebuggerDiagnostic = 'InvalidPythonPathInDebuggerDiagnostic',
+    NoPythonInterpretersDiagnostic = 'NoPythonInterpretersDiagnostic',
+    MacInterpreterSelectedAndNoOtherInterpretersDiagnostic = 'MacInterpreterSelectedAndNoOtherInterpretersDiagnostic',
+    MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic = 'MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic'
 }

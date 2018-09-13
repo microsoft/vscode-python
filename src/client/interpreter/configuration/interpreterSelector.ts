@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
+import { noop } from '../../../utils/misc';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import * as settings from '../../common/configSettings';
 import { Commands } from '../../common/constants';
@@ -36,6 +37,10 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
+    }
+
+    public initialize() {
+        noop();
     }
 
     public async getSuggestions(resourceUri?: Uri) {
