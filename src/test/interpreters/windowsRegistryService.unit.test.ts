@@ -62,7 +62,6 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
         assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[0].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
-        assert.equal(interpreters[0].displayName, 'DisplayName.Tag1', 'Incorrect display name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'path1', 'one.exe'), 'Incorrect executable path');
         assert.equal(interpreters[0].version, 'Version.Tag1', 'Incorrect version');
     });
@@ -82,7 +81,6 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
         assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[0].companyDisplayName, 'Python Software Foundation', 'Incorrect company name');
-        assert.equal(interpreters[0].displayName, undefined, 'Incorrect display name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'path1', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[0].version, 'Tag1', 'Incorrect version');
     });
@@ -117,7 +115,6 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
         assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[0].companyDisplayName, 'Company One', 'Incorrect company name');
-        assert.equal(interpreters[0].displayName, undefined, 'Incorrect display name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'path1', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[0].version, 'Tag1', 'Incorrect version');
     });
@@ -159,19 +156,16 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters.length, 4, 'Incorrect number of entries');
         assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[0].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
-        assert.equal(interpreters[0].displayName, undefined, 'Incorrect display name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'path1', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[0].version, 'Tag1', 'Incorrect version');
 
         assert.equal(interpreters[1].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[1].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
-        assert.equal(interpreters[1].displayName, undefined, 'Incorrect display name');
         assert.equal(interpreters[1].path, path.join(environmentsPath, 'path2', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[1].version, 'Tag2', 'Incorrect version');
 
         assert.equal(interpreters[2].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[2].companyDisplayName, 'Company Two', 'Incorrect company name');
-        assert.equal(interpreters[2].displayName, undefined, 'Incorrect display name');
         assert.equal(interpreters[2].path, path.join(environmentsPath, 'conda', 'envs', 'numpy', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[2].version, 'Tag B', 'Incorrect version');
     });
@@ -218,19 +212,16 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters.length, 4, 'Incorrect number of entries');
         assert.equal(interpreters[0].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[0].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
-        assert.equal(interpreters[0].displayName, undefined, 'Incorrect display name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'conda', 'envs', 'numpy', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[0].version, 'Tag1', 'Incorrect version');
 
         assert.equal(interpreters[1].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[1].companyDisplayName, 'Display Name for Company One', 'Incorrect company name');
-        assert.equal(interpreters[1].displayName, undefined, 'Incorrect display name');
         assert.equal(interpreters[1].path, path.join(environmentsPath, 'conda', 'envs', 'scipy', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[1].version, 'Tag2', 'Incorrect version');
 
         assert.equal(interpreters[2].architecture, Architecture.x86, 'Incorrect arhictecture');
         assert.equal(interpreters[2].companyDisplayName, 'Company Two', 'Incorrect company name');
-        assert.equal(interpreters[2].displayName, undefined, 'Incorrect display name');
         assert.equal(interpreters[2].path, path.join(environmentsPath, 'path1', 'python.exe'), 'Incorrect path');
         assert.equal(interpreters[2].version, 'Tag A', 'Incorrect version');
     });
@@ -278,13 +269,11 @@ suite('Interpreters from Windows Registry (unit)', () => {
 
         assert.equal(interpreters[0].architecture, Architecture.x86, '1. Incorrect arhictecture');
         assert.equal(interpreters[0].companyDisplayName, 'Display Name for Company One', '1. Incorrect company name');
-        assert.equal(interpreters[0].displayName, undefined, '1. Incorrect display name');
         assert.equal(interpreters[0].path, path.join(environmentsPath, 'conda', 'envs', 'numpy', 'python.exe'), '1. Incorrect path');
         assert.equal(interpreters[0].version, 'Tag1', '1. Incorrect version');
 
         assert.equal(interpreters[1].architecture, Architecture.x86, '2. Incorrect arhictecture');
         assert.equal(interpreters[1].companyDisplayName, 'Company Two', '2. Incorrect company name');
-        assert.equal(interpreters[1].displayName, undefined, '2. Incorrect display name');
         assert.equal(interpreters[1].path, path.join(environmentsPath, 'path2', 'python.exe'), '2. Incorrect path');
         assert.equal(interpreters[1].version, 'Tag B', '2. Incorrect version');
     });

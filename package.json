@@ -324,6 +324,18 @@
                         }
                     },
                     {
+                        "label": "Python: Module",
+                        "description": "%python.snippet.launch.module.description%",
+                        "body": {
+                            "name": "Python: Module",
+                            "type": "python",
+                            "request": "launch",
+                            "module": "enter-your-module-name-here",
+                            "console": "integratedTerminal"
+
+                        }
+                    },
+                    {
                         "label": "Python: Django",
                         "description": "%python.snippet.launch.django.description%",
                         "body": {
@@ -645,6 +657,13 @@
                         "request": "attach",
                         "port": 5678,
                         "host": "localhost"
+                    },
+                    {
+                        "name": "Python: Module",
+                        "type": "python",
+                        "request": "launch",
+                        "module": "enter-your-module-name-here",
+                        "console": "integratedTerminal"
                     },
                     {
                         "name": "Python: Django",

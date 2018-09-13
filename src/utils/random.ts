@@ -4,6 +4,8 @@
 'use strict';
 
 import * as crypto from 'crypto';
+import { injectable } from 'inversify';
+import { IRandom } from '../client/common/types';
 
 function getRandom(): number {
     let num: number = 0;
@@ -20,8 +22,8 @@ export function getRandomBetween(min: number = 0, max: number = 10): number {
     return min + (randomVal * (max - min));
 }
 
-export class Random {
-
+@injectable()
+export class Random implements IRandom {
     public getRandomInt(min: number = 0, max: number = 10): number {
         return getRandomBetween(min, max);
     }

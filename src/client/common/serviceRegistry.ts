@@ -15,6 +15,7 @@ import {
 } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { ConfigurationService } from './configuration/service';
+import { EditorUtils } from './editor';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
 import { ProductInstaller } from './installer/productInstaller';
 import { Logger } from './logger';
@@ -35,9 +36,9 @@ import {
 } from './terminal/types';
 import {
     IBrowserService, IConfigurationService, ICurrentProcess,
-    IFeatureDeprecationManager, IInstaller, ILogger,
-    IPathUtils, IPersistentStateFactory,
-    IRandom, Is64Bit, IsWindows
+    IEditorUtils, IFeatureDeprecationManager, IInstaller,
+    ILogger, IPathUtils,
+    IPersistentStateFactory, IRandom, Is64Bit, IsWindows
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -60,6 +61,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
+    serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(

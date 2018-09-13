@@ -8,15 +8,13 @@ import { ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { CondaInfo, ICondaService, IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
-import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
-import { CondaHelper } from './condaHelper';
+import { AnacondaCompanyName } from './conda';
 
 /**
  * Locates conda env interpreters based on the conda service's info.
  */
 @injectable()
 export class CondaEnvService extends CacheableLocatorService {
-    private readonly condaHelper = new CondaHelper();
 
     constructor(
         @inject(ICondaService) private condaService: ICondaService,
@@ -58,8 +56,7 @@ export class CondaEnvService extends CacheableLocatorService {
                 info,
                 this.condaService,
                 this.fileSystem,
-                this.helper,
-                this.condaHelper
+                this.helper
             );
             const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
@@ -68,7 +65,6 @@ export class CondaEnvService extends CacheableLocatorService {
                         const environment = environments.find(item => this.fileSystem.arePathsSame(item.path, interpreter!.envPath!));
                         if (environment) {
                             interpreter.envName = environment!.name;
-                            interpreter.displayName = `${interpreter.displayName} (${environment!.name})`;
                         }
                     });
             }
@@ -93,11 +89,8 @@ export async function parseCondaInfo(
     info: CondaInfo,
     condaService: ICondaService,
     fileSystem: IFileSystem,
-    helper: IInterpreterHelper,
-    condaHelper: CondaHelper = new CondaHelper()
+    helper: IInterpreterHelper
 ) {
-    const condaDisplayName = condaHelper.getDisplayName(info);
-
     // The root of the conda environment is itself a Python interpreter
     // envs reported as e.g.: /Users/bob/miniconda3/envs/someEnv.
     const envs = Array.isArray(info.envs) ? info.envs : [];
@@ -117,15 +110,9 @@ export async function parseCondaInfo(
                 return;
             }
 
-            const versionWithoutCompanyName = stripCondaDisplayName(
-                stripCompanyName(details.version!),
-                condaDisplayName
-            );
-            const displayName = `${condaDisplayName} ${versionWithoutCompanyName}`.trim();
             return {
                 ...(details as PythonInterpreter),
                 path: pythonPath,
-                displayName,
                 companyDisplayName: AnacondaCompanyName,
                 type: InterpreterType.Conda,
                 envPath
@@ -136,35 +123,4 @@ export async function parseCondaInfo(
         .then(interpreters => interpreters.filter(interpreter => interpreter !== null && interpreter !== undefined))
         // tslint:disable-next-line:no-non-null-assertion
         .then(interpreters => interpreters.map(interpreter => interpreter!));
-}
-
-/**
- * Remove the Anaconda company name from the given string.
- */
-function stripCompanyName(content: string) {
-    // Strip company name from version.
-    const startOfCompanyName = AnacondaCompanyNames.reduce((index, companyName) => {
-        if (index > 0) {
-            return index;
-        }
-        return content.indexOf(`:: ${companyName}`);
-    }, -1);
-
-    return startOfCompanyName > 0 ? content.substring(0, startOfCompanyName).trim() : content;
-}
-
-/**
- * Remove the Anaconda display name from the given string.
- */
-function stripCondaDisplayName(content: string, condaDisplayName: string) {
-    // Strip company name from version.
-    if (content.endsWith(condaDisplayName)) {
-        let updatedContent = content.substr(0, content.indexOf(condaDisplayName)).trim();
-        if (updatedContent.endsWith('::')) {
-            updatedContent = updatedContent.substr(0, content.indexOf('::')).trim();
-        }
-        return updatedContent;
-    } else {
-        return content;
-    }
 }

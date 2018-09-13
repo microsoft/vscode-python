@@ -26,21 +26,17 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         this.pipEnvService = serviceContainer.get<IPipEnvService>(IPipEnvService);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
-    public async getEnvironmentName(pythonPath: string): Promise<string> {
-        // https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
-        // hasattr(sys, 'real_prefix') works for virtualenv while
-        // '(hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))' works for venv
-        try {
-            const processService = await this.processServiceFactory.create();
-            const code = 'import sys\nif hasattr(sys, "real_prefix"):\n  print("virtualenv")\nelif hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix:\n  print("venv")';
-            const output = await processService.exec(pythonPath, ['-c', code]);
-            if (output.stdout.length > 0) {
-                return output.stdout.trim();
-            }
-        } catch {
-            // do nothing.
+    public async getEnvironmentName(pythonPath: string, resource?: Uri): Promise<string> {
+        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders![0].uri : undefined;
+        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
+        const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
+        const grandParentDirName = path.basename(path.dirname(path.dirname(pythonPath)));
+        if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath)) {
+            // In pipenv, return the folder name of the workspace.
+            return path.basename(workspaceUri.fsPath);
         }
-        return '';
+
+        return grandParentDirName;
     }
     public async getEnvironmentType(pythonPath: string, resource?: Uri): Promise<InterpreterType> {
         const dir = path.dirname(pythonPath);
@@ -59,7 +55,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders![0].uri : undefined;
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
-        if (workspaceUri && this.pipEnvService.isRelatedPipEnvironment(pythonPath, workspaceUri.fsPath)) {
+        if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath)) {
             return InterpreterType.PipEnv;
         }
 

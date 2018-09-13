@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-multiline-string no-trailing-whitespace
+// tslint:disable:no-multiline-string no-trailing-whitespace max-func-body-length
 
 import { expect } from 'chai';
 import * as path from 'path';
@@ -15,11 +15,10 @@ import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/code
 import { ReplProvider } from '../../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExecution/terminalCodeExecution';
 import { ICodeExecutionService } from '../../../client/terminals/types';
+import { noop } from '../../../utils/misc';
 import { PYTHON_PATH } from '../../common';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Terminal - Code Execution', () => {
-    // tslint:disable-next-line:max-func-body-length
     ['Terminal Execution', 'Repl Execution', 'Django Execution'].forEach(testSuiteName => {
         let terminalSettings: TypeMoq.IMock<ITerminalSettings>;
         let terminalService: TypeMoq.IMock<ITerminalService>;
@@ -46,7 +45,6 @@ suite('Terminal - Code Execution', () => {
             disposables = [];
         });
 
-        // tslint:disable-next-line:max-func-body-length
         setup(() => {
             terminalFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
             terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
@@ -76,8 +74,7 @@ suite('Terminal - Code Execution', () => {
                 case 'Django Execution': {
                     isDjangoRepl = true;
                     workspace.setup(w => w.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
-                        // tslint:disable-next-line:no-empty
-                        return { dispose: () => { } };
+                        return { dispose: noop };
                     });
                     executor = new DjangoShellCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, documentManager.object,
                         platform.object, commandManager.object, fileSystem.object, disposables);
@@ -88,7 +85,6 @@ suite('Terminal - Code Execution', () => {
                     break;
                 }
             }
-            // replExecutor = new TerminalCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, disposables, platform.object);
         });
 
         suite(`${testSuiteName} (validation of title)`, () => {
@@ -119,8 +115,9 @@ suite('Terminal - Code Execution', () => {
             });
         });
 
-        // tslint:disable-next-line:max-func-body-length
-        suite(testSuiteName, () => {
+        suite(testSuiteName, async function () {
+            // tslint:disable-next-line:no-invalid-this
+            this.timeout(5000); // Activation of terminals take some time (there's a delay in the code to account for VSC Terminal issues).
             setup(() => {
                 terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => terminalService.object);
             });
@@ -312,7 +309,7 @@ suite('Terminal - Code Execution', () => {
                 terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.once());
             });
 
-            test('Ensure repl is re-initialized when temrinal is closed', async () => {
+            test('Ensure repl is re-initialized when terminal is closed', async () => {
                 const pythonPath = 'usr/bin/python1234';
                 const terminalArgs = ['-a', 'b', 'c'];
                 platform.setup(p => p.isWindows).returns(() => false);
@@ -323,8 +320,7 @@ suite('Terminal - Code Execution', () => {
                 terminalService.setup(t => t.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((callback => {
                     closeTerminalCallback = callback;
                     return {
-                        // tslint:disable-next-line:no-empty
-                        dispose: () => void 0
+                        dispose: noop
                     };
                 }));
 

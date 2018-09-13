@@ -43,7 +43,7 @@ export class CurrentPathService extends CacheableLocatorService {
      * This is used by CacheableLocatorService.getInterpreters().
      */
     protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
-        return this.suggestionsFromKnownPaths();
+        return this.suggestionsFromKnownPaths(resource);
     }
 
     /**
@@ -70,17 +70,15 @@ export class CurrentPathService extends CacheableLocatorService {
     private async getInterpreterDetails(interpreter: string, resource?: Uri): Promise<PythonInterpreter | undefined> {
         return Promise.all([
             this.helper.getInterpreterInformation(interpreter),
-            this.virtualEnvMgr.getEnvironmentName(interpreter),
+            this.virtualEnvMgr.getEnvironmentName(interpreter, resource),
             this.virtualEnvMgr.getEnvironmentType(interpreter, resource)
         ]).
             then(([details, virtualEnvName, type]) => {
                 if (!details) {
                     return;
                 }
-                const displayName = `${details.version ? details.version : ''}${virtualEnvName.length > 0 ? ` (${virtualEnvName})` : ''}`;
                 return {
                     ...(details as PythonInterpreter),
-                    displayName,
                     envName: virtualEnvName,
                     path: interpreter,
                     type: type ? type : InterpreterType.Unknown

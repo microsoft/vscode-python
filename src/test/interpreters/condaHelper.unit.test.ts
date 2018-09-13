@@ -2,13 +2,10 @@ import * as assert from 'assert';
 import { CondaInfo } from '../../client/interpreter/contracts';
 import { AnacondaDisplayName } from '../../client/interpreter/locators/services/conda';
 import { CondaHelper } from '../../client/interpreter/locators/services/condaHelper';
-import { initialize, initializeTest } from '../initialize';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters display name from Conda Environments', () => {
     const condaHelper = new CondaHelper();
-    suiteSetup(initialize);
-    setup(initializeTest);
     test('Must return default display name for invalid Conda Info', () => {
         assert.equal(condaHelper.getDisplayName(), AnacondaDisplayName, 'Incorrect display name');
         assert.equal(condaHelper.getDisplayName({}), AnacondaDisplayName, 'Incorrect display name');

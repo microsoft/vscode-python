@@ -49,6 +49,7 @@ export interface ITerminalHelper {
     getTerminalShellPath(): string;
     buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]): string;
     getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined>;
+    activateEnvironmentInTerminal(terminal: Terminal, preserveFocus?: boolean, resource?: Uri): Promise<void>;
 }
 
 export const ITerminalActivationCommandProvider = Symbol('ITerminalActivationCommandProvider');

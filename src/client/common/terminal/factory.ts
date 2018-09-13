@@ -12,7 +12,7 @@ import { ITerminalService, ITerminalServiceFactory } from './types';
 export class TerminalServiceFactory implements ITerminalServiceFactory {
     private terminalServices: Map<string, ITerminalService>;
 
-    constructor( @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
 
         this.terminalServices = new Map<string, ITerminalService>();
     }

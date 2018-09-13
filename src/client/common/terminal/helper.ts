@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Terminal, Uri } from 'vscode';
+import { sleep } from '../../../utils/async';
 import { ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ITerminalManager, IWorkspaceService } from '../application/types';
@@ -29,9 +30,11 @@ const IS_TCSHELL = /(tcsh$)/i;
 @injectable()
 export class TerminalHelper implements ITerminalHelper {
     private readonly detectableShells: Map<TerminalShellType, RegExp>;
+    private readonly activatedTerminals: Set<Terminal>;
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
 
         this.detectableShells = new Map<TerminalShellType, RegExp>();
+        this.activatedTerminals = new Set<Terminal>();
         this.detectableShells.set(TerminalShellType.powershell, IS_POWERSHELL);
         this.detectableShells.set(TerminalShellType.gitbash, IS_GITBASH);
         this.detectableShells.set(TerminalShellType.bash, IS_BASH);
@@ -105,6 +108,28 @@ export class TerminalHelper implements ITerminalHelper {
             const activationCommands = await provider.getActivationCommands(resource, terminalShellType);
             if (Array.isArray(activationCommands)) {
                 return activationCommands;
+            }
+        }
+    }
+
+    public async activateEnvironmentInTerminal(terminal: Terminal, preserveFocus: boolean = true, resource?: Uri) {
+        if (this.activatedTerminals.has(terminal)) {
+            return;
+        }
+        this.activatedTerminals.add(terminal);
+        const shellPath = this.getTerminalShellPath();
+        const terminalShellType = !shellPath || shellPath.length === 0 ? TerminalShellType.other : this.identifyTerminalShell(shellPath);
+
+        const activationCommamnds = await this.getEnvironmentActivationCommands(terminalShellType, resource);
+        if (activationCommamnds) {
+            for (const command of activationCommamnds!) {
+                terminal.show(preserveFocus);
+                terminal.sendText(command);
+
+                // Give the command some time to complete.
+                // Its been observed that sending commands too early will strip some text off in VS Terminal.
+                const delay = (terminalShellType === TerminalShellType.powershell || TerminalShellType.powershellCore) ? 1000 : 500;
+                await sleep(delay);
             }
         }
     }

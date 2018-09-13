@@ -5,26 +5,23 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { ILogger, IPersistentStateFactory } from '../../client/common/types';
 import { ICondaService, InterpreterType } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
-import { AnacondaCompanyName, AnacondaDisplayName } from '../../client/interpreter/locators/services/conda';
+import { AnacondaCompanyName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvService, parseCondaInfo } from '../../client/interpreter/locators/services/condaEnvService';
 import { IServiceContainer } from '../../client/ioc/types';
-import { initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockState } from './mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 
 // tslint:disable-next-line:max-func-body-length
-suite('Interpreters from Conda Environmentsx', () => {
+suite('Interpreters from Conda Environments', () => {
     let ioc: UnitTestIocContainer;
     let logger: TypeMoq.IMock<ILogger>;
     let condaProvider: CondaEnvService;
     let condaService: TypeMoq.IMock<ICondaService>;
     let interpreterHelper: TypeMoq.IMock<InterpreterHelper>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-    suiteSetup(initialize);
-    setup(async () => {
-        await initializeTest();
+    setup(() => {
         initializeDI();
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
@@ -83,13 +80,11 @@ suite('Interpreters from Conda Environmentsx', () => {
 
         const path1 = path.join(info.envs[0], isWindows ? 'python.exe' : path.join('bin', 'python'));
         assert.equal(interpreters[0].path, path1, 'Incorrect path for first env');
-        assert.equal(interpreters[0].displayName, 'Anaconda 4.4.0 (64-bit)', 'Incorrect display name for first env');
         assert.equal(interpreters[0].companyDisplayName, AnacondaCompanyName, 'Incorrect company display name for first env');
         assert.equal(interpreters[0].type, InterpreterType.Conda, 'Environment not detected as a conda environment');
 
         const path2 = path.join(info.envs[1], isWindows ? 'python.exe' : path.join('bin', 'python'));
         assert.equal(interpreters[1].path, path2, 'Incorrect path for first env');
-        assert.equal(interpreters[1].displayName, 'Anaconda 4.4.0 (64-bit)', 'Incorrect display name for first env');
         assert.equal(interpreters[1].companyDisplayName, AnacondaCompanyName, 'Incorrect company display name for first env');
         assert.equal(interpreters[1].type, InterpreterType.Conda, 'Environment not detected as a conda environment');
     }
@@ -128,13 +123,11 @@ suite('Interpreters from Conda Environmentsx', () => {
 
         const path1 = path.join(info.envs[0], isWindows ? 'python.exe' : path.join('bin', 'python'));
         assert.equal(interpreters[0].path, path1, 'Incorrect path for first env');
-        assert.equal(interpreters[0].displayName, 'Anaconda 4.4.0 (64-bit) (numpy)', 'Incorrect display name for first env');
         assert.equal(interpreters[0].companyDisplayName, AnacondaCompanyName, 'Incorrect company display name for first env');
         assert.equal(interpreters[0].type, InterpreterType.Conda, 'Environment not detected as a conda environment');
 
         const path2 = path.join(info.envs[1], isWindows ? 'python.exe' : path.join('bin', 'python'));
         assert.equal(interpreters[1].path, path2, 'Incorrect path for first env');
-        assert.equal(interpreters[1].displayName, 'Anaconda 4.4.0 (64-bit) (scipy)', 'Incorrect display name for first env');
         assert.equal(interpreters[1].companyDisplayName, AnacondaCompanyName, 'Incorrect company display name for first env');
         assert.equal(interpreters[1].type, InterpreterType.Conda, 'Environment not detected as a conda environment');
     }
@@ -170,7 +163,6 @@ suite('Interpreters from Conda Environmentsx', () => {
 
         const path1 = path.join(info.envs[0], isWindows ? 'python.exe' : path.join('bin', 'python'));
         assert.equal(interpreters[0].path, path1, 'Incorrect path for first env');
-        assert.equal(interpreters[0].displayName, `Anaonda 4.4.0 (64-bit) : ${AnacondaDisplayName}`, 'Incorrect display name for first env');
         assert.equal(interpreters[0].companyDisplayName, AnacondaCompanyName, 'Incorrect company display name for first env');
         assert.equal(interpreters[0].type, InterpreterType.Conda, 'Environment not detected as a conda environment');
     }
@@ -209,7 +201,6 @@ suite('Interpreters from Conda Environmentsx', () => {
 
         const path1 = path.join(info.envs[0], isWindows ? 'python.exe' : path.join('bin', 'python'));
         assert.equal(interpreters[0].path, path1, 'Incorrect path for first env');
-        assert.equal(interpreters[0].displayName, `Anaonda 4.4.0 (64-bit) : ${AnacondaDisplayName} (numpy)`, 'Incorrect display name for first env');
         assert.equal(interpreters[0].companyDisplayName, AnacondaCompanyName, 'Incorrect company display name for first env');
         assert.equal(interpreters[0].type, InterpreterType.Conda, 'Environment not detected as a conda environment');
     }
@@ -243,7 +234,6 @@ suite('Interpreters from Conda Environmentsx', () => {
 
         const path1 = path.join(info.envs[0], isWindows ? 'python.exe' : path.join('bin', 'python'));
         assert.equal(interpreters[0].path, path1, 'Incorrect path for first env');
-        assert.equal(interpreters[0].displayName, `${AnacondaDisplayName}`, 'Incorrect display name for first env');
         assert.equal(interpreters[0].companyDisplayName, AnacondaCompanyName, 'Incorrect company display name for first env');
         assert.equal(interpreters[0].type, InterpreterType.Conda, 'Environment not detected as a conda environment');
     }
@@ -281,7 +271,6 @@ suite('Interpreters from Conda Environmentsx', () => {
 
         const path1 = path.join(info.envs[0], isWindows ? 'python.exe' : path.join('bin', 'python'));
         assert.equal(interpreters[0].path, path1, 'Incorrect path for first env');
-        assert.equal(interpreters[0].displayName, `${AnacondaDisplayName} (numpy)`, 'Incorrect display name for first env');
         assert.equal(interpreters[0].companyDisplayName, AnacondaCompanyName, 'Incorrect company display name for first env');
         assert.equal(interpreters[0].type, InterpreterType.Conda, 'Environment not detected as a conda environment');
     }
@@ -313,7 +302,6 @@ suite('Interpreters from Conda Environmentsx', () => {
 
         const path1 = path.join(info.default_prefix, isWindows ? 'python.exe' : path.join('bin', 'python'));
         assert.equal(interpreters[0].path, path1, 'Incorrect path for first env');
-        assert.equal(interpreters[0].displayName, AnacondaDisplayName, 'Incorrect display name for first env');
         assert.equal(interpreters[0].companyDisplayName, AnacondaCompanyName, 'Incorrect company display name for first env');
         assert.equal(interpreters[0].type, InterpreterType.Conda, 'Environment not detected as a conda environment');
     }

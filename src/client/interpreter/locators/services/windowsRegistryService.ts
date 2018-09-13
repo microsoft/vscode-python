@@ -105,15 +105,13 @@ export class WindowsRegistryService extends CacheableLocatorService {
                 return Promise.all([
                     Promise.resolve(installPath),
                     this.registry.getValue(key, hive, arch, 'ExecutablePath'),
-                    // tslint:disable-next-line:no-non-null-assertion
-                    this.getInterpreterDisplayName(tagKey, companyKey, hive, arch),
                     this.registry.getValue(tagKey, hive, arch, 'SysVersion'),
                     this.getCompanyDisplayName(companyKey, hive, arch)
                 ])
-                    .then(([installedPath, executablePath, displayName, version, companyDisplayName]) => {
+                    .then(([installedPath, executablePath, version, companyDisplayName]) => {
                         companyDisplayName = AnacondaCompanyNames.indexOf(companyDisplayName) === -1 ? companyDisplayName : AnacondaCompanyName;
                         // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
-                        return { installPath: installedPath, executablePath, displayName, version, companyDisplayName } as InterpreterInformation;
+                        return { installPath: installedPath, executablePath, version, companyDisplayName } as InterpreterInformation;
                     });
             })
             .then(async (interpreterInfo?: InterpreterInformation) => {
@@ -122,7 +120,6 @@ export class WindowsRegistryService extends CacheableLocatorService {
                 }
 
                 const executablePath = interpreterInfo.executablePath && interpreterInfo.executablePath.length > 0 ? interpreterInfo.executablePath : path.join(interpreterInfo.installPath, DefaultPythonExecutable);
-                const displayName = interpreterInfo.displayName;
                 const helper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
                 const details = await helper.getInterpreterInformation(executablePath);
                 if (!details) {
@@ -133,7 +130,6 @@ export class WindowsRegistryService extends CacheableLocatorService {
                 return {
                     ...(details as PythonInterpreter),
                     architecture: arch,
-                    displayName,
                     path: executablePath,
                     version,
                     companyDisplayName: interpreterInfo.companyDisplayName,
@@ -146,12 +142,6 @@ export class WindowsRegistryService extends CacheableLocatorService {
                 console.error(error);
                 return null;
             });
-    }
-    private async getInterpreterDisplayName(tagKey: string, companyKey: string, hive: RegistryHive, arch?: Architecture) {
-        const displayName = await this.registry.getValue(tagKey, hive, arch, 'DisplayName');
-        if (displayName && displayName.length > 0) {
-            return displayName;
-        }
     }
     private async  getCompanyDisplayName(companyKey: string, hive: RegistryHive, arch?: Architecture) {
         const displayName = await this.registry.getValue(companyKey, hive, arch, 'DisplayName');

@@ -57,7 +57,7 @@ suite('Interpreters CurrentPath Service', () => {
         const version = 'mockVersion';
         const envName = 'mockEnvName';
         interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version }));
-        virtualEnvironmentManager.setup(v => v.getEnvironmentName(TypeMoq.It.isAny())).returns(() => Promise.resolve(envName));
+        virtualEnvironmentManager.setup(v => v.getEnvironmentName(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(envName));
         virtualEnvironmentManager.setup(v => v.getEnvironmentType(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(InterpreterType.VirtualEnv));
 
         const execArgs = ['-c', 'import sys;print(sys.executable)'];
@@ -76,7 +76,7 @@ suite('Interpreters CurrentPath Service', () => {
         processService.verifyAll();
         fileSystem.verifyAll();
         expect(interpreters).to.be.of.length(2);
-        expect(interpreters).to.deep.include({ version, envName, displayName: `${version} (${envName})`, path: 'c:/root:python', type: InterpreterType.VirtualEnv });
-        expect(interpreters).to.deep.include({ version, envName, displayName: `${version} (${envName})`, path: 'c:/python3', type: InterpreterType.VirtualEnv });
+        expect(interpreters).to.deep.include({ version, envName, path: 'c:/root:python', type: InterpreterType.VirtualEnv });
+        expect(interpreters).to.deep.include({ version, envName, path: 'c:/python3', type: InterpreterType.VirtualEnv });
     });
 });

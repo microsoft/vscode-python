@@ -25,3 +25,8 @@ export const ICodeExecutionManager = Symbol('ICodeExecutionManager');
 export interface ICodeExecutionManager {
     registerCommands(): void;
 }
+
+export const ITerminalAutoActivation = Symbol('ITerminalAutoActivation');
+export interface ITerminalAutoActivation {
+    register(): void;
+}

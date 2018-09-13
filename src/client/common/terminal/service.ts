@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Terminal, Uri } from 'vscode';
-import { sleep } from '../../../utils/async';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -21,7 +20,7 @@ export class TerminalService implements ITerminalService, Disposable {
     private terminalManager: ITerminalManager;
     private terminalHelper: ITerminalHelper;
     public get onDidCloseTerminal(): Event<void> {
-        return this.terminalClosed.event;
+        return this.terminalClosed.event.bind(this.terminalClosed);
     }
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         private resource?: Uri,
@@ -64,18 +63,7 @@ export class TerminalService implements ITerminalService, Disposable {
         // Sometimes the terminal takes some time to start up before it can start accepting input.
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        const activationCommamnds = await this.terminalHelper.getEnvironmentActivationCommands(this.terminalShellType, this.resource);
-        if (activationCommamnds) {
-            for (const command of activationCommamnds!) {
-                this.terminal!.show(preserveFocus);
-                this.terminal!.sendText(command);
-
-                // Give the command some time to complete.
-                // Its been observed that sending commands too early will strip some text off.
-                const delay = (this.terminalShellType === TerminalShellType.powershell || TerminalShellType.powershellCore) ? 1000 : 500;
-                await sleep(delay);
-            }
-        }
+        await this.terminalHelper.activateEnvironmentInTerminal(this.terminal!, preserveFocus, this.resource);
 
         this.terminal!.show(preserveFocus);
 

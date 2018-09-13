@@ -39,7 +39,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             .then(dirs => dirs.filter(dir => dir.length > 0))
             .then(dirs => Promise.all(dirs.map(lookForInterpretersInDirectory)))
             .then(pathsWithInterpreters => _.flatten(pathsWithInterpreters))
-            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getVirtualEnvDetails(interpreter))))
+            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getVirtualEnvDetails(interpreter, resource))))
             .then(interpreters => interpreters.filter(interpreter => !!interpreter).map(interpreter => interpreter!))
             .catch((err) => {
                 console.error('Python Extension (lookForInterpretersInVenvs):', err);
@@ -65,27 +65,21 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
                     return '';
                 }));
     }
-    private async getVirtualEnvDetails(interpreter: string): Promise<PythonInterpreter | undefined> {
+    private async getVirtualEnvDetails(interpreter: string, resource?: Uri): Promise<PythonInterpreter | undefined> {
         return Promise.all([
             this.helper.getInterpreterInformation(interpreter),
-            this.virtualEnvMgr.getEnvironmentName(interpreter),
-            this.virtualEnvMgr.getEnvironmentType(interpreter)
+            this.virtualEnvMgr.getEnvironmentName(interpreter, resource),
+            this.virtualEnvMgr.getEnvironmentType(interpreter, resource)
         ])
             .then(([details, virtualEnvName, type]) => {
                 if (!details) {
                     return;
                 }
-                const virtualEnvSuffix = virtualEnvName.length ? virtualEnvName : this.getVirtualEnvironmentRootDirectory(interpreter);
                 return {
                     ...(details as PythonInterpreter),
-                    displayName: `${details.version!} (${virtualEnvSuffix})`.trim(),
                     envName: virtualEnvName,
                     type: type
                 };
             });
-    }
-    private getVirtualEnvironmentRootDirectory(interpreter: string) {
-        // Python interperters are always in a subdirectory of the environment folder.
-        return path.basename(path.dirname(path.dirname(interpreter)));
     }
 }

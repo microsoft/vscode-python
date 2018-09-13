@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { fsReaddirAsync } from '../../../utils/fs';
-import { getArchitectureDislayName } from '../../common/platform/registry';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IS_WINDOWS } from '../../common/util';
 import { IServiceContainer } from '../../ioc/types';
@@ -18,15 +17,6 @@ export function lookForInterpretersInDirectory(pathToCheck: string): Promise<str
         });
 }
 
-export function fixInterpreterDisplayName(item: PythonInterpreter) {
-    if (!item.displayName) {
-        const arch = getArchitectureDislayName(item.architecture);
-        const version = typeof item.version === 'string' ? item.version : '';
-        const prefix = version.toUpperCase().startsWith('PYTHON') ? '' : 'Python';
-        item.displayName = [prefix, version, arch].filter(namePart => namePart.length > 0).join(' ').trim();
-    }
-    return item;
-}
 @injectable()
 export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
     private readonly platform: IPlatformService;
@@ -41,7 +31,6 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
     public mergeInterpreters(interpreters: PythonInterpreter[]) {
         return interpreters
             .map(item => { return { ...item }; })
-            .map(fixInterpreterDisplayName)
             .map(item => { item.path = path.normalize(item.path); return item; })
             .reduce<PythonInterpreter[]>((accumulator, current) => {
                 if (this.platform.isMac && this.helper.isMacDefaultPythonPath(current.path)) {

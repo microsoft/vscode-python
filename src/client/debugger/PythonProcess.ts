@@ -4,9 +4,7 @@
 import * as net from "net";
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from "events";
-import { IPythonProcess, IPythonThread, IPythonEvaluationResult, IPythonStackFrame } from "./Common/Contracts";
-import { IPythonBreakpoint, IBreakpointCommand, IChildEnumCommand } from "./Common/Contracts";
-import { PythonEvaluationResultReprKind, IExecutionCommand, enum_EXCEPTION_STATE } from "./Common/Contracts";
+import { IPythonProcess, IPythonThread, IPythonEvaluationResult, IPythonStackFrame, IPythonBreakpoint, IBreakpointCommand, IChildEnumCommand, PythonEvaluationResultReprKind, IExecutionCommand, enum_EXCEPTION_STATE } from "./Common/Contracts";
 import { Commands } from "./ProxyCommands";
 import { IdDispenser } from "../common/idDispenser";
 import { PythonProcessCallbackHandler } from "./PythonProcessCallbackHandler";

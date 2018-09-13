@@ -14,11 +14,12 @@ import { CodeActionKind, debug, Disposable, ExtensionContext, extensions, Indent
 import { createDeferred } from '../utils/async';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationService } from './activation/types';
+import { IExtensionApi } from './api';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { IWorkspaceService } from './common/application/types';
 import { PythonSettings } from './common/configSettings';
-import { PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { PythonInstaller } from './common/installer/pythonInstallation';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
@@ -51,37 +52,41 @@ import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { LinterProvider } from './providers/linterProvider';
 import { PythonRenameProvider } from './providers/renameProvider';
 import { ReplProvider } from './providers/replProvider';
+import { registerTypes as providersRegisterTypes } from './providers/serviceRegistry';
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { TerminalProvider } from './providers/terminalProvider';
+import { ISortImportsEditingProvider } from './providers/types';
 import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
-import * as sortImports from './sortImports';
 import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
-import { ICodeExecutionManager } from './terminals/types';
+import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import { OnEnterFormatter } from './typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
 
 const activationDeferred = createDeferred<void>();
-export const activated = activationDeferred.promise;
 
 // tslint:disable-next-line:max-func-body-length
-export async function activate(context: ExtensionContext) {
+export async function activate(context: ExtensionContext): Promise<IExtensionApi> {
     const cont = new Container();
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
     registerServices(context, serviceManager, serviceContainer);
 
-    const appDiagnostics = serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics);
-    await appDiagnostics.performPreStartupHealthCheck();
+    // When testing, do not perform health checks, as modal dialogs can be displayed.
+    if (!isTestExecution()) {
+        const appDiagnostics = serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics);
+        await appDiagnostics.performPreStartupHealthCheck();
+    }
 
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     // This must be completed before we can continue as language server needs the interpreter path.
     interpreterManager.initialize();
     await interpreterManager.autoSetInterpreter();
 
+    serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 
@@ -92,10 +97,11 @@ export async function activate(context: ExtensionContext) {
     const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
     await activationService.activate();
 
-    sortImports.activate(context, standardOutputChannel, serviceManager);
+    const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
+    sortImports.registerCommands();
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
-    sendStartupTelemetry(activated, serviceContainer).ignoreErrors();
+    sendStartupTelemetry(activationDeferred.promise, serviceContainer).ignoreErrors();
 
     const pythonInstaller = new PythonInstaller(serviceContainer);
     pythonInstaller.checkPythonInstallation(PythonSettings.getInstance())
@@ -161,6 +167,8 @@ export async function activate(context: ExtensionContext) {
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
     activationDeferred.resolve();
+
+    return { ready: activationDeferred.promise };
 }
 
 function registerServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
@@ -190,6 +198,7 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     debugConfigurationRegisterTypes(serviceManager);
     debuggerRegisterTypes(serviceManager);
     appRegisterTypes(serviceManager);
+    providersRegisterTypes(serviceManager);
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {

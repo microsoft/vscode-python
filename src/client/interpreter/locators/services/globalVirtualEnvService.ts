@@ -31,9 +31,9 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
         this.config = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
-    public getSearchPaths(_resource?: Uri): string[] {
+    public getSearchPaths(resource?: Uri): string[] {
         const homedir = os.homedir();
-        const venvFolders = this.config.getSettings(_resource).venvFolders;
+        const venvFolders = this.config.getSettings(resource).venvFolders;
         const folders = venvFolders.map(item => path.join(homedir, item));
 
         // tslint:disable-next-line:no-string-literal
