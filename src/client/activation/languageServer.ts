@@ -179,6 +179,9 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     }
 
     private async startLanguageClient(): Promise<void> {
+        if (this.progressReporting) {
+            this.progressReporting.dispose();
+        }
         this.context.subscriptions.push(this.languageClient!.start());
         await this.serverReady();
         this.progressReporting = new ProgressReporting(this.languageClient!);
