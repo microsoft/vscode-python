@@ -55,6 +55,13 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                     if (existingItem.type === InterpreterType.Unknown && current.type !== InterpreterType.Unknown) {
                         existingItem.type = current.type;
                     }
+                    const props: (keyof PythonInterpreter)[] = ['envName', 'envPath', 'path', 'sysPrefix',
+                        'architecture', 'sysVersion', 'version', 'version_info'];
+                    for (const prop of props) {
+                        if (!existingItem[prop] && current[prop]) {
+                            existingItem[prop] = current[prop];
+                        }
+                    }
                 }
                 return accumulator;
             }, []);
