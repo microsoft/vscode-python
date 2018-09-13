@@ -3,14 +3,12 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { fsExistsAsync } from '../../../../utils/fs';
-import { IS_WINDOWS } from '../../../common/util';
+import { IPlatformService } from '../../../common/platform/types';
+import { ICurrentProcess, IPathUtils } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
-
-// tslint:disable-next-line:no-require-imports no-var-requires
-const untildify = require('untildify');
 
 /**
  * Locates "known" paths.
@@ -18,7 +16,7 @@ const untildify = require('untildify');
 @injectable()
 export class KnownPathsService extends CacheableLocatorService {
     public constructor(
-        @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: string[],
+        @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: IKnownSearchPathsForInterpreters,
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
@@ -46,7 +44,7 @@ export class KnownPathsService extends CacheableLocatorService {
      * Return the located interpreters.
      */
     private suggestionsFromKnownPaths() {
-        const promises = this.knownSearchPaths.map(dir => this.getInterpretersInDirectory(dir));
+        const promises = this.knownSearchPaths.getSearchPaths().map(dir => this.getInterpretersInDirectory(dir));
         return Promise.all<string[]>(promises)
             // tslint:disable-next-line:underscore-consistent-invocation
             .then(listOfInterpreters => _.flatten(listOfInterpreters))
@@ -79,22 +77,34 @@ export class KnownPathsService extends CacheableLocatorService {
     }
 }
 
-/**
- * Return the paths where Python interpreters might be found.
- */
-export function getKnownSearchPathsForInterpreters(): string[] {
-    if (IS_WINDOWS) {
-        return [];
-    } else {
-        const paths = ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'];
-        paths.forEach(p => {
-            paths.push(untildify(`~${p}`));
-        });
-        // Add support for paths such as /Users/xxx/anaconda/bin.
-        if (process.env.HOME) {
-            paths.push(path.join(process.env.HOME, 'anaconda', 'bin'));
-            paths.push(path.join(process.env.HOME, 'python', 'bin'));
+@injectable()
+export class KnownSearchPathsForInterpreters implements IKnownSearchPathsForInterpreters {
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
+    /**
+     * Return the paths where Python interpreters might be found.
+     */
+    public getSearchPaths(): string[] {
+        const currentProcess = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
+        const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
+        const pathUtils = this.serviceContainer.get<IPathUtils>(IPathUtils);
+
+        const searchPaths = currentProcess.env[platformService.pathVariableName]!
+            .split(pathUtils.delimiter)
+            .map(p => p.trim())
+            .filter(p => p.length > 0);
+
+        if (!platformService.isWindows) {
+            ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin']
+                .forEach(p => {
+                    searchPaths.push(p);
+                    searchPaths.push(path.join(pathUtils.home, p));
+                });
+            // Add support for paths such as /Users/xxx/anaconda/bin.
+            if (process.env.HOME) {
+                searchPaths.push(path.join(pathUtils.home, 'anaconda', 'bin'));
+                searchPaths.push(path.join(pathUtils.home, 'python', 'bin'));
+            }
         }
-        return paths;
+        return searchPaths;
     }
 }
