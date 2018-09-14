@@ -57,6 +57,16 @@ export type DebuggerPerformanceTelemetry = {
     duration: number;
     action: 'stepIn' | 'stepOut' | 'continue' | 'next' | 'launch';
 };
+export type LanguageServerInstallTelemetry = {
+    downloadSuccess: boolean;
+    extractSuccess: boolean;
+    downloadMs: number;
+    extractMs: number;
+};
+export type LanguageServerStartupTelemetry = {
+    success: boolean;
+    error?: string;
+};
 export type TestRunTelemetry = {
     tool: 'nosetest' | 'pytest' | 'unittest';
     scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
@@ -81,4 +91,32 @@ export type TerminalTelemetry = {
     pythonVersion?: string;
     interpreterType?: InterpreterType;
 };
-export type TelemetryProperties = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry | CodeExecutionTelemetry | TestRunTelemetry | TestDiscoverytTelemetry | FeedbackTelemetry | TerminalTelemetry | DebuggerTelemetryV2 | SettingsTelemetry;
+export type TelemetryProperties = FormatTelemetry |
+    LanguageServerInstallTelemetry |
+    LanguageServerStartupTelemetry |
+    LintingTelemetry |
+    EditorLoadTelemetry |
+    PythonInterpreterTelemetry |
+    CodeExecutionTelemetry |
+    TestRunTelemetry |
+    TestDiscoverytTelemetry |
+    FeedbackTelemetry |
+    TerminalTelemetry |
+    DebuggerTelemetryV2 |
+    SettingsTelemetry;
+
+export type TelemetryAttributes = {
+    [key: string]: string;
+};
+
+export type TelemetryMetrics = {
+    [key: string]: number;
+};
+
+export const ITelemetryService = Symbol('ITelemetryService');
+
+export interface ITelemetryService {
+    sendEvent(eventName: string, properties?: TelemetryAttributes);
+    sendMetric(metricName: string, quantities?: TelemetryMetrics);
+    send(eventName: string);
+}
