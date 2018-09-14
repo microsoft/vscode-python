@@ -6,6 +6,8 @@ export const PYTHON = [
     { scheme: 'untitled', language: PYTHON_LANGUAGE }
 ];
 
+export const PVSC_EXTENSION_ID = 'ms-python.python';
+
 export namespace Commands {
     export const Set_Interpreter = 'python.setInterpreter';
     export const Set_ShebangInterpreter = 'python.setShebangInterpreter';
