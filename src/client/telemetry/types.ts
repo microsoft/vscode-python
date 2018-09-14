@@ -67,6 +67,10 @@ export type LanguageServerStartupTelemetry = {
     success: boolean;
     error?: string;
 };
+export type LanguageServerAnalysisTelemetry = {
+    success: boolean;
+    error?: string;
+};
 export type TestRunTelemetry = {
     tool: 'nosetest' | 'pytest' | 'unittest';
     scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
