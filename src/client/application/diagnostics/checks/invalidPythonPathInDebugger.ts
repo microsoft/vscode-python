@@ -4,14 +4,16 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { DiagnosticSeverity } from 'vscode';
+import { DiagnosticSeverity, Uri } from 'vscode';
 import '../../../common/extensions';
+import { IConfigurationService, ILogger } from '../../../common/types';
+import { IInterpreterHelper } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
-import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../types';
+import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService, IInvalidPythonPathInDebuggerService } from '../types';
 
 const InvalidPythonPathInDebuggerMessage = 'You need to select a Python interpreter before you start debugging. \nTip: click on "Select Python Environment" in the status bar.';
 
@@ -27,7 +29,7 @@ export const InvalidPythonPathInDebuggerServiceId = 'InvalidPythonPathInDebugger
 const CommandName = 'python.setInterpreter';
 
 @injectable()
-export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService {
+export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService implements IInvalidPythonPathInDebuggerService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super([DiagnosticCodes.InvalidPythonPathInDebuggerDiagnostic], serviceContainer);
@@ -51,5 +53,23 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService {
         ];
 
         await this.messageService.handle(diagnostic, { commandPrompts: options });
+    }
+    public async validatePythonPath(pythonPath?: string, resource?: Uri) {
+        // tslint:disable-next-line:no-invalid-template-strings
+        if (pythonPath === '${config:python.pythonPath}' || !pythonPath) {
+            const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+            pythonPath = configService.getSettings(resource).pythonPath;
+        }
+        const helper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
+        if (!await helper.getInterpreterInformation(pythonPath).catch(() => undefined)) {
+            this.handle([new InvalidPythonPathInDebuggerDiagnostic()])
+                .catch(ex => {
+                    const logger = this.serviceContainer.get<ILogger>(ILogger);
+                    logger.logError('Failed to handle invalid python path in debugger', ex);
+                })
+                .ignoreErrors();
+            return false;
+        }
+        return true;
     }
 }

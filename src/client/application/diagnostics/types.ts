@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { DiagnosticSeverity } from 'vscode';
+import { DiagnosticSeverity, Uri } from 'vscode';
 
 export enum DiagnosticScope {
     Global = 'Global',
@@ -23,6 +23,10 @@ export interface IDiagnosticsService {
     diagnose(): Promise<IDiagnostic[]>;
     canHandle(diagnostic: IDiagnostic): Promise<boolean>;
     handle(diagnostics: IDiagnostic[]): Promise<void>;
+}
+
+export interface IInvalidPythonPathInDebuggerService extends IDiagnosticsService {
+    validatePythonPath(pythonPath?: string, resource?: Uri): Promise<boolean>;
 }
 
 export const IDiagnosticFilterService = Symbol('IDiagnosticFilterService');
