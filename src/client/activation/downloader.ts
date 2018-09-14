@@ -7,8 +7,10 @@ import * as path from 'path';
 import * as requestProgress from 'request-progress';
 import { ProgressLocation, window } from 'vscode';
 import { createDeferred } from '../../utils/async';
+import { StopWatch } from '../../utils/stopWatch';
 import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
+import { LanguageServerInstallTelemetry } from '../telemetry/types';
 import { PlatformData, PlatformName } from './platformData';
 import { IDownloadFileService } from './types';
 
@@ -41,22 +43,48 @@ export class LanguageServerDownloader {
         return DownloadLinks[platformString];
     }
 
-    public async downloadLanguageServer(context: IExtensionContext): Promise<void> {
+    public async downloadLanguageServer(context: IExtensionContext): Promise<LanguageServerInstallTelemetry> {
+        const stats: LanguageServerInstallTelemetry = {
+            downloadMs: -1,
+            extractMs: -1,
+            downloadSuccess: false,
+            extractSuccess: false
+        };
+        const timer: StopWatch = new StopWatch();
         const downloadUri = this.getDownloadUri();
-
         let localTempFilePath = '';
         try {
-            localTempFilePath = await this.downloadFile(downloadUri, 'Downloading Microsoft Python Language Server... ');
-            await this.unpackArchive(context.extensionPath, localTempFilePath);
-        } catch (err) {
-            this.output.appendLine('failed.');
-            this.output.appendLine(err);
-            throw new Error(err);
+            try {
+                await this.downloadFile(downloadUri, 'Downloading Microsoft Python Language Server... ')
+                    .then((tmpFilePath: string) => {
+                        localTempFilePath = tmpFilePath;
+                        stats.downloadSuccess = true;
+                        stats.downloadMs = timer.elapsedTime;
+                    });
+            } catch (err) {
+                this.output.appendLine('failed.');
+                this.output.appendLine(err);
+                throw new Error(err);
+            }
+
+            timer.reset();
+            try {
+                await this.unpackArchive(context.extensionPath, localTempFilePath)
+                    .then(() => {
+                        stats.extractMs = timer.elapsedTime;
+                        stats.extractSuccess = true;
+                    });
+            } catch (err) {
+                this.output.appendLine('failed.');
+                this.output.appendLine(err);
+                throw new Error(err);
+            }
         } finally {
             if (localTempFilePath.length > 0) {
                 await this.fs.deleteFile(localTempFilePath);
             }
         }
+        return stats;
     }
 
     private async downloadFile(uri: string, title: string): Promise<string> {

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import {
@@ -17,7 +19,6 @@ import {
     IApplicationShell, ICommandManager, IWorkspaceService
 } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
-// tslint:disable-next-line:ordered-imports
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import {
@@ -27,12 +28,15 @@ import {
 } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { LanguageServerSymbolProvider } from '../providers/symbolProvider';
+import { sendTelemetryWhenDone } from '../telemetry';
 import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
     PYTHON_LANGUAGE_SERVER_ENABLED,
-    PYTHON_LANGUAGE_SERVER_ERROR
+    PYTHON_LANGUAGE_SERVER_ERROR,
+    PYTHON_LANGUAGE_SERVER_STARTUP
 } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';
+import { LanguageServerInstallTelemetry, LanguageServerStartupTelemetry } from '../telemetry/types';
 import { IUnitTestManagementService } from '../unittests/types';
 import { LanguageServerDownloader } from './downloader';
 import { InterpreterData, InterpreterDataService } from './interpreterDataService';
@@ -162,14 +166,39 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 this.platformData,
                 new RequestWithProxy(this.workspace.getConfiguration('http').get('proxy', '')),
                 languageServerFolder);
-            await downloader.downloadLanguageServer(this.context);
-            reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_DOWNLOADED);
+            let lsTelemetry: LanguageServerInstallTelemetry = {
+                downloadMs: -1,
+                extractMs: -1,
+                downloadSuccess: false,
+                extractSuccess: false
+            };
+            sendTelemetryWhenDone(
+                PYTHON_LANGUAGE_SERVER_DOWNLOADED,
+                downloader.downloadLanguageServer(this.context)
+                    .then((stats: LanguageServerInstallTelemetry) => {
+                        lsTelemetry = stats;
+                    }),
+                undefined,
+                lsTelemetry);
         }
 
         const serverModule = path.join(this.context.extensionPath, languageServerFolder, this.platformData.getEngineExecutableName());
         this.languageClient = this.createSelfContainedLanguageClient(serverModule, clientOptions);
         try {
-            await this.startLanguageClient();
+            const lsStartupTelemetry: LanguageServerStartupTelemetry = {
+                success: false
+            };
+            sendTelemetryWhenDone(
+                PYTHON_LANGUAGE_SERVER_STARTUP,
+                this.startLanguageClient()
+                    .then(() => {
+                        lsStartupTelemetry.success = true;
+                        // tslint:disable-next-line:no-any
+                    }, (failedStartupReason: any) => {
+                        lsStartupTelemetry.error = failedStartupReason;
+                    }),
+                undefined,
+                lsStartupTelemetry);
             return true;
         } catch (ex) {
             this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
@@ -288,7 +317,14 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 asyncStartup: true
             },
             middleware: {
-                provideCompletionItem: (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
+                provideCompletionItem: (
+                    document: TextDocument,
+                    position: Position,
+                    context: CompletionContext,
+                    token: CancellationToken,
+                    next: ProvideCompletionItemsSignature
+                ) => {
+
                     if (this.surveyBanner) {
                         this.surveyBanner.showBanner().ignoreErrors();
                     }

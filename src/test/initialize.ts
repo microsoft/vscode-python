@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { IExtensionApi } from '../client/api';
 import { PythonSettings } from '../client/common/configSettings';
+import { PVSC_EXTENSION_ID } from '../client/common/constants';
 import { clearPythonPathInWorkspaceFolder, PYTHON_PATH, resetGlobalPythonPathSetting, setPythonPathInWorkspaceRoot } from './common';
 
 export * from './constants';
@@ -32,7 +33,7 @@ export async function initialize(): Promise<any> {
     PythonSettings.dispose();
 }
 export async function activateExtension() {
-    const extension = vscode.extensions.getExtension<IExtensionApi>('ms-python.python')!;
+    const extension = vscode.extensions.getExtension<IExtensionApi>(PVSC_EXTENSION_ID)!;
     if (extension.isActive) {
         return;
     }
