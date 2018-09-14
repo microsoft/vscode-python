@@ -104,7 +104,7 @@ export class InterpreterDataService {
   }
 
   private async getSearchPaths(execService: IPythonExecutionService): Promise<string> {
-    const result = await execService.exec(['-c', 'import sys; print(sys.path);'], {});
+    const result = await execService.exec(['-c', 'import sys; import os; print(sys.path + os.getenv("PYTHONPATH", "").split(os.pathsep));'], {});
     if (!result.stdout) {
       throw Error('Unable to determine Python interpreter search paths.');
     }
