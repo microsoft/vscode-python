@@ -153,25 +153,17 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
     });
     test('Ensure diagnosics are handled when path is invalid', async () => {
         const pythonPath = path.join('a', 'b');
-        helper
-            .setup(h => h.getInterpreterInformation(pythonPath))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(typemoq.Times.once());
-
-        const mockDiagnostics = typemoq.Mock.ofInstance(diagnosticService);
-        mockDiagnostics
-            .setup(s => s.handle(typemoq.It.isAny()))
-            .returns(() => Promise.resolve())
-            .verifiable(typemoq.Times.once());
+        let handleInvoked = false;
+        diagnosticService.handle = () => { handleInvoked = true; return Promise.resolve(); };
         helper
             .setup(h => h.getInterpreterInformation(typemoq.It.isValue(pythonPath)))
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
 
-        const valid = await mockDiagnostics.object.validatePythonPath(pythonPath);
+        const valid = await diagnosticService.validatePythonPath(pythonPath);
 
         helper.verifyAll();
-        mockDiagnostics.verifyAll();
         expect(valid).to.be.equal(false, 'should be invalid');
+        expect(handleInvoked).to.be.equal(true, 'should be invoked');
     });
 });
