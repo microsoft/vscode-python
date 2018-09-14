@@ -185,7 +185,20 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         const serverModule = path.join(this.context.extensionPath, languageServerFolder, this.platformData.getEngineExecutableName());
         this.languageClient = this.createSelfContainedLanguageClient(serverModule, clientOptions);
         try {
-            await this.startLanguageClient();
+            const lsStartupTelemetry: LanguageServerStartupTelemetry = {
+                success: false
+            };
+            sendTelemetryWhenDone(
+                PYTHON_LANGUAGE_SERVER_STARTUP,
+                this.startLanguageClient()
+                    .then(() => {
+                        lsStartupTelemetry.success = true;
+                        // tslint:disable-next-line:no-any
+                    }, (failedStartupReason: any) => {
+                        lsStartupTelemetry.error = failedStartupReason;
+                    }),
+                undefined,
+                lsStartupTelemetry);
             return true;
         } catch (ex) {
             this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
@@ -196,21 +209,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
     private async startLanguageClient(): Promise<void> {
         this.context.subscriptions.push(this.languageClient!.start());
+        await this.serverReady();
         this.progressReporting = new ProgressReporting(this.languageClient!);
-        const lsStartupTelemetry: LanguageServerStartupTelemetry = {
-            success: false,
-            error: undefined
-        };
-        sendTelemetryWhenDone(
-            PYTHON_LANGUAGE_SERVER_STARTUP,
-            this.serverReady().then(() => {
-                lsStartupTelemetry.success = true;
-                // tslint:disable-next-line:no-any
-            }, (failedStartupReason: any) => {
-                lsStartupTelemetry.error = failedStartupReason;
-            }),
-            undefined,
-            lsStartupTelemetry);
     }
 
     private async serverReady(): Promise<void> {
