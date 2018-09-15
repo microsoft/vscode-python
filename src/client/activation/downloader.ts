@@ -9,6 +9,12 @@ import { ProgressLocation, window } from 'vscode';
 import { createDeferred } from '../../utils/async';
 import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
+import { captureTelemetry } from '../telemetry';
+import {
+    PYTHON_LANGUAGE_SERVER_DOWNLOADED,
+    PYTHON_LANGUAGE_SERVER_EXTRACTED
+} from '../telemetry/constants';
+import { LanguageServerInstallOpTelemetry } from '../telemetry/types';
 import { PlatformData, PlatformName } from './platformData';
 import { IDownloadFileService } from './types';
 
@@ -28,6 +34,11 @@ export const DownloadLinks = {
 };
 
 export class LanguageServerDownloader {
+    //tslint:disable-next-line:no-unused-variable
+    private lsDownloadTelemetry: LanguageServerInstallOpTelemetry = {};
+    //tslint:disable-next-line:no-unused-variable
+    private lsExtractTelemetry: LanguageServerInstallOpTelemetry = {};
+
     constructor(
         private readonly output: IOutputChannel,
         private readonly fs: IFileSystem,
@@ -59,6 +70,12 @@ export class LanguageServerDownloader {
         }
     }
 
+    @captureTelemetry(
+        PYTHON_LANGUAGE_SERVER_DOWNLOADED,
+        {},
+        true,
+        (props?: LanguageServerInstallOpTelemetry) => props ? props.success = true : undefined
+    )
     private async downloadFile(uri: string, title: string): Promise<string> {
         this.output.append(`Downloading ${uri}... `);
         const tempFile = await this.fs.createTemporaryFile(downloadFileExtension);
@@ -101,6 +118,12 @@ export class LanguageServerDownloader {
         return tempFile.filePath;
     }
 
+    @captureTelemetry(
+        PYTHON_LANGUAGE_SERVER_EXTRACTED,
+        this.languageServerStartupTelemetry,
+        true,
+        (props?: LanguageServerInstallOpTelemetry) => props ? props.success = true : undefined
+    )
     private async unpackArchive(extensionPath: string, tempFilePath: string): Promise<void> {
         this.output.append('Unpacking archive... ');
 

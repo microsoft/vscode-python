@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import {
@@ -28,12 +30,15 @@ import {
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import { LanguageServerSymbolProvider } from '../providers/symbolProvider';
+import { captureTelemetry } from '../telemetry';
 import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
     PYTHON_LANGUAGE_SERVER_ENABLED,
-    PYTHON_LANGUAGE_SERVER_ERROR
+    PYTHON_LANGUAGE_SERVER_ERROR,
+    PYTHON_LANGUAGE_SERVER_STARTUP
 } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';
+import { LanguageServerInstallOpTelemetry } from '../telemetry/types';
 import { IUnitTestManagementService } from '../unittests/types';
 import { LanguageServerDownloader } from './downloader';
 import { InterpreterData, InterpreterDataService } from './interpreterDataService';
@@ -76,6 +81,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private surveyBanner: IPythonExtensionBanner;
     // tslint:disable-next-line:no-unused-variable
     private progressReporting: ProgressReporting | undefined;
+    //tslint:disable-next-line:no-unused-variable
+    private languageServerStartupTelemetry: LanguageServerInstallOpTelemetry = {};
 
     constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
         this.context = this.services.get<IExtensionContext>(IExtensionContext);
@@ -141,6 +148,12 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged.bind(this));
     }
 
+    @captureTelemetry(
+        PYTHON_LANGUAGE_SERVER_STARTUP,
+        this.languageServerStartupTelemetry,
+        true,
+        (props?: LanguageServerInstallOpTelemetry) => props ? props.success = true : undefined
+    )
     private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
 
