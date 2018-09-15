@@ -14,7 +14,7 @@ import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
     PYTHON_LANGUAGE_SERVER_EXTRACTED
 } from '../telemetry/constants';
-import { LanguageServerInstallOpTelemetry } from '../telemetry/types';
+import { LanguageServerTelemetry } from '../telemetry/types';
 import { PlatformData, PlatformName } from './platformData';
 import { IDownloadFileService } from './types';
 
@@ -35,9 +35,9 @@ export const DownloadLinks = {
 
 export class LanguageServerDownloader {
     //tslint:disable-next-line:no-unused-variable
-    private lsDownloadTelemetry: LanguageServerInstallOpTelemetry = {};
+    private lsDownloadTelemetry: LanguageServerTelemetry = {};
     //tslint:disable-next-line:no-unused-variable
-    private lsExtractTelemetry: LanguageServerInstallOpTelemetry = {};
+    private lsExtractTelemetry: LanguageServerTelemetry = {};
 
     constructor(
         private readonly output: IOutputChannel,
@@ -74,7 +74,7 @@ export class LanguageServerDownloader {
         PYTHON_LANGUAGE_SERVER_DOWNLOADED,
         {},
         true,
-        (props?: LanguageServerInstallOpTelemetry) => props ? props.success = true : undefined
+        (props?: LanguageServerTelemetry) => props ? props.success = true : undefined
     )
     private async downloadFile(uri: string, title: string): Promise<string> {
         this.output.append(`Downloading ${uri}... `);
@@ -122,7 +122,7 @@ export class LanguageServerDownloader {
         PYTHON_LANGUAGE_SERVER_EXTRACTED,
         this.languageServerStartupTelemetry,
         true,
-        (props?: LanguageServerInstallOpTelemetry) => props ? props.success = true : undefined
+        (props?: LanguageServerTelemetry) => props ? props.success = true : undefined
     )
     private async unpackArchive(extensionPath: string, tempFilePath: string): Promise<void> {
         this.output.append('Unpacking archive... ');

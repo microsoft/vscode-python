@@ -15,7 +15,7 @@ export type FormatTelemetry = {
     formatSelection: boolean;
 };
 
-export type LanguageServerInstallOpTelemetry = {
+export type LanguageServerTelemetry = {
     success?: boolean;
 };
 
@@ -86,7 +86,7 @@ export type TerminalTelemetry = {
     interpreterType?: InterpreterType;
 };
 export type TelemetryProperties = FormatTelemetry
-    | LanguageServerInstallOpTelemetry
+    | LanguageServerTelemetry
     | LintingTelemetry
     | EditorLoadTelemetry
     | PythonInterpreterTelemetry
