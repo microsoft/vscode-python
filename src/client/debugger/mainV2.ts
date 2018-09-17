@@ -418,11 +418,12 @@ class DebugManager implements Disposable {
             debugSoketProtocolParser.once('event_process', (proc: DebugProtocol.ProcessEvent) => {
                 this.ptvsdProcessId = proc.body.systemProcessId;
             });
-
         }
+
         // Get ready for PTVSD to communicate directly with VS Code.
         (this.inputStream as any as NodeJS.ReadStream).unpipe<Writable>(this.debugSessionInputStream);
         this.debugSessionOutputStream.unpipe(this.outputStream);
+
         // Do not pipe. When restarting the debugger, the socket gets closed,
         // In which case, VSC will see this and shutdown the debugger completely.
         (this.inputStream as any as NodeJS.ReadStream).on('data', data => {
@@ -430,12 +431,12 @@ class DebugManager implements Disposable {
         });
         this.socket.on('data', (data: string | Buffer) => {
             this.throughOutputStream.write(data);
-
             this.outputStream.write(data as string);
 
         });
         // Send the launch/attach request to PTVSD and wait for it to reply back.
         this.sendMessage(attachOrLaunchRequest, this.socket);
+
         // Send the initialize request and wait for it to reply back with the initialized event
         this.sendMessage(await this.initializeRequest, this.socket);
     }
