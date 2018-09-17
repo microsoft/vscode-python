@@ -396,7 +396,7 @@ class DebugManager implements Disposable {
      * @private
      * @memberof DebugManager
      */
-    private connectVSCodeToPTVSD = async () => {
+    private connectVSCodeToPTVSD = async (response: DebugProtocol.AttachResponse | DebugProtocol.LaunchResponse) => {
         const attachOrLaunchRequest = await (this.launchOrAttach === 'attach' ? this.attachRequest : this.launchRequest);
         // By now we're connected to the client.
         this.socket = await this.debugSession!.debugServer!.client;
@@ -517,4 +517,5 @@ process.on('uncaughtException', (err: Error) => {
 });
 
 startDebugger().catch(() => {
+    // Not necessary except for debugging and to kill linter warning about unhandled promises.
 });
