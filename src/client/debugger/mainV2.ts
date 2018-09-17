@@ -432,8 +432,8 @@ class DebugManager implements Disposable {
         this.socket.on('data', (data: string | Buffer) => {
             this.throughOutputStream.write(data);
             this.outputStream.write(data as string);
-
         });
+
         // Send the launch/attach request to PTVSD and wait for it to reply back.
         this.sendMessage(attachOrLaunchRequest, this.socket);
 
