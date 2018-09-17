@@ -41,7 +41,9 @@ suite('Interpreters Conda Service', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
     let logger: TypeMoq.IMock<ILogger>;
+    let condaPath: string;
     setup(async () => {
+        condaPath = '';
         logger = TypeMoq.Mock.ofType<ILogger>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -60,7 +62,7 @@ suite('Interpreters Conda Service', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => config.object);
         config.setup(c => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => settings.object);
-        settings.setup(p => p.condaPath).returns(() => '');
+        settings.setup(p => p.condaPath).returns(() => condaPath);
         condaService = new CondaService(serviceContainer.object, registryInterpreterLocatorService.object);
 
         fileSystem.setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p1, p2) => {
@@ -336,6 +338,22 @@ suite('Interpreters Conda Service', () => {
 
         const condaExe = await condaService.getCondaFile();
         assert.equal(condaExe, 'conda', 'Failed to identify conda.exe');
+    });
+
+    test('Must use \'python.condaPath\' setting if set', async () => {
+        condaPath = 'spam-spam-conda-spam-spam';
+        // We ensure that conda would otherwise be found.
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version'])))
+            .returns(() => Promise.resolve({ stdout: 'xyz' }))
+            .verifiable(TypeMoq.Times.never());
+
+        const condaExe = await condaService.getCondaFile();
+        assert.equal(condaExe, 'spam-spam-conda-spam-spam', 'Failed to identify conda.exe');
+
+        // We should not try to call other unwanted methods.
+        processService.verifyAll();
+        platformService.verify(p => p.isWindows, TypeMoq.Times.never());
+        registryInterpreterLocatorService.verify(r => r.getInterpreters(TypeMoq.It.isAny()), TypeMoq.Times.never());
     });
 
     test('Must use \'conda\' if is available in the current path', async () => {
