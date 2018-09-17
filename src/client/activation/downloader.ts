@@ -12,7 +12,8 @@ import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
 import { sendTelemetryEvent } from '../telemetry';
 import {
-    PYTHON_LANGUAGE_SERVER_DOWNLOADED
+    PYTHON_LANGUAGE_SERVER_DOWNLOADED,
+    PYTHON_LANGUAGE_SERVER_EXTRACTED
 } from '../telemetry/constants';
 import { PlatformData, PlatformName } from './platformData';
 import { IDownloadFileService } from './types';
@@ -55,28 +56,33 @@ export class LanguageServerDownloader {
 
         try {
             localTempFilePath = await this.downloadFile(downloadUri, 'Downloading Microsoft Python Language Server... ');
-            // success telemetry for download
-            success = true;
         } catch (err) {
-            this.output.appendLine('failed.');
+            this.output.appendLine('download failed.');
             this.output.appendLine(err);
             success = false;
             throw new Error(err);
         } finally {
-            sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_DOWNLOADED, timer.elapsedTime, { success: success === true });
+            sendTelemetryEvent(
+                PYTHON_LANGUAGE_SERVER_DOWNLOADED,
+                timer.elapsedTime,
+                { success }
+            );
         }
 
         timer.reset();
         try {
             await this.unpackArchive(context.extensionPath, localTempFilePath);
-            success = true;
         } catch (err) {
-            this.output.appendLine('failed.');
+            this.output.appendLine('extraction failed.');
             this.output.appendLine(err);
-            success = true;
+            success = false;
             throw new Error(err);
         } finally {
-            sendTelemetryEvent('DEREK2', timer.elapsedTime, { success: success === true });
+            sendTelemetryEvent(
+                PYTHON_LANGUAGE_SERVER_EXTRACTED,
+                timer.elapsedTime,
+                { success }
+            );
             await this.fs.deleteFile(localTempFilePath);
         }
     }

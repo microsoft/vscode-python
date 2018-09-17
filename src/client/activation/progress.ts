@@ -7,14 +7,14 @@ import { createDeferred, Deferred } from '../../utils/async';
 import { StopWatch } from '../../utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
 import { PYTHON_LANGUAGE_SERVER_ANALYSISTIME } from '../telemetry/constants';
-import { LanguageServerTelemetry } from '../telemetry/types';
 
 export class ProgressReporting {
   private statusBarMessage: Disposable | undefined;
   private progress: Progress<{ message?: string; increment?: number }> | undefined;
   private progressDeferred: Deferred<void> | undefined;
-  private progressTimer: StopWatch | undefined;
-  private progressTimeout: NodeJS.Timer | undefined;
+  private progressTimer?: StopWatch;
+  // tslint:disable-next-line:no-unused-variable
+  private progressTimeout?: NodeJS.Timer;
   private ANALYSIS_TIMEOUT_MS: number = 60000;
 
   constructor(private readonly languageClient: LanguageClient) {
@@ -26,13 +26,16 @@ export class ProgressReporting {
     });
 
     this.languageClient.onNotification('python/beginProgress', async _ => {
-      if (this.progressDeferred) { // if we restarted, no worries as reporting will still funnel to the same place.
+      if (this.progressDeferred) {
         return;
       }
 
       this.progressDeferred = createDeferred<void>();
       this.progressTimer = new StopWatch();
-      this.progressTimeout = setTimeout(this.handleTimeout, this.ANALYSIS_TIMEOUT_MS);
+      this.progressTimeout = setTimeout(
+        this.handleTimeout.bind(this),
+        this.ANALYSIS_TIMEOUT_MS
+      );
 
       window.withProgress({
         location: ProgressLocation.Window,
@@ -54,28 +57,22 @@ export class ProgressReporting {
       if (this.progressDeferred) {
         this.progressDeferred.resolve();
         this.progressDeferred = undefined;
-        this.completeAnalysisTracking(true);
         this.progress = undefined;
+        this.completeAnalysisTracking(true);
       }
     });
   }
 
-  private completeAnalysisTracking(isSuccess: boolean): void {
+  private completeAnalysisTracking(success: boolean): void {
     if (this.progressTimer) {
-      const lsAnalysisTelemetry: LanguageServerTelemetry = {
-        success: isSuccess
-      };
       sendTelemetryEvent(
         PYTHON_LANGUAGE_SERVER_ANALYSISTIME,
         this.progressTimer.elapsedTime,
-        lsAnalysisTelemetry
+        { success }
       );
-      this.progressTimer = undefined;
     }
-
-    if (this.progressTimeout) {
-      this.progressTimeout = undefined;
-    }
+    this.progressTimer = undefined;
+    this.progressTimeout = undefined;
   }
 
   // tslint:disable-next-line:no-any
