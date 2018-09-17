@@ -16,7 +16,7 @@ import {
     PYTHON_LANGUAGE_SERVER_EXTRACTED
 } from '../telemetry/constants';
 import { PlatformData, PlatformName } from './platformData';
-import { IDownloadFileService } from './types';
+import { IDownloadFileService, ILanguageServerDownloader } from './types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const StreamZip = require('node-stream-zip');
@@ -33,8 +33,7 @@ export const DownloadLinks = {
     [PlatformName.Mac64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Mac64Bit}.${downloadVersion}${downloadFileExtension}`
 };
 
-export class LanguageServerDownloader {
-
+export class LanguageServerDownloader implements ILanguageServerDownloader {
     constructor(
         private readonly output: IOutputChannel,
         private readonly fs: IFileSystem,
