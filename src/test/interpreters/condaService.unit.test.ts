@@ -41,9 +41,9 @@ suite('Interpreters Conda Service', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
     let logger: TypeMoq.IMock<ILogger>;
-    let condaPath: string;
+    let condaPathSetting: string;
     setup(async () => {
-        condaPath = '';
+        condaPathSetting = '';
         logger = TypeMoq.Mock.ofType<ILogger>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -62,7 +62,7 @@ suite('Interpreters Conda Service', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => config.object);
         config.setup(c => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => settings.object);
-        settings.setup(p => p.condaPath).returns(() => condaPath);
+        settings.setup(p => p.condaPath).returns(() => condaPathSetting);
         condaService = new CondaService(serviceContainer.object, registryInterpreterLocatorService.object);
 
         fileSystem.setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p1, p2) => {
@@ -341,7 +341,7 @@ suite('Interpreters Conda Service', () => {
     });
 
     test('Must use \'python.condaPath\' setting if set', async () => {
-        condaPath = 'spam-spam-conda-spam-spam';
+        condaPathSetting = 'spam-spam-conda-spam-spam';
         // We ensure that conda would otherwise be found.
         processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version'])))
             .returns(() => Promise.resolve({ stdout: 'xyz' }))
