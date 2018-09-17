@@ -19,6 +19,10 @@ export class ProgressReporting {
     });
 
     this.languageClient.onNotification('python/beginProgress', async _ => {
+      if (this.progressDeferred) { // if we restarted, no worries as reporting will still funnel to the same place.
+        return;
+      }
+
       this.progressDeferred = createDeferred<void>();
       window.withProgress({
         location: ProgressLocation.Window,
@@ -40,7 +44,13 @@ export class ProgressReporting {
       if (this.progressDeferred) {
         this.progressDeferred.resolve();
         this.progressDeferred = undefined;
+        this.progress = undefined;
       }
     });
+
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: (from https://github.com/Microsoft/vscode-python/pull/2597#discussion_r217892043)
+    // For #2297 (while most of the problem is not here, restart is rare) you need
+    // to track 'stateChange' on the language client. When it gets to 'stopped' LS has terminated
   }
 }
