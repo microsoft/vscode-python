@@ -16,7 +16,7 @@ export type FormatTelemetry = {
 };
 
 export type LanguageServerTelemetry = {
-    success?: boolean;
+    success: boolean;
 };
 
 export type LinterTrigger = 'auto' | 'save';

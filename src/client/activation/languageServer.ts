@@ -30,15 +30,11 @@ import {
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import { LanguageServerSymbolProvider } from '../providers/symbolProvider';
-import { captureTelemetry } from '../telemetry';
 import {
-    PYTHON_LANGUAGE_SERVER_DOWNLOADED,
     PYTHON_LANGUAGE_SERVER_ENABLED,
-    PYTHON_LANGUAGE_SERVER_ERROR,
-    PYTHON_LANGUAGE_SERVER_STARTUP
+    PYTHON_LANGUAGE_SERVER_ERROR
 } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';
-import { LanguageServerTelemetry } from '../telemetry/types';
 import { IUnitTestManagementService } from '../unittests/types';
 import { LanguageServerDownloader } from './downloader';
 import { InterpreterData, InterpreterDataService } from './interpreterDataService';
@@ -81,8 +77,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private surveyBanner: IPythonExtensionBanner;
     // tslint:disable-next-line:no-unused-variable
     private progressReporting: ProgressReporting | undefined;
-    //tslint:disable-next-line:no-unused-variable
-    private languageServerStartupTelemetry: LanguageServerTelemetry = {};
 
     constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
         this.context = this.services.get<IExtensionContext>(IExtensionContext);
@@ -148,15 +142,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         (this.configuration.getSettings() as PythonSettings).removeListener('change', this.onSettingsChanged.bind(this));
     }
 
-    @captureTelemetry(
-        PYTHON_LANGUAGE_SERVER_STARTUP,
-        this.languageServerStartupTelemetry,
-        true,
-        (props?: LanguageServerTelemetry) => props ? props.success = true : undefined
-    )
     private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
-
         const reporter = getTelemetryReporter();
         reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ENABLED);
 
@@ -177,7 +164,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 new RequestWithProxy(this.workspace.getConfiguration('http').get('proxy', '')),
                 languageServerFolder);
             await downloader.downloadLanguageServer(this.context);
-            reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_DOWNLOADED);
         }
 
         const serverModule = path.join(this.context.extensionPath, languageServerFolder, this.platformData.getEngineExecutableName());
