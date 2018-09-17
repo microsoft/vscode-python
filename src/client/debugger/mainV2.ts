@@ -400,6 +400,7 @@ class DebugManager implements Disposable {
         const attachOrLaunchRequest = await (this.launchOrAttach === 'attach' ? this.attachRequest : this.launchRequest);
         // By now we're connected to the client.
         this.socket = await this.debugSession!.debugServer!.client;
+
         // We need to handle both end and error, sometimes the socket will error out without ending (if debugee is killed).
         // Note, we need a handler for the error event, else nodejs complains when socket gets closed and there are no error handlers.
         this.socket.on('end', () => {
@@ -417,6 +418,7 @@ class DebugManager implements Disposable {
             debugSoketProtocolParser.once('event_process', (proc: DebugProtocol.ProcessEvent) => {
                 this.ptvsdProcessId = proc.body.systemProcessId;
             });
+
         }
         // Get ready for PTVSD to communicate directly with VS Code.
         (this.inputStream as any as NodeJS.ReadStream).unpipe<Writable>(this.debugSessionInputStream);
@@ -428,7 +430,9 @@ class DebugManager implements Disposable {
         });
         this.socket.on('data', (data: string | Buffer) => {
             this.throughOutputStream.write(data);
+
             this.outputStream.write(data as string);
+
         });
         // Send the launch/attach request to PTVSD and wait for it to reply back.
         this.sendMessage(attachOrLaunchRequest, this.socket);
@@ -516,6 +520,6 @@ process.on('uncaughtException', (err: Error) => {
     setTimeout(() => process.exit(-1), 100);
 });
 
-startDebugger().catch(() => {
+startDebugger().catch(ex => {
     // Not necessary except for debugging and to kill linter warning about unhandled promises.
 });
