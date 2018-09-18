@@ -48,7 +48,6 @@ import { ILintingEngine } from './linters/types';
 import { PythonCodeActionProvider } from './providers/codeActionsProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { LinterProvider } from './providers/linterProvider';
-import { PythonRenameProvider } from './providers/renameProvider';
 import { ReplProvider } from './providers/replProvider';
 import { registerTypes as providersRegisterTypes } from './providers/serviceRegistry';
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
@@ -87,9 +86,8 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const pythonSettings = configuration.getSettings();
 
-    const standardOutputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    context.subscriptions.push(languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceManager)));
-    activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceManager);
+    const standardOutputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+    activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 
     const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
     await activationService.activate();

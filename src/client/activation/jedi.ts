@@ -58,6 +58,8 @@ export class JediExtensionActivator implements IExtensionActivator {
             context.subscriptions.push(languages.registerSignatureHelpProvider(this.documentSelector, new PythonSignatureProvider(jediFactory), '(', ','));
         }
 
+        context.subscriptions.push(languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer)));
+
         const testManagementService = this.serviceManager.get<IUnitTestManagementService>(IUnitTestManagementService);
         testManagementService.activate()
             .then(() => testManagementService.activateCodeLenses(symbolProvider))
