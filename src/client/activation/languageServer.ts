@@ -333,7 +333,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private getTypeshedPaths(settings: IPythonSettings): string[] {
         return settings.analysis.typeshedPaths && settings.analysis.typeshedPaths.length > 0
             ? settings.analysis.typeshedPaths
-            : [path.join(this.context.extensionPath, 'languageServer', 'Typeshed')];
+            : [path.join(this.context.extensionPath, this.languageServerFolder, 'Typeshed')];
     }
 
     private async onSettingsChanged(): Promise<void> {
