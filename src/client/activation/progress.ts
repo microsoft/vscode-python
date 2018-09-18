@@ -5,7 +5,7 @@ import { Progress, ProgressLocation, window } from 'vscode';
 import { Disposable, LanguageClient } from 'vscode-languageclient';
 import { createDeferred, Deferred } from '../../utils/async';
 
-export class ProgressReporting implements Disposable {
+export class ProgressReporting {
   private statusBarMessage: Disposable | undefined;
   private progress: Progress<{ message?: string; increment?: number }> | undefined;
   private progressDeferred: Deferred<void> | undefined;
@@ -19,7 +19,6 @@ export class ProgressReporting implements Disposable {
     });
 
     this.languageClient.onNotification('python/beginProgress', async _ => {
-      this.clearProgress();
       this.progressDeferred = createDeferred<void>();
       window.withProgress({
         location: ProgressLocation.Window,
@@ -37,17 +36,11 @@ export class ProgressReporting implements Disposable {
       this.progress.report({ message: m });
     });
 
-    this.languageClient.onNotification('python/endProgress', _ => this.clearProgress());
-  }
-
-  public dispose(): void {
-    this.clearProgress();
-  }
-
-  private clearProgress(): void {
-    if (this.progressDeferred) {
-      this.progressDeferred.resolve();
-      this.progressDeferred = undefined;
-    }
+    this.languageClient.onNotification('python/endProgress', _ => {
+      if (this.progressDeferred) {
+        this.progressDeferred.resolve();
+        this.progressDeferred = undefined;
+      }
+    });
   }
 }
