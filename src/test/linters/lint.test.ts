@@ -262,6 +262,7 @@ suite('Linting - General Tests', () => {
     test('Multiple linters', async function () {
         // tslint:disable-next-line:no-invalid-this
         this.skip();
+        return;
 
 //      Unreliable test being skipped until we can sort it out.
 //          - Fails about 1/3 of runs on Windows
