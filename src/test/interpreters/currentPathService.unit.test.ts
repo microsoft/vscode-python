@@ -49,16 +49,13 @@ suite('Interpreters CurrentPath Service', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny())).returns(() => persistentStateFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configurationService.object);
 
-        currentPathService = new CurrentPathService(virtualEnvironmentManager.object, interpreterHelper.object, procServiceFactory.object, serviceContainer.object);
+        currentPathService = new CurrentPathService(interpreterHelper.object, procServiceFactory.object, serviceContainer.object);
     });
 
     test('Interpreters that do not exist on the file system are not excluded from the list', async () => {
         // Specific test for 1305
         const version = 'mockVersion';
-        const envName = 'mockEnvName';
         interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version }));
-        virtualEnvironmentManager.setup(v => v.getEnvironmentName(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(envName));
-        virtualEnvironmentManager.setup(v => v.getEnvironmentType(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(InterpreterType.VirtualEnv));
 
         const execArgs = ['-c', 'import sys;print(sys.executable)'];
         pythonSettings.setup(p => p.pythonPath).returns(() => 'root:Python');
@@ -75,8 +72,9 @@ suite('Interpreters CurrentPath Service', () => {
         const interpreters = await currentPathService.getInterpreters();
         processService.verifyAll();
         fileSystem.verifyAll();
+
         expect(interpreters).to.be.of.length(2);
-        expect(interpreters).to.deep.include({ version, envName, path: 'c:/root:python', type: InterpreterType.VirtualEnv });
-        expect(interpreters).to.deep.include({ version, envName, path: 'c:/python3', type: InterpreterType.VirtualEnv });
+        expect(interpreters).to.deep.include({ version, path: 'c:/root:python', type: InterpreterType.Unknown });
+        expect(interpreters).to.deep.include({ version, path: 'c:/python3', type: InterpreterType.Unknown });
     });
 });
