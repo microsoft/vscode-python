@@ -8,6 +8,10 @@ import { StopWatch } from '../../utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
 import { PYTHON_LANGUAGE_SERVER_ANALYSISTIME } from '../telemetry/constants';
 
+// Draw the line at Language Server analysis 'timing out'
+// and becoming a failure-case at 1 minute:
+const ANALYSIS_TIMEOUT_MS: number = 60000;
+
 export class ProgressReporting {
   private statusBarMessage: Disposable | undefined;
   private progress: Progress<{ message?: string; increment?: number }> | undefined;
@@ -15,7 +19,6 @@ export class ProgressReporting {
   private progressTimer?: StopWatch;
   // tslint:disable-next-line:no-unused-variable
   private progressTimeout?: NodeJS.Timer;
-  private ANALYSIS_TIMEOUT_MS: number = 60000;
 
   constructor(private readonly languageClient: LanguageClient) {
     this.languageClient.onNotification('python/setStatusBarMessage', (m: string) => {
@@ -34,7 +37,7 @@ export class ProgressReporting {
       this.progressTimer = new StopWatch();
       this.progressTimeout = setTimeout(
         this.handleTimeout.bind(this),
-        this.ANALYSIS_TIMEOUT_MS
+        ANALYSIS_TIMEOUT_MS
       );
 
       window.withProgress({
