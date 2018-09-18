@@ -3,6 +3,7 @@
 
 import { expect } from 'chai';
 import { extensions } from 'vscode';
+import { PVSC_EXTENSION_ID } from '../../client/common/constants';
 import { initialize } from '../initialize';
 
 // NOTE:
@@ -17,6 +18,6 @@ suite('Activate Extension', () => {
         await initialize();
     });
     test('Python extension has activated', async () => {
-        expect(extensions.getExtension('ms-python.python')!.isActive).to.equal(true, 'Extension has not been activated');
+        expect(extensions.getExtension(PVSC_EXTENSION_ID)!.isActive).to.equal(true, 'Extension has not been activated');
     });
 });

@@ -29,8 +29,10 @@ suite('Terminal Environment Activation conda', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
     let condaService: TypeMoq.IMock<ICondaService>;
+    let conda: string;
 
     setup(() => {
+        conda = 'conda';
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         disposables = [];
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny())).returns(() => disposables);
@@ -39,6 +41,8 @@ suite('Terminal Environment Activation conda', () => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
         condaService = TypeMoq.Mock.ofType<ICondaService>();
+        condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve(conda));
+
         processService.setup((x: any) => x.then).returns(() => undefined);
         procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
         procServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
@@ -71,6 +75,20 @@ suite('Terminal Environment Activation conda', () => {
 
         const activationCommands = await terminalHelper.getEnvironmentActivationCommands(TerminalShellType.bash, undefined);
         expect(activationCommands).to.equal(undefined, 'Activation commands should be undefined');
+    });
+
+    test('Conda activation for fish escapes spaces in conda filename', async () => {
+        conda = 'path to conda';
+        const envName = 'EnvA';
+        const pythonPath = 'python3';
+        platformService.setup(p => p.isWindows).returns(() => false);
+        condaService.setup(c => c.getCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve({ name: envName, path: path.dirname(pythonPath) }));
+        const expected = ['"path to conda" activate EnvA'];
+
+        const provider = new CondaActivationCommandProvider(serviceContainer.object);
+        const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.fish);
+
+        expect(activationCommands).to.deep.equal(expected, 'Incorrect Activation command');
     });
 
     async function expectNoCondaActivationCommandForPowershell(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string, shellType: TerminalShellType, hasSpaceInEnvironmentName = false) {

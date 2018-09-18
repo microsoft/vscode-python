@@ -22,6 +22,7 @@ import { createDeferred, Deferred, sleep } from '../../utils/async';
 import { noop } from '../../utils/misc';
 import { isNotInstalledError } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
+import { IProcessServiceFactory } from '../common/process/types';
 import { ICurrentProcess } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from './Common/Contracts';
@@ -33,6 +34,7 @@ const killProcessTree = require('tree-kill');
 
 const DEBUGGER_CONNECT_TIMEOUT = 20000;
 const MIN_DEBUGGER_CONNECT_TIMEOUT = 5000;
+const InvalidPythonPathInDebuggerMessage = 'You need to select a Python interpreter before you start debugging. \nTip: click on "Select Python Environment" in the status bar.';
 
 /**
  * Primary purpose of this class is to perform the handshake with VS Code and launch PTVSD process.
@@ -106,13 +108,32 @@ export class PythonDebugger extends DebugSession {
         if ((typeof args.module !== 'string' || args.module.length === 0) && args.program && !fs.fileExistsSync(args.program)) {
             return this.sendErrorResponse(response, { format: `File does not exist. "${args.program}"`, id: 1 }, undefined, undefined, ErrorDestination.User);
         }
-        this.launchPTVSD(args)
-            .then(() => this.waitForPTVSDToConnect(args))
-            .then(() => this.emit('debugger_launched'))
+
+        this.validatePythonPath(response, args)
+            .then<any>(valid => {
+                if (!valid) {
+                    return;
+                }
+                return this.launchPTVSD(args)
+                    .then(() => this.waitForPTVSDToConnect(args))
+                    .then(() => this.emit('debugger_launched'));
+            })
             .catch(ex => {
                 const message = this.getUserFriendlyLaunchErrorMessage(args, ex) || 'Debug Error';
                 this.sendErrorResponse(response, { format: message, id: 1 }, undefined, undefined, ErrorDestination.User);
             });
+    }
+    private async validatePythonPath(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): Promise<boolean> {
+        const pythonPath = typeof args.pythonPath === 'string' && args.pythonPath.length > 0 ? args.pythonPath : 'python';
+        const processFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        const processService = await processFactory.create();
+        const valid = await processService.exec(pythonPath, ['--version'])
+            .then(output => output.stdout.trim().length > 0)
+            .catch(() => false);
+        if (!valid) {
+            this.sendErrorResponse(response, { format: InvalidPythonPathInDebuggerMessage, id: 2 }, undefined, undefined, ErrorDestination.User);
+        }
+        return valid;
     }
     private async launchPTVSD(args: LaunchRequestArguments) {
         const launcher = CreateLaunchDebugClient(args, this, this.supportsRunInTerminalRequest);

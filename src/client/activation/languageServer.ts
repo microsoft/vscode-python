@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import {
@@ -29,7 +31,6 @@ import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import { LanguageServerSymbolProvider } from '../providers/symbolProvider';
 import {
-    PYTHON_LANGUAGE_SERVER_DOWNLOADED,
     PYTHON_LANGUAGE_SERVER_ENABLED,
     PYTHON_LANGUAGE_SERVER_ERROR
 } from '../telemetry/constants';
@@ -143,7 +144,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
     private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
-
         const reporter = getTelemetryReporter();
         reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ENABLED);
 
@@ -164,7 +164,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 new RequestWithProxy(this.workspace.getConfiguration('http').get('proxy', '')),
                 languageServerFolder);
             await downloader.downloadLanguageServer(this.context);
-            reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_DOWNLOADED);
         }
 
         const serverModule = path.join(this.context.extensionPath, languageServerFolder, this.platformData.getEngineExecutableName());

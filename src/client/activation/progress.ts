@@ -4,11 +4,21 @@
 import { Progress, ProgressLocation, window } from 'vscode';
 import { Disposable, LanguageClient } from 'vscode-languageclient';
 import { createDeferred, Deferred } from '../../utils/async';
+import { StopWatch } from '../../utils/stopWatch';
+import { sendTelemetryEvent } from '../telemetry';
+import { PYTHON_LANGUAGE_SERVER_ANALYSISTIME } from '../telemetry/constants';
+
+// Draw the line at Language Server analysis 'timing out'
+// and becoming a failure-case at 1 minute:
+const ANALYSIS_TIMEOUT_MS: number = 60000;
 
 export class ProgressReporting {
   private statusBarMessage: Disposable | undefined;
   private progress: Progress<{ message?: string; increment?: number }> | undefined;
   private progressDeferred: Deferred<void> | undefined;
+  private progressTimer?: StopWatch;
+  // tslint:disable-next-line:no-unused-variable
+  private progressTimeout?: NodeJS.Timer;
 
   constructor(private readonly languageClient: LanguageClient) {
     this.languageClient.onNotification('python/setStatusBarMessage', (m: string) => {
@@ -24,6 +34,12 @@ export class ProgressReporting {
       }
 
       this.progressDeferred = createDeferred<void>();
+      this.progressTimer = new StopWatch();
+      this.progressTimeout = setTimeout(
+        this.handleTimeout.bind(this),
+        ANALYSIS_TIMEOUT_MS
+      );
+
       window.withProgress({
         location: ProgressLocation.Window,
         title: ''
@@ -45,6 +61,7 @@ export class ProgressReporting {
         this.progressDeferred.resolve();
         this.progressDeferred = undefined;
         this.progress = undefined;
+        this.completeAnalysisTracking(true);
       }
     });
 
@@ -52,5 +69,22 @@ export class ProgressReporting {
     // TODO: (from https://github.com/Microsoft/vscode-python/pull/2597#discussion_r217892043)
     // For #2297 (while most of the problem is not here, restart is rare) you need
     // to track 'stateChange' on the language client. When it gets to 'stopped' LS has terminated
+  }
+
+  private completeAnalysisTracking(success: boolean): void {
+    if (this.progressTimer) {
+      sendTelemetryEvent(
+        PYTHON_LANGUAGE_SERVER_ANALYSISTIME,
+        this.progressTimer.elapsedTime,
+        { success }
+      );
+    }
+    this.progressTimer = undefined;
+    this.progressTimeout = undefined;
+  }
+
+  // tslint:disable-next-line:no-any
+  private handleTimeout(_args: any[]): void {
+    this.completeAnalysisTracking(false);
   }
 }

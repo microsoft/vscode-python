@@ -50,8 +50,9 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 `& cmd /k "activate ${envInfo.name.toCommandArgument().replace(/"/g, '""')} & ${powershellExe}"`
             ];
         } else if (targetShell === TerminalShellType.fish) {
+            const conda = await condaService.getCondaFile();
             // https://github.com/conda/conda/blob/be8c08c083f4d5e05b06bd2689d2cd0d410c2ffe/shell/etc/fish/conf.d/conda.fish#L18-L28
-            return [`conda activate ${envInfo.name.toCommandArgument()}`];
+            return [`${conda.fileToCommandArgument()} activate ${envInfo.name.toCommandArgument()}`];
         } else if (isWindows) {
             return [`activate ${envInfo.name.toCommandArgument()}`];
         } else {
