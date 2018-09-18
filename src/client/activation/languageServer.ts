@@ -308,7 +308,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.getVsCodeExcludeSection('files.exclude', list);
         this.getVsCodeExcludeSection('files.watcherExclude', list);
         this.getPythonExcludeSection(list);
-        this.getPythonExcludeSection(list);
         return list;
     }
 
