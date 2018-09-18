@@ -66,6 +66,8 @@ suite('Language Server', () => {
             .returns(() => { return Promise.resolve({ PYTHONPATH: pythonPathVar.join(pathDelimiter) }); })
             .verifiable(TypeMoq.Times.once());
 
+        // tslint:disable-next-line:no-any
+        (languageServer as any).languageServerFolder = '';
         const options = await languageServer.getAnalysisOptions();
 
         expect(options!).not.to.equal(undefined, 'options cannot be undefined');
