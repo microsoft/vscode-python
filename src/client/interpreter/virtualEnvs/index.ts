@@ -4,9 +4,11 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { noop } from '../../../utils/misc';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
+import { ICurrentProcess, IPathUtils } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { InterpreterType, IPipEnvService } from '../contracts';
 import { IVirtualEnvironmentManager } from './types';
@@ -20,7 +22,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
     private fs: IFileSystem;
     private pyEnvRoot?: string;
     private workspaceService: IWorkspaceService;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
         this.pipEnvService = serviceContainer.get<IPipEnvService>(IPipEnvService);
@@ -66,16 +68,27 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         // Lets not try to determine whether this is a conda environment or not.
         return InterpreterType.Unknown;
     }
-    private async getPyEnvRoot(resource?: Uri): Promise<string | undefined> {
+    public async getPyEnvRoot(resource?: Uri): Promise<string | undefined> {
         if (this.pyEnvRoot) {
             return this.pyEnvRoot;
         }
+
+        const currentProccess = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
+        const pyenvRoot = currentProccess.env.PYENV_ROOT;
+        if (pyenvRoot) {
+            return this.pyEnvRoot = pyenvRoot;
+        }
+
         try {
             const processService = await this.processServiceFactory.create(resource);
             const output = await processService.exec('pyenv', ['root']);
-            return this.pyEnvRoot = output.stdout.trim();
+            if (output.stdout.trim().length > 0) {
+                return this.pyEnvRoot = output.stdout.trim();
+            }
         } catch {
-            return;
+            noop();
         }
+        const pathUtils = this.serviceContainer.get<IPathUtils>(IPathUtils);
+        return this.pyEnvRoot = path.join(pathUtils.home, '.pyenv');
     }
 }

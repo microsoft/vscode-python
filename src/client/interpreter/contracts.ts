@@ -22,7 +22,7 @@ export interface IKnownSearchPathsForInterpreters {
 }
 export const IVirtualEnvironmentsSearchPathProvider = Symbol('IVirtualEnvironmentsSearchPathProvider');
 export interface IVirtualEnvironmentsSearchPathProvider {
-    getSearchPaths(resource?: Uri): string[];
+    getSearchPaths(resource?: Uri): Promise<string[]>;
 }
 export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
 

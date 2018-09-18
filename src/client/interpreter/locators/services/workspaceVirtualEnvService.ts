@@ -28,7 +28,7 @@ export class WorkspaceVirtualEnvironmentsSearchPathProvider implements IVirtualE
     public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
 
     }
-    public getSearchPaths(resource?: Uri): string[] {
+    public async getSearchPaths(resource?: Uri): Promise<string[]> {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const paths: string[] = [];
         const venvPath = configService.getSettings(resource).venvPath;
