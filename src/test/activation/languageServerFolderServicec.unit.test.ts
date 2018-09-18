@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-any
+// tslint:disable:no-any max-func-body-length
 
 import { expect } from 'chai';
 import * as path from 'path';
@@ -13,7 +13,7 @@ import { LanguageServerFolderService } from '../../client/activation/languageSer
 import { ILanguageServerPackageService } from '../../client/activation/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { INugetRepo, NugetPackage } from '../../client/common/types';
+import { IConfigurationService, INugetRepo, IPythonSettings, NugetPackage } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 const languageServerFolder = 'languageServer';
@@ -23,12 +23,17 @@ suite('Language Server Folder Service', () => {
     let nugetRepo: typeMoq.IMock<INugetRepo>;
     let platform: typeMoq.IMock<IPlatformService>;
     let lsFolderService: LanguageServerFolderService;
+    let settings: typeMoq.IMock<IPythonSettings>;
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         nugetRepo = typeMoq.Mock.ofType<INugetRepo>();
         platform = typeMoq.Mock.ofType<IPlatformService>();
+        const configService = typeMoq.Mock.ofType<IConfigurationService>();
+        settings = typeMoq.Mock.ofType<IPythonSettings>();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepo))).returns(() => nugetRepo.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platform.object);
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
+        configService.setup(cfg => cfg.getSettings()).returns(() => settings.object);
 
         lsFolderService = new LanguageServerFolderService(serviceContainer.object);
     });
@@ -86,6 +91,7 @@ suite('Language Server Folder Service', () => {
     });
     test('Get latest language server folder name from nuget package version when there is no local folder', async () => {
         const pkg: NugetPackage = { package: 'abc', version: new SemVer('1.1.1'), uri: 'xyz' };
+        settings.setup(s => s.autoUpdateLanguageServer).returns(() => true).verifiable(typeMoq.Times.once());
         lsFolderService.getLatestLanguageServerDirectory = () => Promise.resolve(undefined);
         lsFolderService.getLatestLanguageServerVersion = () => Promise.resolve(pkg);
 
@@ -93,24 +99,40 @@ suite('Language Server Folder Service', () => {
 
         expect(folderName).to.be.equal(`${languageServerFolder}.${pkg.version.raw}`);
     });
-    test('Get latest language server folder name from when local is same as nuget package version', async () => {
+    test('Get latest language server folder name when local is same as nuget package version', async () => {
         const pkg: NugetPackage = { package: 'abc', version: new SemVer('1.1.1'), uri: 'xyz' };
         const existingFolder = { path: path.join('1', '2', 'abc'), version: new SemVer('1.1.1') };
+        settings.setup(s => s.autoUpdateLanguageServer).returns(() => true).verifiable(typeMoq.Times.once());
         lsFolderService.getLatestLanguageServerDirectory = () => Promise.resolve(existingFolder);
         lsFolderService.getLatestLanguageServerVersion = () => Promise.resolve(pkg);
 
         const folderName = await lsFolderService.getLanguageServerFolderName();
 
+        settings.verifyAll();
         expect(folderName).to.be.equal('abc');
     });
-    test('Get latest language server folder name from when remote version is greater', async () => {
+    test('Get latest language server folder name when remote version is greater', async () => {
         const pkg: NugetPackage = { package: 'abc', version: new SemVer('2.1.1'), uri: 'xyz' };
         const existingFolder = { path: path.join('1', '2', 'abc'), version: new SemVer('1.1.1') };
+        settings.setup(s => s.autoUpdateLanguageServer).returns(() => true).verifiable(typeMoq.Times.once());
         lsFolderService.getLatestLanguageServerDirectory = () => Promise.resolve(existingFolder);
         lsFolderService.getLatestLanguageServerVersion = () => Promise.resolve(pkg);
 
         const folderName = await lsFolderService.getLanguageServerFolderName();
 
+        settings.verifyAll();
         expect(folderName).to.be.equal(`${languageServerFolder}.2.1.1`);
+    });
+    test('Get local folder name when remote version is greater and auto download is disabled', async () => {
+        const pkg: NugetPackage = { package: 'abc', version: new SemVer('2.1.1'), uri: 'xyz' };
+        const existingFolder = { path: path.join('1', '2', 'abc'), version: new SemVer('1.1.1') };
+        settings.setup(s => s.autoUpdateLanguageServer).returns(() => false).verifiable(typeMoq.Times.once());
+        lsFolderService.getLatestLanguageServerDirectory = () => Promise.resolve(existingFolder);
+        lsFolderService.getLatestLanguageServerVersion = () => Promise.resolve(pkg);
+
+        const folderName = await lsFolderService.getLanguageServerFolderName();
+
+        settings.verifyAll();
+        expect(folderName).to.be.equal('abc');
     });
 });

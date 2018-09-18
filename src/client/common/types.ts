@@ -142,6 +142,7 @@ export interface IPythonSettings {
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
     readonly analysis: IAnalysisSettings;
+    readonly autoUpdateLanguageServer: boolean;
 }
 export interface ISortImportSettings {
     readonly path: string;

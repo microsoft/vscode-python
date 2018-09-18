@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as semver from 'semver';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
-import { ILogger, NugetPackage } from '../common/types';
+import { IConfigurationService, ILogger, NugetPackage } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ILanguageServerFolderService, ILanguageServerPackageService } from './types';
 
@@ -20,14 +20,21 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
 
     public async getLanguageServerFolderName(): Promise<string> {
-        const serverVersion = await this.getLatestLanguageServerVersion()
+        const latestFolder = await this.getLatestLanguageServerDirectory();
+        let serverVersion: NugetPackage | undefined;
+
+        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        if (latestFolder && !configService.getSettings().autoUpdateLanguageServer) {
+            return path.basename(latestFolder.path);
+        }
+
+        serverVersion = await this.getLatestLanguageServerVersion()
             .catch(ex => {
                 const logger = this.serviceContainer.get<ILogger>(ILogger);
                 logger.logError('Failed to get latest version of Language Server.', ex);
                 return undefined;
             });
 
-        const latestFolder = await this.getLatestLanguageServerDirectory();
         if (latestFolder && (!serverVersion || serverVersion.version.compare(latestFolder.version) <= 0)) {
             return path.basename(latestFolder.path);
         }
