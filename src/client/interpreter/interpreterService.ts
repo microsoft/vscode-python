@@ -127,7 +127,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         let fileHash = await this.fs.getFileHash(pythonPath).catch(() => '');
         fileHash = fileHash ? fileHash : '';
-        const store = this.persistentStateFactory.createGlobalPersistentState<PythonInterpreter & { fileHash: string }>(`${pythonPath}.interpreter.details.v1`, undefined, EXPITY_DURATION);
+        const store = this.persistentStateFactory.createGlobalPersistentState<PythonInterpreter & { fileHash: string }>(`${pythonPath}.interpreter.details.v2`, undefined, EXPITY_DURATION);
         if (store.value && fileHash && store.value.fileHash === fileHash) {
             return store.value;
         }

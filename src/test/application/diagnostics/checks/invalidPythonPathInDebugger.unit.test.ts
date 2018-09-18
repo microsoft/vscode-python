@@ -3,20 +3,26 @@
 
 'use strict';
 
+// tslint:disable:no-invalid-template-strings max-func-body-length
+
 import { expect } from 'chai';
+import * as path from 'path';
 import * as typemoq from 'typemoq';
 import { InvalidPythonPathInDebuggerService } from '../../../../client/application/diagnostics/checks/invalidPythonPathInDebugger';
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
-import { IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService, IDiagnosticsService } from '../../../../client/application/diagnostics/types';
+import { IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService, IInvalidPythonPathInDebuggerService } from '../../../../client/application/diagnostics/types';
+import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
+import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
-// tslint:disable-next-line:max-func-body-length
 suite('Application Diagnostics - Checks Python Path in debugger', () => {
-    let diagnosticService: IDiagnosticsService;
+    let diagnosticService: IInvalidPythonPathInDebuggerService;
     let messageHandler: typemoq.IMock<IDiagnosticHandlerService<MessageCommandPrompt>>;
     let commandFactory: typemoq.IMock<IDiagnosticsCommandFactory>;
+    let configService: typemoq.IMock<IConfigurationService>;
+    let helper: typemoq.IMock<IInterpreterHelper>;
     setup(() => {
         const serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         messageHandler = typemoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
@@ -25,6 +31,12 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         commandFactory = typemoq.Mock.ofType<IDiagnosticsCommandFactory>();
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDiagnosticsCommandFactory)))
             .returns(() => commandFactory.object);
+        configService = typemoq.Mock.ofType<IConfigurationService>();
+        serviceContainer.setup(s => s.get(typemoq.It.isValue(IConfigurationService)))
+            .returns(() => configService.object);
+        helper = typemoq.Mock.ofType<IInterpreterHelper>();
+        serviceContainer.setup(s => s.get(typemoq.It.isValue(IInterpreterHelper)))
+            .returns(() => helper.object);
 
         diagnosticService = new InvalidPythonPathInDebuggerService(serviceContainer.object);
     });
@@ -71,5 +83,87 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         diagnostic.verifyAll();
         commandFactory.verifyAll();
         messageHandler.verifyAll();
+    });
+    test('Ensure we get python path from config when path = ${config:python.pythonPath}', async () => {
+        const pythonPath = '${config:python.pythonPath}';
+
+        const settings = typemoq.Mock.ofType<IPythonSettings>();
+        settings
+            .setup(s => s.pythonPath)
+            .returns(() => 'p')
+            .verifiable(typemoq.Times.once());
+        configService
+            .setup(c => c.getSettings(typemoq.It.isAny()))
+            .returns(() => settings.object)
+            .verifiable(typemoq.Times.once());
+        helper
+            .setup(h => h.getInterpreterInformation(typemoq.It.isValue('p')))
+            .returns(() => Promise.resolve({}))
+            .verifiable(typemoq.Times.once());
+
+        const valid = await diagnosticService.validatePythonPath(pythonPath);
+
+        settings.verifyAll();
+        configService.verifyAll();
+        helper.verifyAll();
+        expect(valid).to.be.equal(true, 'not valid');
+    });
+    test('Ensure we get python path from config when path = undefined', async () => {
+        const pythonPath = undefined;
+
+        const settings = typemoq.Mock.ofType<IPythonSettings>();
+        settings
+            .setup(s => s.pythonPath)
+            .returns(() => 'p')
+            .verifiable(typemoq.Times.once());
+        configService
+            .setup(c => c.getSettings(typemoq.It.isAny()))
+            .returns(() => settings.object)
+            .verifiable(typemoq.Times.once());
+        helper
+            .setup(h => h.getInterpreterInformation(typemoq.It.isValue('p')))
+            .returns(() => Promise.resolve({}))
+            .verifiable(typemoq.Times.once());
+
+        const valid = await diagnosticService.validatePythonPath(pythonPath);
+
+        settings.verifyAll();
+        configService.verifyAll();
+        helper.verifyAll();
+        expect(valid).to.be.equal(true, 'not valid');
+    });
+    test('Ensure we do get python path from config when path is provided', async () => {
+        const pythonPath = path.join('a', 'b');
+
+        const settings = typemoq.Mock.ofType<IPythonSettings>();
+        configService
+            .setup(c => c.getSettings(typemoq.It.isAny()))
+            .returns(() => settings.object)
+            .verifiable(typemoq.Times.never());
+        helper
+            .setup(h => h.getInterpreterInformation(typemoq.It.isValue(pythonPath)))
+            .returns(() => Promise.resolve({}))
+            .verifiable(typemoq.Times.once());
+
+        const valid = await diagnosticService.validatePythonPath(pythonPath);
+
+        configService.verifyAll();
+        helper.verifyAll();
+        expect(valid).to.be.equal(true, 'not valid');
+    });
+    test('Ensure diagnosics are handled when path is invalid', async () => {
+        const pythonPath = path.join('a', 'b');
+        let handleInvoked = false;
+        diagnosticService.handle = () => { handleInvoked = true; return Promise.resolve(); };
+        helper
+            .setup(h => h.getInterpreterInformation(typemoq.It.isValue(pythonPath)))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(typemoq.Times.once());
+
+        const valid = await diagnosticService.validatePythonPath(pythonPath);
+
+        helper.verifyAll();
+        expect(valid).to.be.equal(false, 'should be invalid');
+        expect(handleInvoked).to.be.equal(true, 'should be invoked');
     });
 });

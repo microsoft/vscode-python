@@ -8,6 +8,7 @@
 import { extensions } from 'vscode';
 // tslint:disable-next-line:import-name
 import TelemetryReporter from 'vscode-extension-telemetry';
+import { PVSC_EXTENSION_ID } from '../common/constants';
 
 // tslint:disable-next-line:no-any
 let telemetryReporter: TelemetryReporter;
@@ -15,7 +16,7 @@ export function getTelemetryReporter() {
     if (telemetryReporter) {
         return telemetryReporter;
     }
-    const extensionId = 'ms-python.python';
+    const extensionId = PVSC_EXTENSION_ID;
     // tslint:disable-next-line:no-non-null-assertion
     const extension = extensions.getExtension(extensionId)!;
     // tslint:disable-next-line:no-unsafe-any

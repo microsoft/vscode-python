@@ -15,6 +15,10 @@ export type FormatTelemetry = {
     formatSelection: boolean;
 };
 
+export type LanguageServerTelemetry = {
+    success: boolean;
+};
+
 export type LinterTrigger = 'auto' | 'save';
 
 export type LintingTelemetry = {
@@ -81,4 +85,15 @@ export type TerminalTelemetry = {
     pythonVersion?: string;
     interpreterType?: InterpreterType;
 };
-export type TelemetryProperties = FormatTelemetry | LintingTelemetry | EditorLoadTelemetry | PythonInterpreterTelemetry | CodeExecutionTelemetry | TestRunTelemetry | TestDiscoverytTelemetry | FeedbackTelemetry | TerminalTelemetry | DebuggerTelemetryV2 | SettingsTelemetry;
+export type TelemetryProperties = FormatTelemetry
+    | LanguageServerTelemetry
+    | LintingTelemetry
+    | EditorLoadTelemetry
+    | PythonInterpreterTelemetry
+    | CodeExecutionTelemetry
+    | TestRunTelemetry
+    | TestDiscoverytTelemetry
+    | FeedbackTelemetry
+    | TerminalTelemetry
+    | DebuggerTelemetryV2
+    | SettingsTelemetry;

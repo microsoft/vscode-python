@@ -1247,6 +1247,12 @@
                     "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
+                "python.condaPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to the conda executable to use for activation (version 4.4+).",
+                    "scope": "resource"
+                },
                 "python.sortImports.args": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",

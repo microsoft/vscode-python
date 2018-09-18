@@ -125,6 +125,7 @@ export interface IPythonSettings {
     readonly pythonPath: string;
     readonly venvPath: string;
     readonly venvFolders: string[];
+    readonly condaPath: string;
     readonly downloadLanguageServer: boolean;
     readonly jediEnabled: boolean;
     readonly jediPath: string;

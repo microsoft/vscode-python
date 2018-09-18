@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import {
@@ -23,12 +25,12 @@ import { IFileSystem, IPlatformService } from '../common/platform/types';
 import {
     BANNER_NAME_LS_SURVEY, DeprecatedFeatureInfo, IConfigurationService,
     IExtensionContext, IFeatureDeprecationManager, ILogger, IOutputChannel,
-    IPythonExtensionBanner, IPythonSettings
+    IPathUtils, IPythonExtensionBanner, IPythonSettings
 } from '../common/types';
+import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import { LanguageServerSymbolProvider } from '../providers/symbolProvider';
 import {
-    PYTHON_LANGUAGE_SERVER_DOWNLOADED,
     PYTHON_LANGUAGE_SERVER_ENABLED,
     PYTHON_LANGUAGE_SERVER_ERROR
 } from '../telemetry/constants';
@@ -142,7 +144,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
     private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
-
         const reporter = getTelemetryReporter();
         reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ENABLED);
 
@@ -163,7 +164,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 new RequestWithProxy(this.workspace.getConfiguration('http').get('proxy', '')),
                 languageServerFolder);
             await downloader.downloadLanguageServer(this.context);
-            reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_DOWNLOADED);
         }
 
         const serverModule = path.join(this.context.extensionPath, languageServerFolder, this.platformData.getEngineExecutableName());
@@ -214,7 +214,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         return new LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
     }
 
-    private async getAnalysisOptions(): Promise<LanguageClientOptions | undefined> {
+    // tslint:disable-next-line:member-ordering
+    public async getAnalysisOptions(): Promise<LanguageClientOptions | undefined> {
         // tslint:disable-next-line:no-any
         const properties = new Map<string, any>();
         let interpreterData: InterpreterData | undefined;
@@ -249,7 +250,13 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 searchPaths.push(...extraPaths);
             }
         }
-
+        const envVarsProvider = this.services.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+        const vars = await envVarsProvider.getEnvironmentVariables();
+        if (vars.PYTHONPATH && vars.PYTHONPATH.length > 0) {
+            const pathUtils = this.services.get<IPathUtils>(IPathUtils);
+            const paths = vars.PYTHONPATH.split(pathUtils.delimiter).filter(item => item.trim().length > 0);
+            searchPaths.push(...paths);
+        }
         // Make sure paths do not contain multiple slashes so file URIs
         // in VS Code (Node.js) and in the language server (.NET) match.
         // Note: for the language server paths separator is always ;

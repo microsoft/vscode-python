@@ -17,7 +17,9 @@ export interface IInterpreterVersionService {
 }
 
 export const IKnownSearchPathsForInterpreters = Symbol('IKnownSearchPathsForInterpreters');
-
+export interface IKnownSearchPathsForInterpreters {
+    getSearchPaths(): string[];
+}
 export const IVirtualEnvironmentsSearchPathProvider = Symbol('IVirtualEnvironmentsSearchPathProvider');
 export interface IVirtualEnvironmentsSearchPathProvider {
     getSearchPaths(resource?: Uri): string[];

@@ -13,8 +13,9 @@ export class LocalDebugClientV2 extends LocalDebugClient {
         super(args, debugSession, canLaunchTerminal, launcherScriptProvider);
     }
     protected buildDebugArguments(cwd: string, debugPort: number): string[] {
+        const launcher = this.launcherScriptProvider.getLauncherFilePath();
         const noDebugArg = this.args.noDebug ? ['--nodebug'] : [];
-        return ['-m', 'ptvsd', ...noDebugArg, '--host', 'localhost', '--port', debugPort.toString()];
+        return [launcher, debugPort.toString(), ...noDebugArg];
     }
     protected buildStandardArguments() {
         const programArgs = Array.isArray(this.args.args) && this.args.args.length > 0 ? this.args.args : [];

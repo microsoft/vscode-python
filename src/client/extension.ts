@@ -18,9 +18,7 @@ import { IExtensionApi } from './api';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { IWorkspaceService } from './common/application/types';
-import { PythonSettings } from './common/configSettings';
 import { isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
-import { PythonInstaller } from './common/installer/pythonInstallation';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
@@ -74,6 +72,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
     registerServices(context, serviceManager, serviceContainer);
+    initializeServices(context, serviceManager, serviceContainer);
 
     // When testing, do not perform health checks, as modal dialogs can be displayed.
     if (!isTestExecution()) {
@@ -82,8 +81,6 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     }
 
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    // This must be completed before we can continue as language server needs the interpreter path.
-    interpreterManager.initialize();
     await interpreterManager.autoSetInterpreter();
 
     serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
@@ -102,10 +99,6 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
     sendStartupTelemetry(activationDeferred.promise, serviceContainer).ignoreErrors();
-
-    const pythonInstaller = new PythonInstaller(serviceContainer);
-    pythonInstaller.checkPythonInstallation(PythonSettings.getInstance())
-        .catch(ex => console.error('Python Extension: pythonInstaller.checkPythonInstallation', ex));
 
     interpreterManager.refresh()
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
@@ -152,7 +145,6 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     deprecationMgr.initialize();
     context.subscriptions.push(deprecationMgr);
 
-    context.subscriptions.push(serviceContainer.get<IInterpreterSelector>(IInterpreterSelector));
     context.subscriptions.push(activateUpdateSparkLibraryProvider());
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
@@ -199,6 +191,15 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     debuggerRegisterTypes(serviceManager);
     appRegisterTypes(serviceManager);
     providersRegisterTypes(serviceManager);
+}
+
+function initializeServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
+    const selector = serviceContainer.get<IInterpreterSelector>(IInterpreterSelector);
+    selector.initialize();
+    context.subscriptions.push(selector);
+
+    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
+    interpreterManager.initialize();
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {

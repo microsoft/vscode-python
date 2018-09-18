@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as path from 'path';
 import '../../../common/extensions';
 import { CondaInfo } from '../../contracts';
 import { AnacondaDisplayName, AnacondaIdentfiers } from './conda';
@@ -30,9 +31,9 @@ export class CondaHelper {
         if (sysVersionParts.length === 2) {
             const displayName = sysVersionParts[1].trim();
             if (this.isIdentifiableAsAnaconda(displayName)) {
-               return displayName;
+                return displayName;
             } else {
-               return `${displayName} : ${AnacondaDisplayName}`;
+                return `${displayName} : ${AnacondaDisplayName}`;
             }
         } else {
             return AnacondaDisplayName;
@@ -56,7 +57,7 @@ export class CondaHelper {
      * @memberof CondaHelper
      */
     public parseCondaEnvironmentNames(condaEnvironmentList: string): { name: string; path: string }[] | undefined {
-        const environments = condaEnvironmentList.splitLines();
+        const environments = condaEnvironmentList.splitLines({ trim: false });
         const baseEnvironmentLine = environments.filter(line => line.indexOf('*') > 0);
         if (baseEnvironmentLine.length === 0) {
             return;
@@ -72,7 +73,7 @@ export class CondaHelper {
                 name = name.substring(0, name.length - 1).trim();
             }
             const envPath = line.substring(pathStartIndex).trim();
-
+            name = name.length === 0 ? path.basename(envPath) : name;
             if (name.length > 0 && envPath.length > 0) {
                 envs.push({ name, path: envPath });
             }

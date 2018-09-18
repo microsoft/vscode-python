@@ -54,10 +54,7 @@ suite('Interpreters - Locators Index', () => {
                 locatorsTypes.push(PIPENV_SERVICE);
                 locatorsTypes.push(GLOBAL_VIRTUAL_ENV_SERVICE);
                 locatorsTypes.push(WORKSPACE_VIRTUAL_ENV_SERVICE);
-
-                if (osType.value !== OSType.Windows) {
-                    locatorsTypes.push(KNOWN_PATH_SERVICE);
-                }
+                locatorsTypes.push(KNOWN_PATH_SERVICE);
                 locatorsTypes.push(CURRENT_PATH_SERVICE);
 
                 const locatorsWithInterpreters = locatorsTypes.map(typeName => {
@@ -115,10 +112,7 @@ suite('Interpreters - Locators Index', () => {
                 locatorsTypes.push(PIPENV_SERVICE);
                 locatorsTypes.push(GLOBAL_VIRTUAL_ENV_SERVICE);
                 locatorsTypes.push(WORKSPACE_VIRTUAL_ENV_SERVICE);
-
-                if (osType.value !== OSType.Windows) {
-                    locatorsTypes.push(KNOWN_PATH_SERVICE);
-                }
+                locatorsTypes.push(KNOWN_PATH_SERVICE);
                 locatorsTypes.push(CURRENT_PATH_SERVICE);
 
                 const locatorsWithInterpreters = locatorsTypes.map(typeName => {

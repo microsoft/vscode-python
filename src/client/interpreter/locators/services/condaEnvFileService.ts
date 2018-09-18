@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
 import { ILogger } from '../../../common/types';
@@ -101,12 +102,14 @@ export class CondaEnvFileService extends CacheableLocatorService {
         if (!details) {
             return;
         }
+        const envName = details.envName ? details.envName : path.basename(environmentPath);
         return {
             ...(details as PythonInterpreter),
             path: interpreter,
             companyDisplayName: AnacondaCompanyName,
             type: InterpreterType.Conda,
-            envPath: environmentPath
+            envPath: environmentPath,
+            envName
         };
     }
 }

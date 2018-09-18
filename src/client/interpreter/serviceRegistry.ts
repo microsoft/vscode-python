@@ -42,7 +42,7 @@ import { CondaEnvService } from './locators/services/condaEnvService';
 import { CondaService } from './locators/services/condaService';
 import { CurrentPathService } from './locators/services/currentPathService';
 import { GlobalVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvService } from './locators/services/globalVirtualEnvService';
-import { getKnownSearchPathsForInterpreters, KnownPathsService } from './locators/services/KnownPathsService';
+import { KnownPathsService, KnownSearchPathsForInterpreters } from './locators/services/KnownPathsService';
 import { PipEnvService } from './locators/services/pipEnvService';
 import { WindowsRegistryService } from './locators/services/windowsRegistryService';
 import { WorkspaceVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvService } from './locators/services/workspaceVirtualEnvService';
@@ -50,7 +50,7 @@ import { VirtualEnvironmentManager } from './virtualEnvs/index';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingletonInstance<string[]>(IKnownSearchPathsForInterpreters, getKnownSearchPathsForInterpreters());
+    serviceManager.addSingleton<IKnownSearchPathsForInterpreters>(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters);
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global');
     serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace');
 
@@ -70,9 +70,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     const isWindows = serviceManager.get<boolean>(IsWindows);
     if (isWindows) {
         serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, WindowsRegistryService, WINDOWS_REGISTRY_SERVICE);
-    } else {
-        serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, KnownPathsService, KNOWN_PATH_SERVICE);
     }
+    serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, KnownPathsService, KNOWN_PATH_SERVICE);
     serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
     serviceManager.addSingleton<IInterpreterDisplay>(IInterpreterDisplay, InterpreterDisplay);
 

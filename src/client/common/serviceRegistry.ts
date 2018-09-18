@@ -28,6 +28,7 @@ import { Bash } from './terminal/environmentActivationProviders/bash';
 import {
     CommandPromptAndPowerShell
 } from './terminal/environmentActivationProviders/commandPrompt';
+import { PyEnvActivationCommandProvider } from './terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalServiceFactory } from './terminal/factory';
 import { TerminalHelper } from './terminal/helper';
 import {
@@ -68,5 +69,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         ITerminalActivationCommandProvider, Bash, 'bashCShellFish');
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
         ITerminalActivationCommandProvider, CommandPromptAndPowerShell, 'commandPromptAndPowerShell');
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+        ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, 'pyenv');
     serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
 }

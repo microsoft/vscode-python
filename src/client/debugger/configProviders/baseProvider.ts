@@ -8,12 +8,11 @@
 import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Uri, WorkspaceFolder } from 'vscode';
-import { InvalidPythonPathInDebuggerDiagnostic, InvalidPythonPathInDebuggerServiceId } from '../../application/diagnostics/checks/invalidPythonPathInDebugger';
-import { IDiagnosticsService } from '../../application/diagnostics/types';
+import { InvalidPythonPathInDebuggerServiceId } from '../../application/diagnostics/checks/invalidPythonPathInDebugger';
+import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../application/diagnostics/types';
 import { IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService } from '../../common/types';
-import { IInterpreterHelper } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseAttachRequestArguments, BaseLaunchRequestArguments, DebuggerType } from '../Common/Contracts';
 
@@ -30,10 +29,8 @@ export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArgum
             await this.provideAttachDefaults(workspaceFolder, debugConfiguration as PythonAttachDebugConfiguration<A>);
         } else {
             const config = debugConfiguration as PythonLaunchDebugConfiguration<L>;
-            const helper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
-            if (!await helper.getInterpreterInformation(config.pythonPath).catch(() => undefined)) {
-                const diagnosticHandler = this.serviceContainer.get<IDiagnosticsService>(IDiagnosticsService, InvalidPythonPathInDebuggerServiceId);
-                diagnosticHandler.handle([new InvalidPythonPathInDebuggerDiagnostic()]).ignoreErrors();
+            const diagnosticService = this.serviceContainer.get<IInvalidPythonPathInDebuggerService>(IDiagnosticsService, InvalidPythonPathInDebuggerServiceId);
+            if (!await diagnosticService.validatePythonPath(config.pythonPath, workspaceFolder)) {
                 // Returning an invalid configuration will cause VSC to display `launch.json` and stop launching the debugger..
                 // tslint:disable-next-line:no-any
                 return {} as any;

@@ -102,7 +102,7 @@ gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
 
 gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 
-gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd*']));
+gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
 
 gulp.task('checkNativeDependencies', () => {
     if (hasNativeDependencies()) {

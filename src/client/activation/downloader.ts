@@ -7,8 +7,14 @@ import * as path from 'path';
 import * as requestProgress from 'request-progress';
 import { ProgressLocation, window } from 'vscode';
 import { createDeferred } from '../../utils/async';
+import { StopWatch } from '../../utils/stopWatch';
 import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
+import { sendTelemetryEvent } from '../telemetry';
+import {
+    PYTHON_LANGUAGE_SERVER_DOWNLOADED,
+    PYTHON_LANGUAGE_SERVER_EXTRACTED
+} from '../telemetry/constants';
 import { PlatformData, PlatformName } from './platformData';
 import { IDownloadFileService } from './types';
 
@@ -28,6 +34,7 @@ export const DownloadLinks = {
 };
 
 export class LanguageServerDownloader {
+
     constructor(
         private readonly output: IOutputChannel,
         private readonly fs: IFileSystem,
@@ -43,19 +50,40 @@ export class LanguageServerDownloader {
 
     public async downloadLanguageServer(context: IExtensionContext): Promise<void> {
         const downloadUri = this.getDownloadUri();
-
+        const timer: StopWatch = new StopWatch();
+        let success: boolean = true;
         let localTempFilePath = '';
+
         try {
             localTempFilePath = await this.downloadFile(downloadUri, 'Downloading Microsoft Python Language Server... ');
-            await this.unpackArchive(context.extensionPath, localTempFilePath);
         } catch (err) {
-            this.output.appendLine('failed.');
+            this.output.appendLine('download failed.');
             this.output.appendLine(err);
+            success = false;
             throw new Error(err);
         } finally {
-            if (localTempFilePath.length > 0) {
-                await this.fs.deleteFile(localTempFilePath);
-            }
+            sendTelemetryEvent(
+                PYTHON_LANGUAGE_SERVER_DOWNLOADED,
+                timer.elapsedTime,
+                { success }
+            );
+        }
+
+        timer.reset();
+        try {
+            await this.unpackArchive(context.extensionPath, localTempFilePath);
+        } catch (err) {
+            this.output.appendLine('extraction failed.');
+            this.output.appendLine(err);
+            success = false;
+            throw new Error(err);
+        } finally {
+            sendTelemetryEvent(
+                PYTHON_LANGUAGE_SERVER_EXTRACTED,
+                timer.elapsedTime,
+                { success }
+            );
+            await this.fs.deleteFile(localTempFilePath);
         }
     }
 

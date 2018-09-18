@@ -29,13 +29,15 @@ export class InterpreterSelector implements IInterpreterSelector {
         this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.pathUtils = this.serviceContainer.get<IPathUtils>(IPathUtils);
         this.interpreterComparer = this.serviceContainer.get<IInterpreterComparer>(IInterpreterComparer);
-
-        const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-        this.disposables.push(commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this)));
-        this.disposables.push(commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this)));
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
+    }
+
+    public initialize() {
+        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+        this.disposables.push(commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this)));
+        this.disposables.push(commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this)));
     }
 
     public async getSuggestions(resourceUri?: Uri) {

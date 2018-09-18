@@ -1,4 +1,5 @@
 import * as assert from 'assert';
+import { expect } from 'chai';
 import { CondaInfo } from '../../client/interpreter/contracts';
 import { AnacondaDisplayName } from '../../client/interpreter/locators/services/conda';
 import { CondaHelper } from '../../client/interpreter/locators/services/condaHelper';
@@ -39,5 +40,29 @@ suite('Interpreters display name from Conda Environments', () => {
         };
         const displayName = condaHelper.getDisplayName(info);
         assert.equal(displayName, `4.4.0 (64-bit) : ${AnacondaDisplayName}`, 'Incorrect display name');
+    });
+    test('Parse conda environments', () => {
+        // tslint:disable-next-line:no-multiline-string
+        const environments = `
+# conda environments:
+#
+base                  *  /Users/donjayamanne/anaconda3
+one1                     /Users/donjayamanne/anaconda3/envs/one
+two2 2                   /Users/donjayamanne/anaconda3/envs/two 2
+three3                   /Users/donjayamanne/anaconda3/envs/three
+                         /Users/donjayamanne/anaconda3/envs/four
+                         /Users/donjayamanne/anaconda3/envs/five 5`;
+
+        const expectedList = [
+            { name: 'base', path: '/Users/donjayamanne/anaconda3' },
+            { name: 'one1', path: '/Users/donjayamanne/anaconda3/envs/one' },
+            { name: 'two2 2', path: '/Users/donjayamanne/anaconda3/envs/two 2' },
+            { name: 'three3', path: '/Users/donjayamanne/anaconda3/envs/three' },
+            { name: 'four', path: '/Users/donjayamanne/anaconda3/envs/four' },
+            { name: 'five 5', path: '/Users/donjayamanne/anaconda3/envs/five 5' }
+        ];
+
+        const list = condaHelper.parseCondaEnvironmentNames(environments);
+        expect(list).deep.equal(expectedList);
     });
 });

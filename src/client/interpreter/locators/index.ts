@@ -78,7 +78,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             [PIPENV_SERVICE, ''],
             [GLOBAL_VIRTUAL_ENV_SERVICE, ''],
             [WORKSPACE_VIRTUAL_ENV_SERVICE, ''],
-            [KNOWN_PATH_SERVICE, '-win'],
+            [KNOWN_PATH_SERVICE, ''],
             [CURRENT_PATH_SERVICE, '']
         ];
         return getLocators(keys, this.platform, (key) => {

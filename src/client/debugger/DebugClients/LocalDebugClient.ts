@@ -8,7 +8,6 @@ import { PathUtils } from '../../common/platform/pathUtils';
 import { CurrentProcess } from '../../common/process/currentProcess';
 import { EnvironmentVariablesService } from '../../common/variables/environment';
 import { IServiceContainer } from '../../ioc/types';
-import { PTVSD_PATH } from '../Common/constants';
 import { DebugOptions, IDebugServer, IPythonProcess, LaunchRequestArguments } from '../Common/Contracts';
 import { IS_WINDOWS } from '../Common/Utils';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
@@ -44,8 +43,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         }
         return DebugServerStatus.Unknown;
     }
-    // tslint:disable-next-line:no-any
-    constructor(args: LaunchRequestArguments, debugSession: DebugSession, private canLaunchTerminal: boolean, private launcherScriptProvider: IDebugLauncherScriptProvider) {
+    constructor(args: LaunchRequestArguments, debugSession: DebugSession, private canLaunchTerminal: boolean, protected launcherScriptProvider: IDebugLauncherScriptProvider) {
         super(args, debugSession);
     }
 
@@ -82,8 +80,6 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         const environmentVariablesService = new EnvironmentVariablesService(pathUtils);
         const helper = new DebugClientHelper(environmentVariablesService, pathUtils, currentProcess);
         const environmentVariables = await helper.getEnvironmentVariables(this.args);
-        // Import the PTVSD debugger, allowing users to use their own latest copies.
-        environmentVariablesService.appendPythonPath(environmentVariables, PTVSD_PATH);
         // tslint:disable-next-line:max-func-body-length cyclomatic-complexity no-any
         return new Promise<any>((resolve, reject) => {
             const fileDir = this.args && this.args.program ? path.dirname(this.args.program) : '';
