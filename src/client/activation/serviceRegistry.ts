@@ -10,7 +10,9 @@ import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguage
 import { ExtensionActivationService } from './activationService';
 import { JediExtensionActivator } from './jedi';
 import { LanguageServerExtensionActivator } from './languageServer';
-import { ExtensionActivators, IExtensionActivationService, IExtensionActivator } from './types';
+import { LanguageServerFolderService } from './languageServerFolderService';
+import { LanguageServerPackageService } from './languageServerPackageService';
+import { ExtensionActivators, IExtensionActivationService, IExtensionActivator, ILanguageServerFolderService, ILanguageServerPackageService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, ExtensionActivationService);
@@ -18,4 +20,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IExtensionActivator>(IExtensionActivator, LanguageServerExtensionActivator, ExtensionActivators.DotNet);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, LanguageServerSurveyBanner, BANNER_NAME_LS_SURVEY);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, ProposeLanguageServerBanner, BANNER_NAME_PROPOSE_LS);
+    serviceManager.addSingleton<ILanguageServerFolderService>(ILanguageServerFolderService, LanguageServerFolderService);
+    serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, LanguageServerPackageService);
 }

@@ -24,8 +24,8 @@ import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import {
     BANNER_NAME_LS_SURVEY, DeprecatedFeatureInfo, IConfigurationService,
-    IExtensionContext, IFeatureDeprecationManager, ILogger, IOutputChannel,
-    IPathUtils, IPythonExtensionBanner, IPythonSettings
+    IDisposableRegistry, IExtensionContext, IFeatureDeprecationManager, ILogger,
+    IOutputChannel, IPathUtils, IPythonExtensionBanner, IPythonSettings
 } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
@@ -40,7 +40,6 @@ import { LanguageServerDownloader } from './downloader';
 import { InterpreterData, InterpreterDataService } from './interpreterDataService';
 import { PlatformData } from './platformData';
 import { ProgressReporting } from './progress';
-import { RequestWithProxy } from './requestWithProxy';
 import { IExtensionActivator, ILanguageServerFolderService } from './types';
 
 const PYTHON = 'python';
@@ -76,8 +75,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private surveyBanner: IPythonExtensionBanner;
     private languageServerFolder!: string;
     private languageServerFolderService: ILanguageServerFolderService;
-    // tslint:disable-next-line:no-unused-variable
-    private progressReporting: ProgressReporting | undefined;
 
     constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
         this.context = this.services.get<IExtensionContext>(IExtensionContext);
@@ -118,6 +115,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
     public async activate(): Promise<boolean> {
         this.sw.reset();
+        this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
         const clientOptions = await this.getAnalysisOptions();
         if (!clientOptions) {
             return false;
@@ -130,7 +128,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
                 .catch(ex => this.services.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
         }).ignoreErrors();
 
-        this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolder();
         return this.startLanguageServer(clientOptions);
     }
 
@@ -160,12 +157,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
         const mscorlib = path.join(this.context.extensionPath, this.languageServerFolder, 'mscorlib.dll');
         if (!await this.fs.fileExists(mscorlib)) {
-            const downloader = new LanguageServerDownloader(
-                this.output,
-                this.fs,
-                this.platformData,
-                new RequestWithProxy(this.workspace.getConfiguration('http').get('proxy', '')),
-                this.languageServerFolder);
+            const downloader = new LanguageServerDownloader(this.platformData, this.languageServerFolder, this.services);
             await downloader.downloadLanguageServer(this.context);
         }
 
@@ -184,7 +176,9 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private async startLanguageClient(): Promise<void> {
         this.context.subscriptions.push(this.languageClient!.start());
         await this.serverReady();
-        this.progressReporting = new ProgressReporting(this.languageClient!);
+        const disposables = this.services.get<Disposable[]>(IDisposableRegistry);
+        const progressReporting = new ProgressReporting(this.languageClient!);
+        disposables.push(progressReporting);
     }
 
     private async serverReady(): Promise<void> {
@@ -313,8 +307,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.getVsCodeExcludeSection('search.exclude', list);
         this.getVsCodeExcludeSection('files.exclude', list);
         this.getVsCodeExcludeSection('files.watcherExclude', list);
-        this.getPythonExcludeSection('linting.ignorePatterns', list);
-        this.getPythonExcludeSection('workspaceSymbols.exclusionPattern', list);
+        this.getPythonExcludeSection(list);
+        this.getPythonExcludeSection(list);
         return list;
     }
 
@@ -327,7 +321,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         }
     }
 
-    private getPythonExcludeSection(setting: string, list: string[]): void {
+    private getPythonExcludeSection(list: string[]): void {
         const pythonSettings = this.configuration.getSettings(this.root);
         const paths = pythonSettings && pythonSettings.linting ? pythonSettings.linting.ignorePatterns : undefined;
         if (paths && Array.isArray(paths)) {

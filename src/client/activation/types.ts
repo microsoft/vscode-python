@@ -4,7 +4,7 @@
 'use strict';
 
 import { Request as RequestResult } from 'request';
-import { IExtensionContext } from '../common/types';
+import { IExtensionContext, NugetPackage } from '../common/types';
 
 export const IExtensionActivationService = Symbol('IExtensionActivationService');
 export interface IExtensionActivationService {
@@ -22,19 +22,28 @@ export interface IExtensionActivator {
   deactivate(): Promise<void>;
 }
 
-export interface IDownloadFileService {
+export const IHttpClient = Symbol('IHttpClient');
+export interface IHttpClient {
   downloadFile(uri: string): RequestResult;
+  getJSON<T>(uri: string): Promise<T>;
 }
 
 export const ILanguageServerFolderService = Symbol('ILanguageServerFolderService');
 
 export interface ILanguageServerFolderService {
-  getLanguageServerFolder(): Promise<string>;
+  getLanguageServerFolderName(): Promise<string>;
+  getLatestLanguageServerVersion(): Promise<NugetPackage | undefined>;
 }
 
 export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');
 
 export interface ILanguageServerDownloader {
-  getDownloadUri(): string;
+  getDownloadUri(): Promise<string>;
   downloadLanguageServer(context: IExtensionContext): Promise<void>;
+}
+
+export const ILanguageServerPackageService = Symbol('ILanguageServerPackageService');
+export interface ILanguageServerPackageService {
+  getNugetPackageName(): string;
+  getLatestNugetPackageVersion(): Promise<NugetPackage>;
 }

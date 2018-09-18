@@ -12,7 +12,7 @@ import { PYTHON_LANGUAGE_SERVER_ANALYSISTIME } from '../telemetry/constants';
 // and becoming a failure-case at 1 minute:
 const ANALYSIS_TIMEOUT_MS: number = 60000;
 
-export class ProgressReporting {
+export class ProgressReporting implements Disposable {
   private statusBarMessage: Disposable | undefined;
   private progress: Progress<{ message?: string; increment?: number }> | undefined;
   private progressDeferred: Deferred<void> | undefined;
@@ -65,7 +65,11 @@ export class ProgressReporting {
       }
     });
   }
-
+  public dispose() {
+    if (this.statusBarMessage) {
+      this.statusBarMessage.dispose();
+    }
+  }
   private completeAnalysisTracking(success: boolean): void {
     if (this.progressTimer) {
       sendTelemetryEvent(

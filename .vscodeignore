@@ -29,6 +29,7 @@ yarn.lock
 .vscode/**
 .vscode-test/**
 languageServer/**
+languageServer.*/**
 bin/**
 BuildOutput/**
 coverage/**

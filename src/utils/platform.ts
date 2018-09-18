@@ -6,6 +6,7 @@
 import * as getos from 'getos';
 import * as os from 'os';
 import * as semver from 'semver';
+import { IPlatformInfo } from '../client/common/platform/types';
 import { parseVersion } from './version';
 
 export enum Architecture {
@@ -55,18 +56,18 @@ export function getOSType(platform: string = process.platform): OSType {
     }
 }
 
-export class Info {
+export class Info implements IPlatformInfo {
     constructor(
         public readonly type: OSType,
-        public readonly arch: string = os.arch(),
+        private readonly arch: string = os.arch(),
         // See:
         //  https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/semver/index.d.ts#L152
         public readonly version: semver.SemVer = new semver.SemVer('0.0.0'),
         public readonly distro: OSDistro = OSDistro.Unknown
-    ) {}
+    ) { }
 
-    public get is64bit(): boolean {
-        return this.arch === 'x64';
+    public get architecture(): Architecture {
+        return this.arch === 'x64' ? Architecture.x64 : Architecture.x86;
     }
 
     public matchPlatform(names: string): boolean {
@@ -171,7 +172,7 @@ export function is64bit(info?: Info): boolean {
     if (!info) {
         info = getLocal();
     }
-    return info.arch === 'x64';
+    return info.architecture === Architecture.x64;
 }
 
 // Match the platform string to the given OS info.

@@ -3,8 +3,8 @@
 // Licensed under the MIT License.
 
 import { Socket } from 'net';
+import { SemVer } from 'semver';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
-
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel { }
@@ -311,4 +311,11 @@ export const IEditorUtils = Symbol('IEditorUtils');
 export interface IEditorUtils {
     // getTextEditor(uri: Uri): Promise<{ editor: TextEditor; dispose?(): void }>;
     getWorkspaceEditsFromPatch(originalContents: string, patch: string, uri: Uri): WorkspaceEdit;
+}
+
+export type NugetPackage = { package: string; version: SemVer; uri: string };
+
+export const INugetRepo = Symbol('INugetRepo');
+export interface INugetRepo {
+    getLatestVersion(packageBaseAddress: string, packageName: string, majorVersion?: number): Promise<NugetPackage>;
 }
