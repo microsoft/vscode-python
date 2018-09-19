@@ -18,7 +18,7 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
         const blobStore = createBlobServiceAnonymous(azureBlobStorageAccount);
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
         return new Promise<NugetPackage[]>((resolve, reject) => {
-            // Dirty azure api, we must pass undefined according to docs, but type definition doesn't all it to be undefined or null!!!
+            // We must pass undefined according to docs, but type definition doesn't all it to be undefined or null!!!
             // tslint:disable-next-line:no-any
             blobStore.listBlobsSegmentedWithPrefix(azureBlobStorageContainer, packageName, undefined as any as common.ContinuationToken, (error, result) => {
                 if (error) {
