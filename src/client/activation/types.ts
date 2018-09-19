@@ -4,7 +4,9 @@
 'use strict';
 
 import { Request as RequestResult } from 'request';
-import { IExtensionContext, NugetPackage } from '../common/types';
+import { SemVer } from 'semver';
+import { NugetPackage } from '../common/nuget/types';
+import { IExtensionContext } from '../common/types';
 
 export const IExtensionActivationService = Symbol('IExtensionActivationService');
 export interface IExtensionActivationService {
@@ -28,11 +30,13 @@ export interface IHttpClient {
   getJSON<T>(uri: string): Promise<T>;
 }
 
+export type FolderVersionPair = { path: string; version: SemVer };
 export const ILanguageServerFolderService = Symbol('ILanguageServerFolderService');
 
 export interface ILanguageServerFolderService {
   getLanguageServerFolderName(): Promise<string>;
   getLatestLanguageServerVersion(): Promise<NugetPackage | undefined>;
+  getcurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
 }
 
 export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');
@@ -47,3 +51,5 @@ export interface ILanguageServerPackageService {
   getNugetPackageName(): string;
   getLatestNugetPackageVersion(): Promise<NugetPackage>;
 }
+
+export const MajorLanguageServerVersion = Symbol('MajorLanguageServerVersion');

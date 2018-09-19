@@ -1,9 +1,7 @@
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 import { Socket } from 'net';
-import { SemVer } from 'semver';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
@@ -312,19 +310,4 @@ export const IEditorUtils = Symbol('IEditorUtils');
 export interface IEditorUtils {
     // getTextEditor(uri: Uri): Promise<{ editor: TextEditor; dispose?(): void }>;
     getWorkspaceEditsFromPatch(originalContents: string, patch: string, uri: Uri): WorkspaceEdit;
-}
-
-export type NugetPackage = { package: string; version: SemVer; uri: string };
-
-export const INugetRepo = Symbol('INugetRepo');
-export interface INugetRepo {
-    getLatestVersion(packageBaseAddress: string, packageName: string, majorVersion?: number): Promise<NugetPackage>;
-    getVersion(packageName: string): SemVer;
-    isReleaseVersion(version: SemVer): boolean;
-}
-export type AzureBlob = { name: string; uri: string };
-
-export const IAzureBlobStore = Symbol('IAzureBlobStore');
-export interface IAzureBlobStore {
-    searhBlobs(baseContainerAddress: string, container: string, searchPrefix: string): Promise<AzureBlob[]>;
 }

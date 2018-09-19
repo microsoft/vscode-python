@@ -15,7 +15,6 @@ import {
     IDebugService, IDocumentManager, ITerminalManager, IWorkspaceService
 } from './application/types';
 import { WorkspaceService } from './application/workspace';
-import { AzureBlobStore } from './azureBlobStore';
 import { ConfigurationService } from './configuration/service';
 import { EditorUtils } from './editor';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
@@ -23,7 +22,8 @@ import { ProductInstaller } from './installer/productInstaller';
 import { Logger } from './logger';
 import { BrowserService } from './net/browser';
 import { HttpClient } from './net/httpClient';
-import { NugetRepo } from './nugetRepo';
+import { AzureBlobStoreNugetRepository } from './nuget/azureBlobStoreNugetRepository';
+import { INugetRepository } from './nuget/types';
 import { PersistentStateFactory } from './persistentState';
 import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
@@ -40,10 +40,10 @@ import {
     ITerminalHelper, ITerminalServiceFactory
 } from './terminal/types';
 import {
-    IAzureBlobStore, IBrowserService, IConfigurationService,
+    IBrowserService, IConfigurationService,
     ICurrentProcess, IEditorUtils, IFeatureDeprecationManager,
     IInstaller, ILogger,
-    INugetRepo, IPathUtils, IPersistentStateFactory, IRandom, Is64Bit, IsWindows
+    IPathUtils, IPersistentStateFactory, IRandom, Is64Bit, IsWindows
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -68,8 +68,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
-    serviceManager.addSingleton<INugetRepo>(INugetRepo, NugetRepo);
-    serviceManager.addSingleton<IAzureBlobStore>(IAzureBlobStore, AzureBlobStore);
+    serviceManager.addSingleton<INugetRepository>(INugetRepository, AzureBlobStoreNugetRepository);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(

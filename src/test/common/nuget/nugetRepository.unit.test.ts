@@ -6,20 +6,20 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
-import { IHttpClient } from '../../client/activation/types';
-import { NugetRepo } from '../../client/common/nugetRepo';
-import { IServiceContainer } from '../../client/ioc/types';
+import { IHttpClient } from '../../../client/activation/types';
+import { NugetRepository } from '../../../client/common/nuget/nugetRepository';
+import { IServiceContainer } from '../../../client/ioc/types';
 
-suite('Nuget Repo', () => {
+suite('Nuget on Nuget Repo', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     let httpClient: typeMoq.IMock<IHttpClient>;
-    let nugetRepo: NugetRepo;
+    let nugetRepo: NugetRepository;
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         httpClient = typeMoq.Mock.ofType<IHttpClient>();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IHttpClient))).returns(() => httpClient.object);
 
-        nugetRepo = new NugetRepo(serviceContainer.object);
+        nugetRepo = new NugetRepository(serviceContainer.object);
     });
 
     test('Get all package versions', async () => {
@@ -52,35 +52,16 @@ suite('Nuget Repo', () => {
         expect(packageUri).to.equal(expectedUri);
     });
 
-    test('Get latest version (with major version provided)', async () => {
-        const packageBaseAddress = 'a';
-        const packageName = 'b';
-        const version = '2.5.4';
-
+    test('Get packages', async () => {
         const versions = ['1.1.1', '1.2.1', '2.2.2', '2.5.4', '2.9.5-release', '2.7.4-beta', '2.0.2', '3.5.4'];
         nugetRepo.getVersions = () => Promise.resolve(versions.map(v => new SemVer(v)));
         nugetRepo.getNugetPackageUri = () => 'uri';
 
-        const info = await nugetRepo.getLatestVersion(packageBaseAddress, packageName, 2);
+        const packages = await nugetRepo.getPackages('packageName');
 
-        expect(info.uri).to.equal('uri');
-        expect(info.package).to.equal(packageName);
-        expect(info.version.raw).to.equal(version);
-    });
-
-    test('Get latest version (without major version provided)', async () => {
-        const packageBaseAddress = 'a';
-        const packageName = 'b';
-        const version = '3.5.4';
-
-        const versions = ['1.1.1', '1.2.1', '2.2.2', '2.5.4', '2.9.5-release', '2.7.4-beta', '2.0.2', '3.5.4', '5.9.5-release', '3.7.4-beta'];
-        nugetRepo.getVersions = () => Promise.resolve(versions.map(v => new SemVer(v)));
-        nugetRepo.getNugetPackageUri = () => 'uri';
-
-        const info = await nugetRepo.getLatestVersion(packageBaseAddress, packageName);
-
-        expect(info.uri).to.equal('uri');
-        expect(info.package).to.equal(packageName);
-        expect(info.version.raw).to.equal(version);
+        expect(packages).to.be.lengthOf(versions.length);
+        expect(packages.map(item => item.version.raw)).to.be.deep.equal(versions);
+        expect(packages.map(item => item.uri)).to.be.deep.equal(versions.map(() => 'uri'));
+        expect(packages.map(item => item.package)).to.be.deep.equal(versions.map(() => 'packageName'));
     });
 });

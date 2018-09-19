@@ -7,25 +7,25 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as semver from 'semver';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
+import { NugetPackage } from '../common/nuget/types';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, ILogger, NugetPackage } from '../common/types';
+import { IConfigurationService, ILogger } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { ILanguageServerFolderService, ILanguageServerPackageService } from './types';
+import { FolderVersionPair, ILanguageServerFolderService, ILanguageServerPackageService } from './types';
 
 const languageServerFolder = 'languageServer';
 
-type FolderVersionPair = { path: string; version: semver.SemVer };
 @injectable()
 export class LanguageServerFolderService implements ILanguageServerFolderService {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
 
     public async getLanguageServerFolderName(): Promise<string> {
-        const latestFolder = await this.getLatestLanguageServerDirectory();
+        const currentFolder = await this.getcurrentLanguageServerDirectory();
         let serverVersion: NugetPackage | undefined;
 
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        if (latestFolder && !configService.getSettings().autoUpdateLanguageServer) {
-            return path.basename(latestFolder.path);
+        if (currentFolder && !configService.getSettings().autoUpdateLanguageServer) {
+            return path.basename(currentFolder.path);
         }
 
         serverVersion = await this.getLatestLanguageServerVersion()
@@ -35,8 +35,8 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
                 return undefined;
             });
 
-        if (latestFolder && (!serverVersion || serverVersion.version.compare(latestFolder.version) <= 0)) {
-            return path.basename(latestFolder.path);
+        if (currentFolder && (!serverVersion || serverVersion.version.compare(currentFolder.version) <= 0)) {
+            return path.basename(currentFolder.path);
         }
 
         return `${languageServerFolder}.${serverVersion!.version.raw}`;
@@ -45,7 +45,7 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
         return lsPackageService.getLatestNugetPackageVersion();
     }
-    public async getLatestLanguageServerDirectory(): Promise<FolderVersionPair | undefined> {
+    public async getcurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined> {
         const dirs = await this.getExistingLanguageServerDirectories();
         if (dirs.length === 0) {
             return;

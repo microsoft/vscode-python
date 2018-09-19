@@ -5,17 +5,14 @@
 
 import { inject, injectable } from 'inversify';
 import { Architecture, OSType } from '../../utils/platform';
+import { INugetRepository, INugetService, NugetPackage } from '../common/nuget/types';
 import { IPlatformService } from '../common/platform/types';
-import { IAzureBlobStore, INugetRepo, NugetPackage } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PlatformName } from './platformData';
 import { ILanguageServerPackageService } from './types';
 
 const downloadBaseFileName = 'Python-Language-Server';
-const nugetPackageBaseAddress = 'https://dotnetmyget.blob.core.windows.net/artifacts/dotnet-core-svc/nuget/v3/flatcontainer';
-const maxMajorVersion = 0;
-const azureBlobStorageAccount = 'https://pvsc.blob.core.windows.net';
-const azureBlobStorageContainer = 'python-language-server';
+export const maxMajorVersion = 0;
 export const PackageNames = {
     [PlatformName.Windows32Bit]: `${downloadBaseFileName}-${PlatformName.Windows32Bit}`,
     [PlatformName.Windows64Bit]: `${downloadBaseFileName}-${PlatformName.Windows64Bit}`,
@@ -25,6 +22,7 @@ export const PackageNames = {
 
 @injectable()
 export class LanguageServerPackageService implements ILanguageServerPackageService {
+    public maxMajorVersion: number = maxMajorVersion;
     constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer) { }
     public getNugetPackageName(): string {
         const plaform = this.serviceContainer.get<IPlatformService>(IPlatformService);
@@ -42,40 +40,16 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
         }
     }
 
-    public getLatestNugetPackageVersion(): Promise<NugetPackage> {
-        const nuget = this.serviceContainer.get<INugetRepo>(INugetRepo);
-        const packageName = this.getNugetPackageName();
-        return nuget.getLatestVersion(nugetPackageBaseAddress, packageName, maxMajorVersion);
-    }
-}
-
-@injectable()
-export class AzureBlobLanguageServerPackageService extends LanguageServerPackageService {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer);
-    }
     public async getLatestNugetPackageVersion(): Promise<NugetPackage> {
-        const name = this.getNugetPackageName();
-        const packages = await this.getLatestNugetPackages(name, maxMajorVersion);
-        packages.sort((a, b) => a.version.compare(b.version));
-        return packages[packages.length - 1];
-    }
+        const nugetRepo = this.serviceContainer.get<INugetRepository>(INugetRepository);
+        const nugetService = this.serviceContainer.get<INugetService>(INugetService);
+        const packageName = this.getNugetPackageName();
+        const packages = await nugetRepo.getPackages(packageName);
 
-    public async getLatestNugetPackages(packageName: string, majorVersion?: number): Promise<NugetPackage[]> {
-        const azureBlobStore = this.serviceContainer.get<IAzureBlobStore>(IAzureBlobStore);
-        const blobs = await azureBlobStore.searhBlobs(azureBlobStorageAccount, azureBlobStorageContainer, packageName);
-        const nugetRepo = this.serviceContainer.get<INugetRepo>(INugetRepo);
-        return blobs
-            .map(blob => {
-                return {
-                    package: blob.name,
-                    uri: blob.uri,
-                    version: nugetRepo.getVersion(blob.name)
-                };
-            })
-            // If required to match the major version, then do so.
-            .filter(item => majorVersion ? item.version.major === majorVersion : true)
-            // We are only interested in final releases (not alpha, beta, etc).
-            .filter(item => nugetRepo.isReleaseVersion(item.version));
+        const validPackages = packages
+            .filter(item => item.version.major === this.maxMajorVersion)
+            .filter(item => nugetService.isReleaseVersion(item.version))
+            .sort((a, b) => a.version.compare(b.version));
+        return validPackages[validPackages.length - 1];
     }
 }
