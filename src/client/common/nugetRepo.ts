@@ -47,8 +47,7 @@ export class NugetRepo implements INugetRepo {
     }
 
     public isReleaseVersion(version: SemVer): boolean {
-        // We are only interested in cases where the prerelease is a number.
-        // tslint:disable-next-line:no-any
-        return version.prerelease.filter(v => isNaN(v as any as number)).length === 0;
+        // We are only interested in versions that aren't pre-releases.
+        return version.prerelease.length === 0;
     }
 }
