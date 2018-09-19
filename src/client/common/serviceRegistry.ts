@@ -23,7 +23,8 @@ import { Logger } from './logger';
 import { BrowserService } from './net/browser';
 import { HttpClient } from './net/httpClient';
 import { AzureBlobStoreNugetRepository } from './nuget/azureBlobStoreNugetRepository';
-import { INugetRepository } from './nuget/types';
+import { NugetService } from './nuget/nugetService';
+import { INugetRepository, INugetService } from './nuget/types';
 import { PersistentStateFactory } from './persistentState';
 import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
@@ -69,6 +70,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
     serviceManager.addSingleton<INugetRepository>(INugetRepository, AzureBlobStoreNugetRepository);
+    serviceManager.addSingleton<INugetService>(INugetService, NugetService);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
