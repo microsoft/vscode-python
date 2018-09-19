@@ -15,6 +15,7 @@ import {
     IDebugService, IDocumentManager, ITerminalManager, IWorkspaceService
 } from './application/types';
 import { WorkspaceService } from './application/workspace';
+import { AzureBlobStore } from './azureBlobStore';
 import { ConfigurationService } from './configuration/service';
 import { EditorUtils } from './editor';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
@@ -39,10 +40,10 @@ import {
     ITerminalHelper, ITerminalServiceFactory
 } from './terminal/types';
 import {
-    IBrowserService, IConfigurationService, ICurrentProcess,
-    IEditorUtils, IFeatureDeprecationManager, IInstaller,
-    ILogger, INugetRepo,
-    IPathUtils, IPersistentStateFactory, IRandom, Is64Bit, IsWindows
+    IAzureBlobStore, IBrowserService, IConfigurationService,
+    ICurrentProcess, IEditorUtils, IFeatureDeprecationManager,
+    IInstaller, ILogger,
+    INugetRepo, IPathUtils, IPersistentStateFactory, IRandom, Is64Bit, IsWindows
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -68,6 +69,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
     serviceManager.addSingleton<INugetRepo>(INugetRepo, NugetRepo);
+    serviceManager.addSingleton<IAzureBlobStore>(IAzureBlobStore, AzureBlobStore);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(

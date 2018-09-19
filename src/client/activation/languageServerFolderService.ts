@@ -63,6 +63,6 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
 
     public getFolderVersion(dirName: string): semver.SemVer {
         const suffix = dirName.substring(languageServerFolder.length + 1);
-        return semver.parse(suffix, true)!;
+        return suffix.length === 0 ? new semver.SemVer('0.0.0') : (semver.parse(suffix, true) || new semver.SemVer('0.0.0'));
     }
 }

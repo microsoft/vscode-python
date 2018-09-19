@@ -319,4 +319,12 @@ export type NugetPackage = { package: string; version: SemVer; uri: string };
 export const INugetRepo = Symbol('INugetRepo');
 export interface INugetRepo {
     getLatestVersion(packageBaseAddress: string, packageName: string, majorVersion?: number): Promise<NugetPackage>;
+    getVersion(packageName: string): SemVer;
+    isReleaseVersion(version: SemVer): boolean;
+}
+export type AzureBlob = { name: string; uri: string };
+
+export const IAzureBlobStore = Symbol('IAzureBlobStore');
+export interface IAzureBlobStore {
+    searhBlobs(baseContainerAddress: string, container: string, searchPrefix: string): Promise<AzureBlob[]>;
 }
