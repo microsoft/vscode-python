@@ -172,7 +172,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
      * @memberof InterpreterService
      */
     public async getDisplayName(info: Partial<PythonInterpreter>, resource?: Uri): Promise<string> {
-        const store = this.persistentStateFactory.createGlobalPersistentState<string>(`${info.path}.interpreter.displayName.v2`, undefined, EXPITY_DURATION);
+        const store = this.persistentStateFactory.createGlobalPersistentState<string>(`${info.path}.interpreter.displayName.v3`, undefined, EXPITY_DURATION);
         if (store.value) {
             return store.value;
         }
@@ -194,7 +194,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             info.envName = await virtualEnvMgr.getEnvironmentName(info.path, resource);
         }
         if (info.envName && info.envName.length > 0) {
-            envSuffixParts.push(info.envName);
+            envSuffixParts.push(`'${info.envName}'`);
         }
         if (info.type) {
             const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
