@@ -20,5 +20,6 @@
     "python.linting.enabled": false,
     "python.unitTest.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
-    "python.formatting.provider": "none"
+    "python.formatting.provider": "none",
+    "python.pythonPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
 }
