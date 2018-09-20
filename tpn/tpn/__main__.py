@@ -69,6 +69,7 @@ def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
     for name in stale:
         print("STALE in config file:", name)
     if failures:
+        print("*" * 20)  # Make failure stand out more.
         for name, details in failures.items():
             print(
                 f"FAILED to find license for {name} {details.version} @ {details.url}: {details.error}"
