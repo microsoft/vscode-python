@@ -127,8 +127,8 @@ export class PythonDebugger extends DebugSession {
         const pythonPath = typeof args.pythonPath === 'string' && args.pythonPath.length > 0 ? args.pythonPath : 'python';
         const processFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         const processService = await processFactory.create();
-        const valid = await processService.exec(pythonPath, ['--version'])
-            .then(output => output.stdout.trim().length > 0)
+        const valid = await processService.exec(pythonPath, ['-c', 'print("1")'])
+            .then(output => output.stdout.trim() === '1' || (output.stderr || '').trim() === '1')
             .catch(() => false);
         if (!valid) {
             this.sendErrorResponse(response, { format: InvalidPythonPathInDebuggerMessage, id: 2 }, undefined, undefined, ErrorDestination.User);
