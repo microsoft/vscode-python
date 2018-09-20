@@ -18,11 +18,15 @@ class ConfigProject(data.Project):
     purpose: Optional[str] = None
 
 
+SECTIONS = {"project"}
 FIELDS = {"name", "version", "url", "purpose", "license"}
 
 
 def get_projects(config, acceptable_purposes):
     """Pull out projects as specified in a configuration file."""
+    found_sections = frozenset(config.keys())
+    if found_sections != SECTIONS:
+        raise ValueError(f"Configuration file sections incorrect: {found_sections!r} != {SECTIONS!r}")
     projects = {}
     for project_data in config["project"]:
         if not all(key in project_data for key in FIELDS):
