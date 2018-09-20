@@ -226,7 +226,6 @@ export interface IFormattingSettings {
 export interface IAutoCompleteSettings {
     readonly addBrackets: boolean;
     readonly extraPaths: string[];
-    readonly preloadModules: string[];
     readonly showAdvancedMembers: boolean;
     readonly typeshedPaths: string[];
 }

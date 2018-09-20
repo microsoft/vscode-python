@@ -245,7 +245,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.autoComplete = this.autoComplete ? this.autoComplete : {
             extraPaths: [],
             addBrackets: false,
-            preloadModules: [],
             showAdvancedMembers: false,
             typeshedPaths: []
         };

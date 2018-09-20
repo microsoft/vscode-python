@@ -348,12 +348,6 @@ export class JediProxy implements Disposable {
             args.push('custom');
             args.push(this.pythonSettings.jediPath);
         }
-        if (this.pythonSettings.autoComplete &&
-            Array.isArray(this.pythonSettings.autoComplete.preloadModules) &&
-            this.pythonSettings.autoComplete.preloadModules.length > 0) {
-            const modules = this.pythonSettings.autoComplete.preloadModules.filter(m => m.trim().length > 0).join(',');
-            args.push(modules);
-        }
         const result = pythonProcess.execObservable(args, { cwd });
         this.proc = result.proc;
         this.languageServerStarted.resolve();
