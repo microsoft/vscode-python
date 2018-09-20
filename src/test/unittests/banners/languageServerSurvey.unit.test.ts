@@ -6,17 +6,22 @@
 // tslint:disable:no-any max-func-body-length
 
 import { expect } from 'chai';
+import { SemVer } from 'semver';
 import * as typemoq from 'typemoq';
+import { FolderVersionPair, ILanguageServerFolderService } from '../../../client/activation/types';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { IBrowserService, IConfigurationService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { LanguageServerSurveyBanner, LSSurveyStateKeys } from '../../../client/languageServices/languageServerSurveyBanner';
-//import { ILanguageServerFolderService } from '../../../client/activation/types';
+
+const replaceLanguageServerVersion: string = 'LANGSERV_VER';
+const replaceLaunchCountInUri: string = 'LAUNCH_COUNT';
+const expectedSurveyUri: string = `https://www.research.net/r/LJZV9BZ?n=${replaceLaunchCountInUri}&v=${replaceLanguageServerVersion}`;
 
 suite('Language Server Survey Banner', () => {
     let config: typemoq.IMock<IConfigurationService>;
     let appShell: typemoq.IMock<IApplicationShell>;
     let browser: typemoq.IMock<IBrowserService>;
-    //let lsService: typemoq.IMock<ILanguageServerFolderService>;
+    let lsService: typemoq.IMock<ILanguageServerFolderService>;
 
     const message = 'Can you please take 2 minutes to tell us how the Experimental Debugger is working for you?';
     const yes = 'Yes, take survey now';
@@ -26,13 +31,13 @@ suite('Language Server Survey Banner', () => {
         config = typemoq.Mock.ofType<IConfigurationService>();
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         browser = typemoq.Mock.ofType<IBrowserService>();
-        //lsService = typemoq.Mock.ofType<ILanguageServerFolderService>();
+        lsService = typemoq.Mock.ofType<ILanguageServerFolderService>();
     });
     test('Is debugger enabled upon creation?', () => {
         const enabledValue: boolean = true;
         const attemptCounter: number = 0;
         const completionsCount: number = 0;
-        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 100, appShell.object, browser.object); //, lsService.object);
+        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 100, appShell.object, browser.object, lsService.object);
         expect(testBanner.enabled).to.be.equal(true, 'Sampling 100/100 should always enable the banner.');
     });
     test('Do not show banner when it is disabled', () => {
@@ -43,14 +48,39 @@ suite('Language Server Survey Banner', () => {
         const enabledValue: boolean = true;
         const attemptCounter: number = 0;
         const completionsCount: number = 0;
-        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object); //, lsService.object);
+        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object, lsService.object);
         testBanner.showBanner().ignoreErrors();
     });
     test('shouldShowBanner must return false when Banner is implicitly disabled by sampling', () => {
         const enabledValue: boolean = true;
         const attemptCounter: number = 0;
         const completionsCount: number = 0;
-        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object);
+        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object, lsService.object);
+        expect(testBanner.enabled).to.be.equal(false, 'We implicitly disabled the banner, it should never show.');
+    });
+    test('Survey URL is as expected.', () => {
+        const enabledValue: boolean = true;
+        const attemptCounter: number = 42;
+        const completionsCount: number = 0;
+        const languageServerVersion: string = '1.2.3.4';
+
+        const lsFolder: FolderVersionPair = {
+            path: '/some/path',
+            version: new SemVer(languageServerVersion)
+        };
+        lsService.setup(f => f.getcurrentLanguageServerDirectory())
+            .returns(() => {
+                return Promise.resolve(lsFolder);
+            })
+            .verifiable(typemoq.Times.once());
+        browser.setup(b => b.launch(typemoq.It.isAnyString()))
+            .returns(() => {
+                return expectedSurveyUri
+                    .replace(replaceLaunchCountInUri, attemptCounter.toString())
+                    .replace(replaceLanguageServerVersion, languageServerVersion);
+            })
+            .verifiable(typemoq.Times.once());
+        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object, lsService.object);
         expect(testBanner.enabled).to.be.equal(false, 'We implicitly disabled the banner, it should never show.');
     });
 });
@@ -62,8 +92,8 @@ function preparePopup(
     minCompletionCount: number,
     maxCompletionCount: number,
     appShell: IApplicationShell,
-    browser: IBrowserService
-    //lsService: ILanguageServerFolderService
+    browser: IBrowserService,
+    lsService: ILanguageServerFolderService
 ): LanguageServerSurveyBanner {
 
     const myfactory: typemoq.IMock<IPersistentStateFactory> = typemoq.Mock.ofType<IPersistentStateFactory>();
@@ -113,7 +143,7 @@ function preparePopup(
         appShell,
         myfactory.object,
         browser,
-        //lsService,
+        lsService,
         minCompletionCount,
         maxCompletionCount);
 }

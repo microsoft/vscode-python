@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { getRandomBetween } from '../../utils/random';
+import { FolderVersionPair, ILanguageServerFolderService } from '../activation/types';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import {
@@ -41,7 +42,7 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
-        //@inject(ILanguageServerFolderService) private lsService: ILanguageServerFolderService,
+        @inject(ILanguageServerFolderService) private lsService: ILanguageServerFolderService,
         showAfterMinimumEventsCount: number = 100,
         showBeforeMaximumEventsCount: number = 500) {
         this.minCompletionsBeforeShow = showAfterMinimumEventsCount;
@@ -132,9 +133,8 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     }
 
     private async getPythonLSVersion(fallback: string = 'unknown'): Promise<string> {
-        // const langServiceLatestFolder: FolderVersionPair | undefined = await this.lsService.getLatestLanguageServerDirectory();
-        // return langServiceLatestFolder ? langServiceLatestFolder.version : fallback;
-        return fallback;
+        const langServiceLatestFolder: FolderVersionPair | undefined = await this.lsService.getcurrentLanguageServerDirectory();
+        return langServiceLatestFolder ? langServiceLatestFolder.version.version : fallback;
     }
 
     private async getPythonLSLaunchCounter(): Promise<number> {
