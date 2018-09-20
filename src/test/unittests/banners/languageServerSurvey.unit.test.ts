@@ -13,10 +13,6 @@ import { IApplicationShell } from '../../../client/common/application/types';
 import { IBrowserService, IConfigurationService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { LanguageServerSurveyBanner, LSSurveyStateKeys } from '../../../client/languageServices/languageServerSurveyBanner';
 
-const replaceLanguageServerVersion: string = 'LANGSERV_VER';
-const replaceLaunchCountInUri: string = 'LAUNCH_COUNT';
-const expectedSurveyUri: string = `https://www.research.net/r/LJZV9BZ?n=${replaceLaunchCountInUri}&v=${replaceLanguageServerVersion}`;
-
 suite('Language Server Survey Banner', () => {
     let config: typemoq.IMock<IConfigurationService>;
     let appShell: typemoq.IMock<IApplicationShell>;
@@ -58,30 +54,66 @@ suite('Language Server Survey Banner', () => {
         const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object, lsService.object);
         expect(testBanner.enabled).to.be.equal(false, 'We implicitly disabled the banner, it should never show.');
     });
-    test('Survey URL is as expected.', () => {
-        const enabledValue: boolean = true;
-        const attemptCounter: number = 42;
-        const completionsCount: number = 0;
-        const languageServerVersion: string = '1.2.3.4';
 
-        const lsFolder: FolderVersionPair = {
-            path: '/some/path',
-            version: new SemVer(languageServerVersion)
-        };
-        lsService.setup(f => f.getcurrentLanguageServerDirectory())
-            .returns(() => {
-                return Promise.resolve(lsFolder);
-            })
+    const languageServerVersions: string[] = [
+        '1.2.3',
+        '1.2.3-alpha',
+        '0.0.1234567890',
+        '1234567890.0.1',
+        '1.0.1-alpha+2',
+        '22.4.999-rc.6'
+    ];
+    languageServerVersions.forEach(async (languageServerVersion: string) => {
+        test(`Survey URL is as expected for Language Server version '${languageServerVersion}'.`, async () => {
+            const enabledValue: boolean = true;
+            const attemptCounter: number = 42;
+            const completionsCount: number = 0;
+
+            // the expected URI as provided in issue #2630
+            // with mocked-up test replacement values
+
+            const expectedUri: string = `https://www.research.net/r/LJZV9BZ?n=${attemptCounter}&v=${encodeURIComponent(languageServerVersion)}`;
+
+            const lsFolder: FolderVersionPair = {
+                path: '/some/path',
+                version: new SemVer(languageServerVersion, true)
+            };
+            // language service will get asked for the current Language
+            // Server directory installed. This in turn will give the tested
+            // code the version via the .version member of lsFolder.
+            lsService.setup(f => f.getcurrentLanguageServerDirectory())
+                .returns(() => {
+                    return Promise.resolve(lsFolder);
+                })
+                .verifiable(typemoq.Times.once());
+
+            // The browser service will be asked to launch a URI that is
+            // built using similar constants to those found in this test
+            // suite. The exact built URI should be received in a single call
+            // to launch.
+            let receivedUri: string = '';
+            browser.setup(b => b.launch(
+                typemoq.It.is((a: string) => {
+                    receivedUri = a;
+                    return a === expectedUri;
+                }))
+            )
             .verifiable(typemoq.Times.once());
-        browser.setup(b => b.launch(typemoq.It.isAnyString()))
-            .returns(() => {
-                return expectedSurveyUri
-                    .replace(replaceLaunchCountInUri, attemptCounter.toString())
-                    .replace(replaceLanguageServerVersion, languageServerVersion);
-            })
-            .verifiable(typemoq.Times.once());
-        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object, lsService.object);
-        expect(testBanner.enabled).to.be.equal(false, 'We implicitly disabled the banner, it should never show.');
+
+            const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object, lsService.object);
+            await testBanner.launchSurvey();
+
+            // This is technically not necessary, but it gives
+            // better output than the .verifyAll messages do.
+            expect(receivedUri).is.equal(expectedUri, 'Uri given to launch mock is incorrect.');
+
+            // verify that the calls expected were indeed made.
+            lsService.verifyAll();
+            browser.verifyAll();
+
+            lsService.reset();
+            browser.reset();
+        });
     });
 });
 

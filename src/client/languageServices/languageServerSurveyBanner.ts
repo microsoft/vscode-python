@@ -122,7 +122,8 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
 
     public async launchSurvey(): Promise<void> {
         const launchCounter = await this.getPythonLSLaunchCounter();
-        const lsVersion = await this.getPythonLSVersion();
+        let lsVersion: string = await this.getPythonLSVersion();
+        lsVersion = encodeURIComponent(lsVersion);
         this.browserService.launch(`https://www.research.net/r/LJZV9BZ?n=${launchCounter}&v=${lsVersion}`);
     }
 
@@ -134,7 +135,7 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
 
     private async getPythonLSVersion(fallback: string = 'unknown'): Promise<string> {
         const langServiceLatestFolder: FolderVersionPair | undefined = await this.lsService.getcurrentLanguageServerDirectory();
-        return langServiceLatestFolder ? langServiceLatestFolder.version.version : fallback;
+        return langServiceLatestFolder ? langServiceLatestFolder.version.raw : fallback;
     }
 
     private async getPythonLSLaunchCounter(): Promise<number> {
