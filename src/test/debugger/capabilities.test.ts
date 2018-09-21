@@ -37,6 +37,9 @@ suite('Debugging - Capabilities', () => {
     let disposables: { dispose?: Function; destroy?: Function }[];
     let proc: ChildProcess;
     setup(async function () {
+        this.skip();
+        return;
+
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
