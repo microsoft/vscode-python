@@ -8,48 +8,42 @@ import * as requestProgress from 'request-progress';
 import { ProgressLocation, window } from 'vscode';
 import { createDeferred } from '../../utils/async';
 import { StopWatch } from '../../utils/stopWatch';
+import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
+import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import {
     PYTHON_LANGUAGE_SERVER_DOWNLOADED,
     PYTHON_LANGUAGE_SERVER_EXTRACTED
 } from '../telemetry/constants';
-import { PlatformData, PlatformName } from './platformData';
-import { IDownloadFileService } from './types';
+import { PlatformData } from './platformData';
+import { IHttpClient, ILanguageServerDownloader, ILanguageServerFolderService } from './types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const StreamZip = require('node-stream-zip');
-
-const downloadUriPrefix = 'https://pvsc.blob.core.windows.net/python-language-server';
-const downloadBaseFileName = 'Python-Language-Server';
-const downloadVersion = 'beta';
 const downloadFileExtension = '.nupkg';
 
-export const DownloadLinks = {
-    [PlatformName.Windows32Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Windows32Bit}.${downloadVersion}${downloadFileExtension}`,
-    [PlatformName.Windows64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Windows64Bit}.${downloadVersion}${downloadFileExtension}`,
-    [PlatformName.Linux64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Linux64Bit}.${downloadVersion}${downloadFileExtension}`,
-    [PlatformName.Mac64Bit]: `${downloadUriPrefix}/${downloadBaseFileName}-${PlatformName.Mac64Bit}.${downloadVersion}${downloadFileExtension}`
-};
-
-export class LanguageServerDownloader {
-
+export class LanguageServerDownloader implements ILanguageServerDownloader {
+    private readonly output: IOutputChannel;
+    private readonly fs: IFileSystem;
     constructor(
-        private readonly output: IOutputChannel,
-        private readonly fs: IFileSystem,
         private readonly platformData: PlatformData,
-        private requestHandler: IDownloadFileService,
-        private engineFolder: string
-    ) { }
+        private readonly engineFolder: string,
+        private readonly serviceContainer: IServiceContainer
+    ) {
+        this.output = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
 
-    public getDownloadUri() {
-        const platformString = this.platformData.getPlatformName();
-        return DownloadLinks[platformString];
+    }
+
+    public async getDownloadUri() {
+        const lsFolderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
+        return lsFolderService.getLatestLanguageServerVersion().then(info => info!.uri);
     }
 
     public async downloadLanguageServer(context: IExtensionContext): Promise<void> {
-        const downloadUri = this.getDownloadUri();
+        const downloadUri = await this.getDownloadUri();
         const timer: StopWatch = new StopWatch();
         let success: boolean = true;
         let localTempFilePath = '';
@@ -103,9 +97,8 @@ export class LanguageServerDownloader {
         await window.withProgress({
             location: ProgressLocation.Window
         }, (progress) => {
-
-            requestProgress(
-                this.requestHandler!.downloadFile(uri))
+            const httpClient = this.serviceContainer.get<IHttpClient>(IHttpClient);
+            requestProgress(httpClient.downloadFile(uri))
                 .on('progress', (state) => {
                     // https://www.npmjs.com/package/request-progress
                     const received = Math.round(state.size.transferred / 1024);
@@ -151,7 +144,7 @@ export class LanguageServerDownloader {
                 if (!await this.fs.directoryExists(installFolder)) {
                     await this.fs.createDirectory(installFolder);
                 }
-                zip.extract(null, installFolder, (err, count) => {
+                zip.extract(null, installFolder, (err) => {
                     if (err) {
                         deferred.reject(err);
                     } else {
@@ -159,7 +152,7 @@ export class LanguageServerDownloader {
                     }
                     zip.close();
                 });
-            }).on('extract', (entry, file) => {
+            }).on('extract', () => {
                 extractedFiles += 1;
                 progress.report({ message: `${title}${Math.round(100 * extractedFiles / totalFiles)}%` });
             }).on('error', e => {

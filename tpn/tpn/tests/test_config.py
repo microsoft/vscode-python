@@ -41,6 +41,12 @@ def test_get_projects(example_config, example_data):
     assert result == example_data
 
 
+def test_get_projects_checks_sections(example_config):
+    example_config["PROJECCTS"] = []
+    with pytest.raises(ValueError):
+        config.get_projects(example_config, {"npm"})
+
+
 def test_get_projects_key_check(example_config):
     del example_config["project"][0]["url"]
     with pytest.raises(KeyError):

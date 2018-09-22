@@ -3,72 +3,46 @@
 
 'use strict';
 
-// tslint:disable:no-unused-variable
+// tslint:disable:no-any
 
 import * as assert from 'assert';
-import * as request from 'request';
 import * as TypeMoq from 'typemoq';
-import { WorkspaceConfiguration } from 'vscode';
-import { DownloadLinks, LanguageServerDownloader } from '../../client/activation/downloader';
-import { PlatformData, PlatformName } from '../../client/activation/platformData';
-import { RequestWithProxy } from '../../client/activation/requestWithProxy';
-import { IDownloadFileService } from '../../client/activation/types';
-import { IWorkspaceService } from '../../client/common/application/types';
+import { LanguageServerDownloader } from '../../client/activation/downloader';
+import { PlatformData } from '../../client/activation/platformData';
+import { ILanguageServerFolderService } from '../../client/activation/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IOutputChannel } from '../../client/common/types';
+import { IServiceContainer } from '../../client/ioc/types';
 
 suite('Activation - Downloader', () => {
     let languageServerDownloader: LanguageServerDownloader;
     let platformService: TypeMoq.IMock<IPlatformService>;
-
+    let container: TypeMoq.IMock<IServiceContainer>;
+    let folderService: TypeMoq.IMock<ILanguageServerFolderService>;
     setup(() => {
+        container = TypeMoq.Mock.ofType<IServiceContainer>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
+        folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
         const fs = TypeMoq.Mock.ofType<IFileSystem>();
         const output = TypeMoq.Mock.ofType<IOutputChannel>();
-        const workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         const platformData: PlatformData = new PlatformData(platformService.object, fs.object);
-        const wsConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspace.setup(a => a.getConfiguration(TypeMoq.It.isValue('http'))).returns(() => wsConfig.object);
-        wsConfig.setup(a => a.get(TypeMoq.It.isValue('proxy'), TypeMoq.It.isAnyString())).returns(() => '');
+        container.setup(a => a.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL))).returns(() => output.object);
+        container.setup(a => a.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fs.object);
+        container.setup(a => a.get(TypeMoq.It.isValue(ILanguageServerFolderService))).returns(() => folderService.object);
 
-        languageServerDownloader = new LanguageServerDownloader(
-            output.object,
-            fs.object,
-            platformData,
-            new RequestWithProxy(''),
-            '');
+        languageServerDownloader = new LanguageServerDownloader(platformData, '', container.object);
+    });
 
-    });
-    type PlatformIdentifier = {
-        windows?: boolean;
-        mac?: boolean;
-        linux?: boolean;
-        is64Bit?: boolean;
-    };
-    function setupPlatform(platform: PlatformIdentifier) {
-        platformService.setup(x => x.isWindows).returns(() => platform.windows === true);
-        platformService.setup(x => x.isMac).returns(() => platform.mac === true);
-        platformService.setup(x => x.isLinux).returns(() => platform.linux === true);
-        platformService.setup(x => x.is64bit).returns(() => platform.is64Bit === true);
-    }
-    test('Windows 32Bit', async () => {
-        setupPlatform({ windows: true });
-        const link = languageServerDownloader.getDownloadUri();
-        assert.equal(link, DownloadLinks[PlatformName.Windows32Bit]);
-    });
-    test('Windows 64Bit', async () => {
-        setupPlatform({ windows: true, is64Bit: true });
-        const link = languageServerDownloader.getDownloadUri();
-        assert.equal(link, DownloadLinks[PlatformName.Windows64Bit]);
-    });
-    test('Mac 64Bit', async () => {
-        setupPlatform({ mac: true, is64Bit: true });
-        const link = languageServerDownloader.getDownloadUri();
-        assert.equal(link, DownloadLinks[PlatformName.Mac64Bit]);
-    });
-    test('Linux 64Bit', async () => {
-        setupPlatform({ linux: true, is64Bit: true });
-        const link = languageServerDownloader.getDownloadUri();
-        assert.equal(link, DownloadLinks[PlatformName.Linux64Bit]);
+    test('Get download uri', async () => {
+        folderService
+            .setup(f => f.getLatestLanguageServerVersion())
+            .returns(() => Promise.resolve({ uri: 'xyz' } as any))
+            .verifiable(TypeMoq.Times.once());
+
+        const link = await languageServerDownloader.getDownloadUri();
+
+        folderService.verifyAll();
+        assert.equal(link, 'xyz');
     });
 });

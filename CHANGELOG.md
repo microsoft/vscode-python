@@ -1,5 +1,64 @@
 # Changelog
 
+## 2018.8.1-beta (20 September 2018)
+
+### Enhancements
+
+1. Auto activate Python Environment in terminals (disable with `"python.terminal.activateEnvironment": false`).
+   ([#1387](https://github.com/Microsoft/vscode-python/issues/1387))
+1. Add support for activation of `pyenv` environments in the Terminal.
+   ([#1526](https://github.com/Microsoft/vscode-python/issues/1526))
+1. Display a message with options when user selects the default macOS Python interpreter.
+   ([#1689](https://github.com/Microsoft/vscode-python/issues/1689))
+1. Add debug configuration snippet for modules for the debugger.
+   ([#2175](https://github.com/Microsoft/vscode-python/issues/2175))
+1. Search for python interpreters in all paths found in the `PATH`/`Path` environment variable.
+   ([#2398](https://github.com/Microsoft/vscode-python/issues/2398))
+1. Add telemetry to download, extract, and analyze, phases of the Python Language Server.
+   ([#2461](https://github.com/Microsoft/vscode-python/issues/2461))
+1. The `pvsc-dev-ext.py` script now captures `stderr` for more informative exceptions
+   when execution fails.
+   ([#2483](https://github.com/Microsoft/vscode-python/issues/2483))
+1. Display notification when attempting to debug without selecting a python interpreter.
+   ([#2494](https://github.com/Microsoft/vscode-python/issues/2494))
+1. Add support for out of band updates to the language server.
+   ([#2580](https://github.com/Microsoft/vscode-python/issues/2580))
+1. Ensure status bar with interpreter information takes priority over other items.
+   ([#2617](https://github.com/Microsoft/vscode-python/issues/2617))
+1. Add Python Language Server version to the survey banner URL presented to some users.
+   ([#2630](https://github.com/Microsoft/vscode-python/issues/2630))
+
+### Fixes
+
+1. Improvements to the display format of interpreter information in the list of interpreters.
+   ([#1352](https://github.com/Microsoft/vscode-python/issues/1352))
+1. Add a new `"python.condaPath"` setting to use if conda is not found on `PATH`.
+   ([#1944](https://github.com/Microsoft/vscode-python/issues/1944))
+1. Ensure code is executed when the last line of selected code is indented.
+   ([#2167](https://github.com/Microsoft/vscode-python/issues/2167))
+1. Stop duplicate initializations of Python Language Server progress reporter.
+   ([#2297](https://github.com/Microsoft/vscode-python/issues/2297))
+1. Use a python script to launch the debugger, instead of using `-m` which requires changes to the `PYTHONPATH` variable.
+   ([#2509](https://github.com/Microsoft/vscode-python/issues/2509))
+1. Provide paths from `PYTHONPATH` environment variable to the language server, as additional search locations of Python modules.
+   ([#2518](https://github.com/Microsoft/vscode-python/issues/2518))
+1. Fix issue preventing debugger user survey banner from opening.
+   ([#2557](https://github.com/Microsoft/vscode-python/issues/2557))
+1. Use folder name of the Python interpreter as the name of the virtual environment.
+   ([#2562](https://github.com/Microsoft/vscode-python/issues/2562))
+1. Give preference to bitness information retrieved from the Python interpreter over what's been retrieved from Windows Registry.
+   ([#2563](https://github.com/Microsoft/vscode-python/issues/2563))
+1. Use the environment folder name for environments without environment names in the Conda Environments list file.
+   ([#2577](https://github.com/Microsoft/vscode-python/issues/2577))
+
+### Code Health
+
+1. Fix broken CI on Azure DevOps.
+   ([#2549](https://github.com/Microsoft/vscode-python/issues/2549))
+1. Upgraded our version of `request` to `2.87.0`.
+   ([#2621](https://github.com/Microsoft/vscode-python/issues/2621))
+
+
 ## 2018.8.0 (04 September 2018)
 
 ### Thanks

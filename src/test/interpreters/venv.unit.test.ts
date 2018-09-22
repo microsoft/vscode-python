@@ -10,9 +10,9 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { IConfigurationService, ICurrentProcess, IPythonSettings } from '../../client/common/types';
-import { EnvironmentVariables } from '../../client/common/variables/types';
 import { GlobalVirtualEnvironmentsSearchPathProvider } from '../../client/interpreter/locators/services/globalVirtualEnvService';
 import { WorkspaceVirtualEnvironmentsSearchPathProvider } from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
+import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 
@@ -23,6 +23,7 @@ suite('Virtual environments', () => {
     let config: TypeMoq.IMock<IConfigurationService>;
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let process: TypeMoq.IMock<ICurrentProcess>;
+    let virtualEnvMgr: TypeMoq.IMock<IVirtualEnvironmentManager>;
 
     setup(() => {
         const cont = new Container();
@@ -33,39 +34,36 @@ suite('Virtual environments', () => {
         config = TypeMoq.Mock.ofType<IConfigurationService>();
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         process = TypeMoq.Mock.ofType<ICurrentProcess>();
+        virtualEnvMgr = TypeMoq.Mock.ofType<IVirtualEnvironmentManager>();
 
         config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, config.object);
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
         serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, process.object);
+        serviceManager.addSingletonInstance<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, virtualEnvMgr.object);
     });
 
     test('Global search paths', async () => {
         const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
 
         const homedir = os.homedir();
-        const folders = ['Envs', '.virtualenvs', '.pyenv'];
+        const folders = ['Envs', '.virtualenvs'];
         settings.setup(x => x.venvFolders).returns(() => folders);
-
-        let paths = pathProvider.getSearchPaths();
+        virtualEnvMgr.setup(v => v.getPyEnvRoot(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+        let paths = await pathProvider.getSearchPaths();
         let expected = folders.map(item => path.join(homedir, item));
-        expected.push(path.join(homedir, '.pyenv', 'versions'));
 
+        virtualEnvMgr.verifyAll();
         expect(paths).to.deep.equal(expected, 'Global search folder list is incorrect.');
 
-        const envMap: EnvironmentVariables = {};
-        process.setup(x => x.env).returns(() => envMap);
+        virtualEnvMgr.reset();
+        virtualEnvMgr.setup(v => v.getPyEnvRoot(TypeMoq.It.isAny())).returns(() => Promise.resolve('pyenv_path'));
+        paths = await pathProvider.getSearchPaths();
 
-        const customFolder = path.join(homedir, 'some_folder');
-        // tslint:disable-next-line:no-string-literal
-        envMap['PYENV_ROOT'] = customFolder;
-        paths = pathProvider.getSearchPaths();
-
-        expected = folders.map(item => path.join(homedir, item));
-        expected.push(customFolder);
-        expected.push(path.join(customFolder, 'versions'));
-        expect(paths).to.deep.equal(expected, 'PYENV_ROOT not resolved correctly.');
+        virtualEnvMgr.verifyAll();
+        expected = expected.concat(['pyenv_path', path.join('pyenv_path', 'versions')]);
+        expect(paths).to.deep.equal(expected, 'pyenv path not resolved correctly.');
     });
 
     test('Workspace search paths', async () => {
@@ -81,7 +79,7 @@ suite('Virtual environments', () => {
         workspace.setup(x => x.workspaceFolders).returns(() => [wsRoot.object, folder1.object]);
 
         const pathProvider = new WorkspaceVirtualEnvironmentsSearchPathProvider(serviceContainer);
-        const paths = pathProvider.getSearchPaths(Uri.file(''));
+        const paths = await pathProvider.getSearchPaths(Uri.file(''));
 
         const homedir = os.homedir();
         const isWindows = new PlatformService();

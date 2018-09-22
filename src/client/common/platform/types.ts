@@ -9,7 +9,7 @@ import { Architecture, OSDistro, OSType } from '../../../utils/platform';
 export const IPlatformInfo = Symbol('IPlatformInfo');
 export interface IPlatformInfo {
     readonly type: OSType;
-    readonly arch: string;
+    readonly architecture: Architecture;
     readonly version: semver.SemVer;
     readonly distro: OSDistro;
 

@@ -20,7 +20,7 @@ import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/Common/const
 import { AttachRequestArguments, DebugOptions } from '../../client/debugger/Common/Contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { PYTHON_PATH, sleep } from '../common';
-import { initialize, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
+import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { continueDebugging, createDebugAdapter } from './utils';
 
 const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd.py');
@@ -28,9 +28,8 @@ const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', '
 suite('Attach Debugger', () => {
     let debugClient: DebugClient;
     let proc: ChildProcess;
-    suiteSetup(initialize);
 
-    setup(async function () {
+    setup(async function() {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
@@ -58,7 +57,7 @@ suite('Attach Debugger', () => {
         // Set the path for PTVSD to be picked up.
         // tslint:disable-next-line:no-string-literal
         env['PYTHONPATH'] = PTVSD_PATH;
-        const pythonArgs = ['-m', 'ptvsd', '--server', '--port', `${port}`, '--file', fileToDebug.fileToCommandArgument()];
+        const pythonArgs = ['-m', 'ptvsd', '--server', '--wait', '--port', `${port}`, '--file', fileToDebug.fileToCommandArgument()];
         proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });
         await sleep(3000);
 

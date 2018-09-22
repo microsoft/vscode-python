@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Random } from '../../utils/random';
+import { IHttpClient } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
@@ -20,6 +21,10 @@ import { FeatureDeprecationManager } from './featureDeprecationManager';
 import { ProductInstaller } from './installer/productInstaller';
 import { Logger } from './logger';
 import { BrowserService } from './net/browser';
+import { HttpClient } from './net/httpClient';
+import { AzureBlobStoreNugetRepository } from './nuget/azureBlobStoreNugetRepository';
+import { NugetService } from './nuget/nugetService';
+import { INugetRepository, INugetService } from './nuget/types';
 import { PersistentStateFactory } from './persistentState';
 import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
@@ -36,10 +41,10 @@ import {
     ITerminalHelper, ITerminalServiceFactory
 } from './terminal/types';
 import {
-    IBrowserService, IConfigurationService, ICurrentProcess,
-    IEditorUtils, IFeatureDeprecationManager, IInstaller,
-    ILogger, IPathUtils,
-    IPersistentStateFactory, IRandom, Is64Bit, IsWindows
+    IBrowserService, IConfigurationService,
+    ICurrentProcess, IEditorUtils, IFeatureDeprecationManager,
+    IInstaller, ILogger,
+    IPathUtils, IPersistentStateFactory, IRandom, Is64Bit, IsWindows
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -62,7 +67,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
+    serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
+    serviceManager.addSingleton<INugetRepository>(INugetRepository, AzureBlobStoreNugetRepository);
+    serviceManager.addSingleton<INugetService>(INugetService, NugetService);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(

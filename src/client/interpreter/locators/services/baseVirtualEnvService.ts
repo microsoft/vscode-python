@@ -29,7 +29,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
         return this.suggestionsFromKnownVenvs(resource);
     }
     private async suggestionsFromKnownVenvs(resource?: Uri) {
-        const searchPaths = this.searchPathsProvider.getSearchPaths(resource);
+        const searchPaths = await this.searchPathsProvider.getSearchPaths(resource);
         return Promise.all(searchPaths.map(dir => this.lookForInterpretersInVenvs(dir, resource)))
             .then(listOfInterpreters => _.flatten(listOfInterpreters));
     }

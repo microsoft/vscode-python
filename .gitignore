@@ -16,6 +16,7 @@ coverage/
 pythonFiles/experimental/ptvsd/**
 debug_coverage*/**
 languageServer/**
+languageServer.*/**
 bin/**
 obj/**
 .pytest_cache

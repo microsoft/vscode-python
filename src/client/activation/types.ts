@@ -4,6 +4,9 @@
 'use strict';
 
 import { Request as RequestResult } from 'request';
+import { SemVer } from 'semver';
+import { NugetPackage } from '../common/nuget/types';
+import { IExtensionContext } from '../common/types';
 
 export const IExtensionActivationService = Symbol('IExtensionActivationService');
 export interface IExtensionActivationService {
@@ -21,6 +24,32 @@ export interface IExtensionActivator {
   deactivate(): Promise<void>;
 }
 
-export interface IDownloadFileService {
+export const IHttpClient = Symbol('IHttpClient');
+export interface IHttpClient {
   downloadFile(uri: string): RequestResult;
+  getJSON<T>(uri: string): Promise<T>;
 }
+
+export type FolderVersionPair = { path: string; version: SemVer };
+export const ILanguageServerFolderService = Symbol('ILanguageServerFolderService');
+
+export interface ILanguageServerFolderService {
+  getLanguageServerFolderName(): Promise<string>;
+  getLatestLanguageServerVersion(): Promise<NugetPackage | undefined>;
+  getcurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
+}
+
+export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');
+
+export interface ILanguageServerDownloader {
+  getDownloadUri(): Promise<string>;
+  downloadLanguageServer(context: IExtensionContext): Promise<void>;
+}
+
+export const ILanguageServerPackageService = Symbol('ILanguageServerPackageService');
+export interface ILanguageServerPackageService {
+  getNugetPackageName(): string;
+  getLatestNugetPackageVersion(): Promise<NugetPackage>;
+}
+
+export const MajorLanguageServerVersion = Symbol('MajorLanguageServerVersion');

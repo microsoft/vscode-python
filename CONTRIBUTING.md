@@ -177,14 +177,9 @@ top-priority in a milestone, but if they are not completed they will not
 block a milestone. All other issues are considered best-effort for that
 milestone.
 
-The overall schedule for a release is to feature freeze for on the last
-Monday of the month to coincide with Visual Studio Code's code freeze.
-We then aim to release later that week so the latest version of the
-extension is already live by the time Visual Studio Code does their
-release the following week. This is so we are ready to use any new features
-of Visual Studio Code the day they go live. We do bugfix-only releases
-between scheduled releases as necessary, but otherwise we aim to do one
-release a month.
+The overall schedule is to release the same week as VS Code.
+We do bugfix-only releases between scheduled releases as necessary, but
+otherwise we aim to do one release a month.
 
 All development is actively done in the `master` branch of the
 repository. It is what allows us to have a
@@ -220,10 +215,7 @@ The other way to help is to go through issues that are labeled as [`validate fix
 
 #### Closed issues
 
-When an issue is closed  by a pull request we add a
-[`validate fix`](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22+is%3Aclosed)
-label in order to request people help us test the fix to validate the issue was
-resolved successfully. Once the fix has been manually validated we remove the label.
+If a closed issue is labeled with ["volunteer"](https://github.com/Microsoft/vscode-python/issues?q=label%3Avolunteer+is%3Aclosed) that means the development team has no plans to implement the work for the issue, but that we would accept a pull request if provided. We close these types of issues to help us stay focused on the issues we do plan/hope to get to (which we will also accept pull requests for, just please discuss design considerations with us first to help make sure your pull request will be accepted).
 
 ### Pull requests
 

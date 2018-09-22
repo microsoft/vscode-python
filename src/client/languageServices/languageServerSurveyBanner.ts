@@ -5,10 +5,13 @@
 
 import { inject, injectable } from 'inversify';
 import { getRandomBetween } from '../../utils/random';
+import { FolderVersionPair, ILanguageServerFolderService } from '../activation/types';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
-import { IBrowserService, IPersistentStateFactory,
-    IPythonExtensionBanner } from '../common/types';
+import {
+    IBrowserService, IPersistentStateFactory,
+    IPythonExtensionBanner
+} from '../common/types';
 
 // persistent state names, exported to make use of in testing
 export enum LSSurveyStateKeys {
@@ -33,15 +36,15 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     private maxCompletionsBeforeShow: number;
     private isInitialized: boolean = false;
     private bannerMessage: string = 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?';
-    private bannerLabels: string [] = [ 'Yes, take survey now', 'No, thanks'];
+    private bannerLabels: string[] = ['Yes, take survey now', 'No, thanks'];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
+        @inject(ILanguageServerFolderService) private lsService: ILanguageServerFolderService,
         showAfterMinimumEventsCount: number = 100,
-        showBeforeMaximumEventsCount: number = 500)
-    {
+        showBeforeMaximumEventsCount: number = 500) {
         this.minCompletionsBeforeShow = showAfterMinimumEventsCount;
         this.maxCompletionsBeforeShow = showBeforeMaximumEventsCount;
         this.initialize();
@@ -105,7 +108,7 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
             return false;
         }
 
-        if (! launchCounter) {
+        if (!launchCounter) {
             launchCounter = await this.getPythonLSLaunchCounter();
         }
         const threshold: number = await this.getPythonLSLaunchThresholdCounter();
@@ -119,13 +122,20 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
 
     public async launchSurvey(): Promise<void> {
         const launchCounter = await this.getPythonLSLaunchCounter();
-        this.browserService.launch(`https://www.research.net/r/LJZV9BZ?n=${launchCounter}`);
+        let lsVersion: string = await this.getPythonLSVersion();
+        lsVersion = encodeURIComponent(lsVersion);
+        this.browserService.launch(`https://www.research.net/r/LJZV9BZ?n=${launchCounter}&v=${lsVersion}`);
     }
 
     private async incrementPythonLanguageServiceLaunchCounter(): Promise<number> {
         const state = this.persistentState.createGlobalPersistentState<number>(LSSurveyStateKeys.ShowAttemptCounter, 0);
         await state.updateValue(state.value + 1);
         return state.value;
+    }
+
+    private async getPythonLSVersion(fallback: string = 'unknown'): Promise<string> {
+        const langServiceLatestFolder: FolderVersionPair | undefined = await this.lsService.getcurrentLanguageServerDirectory();
+        return langServiceLatestFolder ? langServiceLatestFolder.version.raw : fallback;
     }
 
     private async getPythonLSLaunchCounter(): Promise<number> {

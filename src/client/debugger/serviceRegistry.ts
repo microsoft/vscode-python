@@ -9,12 +9,15 @@ import { FileSystem } from '../common/platform/fileSystem';
 import { PlatformService } from '../common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { CurrentProcess } from '../common/process/currentProcess';
+import { BufferDecoder } from '../common/process/decoder';
+import { IBufferDecoder, IProcessServiceFactory } from '../common/process/types';
 import { ICurrentProcess, ISocketServer } from '../common/types';
 import { ServiceContainer } from '../ioc/container';
 import { ServiceManager } from '../ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { DebuggerBanner } from './banner';
 import { DebugStreamProvider } from './Common/debugStreamProvider';
+import { DebuggerProcessServiceFactory } from './Common/processServiceFactory';
 import { ProtocolLogger } from './Common/protocolLogger';
 import { ProtocolParser } from './Common/protocolParser';
 import { ProtocolMessageWriter } from './Common/protocolWriter';
@@ -38,6 +41,8 @@ function registerDebuggerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
     serviceManager.addSingleton<ISocketServer>(ISocketServer, SocketServer);
     serviceManager.addSingleton<IProtocolMessageWriter>(IProtocolMessageWriter, ProtocolMessageWriter);
+    serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
+    serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, DebuggerProcessServiceFactory);
 }
 
 export function registerTypes(serviceManager: IServiceManager) {

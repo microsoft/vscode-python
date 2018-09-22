@@ -24,8 +24,8 @@ import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import {
     BANNER_NAME_LS_SURVEY, DeprecatedFeatureInfo, IConfigurationService,
-    IExtensionContext, IFeatureDeprecationManager, ILogger, IOutputChannel,
-    IPathUtils, IPythonExtensionBanner, IPythonSettings
+    IDisposableRegistry, IExtensionContext, IFeatureDeprecationManager, ILogger,
+    IOutputChannel, IPathUtils, IPythonExtensionBanner, IPythonSettings
 } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
@@ -40,13 +40,11 @@ import { LanguageServerDownloader } from './downloader';
 import { InterpreterData, InterpreterDataService } from './interpreterDataService';
 import { PlatformData } from './platformData';
 import { ProgressReporting } from './progress';
-import { RequestWithProxy } from './requestWithProxy';
-import { IExtensionActivator } from './types';
+import { IExtensionActivator, ILanguageServerFolderService } from './types';
 
 const PYTHON = 'python';
 const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
-const languageServerFolder = 'languageServer';
 const loadExtensionCommand = 'python._loadLanguageServerExtension';
 const buildSymbolsCmdDeprecatedInfo: DeprecatedFeatureInfo = {
     doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_BUILD_WORKSPACE_SYMBOLS',
@@ -75,8 +73,8 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private typeshedPaths: string[] = [];
     private loadExtensionArgs: {} | undefined;
     private surveyBanner: IPythonExtensionBanner;
-    // tslint:disable-next-line:no-unused-variable
-    private progressReporting: ProgressReporting | undefined;
+    private languageServerFolder!: string;
+    private languageServerFolderService: ILanguageServerFolderService;
 
     constructor(@inject(IServiceContainer) private readonly services: IServiceContainer) {
         this.context = this.services.get<IExtensionContext>(IExtensionContext);
@@ -86,6 +84,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.fs = this.services.get<IFileSystem>(IFileSystem);
         this.platformData = new PlatformData(services.get<IPlatformService>(IPlatformService), this.fs);
         this.workspace = this.services.get<IWorkspaceService>(IWorkspaceService);
+        this.languageServerFolderService = this.services.get<ILanguageServerFolderService>(ILanguageServerFolderService);
         const deprecationManager: IFeatureDeprecationManager =
             this.services.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
 
@@ -116,6 +115,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
     public async activate(): Promise<boolean> {
         this.sw.reset();
+        this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName();
         const clientOptions = await this.getAnalysisOptions();
         if (!clientOptions) {
             return false;
@@ -155,18 +155,13 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             return true;
         }
 
-        const mscorlib = path.join(this.context.extensionPath, languageServerFolder, 'mscorlib.dll');
+        const mscorlib = path.join(this.context.extensionPath, this.languageServerFolder, 'mscorlib.dll');
         if (!await this.fs.fileExists(mscorlib)) {
-            const downloader = new LanguageServerDownloader(
-                this.output,
-                this.fs,
-                this.platformData,
-                new RequestWithProxy(this.workspace.getConfiguration('http').get('proxy', '')),
-                languageServerFolder);
+            const downloader = new LanguageServerDownloader(this.platformData, this.languageServerFolder, this.services);
             await downloader.downloadLanguageServer(this.context);
         }
 
-        const serverModule = path.join(this.context.extensionPath, languageServerFolder, this.platformData.getEngineExecutableName());
+        const serverModule = path.join(this.context.extensionPath, this.languageServerFolder, this.platformData.getEngineExecutableName());
         this.languageClient = this.createSelfContainedLanguageClient(serverModule, clientOptions);
         try {
             await this.startLanguageClient();
@@ -181,7 +176,9 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private async startLanguageClient(): Promise<void> {
         this.context.subscriptions.push(this.languageClient!.start());
         await this.serverReady();
-        this.progressReporting = new ProgressReporting(this.languageClient!);
+        const disposables = this.services.get<Disposable[]>(IDisposableRegistry);
+        const progressReporting = new ProgressReporting(this.languageClient!);
+        disposables.push(progressReporting);
     }
 
     private async serverReady(): Promise<void> {
@@ -197,7 +194,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
     private createSimpleLanguageClient(clientOptions: LanguageClientOptions): LanguageClient {
         const commandOptions = { stdio: 'pipe' };
-        const serverModule = path.join(this.context.extensionPath, languageServerFolder, this.platformData.getEngineDllName());
+        const serverModule = path.join(this.context.extensionPath, this.languageServerFolder, this.platformData.getEngineDllName());
         const serverOptions: ServerOptions = {
             run: { command: dotNetCommand, args: [serverModule], options: commandOptions },
             debug: { command: dotNetCommand, args: [serverModule, '--debug'], options: commandOptions }
@@ -240,7 +237,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         }
 
         // tslint:disable-next-line:no-string-literal
-        properties['DatabasePath'] = path.join(this.context.extensionPath, languageServerFolder);
+        properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
 
         let searchPaths = interpreterData ? interpreterData.searchPaths.split(path.delimiter) : [];
         const settings = this.configuration.getSettings();
@@ -310,8 +307,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.getVsCodeExcludeSection('search.exclude', list);
         this.getVsCodeExcludeSection('files.exclude', list);
         this.getVsCodeExcludeSection('files.watcherExclude', list);
-        this.getPythonExcludeSection('linting.ignorePatterns', list);
-        this.getPythonExcludeSection('workspaceSymbols.exclusionPattern', list);
+        this.getPythonExcludeSection(list);
         return list;
     }
 
@@ -324,7 +320,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         }
     }
 
-    private getPythonExcludeSection(setting: string, list: string[]): void {
+    private getPythonExcludeSection(list: string[]): void {
         const pythonSettings = this.configuration.getSettings(this.root);
         const paths = pythonSettings && pythonSettings.linting ? pythonSettings.linting.ignorePatterns : undefined;
         if (paths && Array.isArray(paths)) {
@@ -337,7 +333,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
     private getTypeshedPaths(settings: IPythonSettings): string[] {
         return settings.analysis.typeshedPaths && settings.analysis.typeshedPaths.length > 0
             ? settings.analysis.typeshedPaths
-            : [path.join(this.context.extensionPath, 'languageServer', 'Typeshed')];
+            : [path.join(this.context.extensionPath, this.languageServerFolder, 'Typeshed')];
     }
 
     private async onSettingsChanged(): Promise<void> {

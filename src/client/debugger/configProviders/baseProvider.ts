@@ -8,8 +8,6 @@
 import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Uri, WorkspaceFolder } from 'vscode';
-import { InvalidPythonPathInDebuggerServiceId } from '../../application/diagnostics/checks/invalidPythonPathInDebugger';
-import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../application/diagnostics/types';
 import { IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService } from '../../common/types';
@@ -29,12 +27,6 @@ export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArgum
             await this.provideAttachDefaults(workspaceFolder, debugConfiguration as PythonAttachDebugConfiguration<A>);
         } else {
             const config = debugConfiguration as PythonLaunchDebugConfiguration<L>;
-            const diagnosticService = this.serviceContainer.get<IInvalidPythonPathInDebuggerService>(IDiagnosticsService, InvalidPythonPathInDebuggerServiceId);
-            if (!await diagnosticService.validatePythonPath(config.pythonPath, workspaceFolder)) {
-                // Returning an invalid configuration will cause VSC to display `launch.json` and stop launching the debugger..
-                // tslint:disable-next-line:no-any
-                return {} as any;
-            }
             const numberOfSettings = Object.keys(config);
 
             if ((config.noDebug === true && numberOfSettings.length === 1) || numberOfSettings.length === 0) {

@@ -6,7 +6,6 @@ import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
-import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 /**
@@ -20,7 +19,6 @@ export class CurrentPathService extends CacheableLocatorService {
     private readonly fs: IFileSystem;
 
     public constructor(
-        @inject(IVirtualEnvironmentManager) private virtualEnvMgr: IVirtualEnvironmentManager,
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
@@ -60,28 +58,23 @@ export class CurrentPathService extends CacheableLocatorService {
             .then(listOfInterpreters => _.flatten(listOfInterpreters))
             .then(interpreters => interpreters.filter(item => item.length > 0))
             // tslint:disable-next-line:promise-function-async
-            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter, resource))))
+            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))))
             .then(interpreters => interpreters.filter(item => !!item).map(item => item!));
     }
 
     /**
      * Return the information about the identified interpreter binary.
      */
-    private async getInterpreterDetails(interpreter: string, resource?: Uri): Promise<PythonInterpreter | undefined> {
-        return Promise.all([
-            this.helper.getInterpreterInformation(interpreter),
-            this.virtualEnvMgr.getEnvironmentName(interpreter, resource),
-            this.virtualEnvMgr.getEnvironmentType(interpreter, resource)
-        ]).
-            then(([details, virtualEnvName, type]) => {
+    private async getInterpreterDetails(interpreter: string): Promise<PythonInterpreter | undefined> {
+        return this.helper.getInterpreterInformation(interpreter)
+            .then(details => {
                 if (!details) {
                     return;
                 }
                 return {
                     ...(details as PythonInterpreter),
-                    envName: virtualEnvName,
                     path: interpreter,
-                    type: type ? type : InterpreterType.Unknown
+                    type: details.type ? details.type : InterpreterType.Unknown
                 };
             });
     }

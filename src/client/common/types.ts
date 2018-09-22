@@ -1,10 +1,8 @@
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 import { Socket } from 'net';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
-
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel { }
@@ -142,6 +140,7 @@ export interface IPythonSettings {
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
     readonly analysis: IAnalysisSettings;
+    readonly autoUpdateLanguageServer: boolean;
 }
 export interface ISortImportSettings {
     readonly path: string;
