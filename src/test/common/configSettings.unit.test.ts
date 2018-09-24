@@ -85,6 +85,7 @@ suite('Python Settings', () => {
 
     test('condaPath updated', () => {
         const expected = new PythonSettings(undefined, false);
+        expected.pythonPath = 'python3';
         expected.condaPath = 'spam';
         initializeConfig(expected);
         config.setup(c => c.get<string>('condaPath'))
