@@ -1,6 +1,7 @@
 // tslint:disable:no-console
 
 import { injectable } from 'inversify';
+import { isTestExecution } from './constants';
 import { ILogger } from './types';
 
 const PREFIX = 'Python Extension: ';
@@ -8,6 +9,9 @@ const PREFIX = 'Python Extension: ';
 @injectable()
 export class Logger implements ILogger {
     public logError(message: string, ex?: Error) {
+        if (isTestExecution()) {
+            return;
+        }
         if (ex) {
             console.error(`${PREFIX}${message}`, ex);
         } else {
@@ -15,6 +19,9 @@ export class Logger implements ILogger {
         }
     }
     public logWarning(message: string, ex?: Error) {
+        if (isTestExecution()) {
+            return;
+        }
         if (ex) {
             console.warn(`${PREFIX}${message}`, ex);
         } else {
@@ -22,6 +29,9 @@ export class Logger implements ILogger {
         }
     }
     public logInformation(message: string, ex?: Error) {
+        if (isTestExecution()) {
+            return;
+        }
         if (ex) {
             console.info(`${PREFIX}${message}`, ex);
         } else {
