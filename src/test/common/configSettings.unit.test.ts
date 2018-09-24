@@ -83,7 +83,7 @@ suite('Python Settings', () => {
             .returns(() => settings.terminal);
     }
 
-    test('condaPath', () => {
+    test('condaPath updated', () => {
         const expected = new PythonSettings(undefined, false);
         expected.condaPath = 'spam';
         initializeConfig(expected);
