@@ -44,7 +44,7 @@ suite('Python Settings', () => {
         }
 
         // boolean settings
-        for (const name of ['downloadLanguageServer', 'jediEnabled']) {
+        for (const name of ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer']) {
             config.setup(c => c.get<boolean>(name, true))
                 .returns(() => settings[name]);
         }
