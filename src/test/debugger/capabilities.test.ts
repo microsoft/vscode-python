@@ -53,7 +53,7 @@ suite('Debugging - Capabilities', function () {
     let disposables: { dispose?: Function; destroy?: Function }[];
     let proc: ChildProcess;
     setup(function () {
-        // return this.skip();
+        return this.skip();
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
