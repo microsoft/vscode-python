@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as semver from 'semver';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
+import { log } from '../common/logger';
 import { NugetPackage } from '../common/nuget/types';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, ILogger } from '../common/types';
@@ -19,6 +20,7 @@ const languageServerFolder = 'languageServer';
 export class LanguageServerFolderService implements ILanguageServerFolderService {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
 
+    @log('Get language server folder name')
     public async getLanguageServerFolderName(): Promise<string> {
         const currentFolder = await this.getcurrentLanguageServerDirectory();
         let serverVersion: NugetPackage | undefined;
