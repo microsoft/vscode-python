@@ -46,12 +46,15 @@ suite('WorkspacePythonPathUpdaterService', () => {
             .returns(() => info);
     }
 
-    test('not set at all', async () => {
-        const expected = 'python3';
-        config.setup(c => c.inspect<string>('pythonPath'))
-            .returns(() => undefined);
+    function setExpected(expected: string) {
         config.setup(c => c.update('pythonPath', expected, false))
             .returns(() => Promise.resolve());
+    }
+
+    test('not set at all', async () => {
+        config.setup(c => c.inspect<string>('pythonPath'))
+            .returns(() => undefined);
+        setExpected('python3');
 
         const updater = new WorkspacePythonPathUpdaterService(
             Uri.file(__dirname),
@@ -64,10 +67,8 @@ suite('WorkspacePythonPathUpdaterService', () => {
     });
 
     test('not set on workspace', async () => {
-        const expected = 'python3';
         setInfo(undefined);
-        config.setup(c => c.update('pythonPath', expected, false))
-            .returns(() => Promise.resolve());
+        setExpected('python3');
 
         const updater = new WorkspacePythonPathUpdaterService(
             Uri.file(__dirname),
@@ -116,8 +117,7 @@ suite('WorkspacePythonPathUpdaterService', () => {
         }
         test(`${testName} (${pythonPath} -> ${expected})`, async () => {
             setInfo('python');
-            config.setup(c => c.update('pythonPath', expected, false))
-                .returns(() => Promise.resolve());
+            setExpected(expected);
 
             const updater = new WorkspacePythonPathUpdaterService(
                 Uri.file(workspaceRoot),
