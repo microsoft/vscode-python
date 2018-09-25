@@ -92,147 +92,41 @@ suite('WorkspacePythonPathUpdaterService', () => {
         config.verifyAll();
     });
 
-    test('on $PATH', async () => {
-        const expected = 'python3';
-        setInfo('python');
-        config.setup(c => c.update('pythonPath', expected, false))
-            .returns(() => Promise.resolve());
+    const tests: [string, string, string, string][] = [
+        // (test name, root, new pythonPath, expected)
+        ['on $PATH', 'project', 'python3', ''],
+        ['under $HOME', 'project', '~/my-venv/bin/python3', ''],
 
-        const updater = new WorkspacePythonPathUpdaterService(
-            Uri.file('some-root'),
-            workspaceSvc.object
-        );
-        await updater.updatePythonPath('python3');
+        ['relative -- at workspace root', 'project', 'project/python3', ''],
+        ['relative -- under workspace root', 'project', 'project/my-venv/bin/python3', ''],
+        ['relative -- at cwd', 'project', './python3', ''],
+        ['relative -- under cwd', 'project', './my-venv/bin/python3', ''],
+        ['relative -- outside cwd', 'project', '../my-venv/bin/python3', ''],
 
-        workspaceSvc.verifyAll();
-        config.verifyAll();
-    });
+        ['absolute - starts with workspace root', '/home/user/project', '/home/user/project/my-venv/bin/python3', ''],
+        ['absolute - does not start with workspace root', '/home/user/project', '/home/user/my-venv/bin/python3', '']
+    ];
+    for (let [testName, workspaceRoot, pythonPath, expected] of tests) {
+        workspaceRoot = normalizeFilename(workspaceRoot);
+        pythonPath = normalizeFilename(pythonPath);
+        if (expected === '') {
+            expected = pythonPath;
+        } else {
+            expected = normalizeFilename(expected);
+        }
+        test(`${testName} (${pythonPath} -> ${expected})`, async () => {
+            setInfo('python');
+            config.setup(c => c.update('pythonPath', expected, false))
+                .returns(() => Promise.resolve());
 
-    test('under $HOME', async () => {
-        const expected = normalizeFilename('~/my-venv/bin/python3');
-        setInfo('python');
-        config.setup(c => c.update('pythonPath', expected, false))
-            .returns(() => Promise.resolve());
+            const updater = new WorkspacePythonPathUpdaterService(
+                Uri.file(workspaceRoot),
+                workspaceSvc.object
+            );
+            await updater.updatePythonPath(pythonPath);
 
-        const updater = new WorkspacePythonPathUpdaterService(
-            Uri.file('some-root'),
-            workspaceSvc.object
-        );
-        await updater.updatePythonPath(normalizeFilename('~/my-venv/bin/python3'));
-
-        workspaceSvc.verifyAll();
-        config.verifyAll();
-    });
-
-    test('relative -- at workspace root', async () => {
-        const expected = normalizeFilename('some-root/python3');
-        setInfo('python');
-        config.setup(c => c.update('pythonPath', expected, false))
-            .returns(() => Promise.resolve());
-
-        const updater = new WorkspacePythonPathUpdaterService(
-            Uri.file('some-root'),
-            workspaceSvc.object
-        );
-        await updater.updatePythonPath(normalizeFilename('some-root/python3'));
-
-        workspaceSvc.verifyAll();
-        config.verifyAll();
-    });
-
-    test('relative -- under workspace root', async () => {
-        const expected = normalizeFilename('some-root/my-venv/bin/python3');
-        setInfo('python');
-        config.setup(c => c.update('pythonPath', expected, false))
-            .returns(() => Promise.resolve());
-
-        const updater = new WorkspacePythonPathUpdaterService(
-            Uri.file('some-root'),
-            workspaceSvc.object
-        );
-        await updater.updatePythonPath(normalizeFilename('some-root/my-venv/bin/python3'));
-
-        workspaceSvc.verifyAll();
-        config.verifyAll();
-    });
-
-    test('relative -- at cwd', async () => {
-        const expected = normalizeFilename('./python3');
-        setInfo('python');
-        config.setup(c => c.update('pythonPath', expected, false))
-            .returns(() => Promise.resolve());
-
-        const updater = new WorkspacePythonPathUpdaterService(
-            Uri.file('some-root'),
-            workspaceSvc.object
-        );
-        await updater.updatePythonPath(normalizeFilename('./python3'));
-
-        workspaceSvc.verifyAll();
-        config.verifyAll();
-    });
-
-    test('relative -- under cwd', async () => {
-        const expected = normalizeFilename('./my-venv/bin/python3');
-        setInfo('python');
-        config.setup(c => c.update('pythonPath', expected, false))
-            .returns(() => Promise.resolve());
-
-        const updater = new WorkspacePythonPathUpdaterService(
-            Uri.file('some-root'),
-            workspaceSvc.object
-        );
-        await updater.updatePythonPath(normalizeFilename('./my-venv/bin/python3'));
-
-        workspaceSvc.verifyAll();
-        config.verifyAll();
-    });
-
-    test('relative -- outside cwd', async () => {
-        const expected = normalizeFilename('../my-venv/bin/python3');
-        setInfo('python');
-        config.setup(c => c.update('pythonPath', expected, false))
-            .returns(() => Promise.resolve());
-
-        const updater = new WorkspacePythonPathUpdaterService(
-            Uri.file('some-root'),
-            workspaceSvc.object
-        );
-        await updater.updatePythonPath(normalizeFilename('../my-venv/bin/python3'));
-
-        workspaceSvc.verifyAll();
-        config.verifyAll();
-    });
-
-    test('absolute - starts with workspace root', async () => {
-        const expected = normalizeFilename('/home/user/project/my-venv/bin/python3');
-        setInfo('python');
-        config.setup(c => c.update('pythonPath', expected, false))
-            .returns(() => Promise.resolve());
-
-        const updater = new WorkspacePythonPathUpdaterService(
-            Uri.file(normalizeFilename('/home/user/project')),
-            workspaceSvc.object
-        );
-        await updater.updatePythonPath(normalizeFilename('/home/user/project/my-venv/bin/python3'));
-
-        workspaceSvc.verifyAll();
-        config.verifyAll();
-    });
-
-    test('absolute - does not start with workspace root', async () => {
-        const expected = normalizeFilename('/home/user/my-venv/bin/python3');
-        setInfo('python');
-        config.setup(c => c.update('pythonPath', expected, false))
-            .returns(() => Promise.resolve());
-
-        const updater = new WorkspacePythonPathUpdaterService(
-            Uri.file(normalizeFilename('/home/user/project')),
-            workspaceSvc.object
-        );
-        await updater.updatePythonPath(expected);
-
-        workspaceSvc.verifyAll();
-        config.verifyAll();
-    });
+            workspaceSvc.verifyAll();
+            config.verifyAll();
+        });
+    }
 });
