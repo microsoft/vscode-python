@@ -61,6 +61,6 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
     public getLanguageServerDownloadChannel() {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settings = configService.getSettings();
-        return settings.analysis.downloadChannel || 'stable';
+        return settings.analysis.downloadChannel || 'beta';
     }
 }
