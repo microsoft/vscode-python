@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IPythonPathUpdaterService } from '../types';
@@ -15,6 +16,10 @@ export class WorkspaceFolderPythonPathUpdaterService implements IPythonPathUpdat
 
         if (pythonPathValue && pythonPathValue.workspaceFolderValue === pythonPath) {
             return;
+        }
+        // The workspace folder is guaranteed to be an absolute path.
+        if (pythonPath.startsWith(this.workspaceFolder.fsPath)) {
+            pythonPath = path.relative(this.workspaceFolder.fsPath, pythonPath);
         }
         await pythonConfig.update('pythonPath', pythonPath, ConfigurationTarget.WorkspaceFolder);
     }

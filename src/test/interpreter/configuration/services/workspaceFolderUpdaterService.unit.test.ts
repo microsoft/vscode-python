@@ -92,22 +92,26 @@ suite('WorkspaceFolderPythonPathUpdaterService', () => {
         config.verifyAll();
     });
 
-    const tests: [string, string, string, string][] = [
-        // (test name, root, new pythonPath, expected)
-        ['on $PATH', 'project', 'python3', ''],
-        ['under $HOME', 'project', '~/my-venv/bin/python3', ''],
+    const workspaceRoot = normalizeFilename('/home/user/project');
+    const tests: [string, string, string][] = [
+        // (test name, new pythonPath, expected)
+        // If "expected" is an empty string then the new pythonPath is used.
+        ['on $PATH', 'python3', ''],
+        ['under $HOME', '~/my-venv/bin/python3', ''],
 
-        ['relative -- at workspace root', 'project', 'project/python3', ''],
-        ['relative -- under workspace root', 'project', 'project/my-venv/bin/python3', ''],
-        ['relative -- at cwd', 'project', './python3', ''],
-        ['relative -- under cwd', 'project', './my-venv/bin/python3', ''],
-        ['relative -- outside cwd', 'project', '../my-venv/bin/python3', ''],
+        ['relative -- at workspace root', 'python3', ''],
+        ['relative -- under workspace root', 'my-venv/bin/python3', ''],
+        ['relative -- at workspace root directly', 'project/python3', ''],
+        ['relative -- under workspace root directly', 'project/my-venv/bin/python3', ''],
+        ['relative -- at cwd', './python3', ''],
+        ['relative -- under cwd', './my-venv/bin/python3', ''],
+        ['relative -- outside cwd', '../my-venv/bin/python3', ''],
 
-        ['absolute - starts with workspace root', '/home/user/project', '/home/user/project/my-venv/bin/python3', ''],
-        ['absolute - does not start with workspace root', '/home/user/project', '/home/user/my-venv/bin/python3', '']
+        // tslint:disable-next-line:prefer-template
+        ['absolute - starts with workspace root', workspaceRoot + '/my-venv/bin/python3', 'my-venv/bin/python3'],
+        ['absolute - does not start with workspace root', '/home/user/my-venv/bin/python3', '']
     ];
-    for (let [testName, workspaceRoot, pythonPath, expected] of tests) {
-        workspaceRoot = normalizeFilename(workspaceRoot);
+    for (let [testName, pythonPath, expected] of tests) {
         pythonPath = normalizeFilename(pythonPath);
         if (expected === '') {
             expected = pythonPath;
