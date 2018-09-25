@@ -85,7 +85,8 @@
         "onCommand:python.setLinter",
         "onCommand:python.enableLinting",
         "onCommand:python.createTerminal",
-        "onCommand:python.discoverTests"
+        "onCommand:python.discoverTests",
+        "onCommand:python.datascience"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -222,6 +223,11 @@
                 "command": "python.runLinting",
                 "title": "%python.command.python.runLinting.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience",
+                "title": "Datascience Command",
+                "category": "Python Datascience"
             }
         ],
         "menus": {
