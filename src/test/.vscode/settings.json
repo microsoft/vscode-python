@@ -1,5 +1,5 @@
 {
-    "python.linting.pylintEnabled": true,
+    "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": false,
     "python.workspaceSymbols.enabled": false,
     "python.unitTest.nosetestArgs": [],
