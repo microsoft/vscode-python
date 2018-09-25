@@ -6,6 +6,8 @@
 import { common, createBlobServiceAnonymous } from 'azure-storage';
 import { inject, injectable, unmanaged } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
+import { captureTelemetry } from '../../telemetry';
+import { PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES } from '../../telemetry/constants';
 import { log, LogOptions } from '../logger';
 import { INugetRepository, INugetService, NugetPackage } from './types';
 
@@ -18,6 +20,7 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
         return this.listPackages(this.azureBlobStorageAccount, this.azureBlobStorageContainer, packageName);
     }
 
+    @captureTelemetry(PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES)
     @log('Listing Nuget Packages', LogOptions.Arguments)
     public listPackages(azureBlobStorageAccount: string, azureBlobStorageContainer: string, packageName: string) {
         const blobStore = createBlobServiceAnonymous(azureBlobStorageAccount);

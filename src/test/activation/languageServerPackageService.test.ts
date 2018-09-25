@@ -68,7 +68,7 @@ suite('Language Server Package Service', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService);
         const platformService = new PlatformService();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
-        const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.blob.core.windows.net', 'python-language-server');
+        const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.blob.core.windows.net', 'vscode-python-ls-production');
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
         const lsPackageService = new LanguageServerPackageService(serviceContainer.object);
 

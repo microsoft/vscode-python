@@ -27,7 +27,7 @@ suite('Nuget Azure Storage Repository', () => {
         nugetService.setup(n => n.getVersionFromPackageFileName(typeMoq.It.isAny())).returns(() => new SemVer('1.1.1'));
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService.object);
 
-        repo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.blob.core.windows.net', 'python-language-server');
+        repo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.blob.core.windows.net', 'vscode-python-ls-production');
     });
 
     test('Get all packages', async function () {

@@ -1,37 +1,31 @@
 // tslint:disable:no-console
 
 import { injectable } from 'inversify';
-import { isTestExecution } from './constants';
+import { skipIfTest } from './helpers';
 import { ILogger } from './types';
 
 const PREFIX = 'Python Extension: ';
 
 @injectable()
 export class Logger implements ILogger {
+    @skipIfTest(false)
     public logError(message: string, ex?: Error) {
-        if (isTestExecution()) {
-            return;
-        }
         if (ex) {
             console.error(`${PREFIX}${message}`, ex);
         } else {
             console.error(`${PREFIX}${message}`);
         }
     }
+    @skipIfTest(false)
     public logWarning(message: string, ex?: Error) {
-        if (isTestExecution()) {
-            return;
-        }
         if (ex) {
             console.warn(`${PREFIX}${message}`, ex);
         } else {
             console.warn(`${PREFIX}${message}`);
         }
     }
+    @skipIfTest(false)
     public logInformation(message: string, ex?: Error) {
-        if (isTestExecution()) {
-            return;
-        }
         if (ex) {
             console.info(`${PREFIX}${message}`, ex);
         } else {
