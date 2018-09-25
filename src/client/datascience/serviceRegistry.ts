@@ -5,8 +5,10 @@
 
 import { IServiceManager } from '../ioc/types';
 import { DataScience } from './datascience';
-import { IDataScience } from './types';
+import { JupyterServerProvider } from './jupyterserverprovider';
+import { IDataScience, IJupyterServerProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
+    serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, JupyterServerProvider);
 }
