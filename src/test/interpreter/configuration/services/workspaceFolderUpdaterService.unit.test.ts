@@ -5,11 +5,11 @@
 
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Uri, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import {
-    WorkspacePythonPathUpdaterService
-} from '../../../../client/interpreter/configuration/services/workspaceUpdaterService';
+    WorkspaceFolderPythonPathUpdaterService
+} from '../../../../client/interpreter/configuration/services/workspaceFolderUpdaterService';
 
 function normalizeFilename(filename: string): string {
     if (filename === '') {
@@ -24,7 +24,7 @@ function normalizeFilename(filename: string): string {
 }
 
 // tslint:disable-next-line:max-func-body-length
-suite('WorkspacePythonPathUpdaterService', () => {
+suite('WorkspaceFolderPythonPathUpdaterService', () => {
     let workspaceSvc: TypeMoq.IMock<IWorkspaceService>;
     let config: TypeMoq.IMock<WorkspaceConfiguration>;
 
@@ -39,14 +39,14 @@ suite('WorkspacePythonPathUpdaterService', () => {
     function setInfo(pythonPath?: string) {
         const info = {
             key: 'python.pythonPath',
-            workspaceValue: pythonPath
+            workspaceFolderValue: pythonPath
         };
         config.setup(c => c.inspect<string>('pythonPath'))
             .returns(() => info);
     }
 
     function setExpected(expected: string) {
-        config.setup(c => c.update('pythonPath', expected, false))
+        config.setup(c => c.update('pythonPath', expected, ConfigurationTarget.WorkspaceFolder))
             .returns(() => Promise.resolve());
     }
 
@@ -55,7 +55,7 @@ suite('WorkspacePythonPathUpdaterService', () => {
             .returns(() => undefined);
         setExpected('python3');
 
-        const updater = new WorkspacePythonPathUpdaterService(
+        const updater = new WorkspaceFolderPythonPathUpdaterService(
             Uri.file(__dirname),
             workspaceSvc.object
         );
@@ -69,7 +69,7 @@ suite('WorkspacePythonPathUpdaterService', () => {
         setInfo(undefined);
         setExpected('python3');
 
-        const updater = new WorkspacePythonPathUpdaterService(
+        const updater = new WorkspaceFolderPythonPathUpdaterService(
             Uri.file(__dirname),
             workspaceSvc.object
         );
@@ -82,7 +82,7 @@ suite('WorkspacePythonPathUpdaterService', () => {
     test('not changed', async () => {
         setInfo('python3');
 
-        const updater = new WorkspacePythonPathUpdaterService(
+        const updater = new WorkspaceFolderPythonPathUpdaterService(
             Uri.file(__dirname),
             workspaceSvc.object
         );
@@ -118,7 +118,7 @@ suite('WorkspacePythonPathUpdaterService', () => {
             setInfo('python');
             setExpected(expected);
 
-            const updater = new WorkspacePythonPathUpdaterService(
+            const updater = new WorkspaceFolderPythonPathUpdaterService(
                 Uri.file(workspaceRoot),
                 workspaceSvc.object
             );
