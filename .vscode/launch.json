@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "Launch Extension",
+            "name": "Extension",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -19,7 +19,7 @@
             "preLaunchTask": "Compile"
         },
         {
-            "name": "Launch Debugger as debugServer", // https://code.visualstudio.com/docs/extensions/example-debuggers
+            "name": "Debugger as debugServer",
             "type": "node",
             "request": "launch",
             "program": "${workspaceFolder}/out/client/debugger/mainV2.js",
@@ -36,7 +36,28 @@
             "preLaunchTask": "Compile"
         },
         {
-            "name": "Launch Tests",
+            "name": "Tests (Debugger, VS Code, *.test.ts)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/testMultiRootWkspc/multi.code-workspace",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "smartStep": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*"
+            ],
+            "preLaunchTask": "Compile",
+            "env": {
+                "IS_CI_SERVER_TEST_DEBUGGER": "1"
+            }
+        },
+        {
+            "name": "Tests (Sigle Workspace, VS Code, *.test.ts)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -53,23 +74,7 @@
             "preLaunchTask": "Compile"
         },
         {
-            "name": "Debug Unit Tests",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/out/test/unittests.js",
-            "stopOnEntry": false,
-            "sourceMaps": true,
-            "args": [
-                "timeout=60000",
-                "grep="
-            ],
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
-            ],
-            "preLaunchTask": "Compile"
-        },
-        {
-            "name": "Launch Multiroot Tests",
+            "name": "Tests (Multiroot, VS Code, *.test.ts)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -87,7 +92,7 @@
             "preLaunchTask": "Compile"
         },
         {
-            "name": "Launch Language Server Tests",
+            "name": "Tests (Language Server)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -107,7 +112,7 @@
             }
         },
         {
-            "name": "Launch Tests (with code coverage)",
+            "name": "Tests (VS Code, with code coverage, *.test.ts)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -122,14 +127,30 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ]
+        },
+        {
+            "name": "Unit Tests (without VS Ccode, *.unit.test.ts)",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/out/test/unittests.js",
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "args": [
+                "timeout=60000",
+                "grep="
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "Compile"
         }
     ],
     "compounds": [
         {
             "name": "Extension + Debugger",
             "configurations": [
-                "Launch Extension",
-                "Launch Debugger as debugServer"
+                "Extension",
+                "Debugger as debugServer"
             ]
         }
     ]
