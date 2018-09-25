@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-suspicious-comment max-func-body-length no-invalid-this no-var-requires no-require-imports no-any
+// tslint:disable:no-suspicious-comment max-func-body-length no-invalid-this no-var-requires no-require-imports no-any no-object-literal-type-assertion no-banned-terms
 
 import { expect } from 'chai';
 import { ChildProcess, spawn } from 'child_process';
@@ -18,33 +18,9 @@ import { ProtocolParser } from '../../client/debugger/Common/protocolParser';
 import { ProtocolMessageWriter } from '../../client/debugger/Common/protocolWriter';
 import { PythonDebugger } from '../../client/debugger/mainV2';
 import { createDeferred, sleep } from '../../utils/async';
+import { noop } from '../../utils/misc';
 import { PYTHON_PATH } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
-
-class Request extends Message implements DebugProtocol.InitializeRequest {
-    // tslint:disable-next-line:no-banned-terms
-    public arguments: any;
-    constructor(public command: string, args: any) {
-        super('request');
-        this.arguments = args;
-    }
-}
-class MockDebugSession extends PythonDebugger {
-    constructor() {
-        super({} as any);
-    }
-
-    public getInitializeResponseFromDebugAdapter() {
-        // tslint:disable-next-line:no-object-literal-type-assertion
-        let initializeResponse = {
-            body: {}
-        } as DebugProtocol.InitializeResponse;
-        this.sendResponse = resp => initializeResponse = resp;
-
-        this.initializeRequest(initializeResponse, { supportsRunInTerminalRequest: true, adapterID: '' });
-        return initializeResponse;
-    }
-}
 
 const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd-nowait.py');
 
@@ -53,7 +29,7 @@ suite('Debugging - Capabilities', function () {
     let disposables: { dispose?: Function; destroy?: Function }[];
     let proc: ChildProcess;
     setup(function () {
-        return this.skip();
+        // return this.skip();
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
@@ -63,24 +39,53 @@ suite('Debugging - Capabilities', function () {
         disposables.forEach(disposable => {
             try {
                 disposable.dispose!();
-                // tslint:disable-next-line:no-empty
-            } catch { }
+            } catch {
+                noop();
+            }
             try {
                 disposable.destroy!();
-                // tslint:disable-next-line:no-empty
-            } catch { }
+            } catch {
+                noop();
+            }
         });
         try {
             proc.kill();
-            // tslint:disable-next-line:no-empty
-        } catch { }
+        } catch {
+            noop();
+        }
     });
+    function createRequest(cmd: string, requestArgs: any) {
+        return new class extends Message implements DebugProtocol.InitializeRequest {
+            public arguments: any;
+            constructor(public command: string, args: any) {
+                super('request');
+                this.arguments = args;
+            }
+        }(cmd, requestArgs);
+    }
+    function createDebugSession() {
+        return new class extends PythonDebugger {
+            constructor() {
+                super({} as any);
+            }
+
+            public getInitializeResponseFromDebugAdapter() {
+                let initializeResponse = {
+                    body: {}
+                } as DebugProtocol.InitializeResponse;
+                this.sendResponse = resp => initializeResponse = resp;
+
+                this.initializeRequest(initializeResponse, { supportsRunInTerminalRequest: true, adapterID: '' });
+                return initializeResponse;
+            }
+        }();
+    }
     test('Compare capabilities', async () => {
-        const customDebugger = new MockDebugSession();
+        const customDebugger = createDebugSession();
         const expectedResponse = customDebugger.getInitializeResponseFromDebugAdapter();
 
         const protocolWriter = new ProtocolMessageWriter();
-        const initializeRequest: DebugProtocol.InitializeRequest = new Request('initialize', { pathFormat: 'path' });
+        const initializeRequest: DebugProtocol.InitializeRequest = createRequest('initialize', { pathFormat: 'path' });
         const host = 'localhost';
         const port = await getFreePort({ host, port: 3000 });
         const env = { ...process.env };
@@ -100,7 +105,7 @@ suite('Debugging - Capabilities', function () {
         protocolWriter.write(socket, initializeRequest);
         const actualResponse = await actualResponsePromise;
 
-        const attachRequest: DebugProtocol.AttachRequest = new Request('attach', {
+        const attachRequest: DebugProtocol.AttachRequest = createRequest('attach', {
             name: 'attach',
             request: 'attach',
             type: 'python',
@@ -109,12 +114,14 @@ suite('Debugging - Capabilities', function () {
             logToFile: false,
             debugOptions: []
         });
+        const attached = new Promise(resolve => protocolParser.once('response_attach', resolve));
         protocolWriter.write(socket, attachRequest);
-        await sleep(500);
+        await attached;
 
-        const configRequest: DebugProtocol.ConfigurationDoneRequest = new Request('configurationDone', {});
+        const configRequest: DebugProtocol.ConfigurationDoneRequest = createRequest('configurationDone', {});
+        const configured = new Promise(resolve => protocolParser.once('response_configurationDone', resolve));
         protocolWriter.write(socket, configRequest);
-        await sleep(1000);
+        await configured;
 
         protocolParser.dispose();
 
