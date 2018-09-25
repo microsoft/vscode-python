@@ -109,7 +109,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
 
     // Activate the data science features
     const dataScience = serviceManager.get<IDataScience>(IDataScience);
-    await dataScience.activate(context);
+    await dataScience.activate();
 
     context.subscriptions.push(new LinterCommands(serviceManager));
     const linterProvider = new LinterProvider(context, serviceManager);

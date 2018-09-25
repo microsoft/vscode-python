@@ -226,8 +226,8 @@
             },
             {
                 "command": "python.datascience",
-                "title": "Datascience Command",
-                "category": "Python Datascience"
+                "title": "%python.command.python.datascience.datascience.title%",
+                "category": "Python Data Science"
             }
         ],
         "menus": {
