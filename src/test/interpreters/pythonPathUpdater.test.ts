@@ -113,7 +113,7 @@ suite('Python Path Settings Updater', () => {
             workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
             await updater.updatePythonPath(pythonPath);
-            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(false)), TypeMoq.Times.once());
+            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(ConfigurationTarget.Workspace)), TypeMoq.Times.once());
         });
         test('Python Path should be truncated for relative paths', async () => {
             const workspaceFolderPath = path.join('user', 'desktop', 'development');
@@ -125,7 +125,7 @@ suite('Python Path Settings Updater', () => {
             workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
             await updater.updatePythonPath(pythonPath);
-            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(false)), TypeMoq.Times.once());
+            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(ConfigurationTarget.Workspace)), TypeMoq.Times.once());
         });
     });
 });
