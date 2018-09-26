@@ -42,7 +42,7 @@ export interface ILanguageServerFolderService {
 export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');
 
 export interface ILanguageServerDownloader {
-  getDownloadUri(): Promise<string>;
+  getDownloadInfo(): Promise<NugetPackage>;
   downloadLanguageServer(context: IExtensionContext): Promise<void>;
 }
 
