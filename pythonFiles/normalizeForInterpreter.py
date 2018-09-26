@@ -39,7 +39,7 @@ def _get_global_statement_blocks(source, lines):
     """Return a list of all global statement blocks.
 
     The list comprises of 3-item tuples that contain the starting line number,
-    ending line number and whether the statement is a single line.
+    relative ending line number and whether the statement is a single line.
 
     """
     tree = ast.parse(source)
@@ -66,29 +66,26 @@ def _get_global_statement_blocks(source, lines):
     return statement_ranges
 
 
-def normalize_lines(source):
-    """Normalize blank lines for sending to the terminal.
+def get_trailing_newline(content, lines):
+    """Determine if we have two, one, or zero, extra newlines to append to the output.
 
-    Blank lines within a statement block are removed to prevent the REPL
-    from thinking the block is finished. Newlines are added to separate
-    top-level statements so that the REPL does not think there is a syntax
-    error.
-
-    """
-    lines = source.splitlines(False)
-    # If we have two blank lines, then add two blank lines.
-    # Do not trim the spaces, if we have blank lines with spaces, its possible
-    # we have indented code.
-    if (len(lines) > 1 and len(''.join(lines[-2:])) == 0) \
-        or source.endswith(('\n\n', '\r\n\r\n')):
-        trailing_newline = os.linesep * 2
+    If we have two or more blank lines at the end, then add two blank lines.
+    Do not trim the spaces if we have blank lines with spaces as it's possible
+    we have indented code."""
     # Find out if we have any trailing blank lines
-    elif len(lines[-1].strip()) == 0 or source.endswith(('\n', '\r\n')):
-        trailing_newline = os.linesep
+    if (len(lines) > 1 and len(''.join(lines[-2:])) == 0) or content.endswith(('\n\n', '\r\n\r\n')):
+        append_newlines = '\n\n'
+    elif len(lines[-1].strip()) == 0 or content.endswith(('\n', '\r\n')):
+        append_newlines = '\n'
     else:
-        trailing_newline = ''
+        append_newlines = ''
 
-    # Step 1: Remove empty lines.
+    return append_newlines
+
+
+def remove_empty_lines(source):
+    """Remove all the empty lines in the source."""
+    lines = source.splitlines(False)
     tokens = _tokenize(source)
     newlines_indexes_to_remove = (spos[0] for (toknum, tokval, spos, epos, line) in tokens
                                   if len(line.strip()) == 0
@@ -98,25 +95,51 @@ def normalize_lines(source):
     for line_number in reversed(list(newlines_indexes_to_remove)):
         del lines[line_number-1]
 
-    # Step 2: Add blank lines between each global statement block.
-    # A consequtive single lines blocks of code will be treated as a single statement,
-    # just to ensure we do not unnecessarily add too many blank lines.
-    source = os.linesep.join(lines)
-    tokens = _tokenize(source)
-    dedent_indexes = (spos[0] for (toknum, tokval, spos, epos, line) in tokens
-                                if toknum == token.DEDENT and _indent_size(line) == 0)
+    return lines
 
-    global_statement_ranges = _get_global_statement_blocks(source, lines)
+
+def separate_global_blocks(lines):
+    """Discover logical blocks in lines of code and separate by whitespace."""
+    code_block = '\n'.join(lines)
+
+    # tokens = _tokenize(source)
+    # dedent_indexes = (spos[0] for (toknum, tokval, spos, epos, line) in tokens
+    #                             if toknum == token.DEDENT and _indent_size(line) == 0)
+
+    global_statement_ranges = _get_global_statement_blocks(code_block, lines)
     start_positions = map(operator.itemgetter(0), reversed(global_statement_ranges))
     for line_number in filter(lambda x: x > 1, start_positions):
         lines.insert(line_number-1, '')
+    
+    return lines
 
-    sys.stdout.write(os.linesep.join(lines) + trailing_newline)
+
+def normalize_lines(source):
+    """Normalize blank lines for sending to the terminal.
+
+    Blank lines within a statement block are removed to prevent the REPL
+    from thinking the block is finished. Newlines are added to separate
+    top-level statements so that the REPL does not think there is a syntax
+    error.
+
+    """
+    # Step 0.5: Ensure we keep trailing newlines.
+    lines = source.splitlines(False)
+    trailing_newline = get_trailing_newline(source, lines)
+
+    # Step 1: Remove empty lines.
+    reduced_lines = remove_empty_lines(source)
+
+    # Step 2: Add blank lines between each global statement block.
+    # A consecutive single line blocks of code will be treated as a single statement,
+    # just to ensure we do not unnecessarily add too many blank lines.
+    normalized_lines = separate_global_blocks(reduced_lines)
+    
+    sys.stdout.write('\n'.join(reduced_lines) + trailing_newline)
     sys.stdout.flush()
 
 
-if __name__ == '__main__':
-    contents = sys.argv[1]
+def get_normalized_line_endings(contents):
     try:
         default_encoding = sys.getdefaultencoding()
         encoded_contents = contents.encode(default_encoding, 'surrogateescape')
@@ -125,4 +148,9 @@ if __name__ == '__main__':
         pass
     if isinstance(contents, bytes):
         contents = contents.decode('utf8')
+
+    return contents
+
+if __name__ == '__main__':
+    contents = get_normalized_line_endings(sys.argv[1])
     normalize_lines(contents)

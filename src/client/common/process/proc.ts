@@ -106,7 +106,9 @@ export class ProcessService implements IProcessService {
         }
 
         const stdoutBuffers: Buffer[] = [];
-        on(proc.stdout, 'data', (data: Buffer) => stdoutBuffers.push(data));
+        on(proc.stdout, 'data', (data: Buffer) => {
+            stdoutBuffers.push(data);
+        });
         const stderrBuffers: Buffer[] = [];
         on(proc.stderr, 'data', (data: Buffer) => {
             if (options.mergeStdOutErr) {
