@@ -20,6 +20,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import '../../client/common/extensions';
 import { createDeferred, Deferred, sleep } from '../../utils/async';
 import { noop } from '../../utils/misc';
+import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
 import { IProcessServiceFactory } from '../common/process/types';
@@ -123,11 +124,23 @@ export class PythonDebugger extends DebugSession {
                 this.sendErrorResponse(response, { format: message, id: 1 }, undefined, undefined, ErrorDestination.User);
             });
     }
+    /**
+     * Checks the validity of the executable.
+     * Do not use `<python> --version` as the output in 2.7 comes in stderr.
+     * Do not use `<python> -c print('1')` as the executable could be pyspark.
+     * Use `<python> xyz.py` to check output as this is absolutely necessary for debugger to start.
+     * @private
+     * @param {DebugProtocol.LaunchResponse} response
+     * @param {LaunchRequestArguments} args
+     * @returns {Promise<boolean>}
+     * @memberof PythonDebugger
+     */
     private async validatePythonPath(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): Promise<boolean> {
         const pythonPath = typeof args.pythonPath === 'string' && args.pythonPath.length > 0 ? args.pythonPath : 'python';
         const processFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         const processService = await processFactory.create();
-        const valid = await processService.exec(pythonPath, ['-c', 'print("1")'])
+        const pythonFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printOne.py');
+        const valid = await processService.exec(pythonPath, [pythonFile])
             .then(output => output.stdout.trim() === '1' || (output.stderr || '').trim() === '1')
             .catch(() => false);
         if (!valid) {
