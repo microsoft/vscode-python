@@ -3,8 +3,10 @@ import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IServiceContainer } from '../../ioc/types';
 import { GlobalPythonPathUpdaterService } from './services/globalUpdaterService';
-import { WorkspaceFolderPythonPathUpdaterService } from './services/workspaceFolderUpdaterService';
-import { WorkspacePythonPathUpdaterService } from './services/workspaceUpdaterService';
+import {
+    WorkspaceFolderPythonPathUpdaterService,
+    WorkspacePythonPathUpdaterService
+} from './services/workspaceUpdaterService';
 import { IPythonPathUpdaterService, IPythonPathUpdaterServiceFactory } from './types';
 
 @injectable()
