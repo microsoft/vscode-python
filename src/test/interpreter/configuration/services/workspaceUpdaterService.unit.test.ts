@@ -47,7 +47,7 @@ suite('WorkspacePythonPathUpdaterService', () => {
     }
 
     function setExpected(expected: string) {
-        config.setup(c => c.update('pythonPath', expected, false))
+        config.setup(c => c.update('pythonPath', expected, ConfigurationTarget.Workspace))
             .returns(() => Promise.resolve());
     }
 
