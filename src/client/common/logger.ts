@@ -97,7 +97,7 @@ export function log(message: string, options: LogOptions = LogOptions.Arguments 
                     messagesToLog.push(returnValueToLogString(returnValue));
                 }
                 if (ex) {
-                    error(messagesToLog.join(', '), ex);
+                    new Logger().logError(messagesToLog.join(', '), ex);
                 } else {
                     new Logger().logInformation(messagesToLog.join(', '));
                 }

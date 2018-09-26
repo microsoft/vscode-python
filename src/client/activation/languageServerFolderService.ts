@@ -10,7 +10,7 @@ import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { log } from '../common/logger';
 import { NugetPackage } from '../common/nuget/types';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, ILogger } from '../common/types';
+import { IConfigurationService } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { FolderVersionPair, ILanguageServerFolderService, ILanguageServerPackageService } from './types';
 
@@ -31,11 +31,7 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
         }
 
         serverVersion = await this.getLatestLanguageServerVersion()
-            .catch(ex => {
-                const logger = this.serviceContainer.get<ILogger>(ILogger);
-                logger.logError('Failed to get latest version of Language Server.', ex);
-                return undefined;
-            });
+            .catch(ex => undefined);
 
         if (currentFolder && (!serverVersion || serverVersion.version.compare(currentFolder.version) <= 0)) {
             return path.basename(currentFolder.path);
@@ -43,6 +39,8 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
 
         return `${languageServerFolder}.${serverVersion!.version.raw}`;
     }
+
+    @log('Get latest version of Language Server')
     public getLatestLanguageServerVersion(): Promise<NugetPackage | undefined> {
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
         return lsPackageService.getLatestNugetPackageVersion();
