@@ -30,7 +30,11 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
 
-    suiteSetup(async () => {
+    suiteSetup(async function () {
+        //tslint:disable-next-line:no-invalid-this
+        this.skip();
+
+        return;
         await initialize();
         await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
     });
