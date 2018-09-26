@@ -1,19 +1,19 @@
 import * as path from 'path';
-import { ConfigurationTarget, Uri } from 'vscode';
+import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { matchSetting } from '../../../common/configSettings';
 import { IPythonPathUpdaterService } from '../types';
 
-export class WorkspacePythonPathUpdaterService implements IPythonPathUpdaterService {
+export class WorkspacePythonPathUpdater {
 
-    private readonly cfgTarget = ConfigurationTarget.Workspace;
     constructor(
         private workspace: Uri,
-        private readonly workspaceService: IWorkspaceService
+        private getConfig: () => WorkspaceConfiguration,
+        private cfgTarget: ConfigurationTarget
     ) { }
 
     public async updatePythonPath(pythonPath: string): Promise<void> {
-        const pythonConfig = this.workspaceService.getConfiguration('python', this.workspace);
+        const pythonConfig = this.getConfig();
 
         if (matchSetting<string>(pythonConfig, 'pythonPath', this.cfgTarget, pythonPath)) {
             return;
@@ -28,26 +28,24 @@ export class WorkspacePythonPathUpdaterService implements IPythonPathUpdaterServ
     }
 }
 
-export class WorkspaceFolderPythonPathUpdaterService implements IPythonPathUpdaterService {
+export class WorkspacePythonPathUpdaterService extends WorkspacePythonPathUpdater implements IPythonPathUpdaterService {
 
-    private readonly cfgTarget = ConfigurationTarget.WorkspaceFolder;
-    constructor(
-        private workspaceFolder: Uri,
-        private readonly workspaceService: IWorkspaceService
-    ) { }
+    constructor(workspace: Uri, workspaceService: IWorkspaceService) {
+        super(
+            workspace,
+            () => { return workspaceService.getConfiguration('python', workspace); },
+            ConfigurationTarget.Workspace
+        );
+    }
+}
 
-    public async updatePythonPath(pythonPath: string): Promise<void> {
-        const pythonConfig = this.workspaceService.getConfiguration('python', this.workspaceFolder);
+export class WorkspaceFolderPythonPathUpdaterService extends WorkspacePythonPathUpdater implements IPythonPathUpdaterService {
 
-        if (matchSetting<string>(pythonConfig, 'pythonPath', this.cfgTarget, pythonPath)) {
-            return;
-        }
-
-        // The workspace folder is guaranteed to be an absolute path.
-        if (pythonPath.startsWith(this.workspaceFolder.fsPath)) {
-            pythonPath = path.relative(this.workspaceFolder.fsPath, pythonPath);
-        }
-
-        await pythonConfig.update('pythonPath', pythonPath, this.cfgTarget);
+    constructor(workspace: Uri, workspaceService: IWorkspaceService) {
+        super(
+            workspace,
+            () => { return workspaceService.getConfiguration('python', workspace); },
+            ConfigurationTarget.WorkspaceFolder
+        );
     }
 }

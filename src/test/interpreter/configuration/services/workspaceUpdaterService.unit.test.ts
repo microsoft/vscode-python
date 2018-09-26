@@ -9,6 +9,7 @@ import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import {
     WorkspaceFolderPythonPathUpdaterService,
+    WorkspacePythonPathUpdater,
     WorkspacePythonPathUpdaterService
 } from '../../../../client/interpreter/configuration/services/workspaceUpdaterService';
 
@@ -25,6 +26,215 @@ function normalizeFilename(filename: string): string {
 }
 
 // tslint:disable-next-line:max-func-body-length
+suite('WorkspacePythonPathUpdater - normal operation', () => {
+    let getConfig: TypeMoq.IMock<() => WorkspaceConfiguration>;
+    let config: TypeMoq.IMock<WorkspaceConfiguration>;
+
+    setup(() => {
+        // tslint:disable-next-line:no-object-literal-type-assertion
+        getConfig = TypeMoq.Mock.ofInstance(() => { return {} as WorkspaceConfiguration; });
+        config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
+
+        getConfig.setup(f => f())
+            .returns(() => config.object);
+    });
+
+    test('not set at all', async () => {
+        const python = path.sep + path.join('bin', 'python3');
+        config.setup(c => c.inspect<string>('pythonPath'))
+            .returns(() => undefined);
+        config.setup(c => c.update('pythonPath', python, ConfigurationTarget.Workspace))
+            .returns(() => Promise.resolve());
+
+        const updater = new WorkspacePythonPathUpdater(
+            Uri.file(__dirname),
+            getConfig.object,
+            ConfigurationTarget.Workspace
+        );
+        await updater.updatePythonPath(python);
+
+        getConfig.verifyAll();
+        config.verifyAll();
+    });
+
+    test('not set on workspace', async () => {
+        const python = path.sep + path.join('bin', 'python3');
+        config.setup(c => c.inspect<string>('pythonPath'))
+            .returns(() => ({
+                key: 'python.pythonPath',
+                workspaceValue: undefined
+            }));
+        config.setup(c => c.update('pythonPath', python, ConfigurationTarget.Workspace))
+            .returns(() => Promise.resolve());
+
+        const updater = new WorkspacePythonPathUpdater(
+            Uri.file(__dirname),
+            getConfig.object,
+            ConfigurationTarget.Workspace
+        );
+        await updater.updatePythonPath(python);
+
+        getConfig.verifyAll();
+        config.verifyAll();
+    });
+
+    test('not set except on workspace', async () => {
+        const python = path.sep + path.join('bin', 'python3');
+        config.setup(c => c.inspect<string>('pythonPath'))
+            .returns(() => ({
+                key: 'python.pythonPath',
+                workspaceValue: python,  // if code wrong then won't update
+                workspaceFolderValue: undefined
+            }));
+        config.setup(c => c.update('pythonPath', python, ConfigurationTarget.WorkspaceFolder))
+            .returns(() => Promise.resolve());
+
+        const updater = new WorkspacePythonPathUpdater(
+            Uri.file(__dirname),
+            getConfig.object,
+            ConfigurationTarget.WorkspaceFolder
+        );
+        await updater.updatePythonPath(python);
+
+        getConfig.verifyAll();
+        config.verifyAll();
+    });
+
+    test('not set except on workspace folder', async () => {
+        const python = path.sep + path.join('bin', 'python3');
+        config.setup(c => c.inspect<string>('pythonPath'))
+            .returns(() => ({
+                key: 'python.pythonPath',
+                workspaceValue: undefined,
+                workspaceFolderValue: python  // if code wrong then won't update
+            }));
+        config.setup(c => c.update('pythonPath', python, ConfigurationTarget.Workspace))
+            .returns(() => Promise.resolve());
+
+        const updater = new WorkspacePythonPathUpdater(
+            Uri.file(__dirname),
+            getConfig.object,
+            ConfigurationTarget.Workspace
+        );
+        await updater.updatePythonPath(python);
+
+        getConfig.verifyAll();
+        config.verifyAll();
+    });
+
+    test('not changed', async () => {
+        const python = path.sep + path.join('bin', 'python3');
+        config.setup(c => c.inspect<string>('pythonPath'))
+            .returns(() => ({
+                key: 'python.pythonPath',
+                workspaceValue: python
+            }));
+
+        const updater = new WorkspacePythonPathUpdater(
+            Uri.file(__dirname),
+            getConfig.object,
+            ConfigurationTarget.Workspace
+        );
+        await updater.updatePythonPath(python);
+
+        getConfig.verifyAll();
+        config.verifyAll();
+    });
+
+    const workspaceRoot = path.sep + path.join('root', 'some', 'project');
+    const tests: [string, string, string][] = [
+        // (test name, new pythonPath, expected)
+        ['starts with workspace root',
+         path.join(workspaceRoot, 'my-venv', 'bin', 'python3'),
+         path.join('my-venv', 'bin', 'python3')],  // modified
+        ['does not start with workspace root',
+         path.sep + path.join('root', 'my-venv', 'bin', 'python3'),
+         path.sep + path.join('root', 'my-venv', 'bin', 'python3')]  // not modified
+    ];
+    for (const [testName, pythonPath, expected] of tests) {
+        test(`${testName} (${pythonPath} -> ${expected})`, async () => {
+            config.setup(c => c.inspect<string>('pythonPath'))
+                .returns(() => ({
+                    key: 'python.pythonPath',
+                    workspaceValue: 'python'
+                }));
+            config.setup(c => c.update('pythonPath', expected, ConfigurationTarget.Workspace))
+                .returns(() => Promise.resolve());
+
+            const updater = new WorkspacePythonPathUpdater(
+                Uri.file(workspaceRoot),
+                getConfig.object,
+                ConfigurationTarget.Workspace
+            );
+            await updater.updatePythonPath(pythonPath);
+
+            getConfig.verifyAll();
+            config.verifyAll();
+        });
+    }
+});
+
+// tslint:disable-next-line:max-func-body-length
+suite('WorkspacePythonPathUpdater - relative paths (allowed but discouraged)', () => {
+    let getConfig: TypeMoq.IMock<() => WorkspaceConfiguration>;
+    let config: TypeMoq.IMock<WorkspaceConfiguration>;
+
+    setup(() => {
+        // tslint:disable-next-line:no-object-literal-type-assertion
+        getConfig = TypeMoq.Mock.ofInstance(() => { return {} as WorkspaceConfiguration; });
+        config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
+
+        getConfig.setup(f => f())
+            .returns(() => config.object);
+        config.setup(c => c.inspect<string>('pythonPath'))
+            .returns(() => ({
+                key: 'python.pythonPath',
+                workspaceValue: 'python'
+            }));
+    });
+
+    // Note that in every case we use the provided pythonPath as-is.
+
+    const tests: [string, string][] = [
+        // (test name, new pythonPath)
+        ['on $PATH', 'python3'],
+        ['under $HOME', '~/my-venv/bin/python3'],
+
+        ['explicitly relative -- at workspace root', 'python3'],
+        ['explicitly relative -- under workspace root', 'my-venv/bin/python3'],
+        ['explicitly relative -- at workspace root directly', 'project/python3'],
+        ['explicitly relative -- under workspace root directly', 'project/my-venv/bin/python3'],
+
+        ['implicitly relative -- at cwd', './python3'],
+        ['implicitly relative -- under cwd', './my-venv/bin/python3'],
+        ['implicitly relative -- outside cwd', '../my-venv/bin/python3']
+    ];
+    for (let [testName, pythonPath] of tests) {
+        pythonPath = normalizeFilename(pythonPath);
+        test(`${testName} (${pythonPath})`, async () => {
+            config.setup(c => c.inspect<string>('pythonPath'))
+                .returns(() => ({
+                    key: 'python.pythonPath',
+                    workspaceValue: 'python'
+                }));
+            config.setup(c => c.update('pythonPath', pythonPath, ConfigurationTarget.Workspace))
+                .returns(() => Promise.resolve());
+
+            const workspaceRoot = path.sep + path.join('root', 'some', 'project');
+            const updater = new WorkspacePythonPathUpdater(
+                Uri.file(workspaceRoot),
+                getConfig.object,
+                ConfigurationTarget.Workspace
+            );
+            await updater.updatePythonPath(pythonPath);
+
+            getConfig.verifyAll();
+            config.verifyAll();
+        });
+    }
+});
+
+// tslint:disable-next-line:max-func-body-length
 suite('WorkspacePythonPathUpdaterService', () => {
     let workspaceSvc: TypeMoq.IMock<IWorkspaceService>;
     let config: TypeMoq.IMock<WorkspaceConfiguration>;
@@ -35,104 +245,44 @@ suite('WorkspacePythonPathUpdaterService', () => {
 
         workspaceSvc.setup(w => w.getConfiguration('python', TypeMoq.It.isAny()))
             .returns(() => config.object);
+        config.setup(c => c.inspect<string>('pythonPath'))
+            .returns(() => ({
+                key: 'python.pythonPath',
+                workspaceValue: 'python'
+            }));
     });
 
-    function setInfo(pythonPath?: string) {
-        const info = {
-            key: 'python.pythonPath',
-            workspaceValue: pythonPath
-        };
-        config.setup(c => c.inspect<string>('pythonPath'))
-            .returns(() => info);
-    }
-
-    function setExpected(expected: string) {
+    test('starts with workspace root', async () => {
+        const root = path.sep + path.join('some', 'project');
+        const expected = path.join('my-venv', 'bin', 'python3');
         config.setup(c => c.update('pythonPath', expected, ConfigurationTarget.Workspace))
             .returns(() => Promise.resolve());
-    }
-
-    test('not set at all', async () => {
-        config.setup(c => c.inspect<string>('pythonPath'))
-            .returns(() => undefined);
-        setExpected('python3');
 
         const updater = new WorkspacePythonPathUpdaterService(
-            Uri.file(__dirname),
+            Uri.file(root),
             workspaceSvc.object
         );
-        await updater.updatePythonPath('python3');
+        await updater.updatePythonPath(path.join(root, expected));
 
         workspaceSvc.verifyAll();
         config.verifyAll();
     });
 
-    test('not set on workspace', async () => {
-        setInfo(undefined);
-        setExpected('python3');
+    test('does not start with workspace root', async () => {
+        const root = path.sep + path.join('root', 'some', 'project');
+        const expected = path.sep + path.join('root', 'my-venv', 'bin', 'python3');
+        config.setup(c => c.update('pythonPath', expected, ConfigurationTarget.Workspace))
+            .returns(() => Promise.resolve());
 
         const updater = new WorkspacePythonPathUpdaterService(
-            Uri.file(__dirname),
+            Uri.file(root),
             workspaceSvc.object
         );
-        await updater.updatePythonPath('python3');
+        await updater.updatePythonPath(expected);
 
         workspaceSvc.verifyAll();
         config.verifyAll();
     });
-
-    test('not changed', async () => {
-        setInfo('python3');
-
-        const updater = new WorkspacePythonPathUpdaterService(
-            Uri.file(__dirname),
-            workspaceSvc.object
-        );
-        await updater.updatePythonPath('python3');
-
-        workspaceSvc.verifyAll();
-        config.verifyAll();
-    });
-
-    const workspaceRoot = normalizeFilename('/home/user/project');
-    const tests: [string, string, string][] = [
-        // (test name, new pythonPath, expected)
-        // If "expected" is an empty string then the new pythonPath is used.
-        ['on $PATH', 'python3', ''],
-        ['under $HOME', '~/my-venv/bin/python3', ''],
-
-        ['relative -- at workspace root', 'python3', ''],
-        ['relative -- under workspace root', 'my-venv/bin/python3', ''],
-        ['relative -- at workspace root directly', 'project/python3', ''],
-        ['relative -- under workspace root directly', 'project/my-venv/bin/python3', ''],
-        ['relative -- at cwd', './python3', ''],
-        ['relative -- under cwd', './my-venv/bin/python3', ''],
-        ['relative -- outside cwd', '../my-venv/bin/python3', ''],
-
-        // tslint:disable-next-line:prefer-template
-        ['absolute - starts with workspace root', workspaceRoot + '/my-venv/bin/python3', 'my-venv/bin/python3'],
-        ['absolute - does not start with workspace root', '/home/user/my-venv/bin/python3', '']
-    ];
-    for (let [testName, pythonPath, expected] of tests) {
-        pythonPath = normalizeFilename(pythonPath);
-        if (expected === '') {
-            expected = pythonPath;
-        } else {
-            expected = normalizeFilename(expected);
-        }
-        test(`${testName} (${pythonPath} -> ${expected})`, async () => {
-            setInfo('python');
-            setExpected(expected);
-
-            const updater = new WorkspacePythonPathUpdaterService(
-                Uri.file(workspaceRoot),
-                workspaceSvc.object
-            );
-            await updater.updatePythonPath(pythonPath);
-
-            workspaceSvc.verifyAll();
-            config.verifyAll();
-        });
-    }
 });
 
 // tslint:disable-next-line:max-func-body-length
@@ -146,102 +296,42 @@ suite('WorkspaceFolderPythonPathUpdaterService', () => {
 
         workspaceSvc.setup(w => w.getConfiguration('python', TypeMoq.It.isAny()))
             .returns(() => config.object);
+        config.setup(c => c.inspect<string>('pythonPath'))
+            .returns(() => ({
+                key: 'python.pythonPath',
+                workspaceFolderValue: 'python'
+            }));
     });
 
-    function setInfo(pythonPath?: string) {
-        const info = {
-            key: 'python.pythonPath',
-            workspaceFolderValue: pythonPath
-        };
-        config.setup(c => c.inspect<string>('pythonPath'))
-            .returns(() => info);
-    }
-
-    function setExpected(expected: string) {
+    test('starts with workspace root', async () => {
+        const root = path.sep + path.join('some', 'project');
+        const expected = path.join('my-venv', 'bin', 'python3');
         config.setup(c => c.update('pythonPath', expected, ConfigurationTarget.WorkspaceFolder))
             .returns(() => Promise.resolve());
-    }
-
-    test('not set at all', async () => {
-        config.setup(c => c.inspect<string>('pythonPath'))
-            .returns(() => undefined);
-        setExpected('python3');
 
         const updater = new WorkspaceFolderPythonPathUpdaterService(
-            Uri.file(__dirname),
+            Uri.file(root),
             workspaceSvc.object
         );
-        await updater.updatePythonPath('python3');
+        await updater.updatePythonPath(path.join(root, expected));
 
         workspaceSvc.verifyAll();
         config.verifyAll();
     });
 
-    test('not set on workspace', async () => {
-        setInfo(undefined);
-        setExpected('python3');
+    test('does not start with workspace root', async () => {
+        const root = path.sep + path.join('root', 'some', 'project');
+        const expected = path.sep + path.join('root', 'my-venv', 'bin', 'python3');
+        config.setup(c => c.update('pythonPath', expected, ConfigurationTarget.WorkspaceFolder))
+            .returns(() => Promise.resolve());
 
         const updater = new WorkspaceFolderPythonPathUpdaterService(
-            Uri.file(__dirname),
+            Uri.file(root),
             workspaceSvc.object
         );
-        await updater.updatePythonPath('python3');
+        await updater.updatePythonPath(expected);
 
         workspaceSvc.verifyAll();
         config.verifyAll();
     });
-
-    test('not changed', async () => {
-        setInfo('python3');
-
-        const updater = new WorkspaceFolderPythonPathUpdaterService(
-            Uri.file(__dirname),
-            workspaceSvc.object
-        );
-        await updater.updatePythonPath('python3');
-
-        workspaceSvc.verifyAll();
-        config.verifyAll();
-    });
-
-    const workspaceRoot = normalizeFilename('/home/user/project');
-    const tests: [string, string, string][] = [
-        // (test name, new pythonPath, expected)
-        // If "expected" is an empty string then the new pythonPath is used.
-        ['on $PATH', 'python3', ''],
-        ['under $HOME', '~/my-venv/bin/python3', ''],
-
-        ['relative -- at workspace root', 'python3', ''],
-        ['relative -- under workspace root', 'my-venv/bin/python3', ''],
-        ['relative -- at workspace root directly', 'project/python3', ''],
-        ['relative -- under workspace root directly', 'project/my-venv/bin/python3', ''],
-        ['relative -- at cwd', './python3', ''],
-        ['relative -- under cwd', './my-venv/bin/python3', ''],
-        ['relative -- outside cwd', '../my-venv/bin/python3', ''],
-
-        // tslint:disable-next-line:prefer-template
-        ['absolute - starts with workspace root', workspaceRoot + '/my-venv/bin/python3', 'my-venv/bin/python3'],
-        ['absolute - does not start with workspace root', '/home/user/my-venv/bin/python3', '']
-    ];
-    for (let [testName, pythonPath, expected] of tests) {
-        pythonPath = normalizeFilename(pythonPath);
-        if (expected === '') {
-            expected = pythonPath;
-        } else {
-            expected = normalizeFilename(expected);
-        }
-        test(`${testName} (${pythonPath} -> ${expected})`, async () => {
-            setInfo('python');
-            setExpected(expected);
-
-            const updater = new WorkspaceFolderPythonPathUpdaterService(
-                Uri.file(workspaceRoot),
-                workspaceSvc.object
-            );
-            await updater.updatePythonPath(pythonPath);
-
-            workspaceSvc.verifyAll();
-            config.verifyAll();
-        });
-    }
 });
