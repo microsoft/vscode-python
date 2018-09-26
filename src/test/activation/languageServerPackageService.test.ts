@@ -8,7 +8,8 @@
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
-import { LanguageServerPackageService } from '../../client/activation/languageServerPackageService';
+import { LanguageServerPackageStorageContainers } from '../../client/activation/languageServerPackageRepository';
+import { DefaultLanguageServerDownloadChannel, LanguageServerPackageService } from '../../client/activation/languageServerPackageService';
 import { IHttpClient } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { HttpClient } from '../../client/common/net/httpClient';
@@ -68,10 +69,10 @@ suite('Language Server Package Service', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService);
         const platformService = new PlatformService();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
-        const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.blob.core.windows.net', 'vscode-python-ls-production');
+        const defaultStorageChannel = LanguageServerPackageStorageContainers[DefaultLanguageServerDownloadChannel];
+        const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.blob.core.windows.net', defaultStorageChannel);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
         const lsPackageService = new LanguageServerPackageService(serviceContainer.object);
-
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await nugetRepo.getPackages(packageName);
 

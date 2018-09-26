@@ -15,7 +15,7 @@ export enum LanguageServerDownloadChannel {
     daily = 'daily'
 }
 
-enum LanguageServerPackageStorageContainers {
+export enum LanguageServerPackageStorageContainers {
     stable = 'vscode-python-ls-production',
     beta = 'vscode-python-ls-insiders',
     daily = 'vscode-python-ls-internal'

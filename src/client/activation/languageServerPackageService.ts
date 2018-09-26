@@ -22,6 +22,8 @@ export const PackageNames = {
     [PlatformName.Mac64Bit]: `${downloadBaseFileName}-${PlatformName.Mac64Bit}`
 };
 
+export const DefaultLanguageServerDownloadChannel = 'beta';
+
 @injectable()
 export class LanguageServerPackageService implements ILanguageServerPackageService {
     public maxMajorVersion: number = maxMajorVersion;
@@ -61,6 +63,6 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
     public getLanguageServerDownloadChannel() {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settings = configService.getSettings();
-        return settings.analysis.downloadChannel || 'beta';
+        return settings.analysis.downloadChannel || DefaultLanguageServerDownloadChannel;
     }
 }

@@ -6,7 +6,8 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
-import { LanguageServerPackageService } from '../../../client/activation/languageServerPackageService';
+import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServerPackageRepository';
+import { DefaultLanguageServerDownloadChannel, LanguageServerPackageService } from '../../../client/activation/languageServerPackageService';
 import { IHttpClient } from '../../../client/activation/types';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
 import { INugetService } from '../../../client/common/nuget/types';
@@ -26,8 +27,9 @@ suite('Nuget Azure Storage Repository', () => {
         const nugetService = typeMoq.Mock.ofType<INugetService>();
         nugetService.setup(n => n.getVersionFromPackageFileName(typeMoq.It.isAny())).returns(() => new SemVer('1.1.1'));
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService.object);
+        const defaultStorageChannel = LanguageServerPackageStorageContainers[DefaultLanguageServerDownloadChannel];
 
-        repo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.blob.core.windows.net', 'vscode-python-ls-production');
+        repo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.blob.core.windows.net', defaultStorageChannel);
     });
 
     test('Get all packages', async function () {
