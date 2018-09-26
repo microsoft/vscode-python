@@ -13,18 +13,6 @@ import {
     WorkspacePythonPathUpdaterService
 } from '../../../../client/interpreter/configuration/services/workspaceUpdaterService';
 
-function normalizeFilename(filename: string): string {
-    if (filename === '') {
-        return '';
-    }
-    const parts = filename.split('/');
-    if (filename[0] === '/') {
-        return path.sep + path.join(...parts);
-    } else {
-        return path.join(...parts);
-    }
-}
-
 // tslint:disable-next-line:max-func-body-length
 suite('WorkspacePythonPathUpdater - normal operation', () => {
     let getConfig: TypeMoq.IMock<() => WorkspaceConfiguration>;
@@ -198,19 +186,15 @@ suite('WorkspacePythonPathUpdater - relative paths (allowed but discouraged)', (
     const tests: [string, string][] = [
         // (test name, new pythonPath)
         ['on $PATH', 'python3'],
-        ['under $HOME', '~/my-venv/bin/python3'],
+        ['under $HOME', path.join('~', 'my-venv', 'bin', 'python3')],
 
-        ['explicitly relative -- at workspace root', 'python3'],
-        ['explicitly relative -- under workspace root', 'my-venv/bin/python3'],
-        ['explicitly relative -- at workspace root directly', 'project/python3'],
-        ['explicitly relative -- under workspace root directly', 'project/my-venv/bin/python3'],
+        ['implicitly relative', path.join('my-venv', 'bin', 'python3')],
 
-        ['implicitly relative -- at cwd', './python3'],
-        ['implicitly relative -- under cwd', './my-venv/bin/python3'],
-        ['implicitly relative -- outside cwd', '../my-venv/bin/python3']
+        ['explicitly relative -- at cwd', path.join('.', 'python3')],
+        ['explicitly relative -- under cwd', path.join('.', 'my-venv', 'bin', 'python3')],
+        ['explicitly relative -- outside cwd', path.join('..', 'my-venv', 'bin', 'python3')]
     ];
-    for (let [testName, pythonPath] of tests) {
-        pythonPath = normalizeFilename(pythonPath);
+    for (const [testName, pythonPath] of tests) {
         test(`${testName} (${pythonPath})`, async () => {
             config.setup(c => c.inspect<string>('pythonPath'))
                 .returns(() => ({
