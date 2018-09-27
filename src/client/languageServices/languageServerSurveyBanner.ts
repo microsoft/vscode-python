@@ -134,7 +134,7 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     }
 
     private async getPythonLSVersion(fallback: string = 'unknown'): Promise<string> {
-        const langServiceLatestFolder: FolderVersionPair | undefined = await this.lsService.getcurrentLanguageServerDirectory();
+        const langServiceLatestFolder: FolderVersionPair | undefined = await this.lsService.getCurrentLanguageServerDirectory();
         return langServiceLatestFolder ? langServiceLatestFolder.version.raw : fallback;
     }
 

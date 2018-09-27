@@ -81,7 +81,7 @@ suite('Language Server Survey Banner', () => {
             // language service will get asked for the current Language
             // Server directory installed. This in turn will give the tested
             // code the version via the .version member of lsFolder.
-            lsService.setup(f => f.getcurrentLanguageServerDirectory())
+            lsService.setup(f => f.getCurrentLanguageServerDirectory())
                 .returns(() => {
                     return Promise.resolve(lsFolder);
                 })
@@ -98,7 +98,7 @@ suite('Language Server Survey Banner', () => {
                     return a === expectedUri;
                 }))
             )
-            .verifiable(typemoq.Times.once());
+                .verifiable(typemoq.Times.once());
 
             const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object, lsService.object);
             await testBanner.launchSurvey();

@@ -22,7 +22,7 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
 
     @log('Get language server folder name')
     public async getLanguageServerFolderName(): Promise<string> {
-        const currentFolder = await this.getcurrentLanguageServerDirectory();
+        const currentFolder = await this.getCurrentLanguageServerDirectory();
         let serverVersion: NugetPackage | undefined;
 
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -45,7 +45,7 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
         return lsPackageService.getLatestNugetPackageVersion();
     }
-    public async getcurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined> {
+    public async getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined> {
         const dirs = await this.getExistingLanguageServerDirectories();
         if (dirs.length === 0) {
             return;

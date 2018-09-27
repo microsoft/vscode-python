@@ -14,7 +14,7 @@ import { ILanguageServerPackageService } from '../../client/activation/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { NugetPackage } from '../../client/common/nuget/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService,  IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 const languageServerFolder = 'languageServer';
@@ -82,7 +82,7 @@ suite('Language Server Folder Service', () => {
         });
         lsFolderService.getExistingLanguageServerDirectories = () => Promise.resolve(expectedFolders as any);
 
-        const latestFolder = await lsFolderService.getcurrentLanguageServerDirectory();
+        const latestFolder = await lsFolderService.getCurrentLanguageServerDirectory();
 
         expect(latestFolder!.path).to.be.equal(path.join(root, 'languageServer.3.9.1'));
         expect(latestFolder!.version.raw).to.be.equal('3.9.1');
@@ -90,7 +90,7 @@ suite('Language Server Folder Service', () => {
     test('Get latest language server folder name from nuget package version when there is no local folder', async () => {
         const pkg: NugetPackage = { package: 'abc', version: new SemVer('1.1.1'), uri: 'xyz' };
         settings.setup(s => s.autoUpdateLanguageServer).returns(() => true).verifiable(typeMoq.Times.once());
-        lsFolderService.getcurrentLanguageServerDirectory = () => Promise.resolve(undefined);
+        lsFolderService.getCurrentLanguageServerDirectory = () => Promise.resolve(undefined);
         lsFolderService.getLatestLanguageServerVersion = () => Promise.resolve(pkg);
 
         const folderName = await lsFolderService.getLanguageServerFolderName();
@@ -101,7 +101,7 @@ suite('Language Server Folder Service', () => {
         const pkg: NugetPackage = { package: 'abc', version: new SemVer('1.1.1'), uri: 'xyz' };
         const existingFolder = { path: path.join('1', '2', 'abc'), version: new SemVer('1.1.1') };
         settings.setup(s => s.autoUpdateLanguageServer).returns(() => true).verifiable(typeMoq.Times.once());
-        lsFolderService.getcurrentLanguageServerDirectory = () => Promise.resolve(existingFolder);
+        lsFolderService.getCurrentLanguageServerDirectory = () => Promise.resolve(existingFolder);
         lsFolderService.getLatestLanguageServerVersion = () => Promise.resolve(pkg);
 
         const folderName = await lsFolderService.getLanguageServerFolderName();
@@ -113,7 +113,7 @@ suite('Language Server Folder Service', () => {
         const pkg: NugetPackage = { package: 'abc', version: new SemVer('2.1.1'), uri: 'xyz' };
         const existingFolder = { path: path.join('1', '2', 'abc'), version: new SemVer('1.1.1') };
         settings.setup(s => s.autoUpdateLanguageServer).returns(() => true).verifiable(typeMoq.Times.once());
-        lsFolderService.getcurrentLanguageServerDirectory = () => Promise.resolve(existingFolder);
+        lsFolderService.getCurrentLanguageServerDirectory = () => Promise.resolve(existingFolder);
         lsFolderService.getLatestLanguageServerVersion = () => Promise.resolve(pkg);
 
         const folderName = await lsFolderService.getLanguageServerFolderName();
@@ -125,7 +125,7 @@ suite('Language Server Folder Service', () => {
         const pkg: NugetPackage = { package: 'abc', version: new SemVer('2.1.1'), uri: 'xyz' };
         const existingFolder = { path: path.join('1', '2', 'abc'), version: new SemVer('1.1.1') };
         settings.setup(s => s.autoUpdateLanguageServer).returns(() => false).verifiable(typeMoq.Times.once());
-        lsFolderService.getcurrentLanguageServerDirectory = () => Promise.resolve(existingFolder);
+        lsFolderService.getCurrentLanguageServerDirectory = () => Promise.resolve(existingFolder);
         lsFolderService.getLatestLanguageServerVersion = () => Promise.resolve(pkg);
 
         const folderName = await lsFolderService.getLanguageServerFolderName();
