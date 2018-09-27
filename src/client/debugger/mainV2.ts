@@ -74,6 +74,7 @@ export class PythonDebugger extends DebugSession {
         body.supportsSetExpression = true;
         body.supportsLogPoints = true;
         body.supportTerminateDebuggee = true;
+        body.supportsCompletionsRequest = true;
         body.exceptionBreakpointFilters = [
             {
                 filter: 'raised',
