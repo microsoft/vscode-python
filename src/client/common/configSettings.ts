@@ -28,41 +28,6 @@ const untildify = require('untildify');
 
 export const IS_WINDOWS = /^win/.test(process.platform);
 
-export function getSetting<T>(
-    settings: WorkspaceConfiguration,
-    name: string,
-    scope: 'default' | 'global' | 'workspace' | 'workspaceFolder' | ConfigurationTarget
-): T | undefined {
-    const value = settings.inspect<T>(name);
-    if (value === undefined) {
-        return undefined;
-    }
-
-    switch (scope) {
-        case ConfigurationTarget.Global:
-            scope = 'global';
-            break;
-        case ConfigurationTarget.Workspace:
-            scope = 'workspace';
-            break;
-        case ConfigurationTarget.WorkspaceFolder:
-            scope = 'workspaceFolder';
-            break;
-        default:
-    }
-    return value[`${scope}Value`];
-}
-
-export function matchSetting<T>(
-    settings: WorkspaceConfiguration,
-    name: string,
-    scope: 'default' | 'global' | 'workspace' | 'workspaceFolder' | ConfigurationTarget,
-    expected: T
-): boolean {
-    const value = getSetting<T>(settings, name, scope);
-    return value === expected;
-}
-
 // tslint:disable-next-line:completed-docs
 export class PythonSettings extends EventEmitter implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
