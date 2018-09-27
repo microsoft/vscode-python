@@ -1,10 +1,10 @@
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
-import { IWorkspaceService } from '../../client/common/application/types';
-import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
-import { IPythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/types';
-import { IServiceContainer } from '../../client/ioc/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { PythonPathUpdaterServiceFactory } from '../../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
+import { IPythonPathUpdaterServiceFactory } from '../../../client/interpreter/configuration/types';
+import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable:no-invalid-template-strings max-func-body-length
 
