@@ -3,12 +3,18 @@
 
 import { injectable } from 'inversify';
 import { Uri } from 'vscode';
+import { compareVersion } from '../../../../utils/version';
 import { ICondaService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
 import { IPlatformService } from '../../platform/types';
 import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
+
+interface ICondaInfo {
+    name: string;
+    path: string;
+}
 
 /**
  * Support conda env activation (in the terminal).
@@ -38,6 +44,29 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
             return;
         }
 
+        // Conda changed how activation works in the 4.4.0 release, so
+        // we accommodate the two ways distinctly.
+        const versionStr = await condaService.getCondaVersion();
+        if (compareVersion(versionStr || '', '4.4.0') === 0) {
+            return this.getPre440(targetShell, condaService, envInfo);
+        } else {
+            return this.getCurrent(targetShell, condaService, envInfo);
+        }
+    }
+
+    private async getPre440(
+        targetShell: TerminalShellType,
+        condaService: ICondaService,
+        envInfo: ICondaInfo
+    ): Promise<string[] | undefined> {
+        return this.getCurrent(targetShell, condaService, envInfo);
+    }
+
+    private async getCurrent(
+        targetShell: TerminalShellType,
+        condaService: ICondaService,
+        envInfo: ICondaInfo
+    ): Promise<string[] | undefined> {
         const isWindows = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
         if (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore) {
             if (!isWindows) {
