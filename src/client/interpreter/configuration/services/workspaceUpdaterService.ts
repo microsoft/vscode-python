@@ -1,21 +1,33 @@
 import * as path from 'path';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
-import { matchSetting } from '../../../common/configSettings';
 import { IPythonPathUpdaterService } from '../types';
 
 export class WorkspacePythonPathUpdater {
 
+    private scopeField: string;
     constructor(
         private workspace: Uri,
         private getConfig: () => WorkspaceConfiguration,
-        private cfgTarget: ConfigurationTarget
-    ) { }
+        private cfgTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder
+    ) {
+        switch (this.cfgTarget) {
+            case ConfigurationTarget.Workspace:
+                this.scopeField = 'workspaceValue';
+                break;
+            case ConfigurationTarget.WorkspaceFolder:
+                this.scopeField = 'workspaceFolderValue';
+                break;
+            default:
+                throw Error('only workspace scopes are supported');
+        }
+    }
 
     public async updatePythonPath(pythonPath: string): Promise<void> {
         const pythonConfig = this.getConfig();
 
-        if (matchSetting<string>(pythonConfig, 'pythonPath', this.cfgTarget, pythonPath)) {
+        const existing = pythonConfig.inspect<string>('pythonPath');
+        if (existing && existing[this.scopeField] === pythonPath) {
             return;
         }
 
