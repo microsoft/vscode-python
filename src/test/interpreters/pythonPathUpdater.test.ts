@@ -75,7 +75,7 @@ suite('Python Path Settings Updater', () => {
             await updater.updatePythonPath(pythonPath);
             workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder)), TypeMoq.Times.once());
         });
-        test('Python Path should be truncated for relative paths', async () => {
+        test('Python Path should be truncated for worspace-relative paths', async () => {
             const workspaceFolderPath = path.join('user', 'desktop', 'development');
             const workspaceFolder = Uri.file(workspaceFolderPath);
             const updater = updaterServiceFactory.getWorkspaceFolderPythonPathConfigurationService(workspaceFolder);
@@ -115,7 +115,7 @@ suite('Python Path Settings Updater', () => {
             await updater.updatePythonPath(pythonPath);
             workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(ConfigurationTarget.Workspace)), TypeMoq.Times.once());
         });
-        test('Python Path should be truncated for relative paths', async () => {
+        test('Python Path should be truncated for workspace-relative paths', async () => {
             const workspaceFolderPath = path.join('user', 'desktop', 'development');
             const workspaceFolder = Uri.file(workspaceFolderPath);
             const updater = updaterServiceFactory.getWorkspacePythonPathConfigurationService(workspaceFolder);
