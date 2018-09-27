@@ -20,17 +20,15 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import '../../client/common/extensions';
 import { createDeferred, Deferred, sleep } from '../../utils/async';
 import { noop } from '../../utils/misc';
-import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
-import { IProcessServiceFactory } from '../common/process/types';
 import { ICurrentProcess } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from './Common/Contracts';
 import { CreateAttachDebugClient, CreateLaunchDebugClient } from './DebugClients/DebugFactory';
 import { BaseDebugServer } from './DebugServers/BaseDebugServer';
 import { initializeIoc } from './serviceRegistry';
-import { IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
+import { IDebugStreamProvider, IExcutableValidator, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
 const killProcessTree = require('tree-kill');
 
 const DEBUGGER_CONNECT_TIMEOUT = 20000;
@@ -124,25 +122,10 @@ export class PythonDebugger extends DebugSession {
                 this.sendErrorResponse(response, { format: message, id: 1 }, undefined, undefined, ErrorDestination.User);
             });
     }
-    /**
-     * Checks the validity of the executable.
-     * Do not use `<python> --version` as the output in 2.7 comes in stderr.
-     * Do not use `<python> -c print('1')` as the executable could be pyspark.
-     * Use `<python> xyz.py` to check output as this is absolutely necessary for debugger to start.
-     * @private
-     * @param {DebugProtocol.LaunchResponse} response
-     * @param {LaunchRequestArguments} args
-     * @returns {Promise<boolean>}
-     * @memberof PythonDebugger
-     */
     private async validatePythonPath(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): Promise<boolean> {
         const pythonPath = typeof args.pythonPath === 'string' && args.pythonPath.length > 0 ? args.pythonPath : 'python';
-        const processFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
-        const processService = await processFactory.create();
-        const pythonFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printOne.py');
-        const valid = await processService.exec(pythonPath, [pythonFile])
-            .then(output => output.stdout.trim() === '1' || (output.stderr || '').trim() === '1')
-            .catch(() => false);
+        const validator = this.serviceContainer.get<IExcutableValidator>(IExcutableValidator);
+        const valid = await validator.validateExecutable(pythonPath);
         if (!valid) {
             this.sendErrorResponse(response, { format: InvalidPythonPathInDebuggerMessage, id: 2 }, undefined, undefined, ErrorDestination.User);
         }

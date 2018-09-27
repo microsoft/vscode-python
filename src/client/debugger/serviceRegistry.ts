@@ -21,7 +21,8 @@ import { DebuggerProcessServiceFactory } from './Common/processServiceFactory';
 import { ProtocolLogger } from './Common/protocolLogger';
 import { ProtocolParser } from './Common/protocolParser';
 import { ProtocolMessageWriter } from './Common/protocolWriter';
-import { IDebuggerBanner, IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
+import { ExcutableValidator } from './executableValidator';
+import { IDebuggerBanner, IDebugStreamProvider, IExcutableValidator, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
 
 export function initializeIoc(): IServiceContainer {
     const cont = new Container();
@@ -43,6 +44,7 @@ function registerDebuggerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IProtocolMessageWriter>(IProtocolMessageWriter, ProtocolMessageWriter);
     serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
     serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, DebuggerProcessServiceFactory);
+    serviceManager.addSingleton<IExcutableValidator>(IExcutableValidator, ExcutableValidator);
 }
 
 export function registerTypes(serviceManager: IServiceManager) {
