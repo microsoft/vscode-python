@@ -18,15 +18,14 @@ import '../common/extensions';
 import { IPlatformService } from '../common/platform/types';
 import {
     IConfigurationService, IDisposableRegistry,
-    IOutputChannel, IPythonSettings
+    ILogger, IOutputChannel, IPythonSettings
 } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';
 import {
-    ExtensionActivators, FolderVersionPair,
-    IExtensionActivationService, IExtensionActivator,
-    ILanguageServerFolderService
+    ExtensionActivators, IExtensionActivationService,
+    IExtensionActivator, ILanguageServerFolderService
 } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
@@ -96,17 +95,22 @@ export class ExtensionActivationService implements IExtensionActivationService, 
     private async logStartup(isJedi: boolean): Promise<void> {
         let outputLine: string = 'Starting Jedi Python language engine.';
 
-        if (!isJedi) {
-            let msplVersion: string = '';
-            const lsFolderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
-            const msplPackage: FolderVersionPair | undefined = await lsFolderService.getCurrentLanguageServerDirectory();
-            if (msplPackage && msplPackage.version) {
-                msplVersion = ` (${msplPackage.version.raw})`;
+        try {
+            if (!isJedi) {
+                outputLine = 'Starting Microsoft Python language server.';
+                const lsFolderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
+                const msplCurrentFolder = await lsFolderService.getCurrentLanguageServerDirectory();
+                if (msplCurrentFolder && msplCurrentFolder.version) {
+                    outputLine = `Starting Microsoft Python language server (${msplCurrentFolder.version.raw}).`;
+                }
             }
-            outputLine = `Starting Microsoft Python language server${msplVersion}.`;
+        } catch (failReason) {
+            // do not fail doing this task - log only
+            const log: ILogger = this.serviceContainer.get<ILogger>(ILogger);
+            log.logInformation('Failed to obtain current MPLS version during activation.', failReason);
+        } finally {
+            this.output.appendLine(outputLine);
         }
-
-        this.output.appendLine(outputLine);
     }
 
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
