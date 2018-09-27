@@ -15,18 +15,18 @@ import {
 } from '../common/application/types';
 import { isLanguageServerTest, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
-import { NugetPackage } from '../common/nuget/types';
 import { IPlatformService } from '../common/platform/types';
 import {
     IConfigurationService, IDisposableRegistry,
-    ILogger, IOutputChannel, IPythonSettings
+    IOutputChannel, IPythonSettings
 } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';
 import {
-    ExtensionActivators, IExtensionActivationService,
-    IExtensionActivator, ILanguageServerFolderService
+    ExtensionActivators, FolderVersionPair,
+    IExtensionActivationService, IExtensionActivator,
+    ILanguageServerFolderService
 } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
@@ -98,15 +98,10 @@ export class ExtensionActivationService implements IExtensionActivationService, 
 
         if (!isJedi) {
             let msplVersion: string = '';
-            try {
-                const lsFolderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
-                const msplPackage: NugetPackage | undefined = await lsFolderService.getLatestLanguageServerVersion();
-                if (msplPackage && msplPackage.version) {
-                    msplVersion = ` (${msplPackage.version.raw})`;
-                }
-            } catch (ex) {
-                const log: ILogger = this.serviceContainer.get<ILogger>(ILogger);
-                log.logInformation('Cannot determine Microsoft Python language server version.', ex);
+            const lsFolderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
+            const msplPackage: FolderVersionPair | undefined = await lsFolderService.getCurrentLanguageServerDirectory();
+            if (msplPackage && msplPackage.version) {
+                msplVersion = ` (${msplPackage.version.raw})`;
             }
             outputLine = `Starting Microsoft Python language server${msplVersion}.`;
         }
