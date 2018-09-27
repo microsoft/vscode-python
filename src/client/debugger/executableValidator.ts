@@ -15,8 +15,9 @@ export class ExcutableValidator implements IExcutableValidator {
     /**
      * Checks the validity of the executable.
      * Do not use `<python> --version` as the output in 2.7 comes in stderr.
-     * Do not use `<python> -c print('1')` as the executable could be pyspark.
-     * Use `<python> xyz.py` to check output as this is absolutely necessary for debugger to start.
+     * Check if either one of the following is true:
+     * 1. Use `<python> -c print('1')` as the executable could python.
+     * 2. Check if the executable file exists (in case of `spark-submit`)
      * @param {string} exePath
      * @returns {Promise<boolean>}
      * @memberof DebuggerExcutableValidator
