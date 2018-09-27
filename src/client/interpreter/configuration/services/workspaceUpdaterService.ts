@@ -2,41 +2,27 @@ import * as path from 'path';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IPythonPathUpdaterService } from '../types';
+import { ScopedPythonPathUpdater } from './pythonPathUpdater';
 
-export class WorkspacePythonPathUpdater {
+export class WorkspacePythonPathUpdater extends ScopedPythonPathUpdater {
 
-    private scopeField: string;
     constructor(
         private workspace: Uri,
-        private getConfig: () => WorkspaceConfiguration,
-        private cfgTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder
+        cfgTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder,
+        getConfig: () => WorkspaceConfiguration
     ) {
-        switch (this.cfgTarget) {
-            case ConfigurationTarget.Workspace:
-                this.scopeField = 'workspaceValue';
-                break;
-            case ConfigurationTarget.WorkspaceFolder:
-                this.scopeField = 'workspaceFolderValue';
-                break;
-            default:
-                throw Error('only workspace scopes are supported');
-        }
-    }
-
-    public async updatePythonPath(pythonPath: string): Promise<void> {
-        const pythonConfig = this.getConfig();
-
-        const existing = pythonConfig.inspect<string>('pythonPath');
-        if (existing && existing[this.scopeField] === pythonPath) {
-            return;
-        }
-
-        // The workspace folder is guaranteed to be an absolute path.
-        if (pythonPath.startsWith(this.workspace.fsPath)) {
-            pythonPath = path.relative(this.workspace.fsPath, pythonPath);
-        }
-
-        await pythonConfig.update('pythonPath', pythonPath, this.cfgTarget);
+        super(
+            cfgTarget,
+            getConfig,
+            (pythonPath: string) => {
+                // The workspace folder is guaranteed to be an absolute path.
+                if (pythonPath.startsWith(this.workspace.fsPath)) {
+                    return path.relative(this.workspace.fsPath, pythonPath);
+                } else {
+                    return pythonPath;
+                }
+            }
+        );
     }
 }
 
@@ -45,8 +31,8 @@ export class WorkspacePythonPathUpdaterService extends WorkspacePythonPathUpdate
     constructor(workspace: Uri, workspaceService: IWorkspaceService) {
         super(
             workspace,
-            () => { return workspaceService.getConfiguration('python', workspace); },
-            ConfigurationTarget.Workspace
+            ConfigurationTarget.Workspace,
+            () => { return workspaceService.getConfiguration('python', workspace); }
         );
     }
 }
@@ -56,8 +42,8 @@ export class WorkspaceFolderPythonPathUpdaterService extends WorkspacePythonPath
     constructor(workspace: Uri, workspaceService: IWorkspaceService) {
         super(
             workspace,
-            () => { return workspaceService.getConfiguration('python', workspace); },
-            ConfigurationTarget.WorkspaceFolder
+            ConfigurationTarget.WorkspaceFolder,
+            () => { return workspaceService.getConfiguration('python', workspace); }
         );
     }
 }
