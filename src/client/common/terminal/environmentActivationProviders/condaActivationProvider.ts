@@ -3,6 +3,7 @@
 
 import { injectable } from 'inversify';
 import { Uri } from 'vscode';
+import { compareVersion } from '../../../../utils/version';
 import { ICondaService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
@@ -64,7 +65,11 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                     return this.getFishCommands(envInfo.name, await condaService.getCondaFile());
 
                 default:
-                    return this.getUnixCommands(envInfo.name);
+                    return this.getUnixCommands(
+                        envInfo.name,
+                        await condaService.getCondaVersion() || '',
+                        await condaService.getCondaFile()
+                    );
             }
         }
     }
@@ -100,10 +105,23 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
     }
 
     private async getUnixCommands(
-        envName: string
+        envName: string,
+        version: string,
+        conda: string
     ): Promise<string[] | undefined> {
-        return [
-            `source activate ${envName.toCommandArgument()}`
-        ];
+        // Conda changed how activation works in the 4.4.0 release, so
+        // we accommodate the two ways distinctly.
+        if (version === '4.4.0' || compareVersion(version, '4.4.0') > 0) {
+            return [
+                `${conda.fileToCommandArgument()} activate ${envName.toCommandArgument()}`
+            ];
+        } else {
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Handle pre-4.4 case where "activate" script not on $PATH.
+            // (Locate script next to "conda" binary and use absolute path.
+            return [
+                `source activate ${envName.toCommandArgument()}`
+            ];
+        }
     }
 }
