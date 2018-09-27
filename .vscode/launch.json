@@ -57,7 +57,7 @@
             }
         },
         {
-            "name": "Tests (Sigle Workspace, VS Code, *.test.ts)",
+            "name": "Tests (Single Workspace, VS Code, *.test.ts)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
