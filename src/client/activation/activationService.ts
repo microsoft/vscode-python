@@ -4,17 +4,30 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
+import {
+    ConfigurationChangeEvent, Disposable,
+    OutputChannel, Uri
+} from 'vscode';
 import { OSDistro, OSType } from '../../utils/platform';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
+import {
+    IApplicationShell, ICommandManager,
+    IWorkspaceService
+} from '../common/application/types';
 import { isLanguageServerTest, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
+import { NugetPackage } from '../common/nuget/types';
 import { IPlatformService } from '../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../common/types';
+import {
+    IConfigurationService, IDisposableRegistry,
+    ILogger, IOutputChannel, IPythonSettings
+} from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';
-import { ExtensionActivators, IExtensionActivationService, IExtensionActivator } from './types';
+import {
+    ExtensionActivators, IExtensionActivationService,
+    IExtensionActivator, ILanguageServerFolderService
+} from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
 const LS_MIN_OS_VERSIONS: [OSType, OSDistro, string][] = [
@@ -38,6 +51,7 @@ export class ExtensionActivationService implements IExtensionActivationService, 
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
     private readonly appShell: IApplicationShell;
+
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
@@ -47,6 +61,7 @@ export class ExtensionActivationService implements IExtensionActivationService, 
         disposables.push(this);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
+
     public async activate(): Promise<void> {
         if (this.currentActivator) {
             return;
@@ -62,19 +77,43 @@ export class ExtensionActivationService implements IExtensionActivationService, 
             jedi = true;
         }
 
-        const engineName = jedi ? 'Jedi Python language engine' : 'Microsoft Python language server';
-        this.output.appendLine(`Starting ${engineName}.`);
+        await this.logStartup(jedi);
+
         const activatorName = jedi ? ExtensionActivators.Jedi : ExtensionActivators.DotNet;
         const activator = this.serviceContainer.get<IExtensionActivator>(IExtensionActivator, activatorName);
         this.currentActivator = { jedi, activator };
 
         await activator.activate();
     }
+
     public dispose() {
         if (this.currentActivator) {
             this.currentActivator.activator.deactivate().ignoreErrors();
         }
     }
+
+    // write a descriptive text message to output to help us diagnose user issues.
+    private async logStartup(isJedi: boolean): Promise<void> {
+        let outputLine: string = 'Starting Jedi Python language engine.';
+
+        if (!isJedi) {
+            let msplVersion: string = '';
+            try {
+                const lsFolderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
+                const msplPackage: NugetPackage | undefined = await lsFolderService.getLatestLanguageServerVersion();
+                if (msplPackage && msplPackage.version) {
+                    msplVersion = ` (${msplPackage.version.raw})`;
+                }
+            } catch (ex) {
+                const log: ILogger = this.serviceContainer.get<ILogger>(ILogger);
+                log.logInformation('Cannot determine Microsoft Python language server version.', ex);
+            }
+            outputLine = `Starting Microsoft Python language server${msplVersion}.`;
+        }
+
+        this.output.appendLine(outputLine);
+    }
+
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders!.map(workspace => workspace.uri) : [undefined];
         if (workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1) {
