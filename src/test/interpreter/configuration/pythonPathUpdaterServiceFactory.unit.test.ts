@@ -44,7 +44,7 @@ suite('Python Path Settings Updater', () => {
             workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
             await updater.updatePythonPath(pythonPath);
-            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(true)), TypeMoq.Times.once());
+            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(ConfigurationTarget.Global)), TypeMoq.Times.once());
         });
     });
 

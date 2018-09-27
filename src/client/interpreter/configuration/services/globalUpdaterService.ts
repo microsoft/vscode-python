@@ -1,15 +1,21 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
+import { ConfigurationTarget } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IPythonPathUpdaterService } from '../types';
+import { ScopedPythonPathUpdater } from './pythonPathUpdater';
 
-export class GlobalPythonPathUpdaterService implements IPythonPathUpdaterService {
-    constructor(private readonly workspaceService: IWorkspaceService) { }
-    public async updatePythonPath(pythonPath: string): Promise<void> {
-        const pythonConfig = this.workspaceService.getConfiguration('python');
-        const pythonPathValue = pythonConfig.inspect<string>('pythonPath');
+export class GlobalPythonPathUpdaterService extends ScopedPythonPathUpdater implements IPythonPathUpdaterService {
 
-        if (pythonPathValue && pythonPathValue.globalValue === pythonPath) {
-            return;
-        }
-        await pythonConfig.update('pythonPath', pythonPath, true);
+    constructor(
+        workspaceService: IWorkspaceService
+    ) {
+        super(
+            ConfigurationTarget.Global,
+            () => { return workspaceService.getConfiguration('python'); }
+        );
     }
 }
