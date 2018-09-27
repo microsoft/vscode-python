@@ -129,7 +129,7 @@
             ]
         },
         {
-            "name": "Unit Tests (without VS Ccode, *.unit.test.ts)",
+            "name": "Unit Tests (without VS Code, *.unit.test.ts)",
             "type": "node",
             "request": "launch",
             "program": "${workspaceFolder}/out/test/unittests.js",
