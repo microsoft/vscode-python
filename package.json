@@ -733,6 +733,12 @@
                     "description": "Specifies paths to local typeshed repository clone(s) for the Python language server.",
                     "scope": "resource"
                 },
+                "python.autoUpdateLanguageServer": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically update the language server.",
+                    "scope": "application"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,
