@@ -42,12 +42,12 @@ suite('Language Server Download Channels', () => {
         return [instance.storageAccount, instance.storageContainer];
     }
     test('Stable', () => {
-        expect(getPackageInfo(LanguageServerDownloadChannel.stable)).to.be.deep.equal(['https://pvsc.blob.core.windows.net', 'vscode-python-ls-production']);
+        expect(getPackageInfo(LanguageServerDownloadChannel.stable)).to.be.deep.equal(['https://pvsc.blob.core.windows.net', 'python-language-server-stable']);
     });
     test('Beta', () => {
-        expect(getPackageInfo(LanguageServerDownloadChannel.beta)).to.be.deep.equal(['https://pvsc.blob.core.windows.net', 'vscode-python-ls-insiders']);
+        expect(getPackageInfo(LanguageServerDownloadChannel.beta)).to.be.deep.equal(['https://pvsc.blob.core.windows.net', 'python-language-server-beta']);
     });
     test('Daily', () => {
-        expect(getPackageInfo(LanguageServerDownloadChannel.daily)).to.be.deep.equal(['https://pvsc.blob.core.windows.net', 'vscode-python-ls-internal']);
+        expect(getPackageInfo(LanguageServerDownloadChannel.daily)).to.be.deep.equal(['https://pvsc.blob.core.windows.net', 'python-language-server-daily']);
     });
 });

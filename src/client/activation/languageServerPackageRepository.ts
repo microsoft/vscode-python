@@ -16,9 +16,9 @@ export enum LanguageServerDownloadChannel {
 }
 
 export enum LanguageServerPackageStorageContainers {
-    stable = 'vscode-python-ls-production',
-    beta = 'vscode-python-ls-insiders',
-    daily = 'vscode-python-ls-internal'
+    stable = 'python-language-server-stable',
+    beta = 'python-language-server-beta',
+    daily = 'python-language-server-daily'
 }
 
 @injectable()
