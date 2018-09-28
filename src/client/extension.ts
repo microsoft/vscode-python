@@ -58,7 +58,9 @@ import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
+import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
 import { OnTypeFormattingDispatcher } from './typeFormatters/dispatcher';
+import { OnEnterFormatter } from './typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
 
@@ -135,7 +137,10 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
         context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
     }
 
-    const onTypeDispatcher = new OnTypeFormattingDispatcher();
+    const onTypeDispatcher = new OnTypeFormattingDispatcher({
+        '\n': new OnEnterFormatter(),
+        ':': new BlockFormatProviders()
+    });
     const onTypeTriggers = onTypeDispatcher.getTriggerCharacters();
     if (onTypeTriggers) {
         context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, onTypeDispatcher, onTypeTriggers.first, ...onTypeTriggers.more));

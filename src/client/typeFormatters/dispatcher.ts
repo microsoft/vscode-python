@@ -4,30 +4,27 @@
 'use strict';
 
 import { CancellationToken, FormattingOptions, OnTypeFormattingEditProvider, Position, ProviderResult, TextDocument, TextEdit } from 'vscode';
-import { BlockFormatProviders } from './blockFormatProvider';
-import { OnEnterFormatter } from './onEnterFormatter';
 
 export class OnTypeFormattingDispatcher implements OnTypeFormattingEditProvider {
-    private readonly onEnterFormatter = new OnEnterFormatter();
-    private readonly blockFormatProviders = new BlockFormatProviders();
+    private readonly providers: { [key: string]: OnTypeFormattingEditProvider };
 
-    private readonly formatters: { [key: string]: OnTypeFormattingEditProvider } = {
-        '\n': this.onEnterFormatter,
-        ':': this.blockFormatProviders
-    };
+    constructor(providers: { [key: string]: OnTypeFormattingEditProvider }) {
+        this.providers = providers;
+    }
 
     public provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, cancellationToken: CancellationToken): ProviderResult<TextEdit[]> {
-        const formatter = this.formatters[ch];
+        const provider = this.providers[ch];
 
-        if (formatter) {
-            return formatter.provideOnTypeFormattingEdits(document, position, ch, options, cancellationToken);
+        if (provider) {
+            return provider.provideOnTypeFormattingEdits(document, position, ch, options, cancellationToken);
         }
 
         return [];
     }
 
     public getTriggerCharacters(): { first: string; more: string[] } | undefined {
-        const keys = Object.keys(this.formatters);
+        let keys = Object.keys(this.providers);
+        keys = keys.sort(); // Make output deterministic
 
         const first = keys.shift();
 
