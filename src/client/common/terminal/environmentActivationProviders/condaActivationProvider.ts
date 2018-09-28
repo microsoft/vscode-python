@@ -112,6 +112,8 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         // Conda changed how activation works in the 4.4.0 release, so
         // we accommodate the two ways distinctly.
         if (version === '4.4.0' || compareVersion(version, '4.4.0') > 0) {
+            // Note that this requires the user to have already followed
+            // the conda instructions such that "conda" is on their $PATH.
             return [
                 `${conda.fileToCommandArgument()} activate ${envName.toCommandArgument()}`
             ];
