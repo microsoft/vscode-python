@@ -12,6 +12,7 @@ import {
     IBrowserService, IPersistentStateFactory,
     IPythonExtensionBanner
 } from '../common/types';
+import * as localize from '../../utils/localize';
 
 // persistent state names, exported to make use of in testing
 export enum LSSurveyStateKeys {
@@ -35,8 +36,8 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     private minCompletionsBeforeShow: number;
     private maxCompletionsBeforeShow: number;
     private isInitialized: boolean = false;
-    private bannerMessage: string = 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?';
-    private bannerLabels: string[] = ['Yes, take survey now', 'No, thanks'];
+    private bannerMessage: string = localize.LanguageServiceSurveyBanner.bannerMessage;
+    private bannerLabels: string[] = [localize.LanguageServiceSurveyBanner.bannerLabelYes, localize.LanguageServiceSurveyBanner.bannerLabelNo];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
