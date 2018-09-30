@@ -42,3 +42,8 @@ export const IDebuggerBanner = Symbol('IDebuggerBanner');
 export interface IDebuggerBanner {
     initialize(): void;
 }
+
+export const IExcutableValidator = Symbol('IExcutableValidator');
+export interface IExcutableValidator {
+    validateExecutable(exePath: string): Promise<boolean>;
+}

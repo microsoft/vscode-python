@@ -22,14 +22,13 @@ import { createDeferred, Deferred, sleep } from '../../utils/async';
 import { noop } from '../../utils/misc';
 import { isNotInstalledError } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
-import { IProcessServiceFactory } from '../common/process/types';
 import { ICurrentProcess } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from './Common/Contracts';
 import { CreateAttachDebugClient, CreateLaunchDebugClient } from './DebugClients/DebugFactory';
 import { BaseDebugServer } from './DebugServers/BaseDebugServer';
 import { initializeIoc } from './serviceRegistry';
-import { IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
+import { IDebugStreamProvider, IExcutableValidator, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
 const killProcessTree = require('tree-kill');
 
 const DEBUGGER_CONNECT_TIMEOUT = 20000;
@@ -125,11 +124,8 @@ export class PythonDebugger extends DebugSession {
     }
     private async validatePythonPath(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): Promise<boolean> {
         const pythonPath = typeof args.pythonPath === 'string' && args.pythonPath.length > 0 ? args.pythonPath : 'python';
-        const processFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
-        const processService = await processFactory.create();
-        const valid = await processService.exec(pythonPath, ['-c', 'print("1")'])
-            .then(output => output.stdout.trim() === '1' || (output.stderr || '').trim() === '1')
-            .catch(() => false);
+        const validator = this.serviceContainer.get<IExcutableValidator>(IExcutableValidator);
+        const valid = await validator.validateExecutable(pythonPath);
         if (!valid) {
             this.sendErrorResponse(response, { format: InvalidPythonPathInDebuggerMessage, id: 2 }, undefined, undefined, ErrorDestination.User);
         }

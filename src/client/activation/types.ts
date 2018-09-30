@@ -36,13 +36,13 @@ export const ILanguageServerFolderService = Symbol('ILanguageServerFolderService
 export interface ILanguageServerFolderService {
   getLanguageServerFolderName(): Promise<string>;
   getLatestLanguageServerVersion(): Promise<NugetPackage | undefined>;
-  getcurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
+  getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
 }
 
 export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');
 
 export interface ILanguageServerDownloader {
-  getDownloadUri(): Promise<string>;
+  getDownloadInfo(): Promise<NugetPackage>;
   downloadLanguageServer(context: IExtensionContext): Promise<void>;
 }
 

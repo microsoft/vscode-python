@@ -86,7 +86,7 @@ export class InterpreterHelper implements IInterpreterHelper {
                 return 'venv';
             }
             case InterpreterType.VirtualEnv: {
-                return 'virtualEnv';
+                return 'virtualenv';
             }
             default: {
                 return '';

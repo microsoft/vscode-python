@@ -3,14 +3,13 @@
 
 'use strict';
 
-// tslint:disable:no-suspicious-comment max-func-body-length no-invalid-this no-var-requires no-require-imports no-any
+// tslint:disable:no-suspicious-comment max-func-body-length no-invalid-this no-var-requires no-require-imports no-any no-object-literal-type-assertion no-banned-terms
 
 import { expect } from 'chai';
 import { ChildProcess, spawn } from 'child_process';
 import * as getFreePort from 'get-port';
 import { Socket } from 'net';
 import * as path from 'path';
-import { PassThrough } from 'stream';
 import { Message } from 'vscode-debugadapter/lib/messages';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
@@ -19,71 +18,79 @@ import { ProtocolParser } from '../../client/debugger/Common/protocolParser';
 import { ProtocolMessageWriter } from '../../client/debugger/Common/protocolWriter';
 import { PythonDebugger } from '../../client/debugger/mainV2';
 import { createDeferred, sleep } from '../../utils/async';
+import { noop } from '../../utils/misc';
 import { PYTHON_PATH } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 
-class Request extends Message implements DebugProtocol.InitializeRequest {
-    // tslint:disable-next-line:no-banned-terms
-    public arguments: any;
-    constructor(public command: string, args: any) {
-        super('request');
-        this.arguments = args;
-    }
-}
+const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd-nowait.py');
 
-const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd.py');
-
-suite('Debugging - Capabilities', () => {
+suite('Debugging - Capabilities', function () {
+    this.timeout(30000);
     let disposables: { dispose?: Function; destroy?: Function }[];
     let proc: ChildProcess;
-    setup(async function () {
-        this.skip();
-        return;
-
+    setup(function () {
+        return this.skip();
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
-        this.timeout(30000);
         disposables = [];
     });
     teardown(() => {
         disposables.forEach(disposable => {
             try {
                 disposable.dispose!();
-                // tslint:disable-next-line:no-empty
-            } catch { }
+            } catch {
+                noop();
+            }
             try {
                 disposable.destroy!();
-                // tslint:disable-next-line:no-empty
-            } catch { }
+            } catch {
+                noop();
+            }
         });
         try {
             proc.kill();
-            // tslint:disable-next-line:no-empty
-        } catch { }
+        } catch {
+            noop();
+        }
     });
+    function createRequest(cmd: string, requestArgs: any) {
+        return new class extends Message implements DebugProtocol.InitializeRequest {
+            public arguments: any;
+            constructor(public command: string, args: any) {
+                super('request');
+                this.arguments = args;
+            }
+        }(cmd, requestArgs);
+    }
+    function createDebugSession() {
+        return new class extends PythonDebugger {
+            constructor() {
+                super({} as any);
+            }
+
+            public getInitializeResponseFromDebugAdapter() {
+                let initializeResponse = {
+                    body: {}
+                } as DebugProtocol.InitializeResponse;
+                this.sendResponse = resp => initializeResponse = resp;
+
+                this.initializeRequest(initializeResponse, { supportsRunInTerminalRequest: true, adapterID: '' });
+                return initializeResponse;
+            }
+        }();
+    }
     test('Compare capabilities', async () => {
+        const customDebugger = createDebugSession();
+        const expectedResponse = customDebugger.getInitializeResponseFromDebugAdapter();
+
         const protocolWriter = new ProtocolMessageWriter();
-        const initializeRequest: DebugProtocol.InitializeRequest = new Request('initialize', { pathFormat: 'path' });
-
-        const debugClient = new PythonDebugger(undefined as any);
-        const inStream = new PassThrough();
-        const outStream = new PassThrough();
-        disposables.push(inStream);
-        disposables.push(outStream);
-        debugClient.start(inStream, outStream);
-        const debugClientProtocolParser = new ProtocolParser();
-        debugClientProtocolParser.connect(outStream);
-        disposables.push(debugClientProtocolParser);
-        const expectedResponsePromise = new Promise<DebugProtocol.InitializeResponse>(resolve => debugClientProtocolParser.once('response_initialize', resolve));
-        protocolWriter.write(inStream, initializeRequest);
-        const expectedResponse = await expectedResponsePromise;
-
+        const initializeRequest: DebugProtocol.InitializeRequest = createRequest('initialize', { pathFormat: 'path' });
         const host = 'localhost';
         const port = await getFreePort({ host, port: 3000 });
         const env = { ...process.env };
         env.PYTHONPATH = PTVSD_PATH;
-        proc = spawn(PYTHON_PATH, ['-m', 'ptvsd', '--server', '--port', `${port}`, '--file', fileToDebug], { cwd: path.dirname(fileToDebug), env });
+        proc = spawn(PYTHON_PATH, ['-m', 'ptvsd', '--server', '--wait', '--port', `${port}`, '--file', fileToDebug], { cwd: path.dirname(fileToDebug), env });
         await sleep(3000);
 
         const connected = createDeferred();
@@ -95,8 +102,28 @@ suite('Debugging - Capabilities', () => {
         protocolParser.connect(socket!);
         disposables.push(protocolParser);
         const actualResponsePromise = new Promise<DebugProtocol.InitializeResponse>(resolve => protocolParser.once('response_initialize', resolve));
-        protocolWriter.write(socket!, initializeRequest);
+        protocolWriter.write(socket, initializeRequest);
         const actualResponse = await actualResponsePromise;
+
+        const attachRequest: DebugProtocol.AttachRequest = createRequest('attach', {
+            name: 'attach',
+            request: 'attach',
+            type: 'python',
+            port: port,
+            host: 'localhost',
+            logToFile: false,
+            debugOptions: []
+        });
+        const attached = new Promise(resolve => protocolParser.once('response_attach', resolve));
+        protocolWriter.write(socket, attachRequest);
+        await attached;
+
+        const configRequest: DebugProtocol.ConfigurationDoneRequest = createRequest('configurationDone', {});
+        const configured = new Promise(resolve => protocolParser.once('response_configurationDone', resolve));
+        protocolWriter.write(socket, configRequest);
+        await configured;
+
+        protocolParser.dispose();
 
         // supportsDebuggerProperties is not documented, most probably a VS specific item.
         const body: any = actualResponse.body;

@@ -72,9 +72,9 @@ def install_ptvsd(checkout):
 
 def cleanup(checkout):
     """Delete files downloaded by the extension."""
-    pls_path = checkout / "languageServer"
-    if pls_path.exists():
-        shutil.rmtree(pls_path)
+    for path in checkout.glob("languageServer*"):
+        if path.is_dir():
+            shutil.rmtree(path)
 
 
 def build(checkout):

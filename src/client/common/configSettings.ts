@@ -3,7 +3,10 @@
 import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
 import * as path from 'path';
-import { ConfigurationTarget, DiagnosticSeverity, Disposable, Uri, workspace } from 'vscode';
+import {
+    ConfigurationTarget, DiagnosticSeverity, Disposable, Uri,
+    workspace, WorkspaceConfiguration
+} from 'vscode';
 import { sendTelemetryEvent } from '../telemetry';
 import { COMPLETION_ADD_BRACKETS, FORMAT_ON_TYPE } from '../telemetry/constants';
 import { isTestExecution } from './constants';
@@ -54,18 +57,22 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     // tslint:disable-next-line:variable-name
     private _pythonPath = '';
 
-    constructor(workspaceFolder?: Uri) {
+    constructor(workspaceFolder?: Uri, initialize = true) {
         super();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : Uri.file(__dirname);
-        this.disposables.push(workspace.onDidChangeConfiguration(() => {
-            this.initializeSettings();
+        if (initialize) {
+            this.disposables.push(workspace.onDidChangeConfiguration(() => {
+                const currentConfig = workspace.getConfiguration('python', this.workspaceRoot);
+                this.update(currentConfig);
 
-            // If workspace config changes, then we could have a cascading effect of on change events.
-            // Let's defer the change notification.
-            setTimeout(() => this.emit('change'), 1);
-        }));
+                // If workspace config changes, then we could have a cascading effect of on change events.
+                // Let's defer the change notification.
+                setTimeout(() => this.emit('change'), 1);
+            }));
 
-        this.initializeSettings();
+            const initialConfig = workspace.getConfiguration('python', this.workspaceRoot);
+            this.update(initialConfig);
+        }
     }
     // tslint:disable-next-line:function-name
     public static getInstance(resource?: Uri): PythonSettings {
@@ -111,10 +118,9 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.disposables = [];
     }
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
-    private initializeSettings() {
+    public update(pythonSettings: WorkspaceConfiguration) {
         const workspaceRoot = this.workspaceRoot.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(this.workspaceRoot ? this.workspaceRoot.fsPath : undefined);
-        const pythonSettings = workspace.getConfiguration('python', this.workspaceRoot);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
@@ -122,6 +128,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
+        this.condaPath = systemVariables.resolveAny(pythonSettings.get<string>('condaPath'))!;
 
         this.downloadLanguageServer = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadLanguageServer', true))!;
         this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;
@@ -245,7 +252,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.autoComplete = this.autoComplete ? this.autoComplete : {
             extraPaths: [],
             addBrackets: false,
-            preloadModules: [],
             showAdvancedMembers: false,
             typeshedPaths: []
         };

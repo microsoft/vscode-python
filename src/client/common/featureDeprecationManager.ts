@@ -24,6 +24,12 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
         message: 'The setting \'python.linting.lintOnTextChange\' is deprecated, please enable \'python.linting.lintOnSave\' and \'files.autoSave\'.',
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/313',
         setting: { setting: 'linting.lintOnTextChange', values: ['true', true] }
+    },
+    {
+        doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES',
+        message: 'The setting \'python.autoComplete.preloadModules\' is deprecated, please consider using the new Language Server (\'python.jediEnabled = false\').',
+        moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/1704',
+        setting: { setting: 'autoComplete.preloadModules' }
     }
 ];
 
@@ -56,7 +62,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         }
     }
 
-    private async notifyDeprecation(deprecatedInfo: DeprecatedFeatureInfo): Promise<void> {
+    public async notifyDeprecation(deprecatedInfo: DeprecatedFeatureInfo): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(deprecatedInfo.doNotDisplayPromptStateKey, true);
         if (!notificationPromptEnabled.value) {
             return;
@@ -83,7 +89,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         return;
     }
 
-    private checkAndNotifyDeprecatedSetting(deprecatedInfo: DeprecatedFeatureInfo) {
+    public checkAndNotifyDeprecatedSetting(deprecatedInfo: DeprecatedFeatureInfo) {
         let notify = false;
         if (Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders.length > 0) {
             this.workspace.workspaceFolders.forEach(workspaceFolder => {
@@ -102,11 +108,26 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         }
     }
 
-    private isDeprecatedSettingAndValueUsed(pythonConfig: WorkspaceConfiguration, deprecatedSetting: DeprecatedSettingAndValue) {
+    public isDeprecatedSettingAndValueUsed(pythonConfig: WorkspaceConfiguration, deprecatedSetting: DeprecatedSettingAndValue) {
         if (!pythonConfig.has(deprecatedSetting.setting)) {
             return false;
         }
+        const configValue = pythonConfig.get(deprecatedSetting.setting);
         if (!Array.isArray(deprecatedSetting.values) || deprecatedSetting.values.length === 0) {
+            if (Array.isArray(configValue)) {
+                return configValue.length > 0;
+            }
+            return true;
+        }
+        if (!Array.isArray(deprecatedSetting.values) || deprecatedSetting.values.length === 0) {
+            if (configValue === undefined) {
+                return false;
+            }
+            if (Array.isArray(configValue)) {
+                // tslint:disable-next-line:no-any
+                return (configValue as any[]).length > 0;
+            }
+            // If we have a value in the setting, then return.
             return true;
         }
         return deprecatedSetting.values.indexOf(pythonConfig.get(deprecatedSetting.setting)!) >= 0;

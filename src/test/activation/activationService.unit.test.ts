@@ -5,14 +5,25 @@
 
 // tslint:disable:max-func-body-length
 
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationChangeEvent, Disposable } from 'vscode';
 import { ExtensionActivationService } from '../../client/activation/activationService';
-import { ExtensionActivators, IExtensionActivationService, IExtensionActivator } from '../../client/activation/types';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
+import {
+    ExtensionActivators, FolderVersionPair,
+    IExtensionActivationService, IExtensionActivator,
+    ILanguageServerFolderService
+} from '../../client/activation/types';
+import {
+    IApplicationShell, ICommandManager,
+    IWorkspaceService
+} from '../../client/common/application/types';
 import { isLanguageServerTest } from '../../client/common/constants';
 import { IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../../client/common/types';
+import {
+    IConfigurationService, IDisposableRegistry,
+    IOutputChannel, IPythonSettings
+} from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { Info as PlatformInfo } from '../../utils/platform';
 import * as testOSInfos from '../utils/platform.unit.test';
@@ -38,10 +49,16 @@ suite('Activation - ActivationService', () => {
                 platformService = TypeMoq.Mock.ofType<IPlatformService>();
                 const configService = TypeMoq.Mock.ofType<IConfigurationService>();
                 pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+                const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
+                const folderVer: FolderVersionPair = {
+                    path: '',
+                    version: new SemVer('1.2.3')
+                };
 
                 workspaceService.setup(w => w.hasWorkspaceFolders).returns(() => false);
                 workspaceService.setup(w => w.workspaceFolders).returns(() => []);
                 configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+                langFolderServiceMock.setup(l => l.getCurrentLanguageServerDirectory()).returns(() => Promise.resolve(folderVer));
 
                 const output = TypeMoq.Mock.ofType<IOutputChannel>();
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny())).returns(() => output.object);
@@ -51,6 +68,7 @@ suite('Activation - ActivationService', () => {
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICommandManager))).returns(() => cmdManager.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService))).returns(() => langFolderServiceMock.object);
             });
 
             async function testActivation(activationService: IExtensionActivationService, activator: TypeMoq.IMock<IExtensionActivator>, lsSupported: boolean = true) {
@@ -81,8 +99,8 @@ suite('Activation - ActivationService', () => {
                 ['ubuntu 14.04', testOSInfos.UBUNTU_PRECISE],
                 ['fedora 24', testOSInfos.FEDORA],
                 ['arch', testOSInfos.ARCH]
-             ];
-             for (const [osID, info] of supportedTests) {
+            ];
+            for (const [osID, info] of supportedTests) {
                 test(`LS is supported (${osID})`, async () => {
                     pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                     platformService.setup(p => p.info).returns(() => info);

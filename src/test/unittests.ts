@@ -16,6 +16,8 @@ import { MOCHA_CI_REPORTER_ID, MOCHA_CI_REPORTFILE,
     MOCHA_REPORTER_JUNIT } from './ciConstants';
 import * as vscodeMoscks from './vscode-mock';
 
+process.env.VSC_PYTHON_CI_TEST = '1';
+
 export function runTests(testOptions?: { grep?: string; timeout?: number }) {
     vscodeMoscks.initialize();
 

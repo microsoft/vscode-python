@@ -718,15 +718,6 @@
                     "description": "List of paths to libraries and the like that need to be imported by auto complete engine. E.g. when using Google App SDK, the paths are not in system path, hence need to be added into this list.",
                     "scope": "resource"
                 },
-                "python.autoComplete.preloadModules": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "default": [],
-                    "description": "Comma delimited list of modules preloaded to speed up Auto Complete (e.g. add Numpy, Pandas, etc, items slow to load when autocompleting).",
-                    "scope": "resource"
-                },
                 "python.autoComplete.showAdvancedMembers": {
                     "type": "boolean",
                     "default": true,
@@ -741,6 +732,12 @@
                     "default": [],
                     "description": "Specifies paths to local typeshed repository clone(s) for the Python language server.",
                     "scope": "resource"
+                },
+                "python.autoUpdateLanguageServer": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically update the language server.",
+                    "scope": "application"
                 },
                 "python.disableInstallationCheck": {
                     "type": "boolean",

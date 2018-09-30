@@ -75,12 +75,12 @@ suite('Python Path Settings Updater', () => {
             await updater.updatePythonPath(pythonPath);
             workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder)), TypeMoq.Times.once());
         });
-        test('Python Path should be updated with ${workspaceFolder} for relative paths', async () => {
+        test('Python Path should be truncated for worspace-relative paths', async () => {
             const workspaceFolderPath = path.join('user', 'desktop', 'development');
             const workspaceFolder = Uri.file(workspaceFolderPath);
             const updater = updaterServiceFactory.getWorkspaceFolderPythonPathConfigurationService(workspaceFolder);
             const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
-            const expectedPythonPath = path.join('${workspaceFolder}', 'env', 'bin', 'python');
+            const expectedPythonPath = path.join('env', 'bin', 'python');
             const workspaceConfig = setupConfigProvider(workspaceFolder);
             workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
@@ -115,12 +115,12 @@ suite('Python Path Settings Updater', () => {
             await updater.updatePythonPath(pythonPath);
             workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(false)), TypeMoq.Times.once());
         });
-        test('Python Path should be updated with ${workspaceFolder} for relative paths', async () => {
+        test('Python Path should be truncated for workspace-relative paths', async () => {
             const workspaceFolderPath = path.join('user', 'desktop', 'development');
             const workspaceFolder = Uri.file(workspaceFolderPath);
             const updater = updaterServiceFactory.getWorkspacePythonPathConfigurationService(workspaceFolder);
             const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
-            const expectedPythonPath = path.join('${workspaceFolder}', 'env', 'bin', 'python');
+            const expectedPythonPath = path.join('env', 'bin', 'python');
             const workspaceConfig = setupConfigProvider(workspaceFolder);
             workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 

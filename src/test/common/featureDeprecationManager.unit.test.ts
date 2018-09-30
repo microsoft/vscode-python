@@ -3,6 +3,9 @@
 
 'use strict';
 
+// tslint:disable:max-func-body-length no-any
+
+import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Disposable, WorkspaceConfiguration } from 'vscode';
 import {
@@ -12,7 +15,7 @@ import {
     FeatureDeprecationManager
 } from '../../client/common/featureDeprecationManager';
 import {
-    IPersistentState, IPersistentStateFactory
+    DeprecatedSettingAndValue, IPersistentState, IPersistentStateFactory
 } from '../../client/common/types';
 
 suite('Feature Deprecation Manager Tests', () => {
@@ -65,5 +68,69 @@ suite('Feature Deprecation Manager Tests', () => {
             popupMgr.object);
 
         featureDepMgr.initialize();
+    });
+    test('Ensure setting is checked', () => {
+        const pythonConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        const deprecatedSetting: DeprecatedSettingAndValue = { setting: 'autoComplete.preloadModules' };
+        // tslint:disable-next-line:no-any
+        const _ = {} as any;
+        const featureDepMgr = new FeatureDeprecationManager(_, _, _, _);
+
+        pythonConfig
+            .setup(p => p.has(TypeMoq.It.isValue(deprecatedSetting.setting)))
+            .returns(() => false)
+            .verifiable(TypeMoq.Times.atLeastOnce());
+
+        let isUsed = featureDepMgr.isDeprecatedSettingAndValueUsed(pythonConfig.object, deprecatedSetting);
+        pythonConfig.verifyAll();
+        expect(isUsed).to.be.equal(false, 'Setting should not be used');
+
+        type TestConfigs = { valueInSetting: any; expectedValue: boolean; valuesToLookFor?: any[] };
+        let testConfigs: TestConfigs[] = [
+            { valueInSetting: [], expectedValue: false },
+            { valueInSetting: ['1'], expectedValue: true },
+            { valueInSetting: [1], expectedValue: true },
+            { valueInSetting: [{}], expectedValue: true }
+        ];
+
+        for (const config of testConfigs) {
+            pythonConfig.reset();
+            pythonConfig
+                .setup(p => p.has(TypeMoq.It.isValue(deprecatedSetting.setting)))
+                .returns(() => true)
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            pythonConfig
+                .setup(p => p.get(TypeMoq.It.isValue(deprecatedSetting.setting)))
+                .returns(() => config.valueInSetting);
+
+            isUsed = featureDepMgr.isDeprecatedSettingAndValueUsed(pythonConfig.object, deprecatedSetting);
+
+            pythonConfig.verifyAll();
+            expect(isUsed).to.be.equal(config.expectedValue, `Failed for config = ${JSON.stringify(config)}`);
+        }
+
+        testConfigs = [
+            { valueInSetting: 'true', expectedValue: true, valuesToLookFor: ['true', true] },
+            { valueInSetting: true, expectedValue: true, valuesToLookFor: ['true', true] },
+            { valueInSetting: 'false', expectedValue: true, valuesToLookFor: ['false', false] },
+            { valueInSetting: false, expectedValue: true, valuesToLookFor: ['false', false] }
+        ];
+
+        for (const config of testConfigs) {
+            pythonConfig.reset();
+            pythonConfig
+                .setup(p => p.has(TypeMoq.It.isValue(deprecatedSetting.setting)))
+                .returns(() => true)
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            pythonConfig
+                .setup(p => p.get(TypeMoq.It.isValue(deprecatedSetting.setting)))
+                .returns(() => config.valueInSetting);
+
+            deprecatedSetting.values = config.valuesToLookFor;
+            isUsed = featureDepMgr.isDeprecatedSettingAndValueUsed(pythonConfig.object, deprecatedSetting);
+
+            pythonConfig.verifyAll();
+            expect(isUsed).to.be.equal(config.expectedValue, `Failed for config = ${JSON.stringify(config)}`);
+        }
     });
 });

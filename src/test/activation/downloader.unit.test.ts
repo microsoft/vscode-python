@@ -5,7 +5,7 @@
 
 // tslint:disable:no-any
 
-import * as assert from 'assert';
+import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { LanguageServerDownloader } from '../../client/activation/downloader';
 import { PlatformData } from '../../client/activation/platformData';
@@ -35,14 +35,15 @@ suite('Activation - Downloader', () => {
     });
 
     test('Get download uri', async () => {
+        const pkg = { uri: 'xyz' } as any;
         folderService
             .setup(f => f.getLatestLanguageServerVersion())
-            .returns(() => Promise.resolve({ uri: 'xyz' } as any))
+            .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
-        const link = await languageServerDownloader.getDownloadUri();
+        const info = await languageServerDownloader.getDownloadInfo();
 
         folderService.verifyAll();
-        assert.equal(link, 'xyz');
+        expect(info).to.deep.equal(pkg);
     });
 });

@@ -586,7 +586,7 @@ suite('Interpreters service', () => {
                                             interpreterInfo.envName = pipEnvName;
                                         }
                                         if (interpreterInfo.envName && interpreterInfo.envName.length > 0) {
-                                            envSuffixParts.push(interpreterInfo.envName);
+                                            envSuffixParts.push(`'${interpreterInfo.envName}'`);
                                         }
                                         if (interpreterInfo.type) {
                                             envSuffixParts.push(`${interpreterType!.name}_display`);

@@ -5,7 +5,7 @@ import { IServiceContainer } from '../ioc/types';
 import { BaseLinter } from './baseLinter';
 import { ILintMessage } from './types';
 
-const REGEX = '(?<file>.py):(?<line>\\d+): (?<type>\\w+): (?<message>.*)\\r?(\\n|$)';
+const REGEX = '(?<file>.+):(?<line>\\d+): (?<type>\\w+): (?<message>.*)\\r?(\\n|$)';
 
 export class MyPy extends BaseLinter {
     constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {

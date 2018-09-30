@@ -2,10 +2,14 @@
 // Licensed under the MIT License.
 
 import { StopWatch } from '../../utils/stopWatch';
+import { isTestExecution } from '../common/constants';
 import { getTelemetryReporter } from './telemetry';
 import { TelemetryProperties } from './types';
 
 export function sendTelemetryEvent(eventName: string, durationMs?: number, properties?: TelemetryProperties) {
+    if (isTestExecution()) {
+        return;
+    }
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : undefined;
 

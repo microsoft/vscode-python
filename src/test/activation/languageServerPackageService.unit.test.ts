@@ -28,6 +28,7 @@ suite('Language Server Package Service', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platform.object);
 
         lsPackageService = new LanguageServerPackageService(serviceContainer.object);
+        lsPackageService.getLanguageServerDownloadChannel = () => 'stable';
     });
     [true, false].forEach(is64Bit => {
         const bitness = is64Bit ? '64bit' : '32bit';
@@ -82,7 +83,7 @@ suite('Language Server Package Service', () => {
         const expectedPackage = packages[1];
         const repo = typeMoq.Mock.ofType<INugetRepository>();
         const nuget = typeMoq.Mock.ofType<INugetService>();
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => repo.object);
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny())).returns(() => repo.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget.object);
 
         repo
@@ -113,7 +114,7 @@ suite('Language Server Package Service', () => {
         const expectedPackage = packages[0];
         const repo = typeMoq.Mock.ofType<INugetRepository>();
         const nuget = new NugetService();
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => repo.object);
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny())).returns(() => repo.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget);
 
         repo
