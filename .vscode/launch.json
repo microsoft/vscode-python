@@ -12,26 +12,6 @@
             ]
         },
         {
-            "name": "(gdb) Launch",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "enter program name, for example ${workspaceFolder}/a.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": true,
-            "MIMode": "gdb",
-            "miDebuggerPath": "/path/to/gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        },
-        {
             "name": "Extension",
             "type": "extensionHost",
             "request": "launch",
@@ -166,7 +146,7 @@
             "sourceMaps": true,
             "args": [
                 "timeout=60000",
-                "grep=localize"
+                "grep="
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
