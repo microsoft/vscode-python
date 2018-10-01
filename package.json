@@ -1578,7 +1578,7 @@
         "vscode-languageclient": "4.4.0",
         "vscode-languageserver": "4.4.0",
         "vscode-languageserver-protocol": "3.10.3",
-        "vscode-nls": "^4.0.0",
+        "vscode-nls": "4.0.0",
         "winreg": "1.2.4",
         "xml2js": "0.4.19"
     },
