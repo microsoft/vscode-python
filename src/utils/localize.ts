@@ -54,6 +54,7 @@ function load() {
 
 export const ILocalizationService = Symbol('ILocalizationService');
 export interface ILocalizationService {
+    initialize() : void;
 }
 
 // Special class that extension loads to listen for locale changes.
@@ -66,8 +67,11 @@ export class LocalizationService {
     {
         this.workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        this.disposableRegistry.push(this.workspace.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
 
+    }
+
+    public initialize() {
+        this.disposableRegistry.push(this.workspace.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
 
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {

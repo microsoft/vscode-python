@@ -95,7 +95,8 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     await activationService.activate();
 
     // Setup up the localization service
-    serviceManager.get<ILocalizationService>(ILocalizationService);
+    const locService = serviceManager.get<ILocalizationService>(ILocalizationService);
+    locService.initialize();
 
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();

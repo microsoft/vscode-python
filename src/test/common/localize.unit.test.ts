@@ -34,7 +34,8 @@ suite('localize tests', () => {
         ioc.serviceManager.addSingleton<localize.ILocalizationService>(localize.ILocalizationService, localize.LocalizationService);
 
         // Create the actual loc service who should listen to workspace config change events
-        ioc.serviceContainer.get<localize.ILocalizationService>(localize.ILocalizationService);
+        const locService = ioc.serviceContainer.get<localize.ILocalizationService>(localize.ILocalizationService);
+        locService.initialize();
     }
     test('keys', done => {
         const val = localize.LanguageServiceSurveyBanner.bannerMessage;
