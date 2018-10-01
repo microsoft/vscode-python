@@ -11,7 +11,7 @@ import {
     ExtensionActivationService
 } from '../../client/activation/activationService';
 import {
-    FolderVersionPair, IExtensionActivator, ILanguageServerFolderService
+    IExtensionActivator, ILanguageServerFolderService
 } from '../../client/activation/types';
 import {
     IApplicationShell, IWorkspaceService
@@ -93,48 +93,6 @@ suite('ActivationService - Microsoft Python language service', () => {
 
         return [serviceContainerMock, langFolderServiceMock, outputMock, loggerMock];
     }
-
-    test('MPLS issues the version correctly when it is present', async () => {
-        // Set expectations:
-        const testVer: string = '1.2.3';
-        const testSemVer: SemVer = new SemVer(testVer);
-        const expectedString: string = `Starting Microsoft Python language server (${testVer}).`;
-
-        // Arrange/setup mocks:
-        const [serviceContainerMock, langFolderServiceMock, outputMock] = setupMocks();
-        langFolderServiceMock.setup(lfsm => lfsm.getCurrentLanguageServerDirectory())
-            .returns(() => {
-                const mplsFolderVer: FolderVersionPair = {
-                    path: '',
-                    version: testSemVer
-                };
-                return Promise.resolve(mplsFolderVer);
-            });
-        outputMock.setup(om => om.appendLine(TypeMoq.It.isValue(expectedString)))
-            .verifiable(TypeMoq.Times.once());
-
-        // Verify: ensure we actually logged the expected line.
-        const activationServiceMock = new ExtensionActivationService(serviceContainerMock.object);
-        await activationServiceMock.activate();
-        outputMock.verifyAll();
-    });
-
-    test('MPLS issues no version correctly when it is not present', async () => {
-        // Set expectations:
-        const expectedString: string = 'Starting Microsoft Python language server.';
-
-        // Arrange/setup mocks:
-        const [serviceContainerMock, langFolderServiceMock, outputMock] = setupMocks();
-        langFolderServiceMock.setup(lfsm => lfsm.getCurrentLanguageServerDirectory())
-            .returns(() => Promise.resolve(undefined));
-        outputMock.setup(om => om.appendLine(TypeMoq.It.isValue(expectedString)))
-            .verifiable(TypeMoq.Times.once());
-
-        // Verify: ensure we actually logged the expected line.
-        const activationService = new ExtensionActivationService(serviceContainerMock.object);
-        await activationService.activate();
-        outputMock.verifyAll();
-    });
 
     test('Does not throw when errors occur getting the current MPLS version', async () => {
         // Set expectations:
