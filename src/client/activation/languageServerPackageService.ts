@@ -8,7 +8,7 @@ import { Architecture, OSType } from '../../utils/platform';
 import { log } from '../common/logger';
 import { INugetRepository, INugetService, NugetPackage } from '../common/nuget/types';
 import { IPlatformService } from '../common/platform/types';
-import { IConfigurationService } from '../common/types';
+import { IConfigurationService, LanguageServerDownloadChannels } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PlatformName } from './platformData';
 import { ILanguageServerPackageService } from './types';
@@ -60,7 +60,7 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
         return validPackages[validPackages.length - 1];
     }
 
-    public getLanguageServerDownloadChannel() {
+    public getLanguageServerDownloadChannel(): LanguageServerDownloadChannels {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settings = configService.getSettings();
         return settings.analysis.downloadChannel || DefaultLanguageServerDownloadChannel;

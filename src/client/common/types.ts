@@ -243,8 +243,9 @@ export interface ITerminalSettings {
     readonly activateEnvironment: boolean;
 }
 
+export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';
 export interface IAnalysisSettings {
-    readonly downloadChannel?: 'stable' | 'beta' | 'daily';
+    readonly downloadChannel?: LanguageServerDownloadChannels;
     readonly openFilesOnly: boolean;
     readonly typeshedPaths: string[];
     readonly errors: string[];

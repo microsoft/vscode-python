@@ -12,7 +12,7 @@ import { NugetPackage } from '../common/nuget/types';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { FolderVersionPair, ILanguageServerFolderService, ILanguageServerPackageService } from './types';
+import { FolderVersionPair, IDownloadChannelRule, ILanguageServerFolderService, ILanguageServerPackageService } from './types';
 
 const languageServerFolder = 'languageServer';
 
@@ -25,8 +25,8 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
         const currentFolder = await this.getCurrentLanguageServerDirectory();
         let serverVersion: NugetPackage | undefined;
 
-        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        if (currentFolder && !configService.getSettings().autoUpdateLanguageServer) {
+        const shouldLookForNewVersion = await this.shouldLookForNewLanguageServer(currentFolder);
+        if (currentFolder && !shouldLookForNewVersion) {
             return path.basename(currentFolder.path);
         }
 
@@ -45,7 +45,22 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
         return lsPackageService.getLatestNugetPackageVersion();
     }
+    public async shouldLookForNewLanguageServer(currentFolder?: FolderVersionPair): Promise<boolean> {
+        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const autoUpdateLanguageServer = configService.getSettings().autoUpdateLanguageServer;
+        const downloadLanguageServer = configService.getSettings().downloadLanguageServer;
+        if (currentFolder && (!autoUpdateLanguageServer || !downloadLanguageServer)) {
+            return false;
+        }
+        const downloadChannel = this.getDownloadChannel();
+        const rule = this.serviceContainer.get<IDownloadChannelRule>(IDownloadChannelRule, downloadChannel);
+        return rule.shouldLookForNewLanguageServer(currentFolder);
+    }
     public async getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined> {
+        const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        if (!configService.getSettings().downloadLanguageServer) {
+            return { path: languageServerFolder, version: new semver.SemVer('0.0.0') };
+        }
         const dirs = await this.getExistingLanguageServerDirectories();
         if (dirs.length === 0) {
             return;
@@ -64,5 +79,9 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
     public getFolderVersion(dirName: string): semver.SemVer {
         const suffix = dirName.substring(languageServerFolder.length + 1);
         return suffix.length === 0 ? new semver.SemVer('0.0.0') : (semver.parse(suffix, true) || new semver.SemVer('0.0.0'));
+    }
+    private getDownloadChannel() {
+        const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
+        return lsPackageService.getLanguageServerDownloadChannel();
     }
 }
