@@ -16,6 +16,9 @@ import { PythonReferenceProvider } from '../providers/referenceProvider';
 import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { JediSymbolProvider } from '../providers/symbolProvider';
+import { BlockFormatProviders } from '../typeFormatters/blockFormatProvider';
+import { OnTypeFormattingDispatcher } from '../typeFormatters/dispatcher';
+import { OnEnterFormatter } from '../typeFormatters/onEnterFormatter';
 import { IUnitTestManagementService } from '../unittests/types';
 import { WorkspaceSymbols } from '../workspaceSymbols/main';
 import { IExtensionActivator } from './types';
@@ -46,6 +49,15 @@ export class JediExtensionActivator implements IExtensionActivator {
         context.subscriptions.push(languages.registerReferenceProvider(this.documentSelector, new PythonReferenceProvider(jediFactory)));
         context.subscriptions.push(languages.registerCompletionItemProvider(this.documentSelector, new PythonCompletionItemProvider(jediFactory, this.serviceManager), '.'));
         context.subscriptions.push(languages.registerCodeLensProvider(this.documentSelector, this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)));
+
+        const onTypeDispatcher = new OnTypeFormattingDispatcher({
+            '\n': new OnEnterFormatter(),
+            ':': new BlockFormatProviders()
+        });
+        const onTypeTriggers = onTypeDispatcher.getTriggerCharacters();
+        if (onTypeTriggers) {
+            context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, onTypeDispatcher, onTypeTriggers.first, ...onTypeTriggers.more));
+        }
 
         const serviceContainer = this.serviceManager.get<IServiceContainer>(IServiceContainer);
         context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
