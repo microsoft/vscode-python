@@ -40,6 +40,8 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         }
 
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
+            // Note that on Windows we don't have to change anything
+            // for conda 4.4.0+ (i.e. "conda activate").
             switch (targetShell) {
                 case TerminalShellType.powershell:
                 case TerminalShellType.powershellCore:
