@@ -3,6 +3,35 @@
     "version": "0.1.0",
     "configurations": [
         {
+            "type": "node",
+            "request": "launch",
+            "name": "Gulp compile-nls",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "args": [
+                "compile-nls"
+            ]
+        },
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "enter program name, for example ${workspaceFolder}/a.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/path/to/gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
             "name": "Extension",
             "type": "extensionHost",
             "request": "launch",
@@ -137,12 +166,12 @@
             "sourceMaps": true,
             "args": [
                 "timeout=60000",
-                "grep="
+                "grep=localize"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile-nls"
         }
     ],
     "compounds": [

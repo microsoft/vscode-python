@@ -1519,8 +1519,10 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "gulp checkNativeDependencies && tsc -p ./",
+        "vscode:prepublish": "gulp prepublish",
+        "checknativedependencies": "gulp checkNativeDependencies",
         "compile": "tsc -watch -p ./",
+        "compile-nls": "gulp compile-nls",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "node ./out/test/unittests.js",
@@ -1623,6 +1625,7 @@
         "gulp-debounced-watch": "^1.0.4",
         "gulp-filter": "^5.1.0",
         "gulp-gitmodified": "^1.1.1",
+        "gulp-if": "^2.0.2",
         "gulp-inline-source": "^3.2.0",
         "gulp-json-editor": "^2.2.2",
         "gulp-sourcemaps": "^2.6.4",
@@ -1637,6 +1640,7 @@
         "relative": "^3.0.2",
         "remap-istanbul": "^0.10.1",
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
+        "run-sequence": "^2.2.1",
         "shortid": "^2.2.8",
         "sinon": "^4.4.5",
         "tslint": "^5.9.1",
@@ -1647,7 +1651,8 @@
         "typescript-formatter": "^7.1.0",
         "uuid": "^3.2.1",
         "vscode": "^1.1.21",
-        "vscode-debugadapter-testsupport": "^1.27.0"
+        "vscode-debugadapter-testsupport": "^1.27.0",
+        "vscode-nls-dev": "^3.2.2"
     },
     "__metadata": {
         "id": "f1f59ae4-9318-4f3c-a9b5-81b2eaa5f8a5",

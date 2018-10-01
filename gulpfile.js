@@ -33,6 +33,30 @@ const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
+const nls = require('vscode-nls-dev');
+const runSequence = require('run-sequence');
+const typescript = require('typescript');
+const gulpIf = require('gulp-if');
+
+const languages = [
+    { folderName: 'de', id: 'de' }, 
+    { folderName: 'es', id: 'es' },
+    { folderName: 'fr', id: 'fr' }, 
+    { folderName: 'it', id: 'it' }, 
+    { folderName: 'ja', id: 'ja' }, 
+    { folderName: 'ko-kr', id: 'ko-kr' }, 
+    { folderName: 'pt-br', id: 'pt-br' }, 
+    { folderName: 'ru', id: 'ru' }, 
+    { folderName: 'zh-cn', id: 'zh-cn' }, 
+    { folderName: 'zh-tw', id: 'zh-tw' }, 
+];
+
+const tsProject = ts.createProject('./tsconfig.json', { typescript });
+
+// Options for controlling compile step
+const inlineMap = true;
+const inlineSource = false;
+const outDest = './out';
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -81,7 +105,7 @@ const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n
 
 gulp.task('hygiene', () => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }));
 
-gulp.task('compile', () => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }));
+gulp.task('hygiene-compile', () => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }));
 
 gulp.task('watch', ['hygiene-modified', 'hygiene-watch']);
 
@@ -116,7 +140,7 @@ gulp.task('cover:enable', () => {
             json.enabled = true;
             return json;
         }))
-        .pipe(gulp.dest("./out", { 'overwrite': true }));
+        .pipe(gulp.dest(outDest, { 'overwrite': true }));
 });
 
 gulp.task('cover:disable', () => {
@@ -125,7 +149,7 @@ gulp.task('cover:disable', () => {
             json.enabled = false;
             return json;
         }))
-        .pipe(gulp.dest("./out", { 'overwrite': true }));
+        .pipe(gulp.dest(outDest, { 'overwrite': true }));
 });
 
 /**
@@ -137,6 +161,57 @@ gulp.task('inlinesource', () => {
                 .pipe(inlinesource({attribute: false}))
                 .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
+
+gulp.task('prepublish', function(callback) {
+	runSequence('checkNativeDependencies', 'compile-nls', callback);
+});
+
+gulp.task('compile', function() {
+	return compile(false, );
+});
+
+gulp.task('compile-nls', function() {
+	return compile(true);
+});
+
+gulp.task('add-i18n', function() {
+	return gulp.src(['package.nls.json'])
+		.pipe(nls.createAdditionalLanguageFiles(languages, 'i18n'))
+		.pipe(gulp.dest('.'));
+});
+
+//---- internal
+
+function isLocalizable(file) {
+    if (this) {
+        var basename = path.basename(file.relative);
+
+        // There's only one localizable output.
+        return basename.match(/.*localize.*/)
+    }
+    return false;
+}
+
+function compile(buildNls) {
+	var r = tsProject.src()
+		.pipe(sourcemaps.init())
+        .pipe(tsProject()).js
+		.pipe(gulpIf(isLocalizable.bind(buildNls), nls.rewriteLocalizeCalls()))
+		.pipe(gulpIf(isLocalizable.bind(buildNls), nls.createAdditionalLanguageFiles(languages, 'i18n', 'out')));
+
+	if (inlineMap && inlineSource) {
+		r = r.pipe(sourcemaps.write());
+	} else {
+		r = r.pipe(sourcemaps.write(outDest, {
+			// no inlined source
+			includeContent: inlineSource,
+			// Return relative source map root directories per file.
+			sourceRoot: "./src"
+		}));
+	}
+
+	return r.pipe(gulp.dest(outDest));
+}
 
 function hasNativeDependencies() {
     let nativeDependencies = nativeDependencyChecker.check(path.join(__dirname, 'node_modules'));
@@ -370,7 +445,7 @@ const hygiene = (options) => {
     }
 
     const files = options.mode === 'compile' ? tsProject.src() : getFilesToProcess(fileListToProcess);
-    const dest = options.mode === 'compile' ? './out' : '.';
+    const dest = options.mode === 'compile' ? outDest : '.';
     let result = files
         .pipe(filter(f => f && f.stat && !f.stat.isDirectory()));
 
