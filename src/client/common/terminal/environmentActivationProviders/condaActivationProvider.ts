@@ -113,7 +113,11 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         // we accommodate the two ways distinctly.
         if (version === '4.4.0' || compareVersion(version, '4.4.0') > 0) {
             // Note that this requires the user to have already followed
-            // the conda instructions such that "conda" is on their $PATH.
+            // the conda instructions such that "conda" is on their
+            // $PATH.  While we *could* use "source <abs-path-to-activate>"
+            // (after resolving the absolute path to the "activate"
+            // script), we're going to avoid operating contrary to
+            // conda's recommendations.
             return [
                 `${conda.fileToCommandArgument()} activate ${envName.toCommandArgument()}`
             ];
