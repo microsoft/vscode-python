@@ -94,10 +94,6 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     const activationService = serviceContainer.get<IExtensionActivationService>(IExtensionActivationService);
     await activationService.activate();
 
-    // Setup up the localization service
-    const locService = serviceManager.get<ILocalizationService>(ILocalizationService);
-    locService.initialize();
-
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();
 
@@ -204,6 +200,10 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
 }
 
 function initializeServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
+    // Setup up the localization service
+    const locService = serviceManager.get<ILocalizationService>(ILocalizationService);
+    locService.initialize();
+
     const selector = serviceContainer.get<IInterpreterSelector>(IInterpreterSelector);
     selector.initialize();
     context.subscriptions.push(selector);
