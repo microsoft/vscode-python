@@ -140,7 +140,7 @@ gulp.task('cover:enable', () => {
             json.enabled = true;
             return json;
         }))
-        .pipe(gulp.dest(outDest, { 'overwrite': true }));
+        .pipe(gulp.dest('./out', { 'overwrite': true }));
 });
 
 gulp.task('cover:disable', () => {
@@ -149,7 +149,7 @@ gulp.task('cover:disable', () => {
             json.enabled = false;
             return json;
         }))
-        .pipe(gulp.dest(outDest, { 'overwrite': true }));
+        .pipe(gulp.dest('./out', { 'overwrite': true }));
 });
 
 /**
@@ -202,7 +202,7 @@ function compile(buildNls) {
 	if (inlineMap && inlineSource) {
 		r = r.pipe(sourcemaps.write());
 	} else {
-		r = r.pipe(sourcemaps.write(outDest, {
+		r = r.pipe(sourcemaps.write("./", {
 			// no inlined source
 			includeContent: inlineSource,
 			// Return relative source map root directories per file.
@@ -445,7 +445,7 @@ const hygiene = (options) => {
     }
 
     const files = options.mode === 'compile' ? tsProject.src() : getFilesToProcess(fileListToProcess);
-    const dest = options.mode === 'compile' ? outDest : '.';
+    const dest = options.mode === 'compile' ? './out' : '.';
     let result = files
         .pipe(filter(f => f && f.stat && !f.stat.isDirectory()));
 
