@@ -22,6 +22,7 @@ suite('Linting - MyPy', () => {
         const lines = output.split('\n');
         const tests: [string, ILintMessage][] = [
             [lines[1], {
+                code: undefined,
                 message: 'Incompatible types in assignment (expression has type "str", variable has type "int")',
                 column: 0,
                 line: 10,
@@ -29,6 +30,7 @@ suite('Linting - MyPy', () => {
                 provider: 'mypy'
              } as ILintMessage],
             [lines[2], {
+                code: undefined,
                 message: 'Name \'not_declared_var\' is not defined',
                 column: 0,
                 line: 11,
