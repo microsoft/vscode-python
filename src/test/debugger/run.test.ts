@@ -86,7 +86,13 @@ suite('Run without Debugging', () => {
         ]);
     });
     test('Should kill python process when ending debug session', async function () {
-        return this.skip();
+        const skipped = true;
+        if (skipped) {
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Why was this skipped?  See gh-2308.
+            return this.skip();
+        }
+
         const processIdOutput = new Promise<number>(resolve => {
             debugClient.on('output', (event: DebugProtocol.OutputEvent) => {
                 if (event.event === 'output' && event.body.category === 'stdout') {

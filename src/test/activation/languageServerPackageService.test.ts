@@ -27,7 +27,13 @@ suite('Language Server Package Service', () => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
     });
     test('Ensure new Major versions of Language Server is accounted for (nuget)', async function () {
-        return this.skip();
+        const skipped = true;
+        if (skipped) {
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Why was this skipped?  See gh-2615.
+            return this.skip();
+        }
+
         const workSpaceService = typeMoq.Mock.ofType<IWorkspaceService>();
         const config = typeMoq.Mock.ofType<WorkspaceConfiguration>();
         config
