@@ -23,6 +23,7 @@
     "python.command.python.setLinter.title": "Select Linter",
     "python.command.python.enableLinting.title": "Enable Linting",
     "python.command.python.runLinting.title": "Run Linting",
+    "python.command.python.datascience.datascience.title": "Data Science Test Command",
     "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.standard.description": "Debug a Python Program with Standard Output",
     "python.snippet.launch.pyspark.label": "Python: PySpark",

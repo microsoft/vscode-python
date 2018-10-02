@@ -33,6 +33,11 @@ const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
+const webpack = require('webpack');
+const webpack_config = require('./webpack.default.config');
+const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages');
+const chalk = require('chalk');
+const printBuildError = require('react-dev-utils/printBuildError');
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -49,17 +54,18 @@ const all = [
 ];
 
 const tsFilter = [
-    'src/**/*.ts',
+    'src/**/*.ts*',
+    '!out/**/*'
 ];
 
 const indentationFilter = [
-    'src/**/*.ts',
+    'src/**/*.ts*',
     '!**/typings/**/*',
 ];
 
 const tslintFilter = [
-    'src/**/*.ts',
-    'test/**/*.ts',
+    'src/**/*.ts*',
+    'test/**/*.ts*',
     '!**/node_modules/**',
     '!out/**/*',
     '!images/**/*',
@@ -68,7 +74,8 @@ const tslintFilter = [
     '!resources/**/*',
     '!snippets/**/*',
     '!syntaxes/**/*',
-    '!**/typings/**/*'
+    '!**/typings/**/*',
+    '!**/*.d.ts'
 ];
 
 const copyrightHeader = [
@@ -137,6 +144,81 @@ gulp.task('inlinesource', () => {
                 .pipe(inlinesource({attribute: false}))
                 .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
+
+gulp.task('compile-webviews', () => {
+    // First copy the html files/css/svg/png files to the output folder
+    gulp.src('./src/**/*.{html,png,svg,css}')
+        .pipe(gulp.dest('./out'));
+
+    // Then run webpack on the output files
+    gulp.src('./out/**/index*.html')
+        .pipe(es.through(file => webify(file)));
+});
+
+const webify = (file)  => {
+    
+    // First check if we have an index.js. That's what we need to webify
+    const split = path.parse(file.path);
+    const js = path.join(split.dir, split.name + ".js");
+    if (fs.existsSync(js)) {
+        console.log('Webpacking ' + file.path);
+
+        // Replace the entry with our actual file
+        let config = Object.assign({}, webpack_config);
+        config.entry = js;
+
+        // Update the output path to be next to our bundle.js
+        config.output.path = split.dir;
+        config.plugins[0].options.template = file.path;
+
+        // Then spawn our webpack on the base name
+        let compiler = webpack(config);
+        return new Promise((resolve, reject) => {
+          compiler.run((err, stats) => {
+            if (err) {
+              return reject(err);
+            }
+            const messages = formatWebpackMessages(stats.toJson({}, true));
+            if (messages.errors.length) {
+              // Only keep the first error. Others are often indicative
+              // of the same problem, but confuse the reader with noise.
+              if (messages.errors.length > 1) {
+                messages.errors.length = 1;
+              }
+              return reject(new Error(messages.errors.join('\n\n')));
+            }
+            if (
+              process.env.CI &&
+              (typeof process.env.CI !== 'string' ||
+                process.env.CI.toLowerCase() !== 'false') &&
+              messages.warnings.length
+            ) {
+              console.log(
+                chalk.yellow(
+                  '\nTreating warnings as errors because process.env.CI = true.\n' +
+                    'Most CI servers set it automatically.\n'
+                )
+              );
+              return reject(new Error(messages.warnings.join('\n\n')));
+            }
+            return resolve({
+              stats,
+              warnings: messages.warnings,
+            });
+          });
+        }).then(
+            stats =>{
+                console.log(chalk.white('Finished ' + file.path + '.\n'));
+                printBuildError(stats.warnings);
+        }).catch(
+            err => {
+                console.log(chalk.red('Failed to compile.\n'));
+                printBuildError(err);
+                process.exit(1);
+              }
+        )  
+    }    
+}
 
 function hasNativeDependencies() {
     let nativeDependencies = nativeDependencyChecker.check(path.join(__dirname, 'node_modules'));

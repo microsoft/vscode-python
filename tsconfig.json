@@ -4,8 +4,9 @@
         "target": "es6",
         "outDir": "out",
         "lib": [
-            "es6"
+            "es6", "dom"
         ],
+        "jsx": "react",
         "sourceMap": true,
         "rootDir": "src",
         "experimentalDecorators": true,
