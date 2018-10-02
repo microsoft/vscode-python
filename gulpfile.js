@@ -33,6 +33,7 @@ const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
+/*
 const nls = require('vscode-nls-dev');
 const runSequence = require('run-sequence');
 const typescript = require('typescript');
@@ -57,6 +58,7 @@ const tsProject = ts.createProject('./tsconfig.json', { typescript });
 const inlineMap = true;
 const inlineSource = false;
 const outDest = './out';
+*/
 
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -140,7 +142,7 @@ gulp.task('cover:enable', () => {
             json.enabled = true;
             return json;
         }))
-        .pipe(gulp.dest('./out', { 'overwrite': true }));
+        .pipe(gulp.dest("./out", { 'overwrite': true }));
 });
 
 gulp.task('cover:disable', () => {
@@ -149,7 +151,7 @@ gulp.task('cover:disable', () => {
             json.enabled = false;
             return json;
         }))
-        .pipe(gulp.dest('./out', { 'overwrite': true }));
+        .pipe(gulp.dest("./out", { 'overwrite': true }));
 });
 
 /**
@@ -162,6 +164,7 @@ gulp.task('inlinesource', () => {
                 .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
 
+/*
 gulp.task('prepublish', function(callback) {
 	runSequence('checkNativeDependencies', 'compile', callback);
 });
@@ -179,6 +182,7 @@ gulp.task('add-i18n', function() {
 		.pipe(nls.createAdditionalLanguageFiles(languages, 'i18n'))
 		.pipe(gulp.dest('.'));
 });
+*/
 
 //---- internal
 
@@ -191,7 +195,7 @@ function isLocalizable(file) {
     }
     return false;
 }
-
+/*
 function compile(buildNls) {
 	var r = tsProject.src()
 		.pipe(sourcemaps.init())
@@ -212,6 +216,7 @@ function compile(buildNls) {
 
 	return r.pipe(gulp.dest(outDest));
 }
+*/
 
 function hasNativeDependencies() {
     let nativeDependencies = nativeDependencyChecker.check(path.join(__dirname, 'node_modules'));

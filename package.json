@@ -1519,10 +1519,8 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "gulp prepublish",
-        "checknativedependencies": "gulp checkNativeDependencies",
+        "vscode:prepublish": "gulp checkNativeDependencies && tsc -p ./",
         "compile": "tsc -watch -p ./",
-        "compile-nls": "gulp compile-nls",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "node ./out/test/unittests.js",
