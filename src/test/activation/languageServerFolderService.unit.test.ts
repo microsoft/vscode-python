@@ -120,25 +120,23 @@ suite('Language Server Folder Service', () => {
     test('Get latest language server folder name when remote version is greater', async () => {
         const pkg: NugetPackage = { package: 'abc', version: new SemVer('2.1.1'), uri: 'xyz' };
         const existingFolder = { path: path.join('1', '2', 'abc'), version: new SemVer('1.1.1') };
-        settings.setup(s => s.autoUpdateLanguageServer).returns(() => true).verifiable(typeMoq.Times.once());
+        lsFolderService.shouldLookForNewLanguageServer = () => Promise.resolve(true);
         lsFolderService.getCurrentLanguageServerDirectory = () => Promise.resolve(existingFolder);
         lsFolderService.getLatestLanguageServerVersion = () => Promise.resolve(pkg);
 
         const folderName = await lsFolderService.getLanguageServerFolderName();
 
-        settings.verifyAll();
         expect(folderName).to.be.equal(`${languageServerFolder}.2.1.1`);
     });
     test('Get local folder name when remote version is greater and auto download is disabled', async () => {
         const pkg: NugetPackage = { package: 'abc', version: new SemVer('2.1.1'), uri: 'xyz' };
         const existingFolder = { path: path.join('1', '2', 'abc'), version: new SemVer('1.1.1') };
-        settings.setup(s => s.autoUpdateLanguageServer).returns(() => false).verifiable(typeMoq.Times.once());
+        lsFolderService.shouldLookForNewLanguageServer = () => Promise.resolve(false);
         lsFolderService.getCurrentLanguageServerDirectory = () => Promise.resolve(existingFolder);
         lsFolderService.getLatestLanguageServerVersion = () => Promise.resolve(pkg);
 
         const folderName = await lsFolderService.getLanguageServerFolderName();
 
-        settings.verifyAll();
         expect(folderName).to.be.equal('abc');
     });
     test('Should not check on server if downloading is disabled', async () => {
@@ -162,7 +160,7 @@ suite('Language Server Folder Service', () => {
     test('Should not check on server if download rule does not require a download', async () => {
         downloadRule.reset();
         downloadRule
-            .setup(d => d.shouldLookForNewLanguageServer())
+            .setup(d => d.shouldLookForNewLanguageServer(typeMoq.It.isAny()))
             .returns(() => Promise.resolve(false))
             .verifiable(typeMoq.Times.once());
         const check = await lsFolderService.shouldLookForNewLanguageServer();
@@ -173,7 +171,7 @@ suite('Language Server Folder Service', () => {
     test('Should not check on server if download rule does require a download', async () => {
         downloadRule.reset();
         downloadRule
-            .setup(d => d.shouldLookForNewLanguageServer())
+            .setup(d => d.shouldLookForNewLanguageServer(typeMoq.It.isAny()))
             .returns(() => Promise.resolve(true))
             .verifiable(typeMoq.Times.once());
         const check = await lsFolderService.shouldLookForNewLanguageServer();
