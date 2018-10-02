@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { parse } from 'semver';
 import { Architecture, OSType } from '../../utils/platform';
 import { PVSC_EXTENSION_ID } from '../common/constants';
-import { log, warn } from '../common/logger';
+import { log } from '../common/logger';
 import { INugetRepository, INugetService, NugetPackage } from '../common/nuget/types';
 import { IPlatformService } from '../common/platform/types';
 import { IConfigurationService, IExtensions, LanguageServerDownloadChannels } from '../common/types';
@@ -67,23 +67,14 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
             return settings.analysis.downloadChannel;
         }
 
-        const isReleaseOrSimilar = this.isReleaseOrSimilarVersionOfExtension();
-        return isReleaseOrSimilar ? 'stable' : 'beta';
+        const isAlphaVersion = this.isAlphaVersionOfExtension();
+        return isAlphaVersion ? 'beta' : 'stable';
     }
 
-    private isReleaseOrSimilarVersionOfExtension() {
+    private isAlphaVersionOfExtension() {
         const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
-        const extension = extensions.getExtension(PVSC_EXTENSION_ID);
-        if (!extension || !extension.packageJSON || !extension.packageJSON.version) {
-            warn('Python Extension not found', PVSC_EXTENSION_ID);
-            return true;
-        }
-        const version = parse(extension.packageJSON.version);
-        if (version && (version.prerelease.length === 0 ||
-            version.prerelease === ['rc'] ||
-            version.prerelease === ['beta'])) {
-            return true;
-        }
-        return false;
+        const extension = extensions.getExtension(PVSC_EXTENSION_ID)!;
+        const version = parse(extension.packageJSON.version)!;
+        return version.prerelease === ['alpha'];
     }
 }
