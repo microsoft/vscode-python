@@ -42,18 +42,18 @@ suite('localize tests', () => {
         assert.equal(val, 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?', 'Create Terminal string doesnt match');
         done();
     });
-    test('keys italian', done => {
-        // Force a config change
-        process.env.VSCODE_NLS_CONFIG = '{ "locale": "it" }';
+    // test('keys italian', done => {
+    //     // Force a config change
+    //     process.env.VSCODE_NLS_CONFIG = '{ "locale": "it" }';
 
-        const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
-        event.setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
-            .returns(() => true)
-            .verifiable(TypeMoq.Times.atLeastOnce());
+    //     const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
+    //     event.setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
+    //         .returns(() => true)
+    //         .verifiable(TypeMoq.Times.atLeastOnce());
 
-        callbackHandler(event.object).ignoreErrors();
-        const val = localize.LanguageServiceSurveyBanner.bannerLabelYes;
-        assert.equal(val, 'Sì, prenderò il sondaggio ora', 'bannerLabelYes is not being translated');
-        done();
-    });
+    //     callbackHandler(event.object).ignoreErrors();
+    //     const val = localize.LanguageServiceSurveyBanner.bannerLabelYes;
+    //     assert.equal(val, 'Sì, prenderò il sondaggio ora', 'bannerLabelYes is not being translated');
+    //     done();
+    // });
 });

@@ -105,7 +105,7 @@ const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n
 
 gulp.task('hygiene', () => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }));
 
-gulp.task('hygiene-compile', () => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }));
+gulp.task('compile', () => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }));
 
 gulp.task('watch', ['hygiene-modified', 'hygiene-watch']);
 
@@ -163,7 +163,7 @@ gulp.task('inlinesource', () => {
 });
 
 gulp.task('prepublish', function(callback) {
-	runSequence('checkNativeDependencies', 'compile-nls', callback);
+	runSequence('checkNativeDependencies', 'compile', callback);
 });
 
 gulp.task('compile', function() {
