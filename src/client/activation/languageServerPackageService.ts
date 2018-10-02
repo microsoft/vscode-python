@@ -67,11 +67,11 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
             return settings.analysis.downloadChannel;
         }
 
-        const isReleaseOrAlpha = this.isReleaseOrAlphaVersionOfExtension();
-        return isReleaseOrAlpha ? 'stable' : 'beta';
+        const isReleaseOrSimilar = this.isReleaseOrSimilarVersionOfExtension();
+        return isReleaseOrSimilar ? 'stable' : 'beta';
     }
 
-    private isReleaseOrAlphaVersionOfExtension() {
+    private isReleaseOrSimilarVersionOfExtension() {
         const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
         const extension = extensions.getExtension(PVSC_EXTENSION_ID);
         if (!extension || !extension.packageJSON || !extension.packageJSON.version) {
@@ -79,7 +79,9 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
             return true;
         }
         const version = parse(extension.packageJSON.version);
-        if (version && (version.prerelease.length === 0 || version.prerelease === ['alpha'])) {
+        if (version && (version.prerelease.length === 0 ||
+            version.prerelease === ['rc'] ||
+            version.prerelease === ['beta'])) {
             return true;
         }
         return false;
