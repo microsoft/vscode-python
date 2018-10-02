@@ -268,7 +268,7 @@ suite('Linting - General Tests', () => {
         const skipped = true;
         if (skipped) {
             // tslint:disable-next-line:no-invalid-this
-            this.skip();
+            return this.skip();
         }
 
         await closeActiveWindows();

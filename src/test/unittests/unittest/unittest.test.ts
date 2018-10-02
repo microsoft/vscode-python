@@ -35,7 +35,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         if (skipped) {
             // These tests have been skipped temprarily.  See gh-2691.
             //tslint:disable-next-line:no-invalid-this
-            this.skip();
+            return this.skip();
         }
 
         await initialize();
