@@ -17,10 +17,10 @@ import { IInstallationChannelManager, IModuleInstaller } from '../../../client/c
 import { PythonVersionInfo } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings, ModuleNamePurpose, Product } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { noop } from '../../../client/common/utils/misc';
 import { ICondaService, IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { getNamesAndValues } from '../../../utils/enum';
-import { noop } from '../../../utils/misc';
 
 /* Complex test to ensure we cover all combinations:
 We could have written separate tests for each installer, but we'd be replicate code.

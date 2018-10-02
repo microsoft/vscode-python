@@ -13,9 +13,9 @@ import { ProductInstaller } from '../../../client/common/installer/productInstal
 import { ProductService } from '../../../client/common/installer/productService';
 import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from '../../../client/common/installer/types';
 import { IDisposableRegistry, ILogger, InstallerResponse, ModuleNamePurpose, Product } from '../../../client/common/types';
+import { createDeferred, Deferred } from '../../../client/common/utils/async';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { createDeferred, Deferred } from '../../../utils/async';
-import { getNamesAndValues } from '../../../utils/enum';
 
 use(chaiAsPromised);
 

@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import * as os from 'os';
 import { PlatformService } from '../../../client/common/platform/platformService';
-import { getInfo } from '../../../utils/platform';
+import { getInfo } from '../../../client/common/utils/platform';
 
 // tslint:disable-next-line:max-func-body-length
 suite('PlatformService', () => {

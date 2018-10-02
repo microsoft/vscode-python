@@ -5,14 +5,14 @@
 
 import { expect } from 'chai';
 import * as semver from 'semver';
-import { Stub } from '../../test/stub';
 import {
     getInfo, getOSType, Info,
     is64bit, isLinux, isMac, isWindows,
     matchPlatform,
     OSDistro, OSType
-} from '../../utils/platform';
-import { parseVersion } from '../../utils/version';
+} from '../../client/common/utils/platform';
+import { parseVersion } from '../../client/common/utils/version';
+import { Stub } from '../../test/stub';
 
 // Windows
 export const WIN_10 = new Info(

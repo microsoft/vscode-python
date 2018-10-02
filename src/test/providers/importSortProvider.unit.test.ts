@@ -16,10 +16,10 @@ import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
 import { ProcessService } from '../../client/common/process/proc';
 import { IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { IConfigurationService, IDisposableRegistry, IEditorUtils, IPythonSettings, ISortImportSettings } from '../../client/common/types';
+import { noop } from '../../client/common/utils/misc';
 import { IServiceContainer } from '../../client/ioc/types';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
 import { ISortImportsEditingProvider } from '../../client/providers/types';
-import { noop } from '../../utils/misc';
 
 suite('Import Sort Provider', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

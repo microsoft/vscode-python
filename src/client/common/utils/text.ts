@@ -4,7 +4,7 @@
 'use strict';
 
 import { Position, Range, TextDocument } from 'vscode';
-import { isNumber } from '../client/common/utils/sysTypes';
+import { isNumber } from './sysTypes';
 
 export function getWindowsLineEndingCount(document: TextDocument, offset: Number) {
     //const eolPattern = new RegExp('\r\n', 'g');

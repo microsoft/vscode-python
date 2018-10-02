@@ -5,11 +5,11 @@ import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ExtensionContext, Uri } from 'vscode';
-import { createDeferred } from '../../utils/async';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import { IPlatformService } from '../common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
+import { createDeferred } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 
 const DataVersion = 1;

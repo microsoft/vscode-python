@@ -10,13 +10,13 @@ import { expect } from 'chai';
 import { spawnSync } from 'child_process';
 import * as typeMoq from 'typemoq';
 import { ILogger, Product } from '../../client/common/types';
+import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ArgumentsHelper } from '../../client/unittests/common/argumentsHelper';
 import { ArgumentsService as NoseTestArgumentsService } from '../../client/unittests/nosetest/services/argsService';
 import { ArgumentsService as PyTestArgumentsService } from '../../client/unittests/pytest/services/argsService';
 import { IArgumentsHelper, IArgumentsService } from '../../client/unittests/types';
 import { ArgumentsService as UnitTestArgumentsService } from '../../client/unittests/unittest/services/argsService';
-import { getNamesAndValues } from '../../utils/enum';
 import { PYTHON_PATH } from '../common';
 
 suite('ArgsService: Common', () => {

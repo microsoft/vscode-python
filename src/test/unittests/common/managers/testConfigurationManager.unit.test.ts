@@ -8,11 +8,11 @@
 import * as TypeMoq from 'typemoq';
 import { OutputChannel, Uri } from 'vscode';
 import { IInstaller, IOutputChannel, Product } from '../../../../client/common/types';
+import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { TEST_OUTPUT_CHANNEL } from '../../../../client/unittests/common/constants';
 import { TestConfigurationManager } from '../../../../client/unittests/common/managers/testConfigurationManager';
 import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/unittests/common/types';
-import { getNamesAndValues } from '../../../../utils/enum';
 
 class MockTestConfigurationManager extends TestConfigurationManager {
     public requiresUserToConfigure(wkspace: Uri): Promise<boolean> {

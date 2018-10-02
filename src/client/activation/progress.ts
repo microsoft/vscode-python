@@ -3,8 +3,8 @@
 
 import { Progress, ProgressLocation, window } from 'vscode';
 import { Disposable, LanguageClient } from 'vscode-languageclient';
-import { createDeferred, Deferred } from '../../utils/async';
-import { StopWatch } from '../../utils/stopWatch';
+import { createDeferred, Deferred } from '../common/utils/async';
+import { StopWatch } from '../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
 import { PYTHON_LANGUAGE_SERVER_ANALYSISTIME } from '../telemetry/constants';
 

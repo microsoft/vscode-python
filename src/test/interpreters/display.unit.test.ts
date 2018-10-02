@@ -5,11 +5,11 @@ import { ConfigurationTarget, Disposable, StatusBarAlignment, StatusBarItem, Uri
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IPathUtils, IPythonSettings } from '../../client/common/types';
+import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
-import { Architecture } from '../../utils/platform';
 
 // tslint:disable:no-any max-func-body-length
 

@@ -6,8 +6,8 @@
 
 import * as net from 'net';
 import { DebugSession } from 'vscode-debugadapter';
-import { createDeferred } from '../../../utils/async';
 import { ISocketServer } from '../../common/types';
+import { createDeferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { IDebugServer, LaunchRequestArguments } from '../Common/Contracts';
 import { BaseDebugServer } from './BaseDebugServer';

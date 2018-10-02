@@ -6,8 +6,8 @@
 import { expect } from 'chai';
 import * as semver from 'semver';
 import { getPathVariableName, getVirtualEnvBinName } from '../../../client/common/platform/osinfo';
-import * as platform from '../../../utils/platform';
-import { parseVersion } from '../../../utils/version';
+import * as platform from '../../../client/common/utils/platform';
+import { parseVersion } from '../../../client/common/utils/version';
 
 export const WIN_10 = new platform.Info(
     platform.OSType.Windows,

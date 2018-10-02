@@ -9,9 +9,9 @@ import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { getNamesAndValues } from '../../../utils/enum';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Service helpers', () => {

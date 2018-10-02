@@ -8,10 +8,10 @@ import { Terminal } from 'vscode';
 import { ITerminalManager } from '../../../client/common/application/types';
 import { ITerminalHelper } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
+import { noop } from '../../../client/common/utils/misc';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { TerminalAutoActivation } from '../../../client/terminals/activation';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
-import { noop } from '../../../utils/misc';
 
 suite('Terminal Auto Activation', () => {
     let helper: TypeMoq.IMock<ITerminalHelper>;

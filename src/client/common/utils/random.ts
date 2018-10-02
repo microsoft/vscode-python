@@ -5,7 +5,7 @@
 
 import * as crypto from 'crypto';
 import { injectable } from 'inversify';
-import { IRandom } from '../client/common/types';
+import { IRandom } from '../types';
 
 function getRandom(): number {
     let num: number = 0;

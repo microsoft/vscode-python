@@ -9,10 +9,10 @@ import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { IConfigurationService, ILogger, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
+import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { IServiceContainer } from '../../client/ioc/types';
-import { Architecture } from '../../utils/platform';
 import { MockState } from './mocks';
 
 const untildify: (value: string) => string = require('untildify');

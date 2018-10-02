@@ -10,11 +10,11 @@ import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { IDisposableRegistry } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { Architecture, Info as PlatformInfo, OSType } from '../../../client/common/utils/platform';
 import { CONDA_ENV_FILE_SERVICE, CONDA_ENV_SERVICE, CURRENT_PATH_SERVICE, GLOBAL_VIRTUAL_ENV_SERVICE, IInterpreterLocatorHelper, IInterpreterLocatorService, InterpreterType, KNOWN_PATH_SERVICE, PIPENV_SERVICE, PythonInterpreter, WINDOWS_REGISTRY_SERVICE, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../client/interpreter/contracts';
 import { PythonInterpreterLocatorService } from '../../../client/interpreter/locators';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { getNamesAndValues } from '../../../utils/enum';
-import { Architecture, Info as PlatformInfo, OSType } from '../../../utils/platform';
 
 suite('Interpreters - Locators Index', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

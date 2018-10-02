@@ -13,12 +13,12 @@ import * as path from 'path';
 import { Message } from 'vscode-debugadapter/lib/messages';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { createDeferred, sleep } from '../../client/common/utils/async';
+import { noop } from '../../client/common/utils/misc';
 import { PTVSD_PATH } from '../../client/debugger/Common/constants';
 import { ProtocolParser } from '../../client/debugger/Common/protocolParser';
 import { ProtocolMessageWriter } from '../../client/debugger/Common/protocolWriter';
 import { PythonDebugger } from '../../client/debugger/mainV2';
-import { createDeferred, sleep } from '../../utils/async';
-import { noop } from '../../utils/misc';
 import { PYTHON_PATH } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 

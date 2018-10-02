@@ -16,11 +16,11 @@ import { CTagsProductPathService, FormatterProductPathService, LinterProductPath
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductService } from '../../../client/common/installer/types';
 import { IConfigurationService, IFormattingSettings, IInstaller, IPythonSettings, IUnitTestSettings, IWorkspaceSymbolSettings, ModuleNamePurpose, Product, ProductType } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IFormatterHelper } from '../../../client/formatters/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ILinterInfo, ILinterManager } from '../../../client/linters/types';
 import { ITestsHelper } from '../../../client/unittests/common/types';
-import { getNamesAndValues } from '../../../utils/enum';
 
 use(chaiAsPromised);
 

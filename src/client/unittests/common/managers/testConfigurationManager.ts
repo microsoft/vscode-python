@@ -1,8 +1,8 @@
 import * as path from 'path';
 import { OutputChannel, QuickPickItem, Uri, window } from 'vscode';
-import { createDeferred } from '../../../../utils/async';
-import { getSubDirectories } from '../../../../utils/fs';
 import { IInstaller, IOutputChannel, Product } from '../../../common/types';
+import { createDeferred } from '../../../common/utils/async';
+import { getSubDirectories } from '../../../common/utils/fs';
 import { IServiceContainer } from '../../../ioc/types';
 import { ITestConfigurationManager } from '../../types';
 import { TEST_OUTPUT_CHANNEL } from '../constants';

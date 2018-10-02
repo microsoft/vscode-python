@@ -6,7 +6,7 @@
 import * as getos from 'getos';
 import * as os from 'os';
 import * as semver from 'semver';
-import { IPlatformInfo } from '../client/common/platform/types';
+import { IPlatformInfo } from '../platform/types';
 import { parseVersion } from './version';
 
 export enum Architecture {

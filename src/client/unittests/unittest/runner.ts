@@ -2,9 +2,9 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { noop } from '../../../utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { ILogger } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { UNITTEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';

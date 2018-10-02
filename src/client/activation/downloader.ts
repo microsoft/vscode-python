@@ -6,11 +6,11 @@
 import * as path from 'path';
 import * as requestProgress from 'request-progress';
 import { ProgressLocation, window } from 'vscode';
-import { createDeferred } from '../../utils/async';
-import { StopWatch } from '../../utils/stopWatch';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IExtensionContext, IOutputChannel } from '../common/types';
+import { createDeferred } from '../common/utils/async';
+import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import {

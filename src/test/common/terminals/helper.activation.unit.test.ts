@@ -11,9 +11,9 @@ import { CommandPromptAndPowerShell } from '../../../client/common/terminal/envi
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { getNamesAndValues } from '../../../utils/enum';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Service helpers', () => {

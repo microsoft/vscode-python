@@ -11,8 +11,8 @@ import { IFileSystem, IPlatformService } from '../../../client/common/platform/t
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import { TerminalShellType } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { getNamesAndValues } from '../../../utils/enum';
 
 suite('Terminal Environment Activation (cmd/powershell)', () => {
     ['c:/programfiles/python/python', 'c:/program files/python/python',

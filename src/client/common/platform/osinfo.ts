@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Info as PlatformInfo, isWindows } from '../../../utils/platform';
+import { Info as PlatformInfo, isWindows } from '../utils/platform';
 import {
     NON_WINDOWS_PATH_VARIABLE_NAME,
     WINDOWS_PATH_VARIABLE_NAME

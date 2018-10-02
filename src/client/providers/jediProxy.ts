@@ -8,14 +8,14 @@ import * as path from 'path';
 import * as pidusage from 'pidusage';
 import { CancellationToken, CancellationTokenSource, CompletionItemKind,
     Disposable, SymbolKind, Uri } from 'vscode';
-import { createDeferred, Deferred } from '../../utils/async';
-import { debounce, swallowExceptions } from '../../utils/decorators';
-import { StopWatch } from '../../utils/stopWatch';
 import { PythonSettings } from '../common/configSettings';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { BANNER_NAME_PROPOSE_LS, ILogger, IPythonExtensionBanner } from '../common/types';
+import { createDeferred, Deferred } from '../common/utils/async';
+import { debounce, swallowExceptions } from '../common/utils/decorators';
+import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
 import * as logger from './../common/logger';

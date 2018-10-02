@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as semver from 'semver';
 import { Disposable } from 'vscode';
-import { Architecture, OSDistro, OSType } from '../../../utils/platform';
+import { Architecture, OSDistro, OSType } from '../utils/platform';
 
 export const IPlatformInfo = Symbol('IPlatformInfo');
 export interface IPlatformInfo {

@@ -3,13 +3,13 @@
 
 import { inject, injectable } from 'inversify';
 import { Terminal, Uri } from 'vscode';
-import { sleep } from '../../../utils/async';
 import { ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ITerminalManager, IWorkspaceService } from '../application/types';
 import '../extensions';
 import { IPlatformService } from '../platform/types';
 import { IConfigurationService } from '../types';
+import { sleep } from '../utils/async';
 import { CondaActivationCommandProvider } from './environmentActivationProviders/condaActivationProvider';
 import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from './types';
 

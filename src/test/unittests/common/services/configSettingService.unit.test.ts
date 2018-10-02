@@ -11,10 +11,10 @@ import * as typeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { Product } from '../../../../client/common/types';
+import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { TestConfigSettingsService } from '../../../../client/unittests/common/services/configSettingService';
 import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/unittests/common/types';
-import { getNamesAndValues } from '../../../../utils/enum';
 
 use(chaiPromise);
 

@@ -14,12 +14,12 @@ import {
 } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { IFileSystem } from '../../client/common/platform/types';
+import { splitParent } from '../../client/common/utils/string';
+import { parseRange } from '../../client/common/utils/text';
 import { IServiceContainer } from '../../client/ioc/types';
 import { JediFactory } from '../../client/languageServices/jediProxyFactory';
 import { IDefinition, ISymbolResult, JediProxyHandler } from '../../client/providers/jediProxy';
 import { JediSymbolProvider, LanguageServerSymbolProvider } from '../../client/providers/symbolProvider';
-import { splitParent } from '../../utils/string';
-import { parseRange } from '../../utils/text';
 
 const assertArrays = require('chai-arrays');
 use(assertArrays);

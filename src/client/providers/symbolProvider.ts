@@ -5,8 +5,8 @@ import {
     Location, Range, SymbolInformation, SymbolKind, TextDocument, Uri
 } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
-import { createDeferred, Deferred } from '../../utils/async';
 import { IFileSystem } from '../common/platform/types';
+import { createDeferred, Deferred } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';

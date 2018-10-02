@@ -2,11 +2,11 @@ import { EventEmitter } from 'events';
 import { injectable } from 'inversify';
 import { CancellationToken, Disposable, Uri } from 'vscode';
 import { Product } from '../../client/common/types';
+import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { IServiceContainer } from '../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../client/unittests/common/constants';
 import { BaseTestManager } from '../../client/unittests/common/managers/baseTestManager';
 import { ITestDebugLauncher, ITestDiscoveryService, IUnitTestSocketServer, LaunchOptions, TestDiscoveryOptions, TestProvider, Tests, TestsToRun } from '../../client/unittests/common/types';
-import { createDeferred, Deferred } from '../../utils/async';
 
 @injectable()
 export class MockDebugLauncher implements ITestDebugLauncher, Disposable {

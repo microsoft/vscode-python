@@ -4,7 +4,7 @@
 // tslint:disable:no-function-expression no-any no-invalid-this no-use-before-declare
 
 import { DebugSession, StoppedEvent } from 'vscode-debugadapter';
-import { StopWatch } from '../../../utils/stopWatch';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { DEBUGGER_PERFORMANCE } from '../../telemetry/constants';
 import { DebuggerPerformanceTelemetry } from '../../telemetry/types';
 import { TelemetryEvent } from './Contracts';

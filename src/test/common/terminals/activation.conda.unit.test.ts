@@ -28,7 +28,6 @@ import {
 } from '../../../client/common/types';
 import { ICondaService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { getNamesAndValues } from '../../../utils/enum';
 
 suite('Terminal Environment Activation conda', () => {
     let terminalHelper: TerminalHelper;

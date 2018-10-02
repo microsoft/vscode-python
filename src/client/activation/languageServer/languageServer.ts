@@ -13,8 +13,6 @@ import {
     Disposable, LanguageClient, LanguageClientOptions,
     ProvideCompletionItemsSignature, ServerOptions
 } from 'vscode-languageclient';
-import { createDeferred, Deferred } from '../../../utils/async';
-import { StopWatch } from '../../../utils/stopWatch';
 import {
     IApplicationShell, ICommandManager, IWorkspaceService
 } from '../../common/application/types';
@@ -27,6 +25,8 @@ import {
     IDisposableRegistry, IExtensionContext, IFeatureDeprecationManager, ILogger,
     IOutputChannel, IPathUtils, IPythonExtensionBanner, IPythonSettings
 } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IServiceContainer } from '../../ioc/types';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';

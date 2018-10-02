@@ -10,8 +10,8 @@ import { DiagnosticSeverity } from 'vscode';
 import { DiagnosticCommandPromptHandlerService, MessageCommandPrompt } from '../../../client/application/diagnostics/promptHandler';
 import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService } from '../../../client/application/diagnostics/types';
 import { IApplicationShell } from '../../../client/common/application/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { getNamesAndValues } from '../../../utils/enum';
 
 suite('Application Diagnostics - PromptHandler', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;

@@ -13,8 +13,8 @@ import { PlatformName } from '../../../client/activation/platformData';
 import { NugetService } from '../../../client/common/nuget/nugetService';
 import { INugetRepository, INugetService, NugetPackage } from '../../../client/common/nuget/types';
 import { IPlatformService } from '../../../client/common/platform/types';
+import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { Architecture, OSType } from '../../../utils/platform';
 
 const downloadBaseFileName = 'Python-Language-Server';
 

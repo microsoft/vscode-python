@@ -4,7 +4,6 @@ import {
 } from 'inversify';
 import * as path from 'path';
 import { parse, SemVer } from 'semver';
-import { compareVersion } from '../../../../utils/version';
 import { warn } from '../../../common/logger';
 import {
     IFileSystem, IPlatformService
@@ -14,6 +13,7 @@ import {
     IConfigurationService, ILogger,
     IPersistentStateFactory
 } from '../../../common/types';
+import { compareVersion } from '../../../common/utils/version';
 import { IServiceContainer } from '../../../ioc/types';
 import {
     CondaInfo, ICondaService, IInterpreterLocatorService,

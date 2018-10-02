@@ -5,13 +5,12 @@ if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
-import { StopWatch } from '../utils/stopWatch';
+import { StopWatch } from './common/utils/stopWatch';
 // Do not move this linne of code (used to measure extension load times).
 const stopWatch = new StopWatch();
 
 import { Container } from 'inversify';
 import { CodeActionKind, debug, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
-import { createDeferred } from '../utils/async';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationService } from './activation/types';
 import { IExtensionApi } from './api';
@@ -29,6 +28,7 @@ import {
     IExtensionContext, IFeatureDeprecationManager, ILogger,
     IMemento, IOutputChannel, WORKSPACE_MEMENTO
 } from './common/types';
+import { createDeferred } from './common/utils/async';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
 import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
