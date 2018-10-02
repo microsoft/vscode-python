@@ -8,13 +8,13 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
-import { LanguageServerPackageService } from '../../client/activation/languageServerPackageService';
-import { PlatformName } from '../../client/activation/platformData';
-import { NugetService } from '../../client/common/nuget/nugetService';
-import { INugetRepository, INugetService, NugetPackage } from '../../client/common/nuget/types';
-import { IPlatformService } from '../../client/common/platform/types';
-import { IServiceContainer } from '../../client/ioc/types';
-import { Architecture, OSType } from '../../utils/platform';
+import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
+import { PlatformName } from '../../../client/activation/platformData';
+import { NugetService } from '../../../client/common/nuget/nugetService';
+import { INugetRepository, INugetService, NugetPackage } from '../../../client/common/nuget/types';
+import { IPlatformService } from '../../../client/common/platform/types';
+import { IServiceContainer } from '../../../client/ioc/types';
+import { Architecture, OSType } from '../../../utils/platform';
 
 const downloadBaseFileName = 'Python-Language-Server';
 

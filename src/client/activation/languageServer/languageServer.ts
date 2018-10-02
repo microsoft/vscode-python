@@ -13,34 +13,34 @@ import {
     Disposable, LanguageClient, LanguageClientOptions,
     ProvideCompletionItemsSignature, ServerOptions
 } from 'vscode-languageclient';
-import { createDeferred, Deferred } from '../../utils/async';
-import { StopWatch } from '../../utils/stopWatch';
+import { createDeferred, Deferred } from '../../../utils/async';
+import { StopWatch } from '../../../utils/stopWatch';
 import {
     IApplicationShell, ICommandManager, IWorkspaceService
-} from '../common/application/types';
-import { PythonSettings } from '../common/configSettings';
+} from '../../common/application/types';
+import { PythonSettings } from '../../common/configSettings';
 // tslint:disable-next-line:ordered-imports
-import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { IFileSystem, IPlatformService } from '../common/platform/types';
+import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import {
     BANNER_NAME_LS_SURVEY, DeprecatedFeatureInfo, IConfigurationService,
     IDisposableRegistry, IExtensionContext, IFeatureDeprecationManager, ILogger,
     IOutputChannel, IPathUtils, IPythonExtensionBanner, IPythonSettings
-} from '../common/types';
-import { IEnvironmentVariablesProvider } from '../common/variables/types';
-import { IServiceContainer } from '../ioc/types';
-import { LanguageServerSymbolProvider } from '../providers/symbolProvider';
+} from '../../common/types';
+import { IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { IServiceContainer } from '../../ioc/types';
+import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import {
     PYTHON_LANGUAGE_SERVER_ENABLED,
     PYTHON_LANGUAGE_SERVER_ERROR
-} from '../telemetry/constants';
-import { getTelemetryReporter } from '../telemetry/telemetry';
-import { IUnitTestManagementService } from '../unittests/types';
-import { LanguageServerDownloader } from './downloader';
-import { InterpreterData, InterpreterDataService } from './interpreterDataService';
-import { PlatformData } from './platformData';
-import { ProgressReporting } from './progress';
-import { IExtensionActivator, ILanguageServerFolderService } from './types';
+} from '../../telemetry/constants';
+import { getTelemetryReporter } from '../../telemetry/telemetry';
+import { IUnitTestManagementService } from '../../unittests/types';
+import { LanguageServerDownloader } from '../downloader';
+import { InterpreterData, InterpreterDataService } from '../interpreterDataService';
+import { PlatformData } from '../platformData';
+import { ProgressReporting } from '../progress';
+import { IExtensionActivator, ILanguageServerFolderService } from '../types';
 
 const PYTHON = 'python';
 const dotNetCommand = 'dotnet';

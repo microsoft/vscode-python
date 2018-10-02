@@ -8,12 +8,12 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { LanguageServerExtensionActivator } from '../../client/activation/languageServer';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
-import { IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExtensionContext, IFeatureDeprecationManager, IOutputChannel, IPathUtils, IPythonSettings } from '../../client/common/types';
-import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
-import { IServiceContainer } from '../../client/ioc/types';
+import { LanguageServerExtensionActivator } from '../../../client/activation/languageServer/languageServer';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../client/common/application/types';
+import { IPlatformService } from '../../../client/common/platform/types';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext, IFeatureDeprecationManager, IOutputChannel, IPathUtils, IPythonSettings } from '../../../client/common/types';
+import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Language Server', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

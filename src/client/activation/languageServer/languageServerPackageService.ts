@@ -5,15 +5,15 @@
 
 import { inject, injectable } from 'inversify';
 import { parse } from 'semver';
-import { Architecture, OSType } from '../../utils/platform';
-import { PVSC_EXTENSION_ID } from '../common/constants';
-import { log } from '../common/logger';
-import { INugetRepository, INugetService, NugetPackage } from '../common/nuget/types';
-import { IPlatformService } from '../common/platform/types';
-import { IConfigurationService, IExtensions, LanguageServerDownloadChannels } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
-import { PlatformName } from './platformData';
-import { ILanguageServerPackageService } from './types';
+import { Architecture, OSType } from '../../../utils/platform';
+import { PVSC_EXTENSION_ID } from '../../common/constants';
+import { log } from '../../common/logger';
+import { INugetRepository, INugetService, NugetPackage } from '../../common/nuget/types';
+import { IPlatformService } from '../../common/platform/types';
+import { IConfigurationService, IExtensions, LanguageServerDownloadChannels } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
+import { PlatformName } from '../platformData';
+import { ILanguageServerPackageService } from '../types';
 
 const downloadBaseFileName = 'Python-Language-Server';
 export const maxMajorVersion = 0;
