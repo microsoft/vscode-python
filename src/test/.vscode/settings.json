@@ -5,8 +5,11 @@
     "python.unitTest.nosetestArgs": [],
     "python.unitTest.pyTestArgs": [],
     "python.unitTest.unittestArgs": [
-        "-s=./tests",
-        "-p=test_*.py"
+        "-v",
+        "-s",
+        ".",
+        "-p",
+        "*test*.py"
     ],
     "python.sortImports.args": [],
     "python.linting.lintOnSave": false,
@@ -18,5 +21,6 @@
     "python.linting.mypyEnabled": false,
     "python.formatting.provider": "yapf",
     "python.linting.pylintUseMinimalCheckers": false,
-    "python.pythonPath": "python"
+    "python.pythonPath": "python",
+    "python.linting.maxNumberOfProblems": 5
 }

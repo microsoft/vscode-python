@@ -25,6 +25,23 @@
             }
         },
         {
+            "label": "Compile-nls",
+            "type": "npm",
+            "script": "compile-nls",
+            "isBackground": true,
+            "problemMatcher": [
+                "$tsc-watch",
+                {
+                    "base": "$tslint5",
+                    "fileLocation": "relative"
+                }
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
             "label": "Run Unit Tests",
             "type": "npm",
             "script": "test:unittests",

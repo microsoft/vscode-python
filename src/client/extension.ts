@@ -12,6 +12,7 @@ const stopWatch = new StopWatch();
 import { Container } from 'inversify';
 import { CodeActionKind, debug, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
 import { createDeferred } from '../utils/async';
+import { ILocalizationService } from '../utils/localize';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationService } from './activation/types';
 import { IExtensionApi } from './api';
@@ -199,6 +200,10 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
 }
 
 function initializeServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
+    // Setup up the localization service
+    const locService = serviceManager.get<ILocalizationService>(ILocalizationService);
+    locService.initialize();
+
     const selector = serviceContainer.get<IInterpreterSelector>(IInterpreterSelector);
     selector.initialize();
     context.subscriptions.push(selector);
