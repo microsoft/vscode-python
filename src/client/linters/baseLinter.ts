@@ -6,7 +6,10 @@ import { IPythonToolExecutionService } from '../common/process/types';
 import { ExecutionInfo, IConfigurationService, ILogger, IPythonSettings, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/errorHandler';
-import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LintMessageSeverity } from './types';
+import {
+    ILinter, ILinterInfo, ILinterManager, ILintMessage,
+    LinterId, LintMessageSeverity
+} from './types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const namedRegexp = require('named-js-regexp');
@@ -29,6 +32,32 @@ export function matchNamedRegEx(data, regex): IRegexGroup | undefined {
     }
 
     return undefined;
+}
+
+export function parseLine(
+    line: string,
+    regex: string,
+    linterID: LinterId,
+    colOffset: number = 0
+): ILintMessage | undefined {
+    const match = matchNamedRegEx(line, regex)!;
+    if (!match) {
+        return;
+    }
+
+    // tslint:disable-next-line:no-any
+    match.line = Number(<any>match.line);
+    // tslint:disable-next-line:no-any
+    match.column = Number(<any>match.column);
+
+    return {
+        code: match.code,
+        message: match.message,
+        column: isNaN(match.column) || match.column <= 0 ? 0 : match.column - colOffset,
+        line: match.line,
+        type: match.type,
+        provider: linterID
+    };
 }
 
 export abstract class BaseLinter implements ILinter {
@@ -128,24 +157,7 @@ export abstract class BaseLinter implements ILinter {
     }
 
     private parseLine(line: string, regEx: string): ILintMessage | undefined {
-        const match = matchNamedRegEx(line, regEx)!;
-        if (!match) {
-            return;
-        }
-
-        // tslint:disable-next-line:no-any
-        match.line = Number(<any>match.line);
-        // tslint:disable-next-line:no-any
-        match.column = Number(<any>match.column);
-
-        return {
-            code: match.code,
-            message: match.message,
-            column: isNaN(match.column) || match.column <= 0 ? 0 : match.column - this.columnOffset,
-            line: match.line,
-            type: match.type,
-            provider: this.info.id
-        };
+        return parseLine(line, regEx, this.info.id, this.columnOffset);
     }
 
     private parseLines(outputLines: string[], regEx: string): ILintMessage[] {
