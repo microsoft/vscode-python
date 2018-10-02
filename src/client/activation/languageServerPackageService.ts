@@ -4,11 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { parse } from 'semver';
 import { Architecture, OSType } from '../../utils/platform';
-import { log } from '../common/logger';
+import { PVSC_EXTENSION_ID } from '../common/constants';
+import { log, warn } from '../common/logger';
 import { INugetRepository, INugetService, NugetPackage } from '../common/nuget/types';
 import { IPlatformService } from '../common/platform/types';
-import { IConfigurationService, LanguageServerDownloadChannels } from '../common/types';
+import { IConfigurationService, IExtensions, LanguageServerDownloadChannels } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PlatformName } from './platformData';
 import { ILanguageServerPackageService } from './types';
@@ -21,8 +23,6 @@ export const PackageNames = {
     [PlatformName.Linux64Bit]: `${downloadBaseFileName}-${PlatformName.Linux64Bit}`,
     [PlatformName.Mac64Bit]: `${downloadBaseFileName}-${PlatformName.Mac64Bit}`
 };
-
-export const DefaultLanguageServerDownloadChannel = 'beta';
 
 @injectable()
 export class LanguageServerPackageService implements ILanguageServerPackageService {
@@ -63,6 +63,25 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
     public getLanguageServerDownloadChannel(): LanguageServerDownloadChannels {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settings = configService.getSettings();
-        return settings.analysis.downloadChannel || DefaultLanguageServerDownloadChannel;
+        if (settings.analysis.downloadChannel) {
+            return settings.analysis.downloadChannel;
+        }
+
+        const isReleaseOrAlpha = this.isReleaseOrAlphaVersionOfExtension();
+        return isReleaseOrAlpha ? 'stable' : 'beta';
+    }
+
+    private isReleaseOrAlphaVersionOfExtension() {
+        const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
+        const extension = extensions.getExtension(PVSC_EXTENSION_ID);
+        if (!extension || !extension.packageJSON || !extension.packageJSON.version) {
+            warn('Python Extension not found', PVSC_EXTENSION_ID);
+            return true;
+        }
+        const version = parse(extension.packageJSON.version);
+        if (version && (version.prerelease.length === 0 || version.prerelease === ['alpha'])) {
+            return true;
+        }
+        return false;
     }
 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Socket } from 'net';
-import { ConfigurationTarget, DiagnosticSeverity, Disposable, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
+import { ConfigurationTarget, DiagnosticSeverity, Disposable, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel { }
@@ -271,6 +271,32 @@ export interface ISocketServer extends Disposable {
 
 export const IExtensionContext = Symbol('ExtensionContext');
 export interface IExtensionContext extends ExtensionContext { }
+
+export const IExtensions = Symbol('IExtensions');
+export interface IExtensions {
+    /**
+     * All extensions currently known to the system.
+     */
+    // tslint:disable-next-line:no-any
+    readonly all: Extension<any>[];
+
+    /**
+     * Get an extension by its full identifier in the form of: `publisher.name`.
+     *
+     * @param extensionId An extension identifier.
+     * @return An extension or `undefined`.
+     */
+    // tslint:disable-next-line:no-any
+    getExtension(extensionId: string): Extension<any> | undefined;
+
+    /**
+     * Get an extension its full identifier in the form of: `publisher.name`.
+     *
+     * @param extensionId An extension identifier.
+     * @return An extension or `undefined`.
+     */
+    getExtension<T>(extensionId: string): Extension<T> | undefined;
+}
 
 export const IBrowserService = Symbol('IBrowserService');
 export interface IBrowserService {

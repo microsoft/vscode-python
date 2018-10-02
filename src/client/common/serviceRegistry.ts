@@ -9,6 +9,7 @@ import { ApplicationShell } from './application/applicationShell';
 import { CommandManager } from './application/commandManager';
 import { DebugService } from './application/debugService';
 import { DocumentManager } from './application/documentManager';
+import { Extensions } from './application/extensions';
 import { TerminalManager } from './application/terminalManager';
 import {
     IApplicationEnvironment, IApplicationShell, ICommandManager,
@@ -41,15 +42,16 @@ import {
 } from './terminal/types';
 import {
     IBrowserService, IConfigurationService,
-    ICurrentProcess, IEditorUtils, IFeatureDeprecationManager,
-    IInstaller, ILogger,
-    IPathUtils, IPersistentStateFactory, IRandom, Is64Bit, IsWindows
+    ICurrentProcess, IEditorUtils, IExtensions,
+    IFeatureDeprecationManager, IInstaller,
+    ILogger, IPathUtils, IPersistentStateFactory, IRandom, Is64Bit, IsWindows
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
     serviceManager.addSingletonInstance<boolean>(Is64Bit, IS_64_BIT);
 
+    serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IRandom>(IRandom, Random);
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
     serviceManager.addSingleton<ILogger>(ILogger, Logger);
