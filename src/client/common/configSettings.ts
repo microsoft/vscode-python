@@ -57,22 +57,10 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     // tslint:disable-next-line:variable-name
     private _pythonPath = '';
 
-    constructor(workspaceFolder?: Uri, initialize = true) {
+    constructor(workspaceFolder?: Uri) {
         super();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : Uri.file(__dirname);
-        if (initialize) {
-            this.disposables.push(workspace.onDidChangeConfiguration(() => {
-                const currentConfig = workspace.getConfiguration('python', this.workspaceRoot);
-                this.update(currentConfig);
-
-                // If workspace config changes, then we could have a cascading effect of on change events.
-                // Let's defer the change notification.
-                setTimeout(() => this.emit('change'), 1);
-            }));
-
-            const initialConfig = workspace.getConfiguration('python', this.workspaceRoot);
-            this.update(initialConfig);
-        }
+        this.initialize();
     }
     // tslint:disable-next-line:function-name
     public static getInstance(resource?: Uri): PythonSettings {
@@ -240,6 +228,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         };
         this.formatting.autopep8Path = getAbsolutePath(systemVariables.resolveAny(this.formatting.autopep8Path), workspaceRoot);
         this.formatting.yapfPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.yapfPath), workspaceRoot);
+        this.formatting.blackPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.blackPath), workspaceRoot);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const autoCompleteSettings = systemVariables.resolveAny(pythonSettings.get<IAutoCompleteSettings>('autoComplete'))!;
@@ -345,6 +334,19 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         } catch (ex) {
             this._pythonPath = value;
         }
+    }
+    protected initialize(): void{
+        this.disposables.push(workspace.onDidChangeConfiguration(() => {
+            const currentConfig = workspace.getConfiguration('python', this.workspaceRoot);
+            this.update(currentConfig);
+
+            // If workspace config changes, then we could have a cascading effect of on change events.
+            // Let's defer the change notification.
+            setTimeout(() => this.emit('change'), 1);
+        }));
+
+        const initialConfig = workspace.getConfiguration('python', this.workspaceRoot);
+        this.update(initialConfig);
     }
 }
 
