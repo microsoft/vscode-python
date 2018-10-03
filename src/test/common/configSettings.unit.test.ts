@@ -108,6 +108,20 @@ suite('Python Settings', () => {
         config.verifyAll();
     });
 
+    test('condaPath (relative to home) updated', () => {
+        expected.pythonPath = 'python3';
+        expected.condaPath = path.join('~', 'anaconda3', 'bin', 'conda');
+        initializeConfig(expected);
+        config.setup(c => c.get<string>('condaPath'))
+            .returns(() => expected.condaPath)
+            .verifiable(TypeMoq.Times.once());
+
+        settings.update(config.object);
+
+        expect(settings.condaPath).to.be.equal(untildify(expected.condaPath));
+        config.verifyAll();
+    });
+
     test('Formatter Paths and args', () => {
         expected.pythonPath = 'python3';
         // tslint:disable-next-line:no-any
