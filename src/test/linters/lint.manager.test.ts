@@ -37,7 +37,7 @@ suite('Linting - Manager', () => {
     });
 
     test('Ensure product is set in Execution Info', async () => {
-        [Product.flake8, Product.mypy, Product.pep8,
+        [Product.bandit, Product.flake8, Product.mypy, Product.pep8,
         Product.pydocstyle, Product.pylama, Product.pylint].forEach(product => {
             const execInfo = lm.getLinterInfo(product).getExecutionInfo([]);
             assert.equal(execInfo.product, product, `Incorrect information for ${product}`);
@@ -45,7 +45,7 @@ suite('Linting - Manager', () => {
     });
 
     test('Ensure executable is set in Execution Info', async () => {
-        [Product.flake8, Product.mypy, Product.pep8,
+        [Product.bandit, Product.flake8, Product.mypy, Product.pep8,
         Product.pydocstyle, Product.pylama, Product.pylint].forEach(product => {
             const info = lm.getLinterInfo(product);
             const execInfo = info.getExecutionInfo([]);
@@ -55,7 +55,7 @@ suite('Linting - Manager', () => {
     });
 
     test('Ensure correct setting names are returned', async () => {
-        [Product.flake8, Product.mypy, Product.pep8,
+        [Product.bandit, Product.flake8, Product.mypy, Product.pep8,
         Product.pydocstyle, Product.pylama, Product.pylint].forEach(product => {
             const linter = lm.getLinterInfo(product);
             const expected = {
@@ -71,8 +71,8 @@ suite('Linting - Manager', () => {
     });
 
     test('Ensure linter id match product', async () => {
-        const ids = ['flake8', 'mypy', 'pep8', 'prospector', 'pydocstyle', 'pylama', 'pylint'];
-        const products = [Product.flake8, Product.mypy, Product.pep8, Product.prospector, Product.pydocstyle, Product.pylama, Product.pylint];
+        const ids = ['bandit', 'flake8', 'mypy', 'pep8', 'prospector', 'pydocstyle', 'pylama', 'pylint'];
+        const products = [Product.bandit, Product.flake8, Product.mypy, Product.pep8, Product.prospector, Product.pydocstyle, Product.pylama, Product.pylint];
         for (let i = 0; i < products.length; i += 1) {
             const linter = lm.getLinterInfo(products[i]);
             assert.equal(linter.id, ids[i], `Id ${ids[i]} does not match product ${products[i]}`);
@@ -123,6 +123,7 @@ suite('Linting - Manager', () => {
 
     EnumEx.getValues<Product>(Product).forEach(product => {
         const linterIdMapping = new Map<Product, LinterId>();
+        linterIdMapping.set(Product.bandit, 'bandit');
         linterIdMapping.set(Product.flake8, 'flake8');
         linterIdMapping.set(Product.mypy, 'mypy');
         linterIdMapping.set(Product.pep8, 'pep8');

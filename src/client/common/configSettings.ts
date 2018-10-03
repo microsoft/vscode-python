@@ -186,6 +186,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             flake8Args: [], flake8Enabled: false, flake8Path: 'flake',
             lintOnSave: false, maxNumberOfProblems: 100,
             mypyArgs: [], mypyEnabled: false, mypyPath: 'mypy',
+            banditArgs: [], banditEnabled: false, banditPath: 'bandit',
             pep8Args: [], pep8Enabled: false, pep8Path: 'pep8',
             pylamaArgs: [], pylamaEnabled: false, pylamaPath: 'pylama',
             prospectorArgs: [], prospectorEnabled: false, prospectorPath: 'prospector',
@@ -214,6 +215,11 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                 error: DiagnosticSeverity.Error,
                 note: DiagnosticSeverity.Hint
             },
+            banditCategorySeverity: {
+                LOW: DiagnosticSeverity.Error,
+                MEDIUM: DiagnosticSeverity.Error,
+                HIGH: DiagnosticSeverity.Error
+            },
             pylintUseMinimalCheckers: false
         };
         this.linting.pylintPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylintPath), workspaceRoot);
@@ -223,6 +229,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.linting.prospectorPath = getAbsolutePath(systemVariables.resolveAny(this.linting.prospectorPath), workspaceRoot);
         this.linting.pydocstylePath = getAbsolutePath(systemVariables.resolveAny(this.linting.pydocstylePath), workspaceRoot);
         this.linting.mypyPath = getAbsolutePath(systemVariables.resolveAny(this.linting.mypyPath), workspaceRoot);
+        this.linting.banditPath = getAbsolutePath(systemVariables.resolveAny(this.linting.banditPath), workspaceRoot);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const formattingSettings = systemVariables.resolveAny(pythonSettings.get<IFormattingSettings>('formatting'))!;

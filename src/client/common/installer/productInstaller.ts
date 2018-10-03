@@ -285,6 +285,7 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
         case Product.flake8: return 'flake8';
         case Product.unittest: return 'unittest';
         case Product.rope: return 'rope';
+        case Product.bandit: return 'bandit';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }
