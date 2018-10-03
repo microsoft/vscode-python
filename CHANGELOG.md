@@ -37,6 +37,7 @@ make this extension useful:
   [venv](https://docs.python.org/3/library/venv.html#module-venv),
   [virtualenv](https://pypi.org/project/virtualenv/)
 - Linting:
+  [bandit](https://pypi.org/project/bandit/),
   [flake8](https://pypi.org/project/flake8/),
   [mypy](https://pypi.org/project/mypy/),
   [prospector](https://pypi.org/project/prospector/),
@@ -79,6 +80,9 @@ part of!
    ([#2630](https://github.com/Microsoft/vscode-python/issues/2630))
 1. Language server now provides rename functionality.
    ([#2650](https://github.com/Microsoft/vscode-python/issues/2650))
+1. Add [bandit](https://pypi.org/project/bandit/) to supported linters.
+   (thanks [Steven Demurjian](https://github.com/demus:w))
+   ([#2775](https://github.com/Microsoft/vscode-python/issues/2775))
 
 ### Fixes
 
