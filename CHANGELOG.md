@@ -81,7 +81,7 @@ part of!
 1. Language server now provides rename functionality.
    ([#2650](https://github.com/Microsoft/vscode-python/issues/2650))
 1. Add [bandit](https://pypi.org/project/bandit/) to supported linters.
-   (thanks [Steven Demurjian](https://github.com/demus:w))
+   (thanks [Steven Demurjian](https://github.com/demus))
    ([#2775](https://github.com/Microsoft/vscode-python/issues/2775))
 
 ### Fixes
