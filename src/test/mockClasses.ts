@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import {
-    Flake8CategorySeverity, IBanditCategorySeverity, ILintingSettings, IMypyCategorySeverity,
+    Flake8CategorySeverity, ILintingSettings, IMypyCategorySeverity,
     IPep8CategorySeverity, IPylintCategorySeverity
 } from '../client/common/types';
 
@@ -70,7 +70,6 @@ export class MockLintingSettings implements ILintingSettings {
     public pep8CategorySeverity: IPep8CategorySeverity;
     public flake8CategorySeverity: Flake8CategorySeverity;
     public mypyCategorySeverity: IMypyCategorySeverity;
-    public banditCategorySeverity: IBanditCategorySeverity;
     public prospectorPath: string;
     public pylintPath: string;
     public pep8Path: string;

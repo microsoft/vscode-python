@@ -1003,42 +1003,6 @@
                     },
                     "scope": "resource"
                 },
-                "python.linting.banditCategorySeverity.LOW": {
-                    "type": "string",
-                    "default": "Information",
-                    "description": "Severity of Bandit message type 'LOW'.",
-                    "enum": [
-                        "Hint",
-                        "Error",
-                        "Information",
-                        "Warning"
-                    ],
-                    "scope": "resource"
-                },
-                "python.linting.banditCategorySeverity.MEDIUM": {
-                    "type": "string",
-                    "default": "Warning",
-                    "description": "Severity of Bandit message type 'MEDIUM'.",
-                    "enum": [
-                        "Hint",
-                        "Error",
-                        "Information",
-                        "Warning"
-                    ],
-                    "scope": "resource"
-                },
-                "python.linting.banditCategorySeverity.HIGH": {
-                    "type": "string",
-                    "default": "Error",
-                    "description": "Severity of Bandit message type 'HIGH'.",
-                    "enum": [
-                        "Hint",
-                        "Error",
-                        "Information",
-                        "Warning"
-                    ],
-                    "scope": "resource"
-                },
                 "python.linting.banditEnabled": {
                     "type": "boolean",
                     "default": false,

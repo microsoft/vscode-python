@@ -183,11 +183,6 @@ export interface IMypyCategorySeverity {
     readonly error: DiagnosticSeverity;
     readonly note: DiagnosticSeverity;
 }
-export interface IBanditCategorySeverity {
-    LOW: DiagnosticSeverity;
-    MEDIUM: DiagnosticSeverity;
-    HIGH: DiagnosticSeverity;
-}
 export interface ILintingSettings {
     readonly enabled: boolean;
     readonly ignorePatterns: string[];
@@ -209,7 +204,6 @@ export interface ILintingSettings {
     readonly pep8CategorySeverity: IPep8CategorySeverity;
     readonly flake8CategorySeverity: Flake8CategorySeverity;
     readonly mypyCategorySeverity: IMypyCategorySeverity;
-    readonly banditCategorySeverity: IBanditCategorySeverity;
     prospectorPath: string;
     pylintPath: string;
     pep8Path: string;

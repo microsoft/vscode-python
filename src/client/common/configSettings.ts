@@ -215,11 +215,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                 error: DiagnosticSeverity.Error,
                 note: DiagnosticSeverity.Hint
             },
-            banditCategorySeverity: {
-                LOW: DiagnosticSeverity.Information,
-                MEDIUM: DiagnosticSeverity.Warning,
-                HIGH: DiagnosticSeverity.Error
-            },
             pylintUseMinimalCheckers: false
         };
         this.linting.pylintPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylintPath), workspaceRoot);
