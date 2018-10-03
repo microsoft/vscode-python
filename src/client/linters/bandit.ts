@@ -11,11 +11,13 @@ import { ILintMessage, LintMessageSeverity } from './types';
 export class Bandit extends BaseLinter {
     constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
         super(Product.bandit, outputChannel, serviceContainer);
-
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        const messages = await this.run(['-f', 'custom', '--msg-template', '{line},0,{severity},{test_id}:{msg}', document.uri.fsPath], document, cancellation);
+        // View all errors in bandit <= 1.5.1 (https://github.com/PyCQA/bandit/issues/371)
+        const messages = await this.run([
+            '-f', 'custom', '--msg-template', '{line},0,{severity},{test_id}:{msg}', '-n', '-1', document.uri.fsPath
+        ], document, cancellation);
 
         messages.forEach(msg => {
             msg.severity = {
