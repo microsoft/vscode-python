@@ -4,10 +4,12 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { getNamesAndValues } from '../../../utils/enum';
 import { noop } from '../../../utils/misc';
 import { IWorkspaceService } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
+import { ITerminalActivationCommandProvider, TerminalShellType } from '../../common/terminal/types';
 import { ICurrentProcess, IPathUtils } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { InterpreterType, IPipEnvService } from '../contracts';
@@ -41,32 +43,47 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         return grandParentDirName;
     }
     public async getEnvironmentType(pythonPath: string, resource?: Uri): Promise<InterpreterType> {
-        const dir = path.dirname(pythonPath);
-        const pyEnvCfgFiles = PYENVFILES.map(file => path.join(dir, file));
-        for (const file of pyEnvCfgFiles) {
-            if (await this.fs.fileExists(file)) {
-                return InterpreterType.Venv;
-            }
+        if (await this.isVenvEnvironment(pythonPath)) {
+            return InterpreterType.Venv;
         }
 
-        const pyEnvRoot = await this.getPyEnvRoot(resource);
-        if (pyEnvRoot && pythonPath.startsWith(pyEnvRoot)) {
+        if (await this.isPyEnvEnvironment(pythonPath, resource)) {
             return InterpreterType.Pyenv;
         }
 
-        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders![0].uri : undefined;
-        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
-        const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
-        if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath)) {
+        if (await this.isPipEnvironment(pythonPath, resource)) {
             return InterpreterType.PipEnv;
         }
 
-        if ((await this.getEnvironmentName(pythonPath)).length > 0) {
+        if (await this.isVirtualEnvironment(pythonPath)) {
             return InterpreterType.VirtualEnv;
         }
 
         // Lets not try to determine whether this is a conda environment or not.
         return InterpreterType.Unknown;
+    }
+    public async isVenvEnvironment(pythonPath: string) {
+        const dir = path.dirname(pythonPath);
+        const pyEnvCfgFiles = PYENVFILES.map(file => path.join(dir, file));
+        for (const file of pyEnvCfgFiles) {
+            if (await this.fs.fileExists(file)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public async isPyEnvEnvironment(pythonPath: string, resource?: Uri) {
+        const pyEnvRoot = await this.getPyEnvRoot(resource);
+        return pyEnvRoot && pythonPath.startsWith(pyEnvRoot);
+    }
+    public async isPipEnvironment(pythonPath: string, resource?: Uri) {
+        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders![0].uri : undefined;
+        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
+        const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
+        if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath)) {
+            return true;
+        }
+        return false;
     }
     public async getPyEnvRoot(resource?: Uri): Promise<string | undefined> {
         if (this.pyEnvRoot) {
@@ -90,5 +107,25 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         }
         const pathUtils = this.serviceContainer.get<IPathUtils>(IPathUtils);
         return this.pyEnvRoot = path.join(pathUtils.home, '.pyenv');
+    }
+    public async isVirtualEnvironment(pythonPath: string) {
+        const provider = this.getTerminalActivationProviderForVirtualEnvs();
+        const shells = getNamesAndValues<TerminalShellType>(TerminalShellType)
+            .filter(shell => provider.isShellSupported(shell.value))
+            .map(shell => shell.value);
+
+        for (const shell of shells) {
+            const cmds = await provider.getActivationCommandsForInterpreter!(pythonPath, shell);
+            if (cmds && cmds.length > 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    private getTerminalActivationProviderForVirtualEnvs(): ITerminalActivationCommandProvider {
+        const isWindows = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
+        const serviceName = isWindows ? 'commandPromptAndPowerShell' : 'bashCShellFish';
+        return this.serviceContainer.get<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, serviceName);
     }
 }

@@ -57,4 +57,5 @@ export const ITerminalActivationCommandProvider = Symbol('ITerminalActivationCom
 export interface ITerminalActivationCommandProvider {
     isShellSupported(targetShell: TerminalShellType): boolean;
     getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined>;
+    getActivationCommandsForInterpreter?(pythonPath, targetShell: TerminalShellType): Promise<string[] | undefined>;
 }

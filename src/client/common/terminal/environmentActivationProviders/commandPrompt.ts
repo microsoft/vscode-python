@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Uri } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
 import { IPlatformService } from '../../platform/types';
@@ -20,9 +19,9 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
             targetShell === TerminalShellType.powershell ||
             targetShell === TerminalShellType.powershellCore;
     }
-    public async getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
+    public async getActivationCommandsForInterpreter(pythonPath, targetShell: TerminalShellType): Promise<string[] | undefined> {
         // Dependending on the target shell, look for the preferred script file.
-        const scriptFile = await this.findScriptFile(resource, this.getScriptsInOrderOfPreference(targetShell));
+        const scriptFile = await this.findScriptFile(pythonPath, this.getScriptsInOrderOfPreference(targetShell));
         if (!scriptFile) {
             return;
         }
