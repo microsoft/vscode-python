@@ -994,7 +994,15 @@
                     "description": "Controls the maximum number of problems produced by the server.",
                     "scope": "resource"
                 },
-
+                "python.linting.banditArgs": {
+                    "type": "array",
+                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "scope": "resource"
+                },
                 "python.linting.banditCategorySeverity.LOW": {
                     "type": "string",
                     "default": "Information",
