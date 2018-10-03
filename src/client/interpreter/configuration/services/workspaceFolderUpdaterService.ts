@@ -14,7 +14,7 @@ export class WorkspaceFolderPythonPathUpdaterService implements IPythonPathUpdat
             return;
         }
         if (pythonPath.startsWith(this.workspaceFolder.fsPath)) {
-            pythonPath = path.relative(this.workspaceFolder.fsPath, pythonPath);
+            pythonPath = path.join('.', path.relative(this.workspaceFolder.fsPath, pythonPath));
         }
         await pythonConfig.update('pythonPath', pythonPath, ConfigurationTarget.WorkspaceFolder);
     }

@@ -6,7 +6,7 @@
 import { Request as RequestResult } from 'request';
 import { SemVer } from 'semver';
 import { NugetPackage } from '../common/nuget/types';
-import { IExtensionContext } from '../common/types';
+import { IExtensionContext, LanguageServerDownloadChannels } from '../common/types';
 
 export const IExtensionActivationService = Symbol('IExtensionActivationService');
 export interface IExtensionActivationService {
@@ -50,6 +50,11 @@ export const ILanguageServerPackageService = Symbol('ILanguageServerPackageServi
 export interface ILanguageServerPackageService {
   getNugetPackageName(): string;
   getLatestNugetPackageVersion(): Promise<NugetPackage>;
+  getLanguageServerDownloadChannel(): LanguageServerDownloadChannels;
 }
 
 export const MajorLanguageServerVersion = Symbol('MajorLanguageServerVersion');
+export const IDownloadChannelRule = Symbol('IDownloadChannelRule');
+export interface IDownloadChannelRule {
+  shouldLookForNewLanguageServer(currentFolder?: FolderVersionPair): Promise<boolean>;
+}

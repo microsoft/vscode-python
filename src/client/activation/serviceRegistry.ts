@@ -9,12 +9,13 @@ import { IServiceManager } from '../ioc/types';
 import { LanguageServerSurveyBanner } from '../languageServices/languageServerSurveyBanner';
 import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguageServerBanner';
 import { ExtensionActivationService } from './activationService';
+import { DownloadBetaChannelRule, DownloadDailyChannelRule, DownloadStableChannelRule } from './downloadChannelRules';
 import { JediExtensionActivator } from './jedi';
 import { LanguageServerExtensionActivator } from './languageServer';
 import { LanguageServerFolderService } from './languageServerFolderService';
 import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from './languageServerPackageRepository';
 import { LanguageServerPackageService } from './languageServerPackageService';
-import { ExtensionActivators, IExtensionActivationService, IExtensionActivator, ILanguageServerFolderService, ILanguageServerPackageService } from './types';
+import { ExtensionActivators, IDownloadChannelRule, IExtensionActivationService, IExtensionActivator, ILanguageServerFolderService, ILanguageServerPackageService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, ExtensionActivationService);
@@ -27,4 +28,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<INugetRepository>(INugetRepository, StableLanguageServerPackageRepository, LanguageServerDownloadChannel.stable);
     serviceManager.addSingleton<INugetRepository>(INugetRepository, BetaLanguageServerPackageRepository, LanguageServerDownloadChannel.beta);
     serviceManager.addSingleton<INugetRepository>(INugetRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel.daily);
+    serviceManager.addSingleton<IDownloadChannelRule>(IDownloadChannelRule, DownloadDailyChannelRule, LanguageServerDownloadChannel.daily);
+    serviceManager.addSingleton<IDownloadChannelRule>(IDownloadChannelRule, DownloadBetaChannelRule, LanguageServerDownloadChannel.beta);
+    serviceManager.addSingleton<IDownloadChannelRule>(IDownloadChannelRule, DownloadStableChannelRule, LanguageServerDownloadChannel.stable);
 }

@@ -31,9 +31,15 @@
 ### Setup
 
 ```shell
-git clone --recurse-submodules https://github.com/microsoft/vscode-python
+git clone https://github.com/microsoft/vscode-python
 cd vscode-python
 npm install
+python3 -m venv .venv
+# Activate the virtual environment as appropriate for your shell.
+python -m pip install -r requirements.txt
+python -m pip install -t pythonFiles/experimental/ptvsd ptvsd
+# Specifying the virtual environment simply varies between shells.
+export CI_PYTHON_PATH=`pwd`/.venv/bin/python
 ```
 
 You may see warnings that ```The engine "vscode" appears to be invalid.```, you can ignore these.

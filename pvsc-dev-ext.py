@@ -32,7 +32,7 @@ class VSCode(enum.Enum):
 
 def run_command(command, cwd=None):
     """Run the specified command in a subprocess shell."""
-    cmd = subprocess.run(command, cwd=cwd, stderr=subprocess.PIPE, shell=True)
+    cmd = subprocess.run(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     cmd.check_returncode()
 
 
@@ -90,7 +90,7 @@ def build(checkout):
 def setup(install_type):
     """Set up a clone of PVSC."""
     checkout = checkout_directory(install_type)
-    print("Cloning {REPO_URL} ...")
+    print(f"Cloning {REPO_URL} ...")
     clone_repo(checkout)
     build(checkout)
 

@@ -58,7 +58,7 @@ suite('Interpreters display version', () => {
         const pythonPath = path.join('a', 'b', 'python');
         processService
             .setup(p => p.exec(typeMoq.It.isValue(pythonPath), typeMoq.It.isValue(['-m', 'pip', '--version']), typeMoq.It.isAny()))
-            .returns(() => Promise.reject())
+            .returns(() => Promise.reject('error'))
             .verifiable(typeMoq.Times.once());
 
         const pipVersionPromise = interpreterVersionService.getPipVersion(pythonPath);
