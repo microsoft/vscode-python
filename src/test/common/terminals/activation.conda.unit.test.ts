@@ -91,6 +91,44 @@ suite('Terminal Environment Activation conda', () => {
         expect(activationCommands).to.deep.equal(expected, 'Incorrect Activation command');
     });
 
+    test('Conda activation on bash uses "source" before 4.4.0', async () => {
+        const envName = 'EnvA';
+        const pythonPath = 'python3';
+        platformService.setup(p => p.isWindows).returns(() => false);
+        condaService.setup(c => c.getCondaEnvironment(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve({
+                name: envName,
+                path: path.dirname(pythonPath)
+            }));
+        condaService.setup(c => c.getCondaVersion())
+            .returns(() => Promise.resolve('4.3.1'));
+        const expected = ['source activate EnvA'];
+
+        const provider = new CondaActivationCommandProvider(serviceContainer.object);
+        const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
+
+        expect(activationCommands).to.deep.equal(expected, 'Incorrect Activation command');
+    });
+
+    test('Conda activation on bash uses "conda" after 4.4.0', async () => {
+        const envName = 'EnvA';
+        const pythonPath = 'python3';
+        platformService.setup(p => p.isWindows).returns(() => false);
+        condaService.setup(c => c.getCondaEnvironment(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve({
+                name: envName,
+                path: path.dirname(pythonPath)
+            }));
+        condaService.setup(c => c.getCondaVersion())
+            .returns(() => Promise.resolve('4.4.0'));
+        const expected = [`${conda} activate EnvA`];
+
+        const provider = new CondaActivationCommandProvider(serviceContainer.object);
+        const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
+
+        expect(activationCommands).to.deep.equal(expected, 'Incorrect Activation command');
+    });
+
     async function expectNoCondaActivationCommandForPowershell(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string, shellType: TerminalShellType, hasSpaceInEnvironmentName = false) {
         terminalSettings.setup(t => t.activateEnvironment).returns(() => true);
         platformService.setup(p => p.isLinux).returns(() => isLinux);

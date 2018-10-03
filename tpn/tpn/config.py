@@ -18,7 +18,7 @@ class ConfigProject(data.Project):
     purpose: Optional[str] = None
 
 
-SECTIONS = {"project"}
+SECTIONS = {"metadata", "project"}
 FIELDS = {"name", "version", "url", "purpose", "license"}
 
 

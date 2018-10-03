@@ -1,6 +1,56 @@
 # Changelog
 
-## 2018.8.1-beta (20 September 2018)
+## 2018.9.0-rc (2 Oct 2018)
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort 4.3.4](https://pypi.org/project/isort/4.3.4/)
+- [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
+  and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
+- [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+- [ptvsd 4.1.3](https://github.com/Microsoft/ptvsd/releases/tag/v4.1.3)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
 
 ### Enhancements
 
@@ -27,17 +77,24 @@
    ([#2617](https://github.com/Microsoft/vscode-python/issues/2617))
 1. Add Python Language Server version to the survey banner URL presented to some users.
    ([#2630](https://github.com/Microsoft/vscode-python/issues/2630))
+1. Language server now provides rename functionality.
+   ([#2650](https://github.com/Microsoft/vscode-python/issues/2650))
 
 ### Fixes
 
 1. Improvements to the display format of interpreter information in the list of interpreters.
    ([#1352](https://github.com/Microsoft/vscode-python/issues/1352))
+1. Deprecate the use of the setting `python.autoComplete.preloadModules`. Recommendation is to utilize the new language server (change the setting `"python.jediEnabled": false`).
+   ([#1704](https://github.com/Microsoft/vscode-python/issues/1704))
 1. Add a new `"python.condaPath"` setting to use if conda is not found on `PATH`.
    ([#1944](https://github.com/Microsoft/vscode-python/issues/1944))
 1. Ensure code is executed when the last line of selected code is indented.
    ([#2167](https://github.com/Microsoft/vscode-python/issues/2167))
-1. Stop duplicate initializations of Python Language Server progress reporter.
+1. Stop duplicate initializations of the Python Language Server's progress reporter.
    ([#2297](https://github.com/Microsoft/vscode-python/issues/2297))
+1. Fix the regex expression to match MyPy linter messages that expects the file name to have a .py extension, that isn't always the case, to catch any filename.
+   E.g., .pyi files that describes interfaces wouldn't get the linter messages to Problems tab.
+   ([#2380](https://github.com/Microsoft/vscode-python/issues/2380))
 1. Use a python script to launch the debugger, instead of using `-m` which requires changes to the `PYTHONPATH` variable.
    ([#2509](https://github.com/Microsoft/vscode-python/issues/2509))
 1. Provide paths from `PYTHONPATH` environment variable to the language server, as additional search locations of Python modules.
@@ -50,6 +107,8 @@
    ([#2563](https://github.com/Microsoft/vscode-python/issues/2563))
 1. Use the environment folder name for environments without environment names in the Conda Environments list file.
    ([#2577](https://github.com/Microsoft/vscode-python/issues/2577))
+1. Fix debug adapter `Attach` test.
+   ([#2655](https://github.com/Microsoft/vscode-python/issues/2655))
 
 ### Code Health
 

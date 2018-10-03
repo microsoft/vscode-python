@@ -31,10 +31,13 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
 
     suiteSetup(async function () {
-        //tslint:disable-next-line:no-invalid-this
-        this.skip();
+        const skipped = true;
+        if (skipped) {
+            // These tests have been skipped temprarily.  See gh-2691.
+            //tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        }
 
-        return;
         await initialize();
         await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
     });

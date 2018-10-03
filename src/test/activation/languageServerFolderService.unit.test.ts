@@ -10,7 +10,7 @@ import * as path from 'path';
 import { parse, SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
 import { LanguageServerFolderService } from '../../client/activation/languageServerFolderService';
-import { ILanguageServerPackageService } from '../../client/activation/types';
+import { IDownloadChannelRule, ILanguageServerPackageService } from '../../client/activation/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { NugetPackage } from '../../client/common/nuget/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
@@ -24,31 +24,39 @@ suite('Language Server Folder Service', () => {
     let platform: typeMoq.IMock<IPlatformService>;
     let lsFolderService: LanguageServerFolderService;
     let settings: typeMoq.IMock<IPythonSettings>;
+    let packageService: typeMoq.IMock<ILanguageServerPackageService>;
+    let downloadRule: typeMoq.IMock<IDownloadChannelRule>;
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         platform = typeMoq.Mock.ofType<IPlatformService>();
         const configService = typeMoq.Mock.ofType<IConfigurationService>();
         settings = typeMoq.Mock.ofType<IPythonSettings>();
+        packageService = typeMoq.Mock.ofType<ILanguageServerPackageService>();
+        downloadRule = typeMoq.Mock.ofType<IDownloadChannelRule>();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platform.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
         configService.setup(cfg => cfg.getSettings()).returns(() => settings.object);
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(ILanguageServerPackageService))).returns(() => packageService.object);
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IDownloadChannelRule), typeMoq.It.isAny()))
+            .returns(() => downloadRule.object);
+
+        packageService.setup(p => p.getLanguageServerDownloadChannel())
+            .returns(() => 'stable');
+        downloadRule.setup(p => p.shouldLookForNewLanguageServer())
+            .returns(() => Promise.resolve(true));
 
         lsFolderService = new LanguageServerFolderService(serviceContainer.object);
     });
     test('Get latest language server version', async () => {
-        const lsPackageService = typeMoq.Mock.ofType<ILanguageServerPackageService>();
         const pkgInfo = { package: 'string', version: new SemVer('1.1.1'), uri: 'uri' };
-        lsPackageService
+        packageService
             .setup(ls => ls.getLatestNugetPackageVersion())
             .returns(() => Promise.resolve(pkgInfo))
             .verifiable(typeMoq.Times.atLeastOnce());
-        serviceContainer
-            .setup(c => c.get(typeMoq.It.isValue(ILanguageServerPackageService)))
-            .returns(() => lsPackageService.object);
 
         await lsFolderService.getLatestLanguageServerVersion();
 
-        lsPackageService.verifyAll();
+        packageService.verifyAll();
     });
     test('Get folder version', async () => {
         const version = lsFolderService.getFolderVersion(`${languageServerFolder}.${'1.2.3'}`);
@@ -112,25 +120,63 @@ suite('Language Server Folder Service', () => {
     test('Get latest language server folder name when remote version is greater', async () => {
         const pkg: NugetPackage = { package: 'abc', version: new SemVer('2.1.1'), uri: 'xyz' };
         const existingFolder = { path: path.join('1', '2', 'abc'), version: new SemVer('1.1.1') };
-        settings.setup(s => s.autoUpdateLanguageServer).returns(() => true).verifiable(typeMoq.Times.once());
+        lsFolderService.shouldLookForNewLanguageServer = () => Promise.resolve(true);
         lsFolderService.getCurrentLanguageServerDirectory = () => Promise.resolve(existingFolder);
         lsFolderService.getLatestLanguageServerVersion = () => Promise.resolve(pkg);
 
         const folderName = await lsFolderService.getLanguageServerFolderName();
 
-        settings.verifyAll();
         expect(folderName).to.be.equal(`${languageServerFolder}.2.1.1`);
     });
     test('Get local folder name when remote version is greater and auto download is disabled', async () => {
         const pkg: NugetPackage = { package: 'abc', version: new SemVer('2.1.1'), uri: 'xyz' };
         const existingFolder = { path: path.join('1', '2', 'abc'), version: new SemVer('1.1.1') };
-        settings.setup(s => s.autoUpdateLanguageServer).returns(() => false).verifiable(typeMoq.Times.once());
+        lsFolderService.shouldLookForNewLanguageServer = () => Promise.resolve(false);
         lsFolderService.getCurrentLanguageServerDirectory = () => Promise.resolve(existingFolder);
         lsFolderService.getLatestLanguageServerVersion = () => Promise.resolve(pkg);
 
         const folderName = await lsFolderService.getLanguageServerFolderName();
 
-        settings.verifyAll();
         expect(folderName).to.be.equal('abc');
+    });
+    test('Should not check on server if downloading is disabled', async () => {
+        const existingFolder = { path: path.join('1', '2', 'abc'), version: new SemVer('1.1.1') };
+        settings.setup(s => s.downloadLanguageServer).returns(() => false).verifiable(typeMoq.Times.once());
+
+        const check = await lsFolderService.shouldLookForNewLanguageServer(existingFolder);
+
+        settings.verifyAll();
+        expect(check).to.be.equal(false, 'invalid value');
+    });
+    test('Should not check on server if auto updating is disabled', async () => {
+        const existingFolder = { path: path.join('1', '2', 'abc'), version: new SemVer('1.1.1') };
+        settings.setup(s => s.autoUpdateLanguageServer).returns(() => false).verifiable(typeMoq.Times.once());
+
+        const check = await lsFolderService.shouldLookForNewLanguageServer(existingFolder);
+
+        settings.verifyAll();
+        expect(check).to.be.equal(false, 'invalid value');
+    });
+    test('Should not check on server if download rule does not require a download', async () => {
+        downloadRule.reset();
+        downloadRule
+            .setup(d => d.shouldLookForNewLanguageServer(typeMoq.It.isAny()))
+            .returns(() => Promise.resolve(false))
+            .verifiable(typeMoq.Times.once());
+        const check = await lsFolderService.shouldLookForNewLanguageServer();
+
+        downloadRule.verifyAll();
+        expect(check).to.be.equal(false, 'invalid value');
+    });
+    test('Should not check on server if download rule does require a download', async () => {
+        downloadRule.reset();
+        downloadRule
+            .setup(d => d.shouldLookForNewLanguageServer(typeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(typeMoq.Times.once());
+        const check = await lsFolderService.shouldLookForNewLanguageServer();
+
+        downloadRule.verifyAll();
+        expect(check).to.be.equal(true, 'invalid value');
     });
 });

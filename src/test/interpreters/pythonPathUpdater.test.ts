@@ -80,7 +80,7 @@ suite('Python Path Settings Updater', () => {
             const workspaceFolder = Uri.file(workspaceFolderPath);
             const updater = updaterServiceFactory.getWorkspaceFolderPythonPathConfigurationService(workspaceFolder);
             const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
-            const expectedPythonPath = path.join('env', 'bin', 'python');
+            const expectedPythonPath = path.join('.', 'env', 'bin', 'python');
             const workspaceConfig = setupConfigProvider(workspaceFolder);
             workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
@@ -120,7 +120,7 @@ suite('Python Path Settings Updater', () => {
             const workspaceFolder = Uri.file(workspaceFolderPath);
             const updater = updaterServiceFactory.getWorkspacePythonPathConfigurationService(workspaceFolder);
             const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
-            const expectedPythonPath = path.join('env', 'bin', 'python');
+            const expectedPythonPath = path.join('.', 'env', 'bin', 'python');
             const workspaceConfig = setupConfigProvider(workspaceFolder);
             workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 

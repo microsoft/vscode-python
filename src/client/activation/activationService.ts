@@ -18,14 +18,14 @@ import '../common/extensions';
 import { IPlatformService } from '../common/platform/types';
 import {
     IConfigurationService, IDisposableRegistry,
-    ILogger, IOutputChannel, IPythonSettings
+    IOutputChannel, IPythonSettings
 } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';
 import {
     ExtensionActivators, IExtensionActivationService,
-    IExtensionActivator, ILanguageServerFolderService
+    IExtensionActivator
 } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
@@ -91,26 +91,9 @@ export class ExtensionActivationService implements IExtensionActivationService, 
         }
     }
 
-    // write a descriptive text message to output to help us diagnose user issues.
     private async logStartup(isJedi: boolean): Promise<void> {
-        let outputLine: string = 'Starting Jedi Python language engine.';
-
-        try {
-            if (!isJedi) {
-                outputLine = 'Starting Microsoft Python language server.';
-                const lsFolderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
-                const msplCurrentFolder = await lsFolderService.getCurrentLanguageServerDirectory();
-                if (msplCurrentFolder && msplCurrentFolder.version) {
-                    outputLine = `Starting Microsoft Python language server (${msplCurrentFolder.version.raw}).`;
-                }
-            }
-        } catch (failReason) {
-            // do not fail doing this task - log only
-            const log: ILogger = this.serviceContainer.get<ILogger>(ILogger);
-            log.logInformation('Failed to obtain current MPLS version during activation.', failReason);
-        } finally {
-            this.output.appendLine(outputLine);
-        }
+        const outputLine = isJedi ? 'Starting Jedi Python language engine.' : 'Starting Microsoft Python language server.';
+        this.output.appendLine(outputLine);
     }
 
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {

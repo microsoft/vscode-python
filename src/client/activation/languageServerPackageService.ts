@@ -4,11 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { parse } from 'semver';
 import { Architecture, OSType } from '../../utils/platform';
+import { PVSC_EXTENSION_ID } from '../common/constants';
 import { log } from '../common/logger';
 import { INugetRepository, INugetService, NugetPackage } from '../common/nuget/types';
 import { IPlatformService } from '../common/platform/types';
-import { IConfigurationService } from '../common/types';
+import { IConfigurationService, IExtensions, LanguageServerDownloadChannels } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { PlatformName } from './platformData';
 import { ILanguageServerPackageService } from './types';
@@ -21,8 +23,6 @@ export const PackageNames = {
     [PlatformName.Linux64Bit]: `${downloadBaseFileName}-${PlatformName.Linux64Bit}`,
     [PlatformName.Mac64Bit]: `${downloadBaseFileName}-${PlatformName.Mac64Bit}`
 };
-
-export const DefaultLanguageServerDownloadChannel = 'beta';
 
 @injectable()
 export class LanguageServerPackageService implements ILanguageServerPackageService {
@@ -60,9 +60,21 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
         return validPackages[validPackages.length - 1];
     }
 
-    public getLanguageServerDownloadChannel() {
+    public getLanguageServerDownloadChannel(): LanguageServerDownloadChannels {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const settings = configService.getSettings();
-        return settings.analysis.downloadChannel || DefaultLanguageServerDownloadChannel;
+        if (settings.analysis.downloadChannel) {
+            return settings.analysis.downloadChannel;
+        }
+
+        const isAlphaVersion = this.isAlphaVersionOfExtension();
+        return isAlphaVersion ? 'beta' : 'stable';
+    }
+
+    private isAlphaVersionOfExtension() {
+        const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
+        const extension = extensions.getExtension(PVSC_EXTENSION_ID)!;
+        const version = parse(extension.packageJSON.version)!;
+        return version.prerelease === ['alpha'];
     }
 }

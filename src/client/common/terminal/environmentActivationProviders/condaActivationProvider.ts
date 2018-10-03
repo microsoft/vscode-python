@@ -3,6 +3,7 @@
 
 import { injectable } from 'inversify';
 import { Uri } from 'vscode';
+import { compareVersion } from '../../../../utils/version';
 import { ICondaService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
@@ -38,25 +39,97 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
             return;
         }
 
-        const isWindows = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
-        if (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore) {
-            if (!isWindows) {
-                return;
+        if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
+            // Note that on Windows we don't have to change anything
+            // for conda 4.4.0+ (i.e. "conda activate").
+            switch (targetShell) {
+                case TerminalShellType.powershell:
+                case TerminalShellType.powershellCore:
+                    return this.getPowershellCommands(envInfo.name, targetShell);
+
+                // tslint:disable-next-line:no-suspicious-comment
+                // TODO: Do we really special-case fish on Windows?
+                case TerminalShellType.fish:
+                    return this.getFishCommands(envInfo.name, await condaService.getCondaFile());
+
+                default:
+                    return this.getWindowsCommands(envInfo.name);
             }
-            // https://github.com/conda/conda/issues/626
-            // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
-            const powershellExe = targetShell === TerminalShellType.powershell ? 'powershell' : 'pwsh';
-            return [
-                `& cmd /k "activate ${envInfo.name.toCommandArgument().replace(/"/g, '""')} & ${powershellExe}"`
-            ];
-        } else if (targetShell === TerminalShellType.fish) {
-            const conda = await condaService.getCondaFile();
-            // https://github.com/conda/conda/blob/be8c08c083f4d5e05b06bd2689d2cd0d410c2ffe/shell/etc/fish/conf.d/conda.fish#L18-L28
-            return [`${conda.fileToCommandArgument()} activate ${envInfo.name.toCommandArgument()}`];
-        } else if (isWindows) {
-            return [`activate ${envInfo.name.toCommandArgument()}`];
         } else {
-            return [`source activate ${envInfo.name.toCommandArgument()}`];
+            switch (targetShell) {
+                case TerminalShellType.powershell:
+                case TerminalShellType.powershellCore:
+                    return;
+
+                // tslint:disable-next-line:no-suspicious-comment
+                // TODO: What about pre-4.4.0?
+                case TerminalShellType.fish:
+                    return this.getFishCommands(envInfo.name, await condaService.getCondaFile());
+
+                default:
+                    return this.getUnixCommands(
+                        envInfo.name,
+                        await condaService.getCondaVersion() || '',
+                        await condaService.getCondaFile()
+                    );
+            }
+        }
+    }
+
+    private async getWindowsCommands(
+        envName: string
+    ): Promise<string[] | undefined> {
+        return [
+            `activate ${envName.toCommandArgument()}`
+        ];
+    }
+
+    private async getPowershellCommands(
+        envName: string,
+        targetShell: TerminalShellType
+    ): Promise<string[] | undefined> {
+        // https://github.com/conda/conda/issues/626
+        // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
+        const powershellExe = targetShell === TerminalShellType.powershell ? 'powershell' : 'pwsh';
+        return [
+            `& cmd /k "activate ${envName.toCommandArgument().replace(/"/g, '""')} & ${powershellExe}"`
+        ];
+    }
+
+    private async getFishCommands(
+        envName: string,
+        conda: string
+    ): Promise<string[] | undefined> {
+        // https://github.com/conda/conda/blob/be8c08c083f4d5e05b06bd2689d2cd0d410c2ffe/shell/etc/fish/conf.d/conda.fish#L18-L28
+        return [
+            `${conda.fileToCommandArgument()} activate ${envName.toCommandArgument()}`
+        ];
+    }
+
+    private async getUnixCommands(
+        envName: string,
+        version: string,
+        conda: string
+    ): Promise<string[] | undefined> {
+        // Conda changed how activation works in the 4.4.0 release, so
+        // we accommodate the two ways distinctly.
+        if (version === '4.4.0' || compareVersion(version, '4.4.0') > 0) {
+            // Note that this requires the user to have already followed
+            // the conda instructions such that "conda" is on their
+            // $PATH.  While we *could* use "source <abs-path-to-activate>"
+            // (after resolving the absolute path to the "activate"
+            // script), we're going to avoid operating contrary to
+            // conda's recommendations.
+            return [
+                `${conda.fileToCommandArgument()} activate ${envName.toCommandArgument()}`
+            ];
+        } else {
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Handle pre-4.4 case where "activate" script not on $PATH.
+            // (Locate script next to "conda" binary and use absolute path.
+            return [
+                `source activate ${envName.toCommandArgument()}`
+            ];
         }
     }
 }

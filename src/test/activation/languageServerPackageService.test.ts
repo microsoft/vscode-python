@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
 import { LanguageServerPackageStorageContainers } from '../../client/activation/languageServerPackageRepository';
-import { DefaultLanguageServerDownloadChannel, LanguageServerPackageService } from '../../client/activation/languageServerPackageService';
+import { LanguageServerPackageService } from '../../client/activation/languageServerPackageService';
 import { IHttpClient } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { HttpClient } from '../../client/common/net/httpClient';
@@ -27,7 +27,13 @@ suite('Language Server Package Service', () => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
     });
     test('Ensure new Major versions of Language Server is accounted for (nuget)', async function () {
-        return this.skip();
+        const skipped = true;
+        if (skipped) {
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Why was this skipped?  See gh-2615.
+            return this.skip();
+        }
+
         const workSpaceService = typeMoq.Mock.ofType<IWorkspaceService>();
         const config = typeMoq.Mock.ofType<WorkspaceConfiguration>();
         config
@@ -69,7 +75,7 @@ suite('Language Server Package Service', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService);
         const platformService = new PlatformService();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
-        const defaultStorageChannel = LanguageServerPackageStorageContainers[DefaultLanguageServerDownloadChannel];
+        const defaultStorageChannel = LanguageServerPackageStorageContainers.stable;
         const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.blob.core.windows.net', defaultStorageChannel);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
         const lsPackageService = new LanguageServerPackageService(serviceContainer.object);
