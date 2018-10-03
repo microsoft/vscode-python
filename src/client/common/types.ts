@@ -184,9 +184,9 @@ export interface IMypyCategorySeverity {
     readonly note: DiagnosticSeverity;
 }
 export interface IBanditCategorySeverity {
-    LOW: DiagnosticSeverity.Error;
-    MEDIUM: DiagnosticSeverity.Error;
-    HIGH: DiagnosticSeverity.Error;
+    LOW: DiagnosticSeverity;
+    MEDIUM: DiagnosticSeverity;
+    HIGH: DiagnosticSeverity;
 }
 export interface ILintingSettings {
     readonly enabled: boolean;
