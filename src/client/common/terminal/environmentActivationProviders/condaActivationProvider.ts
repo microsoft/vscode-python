@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
+import * as path from 'path';
 import { Uri } from 'vscode';
 import { compareVersion } from '../../../../utils/version';
 import { ICondaService } from '../../../interpreter/contracts';
@@ -32,7 +33,8 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
      */
     public async getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
-        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;
+        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService)
+            .getSettings(resource).pythonPath;
 
         const envInfo = await condaService.getCondaEnvironment(pythonPath);
         if (!envInfo) {
@@ -40,12 +42,15 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         }
 
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
-            // Note that on Windows we don't have to change anything
-            // for conda 4.4.0+ (i.e. "conda activate").
+            // windows activate can be a bit tricky due to conda changes.
+            const condaPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService)
+                .getSettings(resource).condaPath;
+            const activateCmd: string = this.getWindowsActivateCommand(condaPath);
+
             switch (targetShell) {
                 case TerminalShellType.powershell:
                 case TerminalShellType.powershellCore:
-                    return this.getPowershellCommands(envInfo.name, targetShell);
+                    return this.getPowershellCommands(envInfo.name, targetShell, activateCmd);
 
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO: Do we really special-case fish on Windows?
@@ -53,7 +58,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                     return this.getFishCommands(envInfo.name, await condaService.getCondaFile());
 
                 default:
-                    return this.getWindowsCommands(envInfo.name);
+                    return this.getWindowsCommands(envInfo.name, activateCmd);
             }
         } else {
             switch (targetShell) {
@@ -76,23 +81,41 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         }
     }
 
+    private getWindowsActivateCommand(condaExePath: string): string {
+        let activateCmd: string = 'activate';
+        if (condaExePath && condaExePath.length > 0) {
+            const condaScriptsPath: string = path.dirname(condaExePath);
+            // prefix the cmd with the found path
+            activateCmd = path.join(condaScriptsPath, activateCmd);
+
+            // notify the user that this may be necessary?
+            //}  else {
+
+            // const shellSrv: IApplicationShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            // shellSrv.showInformationMessage('No setting for Conda path found in config');
+        }
+        return activateCmd;
+    }
+
     private async getWindowsCommands(
-        envName: string
+        envName: string,
+        activateCmd: string
     ): Promise<string[] | undefined> {
         return [
-            `activate ${envName.toCommandArgument()}`
+            `${activateCmd} ${envName.toCommandArgument()}`
         ];
     }
 
     private async getPowershellCommands(
         envName: string,
-        targetShell: TerminalShellType
+        targetShell: TerminalShellType,
+        activateCmd: string
     ): Promise<string[] | undefined> {
         // https://github.com/conda/conda/issues/626
         // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
         const powershellExe = targetShell === TerminalShellType.powershell ? 'powershell' : 'pwsh';
         return [
-            `& cmd /k "activate ${envName.toCommandArgument().replace(/"/g, '""')} & ${powershellExe}"`
+            `& cmd / k "${activateCmd} ${envName.toCommandArgument().replace(/"/g, '""')} & ${powershellExe} "`
         ];
     }
 
