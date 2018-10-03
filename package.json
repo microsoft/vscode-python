@@ -994,6 +994,55 @@
                     "description": "Controls the maximum number of problems produced by the server.",
                     "scope": "resource"
                 },
+
+                "python.linting.banditCategorySeverity.LOW": {
+                    "type": "string",
+                    "default": "Information",
+                    "description": "Severity of Bandit message type 'LOW'.",
+                    "enum": [
+                        "Hint",
+                        "Error",
+                        "Information",
+                        "Warning"
+                    ],
+                    "scope": "resource"
+                },
+                "python.linting.banditCategorySeverity.MEDIUM": {
+                    "type": "string",
+                    "default": "Warning",
+                    "description": "Severity of Bandit message type 'MEDIUM'.",
+                    "enum": [
+                        "Hint",
+                        "Error",
+                        "Information",
+                        "Warning"
+                    ],
+                    "scope": "resource"
+                },
+                "python.linting.banditCategorySeverity.HIGH": {
+                    "type": "string",
+                    "default": "Error",
+                    "description": "Severity of Bandit message type 'HIGH'.",
+                    "enum": [
+                        "Hint",
+                        "Error",
+                        "Information",
+                        "Warning"
+                    ],
+                    "scope": "resource"
+                },
+                "python.linting.banditEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to lint Python files using bandit.",
+                    "scope": "resource"
+                },
+                "python.linting.banditPath": {
+                    "type": "string",
+                    "default": "bandit",
+                    "description": "Path to bandit, you can use a custom version of bandit by modifying this setting to include the full path.",
+                    "scope": "resource"
+                },
                 "python.linting.mypyArgs": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
