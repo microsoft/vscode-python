@@ -8,7 +8,6 @@ import { IServiceContainer } from '../ioc/types';
 import { BaseLinter } from './baseLinter';
 import { ILintMessage, LintMessageSeverity } from './types';
 
-
 export class Bandit extends BaseLinter {
     constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
         super(Product.bandit, outputChannel, serviceContainer);
