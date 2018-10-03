@@ -216,8 +216,8 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
                 note: DiagnosticSeverity.Hint
             },
             banditCategorySeverity: {
-                LOW: DiagnosticSeverity.Error,
-                MEDIUM: DiagnosticSeverity.Error,
+                LOW: DiagnosticSeverity.Information,
+                MEDIUM: DiagnosticSeverity.Warning,
                 HIGH: DiagnosticSeverity.Error
             },
             pylintUseMinimalCheckers: false
