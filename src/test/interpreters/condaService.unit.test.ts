@@ -3,6 +3,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import { EOL } from 'os';
 import * as path from 'path';
+import { parse } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
@@ -555,11 +556,11 @@ suite('Interpreters Conda Service', () => {
     });
 
     test('Version info from conda process will be returned in getCondaVersion', async () => {
-        const expectedVersion = new Date().toString();
-        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: expectedVersion }));
+        const expectedVersion = parse('4.4.4')!.raw;
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: '4.4.4' }));
 
         const version = await condaService.getCondaVersion();
-        assert.equal(version, expectedVersion);
+        assert.equal(version!.raw, expectedVersion);
     });
 
     test('isCondaInCurrentPath will return true if conda is available', async () => {

@@ -1,6 +1,8 @@
 import { inject, injectable, named, optional } from 'inversify';
 import * as path from 'path';
+import { parse, SemVer } from 'semver';
 import { compareVersion } from '../../../../utils/version';
+import { warn } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService, ILogger, IPersistentStateFactory } from '../../../common/types';
@@ -71,19 +73,34 @@ export class CondaService implements ICondaService {
             return this.isAvailable;
         }
         return this.getCondaVersion()
-            .then(version => this.isAvailable = typeof version === 'string')
+            .then(version => this.isAvailable = version !== undefined)
             .catch(() => this.isAvailable = false);
     }
 
     /**
      * Return the conda version.
      */
-    public async getCondaVersion(): Promise<string | undefined> {
+    public async getCondaVersion(): Promise<SemVer | undefined> {
         const processService = await this.processServiceFactory.create();
-        return this.getCondaFile()
-            .then(condaFile => processService.exec(condaFile, ['--version'], {}))
-            .then(result => result.stdout.trim())
-            .catch(() => undefined);
+        const info = await this.getCondaInfo().catch<CondaInfo | undefined>(() => undefined);
+        let versionString: string;
+        if (info && info.conda_version) {
+            versionString = info.conda_version;
+        } else {
+            const stdOut = await this.getCondaFile()
+                .then(condaFile => processService.exec(condaFile, ['--version'], {}))
+                .then(result => result.stdout.trim())
+                .catch<string | undefined>(() => undefined);
+
+            versionString = (stdOut && stdOut.startsWith('conda ')) ? stdOut.substring('conda '.length).trim() : '';
+        }
+        const version = parse(versionString, true);
+        if (version) {
+            return version;
+        }
+        // Use a bogus version, at least to indicate the fact that a version was returned.
+        warn(`Unable to parse Version of Conda, ${versionString}`);
+        return new SemVer('0.0.1');
     }
 
     /**

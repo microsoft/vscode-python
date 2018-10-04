@@ -3,8 +3,8 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import { Uri } from 'vscode';
-import { compareVersion } from '../../../../utils/version';
 import { ICondaService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
@@ -70,7 +70,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 default:
                     return this.getUnixCommands(
                         envInfo.name,
-                        await condaService.getCondaVersion() || '',
+                        await condaService.getCondaVersion(),
                         await condaService.getCondaFile()
                     );
             }
@@ -134,20 +134,16 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
 
     public async getUnixCommands(
         envName: string,
-        version: string,
+        version: SemVer | undefined,
         conda: string
     ): Promise<string[] | undefined> {
         // Conda changed how activation works in the 4.4.0 release, so
         // we accommodate the two ways distinctly.
-        if (version === '4.4.0' || compareVersion(version, '4.4.0') > 0) {
-            // Note that this requires the user to have already followed
-            // the conda instructions such that "conda" is on their
-            // $PATH.  While we *could* use "source <abs-path-to-activate>"
-            // (after resolving the absolute path to the "activate"
-            // script), we're going to avoid operating contrary to
-            // conda's recommendations.
+        const condaDir = path.dirname(conda);
+        if (version && version.compare('4.4.0') >= 0 && condaDir !== conda) {
+            const activateFile = path.join(condaDir, 'activate');
             return [
-                `${conda.fileToCommandArgument()} activate ${envName.toCommandArgument()}`
+                `source ${activateFile.fileToCommandArgument()} ${envName.toCommandArgument()}`
             ];
         } else {
             // tslint:disable-next-line:no-suspicious-comment
