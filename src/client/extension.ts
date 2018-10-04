@@ -217,7 +217,7 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
         const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
         const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         const [condaVersion, interpreter, interpreters] = await Promise.all([
-            condaLocator.getCondaVersion().catch(() => undefined),
+            condaLocator.getCondaVersion().then(ver => ver ? ver.raw : '').catch<string>(() => ''),
             interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
             interpreterService.getInterpreters().catch<PythonInterpreter[]>(() => [])
         ]);
