@@ -3,7 +3,6 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import { SemVer } from 'semver';
 import { Uri } from 'vscode';
 import { ICondaService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
@@ -70,7 +69,6 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 default:
                     return this.getUnixCommands(
                         envInfo.name,
-                        await condaService.getCondaVersion(),
                         await condaService.getCondaFile()
                     );
             }
@@ -134,24 +132,12 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
 
     public async getUnixCommands(
         envName: string,
-        version: SemVer | undefined,
         conda: string
     ): Promise<string[] | undefined> {
-        // Conda changed how activation works in the 4.4.0 release, so
-        // we accommodate the two ways distinctly.
         const condaDir = path.dirname(conda);
-        if (version && version.compare('4.4.0') >= 0 && condaDir !== conda) {
-            const activateFile = path.join(condaDir, 'activate');
-            return [
-                `source ${activateFile.fileToCommandArgument()} ${envName.toCommandArgument()}`
-            ];
-        } else {
-            // tslint:disable-next-line:no-suspicious-comment
-            // TODO: Handle pre-4.4 case where "activate" script not on $PATH.
-            // (Locate script next to "conda" binary and use absolute path.
-            return [
-                `source activate ${envName.toCommandArgument()}`
-            ];
-        }
+        const activateFile = path.join(condaDir, 'activate');
+        return [
+            `source ${activateFile.fileToCommandArgument()} ${envName.toCommandArgument()}`
+        ];
     }
 }
