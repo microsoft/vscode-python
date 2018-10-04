@@ -14,7 +14,7 @@ const untildify: (value: string) => string = require('untildify');
 // This glob pattern will match all of the following:
 // ~/anaconda/bin/conda, ~/anaconda3/bin/conda, ~/miniconda/bin/conda, ~/miniconda3/bin/conda
 export const CondaLocationsGlob = '~/*conda*/bin/conda';
-
+export const CondaLocationsGlobWin = '*:/ProgramData/Miniconda*/Scripts/conda.exe|*:/ProgramData/Anaconda*/Scripts/conda.exe';
 /**
  * A wrapper around a conda installation.
  */
@@ -25,7 +25,6 @@ export class CondaService implements ICondaService {
     private readonly processServiceFactory: IProcessServiceFactory;
     private readonly platform: IPlatformService;
     private readonly logger: ILogger;
-    private readonly fileSystem: IFileSystem;
     private readonly condaHelper = new CondaHelper();
 
     constructor(
@@ -35,7 +34,6 @@ export class CondaService implements ICondaService {
         this.processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         this.logger = this.serviceContainer.get<ILogger>(ILogger);
-        this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
     public get condaEnvironmentsFile(): string | undefined {
@@ -224,6 +222,8 @@ export class CondaService implements ICondaService {
      */
     private async getCondaFileImpl() {
         const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings();
+        const fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
+
         const setting = settings.condaPath;
         if (setting && setting !== '') {
             return setting;
@@ -234,15 +234,13 @@ export class CondaService implements ICondaService {
             return 'conda';
         }
         if (this.platform.isWindows && this.registryLookupForConda) {
-            return this.registryLookupForConda.getInterpreters()
-                .then(interpreters => interpreters.filter(this.detectCondaEnvironment))
-                .then(condaInterpreters => this.getLatestVersion(condaInterpreters))
-                .then(condaInterpreter => {
-                    return condaInterpreter ? path.join(path.dirname(condaInterpreter.path), 'conda.exe') : 'conda';
-                })
-                .then(async condaPath => {
-                    return this.fileSystem.fileExists(condaPath).then(exists => exists ? condaPath : 'conda');
-                });
+            const interpreters = await this.registryLookupForConda.getInterpreters();
+            const condaInterpreters = interpreters.filter(this.detectCondaEnvironment);
+            const condaInterpreter = this.getLatestVersion(condaInterpreters);
+            const condaPath = condaInterpreter ? path.join(path.dirname(condaInterpreter.path), 'conda.exe') : '';
+            if (await fileSystem.fileExists(condaPath)) {
+                return condaPath;
+            }
         }
         return this.getCondaFileFromKnownLocations();
     }
@@ -251,10 +249,13 @@ export class CondaService implements ICondaService {
      * Return the path to the "conda file", if there is one (in known locations).
      */
     private async getCondaFileFromKnownLocations(): Promise<string> {
-        const condaFiles = await this.fileSystem.search(untildify(CondaLocationsGlob))
+        const fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        const globPattern = this.platform.isWindows ? CondaLocationsGlobWin : CondaLocationsGlob;
+        const condaFiles = await fileSystem.search(untildify(globPattern))
             .catch<string[]>(() => []);
 
         const validCondaFiles = condaFiles.filter(condaPath => condaPath.length > 0);
         return validCondaFiles.length === 0 ? 'conda' : validCondaFiles[0];
     }
+
 }
