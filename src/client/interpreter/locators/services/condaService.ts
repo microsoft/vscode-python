@@ -83,7 +83,7 @@ export class CondaService implements ICondaService {
     public async getCondaVersion(): Promise<SemVer | undefined> {
         const processService = await this.processServiceFactory.create();
         const info = await this.getCondaInfo().catch<CondaInfo | undefined>(() => undefined);
-        let versionString: string;
+        let versionString: string | undefined;
         if (info && info.conda_version) {
             versionString = info.conda_version;
         } else {
@@ -92,7 +92,10 @@ export class CondaService implements ICondaService {
                 .then(result => result.stdout.trim())
                 .catch<string | undefined>(() => undefined);
 
-            versionString = (stdOut && stdOut.startsWith('conda ')) ? stdOut.substring('conda '.length).trim() : '';
+            versionString = (stdOut && stdOut.startsWith('conda ')) ? stdOut.substring('conda '.length).trim() : stdOut;
+        }
+        if (!versionString) {
+            return;
         }
         const version = parse(versionString, true);
         if (version) {
