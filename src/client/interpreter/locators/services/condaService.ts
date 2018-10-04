@@ -1,11 +1,24 @@
-import { inject, injectable, named, optional } from 'inversify';
+import {
+    inject, injectable,
+    named, optional
+} from 'inversify';
 import * as path from 'path';
 import { compareVersion } from '../../../../utils/version';
-import { IFileSystem, IPlatformService } from '../../../common/platform/types';
+import { warn } from '../../../common/logger';
+import {
+    IFileSystem, IPlatformService
+} from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
-import { IConfigurationService, ILogger, IPersistentStateFactory } from '../../../common/types';
+import {
+    IConfigurationService, ILogger,
+    IPersistentStateFactory
+} from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { CondaInfo, ICondaService, IInterpreterLocatorService, InterpreterType, PythonInterpreter, WINDOWS_REGISTRY_SERVICE } from '../../contracts';
+import {
+    CondaInfo, ICondaService, IInterpreterLocatorService,
+    InterpreterType, PythonInterpreter,
+    WINDOWS_REGISTRY_SERVICE
+} from '../../contracts';
 import { CondaHelper } from './condaHelper';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -13,12 +26,19 @@ const untildify: (value: string) => string = require('untildify');
 
 // This glob pattern will match all of the following:
 // ~/anaconda/bin/conda, ~/anaconda3/bin/conda, ~/miniconda/bin/conda, ~/miniconda3/bin/conda
-export const CondaLocationsGlob = '~/*conda*/bin/conda';
-export const CondaLocationsGlobWin = `${[
+export const CondaLocationsGlob = untildify('~/*conda*/bin/conda');
+
+// ...and for windows, the known default install locations:
+const condaGlobPathsForWindows = [
     '/ProgramData/Miniconda*/Scripts/conda.exe',
     '/ProgramData/Anaconda*/Scripts/conda.exe',
-    untildify('~/AppData/Local/Continuum/miniconda*/Scripts/conda.exe'),
-    untildify('~/AppData/Local/Continuum/miniconda*/Scripts/conda.exe')].join(',')}`;
+    untildify('~/Miniconda*/Scripts/conda.exe'),
+    untildify('~/Anaconda*/Scripts/conda.exe'),
+    untildify('~/AppData/Local/Continuum/Miniconda*/Scripts/conda.exe'),
+    untildify('~/AppData/Local/Continuum/Anaconda*/Scripts/conda.exe')];
+
+// format for glob processing:
+export const CondaLocationsGlobWin = `{${condaGlobPathsForWindows.join(',')}}`;
 
 /**
  * A wrapper around a conda installation.
@@ -252,15 +272,20 @@ export class CondaService implements ICondaService {
 
     /**
      * Return the path to the "conda file", if there is one (in known locations).
+     * Note: For now we simply return the first one found.
      */
     private async getCondaFileFromKnownLocations(): Promise<string> {
         const fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
         const globPattern = this.platform.isWindows ? CondaLocationsGlobWin : CondaLocationsGlob;
-        const condaFiles = await fileSystem.search(untildify(globPattern))
-            .catch<string[]>(() => []);
-
+        const condaFiles = await fileSystem.search(globPattern)
+            .catch<string[]>((failReason) => {
+                warn(
+                    'Default conda location search failed.',
+                    `Searching for default install locations for conda results in error: ${failReason}`
+                );
+                return [];
+            });
         const validCondaFiles = condaFiles.filter(condaPath => condaPath.length > 0);
         return validCondaFiles.length === 0 ? 'conda' : validCondaFiles[0];
     }
-
 }
