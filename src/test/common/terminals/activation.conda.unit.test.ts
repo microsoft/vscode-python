@@ -118,7 +118,7 @@ suite('Terminal Environment Activation conda', () => {
             .returns(() => Promise.resolve(condaPath));
         condaService.setup(c => c.getCondaVersion())
             .returns(() => Promise.resolve(parse('4.3.1', true)!));
-        const expected = [`source ${path.join(path.dirname(condaPath), 'activate')} EnvA`];
+        const expected = [`source ${path.join(path.dirname(condaPath), 'activate').fileToCommandArgument()} EnvA`];
 
         const provider = new CondaActivationCommandProvider(serviceContainer.object);
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
@@ -141,7 +141,7 @@ suite('Terminal Environment Activation conda', () => {
             .returns(() => Promise.resolve(condaPath));
         condaService.setup(c => c.getCondaVersion())
             .returns(() => Promise.resolve(parse('4.4.0', true)!));
-        const expected = [`source ${path.join(path.dirname(condaPath), 'activate')} EnvA`];
+        const expected = [`source ${path.join(path.dirname(condaPath), 'activate').fileToCommandArgument()} EnvA`];
 
         const provider = new CondaActivationCommandProvider(serviceContainer.object);
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
