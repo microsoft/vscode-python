@@ -14,7 +14,12 @@ const untildify: (value: string) => string = require('untildify');
 // This glob pattern will match all of the following:
 // ~/anaconda/bin/conda, ~/anaconda3/bin/conda, ~/miniconda/bin/conda, ~/miniconda3/bin/conda
 export const CondaLocationsGlob = '~/*conda*/bin/conda';
-export const CondaLocationsGlobWin = '{/ProgramData/Miniconda*/Scripts/conda.exe,/ProgramData/Anaconda*/Scripts/conda.exe}';
+export const CondaLocationsGlobWin = `${[
+    '/ProgramData/Miniconda*/Scripts/conda.exe',
+    '/ProgramData/Anaconda*/Scripts/conda.exe',
+    untildify('~/AppData/Local/Continuum/miniconda*/Scripts/conda.exe'),
+    untildify('~/AppData/Local/Continuum/miniconda*/Scripts/conda.exe')].join(',')}`;
+
 /**
  * A wrapper around a conda installation.
  */
