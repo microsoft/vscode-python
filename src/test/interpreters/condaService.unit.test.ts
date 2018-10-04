@@ -334,10 +334,28 @@ suite('Interpreters Conda Service', () => {
         platformService.setup(p => p.isWindows).returns(() => true);
         processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.reject(new Error('Not Found')));
         registryInterpreterLocatorService.setup(r => r.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve(registryInterpreters));
+        fileSystem.setup(fs => fs.search(TypeMoq.It.isAnyString())).returns(async () => []);
         fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isAny())).returns((file: string) => Promise.resolve(false));
 
         const condaExe = await condaService.getCondaFile();
         assert.equal(condaExe, 'conda', 'Failed to identify conda.exe');
+    });
+
+    test('Get conda file from default/known locations', async () => {
+
+        const expected = 'C:/ProgramData/Miniconda2/Scripts/conda.exe';
+
+        platformService.setup(p => p.isWindows).returns(() => true);
+
+        fileSystem.setup(f => f.search(TypeMoq.It.isAnyString()))
+            .returns(() => Promise.resolve([expected]));
+        const CondaServiceForTesting = class extends CondaService {
+            public async isCondaInCurrentPath() { return false; }
+        };
+        const condaSrv = new CondaServiceForTesting(serviceContainer.object);
+
+        const result = await condaSrv.getCondaFile();
+        expect(result).is.equal(expected);
     });
 
     test('Must use \'python.condaPath\' setting if set', async () => {
