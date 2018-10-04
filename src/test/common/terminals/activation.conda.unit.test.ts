@@ -114,11 +114,11 @@ suite('Terminal Environment Activation conda', () => {
                 name: envName,
                 path: path.dirname(pythonPath)
             }));
-            condaService.setup(c => c.getCondaFile())
+        condaService.setup(c => c.getCondaFile())
             .returns(() => Promise.resolve(condaPath));
         condaService.setup(c => c.getCondaVersion())
             .returns(() => Promise.resolve(parse('4.3.1', true)!));
-        const expected = ['source activate EnvA'];
+        const expected = [`source ${path.join(path.dirname(condaPath), 'activate')} EnvA`];
 
         const provider = new CondaActivationCommandProvider(serviceContainer.object);
         const activationCommands = await provider.getActivationCommands(undefined, TerminalShellType.bash);
