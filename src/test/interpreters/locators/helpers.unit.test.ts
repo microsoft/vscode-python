@@ -39,49 +39,6 @@ suite('Interpreters - Locators Helper', () => {
 
         helper = new InterpreterLocatorHelper(serviceContainer.object);
     });
-    test('Ensure default Mac interpreters are excluded from the list of interpreters', async () => {
-        platform.setup(p => p.isWindows).returns(() => false);
-        platform.setup(p => p.isLinux).returns(() => false);
-        platform
-            .setup(p => p.isMac).returns(() => true)
-            .verifiable(TypeMoq.Times.atLeastOnce());
-        fs
-            .setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => false)
-            .verifiable(TypeMoq.Times.atLeastOnce());
-
-        const interpreters: PythonInterpreter[] = [];
-        const macInterpreterPath = path.join('users', 'python', 'bin', 'mac');
-        ['conda', 'virtualenv', 'mac', 'pyenv'].forEach(name => {
-            const interpreter = {
-                architecture: Architecture.Unknown,
-                displayName: name,
-                path: path.join('users', 'python', 'bin', name),
-                sysPrefix: name,
-                sysVersion: name,
-                type: InterpreterType.Unknown,
-                version: name,
-                version_info: [0, 0, 0, 'alpha'] as PythonVersionInfo
-            };
-            interpreters.push(interpreter);
-
-            // Treat 'mac' as as mac interpreter.
-            interpreterServiceHelper
-                .setup(i => i.isMacDefaultPythonPath(TypeMoq.It.isValue(interpreter.path)))
-                .returns(() => name === 'mac')
-                .verifiable(TypeMoq.Times.once());
-        });
-
-        const expectedInterpreters = interpreters.filter(item => item.path !== macInterpreterPath);
-
-        const items = helper.mergeInterpreters(interpreters);
-
-        interpreterServiceHelper.verifyAll();
-        platform.verifyAll();
-        fs.verifyAll();
-        expect(items).to.be.lengthOf(3);
-        expect(items).to.be.deep.equal(expectedInterpreters);
-    });
     getNamesAndValues<OS>(OS).forEach(os => {
         test(`Ensure duplicates are removed (same version and same interpreter directory on ${os.name})`, async () => {
             interpreterServiceHelper
