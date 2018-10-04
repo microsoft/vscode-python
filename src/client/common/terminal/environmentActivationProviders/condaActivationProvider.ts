@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
+import * as path from 'path';
 import { Uri } from 'vscode';
 import { compareVersion } from '../../../../utils/version';
 import { ICondaService } from '../../../interpreter/contracts';
@@ -32,7 +33,8 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
      */
     public async getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
-        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;
+        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService)
+            .getSettings(resource).pythonPath;
 
         const envInfo = await condaService.getCondaEnvironment(pythonPath);
         if (!envInfo) {
@@ -40,8 +42,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         }
 
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
-            // Note that on Windows we don't have to change anything
-            // for conda 4.4.0+ (i.e. "conda activate").
+            // windows activate can be a bit tricky due to conda changes.
             switch (targetShell) {
                 case TerminalShellType.powershell:
                 case TerminalShellType.powershellCore:
@@ -76,27 +77,52 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         }
     }
 
-    private async getWindowsCommands(
+    public async getWindowsActivateCommand(): Promise<string> {
+        let activateCmd: string = 'activate';
+
+        const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
+        const condaExePath = await condaService.getCondaFile();
+
+        if (condaExePath && path.basename(condaExePath) !== condaExePath) {
+            const condaScriptsPath: string = path.dirname(condaExePath);
+            // prefix the cmd with the found path, and ensure it's quoted properly
+            activateCmd = path.join(condaScriptsPath, activateCmd);
+            activateCmd = activateCmd.toCommandArgument();
+        }
+
+        return activateCmd;
+    }
+
+    public async getWindowsCommands(
         envName: string
     ): Promise<string[] | undefined> {
+
+        const activate = await this.getWindowsActivateCommand();
         return [
-            `activate ${envName.toCommandArgument()}`
+            `${activate} ${envName.toCommandArgument()}`
         ];
     }
 
-    private async getPowershellCommands(
+    public async getPowershellCommands(
         envName: string,
         targetShell: TerminalShellType
     ): Promise<string[] | undefined> {
         // https://github.com/conda/conda/issues/626
         // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
         const powershellExe = targetShell === TerminalShellType.powershell ? 'powershell' : 'pwsh';
+        const activateCmd = await this.getWindowsActivateCommand();
+
+        let cmdStyleCmd = `${activateCmd} ${envName.toCommandArgument()}`;
+        // we need to double-quote any cmd quotes as we will wrap them
+        // in another layer of quotes for powershell:
+        cmdStyleCmd = cmdStyleCmd.replace(/"/g, '""');
+
         return [
-            `& cmd /k "activate ${envName.toCommandArgument().replace(/"/g, '""')} & ${powershellExe}"`
+            `& cmd /k "${cmdStyleCmd} & ${powershellExe}"`
         ];
     }
 
-    private async getFishCommands(
+    public async getFishCommands(
         envName: string,
         conda: string
     ): Promise<string[] | undefined> {
@@ -106,7 +132,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         ];
     }
 
-    private async getUnixCommands(
+    public async getUnixCommands(
         envName: string,
         version: string,
         conda: string

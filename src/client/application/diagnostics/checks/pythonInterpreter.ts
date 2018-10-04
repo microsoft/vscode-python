@@ -4,10 +4,11 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { DiagnosticSeverity } from 'vscode';
+import { ConfigurationChangeEvent, DiagnosticSeverity, Uri } from 'vscode';
+import { IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { IPlatformService } from '../../../common/platform/types';
-import { IConfigurationService } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { IInterpreterHelper, IInterpreterService, InterpreterType } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
@@ -32,10 +33,13 @@ export const InvalidPythonInterpreterServiceId = 'InvalidPythonInterpreterServic
 
 @injectable()
 export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
+    protected changeThrottleTimeout = 1000;
+    private timeOut?: NodeJS.Timer;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super([DiagnosticCodes.NoPythonInterpretersDiagnostic,
         DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
         DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic], serviceContainer);
+        this.addPythonPathChangedHandler();
     }
     public async diagnose(): Promise<IDiagnostic[]> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -82,6 +86,27 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             const commandPrompts = this.getCommandPrompts(diagnostic);
             return messageService.handle(diagnostic, { commandPrompts, message: diagnostic.message });
         }));
+    }
+    protected addPythonPathChangedHandler() {
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        disposables.push(workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
+    }
+    protected async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.map(workspace => workspace.uri) : [undefined];
+        if (workspacesUris.findIndex(uri => event.affectsConfiguration('python.pythonPath', uri)) === -1) {
+            return;
+        }
+        // Lets wait, for more changes, dirty simple throttling.
+        if (this.timeOut) {
+            clearTimeout(this.timeOut);
+            this.timeOut = undefined;
+        }
+        this.timeOut = setTimeout(() => {
+            this.timeOut = undefined;
+            this.diagnose().then(dianostics => this.handle(dianostics)).ignoreErrors();
+        }, this.changeThrottleTimeout);
     }
     private getCommandPrompts(diagnostic: IDiagnostic): { prompt: string; command?: IDiagnosticCommand }[] {
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);

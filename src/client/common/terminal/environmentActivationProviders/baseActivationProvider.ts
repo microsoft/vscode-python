@@ -14,12 +14,14 @@ export abstract class BaseActivationCommandProvider implements ITerminalActivati
     constructor(protected readonly serviceContainer: IServiceContainer) { }
 
     public abstract isShellSupported(targetShell: TerminalShellType): boolean;
-    public abstract getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined>;
-
-    protected async findScriptFile(resource: Uri | undefined, scriptFileNames: string[]): Promise<string | undefined> {
-        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+    public getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
         const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;
+        return this.getActivationCommandsForInterpreter(pythonPath, targetShell);
+    }
+    public abstract getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined>;
 
+    protected async findScriptFile(pythonPath: string, scriptFileNames: string[]): Promise<string | undefined> {
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         for (const scriptFileName of scriptFileNames) {
             // Generate scripts are found in the same directory as the interpreter.
             const scriptFile = path.join(path.dirname(pythonPath), scriptFileName);

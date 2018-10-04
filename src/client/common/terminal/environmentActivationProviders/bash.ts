@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
 import { TerminalShellType } from '../types';
@@ -23,8 +22,8 @@ export class Bash extends BaseActivationCommandProvider {
             targetShell === TerminalShellType.tcshell ||
             targetShell === TerminalShellType.fish;
     }
-    public async getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
-        const scriptFile = await this.findScriptFile(resource, this.getScriptsInOrderOfPreference(targetShell));
+    public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
+        const scriptFile = await this.findScriptFile(pythonPath, this.getScriptsInOrderOfPreference(targetShell));
         if (!scriptFile) {
             return;
         }

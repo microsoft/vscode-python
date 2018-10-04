@@ -127,7 +127,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
         let fileHash = await this.fs.getFileHash(pythonPath).catch(() => '');
         fileHash = fileHash ? fileHash : '';
-        const store = this.persistentStateFactory.createGlobalPersistentState<PythonInterpreter & { fileHash: string }>(`${pythonPath}.interpreter.details.v2`, undefined, EXPITY_DURATION);
+        const store = this.persistentStateFactory.createGlobalPersistentState<PythonInterpreter & { fileHash: string }>(`${pythonPath}.interpreter.details.v5`, undefined, EXPITY_DURATION);
         if (store.value && fileHash && store.value.fileHash === fileHash) {
             return store.value;
         }
@@ -151,10 +151,10 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 type: type
             };
 
-            const virtualEnvName = await virtualEnvManager.getEnvironmentName(pythonPath, resource);
+            const envName = type === InterpreterType.Unknown ? undefined : await virtualEnvManager.getEnvironmentName(pythonPath, resource);
             interpreterInfo = {
                 ...(details as PythonInterpreter),
-                envName: virtualEnvName
+                envName
             };
             interpreterInfo.displayName = await this.getDisplayName(interpreterInfo, resource);
         }
@@ -172,7 +172,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
      * @memberof InterpreterService
      */
     public async getDisplayName(info: Partial<PythonInterpreter>, resource?: Uri): Promise<string> {
-        const store = this.persistentStateFactory.createGlobalPersistentState<string>(`${info.path}.interpreter.displayName.v3`, undefined, EXPITY_DURATION);
+        const store = this.persistentStateFactory.createGlobalPersistentState<string>(`${info.path}.interpreter.displayName.v5`, undefined, EXPITY_DURATION);
         if (store.value) {
             return store.value;
         }
