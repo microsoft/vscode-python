@@ -8,12 +8,23 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 import '../../../client/common/extensions';
-import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
-import { CondaActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
+import {
+    IFileSystem, IPlatformService
+} from '../../../client/common/platform/types';
+import {
+    IProcessService, IProcessServiceFactory
+} from '../../../client/common/process/types';
+import {
+    CondaActivationCommandProvider
+} from '../../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
-import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../client/common/terminal/types';
-import { IConfigurationService, IDisposableRegistry, IPythonSettings, ITerminalSettings } from '../../../\client/common/types';
+import {
+    ITerminalActivationCommandProvider, TerminalShellType
+} from '../../../client/common/terminal/types';
+import {
+    IConfigurationService, IDisposableRegistry,
+    IPythonSettings, ITerminalSettings
+} from '../../../client/common/types';
 import { ICondaService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { getNamesAndValues } from '../../../utils/enum';
@@ -295,4 +306,119 @@ suite('Terminal Environment Activation conda', () => {
         const activationCommands = await terminalHelper.getEnvironmentActivationCommands(TerminalShellType.bash, undefined);
         expect(activationCommands).to.equal(undefined, 'Incorrect Activation command');
     });
+
+    const windowsTestPath = 'C:\\path\\to';
+    const windowsTestPathSpaces = 'C:\\the path\\to the command';
+
+    type WindowsActivationTestParams = {
+        testName: string;
+        basePath: string;
+        envName: string;
+        expectedResult: string[];
+        expectedRawCmd: string;
+        terminalKind: TerminalShellType;
+    };
+
+    const testsForWindowsActivation: WindowsActivationTestParams[] =
+        [
+            {
+                testName: 'Activation uses full path on windows for powershell',
+                basePath: windowsTestPath,
+                envName: 'TesterEnv',
+                expectedResult: [`& cmd /k "${path.join(windowsTestPath, 'activate')} TesterEnv & powershell"`],
+                expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
+                terminalKind: TerminalShellType.powershell
+            },
+            {
+                testName: 'Activation uses full path with spaces on windows for powershell',
+                basePath: windowsTestPathSpaces,
+                envName: 'TesterEnv',
+                expectedResult: [`& cmd /k """${path.join(windowsTestPathSpaces, 'activate')}"" TesterEnv & powershell"`],
+                expectedRawCmd: `"${path.join(windowsTestPathSpaces, 'activate')}"`,
+                terminalKind: TerminalShellType.powershell
+            },
+            {
+                testName: 'Activation uses full path on windows under powershell, environment name has spaces',
+                basePath: windowsTestPath,
+                envName: 'The Tester Environment',
+                expectedResult: [`& cmd /k "${path.join(windowsTestPath, 'activate')} ""The Tester Environment"" & powershell"`],
+                expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
+                terminalKind: TerminalShellType.powershell
+            },
+            {
+                testName: 'Activation uses full path on windows for powershell-core',
+                basePath: windowsTestPath,
+                envName: 'TesterEnv',
+                expectedResult: [`& cmd /k "${path.join(windowsTestPath, 'activate')} TesterEnv & pwsh"`],
+                expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
+                terminalKind: TerminalShellType.powershellCore
+            },
+            {
+                testName: 'Activation uses full path with spaces on windows for powershell-core',
+                basePath: windowsTestPathSpaces,
+                envName: 'TesterEnv',
+                expectedResult: [`& cmd /k """${path.join(windowsTestPathSpaces, 'activate')}"" TesterEnv & pwsh"`],
+                expectedRawCmd: `"${path.join(windowsTestPathSpaces, 'activate')}"`,
+                terminalKind: TerminalShellType.powershellCore
+            },
+            {
+                testName: 'Activation uses full path on windows for powershell-core, environment name has spaces',
+                basePath: windowsTestPath,
+                envName: 'The Tester Environment',
+                expectedResult: [`& cmd /k "${path.join(windowsTestPath, 'activate')} ""The Tester Environment"" & pwsh"`],
+                expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
+                terminalKind: TerminalShellType.powershellCore
+            },
+            {
+                testName: 'Activation uses full path on windows for cmd.exe',
+                basePath: windowsTestPath,
+                envName: 'TesterEnv',
+                expectedResult: [`${path.join(windowsTestPath, 'activate')} TesterEnv`],
+                expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
+                terminalKind: TerminalShellType.commandPrompt
+            },
+            {
+                testName: 'Activation uses full path with spaces on windows for cmd.exe',
+                basePath: windowsTestPathSpaces,
+                envName: 'TesterEnv',
+                expectedResult: [`"${path.join(windowsTestPathSpaces, 'activate')}" TesterEnv`],
+                expectedRawCmd: `"${path.join(windowsTestPathSpaces, 'activate')}"`,
+                terminalKind: TerminalShellType.commandPrompt
+            },
+            {
+                testName: 'Activation uses full path on windows for cmd.exe, environment name has spaces',
+                basePath: windowsTestPath,
+                envName: 'The Tester Environment',
+                expectedResult: [`${path.join(windowsTestPath, 'activate')} "The Tester Environment"`],
+                expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
+                terminalKind: TerminalShellType.commandPrompt
+            }
+        ];
+
+    testsForWindowsActivation.forEach((testParams: WindowsActivationTestParams) => {
+        test(testParams.testName, async () => {
+            // each test simply tests the base windows activate command,
+            // and then the specific result from the terminal selected.
+            const servCnt = TypeMoq.Mock.ofType<IServiceContainer>();
+            const condaSrv = TypeMoq.Mock.ofType<ICondaService>();
+            condaSrv.setup(c => c.getCondaFile())
+                .returns(async () => {
+                    return path.join(testParams.basePath, 'conda.exe');
+                });
+            servCnt.setup(s => s.get(TypeMoq.It.isValue(ICondaService), TypeMoq.It.isAny()))
+                .returns(() => condaSrv.object);
+
+            const tstCmdProvider = new CondaActivationCommandProvider(servCnt.object);
+
+            let result: string[] | undefined;
+
+            if (testParams.terminalKind === TerminalShellType.commandPrompt) {
+                result = await tstCmdProvider.getWindowsCommands(testParams.envName);
+            } else {
+                result = await tstCmdProvider.getPowershellCommands(testParams.envName, testParams.terminalKind);
+            }
+            expect(result).to.deep.equal(testParams.expectedResult, 'Specific terminal command is incorrect.');
+        });
+    });
+
 });

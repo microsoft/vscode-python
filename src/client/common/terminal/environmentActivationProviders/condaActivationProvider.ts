@@ -43,14 +43,10 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
 
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
             // windows activate can be a bit tricky due to conda changes.
-            const condaPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService)
-                .getSettings(resource).condaPath;
-            const activateCmd: string = this.getWindowsActivateCommand(condaPath);
-
             switch (targetShell) {
                 case TerminalShellType.powershell:
                 case TerminalShellType.powershellCore:
-                    return this.getPowershellCommands(envInfo.name, targetShell, activateCmd);
+                    return this.getPowershellCommands(envInfo.name, targetShell);
 
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO: Do we really special-case fish on Windows?
@@ -58,7 +54,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                     return this.getFishCommands(envInfo.name, await condaService.getCondaFile());
 
                 default:
-                    return this.getWindowsCommands(envInfo.name, activateCmd);
+                    return this.getWindowsCommands(envInfo.name);
             }
         } else {
             switch (targetShell) {
@@ -81,45 +77,52 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         }
     }
 
-    private getWindowsActivateCommand(condaExePath: string): string {
+    public async getWindowsActivateCommand(): Promise<string> {
         let activateCmd: string = 'activate';
-        if (condaExePath && condaExePath.length > 0) {
+
+        const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
+        const condaExePath = await condaService.getCondaFile();
+
+        if (condaExePath && path.basename(condaExePath) !== condaExePath) {
             const condaScriptsPath: string = path.dirname(condaExePath);
-            // prefix the cmd with the found path
+            // prefix the cmd with the found path, and ensure it's quoted properly
             activateCmd = path.join(condaScriptsPath, activateCmd);
-
-            // notify the user that this may be necessary?
-            //}  else {
-
-            // const shellSrv: IApplicationShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            // shellSrv.showInformationMessage('No setting for Conda path found in config');
+            activateCmd = activateCmd.toCommandArgument();
         }
+
         return activateCmd;
     }
 
-    private async getWindowsCommands(
-        envName: string,
-        activateCmd: string
+    public async getWindowsCommands(
+        envName: string
     ): Promise<string[] | undefined> {
+
+        const activate = await this.getWindowsActivateCommand();
         return [
-            `${activateCmd} ${envName.toCommandArgument()}`
+            `${activate} ${envName.toCommandArgument()}`
         ];
     }
 
-    private async getPowershellCommands(
+    public async getPowershellCommands(
         envName: string,
-        targetShell: TerminalShellType,
-        activateCmd: string
+        targetShell: TerminalShellType
     ): Promise<string[] | undefined> {
         // https://github.com/conda/conda/issues/626
         // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
         const powershellExe = targetShell === TerminalShellType.powershell ? 'powershell' : 'pwsh';
+        const activateCmd = await this.getWindowsActivateCommand();
+
+        let cmdStyleCmd = `${activateCmd} ${envName.toCommandArgument()}`;
+        // we need to double-quote any cmd quotes as we will wrap them
+        // in another layer of quotes for powershell:
+        cmdStyleCmd = cmdStyleCmd.replace(/"/g, '""');
+
         return [
-            `& cmd / k "${activateCmd} ${envName.toCommandArgument().replace(/"/g, '""')} & ${powershellExe} "`
+            `& cmd /k "${cmdStyleCmd} & ${powershellExe}"`
         ];
     }
 
-    private async getFishCommands(
+    public async getFishCommands(
         envName: string,
         conda: string
     ): Promise<string[] | undefined> {
@@ -129,7 +132,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         ];
     }
 
-    private async getUnixCommands(
+    public async getUnixCommands(
         envName: string,
         version: string,
         conda: string
