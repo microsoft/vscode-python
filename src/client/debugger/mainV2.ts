@@ -33,7 +33,7 @@ const killProcessTree = require('tree-kill');
 
 const DEBUGGER_CONNECT_TIMEOUT = 20000;
 const MIN_DEBUGGER_CONNECT_TIMEOUT = 5000;
-const InvalidPythonPathInDebuggerMessage = 'You need to select a Python interpreter before you start debugging. \nTip: click on "Select Python Environment" in the status bar.';
+const InvalidPythonPathInDebuggerMessage = 'You need to select a Python interpreter before you start debugging. \n\nTip: click on "Select Python Environment" in the status bar.';
 
 /**
  * Primary purpose of this class is to perform the handshake with VS Code and launch PTVSD process.
