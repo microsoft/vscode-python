@@ -28,12 +28,11 @@ import { AttachRequestArguments, LaunchRequestArguments } from './Common/Contrac
 import { CreateAttachDebugClient, CreateLaunchDebugClient } from './DebugClients/DebugFactory';
 import { BaseDebugServer } from './DebugServers/BaseDebugServer';
 import { initializeIoc } from './serviceRegistry';
-import { IDebugStreamProvider, IExcutableValidator, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
+import { IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
 const killProcessTree = require('tree-kill');
 
 const DEBUGGER_CONNECT_TIMEOUT = 20000;
 const MIN_DEBUGGER_CONNECT_TIMEOUT = 5000;
-const InvalidPythonPathInDebuggerMessage = 'You need to select a Python interpreter before you start debugging. \n\nTip: click on "Select Python Environment" in the status bar.';
 
 /**
  * Primary purpose of this class is to perform the handshake with VS Code and launch PTVSD process.
@@ -109,28 +108,13 @@ export class PythonDebugger extends DebugSession {
             return this.sendErrorResponse(response, { format: `File does not exist. "${args.program}"`, id: 1 }, undefined, undefined, ErrorDestination.User);
         }
 
-        this.validatePythonPath(response, args)
-            .then<any>(valid => {
-                if (!valid) {
-                    return;
-                }
-                return this.launchPTVSD(args)
-                    .then(() => this.waitForPTVSDToConnect(args))
-                    .then(() => this.emit('debugger_launched'));
-            })
+        this.launchPTVSD(args)
+            .then(() => this.waitForPTVSDToConnect(args))
+            .then(() => this.emit('debugger_launched'))
             .catch(ex => {
                 const message = this.getUserFriendlyLaunchErrorMessage(args, ex) || 'Debug Error';
                 this.sendErrorResponse(response, { format: message, id: 1 }, undefined, undefined, ErrorDestination.User);
             });
-    }
-    private async validatePythonPath(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): Promise<boolean> {
-        const pythonPath = typeof args.pythonPath === 'string' && args.pythonPath.length > 0 ? args.pythonPath : 'python';
-        const validator = this.serviceContainer.get<IExcutableValidator>(IExcutableValidator);
-        const valid = await validator.validateExecutable(pythonPath);
-        if (!valid) {
-            this.sendErrorResponse(response, { format: InvalidPythonPathInDebuggerMessage, id: 2 }, undefined, undefined, ErrorDestination.User);
-        }
-        return valid;
     }
     private async launchPTVSD(args: LaunchRequestArguments) {
         const launcher = CreateLaunchDebugClient(args, this, this.supportsRunInTerminalRequest);

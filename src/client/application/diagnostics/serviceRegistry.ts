@@ -6,6 +6,7 @@
 import { IServiceManager } from '../../ioc/types';
 import { EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId } from './checks/envPathVariable';
 import { InvalidDebuggerTypeDiagnosticsService, InvalidDebuggerTypeDiagnosticsServiceId } from './checks/invalidDebuggerType';
+import { InvalidPythonPathInDebuggerService, InvalidPythonPathInDebuggerServiceId } from './checks/invalidPythonPathInDebugger';
 import { InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId } from './checks/pythonInterpreter';
 import { DiagnosticsCommandFactory } from './commands/factory';
 import { IDiagnosticsCommandFactory } from './commands/types';
@@ -19,5 +20,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidDebuggerTypeDiagnosticsService, InvalidDebuggerTypeDiagnosticsServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId);
+    serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidPythonPathInDebuggerService, InvalidPythonPathInDebuggerServiceId);
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);
 }

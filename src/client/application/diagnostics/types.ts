@@ -46,3 +46,9 @@ export interface IDiagnosticCommand {
     readonly diagnostic: IDiagnostic;
     invoke(): Promise<void>;
 }
+
+export const IInvalidPythonPathInDebuggerService = Symbol('IInvalidPythonPathInDebuggerService');
+
+export interface IInvalidPythonPathInDebuggerService extends IDiagnosticsService {
+    validatePythonPath(pythonPath?: string, resource?: Uri): Promise<boolean>;
+}
