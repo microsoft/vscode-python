@@ -42,7 +42,7 @@ export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArgum
             }
 
             await this.provideLaunchDefaults(workspaceFolder, config);
-            const isValid = this.validateLaunchConfiguration(config);
+            const isValid = await this.validateLaunchConfiguration(config);
             if (!isValid) {
                 return;
             }

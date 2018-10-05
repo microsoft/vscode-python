@@ -411,7 +411,7 @@ suite('Debugging - Config Provider', () => {
         expect((debugConfig as any).debugOptions).contains(DebugOptions.RedirectOutput);
         expect((debugConfig as any).debugOptions).contains(DebugOptions.Jinja);
     });
-    test('Test validation of Python Path when launching debugger', async () => {
+    test('Test validation of Python Path when launching debugger (with invalid python path)', async () => {
         const pythonPath = `PythonPath_${new Date().toString()}`;
         const workspaceFolder = createMoqWorkspaceFolder(__dirname);
         const pythonFile = 'xyz.py';
@@ -427,6 +427,24 @@ suite('Debugging - Config Provider', () => {
         const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false, pythonPath } as PythonLaunchDebugConfiguration<LaunchRequestArguments>);
 
         diagnosticsService.verifyAll();
-        expect(Object.keys(debugConfig!)).to.be.lengthOf(0);
+        expect(debugConfig).to.be.equal(undefined, 'Not undefined');
+    });
+    test('Test validation of Python Path when launching debugger (with valid python path)', async () => {
+        const pythonPath = `PythonPath_${new Date().toString()}`;
+        const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+        const pythonFile = 'xyz.py';
+        setupIoc(pythonPath);
+        setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
+
+        diagnosticsService.reset();
+        diagnosticsService
+            .setup(h => h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
+
+        const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false, pythonPath } as PythonLaunchDebugConfiguration<LaunchRequestArguments>);
+
+        diagnosticsService.verifyAll();
+        expect(debugConfig).to.not.be.equal(undefined, 'is undefined');
     });
 });
