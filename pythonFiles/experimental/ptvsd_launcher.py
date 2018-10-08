@@ -80,7 +80,7 @@ try:
     ptvs_lib_path = None
     if bundled_ptvsd:
         ptvs_lib_path = os.path.join(os.path.dirname(__file__), 'ptvsd')
-        sys.path.insert(0, ptvs_lib_path)
+        sys.path.append(ptvs_lib_path)
     try:
         import ptvsd
         import ptvsd.debugger as vspd
