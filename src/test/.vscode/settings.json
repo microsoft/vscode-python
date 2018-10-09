@@ -19,5 +19,4 @@
     "python.linting.banditEnabled": false,
     "python.formatting.provider": "yapf",
     "python.linting.pylintUseMinimalCheckers": false,
-    "python.pythonPath": "python"
 }
