@@ -1,20 +1,18 @@
 import { DebugSession } from 'vscode-debugadapter';
-import { BaseAttachRequestArguments, IPythonProcess } from '../Common/Contracts';
+import { AttachRequestArguments, LaunchRequestArguments } from '../Common/Contracts';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { RemoteDebugServerV2 } from '../DebugServers/RemoteDebugServerv2';
 import { DebugClient, DebugType } from './DebugClient';
 
-export class RemoteDebugClient<T extends BaseAttachRequestArguments> extends DebugClient<T> {
-    private pythonProcess?: IPythonProcess;
+export class RemoteDebugClient<T extends AttachRequestArguments | LaunchRequestArguments> extends DebugClient<T> {
     private debugServer?: BaseDebugServer;
     // tslint:disable-next-line:no-any
     constructor(args: T, debugSession: DebugSession) {
         super(args, debugSession);
     }
 
-    public CreateDebugServer(_pythonProcess?: IPythonProcess): BaseDebugServer {
-        // tslint:disable-next-line:no-any
-        this.debugServer = new RemoteDebugServerV2(this.debugSession, undefined as any, this.args);
+    public CreateDebugServer(): BaseDebugServer {
+        this.debugServer = new RemoteDebugServerV2(this.debugSession, this.args);
         return this.debugServer;
     }
     public get DebugType(): DebugType {
@@ -22,9 +20,6 @@ export class RemoteDebugClient<T extends BaseAttachRequestArguments> extends Deb
     }
 
     public Stop() {
-        if (this.pythonProcess) {
-            this.pythonProcess.Detach();
-        }
         if (this.debugServer) {
             this.debugServer.Stop();
             this.debugServer = undefined;

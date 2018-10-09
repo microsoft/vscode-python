@@ -42,7 +42,7 @@ suite('Run without Debugging', () => {
     });
     function buildLauncArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
         // tslint:disable-next-line:no-unnecessary-local-variable
-        const options: LaunchRequestArguments = {
+        return {
             program: path.join(debugFilesPath, pythonFile),
             cwd: debugFilesPath,
             stopOnEntry,
@@ -53,10 +53,10 @@ suite('Run without Debugging', () => {
             env: { PYTHONPATH: PTVSD_PATH },
             envFile: '',
             logToFile: false,
-            type: debuggerType
+            type: debuggerType,
+            name: '',
+            request: 'launch'
         };
-
-        return options;
     }
 
     test('Should run program to the end', async () => {

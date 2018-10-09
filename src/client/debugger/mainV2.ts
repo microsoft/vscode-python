@@ -91,7 +91,7 @@ export class PythonDebugger extends DebugSession {
     }
     protected attachRequest(response: DebugProtocol.AttachResponse, args: AttachRequestArguments): void {
         const launcher = CreateAttachDebugClient(args, this);
-        this.debugServer = launcher.CreateDebugServer(undefined, this.serviceContainer);
+        this.debugServer = launcher.CreateDebugServer(this.serviceContainer);
         this.debugServer!.Start()
             .then(() => this.emit('debugger_attached'))
             .catch(ex => {
@@ -118,7 +118,7 @@ export class PythonDebugger extends DebugSession {
     }
     private async launchPTVSD(args: LaunchRequestArguments) {
         const launcher = CreateLaunchDebugClient(args, this, this.supportsRunInTerminalRequest);
-        this.debugServer = launcher.CreateDebugServer(undefined, this.serviceContainer);
+        this.debugServer = launcher.CreateDebugServer(this.serviceContainer);
         const serverInfo = await this.debugServer!.Start();
         return launcher.LaunchApplicationToDebug(serverInfo);
     }

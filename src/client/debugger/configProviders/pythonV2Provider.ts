@@ -11,15 +11,15 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { DEBUGGER } from '../../telemetry/constants';
 import { DebuggerTelemetryV2 } from '../../telemetry/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../Common/Contracts';
-import { BaseConfigurationProvider, PythonAttachDebugConfiguration, PythonLaunchDebugConfiguration } from './baseProvider';
+import { BaseConfigurationProvider } from './baseProvider';
 import { IConfigurationProviderUtils } from './types';
 
 @injectable()
-export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvider<LaunchRequestArguments, AttachRequestArguments> {
+export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvider {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('python', serviceContainer);
     }
-    protected async provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonLaunchDebugConfiguration<LaunchRequestArguments>): Promise<void> {
+    protected async provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: LaunchRequestArguments): Promise<void> {
         await super.provideLaunchDefaults(workspaceFolder, debugConfiguration);
         const debugOptions = debugConfiguration.debugOptions!;
         if (debugConfiguration.debugStdLib) {
@@ -56,7 +56,7 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
         this.sendTelemetry('launch', debugConfiguration);
     }
     // tslint:disable-next-line:cyclomatic-complexity
-    protected async provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: PythonAttachDebugConfiguration<AttachRequestArguments>): Promise<void> {
+    protected async provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: AttachRequestArguments): Promise<void> {
         await super.provideAttachDefaults(workspaceFolder, debugConfiguration);
         const debugOptions = debugConfiguration.debugOptions!;
         if (debugConfiguration.debugStdLib) {
@@ -120,10 +120,10 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
         const LocalHosts = ['localhost', '127.0.0.1', '::1'];
         return (hostName && LocalHosts.indexOf(hostName.toLowerCase()) >= 0) ? true : false;
     }
-    private isDebuggingFlask(debugConfiguration: PythonAttachDebugConfiguration<Partial<LaunchRequestArguments & AttachRequestArguments>>) {
+    private isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         return (debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK') ? true : false;
     }
-    private sendTelemetry(trigger: 'launch' | 'attach', debugConfiguration: PythonAttachDebugConfiguration<Partial<LaunchRequestArguments & AttachRequestArguments>>) {
+    private sendTelemetry(trigger: 'launch' | 'attach', debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         const telemetryProps: DebuggerTelemetryV2 = {
             trigger,
             console: debugConfiguration.console,

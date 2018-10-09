@@ -8,7 +8,7 @@ import { CurrentProcess } from '../../common/process/currentProcess';
 import { noop } from '../../common/utils/misc';
 import { EnvironmentVariablesService } from '../../common/variables/environment';
 import { IServiceContainer } from '../../ioc/types';
-import { DebugOptions, IDebugServer, IPythonProcess, LaunchRequestArguments } from '../Common/Contracts';
+import { DebugOptions, IDebugServer, LaunchRequestArguments } from '../Common/Contracts';
 import { IS_WINDOWS } from '../Common/Utils';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { LocalDebugServerV2 } from '../DebugServers/LocalDebugServerV2';
@@ -32,7 +32,6 @@ enum DebugServerStatus {
 
 export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     protected pyProc: ChildProcess | undefined;
-    protected pythonProcess!: IPythonProcess;
     protected debugServer: BaseDebugServer | undefined;
     private get debugServerStatus(): DebugServerStatus {
         if (this.debugServer && this.debugServer!.IsRunning) {
@@ -47,7 +46,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         super(args, debugSession);
     }
 
-    public CreateDebugServer(_pythonProcess?: IPythonProcess, serviceContainer?: IServiceContainer): BaseDebugServer {
+    public CreateDebugServer(serviceContainer?: IServiceContainer): BaseDebugServer {
         this.debugServer =  new LocalDebugServerV2(this.debugSession, this.args, serviceContainer!);
         return this.debugServer;
     }

@@ -59,7 +59,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
     function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
         const env = { PYTHONPATH: PTVSD_PATH };
         // tslint:disable-next-line:no-unnecessary-local-variable
-        const options: LaunchRequestArguments = {
+        const options = {
             program: path.join(debugFilesPath, pythonFile),
             cwd: debugFilesPath,
             stopOnEntry,
@@ -70,7 +70,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
             envFile: '',
             logToFile: false,
             type: debuggerType
-        };
+        } as any as LaunchRequestArguments;
 
         return options;
     }

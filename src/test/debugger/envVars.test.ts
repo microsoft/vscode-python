@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-string-literal no-unused-expression chai-vague-errors max-func-body-length
+// tslint:disable:no-string-literal no-unused-expression chai-vague-errors max-func-body-length no-any
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -45,10 +45,11 @@ suite('Resolving Environment Variables when Debugging', () => {
     }
 
     async function testBasicProperties(console: 'externalTerminal' | 'integratedTerminal' | 'none', expectedNumberOfVariables: number) {
-        const args: LaunchRequestArguments = {
+        const args = {
             program: '', pythonPath: '', args: [], envFile: '',
             console
-        };
+            // tslint:disable-next-line:no-any
+        } as any as LaunchRequestArguments;
 
         const envVars = await helper.getEnvironmentVariables(args);
         expect(envVars).not.be.undefined;
@@ -81,10 +82,11 @@ suite('Resolving Environment Variables when Debugging', () => {
         env[prop2] = prop2;
         mockProcess.env[prop3] = prop3;
 
-        const args: LaunchRequestArguments = {
+        const args = {
             program: '', pythonPath: '', args: [], envFile: '',
             console, env
-        };
+        // tslint:disable-next-line:no-any
+        } as any as LaunchRequestArguments;
 
         const envVars = await helper.getEnvironmentVariables(args);
 
@@ -138,10 +140,10 @@ suite('Resolving Environment Variables when Debugging', () => {
         env[prop2] = prop2;
         mockProcess.env[prop3] = prop3;
 
-        const args: LaunchRequestArguments = {
+        const args = {
             program: '', pythonPath: '', args: [], envFile: '',
             console, env
-        };
+        } as any as LaunchRequestArguments;
 
         const envVars = await helper.getEnvironmentVariables(args);
         expect(envVars).not.be.undefined;

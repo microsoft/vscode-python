@@ -1,7 +1,7 @@
 // tslint:disable:quotemark ordered-imports no-any no-empty
 
 import { BaseDebugServer } from "../DebugServers/BaseDebugServer";
-import { IPythonProcess, IDebugServer } from "../Common/Contracts";
+import { IDebugServer } from "../Common/Contracts";
 import { DebugSession } from "vscode-debugadapter";
 import { EventEmitter } from 'events';
 import { IServiceContainer } from "../../ioc/types";
@@ -17,7 +17,7 @@ export abstract class DebugClient<T> extends EventEmitter {
         super();
         this.debugSession = debugSession;
     }
-    public abstract CreateDebugServer(pythonProcess?: IPythonProcess, serviceContainer?: IServiceContainer): BaseDebugServer ;
+    public abstract CreateDebugServer(serviceContainer?: IServiceContainer): BaseDebugServer ;
     public get DebugType(): DebugType {
         return DebugType.Local;
     }

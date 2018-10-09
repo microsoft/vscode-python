@@ -55,7 +55,9 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
             args: [],
             envFile: '',
             host, port,
-            type: debuggerType
+            type: debuggerType,
+            name: '',
+            request: 'launch'
         };
     }
 

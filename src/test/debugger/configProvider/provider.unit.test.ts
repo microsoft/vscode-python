@@ -19,7 +19,6 @@ import { IConfigurationService, ILogger, IPythonSettings } from '../../../client
 import { PythonV2DebugConfigurationProvider } from '../../../client/debugger';
 import { DebuggerTypeName } from '../../../client/debugger/Common/constants';
 import { DebugOptions, LaunchRequestArguments } from '../../../client/debugger/Common/Contracts';
-import { PythonLaunchDebugConfiguration } from '../../../client/debugger/configProviders/baseProvider';
 import { ConfigurationProviderUtils } from '../../../client/debugger/configProviders/configurationProviderUtils';
 import { IConfigurationProviderUtils } from '../../../client/debugger/configProviders/types';
 import { IInterpreterHelper } from '../../../client/interpreter/contracts';
@@ -297,7 +296,7 @@ suite('Debugging - Config Provider', () => {
         setupIoc(pythonPath);
         setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-        const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false } as PythonLaunchDebugConfiguration<LaunchRequestArguments>);
+        const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false } as LaunchRequestArguments);
 
         expect(debugConfig).to.have.property('console', 'integratedTerminal');
         expect(debugConfig).to.have.property('stopOnEntry', false);
@@ -424,7 +423,7 @@ suite('Debugging - Config Provider', () => {
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
 
-        const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false, pythonPath } as PythonLaunchDebugConfiguration<LaunchRequestArguments>);
+        const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false, pythonPath } as LaunchRequestArguments);
 
         diagnosticsService.verifyAll();
         expect(debugConfig).to.be.equal(undefined, 'Not undefined');
@@ -442,7 +441,7 @@ suite('Debugging - Config Provider', () => {
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
-        const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false, pythonPath } as PythonLaunchDebugConfiguration<LaunchRequestArguments>);
+        const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false, pythonPath } as LaunchRequestArguments);
 
         diagnosticsService.verifyAll();
         expect(debugConfig).to.not.be.equal(undefined, 'is undefined');

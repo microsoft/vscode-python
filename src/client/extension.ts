@@ -10,7 +10,7 @@ import { StopWatch } from './common/utils/stopWatch';
 const stopWatch = new StopWatch();
 
 import { Container } from 'inversify';
-import { CodeActionKind, debug, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
+import { CodeActionKind, debug, DebugConfigurationProvider, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationService } from './activation/types';
 import { IExtensionApi } from './api';
@@ -30,8 +30,7 @@ import {
 } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
-import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
-import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
+import { DebuggerTypeName } from './debugger/Common/constants';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
 import { registerTypes as debuggerRegisterTypes } from './debugger/serviceRegistry';
 import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/types';
@@ -145,9 +144,8 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
 
     context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), { providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports] }));
 
-    type ConfigurationProvider = BaseConfigurationProvider<LaunchRequestArguments, AttachRequestArguments>;
-    serviceContainer.getAll<ConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
-        context.subscriptions.push(debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));
+    serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
+        context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfig));
     });
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();

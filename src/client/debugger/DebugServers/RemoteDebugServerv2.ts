@@ -5,14 +5,14 @@
 
 import { Socket } from 'net';
 import { DebugSession } from 'vscode-debugadapter';
-import { AttachRequestArguments, IDebugServer, IPythonProcess } from '../Common/Contracts';
+import { AttachRequestArguments, IDebugServer } from '../Common/Contracts';
 import { BaseDebugServer } from './BaseDebugServer';
 
 export class RemoteDebugServerV2 extends BaseDebugServer {
     private args: AttachRequestArguments;
     private socket?: Socket;
-    constructor(debugSession: DebugSession, pythonProcess: IPythonProcess, args: AttachRequestArguments) {
-        super(debugSession, pythonProcess);
+    constructor(debugSession: DebugSession, args: AttachRequestArguments) {
+        super(debugSession);
         this.args = args;
     }
 
