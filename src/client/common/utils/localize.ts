@@ -5,7 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../client/common/constants';
+import { EXTENSION_ROOT_DIR } from '../constants';
 
 // External callers of localize use these tables to retrieve localized values.
 export namespace LanguageServiceSurveyBanner {
@@ -16,8 +16,8 @@ export namespace LanguageServiceSurveyBanner {
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
 // can be loaded out of the nls.<locale>.json files
-let loadedCollection: { [index: string]: string } | undefined ;
-let defaultCollection: { [index: string]: string } | undefined ;
+let loadedCollection: { [index: string]: string } | undefined;
+let defaultCollection: { [index: string]: string } | undefined;
 let loadedLocale: string;
 
 function localize(key: string, defValue: string) {
@@ -27,7 +27,7 @@ function localize(key: string, defValue: string) {
     };
 }
 
-function parseLocale() : string {
+function parseLocale(): string {
     // Attempt to load from the vscode locale. If not there, use english
     const vscodeConfigString = process.env.VSCODE_NLS_CONFIG;
     return vscodeConfigString ? JSON.parse(vscodeConfigString).locale : 'en-us';
