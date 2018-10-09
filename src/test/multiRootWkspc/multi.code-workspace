@@ -18,6 +18,7 @@
 	],
 	"settings": {
 		"python.linting.flake8Enabled": false,
+        "python.linting.banditEnabled": true,
 		"python.linting.mypyEnabled": true,
 		"python.linting.pydocstyleEnabled": true,
 		"python.linting.pylamaEnabled": true,

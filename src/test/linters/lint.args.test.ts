@@ -157,7 +157,7 @@ suite('Linting - Arguments', () => {
                 });
                 test('Bandit', async () => {
                     const linter = new Bandit(outputChannel.object, serviceContainer);
-                    const expectedArgs = [fileUri.fsPath];
+                    const expectedArgs = ['-f', 'custom', '--msg-template', '{line},0,{severity},{test_id}:{msg}', '-n', '-1', fileUri.fsPath];
                     await testLinter(linter, expectedArgs);
                 });
             });
