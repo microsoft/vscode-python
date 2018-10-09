@@ -8,7 +8,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 1.   _pydev_calltip_util.py (for PyDev.Debugger) (https://github.com/fabioz/PyDev.Debugger/blob/master/_pydev_bundle/_pydev_calltip_util.py)
 2.   ajv 5.5.2 (https://registry.npmjs.org/ajv/-/ajv-5.5.2.tgz)
 3.   angular.io (for RxJS 5.5) (https://angular.io/)
-4.   applicationinsights 1.0.1 (https://registry.npmjs.org/applicationinsights/-/applicationinsights-1.0.1.tgz)
+4.   applicationinsights 1.0.5 (https://registry.npmjs.org/applicationinsights/-/applicationinsights-1.0.5.tgz)
 5.   arch 2.1.0 (https://registry.npmjs.org/arch/-/arch-2.1.0.tgz)
 6.   asn1 0.2.3 (https://registry.npmjs.org/asn1/-/asn1-0.2.3.tgz)
 7.   assert-plus 1.0.0 (https://github.com/joyent/node-assert-plus/tree/v1.0.0)
@@ -126,7 +126,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 119. verror 1.10.0 (https://registry.npmjs.org/verror/-/verror-1.10.0.tgz)
 120. vscode-debugadapter 1.28.0 (https://registry.npmjs.org/vscode-debugadapter/-/vscode-debugadapter-1.28.0.tgz)
 121. vscode-debugprotocol 1.28.0 (https://registry.npmjs.org/vscode-debugprotocol/-/vscode-debugprotocol-1.28.0.tgz)
-122. vscode-extension-telemetry 0.0.15 (https://registry.npmjs.org/vscode-extension-telemetry/-/vscode-extension-telemetry-0.0.15.tgz)
+122. vscode-extension-telemetry 0.0.22 (https://registry.npmjs.org/vscode-extension-telemetry/-/vscode-extension-telemetry-0.0.22.tgz)
 123. vscode-jsonrpc 3.6.2 (https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-3.6.2.tgz)
 124. vscode-languageclient 4.4.0 (https://registry.npmjs.org/vscode-languageclient/-/vscode-languageclient-4.4.0.tgz)
 125. vscode-languageserver 4.4.0 (https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-4.4.0.tgz)
@@ -203,7 +203,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF angular.io NOTICES AND INFORMATION
 
-%% applicationinsights 1.0.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/applicationinsights/-/applicationinsights-1.0.1.tgz)
+%% applicationinsights 1.0.5 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/applicationinsights/-/applicationinsights-1.0.5.tgz)
 =========================================
 ﻿The MIT License (MIT) 
 Copyright © Microsoft Corporation
@@ -3986,7 +3986,7 @@ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF vscode-debugprotocol NOTICES AND INFORMATION
 
-%% vscode-extension-telemetry 0.0.15 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-extension-telemetry/-/vscode-extension-telemetry-0.0.15.tgz)
+%% vscode-extension-telemetry 0.0.22 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-extension-telemetry/-/vscode-extension-telemetry-0.0.22.tgz)
 =========================================
 vscode-extension-telemetry
 

@@ -9,13 +9,13 @@ import { expect } from 'chai';
 import * as path from 'path';
 import { parse, SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
-import { LanguageServerFolderService } from '../../client/activation/languageServerFolderService';
-import { IDownloadChannelRule, ILanguageServerPackageService } from '../../client/activation/types';
-import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { NugetPackage } from '../../client/common/nuget/types';
-import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService, IPythonSettings } from '../../client/common/types';
-import { IServiceContainer } from '../../client/ioc/types';
+import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
+import { IDownloadChannelRule, ILanguageServerPackageService } from '../../../client/activation/types';
+import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
+import { NugetPackage } from '../../../client/common/nuget/types';
+import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
+import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { IServiceContainer } from '../../../client/ioc/types';
 
 const languageServerFolder = 'languageServer';
 

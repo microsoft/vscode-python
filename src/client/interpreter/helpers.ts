@@ -46,7 +46,7 @@ export class InterpreterHelper implements IInterpreterHelper {
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>> {
         let fileHash = await this.fs.getFileHash(pythonPath).catch(() => '');
         fileHash = fileHash ? fileHash : '';
-        const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(`${pythonPath}.v1`, undefined, EXPITY_DURATION);
+        const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(`${pythonPath}.v2`, undefined, EXPITY_DURATION);
         if (store.value && fileHash && store.value.fileHash === fileHash) {
             return store.value;
         }

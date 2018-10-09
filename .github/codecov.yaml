@@ -3,4 +3,6 @@ coverage:
   round: up
   range: "70...90"
 
-comment: off
+comment:
+  layout: "diff, files"
+  behavior: default

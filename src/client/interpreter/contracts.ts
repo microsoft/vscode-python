@@ -1,3 +1,4 @@
+import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { InterpreterInfomation } from '../common/process/types';
 
@@ -36,6 +37,7 @@ export type CondaInfo = {
     'sys.prefix'?: string;
     'python_version'?: string;
     default_prefix?: string;
+    conda_version?: string;
 };
 
 export const ICondaService = Symbol('ICondaService');
@@ -44,7 +46,7 @@ export interface ICondaService {
     readonly condaEnvironmentsFile: string | undefined;
     getCondaFile(): Promise<string>;
     isCondaAvailable(): Promise<boolean>;
-    getCondaVersion(): Promise<string | undefined>;
+    getCondaVersion(): Promise<SemVer | undefined>;
     getCondaInfo(): Promise<CondaInfo | undefined>;
     getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string; path: string }[]) | undefined>;
     getInterpreterPath(condaEnvironmentPath: string): string;

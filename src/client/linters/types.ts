@@ -45,7 +45,7 @@ export interface ILinterManager {
 export interface ILintMessage {
     line: number;
     column: number;
-    code: string;
+    code: string | undefined;
     message: string;
     type: string;
     severity?: LintMessageSeverity;

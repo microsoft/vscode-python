@@ -6,8 +6,8 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
-import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServerPackageRepository';
-import { LanguageServerPackageService } from '../../../client/activation/languageServerPackageService';
+import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
+import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { IHttpClient } from '../../../client/activation/types';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
 import { INugetService } from '../../../client/common/nuget/types';

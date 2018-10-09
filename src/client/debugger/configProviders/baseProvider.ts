@@ -8,6 +8,8 @@
 import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Uri, WorkspaceFolder } from 'vscode';
+import { InvalidPythonPathInDebuggerServiceId } from '../../application/diagnostics/checks/invalidPythonPathInDebugger';
+import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../application/diagnostics/types';
 import { IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService } from '../../common/types';
@@ -20,7 +22,7 @@ export type PythonAttachDebugConfiguration<T extends BaseAttachRequestArguments>
 @injectable()
 export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArguments, A extends BaseAttachRequestArguments> implements DebugConfigurationProvider {
     constructor(@unmanaged() public debugType: DebuggerType, protected serviceContainer: IServiceContainer) { }
-    public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration> {
+    public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
 
         if (debugConfiguration.request === 'attach') {
@@ -40,6 +42,10 @@ export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArgum
             }
 
             await this.provideLaunchDefaults(workspaceFolder, config);
+            const isValid = await this.validateLaunchConfiguration(config);
+            if (!isValid) {
+                return;
+            }
         }
 
         const dbgConfig = (debugConfiguration as (BaseLaunchRequestArguments | BaseAttachRequestArguments));
@@ -78,6 +84,10 @@ export abstract class BaseConfigurationProvider<L extends BaseLaunchRequestArgum
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
+    }
+    protected async validateLaunchConfiguration(debugConfiguration: PythonLaunchDebugConfiguration<L>): Promise<boolean> {
+        const diagnosticService = this.serviceContainer.get<IInvalidPythonPathInDebuggerService>(IDiagnosticsService, InvalidPythonPathInDebuggerServiceId);
+        return diagnosticService.validatePythonPath(debugConfiguration.pythonPath);
     }
     private getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
         if (folder) {

@@ -8,18 +8,18 @@
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
-import { LanguageServerPackageStorageContainers } from '../../client/activation/languageServerPackageRepository';
-import { LanguageServerPackageService } from '../../client/activation/languageServerPackageService';
-import { IHttpClient } from '../../client/activation/types';
-import { IWorkspaceService } from '../../client/common/application/types';
-import { HttpClient } from '../../client/common/net/httpClient';
-import { AzureBlobStoreNugetRepository } from '../../client/common/nuget/azureBlobStoreNugetRepository';
-import { NugetRepository } from '../../client/common/nuget/nugetRepository';
-import { NugetService } from '../../client/common/nuget/nugetService';
-import { INugetRepository, INugetService } from '../../client/common/nuget/types';
-import { PlatformService } from '../../client/common/platform/platformService';
-import { IPlatformService } from '../../client/common/platform/types';
-import { IServiceContainer } from '../../client/ioc/types';
+import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
+import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
+import { IHttpClient } from '../../../client/activation/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { HttpClient } from '../../../client/common/net/httpClient';
+import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
+import { NugetRepository } from '../../../client/common/nuget/nugetRepository';
+import { NugetService } from '../../../client/common/nuget/nugetService';
+import { INugetRepository, INugetService } from '../../../client/common/nuget/types';
+import { PlatformService } from '../../../client/common/platform/platformService';
+import { IPlatformService } from '../../../client/common/platform/types';
+import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Language Server Package Service', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;

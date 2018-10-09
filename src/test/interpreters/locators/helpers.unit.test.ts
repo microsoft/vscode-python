@@ -39,19 +39,18 @@ suite('Interpreters - Locators Helper', () => {
 
         helper = new InterpreterLocatorHelper(serviceContainer.object);
     });
-    test('Ensure default Mac interpreters are excluded from the list of interpreters', async () => {
+    test('Ensure default Mac interpreter is not excluded from the list of interpreters', async () => {
         platform.setup(p => p.isWindows).returns(() => false);
         platform.setup(p => p.isLinux).returns(() => false);
         platform
             .setup(p => p.isMac).returns(() => true)
-            .verifiable(TypeMoq.Times.atLeastOnce());
+            .verifiable(TypeMoq.Times.never());
         fs
             .setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => false)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
         const interpreters: PythonInterpreter[] = [];
-        const macInterpreterPath = path.join('users', 'python', 'bin', 'mac');
         ['conda', 'virtualenv', 'mac', 'pyenv'].forEach(name => {
             const interpreter = {
                 architecture: Architecture.Unknown,
@@ -69,17 +68,17 @@ suite('Interpreters - Locators Helper', () => {
             interpreterServiceHelper
                 .setup(i => i.isMacDefaultPythonPath(TypeMoq.It.isValue(interpreter.path)))
                 .returns(() => name === 'mac')
-                .verifiable(TypeMoq.Times.once());
+                .verifiable(TypeMoq.Times.never());
         });
 
-        const expectedInterpreters = interpreters.filter(item => item.path !== macInterpreterPath);
+        const expectedInterpreters = interpreters.slice(0);
 
         const items = helper.mergeInterpreters(interpreters);
 
         interpreterServiceHelper.verifyAll();
         platform.verifyAll();
         fs.verifyAll();
-        expect(items).to.be.lengthOf(3);
+        expect(items).to.be.lengthOf(4);
         expect(items).to.be.deep.equal(expectedInterpreters);
     });
     getNamesAndValues<OS>(OS).forEach(os => {

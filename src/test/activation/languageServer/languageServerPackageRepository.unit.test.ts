@@ -5,8 +5,8 @@
 
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
-import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from '../../client/activation/languageServerPackageRepository';
-import { IServiceContainer } from '../../client/ioc/types';
+import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from '../../../client/activation/languageServer/languageServerPackageRepository';
+import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Language Server Download Channels', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;

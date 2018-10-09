@@ -1,10 +1,10 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { fsReaddirAsync } from '../../../utils/fs';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IFileSystem } from '../../common/platform/types';
 import { IS_WINDOWS } from '../../common/util';
 import { IServiceContainer } from '../../ioc/types';
-import { IInterpreterHelper, IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../contracts';
+import { IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../contracts';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
@@ -19,13 +19,9 @@ export function lookForInterpretersInDirectory(pathToCheck: string): Promise<str
 
 @injectable()
 export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
-    private readonly platform: IPlatformService;
     private readonly fs: IFileSystem;
-    private readonly helper: IInterpreterHelper;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
-        this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
     public mergeInterpreters(interpreters: PythonInterpreter[]) {
@@ -33,9 +29,6 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
             .map(item => { return { ...item }; })
             .map(item => { item.path = path.normalize(item.path); return item; })
             .reduce<PythonInterpreter[]>((accumulator, current) => {
-                if (this.platform.isMac && this.helper.isMacDefaultPythonPath(current.path)) {
-                    return accumulator;
-                }
                 const currentVersion = Array.isArray(current.version_info) ? current.version_info.join('.') : undefined;
                 const existingItem = accumulator.find(item => {
                     // If same version and same base path, then ignore.
