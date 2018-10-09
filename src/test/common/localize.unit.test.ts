@@ -4,13 +4,13 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as localize from '../../utils/localize';
+import { LanguageServiceSurveyBanner } from '../../client/common/utils/localize';
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('localize tests', () => {
 
     test('keys', done => {
-        const val = localize.LanguageServiceSurveyBanner.bannerMessage();
+        const val = LanguageServiceSurveyBanner.bannerMessage();
         assert.equal(val, 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?', 'LanguageServiceSurveyBanner string doesnt match');
         done();
     });
@@ -19,7 +19,7 @@ suite('localize tests', () => {
         // Force a config change
         process.env.VSCODE_NLS_CONFIG = '{ "locale": "it" }';
 
-        const val = localize.LanguageServiceSurveyBanner.bannerLabelYes();
+        const val = LanguageServiceSurveyBanner.bannerLabelYes();
         assert.equal(val, 'Sì, prenderò il sondaggio ora', 'bannerLabelYes is not being translated');
         done();
     });

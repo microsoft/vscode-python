@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as localize from '../../utils/localize';
 import { FolderVersionPair, ILanguageServerFolderService } from '../activation/types';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
@@ -12,6 +11,7 @@ import {
     IBrowserService, IPersistentStateFactory,
     IPythonExtensionBanner
 } from '../common/types';
+import * as localize from '../common/utils/localize';
 import { getRandomBetween } from '../common/utils/random';
 
 // persistent state names, exported to make use of in testing

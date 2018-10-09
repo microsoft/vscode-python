@@ -16,9 +16,9 @@ import { IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService, IDiagnostic
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { IPlatformService } from '../../../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../../../../client/common/types';
+import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterHelper, IInterpreterService, InterpreterType } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { noop } from '../../../../utils/misc';
 import { sleep } from '../../../core';
 
 suite('Application Diagnostics - Checks Python Interpreter', () => {
