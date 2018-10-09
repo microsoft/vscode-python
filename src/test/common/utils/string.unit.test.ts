@@ -6,7 +6,7 @@
 // tslint:disable:max-func-body-length no-any no-require-imports no-var-requires
 
 import { expect } from 'chai';
-import { splitParent } from '../../client/common/utils/string';
+import { splitParent } from '../../../client/common/utils/string';
 
 suite('splitParent()', () => {
     test('valid values', async () => {

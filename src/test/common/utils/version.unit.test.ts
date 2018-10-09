@@ -6,7 +6,7 @@
 // tslint:disable: no-any
 
 import * as assert from 'assert';
-import { compareVersion, convertToSemver } from '../../client/common/utils/version';
+import { compareVersion, convertToSemver } from '../../../client/common/utils/version';
 
 suite('Version Utils', () => {
     test('Must handle invalid versions', async () => {

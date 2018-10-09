@@ -10,9 +10,9 @@ import {
     is64bit, isLinux, isMac, isWindows,
     matchPlatform,
     OSDistro, OSType
-} from '../../client/common/utils/platform';
-import { parseVersion } from '../../client/common/utils/version';
-import { Stub } from '../../test/stub';
+} from '../../../client/common/utils/platform';
+import { parseVersion } from '../../../client/common/utils/version';
+import { Stub } from '../../stub';
 
 // Windows
 export const WIN_10 = new Info(
