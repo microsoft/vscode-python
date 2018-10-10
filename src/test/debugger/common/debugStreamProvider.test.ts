@@ -6,8 +6,8 @@ import * as getFreePort from 'get-port';
 import * as net from 'net';
 import * as TypeMoq from 'typemoq';
 import { ICurrentProcess } from '../../../client/common/types';
-import { DebugStreamProvider } from '../../../client/debugger/Common/debugStreamProvider';
-import { IDebugStreamProvider } from '../../../client/debugger/types';
+import { DebugStreamProvider } from '../../../client/debugger/debugAdapter/Common/debugStreamProvider';
+import { IDebugStreamProvider } from '../../../client/debugger/debugAdapter/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { sleep } from '../../common';
 

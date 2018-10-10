@@ -9,8 +9,8 @@ import * as path from 'path';
 import * as shortid from 'shortid';
 import { ICurrentProcess, IPathUtils } from '../../client/common/types';
 import { IEnvironmentVariablesService } from '../../client/common/variables/types';
-import { LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
-import { DebugClientHelper } from '../../client/debugger/DebugClients/helper';
+import { DebugClientHelper } from '../../client/debugger/debugAdapter/DebugClients/helper';
+import { LaunchRequestArguments } from '../../client/debugger/types';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 

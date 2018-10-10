@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import { Transform } from 'stream';
 import { InitializedEvent } from 'vscode-debugadapter/lib/main';
-import { ProtocolMessageWriter } from '../../../client/debugger/Common/protocolWriter';
+import { ProtocolMessageWriter } from '../../../client/debugger/debugAdapter/Common/protocolWriter';
 
 suite('Debugging - Protocol Writer', () => {
     test('Test request, response and event messages', async () => {

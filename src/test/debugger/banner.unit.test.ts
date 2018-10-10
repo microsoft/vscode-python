@@ -11,8 +11,8 @@ import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../client/common/application/types';
 import { IBrowserService, IDisposableRegistry,
     ILogger, IPersistentState, IPersistentStateFactory, IRandom } from '../../client/common/types';
-import { DebuggerBanner, PersistentStateKeys } from '../../client/debugger/banner';
-import { DebuggerTypeName } from '../../client/debugger/Common/constants';
+import { DebuggerTypeName } from '../../client/debugger/constants';
+import { DebuggerBanner, PersistentStateKeys } from '../../client/debugger/extension/banner';
 import { IServiceContainer } from '../../client/ioc/types';
 
 suite('Debugging - Banner', () => {

@@ -4,7 +4,7 @@ import { Uri } from 'vscode';
 import { IDebugService, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { IConfigurationService } from '../../common/types';
-import { DebugOptions } from '../../debugger/Common/Contracts';
+import { DebugOptions } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ITestDebugLauncher, LaunchOptions, TestProvider } from './types';
 

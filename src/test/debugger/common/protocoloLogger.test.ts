@@ -4,8 +4,8 @@
 import { PassThrough } from 'stream';
 import * as TypeMoq from 'typemoq';
 import { Logger } from 'vscode-debugadapter';
-import { ProtocolLogger } from '../../../client/debugger/Common/protocolLogger';
-import { IProtocolLogger } from '../../../client/debugger/types';
+import { ProtocolLogger } from '../../../client/debugger/debugAdapter/Common/protocolLogger';
+import { IProtocolLogger } from '../../../client/debugger/debugAdapter/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Debugging - Protocol Logger', () => {
