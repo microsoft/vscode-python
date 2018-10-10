@@ -8,4 +8,4 @@ if os.path.exists(("/etc/hosts")):
 
 
 import time
-time.slee
+time.sleep(1)
