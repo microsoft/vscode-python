@@ -17,7 +17,7 @@ import { Disposable } from 'vscode';
 import { DebugSession, ErrorDestination, Event, logger, OutputEvent, Response, TerminatedEvent } from 'vscode-debugadapter';
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import '../../client/common/extensions';
+import '../../../client/common/extensions';
 import { isNotInstalledError } from '../../common/helpers';
 import { IFileSystem } from '../../common/platform/types';
 import { ICurrentProcess } from '../../common/types';
