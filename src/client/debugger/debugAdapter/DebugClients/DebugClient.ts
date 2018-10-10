@@ -4,7 +4,7 @@ import { BaseDebugServer } from "../DebugServers/BaseDebugServer";
 import { IDebugServer } from "../Common/Contracts";
 import { DebugSession } from "vscode-debugadapter";
 import { EventEmitter } from 'events';
-import { IServiceContainer } from "../../ioc/types";
+import { IServiceContainer } from "../../../ioc/types";
 
 export enum DebugType {
     Local,

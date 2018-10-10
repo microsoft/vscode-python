@@ -6,7 +6,7 @@
 // tslint:disable:max-classes-per-file
 
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 import { IDebugLauncherScriptProvider } from '../types';
 
 export class NoDebugLauncherScriptProvider implements IDebugLauncherScriptProvider {

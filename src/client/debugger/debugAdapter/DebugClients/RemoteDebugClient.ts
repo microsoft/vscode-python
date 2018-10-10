@@ -1,5 +1,5 @@
 import { DebugSession } from 'vscode-debugadapter';
-import { AttachRequestArguments, LaunchRequestArguments } from '../Common/Contracts';
+import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { RemoteDebugServerV2 } from '../DebugServers/RemoteDebugServerv2';
 import { DebugClient, DebugType } from './DebugClient';

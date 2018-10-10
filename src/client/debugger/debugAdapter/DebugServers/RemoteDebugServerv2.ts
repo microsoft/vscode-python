@@ -5,7 +5,8 @@
 
 import { Socket } from 'net';
 import { DebugSession } from 'vscode-debugadapter';
-import { AttachRequestArguments, IDebugServer } from '../Common/Contracts';
+import { AttachRequestArguments } from '../../types';
+import { IDebugServer } from '../Common/Contracts';
 import { BaseDebugServer } from './BaseDebugServer';
 
 export class RemoteDebugServerV2 extends BaseDebugServer {

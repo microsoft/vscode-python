@@ -4,9 +4,9 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ProcessService } from '../../common/process/proc';
-import { IBufferDecoder, IProcessService, IProcessServiceFactory } from '../../common/process/types';
-import { IServiceContainer } from '../../ioc/types';
+import { ProcessService } from '../../../common/process/proc';
+import { IBufferDecoder, IProcessService, IProcessServiceFactory } from '../../../common/process/types';
+import { IServiceContainer } from '../../../ioc/types';
 
 @injectable()
 export class DebuggerProcessServiceFactory implements IProcessServiceFactory {

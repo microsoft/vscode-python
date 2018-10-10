@@ -8,17 +8,18 @@
 import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, DebugConfigurationProvider, Uri, WorkspaceFolder } from 'vscode';
-import { InvalidPythonPathInDebuggerServiceId } from '../../application/diagnostics/checks/invalidPythonPathInDebugger';
-import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../application/diagnostics/types';
-import { IDocumentManager, IWorkspaceService } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IConfigurationService } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
-import { AttachRequestArguments, DebuggerType, LaunchRequestArguments } from '../Common/Contracts';
+import { InvalidPythonPathInDebuggerServiceId } from '../../../application/diagnostics/checks/invalidPythonPathInDebugger';
+import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../application/diagnostics/types';
+import { IDocumentManager, IWorkspaceService } from '../../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../../common/constants';
+import { IConfigurationService } from '../../../common/types';
+import { IServiceContainer } from '../../../ioc/types';
+import { DebuggerTypeName } from '../../constants';
+import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 
 @injectable()
 export abstract class BaseConfigurationProvider implements DebugConfigurationProvider {
-    constructor(@unmanaged() public debugType: DebuggerType, protected serviceContainer: IServiceContainer) { }
+    constructor(@unmanaged() public debugType: typeof DebuggerTypeName, protected serviceContainer: IServiceContainer) { }
     public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
 

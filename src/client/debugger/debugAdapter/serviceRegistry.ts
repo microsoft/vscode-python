@@ -4,35 +4,34 @@
 'use strict';
 
 import { Container } from 'inversify';
-import { SocketServer } from '../common/net/socket/socketServer';
-import { FileSystem } from '../common/platform/fileSystem';
-import { PlatformService } from '../common/platform/platformService';
-import { IFileSystem, IPlatformService } from '../common/platform/types';
-import { CurrentProcess } from '../common/process/currentProcess';
-import { BufferDecoder } from '../common/process/decoder';
-import { IBufferDecoder, IProcessServiceFactory } from '../common/process/types';
-import { ICurrentProcess, ISocketServer } from '../common/types';
-import { ServiceContainer } from '../ioc/container';
-import { ServiceManager } from '../ioc/serviceManager';
-import { IServiceContainer, IServiceManager } from '../ioc/types';
-import { DebuggerBanner } from './banner';
+import { SocketServer } from '../../common/net/socket/socketServer';
+import { FileSystem } from '../../common/platform/fileSystem';
+import { PlatformService } from '../../common/platform/platformService';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { CurrentProcess } from '../../common/process/currentProcess';
+import { BufferDecoder } from '../../common/process/decoder';
+import { IBufferDecoder, IProcessServiceFactory } from '../../common/process/types';
+import { ICurrentProcess, ISocketServer } from '../../common/types';
+import { ServiceContainer } from '../../ioc/container';
+import { ServiceManager } from '../../ioc/serviceManager';
+import { IServiceContainer, IServiceManager } from '../../ioc/types';
 import { DebugStreamProvider } from './Common/debugStreamProvider';
 import { DebuggerProcessServiceFactory } from './Common/processServiceFactory';
 import { ProtocolLogger } from './Common/protocolLogger';
 import { ProtocolParser } from './Common/protocolParser';
 import { ProtocolMessageWriter } from './Common/protocolWriter';
-import { IDebuggerBanner, IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
+import { IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from './types';
 
 export function initializeIoc(): IServiceContainer {
     const cont = new Container();
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
     serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
-    registerDebuggerTypes(serviceManager);
+    registerTypes(serviceManager);
     return serviceContainer;
 }
 
-function registerDebuggerTypes(serviceManager: IServiceManager) {
+function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
     serviceManager.addSingleton<IDebugStreamProvider>(IDebugStreamProvider, DebugStreamProvider);
     serviceManager.addSingleton<IProtocolLogger>(IProtocolLogger, ProtocolLogger);
@@ -43,8 +42,4 @@ function registerDebuggerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IProtocolMessageWriter>(IProtocolMessageWriter, ProtocolMessageWriter);
     serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
     serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, DebuggerProcessServiceFactory);
-}
-
-export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner);
 }

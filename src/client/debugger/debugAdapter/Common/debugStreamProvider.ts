@@ -3,14 +3,14 @@
 
 import { inject, injectable } from 'inversify';
 import { createServer, Socket } from 'net';
-import { isTestExecution } from '../../common/constants';
-import { ICurrentProcess } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
+import { isTestExecution } from '../../../common/constants';
+import { ICurrentProcess } from '../../../common/types';
+import { IServiceContainer } from '../../../ioc/types';
 import { IDebugStreamProvider } from '../types';
 
 @injectable()
 export class DebugStreamProvider implements IDebugStreamProvider {
-    constructor( @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
     public get useDebugSocketStream(): boolean {
         return this.getDebugPort() > 0;
     }

@@ -6,7 +6,7 @@
 
 import { DebugConfigurationProvider } from 'vscode';
 import { PythonV2DebugConfigurationProvider } from '..';
-import { IServiceManager } from '../../ioc/types';
+import { IServiceManager } from '../../../ioc/types';
 import { IDebugConfigurationProvider } from '../types';
 import { ConfigurationProviderUtils } from './configurationProviderUtils';
 import { IConfigurationProviderUtils } from './types';

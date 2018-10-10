@@ -1,6 +1,6 @@
-import { ICurrentProcess, IPathUtils } from '../../common/types';
-import { EnvironmentVariables, IEnvironmentVariablesService } from '../../common/variables/types';
-import { LaunchRequestArguments } from '../Common/Contracts';
+import { ICurrentProcess, IPathUtils } from '../../../common/types';
+import { EnvironmentVariables, IEnvironmentVariablesService } from '../../../common/variables/types';
+import { LaunchRequestArguments } from '../../types';
 
 export class DebugClientHelper {
     constructor(private envParser: IEnvironmentVariablesService, private pathUtils: IPathUtils,
@@ -19,16 +19,16 @@ export class DebugClientHelper {
         this.envParser.appendPath(env, debugLaunchEnvVars[pathVariableName]);
         this.envParser.appendPythonPath(env, debugLaunchEnvVars.PYTHONPATH);
 
-        if (typeof env[pathVariableName] === 'string' && env[pathVariableName].length > 0) {
+        if (typeof env[pathVariableName] === 'string' && env[pathVariableName]!.length > 0) {
             // Now merge this path with the current system path.
             // We need to do this to ensure the PATH variable always has the system PATHs as well.
-            this.envParser.appendPath(env, this.process.env[pathVariableName]);
+            this.envParser.appendPath(env, this.process.env[pathVariableName]!);
         }
         if (typeof env.PYTHONPATH === 'string' && env.PYTHONPATH.length > 0) {
             // We didn't have a value for PATH earlier and now we do.
             // Now merge this path with the current system path.
             // We need to do this to ensure the PATH variable always has the system PATHs as well.
-            this.envParser.appendPythonPath(env, this.process.env.PYTHONPATH);
+            this.envParser.appendPythonPath(env, this.process.env.PYTHONPATH!);
         }
 
         if (typeof args.console !== 'string' || args.console === 'none') {

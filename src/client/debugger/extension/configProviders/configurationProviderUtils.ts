@@ -6,11 +6,11 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
-import { IPythonExecutionFactory } from '../../common/process/types';
-import { ILogger } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
+import { IApplicationShell } from '../../../common/application/types';
+import { IFileSystem } from '../../../common/platform/types';
+import { IPythonExecutionFactory } from '../../../common/process/types';
+import { ILogger } from '../../../common/types';
+import { IServiceContainer } from '../../../ioc/types';
 import { IConfigurationProviderUtils } from './types';
 
 const PSERVE_SCRIPT_FILE_NAME = 'pserve.py';

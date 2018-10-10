@@ -27,7 +27,7 @@ const PROTOCOL_START_INDENTIFIER = '\r\n\r\n';
 export class ProtocolParser extends EventEmitter implements IProtocolParser {
     private rawData = new Buffer(0);
     private contentLength: number = -1;
-    private disposed: boolean;
+    private disposed: boolean = false;
     private stream?: Readable;
     constructor() {
         super();

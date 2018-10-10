@@ -5,12 +5,12 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
-import { IApplicationShell, IDebugService } from '../common/application/types';
-import '../common/extensions';
+import { IApplicationShell, IDebugService } from '../../common/application/types';
 import { IBrowserService, IDisposableRegistry,
-    ILogger, IPersistentStateFactory, IRandom } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
-import { DebuggerTypeName } from './Common/constants';
+    ILogger, IPersistentStateFactory, IRandom } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
+import '../common/extensions';
+import { DebuggerTypeName } from '../constants';
 import { IDebuggerBanner } from './types';
 
 const SAMPLE_SIZE_PER_HUNDRED = 10;

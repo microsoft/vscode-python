@@ -6,10 +6,11 @@
 
 import * as net from 'net';
 import { DebugSession } from 'vscode-debugadapter';
-import { ISocketServer } from '../../common/types';
-import { createDeferred } from '../../common/utils/async';
-import { IServiceContainer } from '../../ioc/types';
-import { IDebugServer, LaunchRequestArguments } from '../Common/Contracts';
+import { ISocketServer } from '../../../common/types';
+import { createDeferred } from '../../../common/utils/async';
+import { IServiceContainer } from '../../../ioc/types';
+import { LaunchRequestArguments } from '../../types';
+import { IDebugServer } from '../Common/Contracts';
 import { BaseDebugServer } from './BaseDebugServer';
 
 export class LocalDebugServerV2 extends BaseDebugServer {

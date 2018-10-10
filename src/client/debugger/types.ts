@@ -3,42 +3,73 @@
 
 'use strict';
 
-import { Socket } from 'net';
-import { Readable } from 'stream';
-import { Disposable } from 'vscode';
-import { Logger } from 'vscode-debugadapter';
-import { Message } from 'vscode-debugadapter/lib/messages';
+import { DebugConfiguration } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol/lib/debugProtocol';
+import { DebuggerTypeName } from './constants';
 
-export interface IDebugLauncherScriptProvider {
-    getLauncherFilePath(): string;
+export enum DebugOptions {
+    RedirectOutput = 'RedirectOutput',
+    Django = 'Django',
+    Jinja = 'Jinja',
+    DebugStdLib = 'DebugStdLib',
+    Sudo = 'Sudo',
+    Pyramid = 'Pyramid',
+    FixFilePathCase = 'FixFilePathCase',
+    WindowsClient = 'WindowsClient',
+    UnixClient = 'UnixClient',
+    StopOnEntry = 'StopOnEntry'
 }
 
-export const IProtocolParser = Symbol('IProtocolParser');
-export interface IProtocolParser extends Disposable {
-    connect(stream: Readable): void;
-    once(event: string | symbol, listener: Function): this;
-    on(event: string | symbol, listener: Function): this;
+// tslint:disable-next-line:interface-name
+interface AdditionalLaunchDebugOptions {
+    redirectOutput?: boolean;
+    django?: boolean;
+    gevent?: boolean;
+    jinja?: boolean;
+    debugStdLib?: boolean;
+    sudo?: boolean;
+    pyramid?: boolean;
+    stopOnEntry?: boolean;
 }
 
-export const IProtocolLogger = Symbol('IProtocolLogger');
-export interface IProtocolLogger extends Disposable {
-    connect(inputStream: Readable, outputStream: Readable): void;
-    setup(logger: Logger.ILogger): void;
+// tslint:disable-next-line:interface-name
+interface AdditionalAttachDebugOptions {
+    redirectOutput?: boolean;
+    django?: boolean;
+    gevent?: boolean;
+    jinja?: boolean;
+    debugStdLib?: boolean;
 }
 
-export const IDebugStreamProvider = Symbol('IDebugStreamProvider');
-export interface IDebugStreamProvider {
-    readonly useDebugSocketStream: boolean;
-    getInputAndOutputStreams(): Promise<{ input: NodeJS.ReadStream | Socket; output: NodeJS.WriteStream | Socket }>;
+// tslint:disable-next-line:interface-name
+export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, AdditionalLaunchDebugOptions, DebugConfiguration {
+    type: typeof DebuggerTypeName;
+    // An absolute path to the program to debug.
+    module?: string;
+    program?: string;
+    pythonPath: string;
+    // Automatically stop target after launch. If not specified, target does not stop.
+    stopOnEntry?: boolean;
+    args: string[];
+    cwd?: string;
+    debugOptions?: DebugOptions[];
+    env?: Object;
+    envFile: string;
+    console?: 'none' | 'integratedTerminal' | 'externalTerminal';
+    port?: number;
+    host?: string;
+    logToFile?: boolean;
 }
 
-export const IProtocolMessageWriter = Symbol('IProtocolMessageWriter');
-export interface IProtocolMessageWriter {
-    write(stream: Socket | NodeJS.WriteStream, message: Message): void;
-}
-
-export const IDebugConfigurationProvider = Symbol('DebugConfigurationProvider');
-export const IDebuggerBanner = Symbol('IDebuggerBanner');
-export interface IDebuggerBanner {
-    initialize(): void;
+// tslint:disable-next-line:interface-name
+export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments, AdditionalAttachDebugOptions, DebugConfiguration {
+    type: typeof DebuggerTypeName;
+    // An absolute path to local directory with source.
+    port?: number;
+    host?: string;
+    logToFile?: boolean;
+    debugOptions?: DebugOptions[];
+    localRoot?: string;
+    remoteRoot?: string;
+    pathMappings?: { localRoot: string; remoteRoot: string }[];
 }

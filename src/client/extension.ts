@@ -30,10 +30,9 @@ import {
 } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
-import { DebuggerTypeName } from './debugger/Common/constants';
-import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
-import { registerTypes as debuggerRegisterTypes } from './debugger/serviceRegistry';
-import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/types';
+import { DebuggerTypeName } from './debugger/constants';
+import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
+import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import { ICondaService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
@@ -179,7 +178,6 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
-    debuggerRegisterTypes(serviceManager);
     appRegisterTypes(serviceManager);
     providersRegisterTypes(serviceManager);
 }

@@ -5,12 +5,12 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IPlatformService } from '../../common/platform/types';
-import { IServiceContainer } from '../../ioc/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { DEBUGGER } from '../../telemetry/constants';
-import { DebuggerTelemetryV2 } from '../../telemetry/types';
-import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../Common/Contracts';
+import { IPlatformService } from '../../../common/platform/types';
+import { IServiceContainer } from '../../../ioc/types';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { DEBUGGER } from '../../../telemetry/constants';
+import { DebuggerTelemetryV2 } from '../../../telemetry/types';
+import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../types';
 import { BaseConfigurationProvider } from './baseProvider';
 import { IConfigurationProviderUtils } from './types';
 

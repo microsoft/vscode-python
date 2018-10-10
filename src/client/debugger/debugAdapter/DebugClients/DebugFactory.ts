@@ -1,5 +1,5 @@
 import { DebugSession } from 'vscode-debugadapter';
-import { AttachRequestArguments, LaunchRequestArguments } from '../Common/Contracts';
+import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugLauncherScriptProvider } from '../types';
 import { DebugClient } from './DebugClient';
 import { DebuggerLauncherScriptProvider, NoDebugLauncherScriptProvider } from './launcherProvider';

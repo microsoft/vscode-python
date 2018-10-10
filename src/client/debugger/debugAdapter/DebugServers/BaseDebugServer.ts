@@ -5,7 +5,7 @@ import { DebugSession } from 'vscode-debugadapter';
 import { IDebugServer } from '../Common/Contracts';
 import { EventEmitter } from 'events';
 import { Socket } from 'net';
-import { Deferred, createDeferred } from '../../common/utils/async';
+import { Deferred, createDeferred } from '../../../common/utils/async';
 
 export abstract class BaseDebugServer extends EventEmitter {
     protected clientSocket: Deferred<Socket>;

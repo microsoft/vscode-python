@@ -16,11 +16,11 @@ import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { IConfigurationService, ILogger, IPythonSettings } from '../../../client/common/types';
-import { PythonV2DebugConfigurationProvider } from '../../../client/debugger';
-import { DebuggerTypeName } from '../../../client/debugger/Common/constants';
-import { DebugOptions, LaunchRequestArguments } from '../../../client/debugger/Common/Contracts';
-import { ConfigurationProviderUtils } from '../../../client/debugger/configProviders/configurationProviderUtils';
-import { IConfigurationProviderUtils } from '../../../client/debugger/configProviders/types';
+import { DebuggerTypeName } from '../../../client/debugger/constants';
+import { PythonV2DebugConfigurationProvider } from '../../../client/debugger/extension';
+import { ConfigurationProviderUtils } from '../../../client/debugger/extension/configProviders/configurationProviderUtils';
+import { IConfigurationProviderUtils } from '../../../client/debugger/extension/configProviders/types';
+import { DebugOptions, LaunchRequestArguments } from '../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
