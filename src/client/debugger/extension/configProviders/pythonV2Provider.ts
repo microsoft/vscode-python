@@ -28,6 +28,9 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
         if (debugConfiguration.stopOnEntry) {
             this.debugOption(debugOptions, DebugOptions.StopOnEntry);
         }
+        if (debugConfiguration.showReturnValue) {
+            this.debugOption(debugOptions, DebugOptions.ShowReturnValue);
+        }
         if (debugConfiguration.django) {
             this.debugOption(debugOptions, DebugOptions.Django);
         }
@@ -136,7 +139,8 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
             isSudo: !!debugConfiguration.sudo,
             jinja: !!debugConfiguration.jinja,
             pyramid: !!debugConfiguration.pyramid,
-            stopOnEntry: !!debugConfiguration.stopOnEntry
+            stopOnEntry: !!debugConfiguration.stopOnEntry,
+            showReturnValue: !!debugConfiguration.showReturnValue
         };
         sendTelemetryEvent(DEBUGGER, undefined, telemetryProps);
     }

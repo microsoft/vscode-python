@@ -72,6 +72,9 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
         if (typeof debugConfiguration.stopOnEntry !== 'boolean') {
             debugConfiguration.stopOnEntry = false;
         }
+        if (typeof debugConfiguration.showReturnValue !== 'boolean') {
+            debugConfiguration.showReturnValue = false;
+        }
         if (!debugConfiguration.console) {
             debugConfiguration.console = 'integratedTerminal';
         }

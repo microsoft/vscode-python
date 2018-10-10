@@ -490,6 +490,11 @@
                                 "description": "Automatically stop after launch.",
                                 "default": false
                             },
+                            "showReturnValue": {
+                                "type": "boolean",
+                                "description": "Show return value of functions when stepping.",
+                                "default": false
+                            },
                             "console": {
                                 "enum": [
                                     "none",

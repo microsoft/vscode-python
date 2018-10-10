@@ -17,7 +17,8 @@ export enum DebugOptions {
     FixFilePathCase = 'FixFilePathCase',
     WindowsClient = 'WindowsClient',
     UnixClient = 'UnixClient',
-    StopOnEntry = 'StopOnEntry'
+    StopOnEntry = 'StopOnEntry',
+    ShowReturnValue = 'ShowReturnValue'
 }
 
 // tslint:disable-next-line:interface-name
@@ -30,6 +31,7 @@ interface AdditionalLaunchDebugOptions {
     sudo?: boolean;
     pyramid?: boolean;
     stopOnEntry?: boolean;
+    showReturnValue?: boolean;
 }
 
 // tslint:disable-next-line:interface-name
@@ -50,6 +52,8 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
     pythonPath: string;
     // Automatically stop target after launch. If not specified, target does not stop.
     stopOnEntry?: boolean;
+    /** Show return values of functions while stepping. */
+    showReturnValue?: boolean;
     args: string[];
     cwd?: string;
     debugOptions?: DebugOptions[];

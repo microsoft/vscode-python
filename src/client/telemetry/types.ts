@@ -55,6 +55,7 @@ export type DebuggerTelemetryV2 = {
     isModule: boolean;
     isSudo: boolean;
     stopOnEntry: boolean;
+    showReturnValue: boolean;
     pyramid: boolean;
 };
 export type DebuggerPerformanceTelemetry = {
