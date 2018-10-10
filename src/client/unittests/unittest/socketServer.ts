@@ -30,6 +30,7 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
         }
     }
     public start(options: { port?: number; host?: string } = { port: 0, host: 'localhost' }): Promise<number> {
+        this.ipcBuffer = '';
         this.startedDef = createDeferred<number>();
         this.server = net.createServer(this.connectionListener.bind(this));
         this.server!.maxConnections = MaxConnections;
@@ -55,7 +56,10 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
         this.sockets.push(socket);
         socket.setEncoding('utf8');
         this.log('## socket connection to server detected ##');
-        socket.on('close', this.onCloseSocket.bind(this));
+        socket.on('close', () => {
+            this.ipcBuffer = '';
+            this.onCloseSocket();
+        });
         socket.on('error', (err) => {
             this.log('server socket error', err);
             this.emit('error', err);
@@ -75,9 +79,15 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
                 if (dataStr.length < startIndex + lengthOfMessage) {
                     return;
                 }
-                const message = JSON.parse(dataStr.substring(startIndex, lengthOfMessage + startIndex));
+                // tslint:disable-next-line:no-any
+                let message: any;
+                try {
+                    message = JSON.parse(dataStr.substring(startIndex, lengthOfMessage + startIndex));
+                } catch (jsonErr) {
+                    this.emit('error', jsonErr);
+                    return;
+                }
                 dataStr = this.ipcBuffer = dataStr.substring(startIndex + lengthOfMessage);
-
                 this.emit(message.event, message.body, sock);
             }
         });

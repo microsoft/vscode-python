@@ -36,14 +36,12 @@ interface ITestData {
 
 @injectable()
 export class TestManagerRunner implements ITestManagerRunner {
-    private static counter: number = 0;
-
     private readonly argsHelper: IArgumentsHelper;
     private readonly helper: IUnitTestHelper;
     private readonly testRunner: ITestRunner;
     private readonly server: IUnitTestSocketServer;
     private readonly logger: ILogger;
-    private busy: Deferred<Tests>;
+    private busy!: Deferred<Tests>;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.argsHelper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
@@ -164,13 +162,9 @@ export class TestManagerRunner implements ITestManagerRunner {
     // the way here.
     // tslint:disable-next-line:no-any
     private async removeListenersAfter(after: Promise<any>): Promise<any> {
-        return after.then(() => {
-            this.server.removeAllListeners();
-            return after;
-        }, (reason) => {
-            this.server.removeAllListeners();
-            return after;
-        });
+        return after
+                .then(() => this.server.removeAllListeners())
+                .catch(() => this.server.removeAllListeners());
     }
 
     private buildTestArgs(args: string[]): string[] {
