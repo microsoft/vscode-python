@@ -270,8 +270,9 @@ suite('Debugging - Config Provider', () => {
 
         expect(debugConfig).to.have.property('console', 'integratedTerminal');
         expect(debugConfig).to.have.property('stopOnEntry', false);
+        expect(debugConfig).to.have.property('showReturnValue', false);
         expect(debugConfig).to.have.property('debugOptions');
-        expect((debugConfig as any).debugOptions).to.be.deep.equal(['RedirectOutput']);
+        expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.RedirectOutput]);
     });
     test('Test defaults of python debugger', async () => {
         if ('python' === DebuggerTypeName) {
@@ -286,6 +287,7 @@ suite('Debugging - Config Provider', () => {
         const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {} as DebugConfiguration);
 
         expect(debugConfig).to.have.property('stopOnEntry', false);
+        expect(debugConfig).to.have.property('showReturnValue', false);
         expect(debugConfig).to.have.property('debugOptions');
         expect((debugConfig as any).debugOptions).to.be.deep.equal([DebugOptions.RedirectOutput]);
     });
@@ -300,6 +302,7 @@ suite('Debugging - Config Provider', () => {
 
         expect(debugConfig).to.have.property('console', 'integratedTerminal');
         expect(debugConfig).to.have.property('stopOnEntry', false);
+        expect(debugConfig).to.have.property('showReturnValue', false);
         expect(debugConfig).to.have.property('debugOptions');
         expect((debugConfig as any).debugOptions).to.be.deep.equal([]);
     });

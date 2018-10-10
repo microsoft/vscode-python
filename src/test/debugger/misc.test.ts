@@ -56,13 +56,14 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
             return new DebugClientEx(testAdapterFilePath, debuggerType, coverageDirectory, { cwd: EXTENSION_ROOT_DIR });
         }
     }
-    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
+    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, showReturnValue: boolean = false): LaunchRequestArguments {
         const env = { PYTHONPATH: PTVSD_PATH };
         // tslint:disable-next-line:no-unnecessary-local-variable
         const options = {
             program: path.join(debugFilesPath, pythonFile),
             cwd: debugFilesPath,
             stopOnEntry,
+            showReturnValue,
             debugOptions: [DebugOptions.RedirectOutput],
             pythonPath: PYTHON_PATH,
             args: [],

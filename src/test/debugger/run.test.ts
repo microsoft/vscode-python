@@ -40,12 +40,13 @@ suite('Run without Debugging', () => {
         } catch (ex) { }
         await sleep(1000);
     });
-    function buildLauncArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
+    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, showReturnValue: boolean = false): LaunchRequestArguments {
         // tslint:disable-next-line:no-unnecessary-local-variable
         return {
             program: path.join(debugFilesPath, pythonFile),
             cwd: debugFilesPath,
             stopOnEntry,
+            showReturnValue,
             noDebug: true,
             debugOptions: [DebugOptions.RedirectOutput],
             pythonPath: PYTHON_PATH,
@@ -62,7 +63,7 @@ suite('Run without Debugging', () => {
     test('Should run program to the end', async () => {
         await Promise.all([
             debugClient.configurationSequence(),
-            debugClient.launch(buildLauncArgs('simplePrint.py', false)),
+            debugClient.launch(buildLaunchArgs('simplePrint.py', false)),
             debugClient.waitForEvent('initialized'),
             debugClient.waitForEvent('terminated')
         ]);
@@ -70,7 +71,7 @@ suite('Run without Debugging', () => {
     test('test stderr output for Python', async () => {
         await Promise.all([
             debugClient.configurationSequence(),
-            debugClient.launch(buildLauncArgs('stdErrOutput.py', false)),
+            debugClient.launch(buildLaunchArgs('stdErrOutput.py', false)),
             debugClient.waitForEvent('initialized'),
             debugClient.assertOutput('stderr', 'error output'),
             debugClient.waitForEvent('terminated')
@@ -79,7 +80,7 @@ suite('Run without Debugging', () => {
     test('Test stdout output', async () => {
         await Promise.all([
             debugClient.configurationSequence(),
-            debugClient.launch(buildLauncArgs('stdOutOutput.py', false)),
+            debugClient.launch(buildLaunchArgs('stdOutOutput.py', false)),
             debugClient.waitForEvent('initialized'),
             debugClient.assertOutput('stdout', 'normal output'),
             debugClient.waitForEvent('terminated')
@@ -102,7 +103,7 @@ suite('Run without Debugging', () => {
         });
         await Promise.all([
             debugClient.configurationSequence(),
-            debugClient.launch(buildLauncArgs('sampleWithSleep.py', false)),
+            debugClient.launch(buildLaunchArgs('sampleWithSleep.py', false)),
             debugClient.waitForEvent('initialized'),
             processIdOutput
         ]);
