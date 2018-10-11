@@ -122,11 +122,11 @@ export class TestManagerRunner implements ITestManagerRunner {
             }
         };
 
-        let promise = Promise.resolve<void>(undefined);
         // Test everything.
         if (testPaths.length === 0) {
             await this.removeListenersAfter(runTestInternal());
         } else {
+            let promise = Promise.resolve<void>(undefined);
             // Ok, the test runner can only work with one test at a time.
             if (options.testsToRun) {
                 if (Array.isArray(options.testsToRun.testFile)) {
@@ -164,7 +164,10 @@ export class TestManagerRunner implements ITestManagerRunner {
     private async removeListenersAfter(after: Promise<any>): Promise<any> {
         return after
                 .then(() => this.server.removeAllListeners())
-                .catch(() => this.server.removeAllListeners());
+                .catch((err) => {
+                    this.server.removeAllListeners();
+                    throw err; // keep propagating this downward
+                });
     }
 
     private buildTestArgs(args: string[]): string[] {
