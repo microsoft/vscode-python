@@ -18,7 +18,7 @@ import { noop } from '../../client/common/utils/misc';
 import { PTVSD_PATH } from '../../client/debugger/constants';
 import { ProtocolParser } from '../../client/debugger/debugAdapter/Common/protocolParser';
 import { ProtocolMessageWriter } from '../../client/debugger/debugAdapter/Common/protocolWriter';
-import { PythonDebugger } from '../../client/debugger/debugAdapter/mainV2';
+import { PythonDebugger } from '../../client/debugger/debugAdapter/main';
 import { PYTHON_PATH } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 

@@ -298,7 +298,7 @@
                     ]
                 },
                 "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
-                "program": "./out/client/debugger/mainV2.js",
+                "program": "./out/client/debugger/debugAdapter/main.js",
                 "runtime": "node",
                 "configurationSnippets": [
                     {

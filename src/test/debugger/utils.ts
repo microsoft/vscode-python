@@ -16,7 +16,7 @@ import { DebuggerTypeName } from '../../client/debugger/constants';
 import { DEBUGGER_TIMEOUT } from './common/constants';
 import { DebugClientEx } from './debugClient';
 
-const testAdapterFilePath = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'debugger', 'mainV2.js');
+const testAdapterFilePath = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'debugger', 'debugAdapter', 'main.js');
 const debuggerType = DebuggerTypeName;
 
 /**

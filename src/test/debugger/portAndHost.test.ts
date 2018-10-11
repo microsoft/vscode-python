@@ -18,7 +18,7 @@ use(chaiAsPromised);
 
 const debugFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'debugging');
 
-const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'mainV2.js');
+const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'debugAdapter', 'main.js');
 
 const testAdapterFilePath = EXPERIMENTAL_DEBUG_ADAPTER;
 const debuggerType = DebuggerTypeName;
