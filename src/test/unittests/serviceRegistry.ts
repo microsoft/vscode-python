@@ -121,6 +121,6 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerMockUnitTestSocketServer() {
-        this.serviceManager.add<IUnitTestSocketServer>(IUnitTestSocketServer, MockUnitTestSocketServer);
+        this.serviceManager.addSingleton<IUnitTestSocketServer>(IUnitTestSocketServer, MockUnitTestSocketServer);
     }
 }
