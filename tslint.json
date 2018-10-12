@@ -8,6 +8,7 @@
     ],
     "rules": {
         "messages-must-be-localized": true,
+        "files-must-have-copyright-and-strict-header": true,
         "no-unused-expression": true,
         "no-duplicate-variable": true,
         "no-unused-variable": true,
