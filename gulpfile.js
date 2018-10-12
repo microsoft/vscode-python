@@ -135,8 +135,8 @@ gulp.task('cover:disable', () => {
  */
 gulp.task('inlinesource', () => {
     return gulp.src('./coverage/lcov-report/*.html')
-                .pipe(inlinesource({attribute: false}))
-                .pipe(gulp.dest('./coverage/lcov-report-inline'));
+        .pipe(inlinesource({ attribute: false }))
+        .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
 
 function hasNativeDependencies() {
@@ -203,6 +203,14 @@ let configuration;
  */
 function getLinter(options) {
     configuration = configuration ? configuration : tslint.Configuration.findConfiguration(null, '.');
+    // Remove strict rules during compilation step.
+    if (options.mode === 'compile') {
+        for (const rule of ['messages-must-be-localized']) {
+            if (configuration.results.rules.get(rule)) {
+                configuration.results.rules.delete(rule);
+            }
+        }
+    }
     const program = tslint.Linter.createProgram('./tsconfig.json');
     const linter = new tslint.Linter({ formatter: 'json' }, program);
     return { linter, configuration };

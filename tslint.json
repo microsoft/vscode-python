@@ -1,9 +1,13 @@
 {
+    "rulesDirectory": [
+        "./out/tools/tslint-rules"
+    ],
     "extends": [
         "tslint-eslint-rules",
         "tslint-microsoft-contrib"
     ],
     "rules": {
+        "messages-must-be-localized": true,
         "no-unused-expression": true,
         "no-duplicate-variable": true,
         "no-unused-variable": true,
