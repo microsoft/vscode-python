@@ -183,7 +183,7 @@
         ],
         "description": "Code snippet for a lambda statement"
     },
-    "if(main)": {
+    "if(main) with main()": {
         "prefix": "if(main)",
         "body": [
             "def main():",
@@ -193,6 +193,14 @@
             "\tmain()"
         ],
         "description": "Code snippet for a main function"
+    },
+    "if(main)": {
+        "prefix": "__main__",
+        "body": [
+            "if __name__ == '__main__':",
+            "\t${1:pass}",
+        ],
+        "description": "Code snippet for checking if program is being called or imported"
     },
     "async/def": {
         "prefix": "async/def",
