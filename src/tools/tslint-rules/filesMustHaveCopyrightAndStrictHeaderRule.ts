@@ -3,10 +3,11 @@
 
 'use strict';
 
-import * as Lint from 'tslint';
-import * as ts from 'typescript';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as Lint from 'tslint';
+import * as ts from 'typescript';
+import { ExtensionRootDir } from '../constants';
 
 const copyrightHeader = [
     '// Copyright (c) Microsoft Corporation. All rights reserved.',
@@ -16,18 +17,20 @@ const copyrightHeader = [
 ];
 const allowedCopyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n')];
 const failureMessage = 'Header must contain copyright and \'use strict\' in the Python Extension';
-let filesNotToCheck = [];
+const jsonFileWithListOfOldFiles = path.join(ExtensionRootDir, 'src', 'tools', 'existingFiles.json');
+const filesNotToCheck: string[] = [];
 
 function getListOfExcludedFiles() {
     if (filesNotToCheck.length === 0) {
-        const jsonFileWithListOfOldFiles = path.join(__dirname, '..', '..', 'src', 'toos', 'existingFiles.json');
-        filesNotToCheck = JSON.parse(fs.readFileSync(jsonFileWithListOfOldFiles).toString());
+        const files = JSON.parse(fs.readFileSync(jsonFileWithListOfOldFiles).toString()) as string[];
+        files.forEach(file => filesNotToCheck.push(path.join(ExtensionRootDir, file)));
     }
     return filesNotToCheck;
 }
 class NoFileWithoutCopyrightHeader extends Lint.RuleWalker {
+    private readonly filesToIgnore = getListOfExcludedFiles();
     public visitSourceFile(sourceFile: ts.SourceFile) {
-        if (sourceFile && sourceFile.fileName) {
+        if (sourceFile && sourceFile.fileName && this.filesToIgnore.indexOf(sourceFile.fileName) === -1) {
             const sourceFileContents = sourceFile.getFullText();
             if (sourceFileContents) {
                 this.validateHeader(sourceFile, sourceFileContents);
