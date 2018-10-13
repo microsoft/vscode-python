@@ -14,7 +14,7 @@ const methodNames = [
     'appendLine', 'appendLine'
 ];
 
-const failureMessage = 'Header must contain copyright and \'use strict\' in the Python Extension';
+const failureMessage = 'Messages must be locaclized in the Python Extension';
 
 class NoStringLiteralsInMessages extends Lint.RuleWalker {
     protected visitCallExpression(node: ts.CallExpression): void {
