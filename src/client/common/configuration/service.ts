@@ -13,7 +13,12 @@ export class ConfigurationService implements IConfigurationService {
     }
 
     public async updateSectionSetting(section: string, setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void> {
-        const settingsInfo = PythonSettings.getSettingsUriAndTarget(resource);
+        const settingsInfo = section === 'python' ?
+            PythonSettings.getSettingsUriAndTarget(resource) :
+            {
+                uri: resource,
+                target: configTarget ? configTarget : ConfigurationTarget.WorkspaceFolder
+            };
 
         const configSection = workspace.getConfiguration(section, settingsInfo.uri);
         const currentValue = configSection.inspect(setting);
