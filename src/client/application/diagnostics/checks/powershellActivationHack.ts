@@ -26,10 +26,10 @@ export class PowershellActivationNotAvailableDiagnostic extends BaseDiagnostic {
     }
 }
 
-export const PowershellActivationHackDiagnosticsServiceId = 'EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic';
+export const PowerShellActivationHackDiagnosticsServiceId = 'EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic';
 
 @injectable()
-export class PowershellActivationHackDiagnosticsService extends BaseDiagnosticsService {
+export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super([DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic], serviceContainer);
