@@ -23,7 +23,7 @@ suite('Terminal Command Prompt', () => {
         const env = { windir: 'windir' };
         currentProc.setup(p => p.env)
             .returns(() => env)
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.atLeastOnce());
 
         const cmdPath = getCommandPromptLocation(currentProc.object);
 
@@ -34,7 +34,7 @@ suite('Terminal Command Prompt', () => {
         const env = { PROCESSOR_ARCHITEW6432: 'x', windir: 'windir' };
         currentProc.setup(p => p.env)
             .returns(() => env)
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.atLeastOnce());
 
         const cmdPath = getCommandPromptLocation(currentProc.object);
 
@@ -45,7 +45,7 @@ suite('Terminal Command Prompt', () => {
         const env = { windir: 'windir' };
         currentProc.setup(p => p.env)
             .returns(() => env)
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.atLeastOnce());
         const cmdPromptPath = path.join('windir', 'Sysnative', 'cmd.exe');
         configService
             .setup(c => c.updateSettingAsync(TypeMoq.It.isValue('terminal.integrated.shell.windows'),
