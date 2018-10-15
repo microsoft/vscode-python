@@ -5,7 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Terminal, Uri } from 'vscode';
-import { PowerShellActivationHackDiagnosticsServiceId, PowershellActivationNotAvailableDiagnostic } from '../../../application/diagnostics/checks/powerShellActivationHack';
+import { PowerShellActivationHackDiagnosticsServiceId, PowershellActivationNotAvailableDiagnostic } from '../../../application/diagnostics/checks/powerShellActivation';
 import { IDiagnosticsService } from '../../../application/diagnostics/types';
 import { IPlatformService } from '../../platform/types';
 import { ITerminalActivationHandler, ITerminalHelper, TerminalShellType } from '../types';

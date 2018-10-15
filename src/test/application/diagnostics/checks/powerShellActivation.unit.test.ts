@@ -5,7 +5,7 @@
 
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
-import { PowerShellActivationHackDiagnosticsService } from '../../../../client/application/diagnostics/checks/powerShellActivationHack';
+import { PowerShellActivationHackDiagnosticsService } from '../../../../client/application/diagnostics/checks/powerShellActivation';
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
