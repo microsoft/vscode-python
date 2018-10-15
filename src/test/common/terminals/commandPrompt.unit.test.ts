@@ -49,7 +49,7 @@ suite('Terminal Command Prompt', () => {
         const cmdPromptPath = path.join('windir', 'Sysnative', 'cmd.exe');
         configService
             .setup(c => c.updateSettingAsync(TypeMoq.It.isValue('terminal.integrated.shell.windows'),
-                TypeMoq.It.isValue(cmdPromptPath), TypeMoq.It.isValue(undefined),
+                TypeMoq.It.isValue(cmdPromptPath), TypeMoq.It.isAny(),
                 TypeMoq.It.isValue(ConfigurationTarget.Global)))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
