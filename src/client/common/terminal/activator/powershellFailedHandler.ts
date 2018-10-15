@@ -5,7 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Terminal, Uri } from 'vscode';
-import { PowershellActivationHackDiagnosticsServiceId, PowershellActivationNotAvailableDiagnostic } from '../../../application/diagnostics/checks/powershellActivationHack';
+import { PowershellActivationHackDiagnosticsServiceId, PowershellActivationNotAvailableDiagnostic } from '../../../application/diagnostics/checks/powerShellActivationHack';
 import { IDiagnosticsService } from '../../../application/diagnostics/types';
 import { IPlatformService } from '../../platform/types';
 import { ITerminalActivationHandler, ITerminalHelper, TerminalShellType } from '../types';
@@ -17,10 +17,7 @@ export class PowershellTerminalActivationFailedHandler implements ITerminalActiv
         @inject(IDiagnosticsService) @named(PowershellActivationHackDiagnosticsServiceId) private readonly diagnosticService: IDiagnosticsService) {
     }
     public async handleActivation(_terminal: Terminal, resource: Uri | undefined, _preserveFocus: boolean, activated: boolean) {
-        if (activated) {
-            return;
-        }
-        if (!this.platformService.isWindows) {
+        if (activated || !this.platformService.isWindows) {
             return;
         }
         const shell = this.helper.identifyTerminalShell(this.helper.getTerminalShellPath());

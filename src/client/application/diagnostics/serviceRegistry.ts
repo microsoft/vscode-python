@@ -7,7 +7,7 @@ import { IServiceManager } from '../../ioc/types';
 import { EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId } from './checks/envPathVariable';
 import { InvalidDebuggerTypeDiagnosticsService, InvalidDebuggerTypeDiagnosticsServiceId } from './checks/invalidDebuggerType';
 import { InvalidPythonPathInDebuggerService, InvalidPythonPathInDebuggerServiceId } from './checks/invalidPythonPathInDebugger';
-import { PowershellActivationHackDiagnosticsService, PowershellActivationHackDiagnosticsServiceId } from './checks/powershellActivationHack';
+import { PowershellActivationHackDiagnosticsService, PowershellActivationHackDiagnosticsServiceId } from './checks/powerShellActivationHack';
 import { InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId } from './checks/pythonInterpreter';
 import { DiagnosticsCommandFactory } from './commands/factory';
 import { IDiagnosticsCommandFactory } from './commands/types';

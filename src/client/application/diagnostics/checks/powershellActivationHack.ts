@@ -6,6 +6,9 @@
 import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
+import { error } from '../../../common/logger';
+import { useCommandPromptAsDefaultShell } from '../../../common/terminal/commandPrompt';
+import { IConfigurationService, ICurrentProcess } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
@@ -45,7 +48,19 @@ export class PowershellActivationHackDiagnosticsService extends BaseDiagnosticsS
             return;
         }
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
+        const currentProcess = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const options = [
+            {
+                prompt: 'Use Command Prompt',
+                // tslint:disable-next-line:no-object-literal-type-assertion
+                command: {
+                    diagnostic, invoke: async (): Promise<void> => {
+                        useCommandPromptAsDefaultShell(currentProcess, configurationService)
+                            .catch(ex => error('Use Command Prompt as default shell', ex));
+                    }
+                }
+            },
             {
                 prompt: 'Ignore'
             },
