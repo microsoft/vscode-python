@@ -32,7 +32,7 @@ export const PowershellActivationHackDiagnosticsServiceId = 'EnvironmentActivati
 export class PowershellActivationHackDiagnosticsService extends BaseDiagnosticsService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer);
+        super([DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic], serviceContainer);
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId);
     }
     public async diagnose(): Promise<IDiagnostic[]> {
