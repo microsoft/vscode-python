@@ -164,9 +164,7 @@ suite('Terminal Environment Activation conda', () => {
         switch (shellType) {
             case TerminalShellType.powershell:
             case TerminalShellType.powershellCore: {
-                const powershellExe = shellType === TerminalShellType.powershell ? 'powershell' : 'pwsh';
-                const envNameForCmd = envName.toCommandArgument().replace(/"/g, '""');
-                expectedActivationCommamnd = isWindows ? [`& cmd /k \"activate ${envNameForCmd} & ${powershellExe}\"`] : undefined;
+                expectedActivationCommamnd = undefined;
                 break;
             }
             case TerminalShellType.fish: {
@@ -178,7 +176,11 @@ suite('Terminal Environment Activation conda', () => {
                 break;
             }
         }
-        expect(activationCommands).to.deep.equal(expectedActivationCommamnd, 'Incorrect Activation command');
+        if (expectedActivationCommamnd) {
+            expect(activationCommands).to.deep.equal(expectedActivationCommamnd, 'Incorrect Activation command');
+        } else {
+            expect(activationCommands).to.equal(undefined, 'Incorrect Activation command');
+        }
     }
     getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
         test(`Conda activation command for shell ${shellType.name} on (windows)`, async () => {
@@ -323,7 +325,7 @@ suite('Terminal Environment Activation conda', () => {
         testName: string;
         basePath: string;
         envName: string;
-        expectedResult: string[];
+        expectedResult: string[] | undefined;
         expectedRawCmd: string;
         terminalKind: TerminalShellType;
     };
@@ -334,7 +336,7 @@ suite('Terminal Environment Activation conda', () => {
                 testName: 'Activation uses full path on windows for powershell',
                 basePath: windowsTestPath,
                 envName: 'TesterEnv',
-                expectedResult: [`& cmd /k "${path.join(windowsTestPath, 'activate')} TesterEnv & powershell"`],
+                expectedResult: undefined,
                 expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
                 terminalKind: TerminalShellType.powershell
             },
@@ -342,7 +344,7 @@ suite('Terminal Environment Activation conda', () => {
                 testName: 'Activation uses full path with spaces on windows for powershell',
                 basePath: windowsTestPathSpaces,
                 envName: 'TesterEnv',
-                expectedResult: [`& cmd /k """${path.join(windowsTestPathSpaces, 'activate')}"" TesterEnv & powershell"`],
+                expectedResult: undefined,
                 expectedRawCmd: `"${path.join(windowsTestPathSpaces, 'activate')}"`,
                 terminalKind: TerminalShellType.powershell
             },
@@ -350,7 +352,7 @@ suite('Terminal Environment Activation conda', () => {
                 testName: 'Activation uses full path on windows under powershell, environment name has spaces',
                 basePath: windowsTestPath,
                 envName: 'The Tester Environment',
-                expectedResult: [`& cmd /k "${path.join(windowsTestPath, 'activate')} ""The Tester Environment"" & powershell"`],
+                expectedResult: undefined,
                 expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
                 terminalKind: TerminalShellType.powershell
             },
@@ -358,7 +360,7 @@ suite('Terminal Environment Activation conda', () => {
                 testName: 'Activation uses full path on windows for powershell-core',
                 basePath: windowsTestPath,
                 envName: 'TesterEnv',
-                expectedResult: [`& cmd /k "${path.join(windowsTestPath, 'activate')} TesterEnv & pwsh"`],
+                expectedResult: undefined,
                 expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
                 terminalKind: TerminalShellType.powershellCore
             },
@@ -366,7 +368,7 @@ suite('Terminal Environment Activation conda', () => {
                 testName: 'Activation uses full path with spaces on windows for powershell-core',
                 basePath: windowsTestPathSpaces,
                 envName: 'TesterEnv',
-                expectedResult: [`& cmd /k """${path.join(windowsTestPathSpaces, 'activate')}"" TesterEnv & pwsh"`],
+                expectedResult: undefined,
                 expectedRawCmd: `"${path.join(windowsTestPathSpaces, 'activate')}"`,
                 terminalKind: TerminalShellType.powershellCore
             },
@@ -374,7 +376,7 @@ suite('Terminal Environment Activation conda', () => {
                 testName: 'Activation uses full path on windows for powershell-core, environment name has spaces',
                 basePath: windowsTestPath,
                 envName: 'The Tester Environment',
-                expectedResult: [`& cmd /k "${path.join(windowsTestPath, 'activate')} ""The Tester Environment"" & pwsh"`],
+                expectedResult: undefined,
                 expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
                 terminalKind: TerminalShellType.powershellCore
             },

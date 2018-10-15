@@ -96,7 +96,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                         expect(commands).to.be.deep.equal([pathToScriptFile.fileToCommandArgument()], 'Invalid command');
                     });
 
-                    test('Ensure batch files are supported by powershell (on windows)', async () => {
+                    test('Ensure batch files are not supported by powershell (on windows)', async () => {
                         const batch = new CommandPromptAndPowerShell(serviceContainer.object);
 
                         platform.setup(p => p.isWindows).returns(() => true);
@@ -104,14 +104,10 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                         fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
                         const command = await batch.getActivationCommands(resource, TerminalShellType.powershell);
 
-                        // Executing batch files from powershell requires going back to cmd, then into powershell
-
-                        const activationCommand = pathToScriptFile.fileToCommandArgument();
-                        const commands = [`& cmd /k "${activationCommand.replace(/"/g, '""')} & powershell"`];
-                        expect(command).to.be.deep.equal(commands, 'Invalid command');
+                        expect(command).to.be.equal(undefined, 'Invalid');
                     });
 
-                    test('Ensure batch files are supported by powershell core (on windows)', async () => {
+                    test('Ensure batch files are not supported by powershell core (on windows)', async () => {
                         const bash = new CommandPromptAndPowerShell(serviceContainer.object);
 
                         platform.setup(p => p.isWindows).returns(() => true);
@@ -119,11 +115,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                         fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile))).returns(() => Promise.resolve(true));
                         const command = await bash.getActivationCommands(resource, TerminalShellType.powershellCore);
 
-                        // Executing batch files from powershell requires going back to cmd, then into powershell
-
-                        const activationCommand = pathToScriptFile.fileToCommandArgument();
-                        const commands = [`& cmd /k "${activationCommand.replace(/"/g, '""')} & pwsh"`];
-                        expect(command).to.be.deep.equal(commands, 'Invalid command');
+                        expect(command).to.be.equal(undefined, 'Invalid');
                     });
 
                     test('Ensure batch files are not supported by powershell (on non-windows)', async () => {

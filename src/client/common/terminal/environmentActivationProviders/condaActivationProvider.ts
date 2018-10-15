@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
@@ -105,19 +107,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         envName: string,
         targetShell: TerminalShellType
     ): Promise<string[] | undefined> {
-        // https://github.com/conda/conda/issues/626
-        // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
-        const powershellExe = targetShell === TerminalShellType.powershell ? 'powershell' : 'pwsh';
-        const activateCmd = await this.getWindowsActivateCommand();
-
-        let cmdStyleCmd = `${activateCmd} ${envName.toCommandArgument()}`;
-        // we need to double-quote any cmd quotes as we will wrap them
-        // in another layer of quotes for powershell:
-        cmdStyleCmd = cmdStyleCmd.replace(/"/g, '""');
-
-        return [
-            `& cmd /k "${cmdStyleCmd} & ${powershellExe}"`
-        ];
+        return;
     }
 
     public async getFishCommands(

@@ -10,7 +10,7 @@ import { captureTelemetry } from '../../telemetry';
 import { TERMINAL_CREATE } from '../../telemetry/constants';
 import { ITerminalManager } from '../application/types';
 import { IConfigurationService, IDisposableRegistry } from '../types';
-import { ITerminalHelper, ITerminalService, TerminalShellType } from './types';
+import { ITerminalActivator, ITerminalHelper, ITerminalService, TerminalShellType } from './types';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -19,6 +19,7 @@ export class TerminalService implements ITerminalService, Disposable {
     private terminalClosed = new EventEmitter<void>();
     private terminalManager: ITerminalManager;
     private terminalHelper: ITerminalHelper;
+    private terminalActivator: ITerminalActivator;
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }
@@ -31,6 +32,7 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
         this.terminalManager = this.serviceContainer.get<ITerminalManager>(ITerminalManager);
         this.terminalManager.onDidCloseTerminal(this.terminalCloseHandler, this, disposableRegistry);
+        this.terminalActivator = this.serviceContainer.get<ITerminalActivator>(ITerminalActivator);
     }
     public dispose() {
         if (this.terminal) {
@@ -63,7 +65,7 @@ export class TerminalService implements ITerminalService, Disposable {
         // Sometimes the terminal takes some time to start up before it can start accepting input.
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        await this.terminalHelper.activateEnvironmentInTerminal(this.terminal!, preserveFocus, this.resource);
+        await this.terminalActivator.activateEnvironmentInTerminal(this.terminal!, this.resource, preserveFocus);
 
         this.terminal!.show(preserveFocus);
 

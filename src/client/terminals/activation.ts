@@ -6,16 +6,15 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, Terminal } from 'vscode';
 import { ITerminalManager } from '../common/application/types';
-import { ITerminalHelper } from '../common/terminal/types';
+import { ITerminalActivator } from '../common/terminal/types';
 import { IDisposableRegistry } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ITerminalAutoActivation } from './types';
 
 @injectable()
 export class TerminalAutoActivation implements ITerminalAutoActivation {
-    private readonly helper: ITerminalHelper;
-    constructor(@inject(IServiceContainer) private container: IServiceContainer) {
-        this.helper = container.get<ITerminalHelper>(ITerminalHelper);
+    constructor(@inject(IServiceContainer) private container: IServiceContainer,
+        @inject(ITerminalActivator) private readonly activator: ITerminalActivator) {
     }
     public register() {
         const manager = this.container.get<ITerminalManager>(ITerminalManager);
@@ -23,7 +22,7 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         const disposable = manager.onDidOpenTerminal(this.activateTerminal, this);
         disposables.push(disposable);
     }
-    private activateTerminal(terminal: Terminal): Promise<void> {
-        return this.helper.activateEnvironmentInTerminal(terminal);
+    private async activateTerminal(terminal: Terminal): Promise<void> {
+        await this.activator.activateEnvironmentInTerminal(terminal, undefined);
     }
 }

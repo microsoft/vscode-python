@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Terminal } from 'vscode';
 import { ITerminalManager } from '../../../client/common/application/types';
-import { ITerminalHelper } from '../../../client/common/terminal/types';
+import { ITerminalActivator, ITerminalHelper } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -14,13 +14,13 @@ import { TerminalAutoActivation } from '../../../client/terminals/activation';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
 
 suite('Terminal Auto Activation', () => {
-    let helper: TypeMoq.IMock<ITerminalHelper>;
+    let activator: TypeMoq.IMock<ITerminalActivator>;
     let terminalManager: TypeMoq.IMock<ITerminalManager>;
     let terminalAutoActivation: ITerminalAutoActivation;
 
     setup(() => {
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
-        helper = TypeMoq.Mock.ofType<ITerminalHelper>();
+        activator = TypeMoq.Mock.ofType<ITerminalActivator>();
         const disposables = [];
 
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -29,12 +29,12 @@ suite('Terminal Auto Activation', () => {
             .returns(() => terminalManager.object);
         serviceContainer
             .setup(c => c.get(TypeMoq.It.isValue(ITerminalHelper), TypeMoq.It.isAny()))
-            .returns(() => helper.object);
+            .returns(() => activator.object);
         serviceContainer
             .setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
             .returns(() => disposables);
 
-        terminalAutoActivation = new TerminalAutoActivation(serviceContainer.object);
+        terminalAutoActivation = new TerminalAutoActivation(serviceContainer.object, activator.object);
     });
 
     test('New Terminals should be activated', async () => {
@@ -46,7 +46,7 @@ suite('Terminal Auto Activation', () => {
                 eventHandler = handler;
                 return { dispose: noop };
             });
-        helper
+        activator
             .setup(h => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .verifiable(TypeMoq.Times.once());
 
@@ -56,6 +56,6 @@ suite('Terminal Auto Activation', () => {
 
         eventHandler!.bind(terminalAutoActivation)(terminal.object);
 
-        helper.verifyAll();
+        activator.verifyAll();
     });
 });
