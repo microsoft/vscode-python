@@ -17,6 +17,7 @@
     "python.linting.pylamaEnabled": false,
     "python.linting.mypyEnabled": false,
     "python.linting.banditEnabled": false,
+    "python.linting.pyformatEnabled": false,
     "python.formatting.provider": "yapf",
     "python.linting.pylintUseMinimalCheckers": false,
 }

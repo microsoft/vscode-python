@@ -771,13 +771,29 @@
                     "description": "Path to autopep8, you can use a custom version of autopep8 by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
+                "python.formatting.pyformatPath": {
+                    "type": "string",
+                    "default": "pyformat",
+                    "description": "Path to pyformat, you can use a custom version of pyformat by modifying this setting to include the full path.",
+                    "scope": "resource"
+                },
+                "python.formatting.pyformatArgs": {
+                    "type": "array",
+                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "scope": "resource"
+                },
                 "python.formatting.provider": {
                     "type": "string",
                     "default": "autopep8",
-                    "description": "Provider for formatting. Possible options include 'autopep8', 'black', and 'yapf'.",
+                    "description": "Provider for formatting. Possible options include 'autopep8', 'black', 'pyformat', and 'yapf'.",
                     "enum": [
                         "autopep8",
                         "black",
+                        "pyformat",
                         "yapf",
                         "none"
                     ],

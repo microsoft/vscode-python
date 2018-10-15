@@ -129,6 +129,7 @@ suite('Python Settings', () => {
             autopep8Args: ['1', '2'], autopep8Path: 'one',
             blackArgs: ['3', '4'], blackPath: 'two',
             yapfArgs: ['5', '6'], yapfPath: 'three',
+            pyformatArgs: ['7', '8'], pyformatPath: 'four',
             provider: ''
         };
         expected.formatting.blackPath = 'spam';
@@ -151,6 +152,7 @@ suite('Python Settings', () => {
             autopep8Args: [], autopep8Path: path.join('~', 'one'),
             blackArgs: [], blackPath: path.join('~', 'two'),
             yapfArgs: [], yapfPath: path.join('~', 'three'),
+            pyformatArgs: [], pyformatPath: path.join('~', 'four'),
             provider: ''
         };
         expected.formatting.blackPath = 'spam';

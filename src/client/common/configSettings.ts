@@ -227,11 +227,13 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             autopep8Args: [], autopep8Path: 'autopep8',
             provider: 'autopep8',
             blackArgs: [], blackPath: 'black',
+            pyformatArgs: [], pyformatPath: 'pyformat',
             yapfArgs: [], yapfPath: 'yapf'
         };
         this.formatting.autopep8Path = getAbsolutePath(systemVariables.resolveAny(this.formatting.autopep8Path), workspaceRoot);
         this.formatting.yapfPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.yapfPath), workspaceRoot);
         this.formatting.blackPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.blackPath), workspaceRoot);
+        this.formatting.pyformatPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.pyformatPath), workspaceRoot);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const autoCompleteSettings = systemVariables.resolveAny(pythonSettings.get<IAutoCompleteSettings>('autoComplete'))!;

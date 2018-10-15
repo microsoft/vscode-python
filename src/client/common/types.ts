@@ -79,7 +79,8 @@ export enum Product {
     rope = 14,
     isort = 15,
     black = 16,
-    bandit = 17
+    bandit = 17,
+    pyformat = 18
 }
 
 export enum ModuleNamePurpose {
@@ -224,6 +225,8 @@ export interface IFormattingSettings {
     readonly autopep8Args: string[];
     blackPath: string;
     readonly blackArgs: string[];
+    pyformatPath: string;
+    readonly pyformatArgs: string[];
     yapfPath: string;
     readonly yapfArgs: string[];
 }

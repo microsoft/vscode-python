@@ -10,6 +10,7 @@ import { AutoPep8Formatter } from './../formatters/autoPep8Formatter';
 import { BaseFormatter } from './../formatters/baseFormatter';
 import { BlackFormatter } from './../formatters/blackFormatter';
 import { DummyFormatter } from './../formatters/dummyFormatter';
+import { PyformatFormatter } from './../formatters/pyformatFormatter';
 import { YapfFormatter } from './../formatters/yapfFormatter';
 
 export class PythonFormattingEditProvider implements vscode.DocumentFormattingEditProvider, vscode.DocumentRangeFormattingEditProvider, vscode.Disposable {
@@ -27,10 +28,12 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
 
     public constructor(context: vscode.ExtensionContext, serviceContainer: IServiceContainer) {
         const yapfFormatter = new YapfFormatter(serviceContainer);
+        const pyformatFormatter = new PyformatFormatter(serviceContainer);
         const autoPep8 = new AutoPep8Formatter(serviceContainer);
         const black = new BlackFormatter(serviceContainer);
         const dummy = new DummyFormatter(serviceContainer);
         this.formatters.set(yapfFormatter.Id, yapfFormatter);
+        this.formatters.set(pyformatFormatter.Id, pyformatFormatter);
         this.formatters.set(black.Id, black);
         this.formatters.set(autoPep8.Id, autoPep8);
         this.formatters.set(dummy.Id, dummy);

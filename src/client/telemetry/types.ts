@@ -10,7 +10,7 @@ export type EditorLoadTelemetry = {
     terminal: TerminalShellType;
 };
 export type FormatTelemetry = {
-    tool: 'autopep8' | 'black' | 'yapf';
+    tool: 'autopep8' | 'black' | 'yapf' | 'pyformat';
     hasCustomArgs: boolean;
     formatSelection: boolean;
 };

@@ -16,6 +16,7 @@ export class FormatterHelper implements IFormatterHelper {
             case Product.autopep8: return 'autopep8';
             case Product.black: return 'black';
             case Product.yapf: return 'yapf';
+            case Product.pyformat: return 'pyformat';
             default: {
                 throw new Error(`Unrecognized Formatter '${formatter}'`);
             }
