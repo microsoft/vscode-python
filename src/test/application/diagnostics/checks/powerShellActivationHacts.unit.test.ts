@@ -69,7 +69,7 @@ suite('Application Diagnostics - PowerShell Activation', () => {
     test('Can handle PowerShell diagnostics', async () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
         diagnostic.setup(d => d.code)
-            .returns(() => DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic)
+            .returns(() => DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic)
             .verifiable(typemoq.Times.atLeastOnce());
 
         const canHandle = await diagnosticService.canHandle(diagnostic.object);

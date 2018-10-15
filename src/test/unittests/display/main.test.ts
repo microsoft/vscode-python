@@ -297,7 +297,7 @@ suite('Unit Tests - TestResultDisplay', () => {
 
         for (const setting of ['unitTest.promptToConfigure', 'unitTest.pyTestEnabled',
             'unitTest.unittestEnabled', 'unitTest.nosetestsEnabled']) {
-            configurationService.setup(c => c.updateSettingAsync(typeMoq.It.isValue(setting), typeMoq.It.isValue(false)))
+            configurationService.setup(c => c.updateSetting(typeMoq.It.isValue(setting), typeMoq.It.isValue(false)))
                 .returns(() => Promise.resolve())
                 .verifiable(typeMoq.Times.once());
         }

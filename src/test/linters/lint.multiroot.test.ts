@@ -72,7 +72,7 @@ suite('Multiroot Linting', () => {
     }
     async function enableDisableSetting(workspaceFolder, configTarget: ConfigurationTarget, setting: string, value: boolean): Promise<void> {
         const config = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        await config.updateSettingAsync(setting, value, Uri.file(workspaceFolder), configTarget);
+        await config.updateSetting(setting, value, Uri.file(workspaceFolder), configTarget);
     }
 
     test('Enabling Pylint in root and also in Workspace, should return errors', async () => {

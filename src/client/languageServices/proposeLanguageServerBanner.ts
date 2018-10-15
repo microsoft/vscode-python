@@ -119,6 +119,6 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     }
 
     public async enableNewLanguageServer(): Promise<void> {
-        await this.configuration.updateSettingAsync('jediEnabled', false, undefined, ConfigurationTarget.Global);
+        await this.configuration.updateSetting('jediEnabled', false, undefined, ConfigurationTarget.Global);
     }
 }

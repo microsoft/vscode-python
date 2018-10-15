@@ -52,7 +52,7 @@ suite('Exclude files (Language Server)', () => {
     }
 
     async function setSetting(name: string, value: {} | undefined): Promise<void> {
-        await configService.updateSettingAsync(name, value, undefined, ConfigurationTarget.Global);
+        await configService.updateSetting(name, value, undefined, ConfigurationTarget.Global);
     }
 
     test('Default exclusions', async () => {

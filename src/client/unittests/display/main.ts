@@ -148,7 +148,7 @@ export class TestResultDisplay implements ITestResultDisplay {
             'unitTest.unittestEnabled', 'unitTest.nosetestsEnabled'];
 
         for (const setting of settingsToDisable) {
-            await configurationService.updateSettingAsync(setting, false).catch(noop);
+            await configurationService.updateSetting(setting, false).catch(noop);
         }
     }
 

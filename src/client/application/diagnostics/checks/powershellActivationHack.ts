@@ -20,7 +20,7 @@ const PowershellActivationNotSupportedWithBatchFilesMessage = 'Activation of the
 
 export class PowershellActivationNotAvailableDiagnostic extends BaseDiagnostic {
     constructor() {
-        super(DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic,
+        super(DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic,
             PowershellActivationNotSupportedWithBatchFilesMessage,
             DiagnosticSeverity.Warning, DiagnosticScope.Global);
     }

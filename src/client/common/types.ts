@@ -264,7 +264,8 @@ export const IConfigurationService = Symbol('IConfigurationService');
 export interface IConfigurationService {
     getSettings(resource?: Uri): IPythonSettings;
     isTestExecution(): boolean;
-    updateSettingAsync(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
+    updateSetting(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
+    updateSectionSetting(section: string, setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
 }
 
 export const ISocketServer = Symbol('ISocketServer');

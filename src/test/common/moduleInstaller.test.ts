@@ -116,7 +116,7 @@ suite('Module Installer', () => {
         }
         async function resetSettings(): Promise<void> {
             const configService = ioc.serviceManager.get<IConfigurationService>(IConfigurationService);
-            await configService.updateSettingAsync('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
+            await configService.updateSetting('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
         }
         async function getCurrentPythonPath(): Promise<string> {
             const pythonPath = PythonSettings.getInstance(workspaceUri).pythonPath;
