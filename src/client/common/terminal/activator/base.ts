@@ -32,7 +32,7 @@ export class BaseTerminalActivator implements ITerminalActivator {
     }
     protected async waitForCommandToProcess(shell: TerminalShellType) {
         // Give the command some time to complete.
-        // Its been observed that sending commands too early will strip some text off in VS Terminal.
+        // Its been observed that sending commands too early will strip some text off in VS Code Terminal.
         await sleep(500);
     }
 }
