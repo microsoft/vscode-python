@@ -19,8 +19,8 @@ suite('Terminal Command Prompt', () => {
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
     });
 
-    test('Getting Path Command Prompt executable (32 bit)', async () => {
-        const env = { PROCESSOR_ARCHITEW6432: '', windir: 'windir' };
+    test('Getting Path Command Prompt executable (32 on 64Win)', async () => {
+        const env = { windir: 'windir' };
         currentProc.setup(p => p.env)
             .returns(() => env)
             .verifiable(TypeMoq.Times.once());
@@ -30,8 +30,8 @@ suite('Terminal Command Prompt', () => {
         expect(cmdPath).to.be.deep.equal(path.join('windir', 'System32', 'cmd.exe'));
         currentProc.verifyAll();
     });
-    test('Getting Path Command Prompt executable (64 bit)', async () => {
-        const env = { windir: 'windir' };
+    test('Getting Path Command Prompt executable (not 32 on 64Win)', async () => {
+        const env = { PROCESSOR_ARCHITEW6432: 'x', windir: 'windir' };
         currentProc.setup(p => p.env)
             .returns(() => env)
             .verifiable(TypeMoq.Times.once());
