@@ -17,7 +17,7 @@ export type FormatTelemetry = {
 
 export type LanguageServerTelemetry = {
     success: boolean;
-    lsVersion: string;
+    lsVersion?: string;
 };
 
 export type LinterTrigger = 'auto' | 'save';
