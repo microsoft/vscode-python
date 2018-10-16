@@ -45,7 +45,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     public async downloadLanguageServer(context: IExtensionContext): Promise<void> {
         const downloadInfo = await this.getDownloadInfo();
         const downloadUri = downloadInfo.uri;
-        const version = downloadInfo.version.raw;
+        const lsVersion = downloadInfo.version.raw;
         const timer: StopWatch = new StopWatch();
         let success: boolean = true;
         let localTempFilePath = '';
@@ -61,7 +61,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             sendTelemetryEvent(
                 PYTHON_LANGUAGE_SERVER_DOWNLOADED,
                 timer.elapsedTime,
-                { success, version }
+                { success, lsVersion }
             );
         }
 
@@ -77,7 +77,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             sendTelemetryEvent(
                 PYTHON_LANGUAGE_SERVER_EXTRACTED,
                 timer.elapsedTime,
-                { success, version }
+                { success, lsVersion }
             );
             await this.fs.deleteFile(localTempFilePath);
         }
