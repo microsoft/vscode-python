@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Random } from '../../utils/random';
 import { IHttpClient } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
@@ -29,6 +28,8 @@ import { PersistentStateFactory } from './persistentState';
 import { IS_64_BIT, IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
 import { CurrentProcess } from './process/currentProcess';
+import { TerminalActivator } from './terminal/activator';
+import { PowershellTerminalActivationFailedHandler } from './terminal/activator/powershellFailedHandler';
 import { Bash } from './terminal/environmentActivationProviders/bash';
 import {
     CommandPromptAndPowerShell
@@ -38,7 +39,7 @@ import { TerminalServiceFactory } from './terminal/factory';
 import { TerminalHelper } from './terminal/helper';
 import {
     ITerminalActivationCommandProvider,
-    ITerminalHelper, ITerminalServiceFactory
+    ITerminalActivationHandler, ITerminalActivator, ITerminalHelper, ITerminalServiceFactory
 } from './terminal/types';
 import {
     IBrowserService, IConfigurationService,
@@ -46,6 +47,7 @@ import {
     IFeatureDeprecationManager, IInstaller,
     ILogger, IPathUtils, IPersistentStateFactory, IRandom, Is64Bit, IsWindows
 } from './types';
+import { Random } from './utils/random';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
@@ -71,6 +73,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
     serviceManager.addSingleton<INugetService>(INugetService, NugetService);
+    serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
+    serviceManager.addSingleton<ITerminalActivationHandler>(ITerminalActivationHandler, PowershellTerminalActivationFailedHandler);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(

@@ -10,7 +10,7 @@ export interface IErrorHandler {
     handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo): Promise<boolean>;
 }
 
-export type LinterId = 'flake8' | 'mypy' | 'pep8' | 'prospector' | 'pydocstyle' | 'pylama' | 'pylint';
+export type LinterId = 'flake8' | 'mypy' | 'pep8' | 'prospector' | 'pydocstyle' | 'pylama' | 'pylint' | 'bandit';
 
 export interface ILinterInfo {
     readonly id: LinterId;
@@ -45,7 +45,7 @@ export interface ILinterManager {
 export interface ILintMessage {
     line: number;
     column: number;
-    code: string;
+    code: string | undefined;
     message: string;
     type: string;
     severity?: LintMessageSeverity;

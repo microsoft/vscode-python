@@ -49,7 +49,11 @@ export interface ITerminalHelper {
     getTerminalShellPath(): string;
     buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]): string;
     getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined>;
-    activateEnvironmentInTerminal(terminal: Terminal, preserveFocus?: boolean, resource?: Uri): Promise<void>;
+}
+
+export const ITerminalActivator = Symbol('ITerminalActivator');
+export interface ITerminalActivator {
+    activateEnvironmentInTerminal(terminal: Terminal, resource: Uri | undefined, preserveFocus?: boolean): Promise<boolean>;
 }
 
 export const ITerminalActivationCommandProvider = Symbol('ITerminalActivationCommandProvider');
@@ -58,4 +62,9 @@ export interface ITerminalActivationCommandProvider {
     isShellSupported(targetShell: TerminalShellType): boolean;
     getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined>;
     getActivationCommandsForInterpreter?(pythonPath, targetShell: TerminalShellType): Promise<string[] | undefined>;
+}
+
+export const ITerminalActivationHandler = Symbol('ITerminalActivationHandler');
+export interface ITerminalActivationHandler {
+    handleActivation(terminal: Terminal, resource: Uri | undefined, preserveFocus: boolean, activated: boolean): Promise<void>;
 }

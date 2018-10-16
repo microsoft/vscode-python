@@ -4,13 +4,13 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { getNamesAndValues } from '../../../utils/enum';
-import { noop } from '../../../utils/misc';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../../common/terminal/types';
 import { ICurrentProcess, IPathUtils } from '../../common/types';
+import { getNamesAndValues } from '../../common/utils/enum';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { InterpreterType, IPipEnvService } from '../contracts';
 import { IVirtualEnvironmentManager } from './types';

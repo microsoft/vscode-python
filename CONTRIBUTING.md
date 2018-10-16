@@ -250,33 +250,7 @@ Overall steps for releasing are covered in the
 
 ### Building a release
 
-To create a release _build_, the following steps should be followed:
-
-1. Update the version in
-   [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json)
-1. Run `npm install` to make sure
-   [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json)
-   is up-to-date (the only update should be the version number if
-   `package-lock.json` has been kept up-to-date otherwise)
-1. Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
-   - If this is the first release **after** a final release, then create a new section,
-     otherwise update the version and date in section header
-   - Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news)
-     (typically `python3 news | code-insiders -`; add `--final` if this
-     is a final release)
-   - Touch up news entries (if a non-final release then also touch up news entry
-     files as appropriate)
-   - Check that the "thank you" section is up-to-date
-1. Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt)
-   - Run [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn)
-     (typically
-     `python3 tpn --npm package-lock.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`)
-   - Register any version changes or new dependencies with [OSPO](https://opensource.microsoft.com/)
-1. Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt)
-   and register any changes with OSPO
-
-Once the above changes have been merged into `master` you can then download the
-development build `.vsix` for releasing.
+To create a release _build_, follow the steps outlined in the [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan) (which has a [template](https://github.com/Microsoft/vscode-python/blob/master/.github/release_plan.md)).
 
 ## Development Build
 

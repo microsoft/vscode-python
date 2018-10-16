@@ -30,13 +30,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
 
-    suiteSetup(async function () {
-        const skipped = true;
-        if (skipped) {
-            // These tests have been skipped temprarily.  See gh-2691.
-            //tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        }
+    suiteSetup(async () => {
 
         await initialize();
         await updateSetting('unitTest.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);

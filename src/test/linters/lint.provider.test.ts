@@ -7,13 +7,13 @@ import * as vscode from 'vscode';
 import { IDocumentManager } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, ILintingSettings, IPythonSettings, Product } from '../../client/common/types';
+import { createDeferred } from '../../client/common/utils/async';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinterManager, ILintingEngine } from '../../client/linters/types';
 import { LinterProvider } from '../../client/providers/linterProvider';
-import { createDeferred } from '../../utils/async';
 import { initialize } from '../initialize';
 
 // tslint:disable-next-line:max-func-body-length

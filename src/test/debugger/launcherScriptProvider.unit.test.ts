@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { DebuggerLauncherScriptProvider, NoDebugLauncherScriptProvider } from '../../client/debugger/DebugClients/launcherProvider';
+import { DebuggerLauncherScriptProvider, NoDebugLauncherScriptProvider } from '../../client/debugger/debugAdapter/DebugClients/launcherProvider';
 
 suite('Debugger - Launcher Script Provider', () => {
     test('Ensure debugger gets the launcher from PythonTools directory', () => {

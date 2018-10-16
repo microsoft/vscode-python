@@ -12,11 +12,11 @@ import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEdito
 import { IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { PythonV2DebugConfigurationProvider } from '../../../client/debugger';
-import { DebuggerTypeName } from '../../../client/debugger/Common/constants';
-import { AttachRequestArguments, DebugOptions } from '../../../client/debugger/Common/Contracts';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { DebuggerTypeName } from '../../../client/debugger/constants';
+import { PythonV2DebugConfigurationProvider } from '../../../client/debugger/extension';
+import { AttachRequestArguments, DebugOptions } from '../../../client/debugger/types';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { getNamesAndValues } from '../../../utils/enum';
 
 enum OS {
     Windows,

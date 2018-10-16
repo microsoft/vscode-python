@@ -14,11 +14,11 @@ import { IDebugService, IWorkspaceService } from '../../../client/common/applica
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { IConfigurationService, IPythonSettings, IUnitTestSettings } from '../../../client/common/types';
-import { DebugOptions } from '../../../client/debugger/Common/Contracts';
+import { DebuggerTypeName } from '../../../client/debugger/constants';
+import { DebugOptions } from '../../../client/debugger/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { DebugLauncher } from '../../../client/unittests/common/debugLauncher';
 import { TestProvider } from '../../../client/unittests/common/types';
-import { DebuggerTypeName } from '../../../client/debugger/Common/constants';
 
 use(chaiAsPromised);
 

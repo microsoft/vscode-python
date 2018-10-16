@@ -26,6 +26,7 @@ yarn.lock
 .github/**
 .mocha-reporter/**
 .nvm/**
+.venv/**
 .vscode/**
 .vscode-test/**
 languageServer/**

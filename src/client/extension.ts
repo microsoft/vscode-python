@@ -5,13 +5,12 @@ if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
-import { StopWatch } from '../utils/stopWatch';
+import { StopWatch } from './common/utils/stopWatch';
 // Do not move this linne of code (used to measure extension load times).
 const stopWatch = new StopWatch();
 
 import { Container } from 'inversify';
-import { CodeActionKind, debug, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
-import { createDeferred } from '../utils/async';
+import { CodeActionKind, debug, DebugConfigurationProvider, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationService } from './activation/types';
 import { IExtensionApi } from './api';
@@ -29,12 +28,11 @@ import {
     IExtensionContext, IFeatureDeprecationManager, ILogger,
     IMemento, IOutputChannel, WORKSPACE_MEMENTO
 } from './common/types';
+import { createDeferred } from './common/utils/async';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
-import { AttachRequestArguments, LaunchRequestArguments } from './debugger/Common/Contracts';
-import { BaseConfigurationProvider } from './debugger/configProviders/baseProvider';
-import { registerTypes as debugConfigurationRegisterTypes } from './debugger/configProviders/serviceRegistry';
-import { registerTypes as debuggerRegisterTypes } from './debugger/serviceRegistry';
-import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/types';
+import { DebuggerTypeName } from './debugger/constants';
+import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
+import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import { ICondaService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
@@ -58,9 +56,6 @@ import { sendTelemetryEvent } from './telemetry';
 import { EDITOR_LOAD } from './telemetry/constants';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
-import { BlockFormatProviders } from './typeFormatters/blockFormatProvider';
-import { OnTypeFormattingDispatcher } from './typeFormatters/dispatcher';
-import { OnEnterFormatter } from './typeFormatters/onEnterFormatter';
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
 
@@ -137,15 +132,6 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
         context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
     }
 
-    const onTypeDispatcher = new OnTypeFormattingDispatcher({
-        '\n': new OnEnterFormatter(),
-        ':': new BlockFormatProviders()
-    });
-    const onTypeTriggers = onTypeDispatcher.getTriggerCharacters();
-    if (onTypeTriggers) {
-        context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, onTypeDispatcher, onTypeTriggers.first, ...onTypeTriggers.more));
-    }
-
     const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
     deprecationMgr.initialize();
     context.subscriptions.push(deprecationMgr);
@@ -157,9 +143,8 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
 
     context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), { providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports] }));
 
-    type ConfigurationProvider = BaseConfigurationProvider<LaunchRequestArguments, AttachRequestArguments>;
-    serviceContainer.getAll<ConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
-        context.subscriptions.push(debug.registerDebugConfigurationProvider(debugConfig.debugType, debugConfig));
+    serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationProvider).forEach(debugConfig => {
+        context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfig));
     });
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
@@ -193,7 +178,6 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
-    debuggerRegisterTypes(serviceManager);
     appRegisterTypes(serviceManager);
     providersRegisterTypes(serviceManager);
 }
@@ -217,7 +201,7 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
         const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
         const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         const [condaVersion, interpreter, interpreters] = await Promise.all([
-            condaLocator.getCondaVersion().catch(() => undefined),
+            condaLocator.getCondaVersion().then(ver => ver ? ver.raw : '').catch<string>(() => ''),
             interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
             interpreterService.getInterpreters().catch<PythonInterpreter[]>(() => [])
         ]);

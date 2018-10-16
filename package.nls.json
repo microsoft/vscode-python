@@ -48,5 +48,8 @@
     "python.snippet.launch.attach.label": "Python: Attach",
     "python.snippet.launch.attach.description": "Attach the Debugger for Remote Debugging",
     "python.snippet.launch.scrapy.label": "Python: Scrapy",
-    "python.snippet.launch.scrapy.description": "Scrapy with Integrated Terminal/Console"
+    "python.snippet.launch.scrapy.description": "Scrapy with Integrated Terminal/Console",
+    "LanguageServiceSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Python Language Server is working for you?",
+    "LanguageServiceSurveyBanner.bannerLabelYes": "Yes, take survey now",
+    "LanguageServiceSurveyBanner.bannerLabelNo": "No, thanks"
 }

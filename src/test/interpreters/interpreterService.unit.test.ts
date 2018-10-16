@@ -17,6 +17,9 @@ import { getArchitectureDisplayName } from '../../client/common/platform/registr
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../client/common/types';
+import * as EnumEx from '../../client/common/utils/enum';
+import { noop } from '../../client/common/utils/misc';
+import { Architecture } from '../../client/common/utils/platform';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
     IInterpreterDisplay,
@@ -33,9 +36,6 @@ import { InterpreterService } from '../../client/interpreter/interpreterService'
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
-import * as EnumEx from '../../utils/enum';
-import { noop } from '../../utils/misc';
-import { Architecture } from '../../utils/platform';
 
 use(chaiAsPromised);
 

@@ -17,6 +17,7 @@ import { IConfigurationService, IInstaller, ILintingSettings, ILogger, IOutputCh
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
+import { Bandit } from '../../client/linters/bandit';
 import { BaseLinter } from '../../client/linters/baseLinter';
 import { Flake8 } from '../../client/linters/flake8';
 import { LinterManager } from '../../client/linters/linterManager';
@@ -153,6 +154,11 @@ suite('Linting - Arguments', () => {
                     };
                     await linter.lint(document.object, cancellationToken);
                     expect(invoked).to.be.equal(true, 'method not invoked');
+                });
+                test('Bandit', async () => {
+                    const linter = new Bandit(outputChannel.object, serviceContainer);
+                    const expectedArgs = ['-f', 'custom', '--msg-template', '{line},0,{severity},{test_id}:{msg}', '-n', '-1', fileUri.fsPath];
+                    await testLinter(linter, expectedArgs);
                 });
             });
         });

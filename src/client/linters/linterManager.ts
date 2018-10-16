@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
 import { IConfigurationService, ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { Bandit } from './bandit';
 import { Flake8 } from './flake8';
 import { LinterInfo } from './linterInfo';
 import { MyPy } from './mypy';
@@ -34,6 +35,7 @@ export class LinterManager implements ILinterManager {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.linters = [
+            new LinterInfo(Product.bandit, 'bandit', this.configService),
             new LinterInfo(Product.flake8, 'flake8', this.configService),
             new LinterInfo(Product.pylint, 'pylint', this.configService, ['.pylintrc', 'pylintrc']),
             new LinterInfo(Product.mypy, 'mypy', this.configService),
@@ -62,7 +64,7 @@ export class LinterManager implements ILinterManager {
     }
 
     public async enableLintingAsync(enable: boolean, resource?: Uri): Promise<void> {
-        await this.configService.updateSettingAsync(`linting.${this.lintingEnabledSettingName}`, enable, resource);
+        await this.configService.updateSetting(`linting.${this.lintingEnabledSettingName}`, enable, resource);
 
         // If nothing is enabled, fix it up to PyLint (default).
         if (enable && this.getActiveLinters(resource).length === 0) {
@@ -94,6 +96,8 @@ export class LinterManager implements ILinterManager {
         }
         const error = 'Linter manager: Unknown linter';
         switch (product) {
+            case Product.bandit:
+                return new Bandit(outputChannel, serviceContainer);
             case Product.flake8:
                 return new Flake8(outputChannel, serviceContainer);
             case Product.pylint:

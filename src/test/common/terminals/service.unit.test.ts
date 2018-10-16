@@ -7,7 +7,7 @@ import { Disposable, Terminal as VSCodeTerminal, WorkspaceConfiguration } from '
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalService } from '../../../client/common/terminal/service';
-import { ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
+import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -17,6 +17,7 @@ suite('Terminal Service', () => {
     let terminal: TypeMoq.IMock<VSCodeTerminal>;
     let terminalManager: TypeMoq.IMock<ITerminalManager>;
     let terminalHelper: TypeMoq.IMock<ITerminalHelper>;
+    let terminalActivator: TypeMoq.IMock<ITerminalActivator>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let disposables: Disposable[] = [];
@@ -27,6 +28,7 @@ suite('Terminal Service', () => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
+        terminalActivator = TypeMoq.Mock.ofType<ITerminalActivator>();
         disposables = [];
 
         mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -35,6 +37,7 @@ suite('Terminal Service', () => {
         mockServiceContainer.setup(c => c.get(IPlatformService)).returns(() => platformService.object);
         mockServiceContainer.setup(c => c.get(IDisposableRegistry)).returns(() => disposables);
         mockServiceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspaceService.object);
+        mockServiceContainer.setup(c => c.get(ITerminalActivator)).returns(() => terminalActivator.object);
     });
     teardown(() => {
         if (service) {
@@ -129,9 +132,9 @@ suite('Terminal Service', () => {
         terminalHelper
             .setup(h => h.getTerminalShellPath()).returns(() => '')
             .verifiable(TypeMoq.Times.once());
-        terminalHelper
+        terminalActivator
             .setup(h => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve())
+            .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
         terminalManager
             .setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object)
@@ -143,6 +146,7 @@ suite('Terminal Service', () => {
         await service.show();
 
         terminalHelper.verifyAll();
+        terminalActivator.verifyAll();
         terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
     });
 
@@ -152,9 +156,9 @@ suite('Terminal Service', () => {
         terminalHelper
             .setup(h => h.getTerminalShellPath()).returns(() => '')
             .verifiable(TypeMoq.Times.once());
-        terminalHelper
+        terminalActivator
             .setup(h => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve())
+            .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
         terminalManager
             .setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object)
@@ -166,6 +170,7 @@ suite('Terminal Service', () => {
         await service.sendText(textToSend);
 
         terminalHelper.verifyAll();
+        terminalActivator.verifyAll();
         terminal.verify(t => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
     });
 

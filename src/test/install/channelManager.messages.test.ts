@@ -9,11 +9,11 @@ import { InstallationChannelManager } from '../../client/common/installer/channe
 import { IModuleInstaller } from '../../client/common/installer/types';
 import { IPlatformService } from '../../client/common/platform/types';
 import { Product } from '../../client/common/types';
+import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
-import { Architecture } from '../../utils/platform';
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,

@@ -7,11 +7,11 @@ import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPathUtils } from '../../client/common/types';
+import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterQuickPickItem, InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
 import { IInterpreterComparer } from '../../client/interpreter/configuration/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { Architecture } from '../../utils/platform';
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,

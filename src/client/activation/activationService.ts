@@ -8,7 +8,6 @@ import {
     ConfigurationChangeEvent, Disposable,
     OutputChannel, Uri
 } from 'vscode';
-import { OSDistro, OSType } from '../../utils/platform';
 import {
     IApplicationShell, ICommandManager,
     IWorkspaceService
@@ -20,6 +19,7 @@ import {
     IConfigurationService, IDisposableRegistry,
     IOutputChannel, IPythonSettings
 } from '../common/types';
+import { OSDistro, OSType } from '../common/utils/platform';
 import { IServiceContainer } from '../ioc/types';
 import { PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED } from '../telemetry/constants';
 import { getTelemetryReporter } from '../telemetry/telemetry';

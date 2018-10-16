@@ -1,11 +1,11 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, StatusBarAlignment, StatusBarItem } from 'vscode';
-import { noop } from '../../../utils/misc';
 import { IApplicationShell } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { isNotInstalledError } from '../../common/helpers';
 import { IConfigurationService } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { CANCELLATION_REASON } from '../common/constants';
 import { ITestsHelper, Tests } from '../common/types';
@@ -148,7 +148,7 @@ export class TestResultDisplay implements ITestResultDisplay {
             'unitTest.unittestEnabled', 'unitTest.nosetestsEnabled'];
 
         for (const setting of settingsToDisable) {
-            await configurationService.updateSettingAsync(setting, false).catch(noop);
+            await configurationService.updateSetting(setting, false).catch(noop);
         }
     }
 

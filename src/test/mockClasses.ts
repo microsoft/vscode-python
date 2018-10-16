@@ -79,5 +79,8 @@ export class MockLintingSettings implements ILintingSettings {
     public mypyEnabled: boolean;
     public mypyArgs: string[];
     public mypyPath: string;
+    public banditEnabled: boolean;
+    public banditArgs: string[];
+    public banditPath: string;
     public pylintUseMinimalCheckers: boolean;
 }

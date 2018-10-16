@@ -1,8 +1,8 @@
 import { injectable } from 'inversify';
 import { IRegistry, RegistryHive } from '../../client/common/platform/types';
 import { IPersistentState } from '../../client/common/types';
+import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterVersionService } from '../../client/interpreter/contracts';
-import { Architecture } from '../../utils/platform';
 
 @injectable()
 export class MockRegistry implements IRegistry {

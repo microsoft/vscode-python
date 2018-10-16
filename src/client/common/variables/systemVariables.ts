@@ -6,7 +6,7 @@
 'use strict';
 
 import * as Path from 'path';
-import * as Types from '../../../utils/sysTypes';
+import * as Types from '../utils/sysTypes';
 import { IStringDictionary, ISystemVariables } from './types';
 /* tslint:disable:rule1 no-any no-unnecessary-callback-wrapper jsdoc-format no-for-in prefer-const no-increment-decrement */
 

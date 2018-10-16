@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2018.9.0-rc",
+    "version": "2018.10.0-alpha",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -298,7 +298,7 @@
                     ]
                 },
                 "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
-                "program": "./out/client/debugger/mainV2.js",
+                "program": "./out/client/debugger/debugAdapter/main.js",
                 "runtime": "node",
                 "configurationSnippets": [
                     {
@@ -488,6 +488,11 @@
                             "stopOnEntry": {
                                 "type": "boolean",
                                 "description": "Automatically stop after launch.",
+                                "default": false
+                            },
+                            "showReturnValue": {
+                                "type": "boolean",
+                                "description": "Show return value of functions when stepping.",
                                 "default": false
                             },
                             "console": {
@@ -992,6 +997,27 @@
                     "type": "number",
                     "default": 100,
                     "description": "Controls the maximum number of problems produced by the server.",
+                    "scope": "resource"
+                },
+                "python.linting.banditArgs": {
+                    "type": "array",
+                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "scope": "resource"
+                },
+                "python.linting.banditEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to lint Python files using bandit.",
+                    "scope": "resource"
+                },
+                "python.linting.banditPath": {
+                    "type": "string",
+                    "default": "bandit",
+                    "description": "Path to bandit, you can use a custom version of bandit by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
                 "python.linting.mypyArgs": {

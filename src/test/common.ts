@@ -17,7 +17,7 @@ export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'linting.lintOnSave' |
     'linting.enabled' | 'linting.pylintEnabled' |
     'linting.flake8Enabled' | 'linting.pep8Enabled' | 'linting.pylamaEnabled' |
-    'linting.prospectorEnabled' | 'linting.pydocstyleEnabled' | 'linting.mypyEnabled' |
+    'linting.prospectorEnabled' | 'linting.pydocstyleEnabled' | 'linting.mypyEnabled' | 'linting.banditEnabled' |
     'unitTest.nosetestArgs' | 'unitTest.pyTestArgs' | 'unitTest.unittestArgs' |
     'formatting.provider' | 'sortImports.args' |
     'unitTest.nosetestsEnabled' | 'unitTest.pyTestEnabled' | 'unitTest.unittestEnabled' |

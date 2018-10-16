@@ -12,11 +12,16 @@ export class ConfigurationService implements IConfigurationService {
         return PythonSettings.getInstance(resource);
     }
 
-    public async updateSettingAsync(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void> {
-        const settingsInfo = PythonSettings.getSettingsUriAndTarget(resource);
+    public async updateSectionSetting(section: string, setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void> {
+        const settingsInfo = section === 'python' ?
+            PythonSettings.getSettingsUriAndTarget(resource) :
+            {
+                uri: resource,
+                target: configTarget ? configTarget : ConfigurationTarget.WorkspaceFolder
+            };
 
-        const pythonConfig = workspace.getConfiguration('python', settingsInfo.uri);
-        const currentValue = pythonConfig.inspect(setting);
+        const configSection = workspace.getConfiguration(section, settingsInfo.uri);
+        const currentValue = configSection.inspect(setting);
 
         if (currentValue !== undefined &&
             ((settingsInfo.target === ConfigurationTarget.Global && currentValue.globalValue === value) ||
@@ -25,19 +30,23 @@ export class ConfigurationService implements IConfigurationService {
             return;
         }
 
-        await pythonConfig.update(setting, value, settingsInfo.target);
-        await this.verifySetting(pythonConfig, settingsInfo.target, setting, value);
+        await configSection.update(setting, value, settingsInfo.target);
+        await this.verifySetting(configSection, settingsInfo.target, setting, value);
+    }
+
+    public async updateSetting(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void> {
+        return this.updateSectionSetting('python', setting, value, resource, configTarget);
     }
 
     public isTestExecution(): boolean {
         return process.env.VSC_PYTHON_CI_TEST === '1';
     }
 
-    private async verifySetting(pythonConfig: WorkspaceConfiguration, target: ConfigurationTarget, settingName: string, value?: {}): Promise<void> {
+    private async verifySetting(configSection: WorkspaceConfiguration, target: ConfigurationTarget, settingName: string, value?: {}): Promise<void> {
         if (this.isTestExecution()) {
             let retries = 0;
             do {
-                const setting = pythonConfig.inspect(settingName);
+                const setting = configSection.inspect(settingName);
                 if (!setting && value === undefined) {
                     break; // Both are unset
                 }

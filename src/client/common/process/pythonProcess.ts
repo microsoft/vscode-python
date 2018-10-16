@@ -3,12 +3,12 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import { Architecture } from '../../../utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 import { IFileSystem } from '../platform/types';
+import { Architecture } from '../utils/platform';
 import { ExecutionResult, InterpreterInfomation, IProcessService, IPythonExecutionService, ObservableExecutionResult, PythonVersionInfo, SpawnOptions } from './types';
 
 @injectable()

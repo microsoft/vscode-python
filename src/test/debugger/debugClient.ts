@@ -7,7 +7,7 @@ import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { noop } from '../../utils/misc';
+import { noop } from '../../client/common/utils/misc';
 
 export class DebugClientEx extends DebugClient {
     private adapterProcess: ChildProcess | undefined;

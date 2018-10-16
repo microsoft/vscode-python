@@ -14,8 +14,8 @@ import { ProductInstaller } from '../../../client/common/installer/productInstal
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../../client/common/installer/types';
 import { Product } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { getNamesAndValues } from '../../../utils/enum';
 
 use(chaiAsPromised);
 

@@ -3,7 +3,7 @@
 'use strict';
 
 import { injectable } from 'inversify';
-import * as platform from '../../../utils/platform';
+import * as platform from '../utils/platform';
 import * as osinfo from './osinfo';
 import { IPlatformService } from './types';
 

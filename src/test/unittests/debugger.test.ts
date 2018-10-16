@@ -2,6 +2,7 @@ import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
+import { createDeferred } from '../../client/common/utils/async';
 import { TestManagerRunner as NoseTestManagerRunner } from '../../client/unittests//nosetest/runner';
 import { TestManagerRunner as PytestManagerRunner } from '../../client/unittests//pytest/runner';
 import { TestManagerRunner as UnitTestTestManagerRunner } from '../../client/unittests//unittest/runner';
@@ -15,7 +16,6 @@ import { ArgumentsService as PyTestArgumentsService } from '../../client/unittes
 import { IArgumentsHelper, IArgumentsService, ITestManagerRunner, IUnitTestHelper } from '../../client/unittests/types';
 import { UnitTestHelper } from '../../client/unittests/unittest/helper';
 import { ArgumentsService as UnitTestArgumentsService } from '../../client/unittests/unittest/services/argsService';
-import { createDeferred } from '../../utils/async';
 import { deleteDirectory, rootWorkspaceUri, updateSetting } from '../common';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 import { MockDebugLauncher } from './mocks';

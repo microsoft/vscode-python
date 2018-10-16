@@ -22,9 +22,9 @@ import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../client/common/terminal/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IPythonSettings, IsWindows } from '../../client/common/types';
+import { Architecture } from '../../client/common/utils/platform';
 import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PIPENV_SERVICE, PythonInterpreter } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { Architecture } from '../../utils/platform';
 import { PYTHON_PATH, rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
@@ -116,7 +116,7 @@ suite('Module Installer', () => {
         }
         async function resetSettings(): Promise<void> {
             const configService = ioc.serviceManager.get<IConfigurationService>(IConfigurationService);
-            await configService.updateSettingAsync('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
+            await configService.updateSetting('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
         }
         async function getCurrentPythonPath(): Promise<string> {
             const pythonPath = PythonSettings.getInstance(workspaceUri).pythonPath;

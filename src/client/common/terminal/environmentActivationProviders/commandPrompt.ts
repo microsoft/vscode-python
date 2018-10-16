@@ -5,7 +5,6 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
-import { IPlatformService } from '../../platform/types';
 import { TerminalShellType } from '../types';
 import { BaseActivationCommandProvider } from './baseActivationProvider';
 
@@ -34,18 +33,7 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
             // lets not try to run the powershell file from command prompt (user may not have powershell)
             return [];
         } else {
-            // This means we're in powershell and we have a .bat file.
-            if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
-                // On windows, the solution is to go into cmd, then run the batch (.bat) file and go back into powershell.
-                const powershellExe = targetShell === TerminalShellType.powershell ? 'powershell' : 'pwsh';
-                const activationCmd = scriptFile.fileToCommandArgument();
-                return [
-                    `& cmd /k "${activationCmd.replace(/"/g, '""')} & ${powershellExe}"`
-                ];
-            } else {
-                // Powershell on non-windows os, we cannot execute the batch file.
-                return;
-            }
+            return;
         }
     }
 

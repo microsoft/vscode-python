@@ -13,11 +13,11 @@ import { IApplicationShell, IWorkspaceService } from '../../client/common/applic
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { ICurrentProcess, ILogger, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterHelper, IInterpreterLocatorService } from '../../client/interpreter/contracts';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
 import { IServiceContainer } from '../../client/ioc/types';
-import { getNamesAndValues } from '../../utils/enum';
 
 enum OS {
     Mac, Windows, Linux

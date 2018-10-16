@@ -45,5 +45,6 @@
     "python.snippet.launch.attach.label": "Python: Allega",
     "python.snippet.launch.attach.description": "Allega debugger per debug remoto",
     "python.snippet.launch.scrapy.label": "Python: Scrapy",
-    "python.snippet.launch.scrapy.description": "Scrapy con terminale integrato"
+    "python.snippet.launch.scrapy.description": "Scrapy con terminale integrato",
+    "LanguageServiceSurveyBanner.bannerLabelYes": "Sì, prenderò il sondaggio ora"
 }

@@ -8,12 +8,12 @@ import * as fs from 'fs';
 import { injectable } from 'inversify';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { noop } from '../../../utils/misc';
 import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
+import { noop } from '../utils/misc';
 
 @injectable()
 export abstract class ModuleInstaller {

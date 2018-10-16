@@ -38,7 +38,7 @@ export class LinterInfo implements ILinterInfo {
     }
 
     public async enableAsync(enabled: boolean, resource?: Uri): Promise<void> {
-        return this.configService.updateSettingAsync(`linting.${this.enabledSettingName}`, enabled, resource);
+        return this.configService.updateSetting(`linting.${this.enabledSettingName}`, enabled, resource);
     }
     public isEnabled(resource?: Uri): boolean {
         const settings = this.configService.getSettings(resource);

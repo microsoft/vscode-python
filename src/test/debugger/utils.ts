@@ -12,11 +12,11 @@ import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { DebugProtocol } from 'vscode-debugprotocol/lib/debugProtocol';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
+import { DebuggerTypeName } from '../../client/debugger/constants';
 import { DEBUGGER_TIMEOUT } from './common/constants';
 import { DebugClientEx } from './debugClient';
-import { DebuggerTypeName } from '../../client/debugger/Common/constants';
 
-const testAdapterFilePath = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'debugger', 'mainV2.js');
+const testAdapterFilePath = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'debugger', 'debugAdapter', 'main.js');
 const debuggerType = DebuggerTypeName;
 
 /**

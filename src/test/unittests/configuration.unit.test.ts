@@ -10,12 +10,12 @@ import * as typeMoq from 'typemoq';
 import { OutputChannel, Uri, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { IConfigurationService, IInstaller, IOutputChannel, IPythonSettings, IUnitTestSettings, Product } from '../../client/common/types';
+import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IServiceContainer } from '../../client/ioc/types';
 import { TEST_OUTPUT_CHANNEL } from '../../client/unittests/common/constants';
 import { UnitTestProduct } from '../../client/unittests/common/types';
 import { UnitTestConfigurationService } from '../../client/unittests/configuration';
 import { ITestConfigurationManager, ITestConfigurationManagerFactory } from '../../client/unittests/types';
-import { getNamesAndValues } from '../../utils/enum';
 
 suite('Unit Tests - ConfigurationService', () => {
     [Product.pytest, Product.unittest, Product.nosetest].forEach(prodItem => {

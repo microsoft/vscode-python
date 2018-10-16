@@ -11,10 +11,10 @@ import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguage
 import { ExtensionActivationService } from './activationService';
 import { DownloadBetaChannelRule, DownloadDailyChannelRule, DownloadStableChannelRule } from './downloadChannelRules';
 import { JediExtensionActivator } from './jedi';
-import { LanguageServerExtensionActivator } from './languageServer';
-import { LanguageServerFolderService } from './languageServerFolderService';
-import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from './languageServerPackageRepository';
-import { LanguageServerPackageService } from './languageServerPackageService';
+import { LanguageServerExtensionActivator } from './languageServer/languageServer';
+import { LanguageServerFolderService } from './languageServer/languageServerFolderService';
+import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from './languageServer/languageServerPackageRepository';
+import { LanguageServerPackageService } from './languageServer/languageServerPackageService';
 import { ExtensionActivators, IDownloadChannelRule, IExtensionActivationService, IExtensionActivator, ILanguageServerFolderService, ILanguageServerPackageService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {

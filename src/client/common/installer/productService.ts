@@ -12,6 +12,7 @@ export class ProductService implements IProductService {
     private ProductTypes = new Map<Product, ProductType>();
 
     constructor() {
+        this.ProductTypes.set(Product.bandit, ProductType.Linter);
         this.ProductTypes.set(Product.flake8, ProductType.Linter);
         this.ProductTypes.set(Product.mypy, ProductType.Linter);
         this.ProductTypes.set(Product.pep8, ProductType.Linter);

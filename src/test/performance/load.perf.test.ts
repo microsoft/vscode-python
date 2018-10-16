@@ -11,7 +11,7 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { commands, extensions } from 'vscode';
 import { PVSC_EXTENSION_ID } from '../../client/common/constants';
-import { StopWatch } from '../../utils/stopWatch';
+import { StopWatch } from '../../client/common/utils/stopWatch';
 
 const AllowedIncreaseInActivationDelayInMS = 500;
 

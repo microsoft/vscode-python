@@ -10,9 +10,9 @@ import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/Common/constants';
-import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
-import { noop } from '../../utils/misc';
+import { noop } from '../../client/common/utils/misc';
+import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
+import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/types';
 import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { createDebugAdapter } from './utils';
@@ -40,12 +40,13 @@ suite('Run without Debugging', () => {
         } catch (ex) { }
         await sleep(1000);
     });
-    function buildLauncArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
+    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, showReturnValue: boolean = false): LaunchRequestArguments {
         // tslint:disable-next-line:no-unnecessary-local-variable
-        const options: LaunchRequestArguments = {
+        return {
             program: path.join(debugFilesPath, pythonFile),
             cwd: debugFilesPath,
             stopOnEntry,
+            showReturnValue,
             noDebug: true,
             debugOptions: [DebugOptions.RedirectOutput],
             pythonPath: PYTHON_PATH,
@@ -53,16 +54,16 @@ suite('Run without Debugging', () => {
             env: { PYTHONPATH: PTVSD_PATH },
             envFile: '',
             logToFile: false,
-            type: debuggerType
+            type: debuggerType,
+            name: '',
+            request: 'launch'
         };
-
-        return options;
     }
 
     test('Should run program to the end', async () => {
         await Promise.all([
             debugClient.configurationSequence(),
-            debugClient.launch(buildLauncArgs('simplePrint.py', false)),
+            debugClient.launch(buildLaunchArgs('simplePrint.py', false)),
             debugClient.waitForEvent('initialized'),
             debugClient.waitForEvent('terminated')
         ]);
@@ -70,7 +71,7 @@ suite('Run without Debugging', () => {
     test('test stderr output for Python', async () => {
         await Promise.all([
             debugClient.configurationSequence(),
-            debugClient.launch(buildLauncArgs('stdErrOutput.py', false)),
+            debugClient.launch(buildLaunchArgs('stdErrOutput.py', false)),
             debugClient.waitForEvent('initialized'),
             debugClient.assertOutput('stderr', 'error output'),
             debugClient.waitForEvent('terminated')
@@ -79,7 +80,7 @@ suite('Run without Debugging', () => {
     test('Test stdout output', async () => {
         await Promise.all([
             debugClient.configurationSequence(),
-            debugClient.launch(buildLauncArgs('stdOutOutput.py', false)),
+            debugClient.launch(buildLaunchArgs('stdOutOutput.py', false)),
             debugClient.waitForEvent('initialized'),
             debugClient.assertOutput('stdout', 'normal output'),
             debugClient.waitForEvent('terminated')
@@ -102,7 +103,7 @@ suite('Run without Debugging', () => {
         });
         await Promise.all([
             debugClient.configurationSequence(),
-            debugClient.launch(buildLauncArgs('sampleWithSleep.py', false)),
+            debugClient.launch(buildLaunchArgs('sampleWithSleep.py', false)),
             debugClient.waitForEvent('initialized'),
             processIdOutput
         ]);

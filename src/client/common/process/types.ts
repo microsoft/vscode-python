@@ -4,8 +4,8 @@
 import { ChildProcess, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
-import { Architecture } from '../../../utils/platform';
 import { ExecutionInfo } from '../types';
+import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
 
 export const IBufferDecoder = Symbol('IBufferDecoder');

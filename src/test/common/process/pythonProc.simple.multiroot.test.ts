@@ -68,7 +68,7 @@ suite('PythonExecutableService', () => {
         configService = serviceManager.get<IConfigurationService>(IConfigurationService);
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
 
-        await configService.updateSettingAsync('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
+        await configService.updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         return initializeTest();
     });
     suiteTeardown(closeActiveWindows);
@@ -77,12 +77,12 @@ suite('PythonExecutableService', () => {
         cont.unload();
         await closeActiveWindows();
         await clearPythonPathInWorkspaceFolder(workspace4Path);
-        await configService.updateSettingAsync('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
+        await configService.updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         await initializeTest();
     });
 
     test('Importing without a valid PYTHONPATH should fail', async () => {
-        await configService.updateSettingAsync('envFile', 'someInvalidFile.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
+        await configService.updateSetting('envFile', 'someInvalidFile.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], { cwd: path.dirname(workspace4PyFile.fsPath), throwOnStdErr: true });
@@ -91,7 +91,7 @@ suite('PythonExecutableService', () => {
     });
 
     test('Importing with a valid PYTHONPATH from .env file should succeed', async () => {
-        await configService.updateSettingAsync('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
+        await configService.updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], { cwd: path.dirname(workspace4PyFile.fsPath), throwOnStdErr: true });
 

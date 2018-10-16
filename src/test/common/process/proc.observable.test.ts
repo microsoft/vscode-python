@@ -7,7 +7,7 @@ import { CancellationTokenSource } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
-import { createDeferred } from '../../../utils/async';
+import { createDeferred } from '../../../client/common/utils/async';
 import { initialize } from './../../initialize';
 
 use(chaiAsPromised);

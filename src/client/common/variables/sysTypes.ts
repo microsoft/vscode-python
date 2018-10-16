@@ -6,7 +6,7 @@
 
 // tslint:disable:no-any no-increment-decrement
 
-import { isFunction, isString } from '../../../utils/sysTypes';
+import { isFunction, isString } from '../utils/sysTypes';
 
 export type TypeConstraint = string | Function;
 

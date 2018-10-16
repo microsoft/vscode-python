@@ -57,22 +57,10 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     // tslint:disable-next-line:variable-name
     private _pythonPath = '';
 
-    constructor(workspaceFolder?: Uri, initialize = true) {
+    constructor(workspaceFolder?: Uri) {
         super();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : Uri.file(__dirname);
-        if (initialize) {
-            this.disposables.push(workspace.onDidChangeConfiguration(() => {
-                const currentConfig = workspace.getConfiguration('python', this.workspaceRoot);
-                this.update(currentConfig);
-
-                // If workspace config changes, then we could have a cascading effect of on change events.
-                // Let's defer the change notification.
-                setTimeout(() => this.emit('change'), 1);
-            }));
-
-            const initialConfig = workspace.getConfiguration('python', this.workspaceRoot);
-            this.update(initialConfig);
-        }
+        this.initialize();
     }
     // tslint:disable-next-line:function-name
     public static getInstance(resource?: Uri): PythonSettings {
@@ -128,7 +116,8 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
-        this.condaPath = systemVariables.resolveAny(pythonSettings.get<string>('condaPath'))!;
+        const condaPath = systemVariables.resolveAny(pythonSettings.get<string>('condaPath'))!;
+        this.condaPath = condaPath && condaPath.length > 0 ? getAbsolutePath(condaPath, workspaceRoot) : condaPath;
 
         this.downloadLanguageServer = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadLanguageServer', true))!;
         this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;
@@ -186,6 +175,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             flake8Args: [], flake8Enabled: false, flake8Path: 'flake',
             lintOnSave: false, maxNumberOfProblems: 100,
             mypyArgs: [], mypyEnabled: false, mypyPath: 'mypy',
+            banditArgs: [], banditEnabled: false, banditPath: 'bandit',
             pep8Args: [], pep8Enabled: false, pep8Path: 'pep8',
             pylamaArgs: [], pylamaEnabled: false, pylamaPath: 'pylama',
             prospectorArgs: [], prospectorEnabled: false, prospectorPath: 'prospector',
@@ -223,6 +213,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         this.linting.prospectorPath = getAbsolutePath(systemVariables.resolveAny(this.linting.prospectorPath), workspaceRoot);
         this.linting.pydocstylePath = getAbsolutePath(systemVariables.resolveAny(this.linting.pydocstylePath), workspaceRoot);
         this.linting.mypyPath = getAbsolutePath(systemVariables.resolveAny(this.linting.mypyPath), workspaceRoot);
+        this.linting.banditPath = getAbsolutePath(systemVariables.resolveAny(this.linting.banditPath), workspaceRoot);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const formattingSettings = systemVariables.resolveAny(pythonSettings.get<IFormattingSettings>('formatting'))!;
@@ -240,6 +231,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         };
         this.formatting.autopep8Path = getAbsolutePath(systemVariables.resolveAny(this.formatting.autopep8Path), workspaceRoot);
         this.formatting.yapfPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.yapfPath), workspaceRoot);
+        this.formatting.blackPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.blackPath), workspaceRoot);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const autoCompleteSettings = systemVariables.resolveAny(pythonSettings.get<IAutoCompleteSettings>('autoComplete'))!;
@@ -345,6 +337,19 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         } catch (ex) {
             this._pythonPath = value;
         }
+    }
+    protected initialize(): void {
+        this.disposables.push(workspace.onDidChangeConfiguration(() => {
+            const currentConfig = workspace.getConfiguration('python', this.workspaceRoot);
+            this.update(currentConfig);
+
+            // If workspace config changes, then we could have a cascading effect of on change events.
+            // Let's defer the change notification.
+            setTimeout(() => this.emit('change'), 1);
+        }));
+
+        const initialConfig = workspace.getConfiguration('python', this.workspaceRoot);
+        this.update(initialConfig);
     }
 }
 

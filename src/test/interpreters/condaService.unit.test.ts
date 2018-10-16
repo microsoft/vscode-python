@@ -3,15 +3,16 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import { EOL } from 'os';
 import * as path from 'path';
+import { parse } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { IConfigurationService, ILogger, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
+import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterLocatorService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { IServiceContainer } from '../../client/ioc/types';
-import { Architecture } from '../../utils/platform';
 import { MockState } from './mocks';
 
 const untildify: (value: string) => string = require('untildify');
@@ -334,10 +335,28 @@ suite('Interpreters Conda Service', () => {
         platformService.setup(p => p.isWindows).returns(() => true);
         processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.reject(new Error('Not Found')));
         registryInterpreterLocatorService.setup(r => r.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve(registryInterpreters));
+        fileSystem.setup(fs => fs.search(TypeMoq.It.isAnyString())).returns(async () => []);
         fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isAny())).returns((file: string) => Promise.resolve(false));
 
         const condaExe = await condaService.getCondaFile();
         assert.equal(condaExe, 'conda', 'Failed to identify conda.exe');
+    });
+
+    test('Get conda file from default/known locations', async () => {
+
+        const expected = 'C:/ProgramData/Miniconda2/Scripts/conda.exe';
+
+        platformService.setup(p => p.isWindows).returns(() => true);
+
+        fileSystem.setup(f => f.search(TypeMoq.It.isAnyString()))
+            .returns(() => Promise.resolve([expected]));
+        const CondaServiceForTesting = class extends CondaService {
+            public async isCondaInCurrentPath() { return false; }
+        };
+        const condaSrv = new CondaServiceForTesting(serviceContainer.object);
+
+        const result = await condaSrv.getCondaFile();
+        expect(result).is.equal(expected);
     });
 
     test('Must use \'python.condaPath\' setting if set', async () => {
@@ -539,27 +558,30 @@ suite('Interpreters Conda Service', () => {
     });
 
     test('isAvailable will return true if conda is available', async () => {
-        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'xyz' }));
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: '4.4.4' }));
         const isAvailable = await condaService.isCondaAvailable();
         assert.equal(isAvailable, true);
     });
 
     test('isAvailable will return false if conda is not available', async () => {
+        condaService.getCondaFile = () => Promise.resolve('conda');
         processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.reject(new Error('not found')));
         fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
         fileSystem.setup(fs => fs.search(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
         platformService.setup(p => p.isWindows).returns(() => false);
-
+        condaService.getCondaInfo = () => Promise.reject('Not Found');
         const isAvailable = await condaService.isCondaAvailable();
         assert.equal(isAvailable, false);
     });
 
     test('Version info from conda process will be returned in getCondaVersion', async () => {
-        const expectedVersion = new Date().toString();
-        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: expectedVersion }));
+        condaService.getCondaInfo = () => Promise.reject('Not Found');
+        condaService.getCondaFile = () => Promise.resolve('conda');
+        const expectedVersion = parse('4.4.4')!.raw;
+        processService.setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: '4.4.4' }));
 
         const version = await condaService.getCondaVersion();
-        assert.equal(version, expectedVersion);
+        assert.equal(version!.raw, expectedVersion);
     });
 
     test('isCondaInCurrentPath will return true if conda is available', async () => {

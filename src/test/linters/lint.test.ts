@@ -137,12 +137,12 @@ suite('Linting - General Tests', () => {
         // Don't run these updates in parallel, as they are updating the same file.
         const target = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
 
-        await configService.updateSettingAsync('linting.enabled', true, rootWorkspaceUri, target);
-        await configService.updateSettingAsync('linting.lintOnSave', false, rootWorkspaceUri, target);
-        await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', false, workspaceUri);
+        await configService.updateSetting('linting.enabled', true, rootWorkspaceUri, target);
+        await configService.updateSetting('linting.lintOnSave', false, rootWorkspaceUri, target);
+        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
 
         linterManager.getAllLinterInfos().forEach(async (x) => {
-            await configService.updateSettingAsync(makeSettingKey(x.product), false, rootWorkspaceUri, target);
+            await configService.updateSetting(makeSettingKey(x.product), false, rootWorkspaceUri, target);
         });
     }
 
@@ -154,7 +154,7 @@ suite('Linting - General Tests', () => {
         const setting = makeSettingKey(product);
         const output = ioc.serviceContainer.get<MockOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
 
-        await configService.updateSettingAsync(setting, enabled, rootWorkspaceUri,
+        await configService.updateSetting(setting, enabled, rootWorkspaceUri,
             IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace);
 
         file = file ? file : fileToLint;
@@ -247,15 +247,15 @@ suite('Linting - General Tests', () => {
         await testLinterMessages(Product.pep8, path.join(pep8ConfigPath, 'file.py'), filteredPep88MessagesToBeReturned);
     });
     test('Pydocstyle with config in root', async () => {
-        await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', false, workspaceUri);
+        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await fs.copy(path.join(pydocstyleConfigPath27, '.pydocstyle'), path.join(workspaceUri.fsPath, '.pydocstyle'));
         await testLinterMessages(Product.pydocstyle, path.join(pydocstyleConfigPath27, 'file.py'), []);
     });
     test('PyLint minimal checkers', async () => {
         const file = path.join(pythoFilesPath, 'minCheck.py');
-        await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', true, workspaceUri);
+        await configService.updateSetting('linting.pylintUseMinimalCheckers', true, workspaceUri);
         await testEnablingDisablingOfLinter(Product.pylint, false, file);
-        await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', false, workspaceUri);
+        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await testEnablingDisablingOfLinter(Product.pylint, true, file);
     });
     // tslint:disable-next-line:no-function-expression
@@ -274,10 +274,10 @@ suite('Linting - General Tests', () => {
         await closeActiveWindows();
         const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         await window.showTextDocument(document);
-        await configService.updateSettingAsync('linting.enabled', true, workspaceUri);
-        await configService.updateSettingAsync('linting.pylintUseMinimalCheckers', false, workspaceUri);
-        await configService.updateSettingAsync('linting.pylintEnabled', true, workspaceUri);
-        await configService.updateSettingAsync('linting.flake8Enabled', true, workspaceUri);
+        await configService.updateSetting('linting.enabled', true, workspaceUri);
+        await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
+        await configService.updateSetting('linting.pylintEnabled', true, workspaceUri);
+        await configService.updateSetting('linting.flake8Enabled', true, workspaceUri);
 
         const commands = ioc.serviceContainer.get<ICommandManager>(ICommandManager);
         const collection = await commands.executeCommand('python.runLinting') as DiagnosticCollection;
@@ -303,7 +303,7 @@ suite('Linting - General Tests', () => {
     test('Three line output counted as one message', async () => {
         const maxErrors = 5;
         const target = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
-        await configService.updateSettingAsync('linting.maxNumberOfProblems', maxErrors, rootWorkspaceUri, target);
+        await configService.updateSetting('linting.maxNumberOfProblems', maxErrors, rootWorkspaceUri, target);
         await testLinterMessageCount(Product.pylint, threeLineLintsPath, maxErrors);
     });
 });

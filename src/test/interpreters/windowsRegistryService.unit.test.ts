@@ -3,10 +3,10 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { RegistryHive } from '../../client/common/platform/types';
 import { IPathUtils, IPersistentStateFactory } from '../../client/common/types';
+import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
 import { IServiceContainer } from '../../client/ioc/types';
-import { Architecture } from '../../utils/platform';
 import { MockRegistry, MockState } from './mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');

@@ -156,7 +156,7 @@ export class FormatterInstaller extends BaseInstaller {
                 const formatterName = ProductNames.get(formatter)!;
 
                 if (item.endsWith(formatterName)) {
-                    await this.configService.updateSettingAsync('formatting.provider', formatterName, resource);
+                    await this.configService.updateSetting('formatting.provider', formatterName, resource);
                     return this.install(formatter, resource);
                 }
             }
@@ -285,6 +285,7 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
         case Product.flake8: return 'flake8';
         case Product.unittest: return 'unittest';
         case Product.rope: return 'rope';
+        case Product.bandit: return 'bandit';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }

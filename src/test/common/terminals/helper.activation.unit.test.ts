@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Terminal } from 'vscode';
+import { Disposable } from 'vscode';
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
@@ -11,9 +11,9 @@ import { CommandPromptAndPowerShell } from '../../../client/common/terminal/envi
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { getNamesAndValues } from '../../../utils/enum';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Service helpers', () => {
@@ -73,61 +73,6 @@ suite('Terminal Service helpers', () => {
         const commands = await helper.getEnvironmentActivationCommands(TerminalShellType.other);
 
         expect(commands).to.equal(undefined, 'Activation command should be undefined if terminal type cannot be determined');
-    });
-    [
-        { commandCount: 1, preserveFocus: false },
-        { commandCount: 2, preserveFocus: false },
-        { commandCount: 1, preserveFocus: true },
-        { commandCount: 1, preserveFocus: true }
-    ].forEach(item => {
-        const titleSuffix = `(${item.commandCount} activation command, and preserve focus in terminal is ${item.preserveFocus})`;
-        const activationCommands = item.commandCount === 1 ? ['CMD1'] : ['CMD1', 'CMD2'];
-        test(`Terminal is activated ${titleSuffix}`, async function () {
-            // tslint:disable-next-line:no-invalid-this
-            this.timeout(10000); // We have delays in place to account for issues with VSC Terminal.
-            helper.getEnvironmentActivationCommands = (_shellType, _resource) => Promise.resolve(activationCommands);
-            helper.getTerminalShellPath = () => '';
-            const terminal = TypeMoq.Mock.ofType<Terminal>();
-
-            terminal
-                .setup(t => t.show(TypeMoq.It.isValue(item.preserveFocus)))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.exactly(activationCommands.length));
-            activationCommands.forEach(cmd => {
-                terminal
-                    .setup(t => t.sendText(TypeMoq.It.isValue(cmd)))
-                    .returns(() => undefined)
-                    .verifiable(TypeMoq.Times.exactly(1));
-            });
-
-            await helper.activateEnvironmentInTerminal(terminal.object, item.preserveFocus);
-
-            terminal.verifyAll();
-        });
-        test(`Terminal is activated only once ${titleSuffix}`, async function () {
-            // tslint:disable-next-line:no-invalid-this
-            this.timeout(10000); // We have delays in place to account for issues with VSC Terminal.
-            helper.getEnvironmentActivationCommands = (_shellType, _resource) => Promise.resolve(activationCommands);
-            helper.getTerminalShellPath = () => '';
-            const terminal = TypeMoq.Mock.ofType<Terminal>();
-
-            terminal
-                .setup(t => t.show(TypeMoq.It.isValue(item.preserveFocus)))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.exactly(activationCommands.length));
-            activationCommands.forEach(cmd => {
-                terminal
-                    .setup(t => t.sendText(TypeMoq.It.isValue(cmd)))
-                    .returns(() => undefined)
-                    .verifiable(TypeMoq.Times.exactly(1));
-            });
-
-            await helper.activateEnvironmentInTerminal(terminal.object, item.preserveFocus);
-            await helper.activateEnvironmentInTerminal(terminal.object, item.preserveFocus);
-            await helper.activateEnvironmentInTerminal(terminal.object, item.preserveFocus);
-
-            terminal.verifyAll();
-        });
     });
 });
 

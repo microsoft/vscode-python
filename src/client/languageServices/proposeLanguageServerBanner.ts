@@ -5,11 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
-import { getRandomBetween } from '../../utils/random';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import { IConfigurationService, IPersistentStateFactory,
     IPythonExtensionBanner } from '../common/types';
+import { getRandomBetween } from '../common/utils/random';
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
@@ -119,6 +119,6 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     }
 
     public async enableNewLanguageServer(): Promise<void> {
-        await this.configuration.updateSettingAsync('jediEnabled', false, undefined, ConfigurationTarget.Global);
+        await this.configuration.updateSetting('jediEnabled', false, undefined, ConfigurationTarget.Global);
     }
 }

@@ -7,9 +7,9 @@ import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/Common/constants';
-import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/Common/Contracts';
-import { noop } from '../../utils/misc';
+import { noop } from '../../client/common/utils/misc';
+import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
+import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/types';
 import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { DEBUGGER_TIMEOUT } from './common/constants';
@@ -17,7 +17,7 @@ import { DebugClientEx } from './debugClient';
 
 const debugFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'debugging');
 
-const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'mainV2.js');
+const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'debugger', 'debugAdapter', 'main.js');
 
 let testCounter = 0;
 const testAdapterFilePath = EXPERIMENTAL_DEBUG_ADAPTER;
@@ -56,13 +56,14 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
             return new DebugClientEx(testAdapterFilePath, debuggerType, coverageDirectory, { cwd: EXTENSION_ROOT_DIR });
         }
     }
-    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false): LaunchRequestArguments {
+    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, showReturnValue: boolean = false): LaunchRequestArguments {
         const env = { PYTHONPATH: PTVSD_PATH };
         // tslint:disable-next-line:no-unnecessary-local-variable
-        const options: LaunchRequestArguments = {
+        const options = {
             program: path.join(debugFilesPath, pythonFile),
             cwd: debugFilesPath,
             stopOnEntry,
+            showReturnValue,
             debugOptions: [DebugOptions.RedirectOutput],
             pythonPath: PYTHON_PATH,
             args: [],
@@ -70,7 +71,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
             envFile: '',
             logToFile: false,
             type: debuggerType
-        };
+        } as any as LaunchRequestArguments;
 
         return options;
     }

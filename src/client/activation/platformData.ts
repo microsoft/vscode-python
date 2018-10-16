@@ -7,7 +7,7 @@ import {
     language_server_osx_x64_sha512,
     language_server_win_x64_sha512,
     language_server_win_x86_sha512
-} from './languageServerHashes';
+} from './languageServer/languageServerHashes';
 
 export enum PlatformName {
     Windows32Bit = 'win-x86',

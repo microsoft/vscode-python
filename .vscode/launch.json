@@ -22,7 +22,7 @@
             "name": "Debugger as debugServer",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceFolder}/out/client/debugger/mainV2.js",
+            "program": "${workspaceFolder}/out/client/debugger/debugAdapter/main.js",
             "stopOnEntry": false,
             "smartStep": true,
             "args": [

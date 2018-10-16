@@ -1,8 +1,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { noop } from '../../../utils/misc';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { NOSETEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
