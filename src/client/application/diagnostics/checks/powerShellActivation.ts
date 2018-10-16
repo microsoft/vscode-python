@@ -70,7 +70,7 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
             },
             {
                 prompt: 'More Info',
-                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/Niq35h' })
+                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/CondaPwsh' })
             }
         ];
 
