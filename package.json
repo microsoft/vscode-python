@@ -1644,7 +1644,7 @@
         "download": "^7.0.0",
         "event-stream": "^3.3.4",
         "flat": "^4.0.0",
-        "gulp": "^3.9.1",
+        "gulp": "^4.0.0",
         "gulp-debounced-watch": "^1.0.4",
         "gulp-filter": "^5.1.0",
         "gulp-gitmodified": "^1.1.1",
