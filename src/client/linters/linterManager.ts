@@ -1,9 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { inject, injectable } from 'inversify';
-import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
-import { IConfigurationService, ILogger, Product } from '../common/types';
+import {
+    CancellationToken, MessageItem, OutputChannel,
+    TextDocument, Uri
+} from 'vscode';
+import { IApplicationShell, IWorkspaceService } from '../common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { LinterInstaller } from '../common/installer/productInstaller';
+import {
+    IConfigurationService, ILogger,
+    IOutputChannel, Product
+} from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Bandit } from './bandit';
 import { Flake8 } from './flake8';
@@ -31,8 +42,9 @@ export class LinterManager implements ILinterManager {
     private lintingEnabledSettingName = 'enabled';
     private linters: ILinterInfo[];
     private configService: IConfigurationService;
+    private checkedForInstalledLinters: boolean = false;
 
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.linters = [
             new LinterInfo(Product.bandit, 'bandit', this.configService),
@@ -58,26 +70,116 @@ export class LinterManager implements ILinterManager {
         throw new Error('Invalid linter');
     }
 
-    public isLintingEnabled(resource?: Uri): boolean {
+    public async isLintingEnabled(checkAvailable: boolean, resource?: Uri): Promise<boolean> {
         const settings = this.configService.getSettings(resource);
-        return (settings.linting[this.lintingEnabledSettingName] as boolean) && this.getActiveLinters(resource).length > 0;
+        const activeLintersPresent = await this.getActiveLinters(checkAvailable, resource);
+        return (settings.linting[this.lintingEnabledSettingName] as boolean) && activeLintersPresent.length > 0;
     }
 
     public async enableLintingAsync(enable: boolean, resource?: Uri): Promise<void> {
         await this.configService.updateSetting(`linting.${this.lintingEnabledSettingName}`, enable, resource);
-
-        // If nothing is enabled, fix it up to PyLint (default).
-        if (enable && this.getActiveLinters(resource).length === 0) {
-            await this.setActiveLintersAsync([Product.pylint], resource);
-        }
     }
 
-    public getActiveLinters(resource?: Uri): ILinterInfo[] {
-        return this.linters.filter(x => x.isEnabled(resource));
+    /// Check if it is possible to enable an otherwise-unconfigured linter in the current
+    /// workspace, and if so ask the user if they want that linter configured explicitly.
+    /// Return true if a configuration change was made.
+    public async notifyUserOfInstalledLinters(linterInfo: ILinterInfo, resource?: Uri): Promise<boolean> {
+        // if we've already checked during this session, don't bother again
+        if (!this.checkedForInstalledLinters) {
+            this.checkedForInstalledLinters = true;
+        } else {
+            return false;
+        }
+
+        // If linting is disabled, we are finished.
+        if (!await this.isLintingEnabled(false, resource)) {
+            return false;
+        }
+
+        // Has the linter in question has been configured explicitly? If so, no need to continue.
+        if (!this.isLinterUnset(linterInfo, resource)) {
+            return false;
+        }
+
+        // Is the linter available in the current workspace?
+        if (await this.isLinterAvailable(linterInfo.product, resource)) {
+            // ...ask the user if they would like to enable it.
+            return this.notifyUserAndConfigureLinter(linterInfo);
+        } else {
+            return false;
+        }
+
+    }
+
+    /// Raise a dialog asking the user if they would like to explicitly configure a linter or not.
+    /// Return true if a config change was made.
+    public async notifyUserAndConfigureLinter(linterInfo: ILinterInfo): Promise<boolean> {
+        const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+
+        class ConfigureLinterMessage implements MessageItem {
+            public enabled: boolean;
+            public title: string;
+            constructor() {
+                this.enabled = true;
+                this.title = '';
+            }
+        }
+
+        const optButtons: ConfigureLinterMessage[] = [
+            {
+                title: `Enable ${linterInfo.id}`,
+                enabled: true
+            },
+            {
+                title: `Disable ${linterInfo.id}`,
+                enabled: false
+            }
+        ];
+        const pick = await appShell.showInformationMessage(`Linter ${linterInfo.id} is available but not enabled.`, ...optButtons);
+        if (pick) {
+            await linterInfo.enableAsync(pick.enabled);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// Check if the linter itself is available in the workspace's Python environment or not.
+    /// Return true if the linter is present.
+    public async isLinterAvailable(linterProduct: Product, resource?: Uri): Promise<boolean | undefined> {
+        const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        const linterInstaller = new LinterInstaller(this.serviceContainer, outputChannel);
+
+        return linterInstaller.isInstalled(linterProduct, resource);
+    }
+
+    /// Check if the given linter has been configured by the user in this workspace or not.
+    /// Return true if no explicit setting for the linter has been made.
+    public isLinterUnset(linterInfo: ILinterInfo, resource?: Uri) {
+        const workspaceConfig = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const ws = workspaceConfig.getConfiguration('python.linting', resource);
+        const pe = ws!.inspect(linterInfo.enabledSettingName);
+        return (pe!.globalValue === undefined && pe!.workspaceValue === undefined && pe!.workspaceFolderValue === undefined);
+    }
+
+    public async getActiveLinters(checkAvailable: boolean, resource?: Uri): Promise<ILinterInfo[]> {
+        let activeLinters = this.linters.filter(x => x.isEnabled(resource));
+
+        if (checkAvailable) {
+            // only ask the user if they'd like to enable pylint when it is available... others may follow.
+            const pylintInfo = this.linters.find((linter: ILinterInfo) => linter.id === 'pylint');
+            if (pylintInfo) {
+                const change = await this.notifyUserOfInstalledLinters(pylintInfo, resource);
+                if (change) {
+                    activeLinters = this.linters.filter(x => x.isEnabled(resource));
+                }
+            }
+        }
+        return activeLinters;
     }
 
     public async setActiveLintersAsync(products: Product[], resource?: Uri): Promise<void> {
-        const active = this.getActiveLinters(resource);
+        const active = await this.getActiveLinters(false, resource);
         for (const x of active) {
             await x.enableAsync(false, resource);
         }
@@ -90,8 +192,8 @@ export class LinterManager implements ILinterManager {
         }
     }
 
-    public createLinter(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer, resource?: Uri): ILinter {
-        if (!this.isLintingEnabled(resource)) {
+    public async createLinter(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer, resource?: Uri): Promise<ILinter> {
+        if (!await this.isLintingEnabled(false, resource)) {
             return new DisabledLinter(this.configService);
         }
         const error = 'Linter manager: Unknown linter';

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { inject, injectable } from 'inversify';
 import { Minimatch } from 'minimatch';
 import * as path from 'path';
@@ -93,10 +95,16 @@ export class LintingEngine implements ILintingEngine {
 
         this.pendingLintings.set(document.uri.fsPath, cancelToken);
 
-        const promises: Promise<ILintMessage[]>[] = this.linterManager.getActiveLinters(document.uri)
-            .map(info => {
+        const activeLinters = await this.linterManager.getActiveLinters(true, document.uri);
+        const promises: Promise<ILintMessage[]>[] = activeLinters
+            .map(async (info: ILinterInfo) => {
                 const stopWatch = new StopWatch();
-                const linter = this.linterManager.createLinter(info.product, this.outputChannel, this.serviceContainer, document.uri);
+                const linter = await this.linterManager.createLinter(
+                    info.product,
+                    this.outputChannel,
+                    this.serviceContainer,
+                    document.uri
+                );
                 const promise = linter.lint(document, cancelToken.token);
                 this.sendLinterRunTelemetry(info, document.uri, promise, stopWatch, trigger);
                 return promise;
@@ -175,7 +183,7 @@ export class LintingEngine implements ILintingEngine {
     }
 
     private async shouldLintDocument(document: vscode.TextDocument): Promise<boolean> {
-        if (!this.linterManager.isLintingEnabled(document.uri)) {
+        if (!await this.linterManager.isLintingEnabled(true, document.uri)) {
             this.diagnosticCollection.set(document.uri, []);
             return false;
         }

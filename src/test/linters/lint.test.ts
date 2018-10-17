@@ -163,7 +163,7 @@ suite('Linting - General Tests', () => {
 
         await linterManager.setActiveLintersAsync([product]);
         await linterManager.enableLintingAsync(enabled);
-        const linter = linterManager.createLinter(product, output, ioc.serviceContainer);
+        const linter = await linterManager.createLinter(product, output, ioc.serviceContainer);
 
         const messages = await linter.lint(document, cancelToken.token);
         if (enabled) {
@@ -211,7 +211,7 @@ suite('Linting - General Tests', () => {
         const document = await workspace.openTextDocument(pythonFile);
 
         await linterManager.setActiveLintersAsync([product], document.uri);
-        const linter = linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
+        const linter = await linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
 
         const messages = await linter.lint(document, cancelToken.token);
         if (messagesToBeReceived.length === 0) {
@@ -260,11 +260,11 @@ suite('Linting - General Tests', () => {
     });
     // tslint:disable-next-line:no-function-expression
     test('Multiple linters', async function () {
-//      Unreliable test being skipped until we can sort it out.  See gh-2609.
-//          - Fails about 1/3 of runs on Windows
-//          - Symptom: lintingEngine::lintOpenPythonFiles returns values *after* command await resolves in lint.tests
-//          - lintOpenPythonFiles returns 3 sets of values, not what I expect (1).
-//          - Haven't yet found a way to await on this properly.
+        //      Unreliable test being skipped until we can sort it out.  See gh-2609.
+        //          - Fails about 1/3 of runs on Windows
+        //          - Symptom: lintingEngine::lintOpenPythonFiles returns values *after* command await resolves in lint.tests
+        //          - lintOpenPythonFiles returns 3 sets of values, not what I expect (1).
+        //          - Haven't yet found a way to await on this properly.
         const skipped = true;
         if (skipped) {
             // tslint:disable-next-line:no-invalid-this
@@ -295,7 +295,7 @@ suite('Linting - General Tests', () => {
         const document = await workspace.openTextDocument(pythonFile);
 
         await linterManager.setActiveLintersAsync([product], document.uri);
-        const linter = linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
+        const linter = await linterManager.createLinter(product, outputChannel, ioc.serviceContainer);
 
         const messages = await linter.lint(document, cancelToken.token);
         assert.equal(messages.length, messageCountToBeReceived, 'Expected number of lint errors does not match lint error count');

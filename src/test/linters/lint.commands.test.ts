@@ -30,7 +30,7 @@ suite('Linting - Linter Selector', () => {
         initializeServices();
     });
     suiteTeardown(closeActiveWindows);
-    teardown(async () => await closeActiveWindows());
+    teardown(async () => closeActiveWindows());
 
     function initializeServices() {
         const cont = new Container();
@@ -105,7 +105,7 @@ suite('Linting - Linter Selector', () => {
         assert.equal(options!.matchOnDescription, true, 'Quick pick options are incorrect');
         assert.equal(options!.matchOnDetail, true, 'Quick pick options are incorrect');
         assert.equal(options!.placeHolder, `current: ${current}`, 'Quick pick current option is incorrect');
-        assert.equal(lm.isLintingEnabled(undefined), enable, 'Linting selector did not change linting on/off flag');
+        assert.equal(await lm.isLintingEnabled(false, undefined), enable, 'Linting selector did not change linting on/off flag');
     }
 
     async function selectLinterAsync(products: Product[]): Promise<void> {
@@ -129,7 +129,7 @@ suite('Linting - Linter Selector', () => {
         await lm.setActiveLintersAsync(products);
 
         let current: string;
-        let activeLinters = lm.getActiveLinters();
+        let activeLinters = await lm.getActiveLinters(false);
         switch (activeLinters.length) {
             case 0:
                 current = 'none';
@@ -154,7 +154,7 @@ suite('Linting - Linter Selector', () => {
         assert.equal(options!.matchOnDetail, true, 'Quick pick options are incorrect');
         assert.equal(options!.placeHolder, `current: ${current}`, 'Quick pick current option is incorrect');
 
-        activeLinters = lm.getActiveLinters();
+        activeLinters = await lm.getActiveLinters(false);
         assert.equal(activeLinters.length, 1, 'Linting selector did not change active linter');
         assert.equal(activeLinters[0].product, Product.pylint, 'Linting selector did not change to pylint');
 

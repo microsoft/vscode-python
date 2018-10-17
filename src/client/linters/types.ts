@@ -19,7 +19,7 @@ export interface ILinterInfo {
     readonly argsSettingName: string;
     readonly enabledSettingName: string;
     readonly configFileNames: string[];
-    enableAsync(flag: boolean, resource?: vscode.Uri): Promise<void>;
+    enableAsync(enabled: boolean, resource?: vscode.Uri): Promise<void>;
     isEnabled(resource?: vscode.Uri): boolean;
     pathName(resource?: vscode.Uri): string;
     linterArgs(resource?: vscode.Uri): string[];
@@ -35,11 +35,11 @@ export const ILinterManager = Symbol('ILinterManager');
 export interface ILinterManager {
     getAllLinterInfos(): ILinterInfo[];
     getLinterInfo(product: Product): ILinterInfo;
-    getActiveLinters(resource?: vscode.Uri): ILinterInfo[];
-    isLintingEnabled(resource?: vscode.Uri): boolean;
+    getActiveLinters(checkAvailable: boolean, resource?: vscode.Uri): Promise<ILinterInfo[]>;
+    isLintingEnabled(checkAvailable: boolean, resource?: vscode.Uri): Promise<boolean>;
     enableLintingAsync(enable: boolean, resource?: vscode.Uri): Promise<void>;
     setActiveLintersAsync(products: Product[], resource?: vscode.Uri): Promise<void>;
-    createLinter(product: Product, outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer, resource?: vscode.Uri): ILinter;
+    createLinter(product: Product, outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer, resource?: vscode.Uri): Promise<ILinter>;
 }
 
 export interface ILintMessage {

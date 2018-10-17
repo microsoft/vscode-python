@@ -86,10 +86,6 @@ export abstract class BaseLinter implements ILinter {
         return this._info;
     }
 
-    public isLinterExecutableSpecified(resource: vscode.Uri) {
-        const executablePath = this.info.pathName(resource);
-        return path.basename(executablePath).length > 0 && path.basename(executablePath) !== executablePath;
-    }
     public async lint(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]> {
         this._pythonSettings = this.configService.getSettings(document.uri);
         return this.runLinter(document, cancellation);

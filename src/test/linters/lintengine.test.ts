@@ -47,7 +47,7 @@ suite('Linting - LintingEngine', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL))).returns(() => outputChannel.object);
 
         lintManager = TypeMoq.Mock.ofType<ILinterManager>();
-        lintManager.setup(x => x.isLintingEnabled(TypeMoq.It.isAny())).returns(() => true);
+        lintManager.setup(x => x.isLintingEnabled(TypeMoq.It.isAny())).returns(async () => true);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny())).returns(() => lintManager.object);
 
         lintingEngine = new LintingEngine(serviceContainer.object);
@@ -59,7 +59,7 @@ suite('Linting - LintingEngine', () => {
         try {
             lintingEngine.lintDocument(doc, 'auto').ignoreErrors();
         } catch {
-            lintManager.verify(l => l.isLintingEnabled(TypeMoq.It.isValue(doc.uri)), TypeMoq.Times.once());
+            lintManager.verify(l => l.isLintingEnabled(TypeMoq.It.isAny(), TypeMoq.It.isValue(doc.uri)), TypeMoq.Times.once());
         }
     });
     test('Ensure document.uri is passed into createLinter', () => {

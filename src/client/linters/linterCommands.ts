@@ -28,7 +28,7 @@ export class LinterCommands implements vscode.Disposable {
     public async setLinterAsync(): Promise<void> {
         const linters = this.linterManager.getAllLinterInfos();
         const suggestions = linters.map(x => x.id).sort();
-        const activeLinters = this.linterManager.getActiveLinters(this.settingsUri);
+        const activeLinters = await this.linterManager.getActiveLinters(false, this.settingsUri);
 
         let current: string;
         switch (activeLinters.length) {
@@ -64,7 +64,7 @@ export class LinterCommands implements vscode.Disposable {
 
     public async enableLintingAsync(): Promise<void> {
         const options = ['on', 'off'];
-        const current = this.linterManager.isLintingEnabled(this.settingsUri) ? options[0] : options[1];
+        const current = await this.linterManager.isLintingEnabled(false, this.settingsUri) ? options[0] : options[1];
 
         const quickPickOptions: vscode.QuickPickOptions = {
             matchOnDetail: true,
