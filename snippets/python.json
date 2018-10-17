@@ -198,7 +198,7 @@
         "prefix": "__main__",
         "body": [
             "if __name__ == '__main__':",
-            "\t${1:pass}",
+            "    ${1:pass}",
         ],
         "description": "Code snippet for checking if program is being called or imported"
     },
