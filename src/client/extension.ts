@@ -199,8 +199,8 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
 
     const handlers = serviceManager.getAll<ICustomDebugSessionEventHandlers>(ICustomDebugSessionEventHandlers);
     const disposables = serviceManager.get<IDisposableRegistry>(IDisposableRegistry);
-    const dispatccher = new CustomDebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
-    dispatccher.registerEventHandlers();
+    const dispatcher = new CustomDebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
+    dispatcher.registerEventHandlers();
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {
