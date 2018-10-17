@@ -184,15 +184,12 @@
         "description": "Code snippet for a lambda statement"
     },
     "if(main)": {
-        "prefix": "if(main)",
+        "prefix": "__main__",
         "body": [
-            "def main():",
-            "\t${1:pass}",
-            "",
-            "if __name__ == '__main__':",
-            "\tmain()"
+            "if __name__ == \"__main__\":",
+            "    ${1:pass}",
         ],
-        "description": "Code snippet for a main function"
+        "description": "Code snippet for a `if __name__ == \"__main__\": ...` block"
     },
     "async/def": {
         "prefix": "async/def",

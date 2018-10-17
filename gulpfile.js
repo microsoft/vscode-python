@@ -79,35 +79,36 @@ const copyrightHeader = [
 ];
 const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n')];
 
+gulp.task('hygiene-modified', () => gulp.series('compile', run({ mode: 'changes' })));
+
+gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
+
 gulp.task('hygiene', () => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }));
 
 gulp.task('compile', () => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }));
 
-gulp.task('watch', ['hygiene-modified', 'hygiene-watch']);
+gulp.task('watch', gulp.parallel('hygiene-modified', 'hygiene-watch'));
 
 // Duplicate to allow duplicate task in tasks.json (one ith problem matching, and one without)
-gulp.task('watchProblems', ['hygiene-modified', 'hygiene-watch']);
+gulp.task('watchProblems', gulp.parallel('hygiene-modified', 'hygiene-watch'));
 
-gulp.task('debugger-coverage', () => buildDebugAdapterCoverage());
-
-gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
+gulp.task('debugger-coverage', buildDebugAdapterCoverage);
 
 gulp.task('hygiene-all', () => run({ mode: 'all' }));
 
-gulp.task('hygiene-modified', ['compile'], () => run({ mode: 'changes' }));
-
-gulp.task('clean', ['output:clean', 'cover:clean'], () => { });
+gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 
 gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
 
-gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
+gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
 
 gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
 
-gulp.task('checkNativeDependencies', () => {
+gulp.task('checkNativeDependencies', (done) => {
     if (hasNativeDependencies()) {
         throw new Error('Native dependencies deteced');
     }
+    done();
 });
 
 gulp.task('cover:enable', () => {
@@ -155,7 +156,7 @@ function hasNativeDependencies() {
     return false;
 }
 
-function buildDebugAdapterCoverage() {
+function buildDebugAdapterCoverage(done) {
     const matches = glob.sync(path.join(__dirname, 'debug_coverage*/coverage.json'));
     matches.forEach(coverageFile => {
         const finalCoverageFile = path.join(path.dirname(coverageFile), 'coverage-final-upload.json');
@@ -171,6 +172,8 @@ function buildDebugAdapterCoverage() {
         reporter.add('lcov');
         reporter.write(remappedCollector, true, () => { });
     });
+
+    done();
 }
 
 /**

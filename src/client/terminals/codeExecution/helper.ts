@@ -33,6 +33,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'normalizeForInterpreter.py'), code];
             const processService = await this.processServiceFactory.create(resource);
             const proc = await processService.exec(pythonPath, args, { throwOnStdErr: true });
+
             return proc.stdout;
         } catch (ex) {
             console.error(ex, 'Python: Failed to normalize code for execution in terminal');

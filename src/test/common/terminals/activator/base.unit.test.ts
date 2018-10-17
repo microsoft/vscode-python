@@ -4,13 +4,14 @@
 'use strict';
 
 import * as TypeMoq from 'typemoq';
+import { expect } from 'chai';
 import { Terminal } from 'vscode';
 import { BaseTerminalActivator } from '../../../../client/common/terminal/activator/base';
 import { ITerminalActivator, ITerminalHelper } from '../../../../client/common/terminal/types';
 import { noop } from '../../../../client/common/utils/misc';
 
-// tslint:disable-next-line:max-func-body-length
-suite('Terminalx Base Activator', () => {
+// tslint:disable:max-func-body-length no-any
+suite('Terminal Base Activator', () => {
     let activator: ITerminalActivator;
     let helper: TypeMoq.IMock<ITerminalHelper>;
 
@@ -18,7 +19,7 @@ suite('Terminalx Base Activator', () => {
         helper = TypeMoq.Mock.ofType<ITerminalHelper>();
         activator = new class extends BaseTerminalActivator {
             public waitForCommandToProcess() { noop(); return Promise.resolve(); }
-        }(helper.object);
+        }(helper.object) as any as ITerminalActivator;
     });
     [
         { commandCount: 1, preserveFocus: false },
@@ -69,6 +70,31 @@ suite('Terminalx Base Activator', () => {
             await activator.activateEnvironmentInTerminal(terminal.object, undefined, item.preserveFocus);
 
             terminal.verifyAll();
+        });
+        test(`Terminal is activated only once ${titleSuffix} (even when not waiting)`, async () => {
+            helper.setup(h => h.getTerminalShellPath()).returns(() => '');
+            helper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(activationCommands));
+            const terminal = TypeMoq.Mock.ofType<Terminal>();
+
+            terminal
+                .setup(t => t.show(TypeMoq.It.isValue(item.preserveFocus)))
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.exactly(activationCommands.length));
+            activationCommands.forEach(cmd => {
+                terminal
+                    .setup(t => t.sendText(TypeMoq.It.isValue(cmd)))
+                    .returns(() => undefined)
+                    .verifiable(TypeMoq.Times.exactly(1));
+            });
+
+            const activated = await Promise.all([
+                activator.activateEnvironmentInTerminal(terminal.object, undefined, item.preserveFocus),
+                activator.activateEnvironmentInTerminal(terminal.object, undefined, item.preserveFocus),
+                activator.activateEnvironmentInTerminal(terminal.object, undefined, item.preserveFocus)
+            ]);
+
+            terminal.verifyAll();
+            expect(activated).to.deep.equal([true, true, true], 'Invalid values');
         });
     });
 });

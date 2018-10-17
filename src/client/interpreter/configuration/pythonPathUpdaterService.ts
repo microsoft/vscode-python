@@ -50,7 +50,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
                 .catch<string>(() => '');
             const [info, pipVersion] = await Promise.all([infoPromise, pipVersionPromise]);
             if (info) {
-                telemtryProperties.version = info.version;
+                telemtryProperties.pyVersion = info.version;
             }
             if (pipVersion) {
                 telemtryProperties.pipVersion = pipVersion;
