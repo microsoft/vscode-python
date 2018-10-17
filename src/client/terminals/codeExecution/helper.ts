@@ -33,7 +33,11 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'normalizeForInterpreter.py'), code];
             const processService = await this.processServiceFactory.create(resource);
             const proc = await processService.exec(pythonPath, args, { throwOnStdErr: true });
-            return proc.stdout;
+
+            // tslint:disable-next-line:no-suspicious-comment
+            // HACK FIX: Until we correct the normalize script we can simply remove
+            // extraneous CR characters.
+            return proc.stdout.replace(/\r\r/g, '\r');
         } catch (ex) {
             console.error(ex, 'Python: Failed to normalize code for execution in terminal');
             return code;
