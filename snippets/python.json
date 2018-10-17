@@ -183,17 +183,6 @@
         ],
         "description": "Code snippet for a lambda statement"
     },
-    "if(main) with main()": {
-        "prefix": "if(main)",
-        "body": [
-            "def main():",
-            "\t${1:pass}",
-            "",
-            "if __name__ == '__main__':",
-            "\tmain()"
-        ],
-        "description": "Code snippet for a main function"
-    },
     "if(main)": {
         "prefix": "__main__",
         "body": [
