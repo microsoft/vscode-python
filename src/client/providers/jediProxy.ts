@@ -6,8 +6,10 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as pidusage from 'pidusage';
-import { CancellationToken, CancellationTokenSource, CompletionItemKind,
-    Disposable, SymbolKind, Uri } from 'vscode';
+import {
+    CancellationToken, CancellationTokenSource, CompletionItemKind,
+    Disposable, SymbolKind, Uri
+} from 'vscode';
 import { PythonSettings } from '../common/configSettings';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
@@ -18,7 +20,7 @@ import { debounce, swallowExceptions } from '../common/utils/decorators';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IServiceContainer } from '../ioc/types';
-import * as logger from './../common/logger';
+import { Logger } from './../common/logger';
 
 const IS_WINDOWS = /^win/.test(process.platform);
 
@@ -329,7 +331,7 @@ export class JediProxy implements Disposable {
     }
 
     private handleError(source: string, errorMessage: string) {
-        logger.error(`${source} jediProxy`, `Error (${source}) ${errorMessage}`);
+        Logger.error(`${source} jediProxy`, `Error (${source}) ${errorMessage}`);
     }
 
     // tslint:disable-next-line:max-func-body-length
@@ -352,7 +354,7 @@ export class JediProxy implements Disposable {
         this.proc = result.proc;
         this.languageServerStarted.resolve();
         this.proc.on('end', (end) => {
-            logger.error('spawnProcess.end', `End - ${end}`);
+            Logger.error('spawnProcess.end', `End - ${end}`);
         });
         this.proc.on('error', error => {
             this.handleError('error', `${error}`);

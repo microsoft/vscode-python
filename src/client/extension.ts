@@ -16,6 +16,7 @@ import { IExtensionActivationService } from './activation/types';
 import { IExtensionApi } from './api';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
+import { DebugService } from './common/application/debugService';
 import { IWorkspaceService } from './common/application/types';
 import { isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
@@ -31,6 +32,8 @@ import {
 import { createDeferred } from './common/utils/async';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { DebuggerTypeName } from './debugger/constants';
+import { CustomDebugSessionEventDispatcher } from './debugger/extension/hooks/customEventHandlerDispatcher';
+import { ICustomDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
@@ -189,6 +192,11 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
 
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterManager.initialize();
+
+    const handlers = serviceManager.getAll<ICustomDebugSessionEventHandlers>(ICustomDebugSessionEventHandlers);
+    const disposables = serviceManager.get<IDisposableRegistry>(IDisposableRegistry);
+    const dispather = new CustomDebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
+    dispather.registerEventHandlers();
 }
 
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {

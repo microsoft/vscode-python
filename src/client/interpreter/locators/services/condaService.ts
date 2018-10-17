@@ -4,7 +4,7 @@ import {
 } from 'inversify';
 import * as path from 'path';
 import { parse, SemVer } from 'semver';
-import { warn } from '../../../common/logger';
+import { Logger } from '../../../common/logger';
 import {
     IFileSystem, IPlatformService
 } from '../../../common/platform/types';
@@ -124,7 +124,7 @@ export class CondaService implements ICondaService {
             return version;
         }
         // Use a bogus version, at least to indicate the fact that a version was returned.
-        warn(`Unable to parse Version of Conda, ${versionString}`);
+        Logger.warn(`Unable to parse Version of Conda, ${versionString}`);
         return new SemVer('0.0.1');
     }
 
@@ -298,7 +298,7 @@ export class CondaService implements ICondaService {
         const globPattern = this.platform.isWindows ? CondaLocationsGlobWin : CondaLocationsGlob;
         const condaFiles = await fileSystem.search(globPattern)
             .catch<string[]>((failReason) => {
-                warn(
+                Logger.warn(
                     'Default conda location search failed.',
                     `Searching for default install locations for conda results in error: ${failReason}`
                 );

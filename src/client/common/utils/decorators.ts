@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import { isTestExecution } from '../constants';
 
 type AsyncVoidAction = (...params: {}[]) => Promise<void>;
 type VoidAction = (...params: {}[]) => void;
@@ -37,9 +38,17 @@ export function swallowExceptions(scopeName: string) {
 
                 // If method being wrapped returns a promise then wait and swallow errors.
                 if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
-                    return (result as Promise<void>).catch(error => console.error(errorMessage, error));
+                    return (result as Promise<void>).catch(error => {
+                        if (isTestExecution()) {
+                            return;
+                        }
+                        console.error(errorMessage, error);
+                    });
                 }
             } catch (error) {
+                if (isTestExecution()) {
+                    return;
+                }
                 console.error(errorMessage, error);
             }
         };

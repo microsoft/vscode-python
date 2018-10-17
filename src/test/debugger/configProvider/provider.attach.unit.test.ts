@@ -14,7 +14,7 @@ import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
-import { PythonV2DebugConfigurationProvider } from '../../../client/debugger/extension';
+import { PythonV2DebugConfigurationProvider } from '../../../client/debugger/extension/configProviders/pythonV2Provider';
 import { AttachRequestArguments, DebugOptions } from '../../../client/debugger/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 

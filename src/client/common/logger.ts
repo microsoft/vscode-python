@@ -2,12 +2,20 @@
 
 import { injectable } from 'inversify';
 import { skipIfTest } from './helpers';
-import { ILogger } from './types';
+import { ILogger, LogLevel } from './types';
 
 const PREFIX = 'Python Extension: ';
 
 @injectable()
 export class Logger implements ILogger {
+    // tslint:disable-next-line:no-any
+    public static error(title: string = '', message: any) {
+        new Logger().logError(`${title}, ${message}`);
+    }
+    // tslint:disable-next-line:no-any
+    public static warn(title: string = '', message: any = '') {
+        new Logger().logWarning(`${title}, ${message}`);
+    }
     @skipIfTest(false)
     public logError(message: string, ex?: Error) {
         if (ex) {
@@ -33,17 +41,11 @@ export class Logger implements ILogger {
         }
     }
 }
-// tslint:disable-next-line:no-any
-export function error(title: string = '', message: any) {
-    new Logger().logError(`${title}, ${message}`);
-}
-// tslint:disable-next-line:no-any
-export function warn(title: string = '', message: any = '') {
-    new Logger().logWarning(`${title}, ${message}`);
-}
 
-export enum LogOptions {
-    Arguments, ReturnValue
+enum LogOptions {
+    None = 0,
+    Arguments = 1,
+    ReturnValue = 2
 }
 
 // tslint:disable-next-line:no-any
@@ -74,7 +76,16 @@ function returnValueToLogString(returnValue: any): string {
     return returnValueMessage;
 }
 
-export function log(message: string, options: LogOptions = LogOptions.Arguments | LogOptions.ReturnValue) {
+export function traceVerbose(message: string) {
+    return trace(message, LogOptions.Arguments | LogOptions.ReturnValue);
+}
+export function traceError(message: string, ex?: Error) {
+    return trace(message, LogOptions.Arguments | LogOptions.ReturnValue, LogLevel.Error);
+}
+export function traceInfo(message: string) {
+    return trace(message);
+}
+function trace(message: string, options: LogOptions = LogOptions.None, logLevel?: LogLevel) {
     // tslint:disable-next-line:no-function-expression no-any
     return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
@@ -82,6 +93,9 @@ export function log(message: string, options: LogOptions = LogOptions.Arguments 
         descriptor.value = function (...args: any[]) {
             // tslint:disable-next-line:no-any
             function writeSuccess(returnValue?: any) {
+                if (logLevel === LogLevel.Error) {
+                    return;
+                }
                 writeToLog(returnValue);
             }
             function writeError(ex: Error) {
