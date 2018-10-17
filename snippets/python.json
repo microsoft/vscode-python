@@ -200,7 +200,7 @@
             "if __name__ == '__main__':",
             "    ${1:pass}",
         ],
-        "description": "Code snippet for checking if program is being called or imported"
+        "description": "Code snippet for a `if __name__ == \"__main__\": ...` block"
     },
     "async/def": {
         "prefix": "async/def",
