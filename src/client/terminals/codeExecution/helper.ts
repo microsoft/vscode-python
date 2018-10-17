@@ -34,10 +34,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const processService = await this.processServiceFactory.create(resource);
             const proc = await processService.exec(pythonPath, args, { throwOnStdErr: true });
 
-            // tslint:disable-next-line:no-suspicious-comment
-            // HACK FIX: Until we correct the normalize script we can simply remove
-            // extraneous CR characters.
-            return proc.stdout.replace(/\r\r/g, '\r');
+            return proc.stdout;
         } catch (ex) {
             console.error(ex, 'Python: Failed to normalize code for execution in terminal');
             return code;

@@ -32,7 +32,7 @@ suite('Terminal - Code Execution Helper', () => {
     let editor: TypeMoq.IMock<TextEditor>;
     let processService: TypeMoq.IMock<IProcessService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
-    setup(function () {
+    setup(() => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -58,7 +58,7 @@ suite('Terminal - Code Execution Helper', () => {
         editor.setup(e => e.document).returns(() => document.object);
 
         // tslint:disable-next-line:no-invalid-this
-        this.skip();
+        // this.skip();
     });
 
     async function ensureBlankLinesAreRemoved(source: string, expectedSource: string) {
@@ -76,6 +76,17 @@ suite('Terminal - Code Execution Helper', () => {
         const code = ['import sys', '', '', '', 'print(sys.executable)', '', 'print("1234")', '', '', 'print(1)', 'print(2)'];
         const expectedCode = code.filter(line => line.trim().length > 0).join(EOL);
         await ensureBlankLinesAreRemoved(code.join(EOL), expectedCode);
+    });
+    test('Ensure there are no multiple-CR elements in the normalized code.', async () => {
+        const code = ['import sys', '', '', '', 'print(sys.executable)', '', 'print("1234")', '', '', 'print(1)', 'print(2)'];
+        const actualProcessService = new ProcessService(new BufferDecoder());
+        processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((file, args, options) => {
+                return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
+            });
+        const normalizedCode = await helper.normalizeLines(code.join(EOL));
+        const doubleCrIndex = normalizedCode.indexOf('\r\r');
+        expect(doubleCrIndex).to.be.equal(-1, 'Double CR (CRCRLF) line endings detected in normalized code snippet.');
     });
     ['', '1', '2', '3', '4', '5', '6', '7'].forEach(fileNameSuffix => {
         test(`Ensure blank lines are removed (Sample${fileNameSuffix})`, async () => {
