@@ -27,7 +27,7 @@ export function debounce(wait?: number) {
  */
 export function swallowExceptions(scopeName: string) {
     // tslint:disable-next-line:no-any no-function-expression
-    return function (_target: any, propertyName: string, descriptor: TypedPropertyDescriptor<VoidAction> | TypedPropertyDescriptor<AsyncVoidAction>) {
+    return function (_target: any, propertyName: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value!;
         const errorMessage = `Python Extension (Error in ${scopeName}, method:${propertyName}):`;
         // tslint:disable-next-line:no-any no-function-expression

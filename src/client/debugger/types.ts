@@ -32,6 +32,7 @@ interface AdditionalLaunchDebugOptions {
     pyramid?: boolean;
     stopOnEntry?: boolean;
     showReturnValue?: boolean;
+    workspaceFolder?: string;
 }
 
 // tslint:disable-next-line:interface-name
@@ -41,6 +42,7 @@ interface AdditionalAttachDebugOptions {
     gevent?: boolean;
     jinja?: boolean;
     debugStdLib?: boolean;
+    workspaceFolder?: string;
 }
 
 // tslint:disable-next-line:interface-name
@@ -52,7 +54,7 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
     pythonPath: string;
     // Automatically stop target after launch. If not specified, target does not stop.
     stopOnEntry?: boolean;
-    /** Show return values of functions while stepping. */
+    // Show return values of functions while stepping.
     showReturnValue?: boolean;
     args: string[];
     cwd?: string;

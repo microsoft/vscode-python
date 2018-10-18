@@ -4,10 +4,9 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { DebugConfiguration, DebugSessionCustomEvent } from 'vscode';
+import { DebugConfiguration, DebugSessionCustomEvent, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IDebugService, IWorkspaceService } from '../../../common/application/types';
-import { traceError } from '../../../common/logger';
-// import { swallowExceptions } from '../../../common/utils/decorators';
+import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { ICustomDebugSessionEventHandlers } from './types';
@@ -35,8 +34,7 @@ export class ChildProcessLaunchEventHandler implements ICustomDebugSessionEventH
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) { }
 
-    // @swallowExceptions('Handle child process launch')
-    @traceError('Handle child process launch')
+    @swallowExceptions('Handle child process launch')
     public async handleEvent(event: DebugSessionCustomEvent): Promise<void> {
         if (!event || event.event !== eventName) {
             return;
@@ -49,8 +47,12 @@ export class ChildProcessLaunchEventHandler implements ICustomDebugSessionEventH
             this.appShell.showErrorMessage(`Failed to launch debugger for child process ${data.processId}`).then(noop, noop);
         }
     }
-    protected getRelatedWorkspaceFolder(_data: ChildProcessLaunchData) {
-        return this.workspaceService.workspaceFolders![0];
+    protected getRelatedWorkspaceFolder(data: ChildProcessLaunchData): WorkspaceFolder | undefined {
+        const workspaceFolder = data.rootStartRequest.arguments.workspaceFolder;
+        if (!this.workspaceService.hasWorkspaceFolders || !workspaceFolder) {
+            return;
+        }
+        return this.workspaceService.workspaceFolders!.find(ws => ws.uri.fsPath === workspaceFolder);
     }
     protected getAttachConfiguration(data: ChildProcessLaunchData): AttachRequestArguments & DebugConfiguration {
         // tslint:disable-next-line:no-any
