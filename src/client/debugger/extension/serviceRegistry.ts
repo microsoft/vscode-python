@@ -10,7 +10,7 @@ import { ConfigurationProviderUtils } from './configProviders/configurationProvi
 import { PythonV2DebugConfigurationProvider } from './configProviders/pythonV2Provider';
 import { IConfigurationProviderUtils } from './configProviders/types';
 import { ChildProcessAttachEventHandler } from './hooks/childProcessAttachHandler';
-import { ProcecssTerminationEventHandler } from './hooks/processTerminationHandler';
+import { ProcessTerminationEventHandler } from './hooks/processTerminationHandler';
 import { IDebugSessionEventHandlers } from './hooks/types';
 import { IDebugConfigurationProvider, IDebuggerBanner } from './types';
 
@@ -19,5 +19,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IConfigurationProviderUtils>(IConfigurationProviderUtils, ConfigurationProviderUtils);
     serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner);
     serviceManager.add<IDebugSessionEventHandlers>(IDebugSessionEventHandlers, ChildProcessAttachEventHandler);
-    serviceManager.add<IDebugSessionEventHandlers>(IDebugSessionEventHandlers, ProcecssTerminationEventHandler);
+    serviceManager.add<IDebugSessionEventHandlers>(IDebugSessionEventHandlers, ProcessTerminationEventHandler);
 }

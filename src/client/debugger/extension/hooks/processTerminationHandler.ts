@@ -17,12 +17,12 @@ import { ChildProcessLaunchData, IDebugSessionEventHandlers } from './types';
  * This class is responsible for killing any processes that didn't die after the debugger ends.
  * Child processes belonging to a parent process that is no longer being debugged (via launch) will be killed off.
  * @export
- * @class ProcecssTerminationEventHandler
+ * @class ProcessTerminationEventHandler
  * @implements {IDebugSessionEventHandlers}
  * @implements {Disposable}
  */
 @injectable()
-export class ProcecssTerminationEventHandler implements IDebugSessionEventHandlers, Disposable {
+export class ProcessTerminationEventHandler implements IDebugSessionEventHandlers, Disposable {
     protected parentAndChildProcsToKill = new Map<number, Set<number>>();
     constructor(@inject(IDisposableRegistry) disposables: Disposable[]) {
         disposables.push(this);

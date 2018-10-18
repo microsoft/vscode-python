@@ -35,7 +35,7 @@ interface ICommonDebugArguments {
     // Show return values of functions while stepping.
     showReturnValue?: boolean;
 }
-export interface IKnwonAttachDebugArguments extends ICommonDebugArguments {
+export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     workspaceFolder?: string;
     // An absolute path to local directory with source.
     localRoot?: string;
@@ -66,6 +66,6 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
 }
 
 // tslint:disable-next-line:interface-name
-export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments, IKnwonAttachDebugArguments, DebugConfiguration {
+export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments, IKnownAttachDebugArguments, DebugConfiguration {
     type: typeof DebuggerTypeName;
 }
