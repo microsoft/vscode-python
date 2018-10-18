@@ -30,11 +30,11 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IServiceContainer } from '../../ioc/types';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
+import { sendTelemetryEvent } from '../../telemetry';
 import {
     PYTHON_LANGUAGE_SERVER_ENABLED,
     PYTHON_LANGUAGE_SERVER_ERROR
 } from '../../telemetry/constants';
-import { getTelemetryReporter } from '../../telemetry/telemetry';
 import { IUnitTestManagementService } from '../../unittests/types';
 import { LanguageServerDownloader } from '../downloader';
 import { InterpreterData, InterpreterDataService } from '../interpreterDataService';
@@ -144,8 +144,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
     private async startLanguageServer(clientOptions: LanguageClientOptions): Promise<boolean> {
         // Determine if we are running MSIL/Universal via dotnet or self-contained app.
-        const reporter = getTelemetryReporter();
-        reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ENABLED);
+        sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ENABLED);
 
         const settings = this.configuration.getSettings();
         if (!settings.downloadLanguageServer) {
@@ -168,7 +167,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             return true;
         } catch (ex) {
             this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
-            reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, { error: 'Failed to start (platform)' });
+            sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to start (platform)' });
             return false;
         }
     }

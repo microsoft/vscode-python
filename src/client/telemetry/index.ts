@@ -1,17 +1,39 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isTestExecution } from '../common/constants';
+// tslint:disable-next-line:no-reference
+/// <reference path="./vscode-extension-telemetry.d.ts" />
+import { extensions } from 'vscode';
+// tslint:disable-next-line:import-name
+import TelemetryReporter from 'vscode-extension-telemetry';
+import { isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { StopWatch } from '../common/utils/stopWatch';
-import { getTelemetryReporter } from './telemetry';
 import { TelemetryProperties } from './types';
 
-export function sendTelemetryEvent(eventName: string, durationMs?: number, properties?: TelemetryProperties) {
+let telemetryReporter: TelemetryReporter;
+function getTelemetryReporter() {
+    if (telemetryReporter) {
+        return telemetryReporter;
+    }
+    const extensionId = PVSC_EXTENSION_ID;
+    // tslint:disable-next-line:no-non-null-assertion
+    const extension = extensions.getExtension(extensionId)!;
+    // tslint:disable-next-line:no-unsafe-any
+    const extensionVersion = extension.packageJSON.version;
+    // tslint:disable-next-line:no-unsafe-any
+    const aiKey = extension.packageJSON.contributes.debuggers[0].aiKey;
+
+    // tslint:disable-next-line:no-require-imports
+    const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
+    return telemetryReporter = new reporter(extensionId, extensionVersion, aiKey);
+}
+
+export function sendTelemetryEvent(eventName: string, durationMs?: { [key: string]: number } | number, properties?: TelemetryProperties) {
     if (isTestExecution()) {
         return;
     }
     const reporter = getTelemetryReporter();
-    const measures = typeof durationMs === 'number' ? { duration: durationMs } : undefined;
+    const measures = typeof durationMs === 'number' ? { duration: durationMs } : (durationMs ? durationMs : undefined);
 
     // tslint:disable-next-line:no-any
     const customProperties: { [key: string]: string } = {};

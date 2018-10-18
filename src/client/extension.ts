@@ -5,6 +5,7 @@ if ((Reflect as any).metadata === undefined) {
     // tslint:disable-next-line:no-require-imports no-var-requires
     require('reflect-metadata');
 }
+const durations: { [key: string]: number } = {};
 import { StopWatch } from './common/utils/stopWatch';
 // Do not move this linne of code (used to measure extension load times).
 const stopWatch = new StopWatch();
@@ -59,10 +60,12 @@ import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/type
 import { TEST_OUTPUT_CHANNEL } from './unittests/common/constants';
 import { registerTypes as unitTestsRegisterTypes } from './unittests/serviceRegistry';
 
+durations.codeLoadingTime = stopWatch.elapsedTime;
 const activationDeferred = createDeferred<void>();
 
 // tslint:disable-next-line:max-func-body-length
 export async function activate(context: ExtensionContext): Promise<IExtensionApi> {
+    durations.startActivateTime = stopWatch.elapsedTime;
     const cont = new Container();
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
@@ -148,6 +151,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     });
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
+    durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
     return { ready: activationDeferred.promise };
@@ -197,7 +201,6 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
         await activatedPromise;
         const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
         const terminalShellType = terminalHelper.identifyTerminalShell(terminalHelper.getTerminalShellPath());
-        const duration = stopWatch.elapsedTime;
         const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
         const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         const [condaVersion, interpreter, interpreters] = await Promise.all([
@@ -214,7 +217,7 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
             .length > 0;
 
         const props = { condaVersion, terminal: terminalShellType, pythonVersion, interpreterType, workspaceFolderCount, hasPython3 };
-        sendTelemetryEvent(EDITOR_LOAD, duration, props);
+        sendTelemetryEvent(EDITOR_LOAD, durations, props);
     } catch (ex) {
         logger.logError('sendStartupTelemetry failed.', ex);
     }
