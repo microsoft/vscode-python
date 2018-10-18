@@ -21,61 +21,51 @@ export enum DebugOptions {
     ShowReturnValue = 'ShowReturnValue'
 }
 
-// tslint:disable-next-line:interface-name
-interface AdditionalLaunchDebugOptions {
+interface ICommonDebugArguments {
     redirectOutput?: boolean;
     django?: boolean;
     gevent?: boolean;
     jinja?: boolean;
     debugStdLib?: boolean;
+    logToFile?: boolean;
+    debugOptions?: DebugOptions[];
+    multiProcess?: boolean;
+    port?: number;
+    host?: string;
+    // Show return values of functions while stepping.
+    showReturnValue?: boolean;
+}
+export interface IKnwonAttachDebugArguments extends ICommonDebugArguments {
+    workspaceFolder?: string;
+    // An absolute path to local directory with source.
+    localRoot?: string;
+    remoteRoot?: string;
+    pathMappings?: { localRoot: string; remoteRoot: string }[];
+}
+
+export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     sudo?: boolean;
     pyramid?: boolean;
-    stopOnEntry?: boolean;
-    showReturnValue?: boolean;
     workspaceFolder?: string;
-}
-
-// tslint:disable-next-line:interface-name
-interface AdditionalAttachDebugOptions {
-    redirectOutput?: boolean;
-    django?: boolean;
-    gevent?: boolean;
-    jinja?: boolean;
-    debugStdLib?: boolean;
-    workspaceFolder?: string;
-}
-
-// tslint:disable-next-line:interface-name
-export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, AdditionalLaunchDebugOptions, DebugConfiguration {
-    type: typeof DebuggerTypeName;
     // An absolute path to the program to debug.
     module?: string;
     program?: string;
     pythonPath: string;
     // Automatically stop target after launch. If not specified, target does not stop.
     stopOnEntry?: boolean;
-    // Show return values of functions while stepping.
-    showReturnValue?: boolean;
     args: string[];
     cwd?: string;
     debugOptions?: DebugOptions[];
     env?: Object;
     envFile: string;
     console?: 'none' | 'integratedTerminal' | 'externalTerminal';
-    port?: number;
-    host?: string;
-    logToFile?: boolean;
+}
+// tslint:disable-next-line:interface-name
+export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, IKnownLaunchRequestArguments, DebugConfiguration {
+    type: typeof DebuggerTypeName;
 }
 
 // tslint:disable-next-line:interface-name
-export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments, AdditionalAttachDebugOptions, DebugConfiguration {
+export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments, IKnwonAttachDebugArguments, DebugConfiguration {
     type: typeof DebuggerTypeName;
-    // An absolute path to local directory with source.
-    port?: number;
-    host?: string;
-    logToFile?: boolean;
-    debugOptions?: DebugOptions[];
-    localRoot?: string;
-    remoteRoot?: string;
-    pathMappings?: { localRoot: string; remoteRoot: string }[];
 }

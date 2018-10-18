@@ -4,7 +4,7 @@
 'use strict';
 
 import { DebugSession } from 'vscode-debugadapter';
-import { LaunchRequestArguments } from '../../types';
+import { IKnownLaunchRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugLauncherScriptProvider } from '../types';
 import { LocalDebugClient } from './LocalDebugClient';
 
@@ -14,8 +14,16 @@ export class LocalDebugClientV2 extends LocalDebugClient {
     }
     protected buildDebugArguments(cwd: string, debugPort: number): string[] {
         const launcher = this.launcherScriptProvider.getLauncherFilePath();
-        const noDebugArg = this.args.noDebug ? ['--nodebug'] : [];
-        return [launcher, ...noDebugArg, '--host', 'localhost', '--port', debugPort.toString()];
+        const additionalPtvsdArgs: string[] = [];
+        if (this.args.noDebug) {
+            additionalPtvsdArgs.push('--nodebug');
+        }
+        const multiProcessPropety: keyof IKnownLaunchRequestArguments = 'multiProcess';
+        const multiProcess = (this.args as Object).hasOwnProperty(multiProcessPropety) ? this.args.multiProcess : true;
+        if (multiProcess) {
+            additionalPtvsdArgs.push('--multiprocess');
+        }
+        return [launcher, ...additionalPtvsdArgs, '--host', 'localhost', '--port', debugPort.toString()];
     }
     protected buildStandardArguments() {
         const programArgs = Array.isArray(this.args.args) && this.args.args.length > 0 ? this.args.args : [];
