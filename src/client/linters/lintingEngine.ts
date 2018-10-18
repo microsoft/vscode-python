@@ -168,7 +168,7 @@ export class LintingEngine implements ILintingEngine {
         const range = new vscode.Range(position, position);
 
         const severity = lintSeverityToVSSeverity.get(message.severity!)!;
-        const diagnostic = new vscode.Diagnostic(range, `${message.code}:${message.message}`, severity);
+        const diagnostic = new vscode.Diagnostic(range, `${message.message}`, severity);
         diagnostic.code = message.code;
         diagnostic.source = message.provider;
         return diagnostic;
