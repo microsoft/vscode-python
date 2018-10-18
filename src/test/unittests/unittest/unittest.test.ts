@@ -1,16 +1,25 @@
+'use strict';
+
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ConfigurationTarget } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
+import { OSType } from '../../../client/common/utils/platform';
 import { CommandSource } from '../../../client/unittests/common/constants';
 import {
     ITestManagerFactory, TestFile,
     TestFunction, Tests, TestsToRun
 } from '../../../client/unittests/common/types';
-import { rootWorkspaceUri, updateSetting } from '../../common';
+import {
+    rootWorkspaceUri, shouldSkipForOs,
+    shouldSkipForPythonVersion, updateSetting
+} from '../../common';
 import { UnitTestIocContainer } from '../serviceRegistry';
-import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
+import {
+    initialize, initializeTest,
+    IS_MULTI_ROOT_TEST
+} from './../../initialize';
 
 const testFilesPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles');
 const UNITTEST_TEST_FILES_PATH = path.join(testFilesPath, 'standard');
@@ -106,6 +115,15 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     });
 
     test('Ensure correct test count for running a set of tests multiple times', async () => {
+        // This test has not been working for many months in Python 3.4 under
+        // Windows and macOS.Tracked by #2548.
+        if (shouldSkipForOs([OSType.Windows, OSType.OSX])) {
+            if (await shouldSkipForPythonVersion(['3.4'])) {
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
+            }
+        }
+
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri, UNITTEST_COUNTS_TEST_FILE_PATH);

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { CancellationTokenSource } from 'vscode';
@@ -8,12 +10,14 @@ import { PythonSettings } from '../../../client/common/configSettings';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { StdErrError } from '../../../client/common/process/types';
+import { OSType } from '../../../client/common/utils/platform';
+import { shouldSkipForOs, shouldSkipForPythonVersion } from '../../common';
 import { initialize } from './../../initialize';
 
 use(chaiAsPromised);
 
 // tslint:disable-next-line:max-func-body-length
-suite('ProcessService', () => {
+suite('ProcessService Observable', () => {
     let pythonPath: string;
     suiteSetup(() => {
         pythonPath = PythonSettings.getInstance().pythonPath;
@@ -33,6 +37,13 @@ suite('ProcessService', () => {
     });
 
     test('exec should output print unicode characters', async () => {
+        // This test has not been working for many months in Python 2.7 under
+        // Windows. Tracked by #2546.
+        if (shouldSkipForOs([OSType.Windows]) && await shouldSkipForPythonVersion(['2.7'])) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        }
+
         const procService = new ProcessService(new BufferDecoder());
         const printOutput = 'öä';
         const result = await procService.exec(pythonPath, ['-c', `print("${printOutput}")`]);

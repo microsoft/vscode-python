@@ -1,8 +1,14 @@
+'use strict';
+
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
+import { BufferDecoder } from '../client/common/process/decoder';
+import { ProcessService } from '../client/common/process/proc';
+import { IProcessService } from '../client/common/process/types';
+import { getOSType, OSType } from '../client/common/utils/platform';
 import { IS_MULTI_ROOT_TEST } from './initialize';
 export { sleep } from './core';
 
@@ -127,4 +133,60 @@ function getPythonPath(): string {
         return process.env.CI_PYTHON_PATH;
     }
     return 'python';
+}
+
+/**
+ * Determine if a test should be skipped based on the current OS.
+ *
+ * @param {skipForOses} OSType List of operating system Ids that should be skipped.
+ * @return true if the current OS matches one from the skip list, false otherwise.
+ */
+export function shouldSkipForOs(skipForOses: OSType[]): boolean {
+    // get current OS
+    const currentOS: OSType = getOSType();
+    // compare and return
+    if (skipForOses.indexOf(currentOS) === -1) {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Get the current Python interpreter version.
+ *
+ * @param {procService} IProcessService Optionally specify the IProcessService implementation to use to execute with.
+ * @return `"MAJOR.MINOR"` version of the Python interpreter, "0" if an error occurs.
+ */
+export async function getPythonVersionString(procService?: IProcessService): Promise<string> {
+    const pythonProcRunner = procService ? procService : new ProcessService(new BufferDecoder());
+    const pyVerArgs = ['-c', 'import sys;print("{0}.{1}".format(*sys.version_info[:2]))'];
+
+    return pythonProcRunner.exec(PYTHON_PATH, pyVerArgs)
+        .then((result) => result.stdout.trim())
+        .catch((err) => {
+            // if the call fails this should make it loudly apparent.
+            // tslint:disable-next-line:no-console
+            console.log(`[ERROR] shouldSkipForPythonVersion: ${err}`);
+            return '0';
+        });
+}
+
+/**
+ * Determine if a test should be skipped based on the Python version.
+ *
+ * @param {skipForVersions} string[] List of major.minor version of python that are to be skipped.
+ * @param {resource} vscode.Uri Current workspace resource Uri or undefined.
+ * @return true if the current Python version matches a version in the skip list, false otherwise.
+ */
+export async function shouldSkipForPythonVersion(skipForVersions: string[], procService?: IProcessService): Promise<boolean> {
+    // get the current python version major/minor
+    const currentPyVersion = await getPythonVersionString(procService);
+
+    // see if the major/minor version matches any member of the skip-list.
+    const isPresent = skipForVersions.findIndex((ver: string) => ver === currentPyVersion);
+
+    if (isPresent) {
+        return true;
+    }
+    return false;
 }

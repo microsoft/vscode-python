@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { execFile } from 'child_process';
@@ -18,14 +20,26 @@ import { IFileSystem, IPlatformService } from '../../../client/common/platform/t
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
 import { IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
-import { IConfigurationService, ICurrentProcess, IDisposableRegistry, IPathUtils, IsWindows } from '../../../client/common/types';
+import {
+    IConfigurationService, ICurrentProcess,
+    IDisposableRegistry, IPathUtils, IsWindows
+} from '../../../client/common/types';
 import { IS_WINDOWS } from '../../../client/common/util';
-import { registerTypes as variablesRegisterTypes } from '../../../client/common/variables/serviceRegistry';
+import { OSType } from '../../../client/common/utils/platform';
+import {
+    registerTypes as variablesRegisterTypes
+} from '../../../client/common/variables/serviceRegistry';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { clearPythonPathInWorkspaceFolder } from '../../common';
-import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
+import {
+    clearPythonPathInWorkspaceFolder, shouldSkipForOs,
+    shouldSkipForPythonVersion
+} from '../../common';
+import {
+    closeActiveWindows, initialize, initializeTest,
+    IS_MULTI_ROOT_TEST
+} from './../../initialize';
 
 use(chaiAsPromised);
 
@@ -91,6 +105,15 @@ suite('PythonExecutableService', () => {
     });
 
     test('Importing with a valid PYTHONPATH from .env file should succeed', async () => {
+        // This test has not been working for many months in Python 2.7 under
+        // Windows. Tracked by #2547.
+        if (shouldSkipForOs([OSType.Windows])) {
+            if (await shouldSkipForPythonVersion(['2.7'])) {
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
+            }
+        }
+
         await configService.updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], { cwd: path.dirname(workspace4PyFile.fsPath), throwOnStdErr: true });

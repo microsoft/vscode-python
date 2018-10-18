@@ -1,10 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { Uri } from 'vscode';
-import { IPythonExecutionFactory } from '../../client/common/process/types';
+import { IProcessServiceFactory } from '../../client/common/process/types';
 import { IServiceContainer } from '../../client/ioc/types';
-import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/unittests/common/constants';
+import {
+    NOSETEST_PROVIDER, PYTEST_PROVIDER,
+    UNITTEST_PROVIDER
+} from '../../client/unittests/common/constants';
 import { TestCollectionStorageService } from '../../client/unittests/common/services/storageService';
 import { TestManagerService } from '../../client/unittests/common/services/testManagerService';
 import { TestResultsService } from '../../client/unittests/common/services/testResultsService';
@@ -12,11 +17,12 @@ import { TestsHelper } from '../../client/unittests/common/testUtils';
 import { TestFlatteningVisitor } from '../../client/unittests/common/testVisitors/flatteningVisitor';
 import { TestFolderGenerationVisitor } from '../../client/unittests/common/testVisitors/folderGenerationVisitor';
 import { TestResultResetVisitor } from '../../client/unittests/common/testVisitors/resultResetVisitor';
-import { ITestResultsService, ITestsHelper, ITestsParser,
-    ITestVisitor, IUnitTestSocketServer,
-    PythonVersionInformation, TestProvider } from '../../client/unittests/common/types';
-// tslint:disable-next-line:no-duplicate-imports
-import { ITestCollectionStorageService, ITestDiscoveryService, ITestManager, ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory } from '../../client/unittests/common/types';
+import {
+    ITestCollectionStorageService, ITestDiscoveryService, ITestManager,
+    ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory,
+    ITestResultsService, ITestsHelper, ITestsParser, ITestVisitor,
+    IUnitTestSocketServer, PythonVersionInformation, TestProvider
+} from '../../client/unittests/common/types';
 import { TestManager as NoseTestManager } from '../../client/unittests/nosetest/main';
 import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/unittests/nosetest/services/discoveryService';
 import { TestsParser as NoseTestTestsParser } from '../../client/unittests/nosetest/services/parserService';
@@ -26,6 +32,7 @@ import { TestsParser as PytestTestsParser } from '../../client/unittests/pytest/
 import { TestManager as UnitTestTestManager } from '../../client/unittests/unittest/main';
 import { TestDiscoveryService as UnitTestTestDiscoveryService } from '../../client/unittests/unittest/services/discoveryService';
 import { TestsParser as UnitTestTestsParser } from '../../client/unittests/unittest/services/parserService';
+import { getPythonVersionString } from '../common';
 import { IocContainer } from '../serviceRegistry';
 import { MockUnitTestSocketServer } from './mocks';
 
@@ -33,30 +40,28 @@ export class UnitTestIocContainer extends IocContainer {
     constructor() {
         super();
     }
-    public getPythonMajorVersion(resource: Uri) {
-        return this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource })
-            .then(pythonProcess => pythonProcess.exec(['-c', 'import sys;print(sys.version_info[0])'], {}))
-            .then(output => parseInt(output.stdout.trim(), 10));
+    public getPythonMajorVersion(resource: Uri): Promise<number> {
+        return this.getPythonMajorMinorVersion(resource)
+            .then(versionInfo => versionInfo.major);
     }
 
     public getPythonMajorMinorVersionString(resource: Uri): Promise<string> {
-        return this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource })
-            .then(pythonProcess => pythonProcess.exec(['-c', 'import sys;print("{0}.{1}".format(*sys.version_info[:2]))'], {}))
-            .then(output => output.stdout.trim());
+        return this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(resource)
+            .then(async (procService) => getPythonVersionString(procService));
     }
 
     public getPythonMajorMinorVersion(resource: Uri): Promise<PythonVersionInformation> {
-        return this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource })
-            .then(pythonProcess => pythonProcess.exec(['-c', 'import sys;print("{0}|{1}".format(*sys.version_info[:2]))'], {}))
+        return this.getPythonMajorMinorVersionString(resource)
             .then(output => {
-                const versionString: string = output.stdout.trim();
-                const versionInfo: string[] = versionString.split('|');
+                const versionString: string = output.trim();
+                const versionInfo: string[] = versionString.split('.');
                 return {
                     major: parseInt(versionInfo[0].trim(), 10),
                     minor: parseInt(versionInfo[1].trim(), 10)
                 };
             });
     }
+
     public registerTestVisitors() {
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestFlatteningVisitor, 'TestFlatteningVisitor');
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestFolderGenerationVisitor, 'TestFolderGenerationVisitor');
