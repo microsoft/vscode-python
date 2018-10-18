@@ -1,5 +1,22 @@
 # Changelog
 
+## 2018.9.1 (18 Oct 2018)
+
+### Fixes
+
+1. Disable activation of conda environments in PowerShell.
+   ([#2732](https://github.com/Microsoft/vscode-python/issues/2732))
+1. Add logging along with some some improvements to the load times of the extension.
+   ([#2827](https://github.com/Microsoft/vscode-python/issues/2827))
+1. Stop `normalizationForInterpreter.py` script from returning CRCRLF line-endings.
+   ([#2857](https://github.com/Microsoft/vscode-python/issues/2857))
+
+### Code Health
+
+1. Add ability to publish extension builds from `release` branches into the blob store.
+   ([#2874](https://github.com/Microsoft/vscode-python/issues/2874))
+
+
 ## 2018.9.0 (9 Oct 2018)
 
 ### Thanks
