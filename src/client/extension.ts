@@ -199,7 +199,7 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
 
     const handlers = serviceManager.getAll<IDebugSessionEventHandlers>(IDebugSessionEventHandlers);
     const disposables = serviceManager.get<IDisposableRegistry>(IDisposableRegistry);
-    const dispatcher = new CustomDebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
+    const dispatcher = new DebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
     dispatcher.registerEventHandlers();
 }
 
