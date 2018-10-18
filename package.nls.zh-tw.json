@@ -45,5 +45,8 @@
     "python.snippet.launch.attach.label": "Python：附加",
     "python.snippet.launch.attach.description": "附加遠端偵錯工具",
     "python.snippet.launch.scrapy.label": "Python：Scrapy 程式",
-    "python.snippet.launch.scrapy.description": "使用整合終端機執行 Scrapy"
+    "python.snippet.launch.scrapy.description": "使用整合終端機執行 Scrapy",
+    "python.command.python.discoverTests.title": "探索 Unit 測試項目",
+    "python.snippet.launch.gevent.label": "Python: Gevent",
+    "python.snippet.launch.gevent.description": "偵錯 Gevent 應用程式"
 }

@@ -165,6 +165,9 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.languageClient = this.createSelfContainedLanguageClient(serverModule, clientOptions);
         try {
             await this.startLanguageClient();
+            this.languageClient.onTelemetry(data => {
+                reporter.sendTelemetryEvent('Microsoft Python Language Server', { data });
+            });
             return true;
         } catch (ex) {
             this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);

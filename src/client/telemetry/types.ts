@@ -17,6 +17,7 @@ export type FormatTelemetry = {
 
 export type LanguageServerTelemetry = {
     success: boolean;
+    lsVersion?: string;
 };
 
 export type LinterTrigger = 'auto' | 'save';
@@ -30,7 +31,7 @@ export type LintingTelemetry = {
 export type PythonInterpreterTelemetry = {
     trigger: 'ui' | 'shebang' | 'load';
     failed: boolean;
-    version?: string;
+    pyVersion?: string;
     pipVersion?: string;
 };
 export type CodeExecutionTelemetry = {

@@ -4,31 +4,33 @@
 'use strict';
 
 import { Terminal, Uri } from 'vscode';
-import { sleep } from '../../utils/async';
+import { createDeferred, sleep } from '../../utils/async';
 import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../types';
 
 export class BaseTerminalActivator implements ITerminalActivator {
-    private readonly activatedTerminals: Set<Terminal> = new Set<Terminal>();
+    private readonly activatedTerminals: Map<Terminal, Promise<boolean>> = new Map<Terminal, Promise<boolean>>();
     constructor(private readonly helper: ITerminalHelper) { }
     public async activateEnvironmentInTerminal(terminal: Terminal, resource: Uri | undefined, preserveFocus: boolean = true) {
         if (this.activatedTerminals.has(terminal)) {
-            return false;
+            return this.activatedTerminals.get(terminal)!;
         }
-        this.activatedTerminals.add(terminal);
+        const deferred = createDeferred<boolean>();
+        this.activatedTerminals.set(terminal, deferred.promise);
         const shellPath = this.helper.getTerminalShellPath();
         const terminalShellType = !shellPath || shellPath.length === 0 ? TerminalShellType.other : this.helper.identifyTerminalShell(shellPath);
 
         const activationCommamnds = await this.helper.getEnvironmentActivationCommands(terminalShellType, resource);
+        let activated = false;
         if (activationCommamnds) {
             for (const command of activationCommamnds!) {
                 terminal.show(preserveFocus);
                 terminal.sendText(command);
                 await this.waitForCommandToProcess(terminalShellType);
+                activated = true;
             }
-            return true;
-        } else {
-            return false;
         }
+        deferred.resolve(activated);
+        return activated;
     }
     protected async waitForCommandToProcess(shell: TerminalShellType) {
         // Give the command some time to complete.
