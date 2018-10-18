@@ -54,7 +54,7 @@ export type ExecutionFactoryCreationOptions = {
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
 }
-export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final';
+export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
 // tslint:disable-next-line:interface-name
 export type PythonVersionInfo = [number, number, number, ReleaseLevel];
 export type InterpreterInfomation = {
