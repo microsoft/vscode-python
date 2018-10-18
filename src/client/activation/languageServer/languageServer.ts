@@ -232,8 +232,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             properties['InterpreterPath'] = interpreterData.path;
             // tslint:disable-next-line:no-string-literal
             properties['Version'] = interpreterData.version;
-            // tslint:disable-next-line:no-string-literal
-            properties['PrefixPath'] = interpreterData.prefix;
         }
 
         // tslint:disable-next-line:no-string-literal
