@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-multiline-string no-trailing-whitespace max-func-body-length no-any
+'use strict';
 
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
@@ -16,14 +16,16 @@ import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { OSType } from '../../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
-import { PYTHON_PATH } from '../../common';
+import { PYTHON_PATH, shouldSkipForOs, shouldSkipForPythonVersion } from '../../common';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
 
+// tslint:disable-next-line:max-func-body-length
 suite('Terminal - Code Execution Helper', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let applicationShell: TypeMoq.IMock<IApplicationShell>;
@@ -41,6 +43,7 @@ suite('Terminal - Code Execution Helper', () => {
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         pythonSettings.setup(p => p.pythonPath).returns(() => PYTHON_PATH);
+        // tslint:disable-next-line:no-any
         processService.setup((x: any) => x.then).returns(() => undefined);
         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         envVariablesProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
@@ -56,9 +59,6 @@ suite('Terminal - Code Execution Helper', () => {
         document = TypeMoq.Mock.ofType<TextDocument>();
         editor = TypeMoq.Mock.ofType<TextEditor>();
         editor.setup(e => e.document).returns(() => document.object);
-
-        // tslint:disable-next-line:no-invalid-this
-        // this.skip();
     });
 
     async function ensureBlankLinesAreRemoved(source: string, expectedSource: string) {
@@ -72,7 +72,16 @@ suite('Terminal - Code Execution Helper', () => {
         expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join(EOL);
         expect(normalizedZCode).to.be.equal(expectedSource);
     }
-    test('Ensure blank lines are NOT removed when code is not indented (simple)', async () => {
+    test('Ensure blank lines are NOT removed when code is not indented (simple)', async function () {
+        // This test has not been working for many months in Python 2.7 under
+        // Windows.Tracked by #2544.
+        if (shouldSkipForOs([OSType.Windows])) {
+            if (await shouldSkipForPythonVersion(['2.7'])) {
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
+            }
+        }
+
         const code = ['import sys', '', '', '', 'print(sys.executable)', '', 'print("1234")', '', '', 'print(1)', 'print(2)'];
         const expectedCode = code.filter(line => line.trim().length > 0).join(EOL);
         await ensureBlankLinesAreRemoved(code.join(EOL), expectedCode);
@@ -89,17 +98,44 @@ suite('Terminal - Code Execution Helper', () => {
         expect(doubleCrIndex).to.be.equal(-1, 'Double CR (CRCRLF) line endings detected in normalized code snippet.');
     });
     ['', '1', '2', '3', '4', '5', '6', '7'].forEach(fileNameSuffix => {
-        test(`Ensure blank lines are removed (Sample${fileNameSuffix})`, async () => {
+        test(`Ensure blank lines are removed (Sample${fileNameSuffix})`, async function () {
+            // This test has not been working for many months in Python 2.7 under
+            // Windows.Tracked by #2544.
+            if (shouldSkipForOs([OSType.Windows])) {
+                if (await shouldSkipForPythonVersion(['2.7'])) {
+                    // tslint:disable-next-line:no-invalid-this
+                    return this.skip();
+                }
+            }
+
             const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
             const expectedCode = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`), 'utf8');
             await ensureBlankLinesAreRemoved(code, expectedCode);
         });
-        test(`Ensure last two blank lines are preserved (Sample${fileNameSuffix})`, async () => {
+        test(`Ensure last two blank lines are preserved (Sample${fileNameSuffix})`, async function () {
+            // This test has not been working for many months in Python 2.7 under
+            // Windows.Tracked by #2544.
+            if (shouldSkipForOs([OSType.Windows])) {
+                if (await shouldSkipForPythonVersion(['2.7'])) {
+                    // tslint:disable-next-line:no-invalid-this
+                    return this.skip();
+                }
+            }
+
             const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
             const expectedCode = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`), 'utf8');
             await ensureBlankLinesAreRemoved(code + EOL, expectedCode + EOL);
         });
-        test(`Ensure last two blank lines are preserved even if we have more than 2 trailing blank lines (Sample${fileNameSuffix})`, async () => {
+        test(`Ensure last two blank lines are preserved even if we have more than 2 trailing blank lines (Sample${fileNameSuffix})`, async function () {
+            // This test has not been working for many months in Python 2.7 under
+            // Windows.Tracked by #2544.
+            if (shouldSkipForOs([OSType.Windows])) {
+                if (await shouldSkipForPythonVersion(['2.7'])) {
+                    // tslint:disable-next-line:no-invalid-this
+                    return this.skip();
+                }
+            }
+
             const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
             const expectedCode = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`), 'utf8');
             await ensureBlankLinesAreRemoved(code + EOL + EOL + EOL + EOL, expectedCode + EOL);

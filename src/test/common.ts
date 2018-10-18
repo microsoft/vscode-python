@@ -185,7 +185,7 @@ export async function shouldSkipForPythonVersion(skipForVersions: string[], proc
     // see if the major/minor version matches any member of the skip-list.
     const isPresent = skipForVersions.findIndex((ver: string) => ver === currentPyVersion);
 
-    if (isPresent) {
+    if (isPresent >= 0) {
         return true;
     }
     return false;
