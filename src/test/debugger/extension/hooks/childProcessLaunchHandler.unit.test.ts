@@ -12,7 +12,7 @@ import { ApplicationShell } from '../../../../client/common/application/applicat
 import { DebugService } from '../../../../client/common/application/debugService';
 import { IApplicationShell, IDebugService, IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
-import { ChildProcessLaunchEventHandler } from '../../../../client/debugger/extension/hooks/childProcessLaunchHandler';
+import { ChildProcessAttachEventHandler } from '../../../../client/debugger/extension/hooks/childProcessAttachHandler';
 
 const ptvsdEventName = 'ptvsd_subprocess';
 
@@ -22,8 +22,8 @@ suite('Debugx - Debug Child Process', () => {
         const shell = mock(ApplicationShell);
         const debugMgr = mock(DebugService);
         const workspace = mock(WorkspaceService);
-        const handler = new ChildProcessLaunchEventHandler(instance(shell), instance(debugMgr), instance(workspace));
-        await handler.handleEvent({ event: ptvsdEventName, session: {} as any });
+        const handler = new ChildProcessAttachEventHandler(instance(shell), instance(debugMgr), instance(workspace));
+        await handler.handleCustomEvent({ event: ptvsdEventName, session: {} as any });
     });
 
     test('Debugger is launched when data is valid', async () => {
@@ -43,7 +43,7 @@ suite('Debugx - Debug Child Process', () => {
             .returns(() => Promise.resolve(true))
             .verifiable(typemoq.Times.once());
 
-        const handler = new ChildProcessLaunchEventHandler(shell.object, debugMgr.object, workspace.object);
+        const handler = new ChildProcessAttachEventHandler(shell.object, debugMgr.object, workspace.object);
         const session: DebugSession = {} as any;
         const body = {
             rootProcessId: 1,
@@ -62,7 +62,7 @@ suite('Debugx - Debug Child Process', () => {
             port: 1234
         };
 
-        await handler.handleEvent({ event: ptvsdEventName, session, body });
+        await handler.handleCustomEvent({ event: ptvsdEventName, session, body });
 
         workspace.verifyAll();
         debugMgr.verifyAll();
@@ -87,7 +87,7 @@ suite('Debugx - Debug Child Process', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
 
-        const handler = new ChildProcessLaunchEventHandler(shell.object, debugMgr.object, workspace.object);
+        const handler = new ChildProcessAttachEventHandler(shell.object, debugMgr.object, workspace.object);
         const session: DebugSession = {} as any;
         const body = {
             rootProcessId: 1,
@@ -106,7 +106,7 @@ suite('Debugx - Debug Child Process', () => {
             port: 1234
         };
 
-        await handler.handleEvent({ event: ptvsdEventName, session, body });
+        await handler.handleCustomEvent({ event: ptvsdEventName, session, body });
 
         debugMgr.verifyAll();
         shell.verifyAll();

@@ -8,35 +8,26 @@ import { DebugConfiguration, DebugSessionCustomEvent, WorkspaceFolder } from 'vs
 import { IApplicationShell, IDebugService, IWorkspaceService } from '../../../common/application/types';
 import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
-import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
-import { ICustomDebugSessionEventHandlers } from './types';
+import { AttachRequestArguments } from '../../types';
+import { ChildProcessLaunched } from './constants';
+import { ChildProcessLaunchData, IDebugSessionEventHandlers } from './types';
 
-const eventName = 'ptvsd_subprocess';
-
-type ChildProcessLaunchData = {
-    rootProcessId: number;
-    initialProcessId: number;
-    rootStartRequest: {
-        // tslint:disable-next-line:no-banned-terms
-        arguments: LaunchRequestArguments | AttachRequestArguments;
-        command: 'attach' | 'request';
-        seq: number;
-        type: string;
-    };
-    parentProcessId: number;
-    processId: number;
-    port: number;
-};
-
+/**
+ * This class is responsible for automatically attaching the debugger to any
+ * child processes launched. I.e. this is the classs responsible for multi-proc debugging.
+ * @export
+ * @class ChildProcessAttachEventHandler
+ * @implements {IDebugSessionEventHandlers}
+ */
 @injectable()
-export class ChildProcessLaunchEventHandler implements ICustomDebugSessionEventHandlers {
+export class ChildProcessAttachEventHandler implements IDebugSessionEventHandlers {
     constructor(@inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) { }
 
     @swallowExceptions('Handle child process launch')
-    public async handleEvent(event: DebugSessionCustomEvent): Promise<void> {
-        if (!event || event.event !== eventName) {
+    public async handleCustomEvent(event: DebugSessionCustomEvent): Promise<void> {
+        if (!event || event.event !== ChildProcessLaunched) {
             return;
         }
         const data = event.body! as ChildProcessLaunchData;
@@ -55,12 +46,11 @@ export class ChildProcessLaunchEventHandler implements ICustomDebugSessionEventH
         return this.workspaceService.workspaceFolders!.find(ws => ws.uri.fsPath === workspaceFolder);
     }
     protected getAttachConfiguration(data: ChildProcessLaunchData): AttachRequestArguments & DebugConfiguration {
+        const args = data.rootStartRequest.arguments;
         // tslint:disable-next-line:no-any
-        const config = JSON.parse(JSON.stringify(data.rootStartRequest.arguments)) as any as (AttachRequestArguments & DebugConfiguration);
+        const config = JSON.parse(JSON.stringify(args)) as any as (AttachRequestArguments & DebugConfiguration);
 
-        if (data.rootStartRequest.arguments.request === 'attach') {
-            config.host = data.rootStartRequest.arguments.host!;
-        }
+        config.host = args.request === 'attach' ? args.host! : 'localhost';
         config.port = data.port;
         config.name = `Child Process ${data.processId}`;
         config.request = 'attach';

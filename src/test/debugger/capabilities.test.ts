@@ -89,7 +89,7 @@ suite('Debugging - Capabilities', function () {
         const port = await getFreePort({ host, port: 3000 });
         const env = { ...process.env };
         env.PYTHONPATH = PTVSD_PATH;
-        proc = spawn(PYTHON_PATH, ['-m', 'ptvsd', '--server', '--wait', '--port', `${port}`, '--file', fileToDebug], { cwd: path.dirname(fileToDebug), env });
+        proc = spawn(PYTHON_PATH, ['-m', 'ptvsd', '--host', 'localhost', '--wait', '--port', `${port}`, '--file', fileToDebug], { cwd: path.dirname(fileToDebug), env });
         await sleep(3000);
 
         const connected = createDeferred();
