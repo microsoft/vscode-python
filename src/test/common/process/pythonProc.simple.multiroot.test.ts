@@ -104,7 +104,7 @@ suite('PythonExecutableService', () => {
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
     });
 
-    test('Importing with a valid PYTHONPATH from .env file should succeed', async () => {
+    test('Importing with a valid PYTHONPATH from .env file should succeed', async function () {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2547.
         if (shouldSkipForOs([OSType.Windows])) {

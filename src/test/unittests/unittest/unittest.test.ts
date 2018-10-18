@@ -114,7 +114,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(testRunResult.summary.skipped, 0, `Expected to have skipped 0 tests during this test-run. Instead, ${testRunResult.summary.skipped} where skipped.`);
     });
 
-    test('Ensure correct test count for running a set of tests multiple times', async () => {
+    test('Ensure correct test count for running a set of tests multiple times', async function () {
         // This test has not been working for many months in Python 3.4 under
         // Windows and macOS.Tracked by #2548.
         if (shouldSkipForOs([OSType.Windows, OSType.OSX])) {
@@ -147,7 +147,16 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(testRunResult.summary.passed, 2, 'This test was written assuming there was 2 tests run that would succeed. (iteration 2)');
     });
 
-    test('Re-run failed tests results in the correct number of tests counted', async () => {
+    test('Re-run failed tests results in the correct number of tests counted', async function () {
+        // This test has not been working for many months in Python 3.4 under
+        // Windows and macOS.Tracked by #2548.
+        if (shouldSkipForOs([OSType.Windows, OSType.OSX])) {
+            if (await shouldSkipForPythonVersion(['3.4'])) {
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
+            }
+        }
+
         await updateSetting('unitTest.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri, UNITTEST_COUNTS_TEST_FILE_PATH);

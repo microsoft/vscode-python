@@ -36,7 +36,7 @@ suite('ProcessService Observable', () => {
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
-    test('exec should output print unicode characters', async () => {
+    test('exec should output print unicode characters', async function () {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2546.
         if (shouldSkipForOs([OSType.Windows]) && await shouldSkipForPythonVersion(['2.7'])) {
