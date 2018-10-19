@@ -34,6 +34,8 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
 
+const isCI = process.env.TRAVIS === 'true';
+const noop = function () { };
 /**
 * Hygiene works by creating cascading subsets of all our files and
 * passing them through a sequence of checks. Here are the current subsets,
@@ -423,7 +425,9 @@ function exitHandler(options, ex) {
 * @param {runOptions} options
 */
 function run(options, done) {
+    done = done || noop;
     options = options ? options : {};
+    options.exitOnError ? options.exitOnError : isCI;
     process.once('unhandledRejection', (reason, p) => {
         console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
         exitHandler(options);
@@ -447,11 +451,8 @@ function getAddedFilesSync() {
 }
 function getModifiedFilesSync() {
     if (process.env.TRAVIS) {
-<<<<<<< HEAD
         // If on travis, get a list of modified files comparing either against
         // target (assumed 'upstream') PR branch or master of current (assumed 'origin') repo.
-=======
->>>>>>> 5a4d3454be4d85cb8c396a5e06bc7be1e9a7e777
         const isPR = process.env.TRAVIS_PULL_REQUEST === 'true';
         const originOrUpstream = isPR ? 'upstream' : 'origin';
         cp.execSync(`git remote set-branches --add ${originOrUpstream} master`, { encoding: 'utf8', cwd: __dirname });
