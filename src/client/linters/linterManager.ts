@@ -5,12 +5,13 @@
 
 import { inject, injectable } from 'inversify';
 import {
-    CancellationToken, MessageItem, OutputChannel,
+    CancellationToken, OutputChannel,
     TextDocument, Uri
 } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { LinterInstaller } from '../common/installer/productInstaller';
+import { error as traceError } from '../common/logger';
 import {
     IConfigurationService, ILogger,
     IOutputChannel, Product
@@ -25,7 +26,10 @@ import { Prospector } from './prospector';
 import { PyDocStyle } from './pydocstyle';
 import { PyLama } from './pylama';
 import { Pylint } from './pylint';
-import { ILinter, ILinterInfo, ILinterManager, ILintMessage } from './types';
+import {
+    ILinter, ILinterInfo,
+    ILinterManager, ILintMessage
+} from './types';
 
 class DisabledLinter implements ILinter {
     constructor(private configService: IConfigurationService) { }
@@ -123,14 +127,10 @@ export class LinterManager implements ILinterManager {
     public async notifyUserAndConfigureLinter(linterInfo: ILinterInfo): Promise<boolean> {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
 
-        class ConfigureLinterMessage implements MessageItem {
-            public enabled: boolean;
-            public title: string;
-            constructor() {
-                this.enabled = true;
-                this.title = '';
-            }
-        }
+        type ConfigureLinterMessage = {
+            enabled: boolean;
+            title: string;
+        };
 
         const optButtons: ConfigureLinterMessage[] = [
             {
@@ -152,16 +152,22 @@ export class LinterManager implements ILinterManager {
     }
 
     /**
-     * Check if the linter itself is available in the workspace's Python environment or not.
+     * Check if the linter itself is available in the workspace's Python environment or
+     * not.
      *
-     * @param linterProduct Linter to check for availability in the current workspace environment.
+     * @param linterProduct Linter to check in the current workspace environment.
      * @param resource Context information for workspace.
      */
     public async isLinterAvailable(linterProduct: Product, resource?: Uri): Promise<boolean | undefined> {
         const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const linterInstaller = new LinterInstaller(this.serviceContainer, outputChannel);
 
-        return linterInstaller.isInstalled(linterProduct, resource);
+        return linterInstaller.isInstalled(linterProduct, resource)
+            .catch((reason) => {
+                // report and continue, assume the linter is unavailable.
+                traceError(`[WARNING]: Failed to discover if linter ${linterProduct} is installed.`, reason);
+                return false;
+            });
     }
 
     /**
