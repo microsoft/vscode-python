@@ -186,19 +186,14 @@ export class LinterManager implements ILinterManager {
     }
 
     public async getActiveLinters(checkAvailable: boolean, resource?: Uri): Promise<ILinterInfo[]> {
-        let activeLinters = this.linters.filter(x => x.isEnabled(resource));
-
         if (checkAvailable) {
             // only ask the user if they'd like to enable pylint when it is available... others may follow.
             const pylintInfo = this.linters.find((linter: ILinterInfo) => linter.id === 'pylint');
             if (pylintInfo) {
-                const change = await this.promptUserIfLinterAvailable(pylintInfo, resource);
-                if (change) {
-                    activeLinters = this.linters.filter(x => x.isEnabled(resource));
-                }
+                await this.promptUserIfLinterAvailable(pylintInfo, resource);
             }
         }
-        return activeLinters;
+        return this.linters.filter(x => x.isEnabled(resource));
     }
 
     public async setActiveLintersAsync(products: Product[], resource?: Uri): Promise<void> {
