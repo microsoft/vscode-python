@@ -15,7 +15,7 @@ const methodNames = [
     'appendLine', 'appendLine'
 ];
 
-const failureMessage = 'Messages must be locaclized in the Python Extension';
+const failureMessage = 'Messages must be localized in the Python Extension';
 
 class NoStringLiteralsInMessages extends BaseRuleWalker {
     protected visitCallExpression(node: ts.CallExpression): void {
@@ -36,6 +36,7 @@ class NoStringLiteralsInMessages extends BaseRuleWalker {
 export class Rule extends Lint.Rules.AbstractRule {
     public static FAILURE_STRING = failureMessage;
     public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
+        console.log('wow');
         return this.applyWithWalker(new NoStringLiteralsInMessages(sourceFile, this.getOptions()));
     }
 }

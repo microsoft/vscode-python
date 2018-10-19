@@ -6,9 +6,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-export const ExtensionRootDir = path.join(__dirname, '..', '..');
+export const ExtensionRootDir = path.join(__dirname, '..');
 
-const jsonFileWithListOfOldFiles = path.join(ExtensionRootDir, 'src', 'tools', 'existingFiles.json');
+const jsonFileWithListOfOldFiles = path.join(__dirname, 'existingFiles.json');
 const filesNotToCheck: string[] = [];
 
 export function getListOfExcludedFiles() {

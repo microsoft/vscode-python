@@ -4,8 +4,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const path = require("path");
-exports.ExtensionRootDir = path.join(__dirname, '..', '..');
-const jsonFileWithListOfOldFiles = path.join(exports.ExtensionRootDir, 'src', 'tools', 'existingFiles.json');
+exports.ExtensionRootDir = path.join(__dirname, '..');
+const jsonFileWithListOfOldFiles = path.join(__dirname, 'existingFiles.json');
 const filesNotToCheck = [];
 function getListOfExcludedFiles() {
     if (filesNotToCheck.length === 0) {

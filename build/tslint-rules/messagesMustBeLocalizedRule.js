@@ -12,7 +12,7 @@ const methodNames = [
     // From IOutputChannel (vscode.OutputChannel)
     'appendLine', 'appendLine'
 ];
-const failureMessage = 'Messages must be locaclized in the Python Extension';
+const failureMessage = 'Messages must be localized in the Python Extension';
 class NoStringLiteralsInMessages extends baseRuleWalker_1.BaseRuleWalker {
     visitCallExpression(node) {
         const prop = node.expression;
@@ -30,6 +30,7 @@ class NoStringLiteralsInMessages extends baseRuleWalker_1.BaseRuleWalker {
 }
 class Rule extends Lint.Rules.AbstractRule {
     apply(sourceFile) {
+        console.log('wow');
         return this.applyWithWalker(new NoStringLiteralsInMessages(sourceFile, this.getOptions()));
     }
 }
