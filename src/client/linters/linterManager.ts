@@ -80,10 +80,17 @@ export class LinterManager implements ILinterManager {
         await this.configService.updateSetting(`linting.${this.lintingEnabledSettingName}`, enable, resource);
     }
 
-    /// Check if it is possible to enable an otherwise-unconfigured linter in the current
-    /// workspace, and if so ask the user if they want that linter configured explicitly.
-    /// Return true if a configuration change was made.
-    public async notifyUserOfInstalledLinters(linterInfo: ILinterInfo, resource?: Uri): Promise<boolean> {
+    /**
+     * Check if it is possible to enable an otherwise-unconfigured linter in
+     * the current workspace, and if so ask the user if they want that linter
+     * configured explicitly.
+     *
+     * @param linterInfo The linter to check installation status.
+     * @param resource Context for the operation (required when in multi-root workspaces).
+     *
+     * @returns true if configuration was updated in any way, false otherwise.
+     */
+    public async promptUserIfLinterAvailable(linterInfo: ILinterInfo, resource?: Uri): Promise<boolean> {
         // if we've already checked during this session, don't bother again
         if (!this.checkedForInstalledLinters) {
             this.checkedForInstalledLinters = true;
@@ -97,7 +104,7 @@ export class LinterManager implements ILinterManager {
         }
 
         // Has the linter in question has been configured explicitly? If so, no need to continue.
-        if (!this.isLinterUnset(linterInfo, resource)) {
+        if (!this.isLinterUsingDefaultConfiguration(linterInfo, resource)) {
             return false;
         }
 
@@ -144,8 +151,12 @@ export class LinterManager implements ILinterManager {
         return false;
     }
 
-    /// Check if the linter itself is available in the workspace's Python environment or not.
-    /// Return true if the linter is present.
+    /**
+     * Check if the linter itself is available in the workspace's Python environment or not.
+     *
+     * @param linterProduct Linter to check for availability in the current workspace environment.
+     * @param resource Context information for workspace.
+     */
     public async isLinterAvailable(linterProduct: Product, resource?: Uri): Promise<boolean | undefined> {
         const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const linterInstaller = new LinterInstaller(this.serviceContainer, outputChannel);
@@ -153,9 +164,15 @@ export class LinterManager implements ILinterManager {
         return linterInstaller.isInstalled(linterProduct, resource);
     }
 
-    /// Check if the given linter has been configured by the user in this workspace or not.
-    /// Return true if no explicit setting for the linter has been made.
-    public isLinterUnset(linterInfo: ILinterInfo, resource?: Uri) {
+    /**
+     * Check if the given linter has been configured by the user in this workspace or not.
+     *
+     * @param linterInfo Linter to check for configuration status.
+     * @param resource Context information.
+     *
+     * @returns true if the linter has not been configured at the user, workspace, or workspace-folder scope. false otherwise.
+     */
+    public isLinterUsingDefaultConfiguration(linterInfo: ILinterInfo, resource?: Uri) {
         const workspaceConfig = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const ws = workspaceConfig.getConfiguration('python.linting', resource);
         const pe = ws!.inspect(linterInfo.enabledSettingName);
@@ -169,7 +186,7 @@ export class LinterManager implements ILinterManager {
             // only ask the user if they'd like to enable pylint when it is available... others may follow.
             const pylintInfo = this.linters.find((linter: ILinterInfo) => linter.id === 'pylint');
             if (pylintInfo) {
-                const change = await this.notifyUserOfInstalledLinters(pylintInfo, resource);
+                const change = await this.promptUserIfLinterAvailable(pylintInfo, resource);
                 if (change) {
                     activeLinters = this.linters.filter(x => x.isEnabled(resource));
                 }

@@ -124,6 +124,7 @@ export async function deleteDirectory(dir: string) {
         await fs.remove(dir);
     }
 }
+
 export async function deleteFile(file: string) {
     const exists = await fs.pathExists(file);
     if (exists) {
