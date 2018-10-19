@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es6",
+        "outDir": ".",
+        "lib": [
+            "es6"
+        ],
+        "allowJs": true,
+        "checkJs": true,
+        "sourceMap": false,
+        "rootDir": ".",
+        "removeComments": false,
+        "experimentalDecorators": true,
+        "noImplicitThis": false,
+        "noUnusedLocals": true,
+        "noUnusedParameters": false,
+        "strict": true
+    },
+    "include": [
+        "**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        ".vscode-test",
+        "src"
+    ]
+}

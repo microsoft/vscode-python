@@ -56,16 +56,15 @@ before_install: |
   npm install -g vsce
   npm install -g azure-cli
   export CI_PYTHON_PATH=`which python`
-  echo "One"
-  git diff --name-only
-  echo "One"
-  git --no-pager diff --name-only FETCH_HEAD $(git merge-base FETCH_HEAD $TRAVIS_BRANCH)
 install:
   - python -m pip install --upgrade -r requirements.txt
   - python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
   - npm ci
 
 script:
+  - npm run clean
+  - npm run vscode:prepublish
+  - npx gulp hygiene-modified
   - if [ $DEBUGGER_TEST == "true" ]; then
         npm run clean;
         npm run vscode:prepublish;

@@ -79,66 +79,6 @@ const copyrightHeader = [
 ];
 const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n')];
 
-gulp.task('hygiene-modified', () => gulp.series('compile', run({ mode: 'changes' })));
-
-gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
-
-gulp.task('hygiene', () => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }));
-
-gulp.task('compile', () => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }));
-
-gulp.task('watch', gulp.parallel('hygiene-modified', 'hygiene-watch'));
-
-// Duplicate to allow duplicate task in tasks.json (one ith problem matching, and one without)
-gulp.task('watchProblems', gulp.parallel('hygiene-modified', 'hygiene-watch'));
-
-gulp.task('debugger-coverage', buildDebugAdapterCoverage);
-
-gulp.task('hygiene-all', () => run({ mode: 'all' }));
-
-gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
-
-gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
-
-gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
-
-gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
-
-gulp.task('checkNativeDependencies', (done) => {
-    if (hasNativeDependencies()) {
-        throw new Error('Native dependencies deteced');
-    }
-    done();
-});
-
-gulp.task('cover:enable', () => {
-    return gulp.src("./coverconfig.json")
-        .pipe(jeditor((json) => {
-            json.enabled = true;
-            return json;
-        }))
-        .pipe(gulp.dest("./out", { 'overwrite': true }));
-});
-
-gulp.task('cover:disable', () => {
-    return gulp.src("./coverconfig.json")
-        .pipe(jeditor((json) => {
-            json.enabled = false;
-            return json;
-        }))
-        .pipe(gulp.dest("./out", { 'overwrite': true }));
-});
-
-/**
- * Inline CSS into the coverage report for better visualizations on
- * the VSTS report page for code coverage.
- */
-gulp.task('inlinesource', () => {
-    return gulp.src('./coverage/lcov-report/*.html')
-        .pipe(inlinesource({ attribute: false }))
-        .pipe(gulp.dest('./coverage/lcov-report-inline'));
-});
-
 function hasNativeDependencies() {
     let nativeDependencies = nativeDependencyChecker.check(path.join(__dirname, 'node_modules'));
     if (!Array.isArray(nativeDependencies) || nativeDependencies.length === 0) {
@@ -222,15 +162,15 @@ let reRunCompilation = false;
  * @param {hygieneOptions} options
  * @returns {NodeJS.ReadWriteStream}
  */
-const hygiene = (options) => {
+const hygiene = (options, done) => {
     if (compilationInProgress) {
         reRunCompilation = true;
-        return;
+        return done();
     }
     const fileListToProcess = options.mode === 'compile' ? undefined : getFileListToProcess(options);
     if (Array.isArray(fileListToProcess) && fileListToProcess !== all
         && fileListToProcess.filter(item => item.endsWith('.ts')).length === 0) {
-        return;
+        return done();
     }
 
     const started = new Date().getTime();
@@ -238,7 +178,6 @@ const hygiene = (options) => {
     options = options || {};
     let errorCount = 0;
     const addedFiles = options.skipCopyrightCheck ? [] : getAddedFilesSync();
-    console.log(colors.blue('Hygiene started.'));
     const copyrights = es.through(function (file) {
         if (addedFiles.indexOf(file.path) !== -1) {
             const contents = file.contents.toString('utf8');
@@ -439,9 +378,13 @@ const hygiene = (options) => {
                     hygiene(options);
                 }, 10);
             }
+            done();
             this.emit('end');
         }))
-        .on('error', exitHandler.bind(this, options));
+        .on('error', ex => {
+            exitHandler(options, ex);
+            done();
+        });
 
     return result;
 };
@@ -479,14 +422,14 @@ function exitHandler(options, ex) {
 * Run the linters.
 * @param {runOptions} options
 */
-function run(options) {
+function run(options, done) {
     options = options ? options : {};
     process.once('unhandledRejection', (reason, p) => {
         console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
         exitHandler(options);
     });
 
-    return hygiene(options);
+    hygiene(options, done);
 }
 function getStagedFilesSync() {
     const out = cp.execSync('git diff --cached --name-only', { encoding: 'utf8' });
@@ -503,12 +446,34 @@ function getAddedFilesSync() {
         .map(l => path.join(__dirname, l.substring(2).trim()));
 }
 function getModifiedFilesSync() {
-    const out = cp.execSync('git status -u -s', { encoding: 'utf8' });
-    return out
-        .split(/\r?\n/)
-        .filter(l => !!l)
-        .filter(l => _.intersection(['M', 'A', 'R', 'C', 'U', '?'], l.substring(0, 2).trim().split('')).length > 0)
-        .map(l => path.join(__dirname, l.substring(2).trim()));
+    if (process.env.TRAVIS) {
+<<<<<<< HEAD
+        // If on travis, get a list of modified files comparing either against
+        // target (assumed 'upstream') PR branch or master of current (assumed 'origin') repo.
+=======
+>>>>>>> 5a4d3454be4d85cb8c396a5e06bc7be1e9a7e777
+        const isPR = process.env.TRAVIS_PULL_REQUEST === 'true';
+        const originOrUpstream = isPR ? 'upstream' : 'origin';
+        cp.execSync(`git remote set-branches --add ${originOrUpstream} master`, { encoding: 'utf8', cwd: __dirname });
+        cp.execSync('git fetch', { encoding: 'utf8', cwd: __dirname });
+        const cmd = `git diff --name-only HEAD ${originOrUpstream}/${isPR ? process.env.TRAVIS_BRANCH : 'master'}`;
+        const out = cp.execSync(cmd, { encoding: 'utf8', cwd: __dirname });
+        console.log(cmd);
+        console.log(out);
+        return out
+            .split(/\r?\n/)
+            .filter(l => !!l)
+            .filter(l => l.length > 0)
+            .map(l => l.trim())
+            .map(l => path.join(__dirname, l));
+    } else {
+        const out = cp.execSync('git status -u -s', { encoding: 'utf8' });
+        return out
+            .split(/\r?\n/)
+            .filter(l => !!l)
+            .filter(l => _.intersection(['M', 'A', 'R', 'C', 'U', '?'], l.substring(0, 2).trim().split('')).length > 0)
+            .map(l => path.join(__dirname, l.substring(2).trim()));
+    }
 }
 
 /**
@@ -537,7 +502,68 @@ function getFileListToProcess(options) {
 
     return all;
 }
+
 exports.hygiene = hygiene;
+
+gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
+
+gulp.task('hygiene', (done) => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }, done));
+
+gulp.task('compile', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }, done));
+
+gulp.task('hygiene-modified', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
+
+gulp.task('watch', gulp.parallel('hygiene-modified', 'hygiene-watch'));
+
+// Duplicate to allow duplicate task in tasks.json (one ith problem matching, and one without)
+gulp.task('watchProblems', gulp.parallel('hygiene-modified', 'hygiene-watch'));
+
+gulp.task('debugger-coverage', buildDebugAdapterCoverage);
+
+gulp.task('hygiene-all', (done) => run({ mode: 'all' }, done));
+
+gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
+
+gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
+
+gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
+
+gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
+
+gulp.task('checkNativeDependencies', (done) => {
+    if (hasNativeDependencies()) {
+        throw new Error('Native dependencies deteced');
+    }
+    done();
+});
+
+gulp.task('cover:enable', () => {
+    return gulp.src("./coverconfig.json")
+        .pipe(jeditor((json) => {
+            json.enabled = true;
+            return json;
+        }))
+        .pipe(gulp.dest("./out", { 'overwrite': true }));
+});
+
+gulp.task('cover:disable', () => {
+    return gulp.src("./coverconfig.json")
+        .pipe(jeditor((json) => {
+            json.enabled = false;
+            return json;
+        }))
+        .pipe(gulp.dest("./out", { 'overwrite': true }));
+});
+
+/**
+ * Inline CSS into the coverage report for better visualizations on
+ * the VSTS report page for code coverage.
+ */
+gulp.task('inlinesource', () => {
+    return gulp.src('./coverage/lcov-report/*.html')
+        .pipe(inlinesource({ attribute: false }))
+        .pipe(gulp.dest('./coverage/lcov-report-inline'));
+});
 
 // this allows us to run hygiene as a git pre-commit hook.
 if (require.main === module) {

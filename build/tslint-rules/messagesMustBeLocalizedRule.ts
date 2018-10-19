@@ -5,6 +5,7 @@
 
 import * as Lint from 'tslint';
 import * as ts from 'typescript';
+import { getListOfExcludedFiles } from '../constants';
 
 const methodNames = [
     // From IApplicationShell (vscode.window)
@@ -17,9 +18,12 @@ const methodNames = [
 const failureMessage = 'Messages must be locaclized in the Python Extension';
 
 class NoStringLiteralsInMessages extends Lint.RuleWalker {
+    private readonly filesToIgnore = getListOfExcludedFiles();
     protected visitCallExpression(node: ts.CallExpression): void {
+        const sourceFile = node.getSourceFile();
         const prop = node.expression as ts.PropertyAccessExpression;
-        if (ts.isPropertyAccessExpression(node.expression) &&
+        if (sourceFile && sourceFile.fileName && this.filesToIgnore.indexOf(sourceFile.fileName) === -1 &&
+            ts.isPropertyAccessExpression(node.expression) &&
             methodNames.indexOf(prop.name.text) >= 0) {
             node.arguments
                 .filter(arg => ts.isStringLiteral(arg) || ts.isTemplateLiteral(arg))
