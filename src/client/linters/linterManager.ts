@@ -74,9 +74,9 @@ export class LinterManager implements ILinterManager {
         throw new Error('Invalid linter');
     }
 
-    public async isLintingEnabled(checkAvailable: boolean, resource?: Uri): Promise<boolean> {
+    public async isLintingEnabled(silent: boolean, resource?: Uri): Promise<boolean> {
         const settings = this.configService.getSettings(resource);
-        const activeLintersPresent = await this.getActiveLinters(checkAvailable, resource);
+        const activeLintersPresent = await this.getActiveLinters(silent, resource);
         return (settings.linting[this.lintingEnabledSettingName] as boolean) && activeLintersPresent.length > 0;
     }
 
@@ -185,8 +185,8 @@ export class LinterManager implements ILinterManager {
         return (pe!.globalValue === undefined && pe!.workspaceValue === undefined && pe!.workspaceFolderValue === undefined);
     }
 
-    public async getActiveLinters(checkAvailable: boolean, resource?: Uri): Promise<ILinterInfo[]> {
-        if (checkAvailable) {
+    public async getActiveLinters(silent: boolean, resource?: Uri): Promise<ILinterInfo[]> {
+        if (silent) {
             // only ask the user if they'd like to enable pylint when it is available... others may follow.
             const pylintInfo = this.linters.find((linter: ILinterInfo) => linter.id === 'pylint');
             if (pylintInfo) {
