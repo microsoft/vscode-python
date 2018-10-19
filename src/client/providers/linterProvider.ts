@@ -89,7 +89,7 @@ export class LinterProvider implements Disposable {
             return;
         }
 
-        const linters = await this.linterManager.getActiveLinters(true, document.uri);
+        const linters = await this.linterManager.getActiveLinters(false, document.uri);
         const fileName = path.basename(document.uri.fsPath).toLowerCase();
         const watchers = linters.filter((info) => info.configFileNames.indexOf(fileName) >= 0);
         if (watchers.length > 0) {
