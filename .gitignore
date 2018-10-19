@@ -13,6 +13,7 @@ npm-debug.log
 coverage/
 .vscode-test/**
 .venv*/
+precommit.hook
 pythonFiles/experimental/ptvsd/**
 debug_coverage*/**
 languageServer/**
