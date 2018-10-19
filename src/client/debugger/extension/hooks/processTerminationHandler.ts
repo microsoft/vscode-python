@@ -5,100 +5,61 @@
 
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
-import { DebugSession, DebugSessionCustomEvent, Disposable } from 'vscode';
-import { IDisposableRegistry } from '../../../common/types';
+import { DebugSession, DebugSessionCustomEvent } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
 import { sleep } from '../../../common/utils/async';
 import { swallowExceptions } from '../../../common/utils/decorators';
-import { noop } from '../../../common/utils/misc';
-import { ChildProcessLaunched } from './constants';
-import { ChildProcessLaunchData, IDebugSessionEventHandlers } from './types';
+import { ChildProcessLaunched, ProcessLaunched } from './constants';
+import { ChildProcessLaunchData, IDebugSessionEventHandlers, IProcessTerminationService } from './types';
 
 /**
- * This class is responsible for killing any processes that didn't die after the debugger ends.
- * Child processes belonging to a parent process that is no longer being debugged (via launch) will be killed off.
+ * This class is responsible for handling spawning of new processes for debugging and termination of debugger.
+ * We need to kill off any child processes belonging to the parent process that was debugged via a launch.
  * @export
  * @class ProcessTerminationEventHandler
  * @implements {IDebugSessionEventHandlers}
  * @implements {Disposable}
  */
 @injectable()
-export class ProcessTerminationEventHandler implements IDebugSessionEventHandlers, Disposable {
+export class ProcessTerminationEventHandler implements IDebugSessionEventHandlers {
     protected parentAndChildProcsToKill = new Map<number, Set<number>>();
-    constructor(@inject(IDisposableRegistry) disposables: Disposable[]) {
-        disposables.push(this);
-    }
-    public dispose = () => this.killDeadProccesses();
+    constructor(@inject(IProcessTerminationService) private readonly processTermination: IProcessTerminationService) { }
 
     @swallowExceptions('Track child process for termination')
     public async handleCustomEvent(event: DebugSessionCustomEvent): Promise<void> {
-        if (!event || event.event !== ChildProcessLaunched) {
+        if (!event) {
             return;
         }
-        const data = event.body! as ChildProcessLaunchData;
 
-        // Track the parent process that was launched via debugger and subsequently launched child procs.
-        if (data.initialProcessId && data.initialProcessId === data.parentProcessId &&
-            data.rootStartRequest.arguments.request === 'launch' &&
-            !this.parentAndChildProcsToKill.has(data.initialProcessId)) {
-            const procIds = new Set<number>();
-            procIds.add(data.initialProcessId);
-            procIds.add(data.processId);
-            this.parentAndChildProcsToKill.set(data.initialProcessId, procIds);
-        }
-
-        // Look for a child process that has been launched as a child/grandchild of a parent process
-        // that was launched via debugger locally.
-        if (this.parentAndChildProcsToKill.has(data.initialProcessId)) {
-            this.parentAndChildProcsToKill.get(data.initialProcessId)!.add(data.processId);
-
-            // Keep track of the child processes that need to be killed (if we just detach from child proc).
-            this.parentAndChildProcsToKill.set(data.processId, new Set<number>([data.processId]));
+        switch (event.event) {
+            case ChildProcessLaunched:
+                return this.handleSubProcessLaunch(event.body! as ChildProcessLaunchData);
+            case ProcessLaunched:
+                // tslint:disable-next-line:no-any
+                return this.handleProcessLaunch(event as any as DebugProtocol.ProcessEvent);
+            default:
+                return;
         }
     }
     @swallowExceptions('Terminate debugger processes')
     public async handleTerminateEvent(event: DebugSession): Promise<void> {
         // Wait till all house cleaning to take place.
         await sleep(5000);
-        this.killDeadProccesses();
+        this.processTermination.terminateChildProcesses();
     }
-    protected killDeadProccesses() {
-        // tslint:disable-next-line:no-require-imports
-        const killProcessTree = require('tree-kill');
-
-        const procIds = this.getDeadParentProcessIds();
-        const childProcs = _.flatten(procIds.map(procId => {
-            if (this.parentAndChildProcsToKill.has(procId)) {
-                return Array.from(this.parentAndChildProcsToKill.get(procId)!.values());
-            } else {
-                return [];
-            }
-        }));
-        // Kill the parent and all tracked child processes.
-        [...procIds, ...childProcs].forEach(procId => {
-            try {
-                this.parentAndChildProcsToKill.delete(procId);
-                killProcessTree(procId);
-            } catch {
-                noop();
-            }
-        });
-
-    }
-    protected getDeadParentProcessIds() {
-        const deadProcessIds: number[] = [];
-        for (const procId of this.parentAndChildProcsToKill.keys()) {
-            if (!this.isProcessIdAlive(procId)) {
-                deadProcessIds.push(procId);
-            }
+    protected handleProcessLaunch(event: DebugProtocol.ProcessEvent) {
+        if (event.body.startMethod !== 'launch' || !event.body.systemProcessId) {
+            return;
         }
-        return deadProcessIds;
+
+        this.processTermination.trackProcess(event.body.systemProcessId);
     }
-    protected isProcessIdAlive(pid: number) {
-        try {
-            process.kill(pid, 0);
-            return true;
-        } catch {
-            return false;
+    protected handleSubProcessLaunch(data: ChildProcessLaunchData) {
+        // We need to track root & parent process that is a part of multi-proc `launch` debugging.
+        if (!data.initialProcessId || data.rootStartRequest.arguments.request !== 'launch') {
+            return;
         }
+        this.processTermination.trackProcess(data.processId, data.parentProcessId);
+        this.processTermination.trackProcess(data.processId, data.initialProcessId);
     }
 }

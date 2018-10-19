@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { DebugSession, DebugSessionCustomEvent } from 'vscode';
+import { DebugSession, DebugSessionCustomEvent, Disposable } from 'vscode';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 
 export const IDebugSessionEventHandlers = Symbol('IDebugSessionEventHandlers');
@@ -26,3 +26,14 @@ export type ChildProcessLaunchData = {
     processId: number;
     port: number;
 };
+
+export const IChildProcessAttachService = Symbol('IChildProcessAttachService');
+export interface IChildProcessAttachService {
+    attach(data: ChildProcessLaunchData): Promise<void>;
+}
+
+export const IProcessTerminationService = Symbol('IProcessTerminationService');
+export interface IProcessTerminationService extends Disposable {
+    trackProcess(pid: number, parentOrGrandParentPid?: number): void;
+    terminateChildProcesses(): void;
+}
