@@ -15,6 +15,7 @@ import { SocketStream } from '../../client/common/net/socket/SocketStream';
 import * as net from 'net';
 const uint64be = require("uint64be");
 
+
 class MockSocket {
     constructor() {
         this._data = '';

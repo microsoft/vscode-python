@@ -6,6 +6,9 @@ import { ILogger, LogLevel } from './types';
 
 const PREFIX = 'Python Extension: ';
 
+export interface ITest {
+    
+}
 @injectable()
 export class Logger implements ILogger {
     // tslint:disable-next-line:no-any
