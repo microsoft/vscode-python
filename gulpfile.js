@@ -81,6 +81,67 @@ const copyrightHeader = [
 ];
 const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n')];
 
+
+gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
+
+gulp.task('hygiene', (done) => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }, done));
+
+gulp.task('compile', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }, done));
+
+gulp.task('hygiene-modified', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
+
+gulp.task('watch', gulp.parallel('hygiene-modified', 'hygiene-watch'));
+
+// Duplicate to allow duplicate task in tasks.json (one ith problem matching, and one without)
+gulp.task('watchProblems', gulp.parallel('hygiene-modified', 'hygiene-watch'));
+
+gulp.task('debugger-coverage', buildDebugAdapterCoverage);
+
+gulp.task('hygiene-all', (done) => run({ mode: 'all' }, done));
+
+gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
+
+gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
+
+gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
+
+gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
+
+gulp.task('checkNativeDependencies', (done) => {
+    if (hasNativeDependencies()) {
+        throw new Error('Native dependencies deteced');
+    }
+    done();
+});
+
+gulp.task('cover:enable', () => {
+    return gulp.src("./coverconfig.json")
+        .pipe(jeditor((json) => {
+            json.enabled = true;
+            return json;
+        }))
+        .pipe(gulp.dest("./out", { 'overwrite': true }));
+});
+
+gulp.task('cover:disable', () => {
+    return gulp.src("./coverconfig.json")
+        .pipe(jeditor((json) => {
+            json.enabled = false;
+            return json;
+        }))
+        .pipe(gulp.dest("./out", { 'overwrite': true }));
+});
+
+/**
+ * Inline CSS into the coverage report for better visualizations on
+ * the VSTS report page for code coverage.
+ */
+gulp.task('inlinesource', () => {
+    return gulp.src('./coverage/lcov-report/*.html')
+        .pipe(inlinesource({ attribute: false }))
+        .pipe(gulp.dest('./coverage/lcov-report-inline'));
+});
+
 function hasNativeDependencies() {
     let nativeDependencies = nativeDependencyChecker.check(path.join(__dirname, 'node_modules'));
     if (!Array.isArray(nativeDependencies) || nativeDependencies.length === 0) {
@@ -459,8 +520,6 @@ function getModifiedFilesSync() {
         cp.execSync('git fetch', { encoding: 'utf8', cwd: __dirname });
         const cmd = `git diff --name-only HEAD ${originOrUpstream}/${isPR ? process.env.TRAVIS_BRANCH : 'master'}`;
         const out = cp.execSync(cmd, { encoding: 'utf8', cwd: __dirname });
-        console.log(cmd);
-        console.log(out);
         return out
             .split(/\r?\n/)
             .filter(l => !!l)
@@ -505,66 +564,6 @@ function getFileListToProcess(options) {
 }
 
 exports.hygiene = hygiene;
-
-gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
-
-gulp.task('hygiene', (done) => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }, done));
-
-gulp.task('compile', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }, done));
-
-gulp.task('hygiene-modified', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
-
-gulp.task('watch', gulp.parallel('hygiene-modified', 'hygiene-watch'));
-
-// Duplicate to allow duplicate task in tasks.json (one ith problem matching, and one without)
-gulp.task('watchProblems', gulp.parallel('hygiene-modified', 'hygiene-watch'));
-
-gulp.task('debugger-coverage', buildDebugAdapterCoverage);
-
-gulp.task('hygiene-all', (done) => run({ mode: 'all' }, done));
-
-gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
-
-gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
-
-gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
-
-gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
-
-gulp.task('checkNativeDependencies', (done) => {
-    if (hasNativeDependencies()) {
-        throw new Error('Native dependencies deteced');
-    }
-    done();
-});
-
-gulp.task('cover:enable', () => {
-    return gulp.src("./coverconfig.json")
-        .pipe(jeditor((json) => {
-            json.enabled = true;
-            return json;
-        }))
-        .pipe(gulp.dest("./out", { 'overwrite': true }));
-});
-
-gulp.task('cover:disable', () => {
-    return gulp.src("./coverconfig.json")
-        .pipe(jeditor((json) => {
-            json.enabled = false;
-            return json;
-        }))
-        .pipe(gulp.dest("./out", { 'overwrite': true }));
-});
-
-/**
- * Inline CSS into the coverage report for better visualizations on
- * the VSTS report page for code coverage.
- */
-gulp.task('inlinesource', () => {
-    return gulp.src('./coverage/lcov-report/*.html')
-        .pipe(inlinesource({ attribute: false }))
-        .pipe(gulp.dest('./coverage/lcov-report-inline'));
-});
 
 // this allows us to run hygiene as a git pre-commit hook.
 if (require.main === module) {
