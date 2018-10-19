@@ -4,8 +4,11 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { OSType } from '../../client/common/utils/platform';
-import { rootWorkspaceUri, shouldSkipForOs, shouldSkipForPythonVersion } from '../common';
-import { closeActiveWindows, initialize, initializeTest, IsLanguageServerTest } from '../initialize';
+import { isOs, isPythonVersion, rootWorkspaceUri } from '../common';
+import {
+    closeActiveWindows, initialize,
+    initializeTest, IsLanguageServerTest
+} from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
@@ -46,8 +49,8 @@ suite('Autocomplete PEP 526', () => {
     test('variable (abc:str)', async function () {
         // This test has not been working for many months in Python 3.4 and 3.5 under
         // Windows and macOS.Tracked by #2545.
-        if (shouldSkipForOs([OSType.Windows, OSType.OSX])) {
-            if (await shouldSkipForPythonVersion(['3.4', '3.5'])) {
+        if (isOs(OSType.Windows, OSType.OSX)) {
+            if (await isPythonVersion('3.4', '3.5')) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
@@ -66,8 +69,8 @@ suite('Autocomplete PEP 526', () => {
     test('variable (abc: str = "")', async function () {
         // This test has not been working for many months in Python 3.4 and 3.5 under
         // Windows and macOS.Tracked by #2545.
-        if (shouldSkipForOs([OSType.Windows, OSType.OSX])) {
-            if (await shouldSkipForPythonVersion(['3.4', '3.5'])) {
+        if (isOs(OSType.Windows, OSType.OSX)) {
+            if (await isPythonVersion('3.4', '3.5')) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
@@ -86,8 +89,8 @@ suite('Autocomplete PEP 526', () => {
     test('variable (abc = UNKNOWN # type: str)', async function () {
         // This test has not been working for many months in Python 3.4 and 3.5 under
         // Windows and macOS.Tracked by #2545.
-        if (shouldSkipForOs([OSType.Windows, OSType.OSX])) {
-            if (await shouldSkipForPythonVersion(['3.4', '3.5'])) {
+        if (isOs(OSType.Windows, OSType.OSX)) {
+            if (await isPythonVersion('3.4', '3.5')) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
@@ -103,7 +106,16 @@ suite('Autocomplete PEP 526', () => {
         assert.notEqual(list!.items.filter(item => item.label === 'lower').length, 0, 'lower not found');
     });
 
-    test('class methods', async () => {
+    test('class methods', async function () {
+        // This test has not been working for many months in Python 3.4 and 3.5 under
+        // Windows and macOS.Tracked by #2545.
+        if (isOs(OSType.Windows, OSType.OSX)) {
+            if (await isPythonVersion('3.4', '3.5')) {
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
+            }
+        }
+
         const textDocument = await vscode.workspace.openTextDocument(filePep526);
         await vscode.window.showTextDocument(textDocument);
         assert(vscode.window.activeTextEditor, 'No active editor');

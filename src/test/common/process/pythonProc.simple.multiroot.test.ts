@@ -33,8 +33,8 @@ import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../../client/ioc/types';
 import {
-    clearPythonPathInWorkspaceFolder, shouldSkipForOs,
-    shouldSkipForPythonVersion
+    clearPythonPathInWorkspaceFolder, isOs,
+    isPythonVersion
 } from '../../common';
 import {
     closeActiveWindows, initialize, initializeTest,
@@ -107,11 +107,9 @@ suite('PythonExecutableService', () => {
     test('Importing with a valid PYTHONPATH from .env file should succeed', async function () {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2547.
-        if (shouldSkipForOs([OSType.Windows])) {
-            if (await shouldSkipForPythonVersion(['2.7'])) {
-                // tslint:disable-next-line:no-invalid-this
-                return this.skip();
-            }
+        if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
         }
 
         await configService.updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);

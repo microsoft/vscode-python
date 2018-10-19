@@ -11,7 +11,7 @@ import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { StdErrError } from '../../../client/common/process/types';
 import { OSType } from '../../../client/common/utils/platform';
-import { shouldSkipForOs, shouldSkipForPythonVersion } from '../../common';
+import { isOs, isPythonVersion } from '../../common';
 import { initialize } from './../../initialize';
 
 use(chaiAsPromised);
@@ -38,8 +38,8 @@ suite('ProcessService Observable', () => {
 
     test('exec should output print unicode characters', async function () {
         // This test has not been working for many months in Python 2.7 under
-        // Windows. Tracked by #2546.
-        if (shouldSkipForOs([OSType.Windows]) && await shouldSkipForPythonVersion(['2.7'])) {
+        // Windows. Tracked by #2546. (unicode under Py2.7 is tough!)
+        if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }

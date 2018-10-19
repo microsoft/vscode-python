@@ -21,7 +21,7 @@ import { IEnvironmentVariablesProvider } from '../../../client/common/variables/
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
-import { PYTHON_PATH, shouldSkipForOs, shouldSkipForPythonVersion } from '../../common';
+import { isOs, isPythonVersion, PYTHON_PATH } from '../../common';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
 
@@ -75,11 +75,9 @@ suite('Terminal - Code Execution Helper', () => {
     test('Ensure blank lines are NOT removed when code is not indented (simple)', async function () {
         // This test has not been working for many months in Python 2.7 under
         // Windows.Tracked by #2544.
-        if (shouldSkipForOs([OSType.Windows])) {
-            if (await shouldSkipForPythonVersion(['2.7'])) {
-                // tslint:disable-next-line:no-invalid-this
-                return this.skip();
-            }
+        if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
         }
 
         const code = ['import sys', '', '', '', 'print(sys.executable)', '', 'print("1234")', '', '', 'print(1)', 'print(2)'];
@@ -101,11 +99,9 @@ suite('Terminal - Code Execution Helper', () => {
         test(`Ensure blank lines are removed (Sample${fileNameSuffix})`, async function () {
             // This test has not been working for many months in Python 2.7 under
             // Windows.Tracked by #2544.
-            if (shouldSkipForOs([OSType.Windows])) {
-                if (await shouldSkipForPythonVersion(['2.7'])) {
-                    // tslint:disable-next-line:no-invalid-this
-                    return this.skip();
-                }
+            if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
             }
 
             const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
@@ -115,11 +111,9 @@ suite('Terminal - Code Execution Helper', () => {
         test(`Ensure last two blank lines are preserved (Sample${fileNameSuffix})`, async function () {
             // This test has not been working for many months in Python 2.7 under
             // Windows.Tracked by #2544.
-            if (shouldSkipForOs([OSType.Windows])) {
-                if (await shouldSkipForPythonVersion(['2.7'])) {
-                    // tslint:disable-next-line:no-invalid-this
-                    return this.skip();
-                }
+            if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
             }
 
             const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
@@ -129,11 +123,9 @@ suite('Terminal - Code Execution Helper', () => {
         test(`Ensure last two blank lines are preserved even if we have more than 2 trailing blank lines (Sample${fileNameSuffix})`, async function () {
             // This test has not been working for many months in Python 2.7 under
             // Windows.Tracked by #2544.
-            if (shouldSkipForOs([OSType.Windows])) {
-                if (await shouldSkipForPythonVersion(['2.7'])) {
-                    // tslint:disable-next-line:no-invalid-this
-                    return this.skip();
-                }
+            if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
             }
 
             const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');

@@ -21,7 +21,7 @@ import {
     ITestCollectionStorageService, ITestDiscoveryService, ITestManager,
     ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory,
     ITestResultsService, ITestsHelper, ITestsParser, ITestVisitor,
-    IUnitTestSocketServer, PythonVersionInformation, TestProvider
+    IUnitTestSocketServer, TestProvider
 } from '../../client/unittests/common/types';
 import { TestManager as NoseTestManager } from '../../client/unittests/nosetest/main';
 import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/unittests/nosetest/services/discoveryService';
@@ -32,7 +32,7 @@ import { TestsParser as PytestTestsParser } from '../../client/unittests/pytest/
 import { TestManager as UnitTestTestManager } from '../../client/unittests/unittest/main';
 import { TestDiscoveryService as UnitTestTestDiscoveryService } from '../../client/unittests/unittest/services/discoveryService';
 import { TestsParser as UnitTestTestsParser } from '../../client/unittests/unittest/services/parserService';
-import { getPythonVersionString } from '../common';
+import { getPythonSemVer } from '../common';
 import { IocContainer } from '../serviceRegistry';
 import { MockUnitTestSocketServer } from './mocks';
 
@@ -40,26 +40,15 @@ export class UnitTestIocContainer extends IocContainer {
     constructor() {
         super();
     }
-    public getPythonMajorVersion(resource: Uri): Promise<number> {
-        return this.getPythonMajorMinorVersion(resource)
-            .then(versionInfo => versionInfo.major);
-    }
-
-    public getPythonMajorMinorVersionString(resource: Uri): Promise<string> {
-        return this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(resource)
-            .then(async (procService) => getPythonVersionString(procService));
-    }
-
-    public getPythonMajorMinorVersion(resource: Uri): Promise<PythonVersionInformation> {
-        return this.getPythonMajorMinorVersionString(resource)
-            .then(output => {
-                const versionString: string = output.trim();
-                const versionInfo: string[] = versionString.split('.');
-                return {
-                    major: parseInt(versionInfo[0].trim(), 10),
-                    minor: parseInt(versionInfo[1].trim(), 10)
-                };
-            });
+    public async getPythonMajorVersion(resource: Uri): Promise<number> {
+        const procServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        const procService = await procServiceFactory.create(resource);
+        const pythonVersion = await getPythonSemVer(procService);
+        if (pythonVersion) {
+            return pythonVersion.major;
+        } else {
+            return -1; // log warning already issued by underlying functions...
+        }
     }
 
     public registerTestVisitors() {

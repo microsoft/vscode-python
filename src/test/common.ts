@@ -2,14 +2,17 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
+import { error } from '../client/common/logger';
 import { BufferDecoder } from '../client/common/process/decoder';
 import { ProcessService } from '../client/common/process/proc';
 import { IProcessService } from '../client/common/process/types';
 import { getOSType, OSType } from '../client/common/utils/platform';
 import { IS_MULTI_ROOT_TEST } from './initialize';
+
 export { sleep } from './core';
 
 // tslint:disable:no-invalid-this no-any
@@ -136,16 +139,16 @@ function getPythonPath(): string {
 }
 
 /**
- * Determine if a test should be skipped based on the current OS.
+ * Determine if the current platform is included in a list of platforms.
  *
- * @param {skipForOses} OSType List of operating system Ids that should be skipped.
- * @return true if the current OS matches one from the skip list, false otherwise.
+ * @param {OSes} OSType[] List of operating system Ids to check within.
+ * @return true if the current OS matches one from the list, false otherwise.
  */
-export function shouldSkipForOs(skipForOses: OSType[]): boolean {
+export function isOs(...OSes: OSType[]): boolean {
     // get current OS
     const currentOS: OSType = getOSType();
     // compare and return
-    if (skipForOses.indexOf(currentOS) === -1) {
+    if (OSes.indexOf(currentOS) === -1) {
         return false;
     }
     return true;
@@ -155,38 +158,132 @@ export function shouldSkipForOs(skipForOses: OSType[]): boolean {
  * Get the current Python interpreter version.
  *
  * @param {procService} IProcessService Optionally specify the IProcessService implementation to use to execute with.
- * @return `"MAJOR.MINOR"` version of the Python interpreter, "0" if an error occurs.
+ * @return `SemVer` version of the Python interpreter, or `undefined` if an error occurs.
  */
-export async function getPythonVersionString(procService?: IProcessService): Promise<string> {
+export async function getPythonSemVer(procService?: IProcessService): Promise<SemVer | undefined> {
     const pythonProcRunner = procService ? procService : new ProcessService(new BufferDecoder());
-    const pyVerArgs = ['-c', 'import sys;print("{0}.{1}".format(*sys.version_info[:2]))'];
+    const pyVerArgs = ['-c', 'import sys;print("{0}.{1}.{2}".format(*sys.version_info[:3]))'];
 
     return pythonProcRunner.exec(PYTHON_PATH, pyVerArgs)
-        .then((result) => result.stdout.trim())
+        .then(strVersion => new SemVer(strVersion.stdout.trim()))
         .catch((err) => {
             // if the call fails this should make it loudly apparent.
-            // tslint:disable-next-line:no-console
-            console.log(`[ERROR] shouldSkipForPythonVersion: ${err}`);
-            return '0';
+            error('getPythonSemVer', `[ERROR] shouldSkipForPythonVersion: ${err}`);
+            return undefined;
         });
 }
 
 /**
- * Determine if a test should be skipped based on the Python version.
+ * Match a given semver version specification with a list of loosely defined
+ * version strings.
  *
- * @param {skipForVersions} string[] List of major.minor version of python that are to be skipped.
- * @param {resource} vscode.Uri Current workspace resource Uri or undefined.
- * @return true if the current Python version matches a version in the skip list, false otherwise.
+ * Specify versions by their major version at minimum - the minor and patch
+ * version numbers are optional.
+ *
+ * '3', '3.6', '3.6.6', are all vald and only the portions specified will be matched
+ * against the current running Python interpreter version.
+ *
+ * Example scenarios:
+ * '3' will match version 3.5.6, 3.6.4, 3.6.6, and 3.7.0.
+ * '3.6' will match version 3.6.4 and 3.6.6.
+ * '3.6.4' will match version 3.6.4 only.
+ *
+ * @param {version} SemVer the version to look for.
+ * @param {searchVersions} string[] List of loosely-specified versions to match against.
  */
-export async function shouldSkipForPythonVersion(skipForVersions: string[], procService?: IProcessService): Promise<boolean> {
-    // get the current python version major/minor
-    const currentPyVersion = await getPythonVersionString(procService);
-
+export function isVersionInList(version: SemVer, ...searchVersions: string[]): boolean {
     // see if the major/minor version matches any member of the skip-list.
-    const isPresent = skipForVersions.findIndex((ver: string) => ver === currentPyVersion);
+    const isPresent = searchVersions.findIndex(ver => {
+        const semverChecker = coerce(ver);
+        if (semverChecker) {
+            if (semverChecker.compare(version) === 0) {
+                return true;
+            } else {
+                // compare all the parts of the version that we have, we know we have
+                // at minimum the major version or semverChecker would be 'null'...
+                const versionParts = ver.split('.');
+                let matches = parseInt(versionParts[0], 10) === version.major;
+
+                if (matches && versionParts.length >= 2) {
+                    matches = parseInt(versionParts[1], 10) === version.minor;
+                }
+
+                if (matches && versionParts.length >= 3) {
+                    matches = parseInt(versionParts[2], 10) === version.patch;
+                }
+
+                return matches;
+            }
+        }
+        return false;
+    });
 
     if (isPresent >= 0) {
         return true;
     }
     return false;
+}
+
+/**
+ * Determine if the Python interpreter version running in a given `IProcessService`
+ * is in a selection of versions.
+ *
+ * You can specify versions by specifying the major version at minimum - the minor and
+ * patch version numbers are optional.
+ *
+ * '3', '3.6', '3.6.6', are all vald and only the portions specified will be matched
+ * against the current running Python interpreter version.
+ *
+ * Example scenarios:
+ * '3' will match version 3.5.6, 3.6.4, 3.6.6, and 3.7.0.
+ * '3.6' will match version 3.6.4 and 3.6.6.
+ * '3.6.4' will match version 3.6.4 only.
+ *
+ * If you don't need to specify the environment (ie. the workspace) that the Python
+ * interpreter is running under, use the simpler `isPythonVersion` instead.
+ *
+ * @param {skipForVersions} string[] List of versions of python that are to be skipped.
+ * @param {resource} vscode.Uri Current workspace resource Uri or undefined.
+ * @return true if the current Python version matches a version in the skip list, false otherwise.
+ */
+export async function isPythonVersionInProcess(procService?: IProcessService, ...versions: string[]): Promise<boolean> {
+    // get the current python version major/minor
+    const currentPyVersion = await getPythonSemVer(procService);
+    if (currentPyVersion) {
+        return isVersionInList(currentPyVersion, ...versions);
+    } else {
+        error('ERROR: isPythonVersionInProcess', `Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
+        return false;
+    }
+}
+
+/**
+ * Determine if the current interpreter version is in a given selection of versions.
+ *
+ * You can specify versions by using up to the first three semver parts of a python
+ * version.
+ *
+ * '3', '3.6', '3.6.6', are all vald and only the portions specified will be matched
+ * against the current running Python interpreter version.
+ *
+ * Example scenarios:
+ * '3' will match version 3.5.6, 3.6.4, 3.6.6, and 3.7.0.
+ * '3.6' will match version 3.6.4 and 3.6.6.
+ * '3.6.4' will match version 3.6.4 only.
+ *
+ * If you need to specify the environment (ie. the workspace) that the Python
+ * interpreter is running under, use `isPythonVersionInProcess` instead.
+ *
+ * @param {skipForVersions} string[] List of versions of python that are to be skipped.
+ * @param {resource} vscode.Uri Current workspace resource Uri or undefined.
+ * @return true if the current Python version matches a version in the skip list, false otherwise.
+ */
+export async function isPythonVersion(...versions: string[]): Promise<boolean> {
+    const currentPyVersion = await getPythonSemVer();
+    if (currentPyVersion) {
+        return isVersionInList(currentPyVersion, ...versions);
+    } else {
+        error('ERROR: isPythonVersion', `Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
+        return false;
+    }
 }

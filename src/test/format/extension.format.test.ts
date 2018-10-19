@@ -5,7 +5,7 @@ import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/co
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
-import { PythonVersionInformation } from '../../client/unittests/common/types';
+import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { MockProcessService } from '../mocks/proc';
 import { compareFiles } from '../textUtils';
@@ -121,9 +121,10 @@ suite('Formatting', () => {
     });
     // tslint:disable-next-line:no-function-expression
     test('Black', async function () {
-        const pyVersion: PythonVersionInformation = await ioc.getPythonMajorMinorVersion(Uri.parse(blackFileToFormat));
-
-        if (pyVersion && (pyVersion.major < 3 || (pyVersion.major === 3 && pyVersion.minor < 6))) {
+        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)
+            .create(Uri.file(workspaceRootPath));
+        if (await isPythonVersionInProcess(processService, '2.7', '3.4', '3.5')) {
+            // Skip for versions of python below 3.6, as Black doesn't support them at all.
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }

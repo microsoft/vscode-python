@@ -12,8 +12,8 @@ import {
     TestFunction, Tests, TestsToRun
 } from '../../../client/unittests/common/types';
 import {
-    rootWorkspaceUri, shouldSkipForOs,
-    shouldSkipForPythonVersion, updateSetting
+    isOs, isPythonVersion,
+    rootWorkspaceUri, updateSetting
 } from '../../common';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import {
@@ -117,8 +117,8 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     test('Ensure correct test count for running a set of tests multiple times', async function () {
         // This test has not been working for many months in Python 3.4 under
         // Windows and macOS.Tracked by #2548.
-        if (shouldSkipForOs([OSType.Windows, OSType.OSX])) {
-            if (await shouldSkipForPythonVersion(['3.4'])) {
+        if (isOs(OSType.Windows, OSType.OSX)) {
+            if (await isPythonVersion('3.4')) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
@@ -150,8 +150,8 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     test('Re-run failed tests results in the correct number of tests counted', async function () {
         // This test has not been working for many months in Python 3.4 under
         // Windows and macOS.Tracked by #2548.
-        if (shouldSkipForOs([OSType.Windows, OSType.OSX])) {
-            if (await shouldSkipForPythonVersion(['3.4'])) {
+        if (isOs(OSType.Windows, OSType.OSX)) {
+            if (await isPythonVersion('3.4')) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }

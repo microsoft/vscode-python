@@ -8,8 +8,7 @@ import { PythonSettings } from '../../client/common/configSettings';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
-import { PythonVersionInformation } from '../../client/unittests/common/types';
-import { rootWorkspaceUri } from '../common';
+import { isPythonVersion } from '../common';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { closeActiveWindows, initialize, initializeTest, IS_CI_SERVER } from './../initialize';
 import { MockOutputChannel } from './../mockClasses';
@@ -84,9 +83,7 @@ suite('Variable Extraction', () => {
 
     // tslint:disable-next-line:no-function-expression
     test('Extract Variable', async function () {
-        const pyVersion: PythonVersionInformation = await ioc.getPythonMajorMinorVersion(rootWorkspaceUri);
-
-        if (pyVersion.major === 3 && pyVersion.minor === 7) {
+        if (isPythonVersion('3.7')) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         } else {
