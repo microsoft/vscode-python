@@ -5,10 +5,10 @@
 
 import * as Lint from 'tslint';
 import * as ts from 'typescript';
-import { getListOfExcludedFiles } from '../constants';
+import { filesNotToCheck } from '../constants';
 
 export class BaseRuleWalker extends Lint.RuleWalker {
-    private readonly filesToIgnore = getListOfExcludedFiles();
+    private readonly filesToIgnore = filesNotToCheck;
     protected sholdIgnoreCcurrentFile(node: ts.Node) {
         const sourceFile = node.getSourceFile();
         return sourceFile && sourceFile.fileName && this.filesToIgnore.indexOf(sourceFile.fileName) >= 0;

@@ -7,7 +7,7 @@ const constants_1 = require("../constants");
 class BaseRuleWalker extends Lint.RuleWalker {
     constructor() {
         super(...arguments);
-        this.filesToIgnore = constants_1.getListOfExcludedFiles();
+        this.filesToIgnore = constants_1.filesNotToCheck;
     }
     sholdIgnoreCcurrentFile(node) {
         const sourceFile = node.getSourceFile();

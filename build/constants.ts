@@ -9,12 +9,9 @@ import * as path from 'path';
 export const ExtensionRootDir = path.join(__dirname, '..');
 
 const jsonFileWithListOfOldFiles = path.join(__dirname, 'existingFiles.json');
-const filesNotToCheck: string[] = [];
-
-export function getListOfExcludedFiles() {
-    if (filesNotToCheck.length === 0) {
-        const files = JSON.parse(fs.readFileSync(jsonFileWithListOfOldFiles).toString()) as string[];
-        files.forEach(file => filesNotToCheck.push(path.join(ExtensionRootDir, file)));
-    }
-    return filesNotToCheck;
+function getListOfExcludedFiles() {
+    const files = JSON.parse(fs.readFileSync(jsonFileWithListOfOldFiles).toString()) as string[];
+    return files.map(file => path.join(ExtensionRootDir, file));
 }
+
+export const filesNotToCheck: string[] = getListOfExcludedFiles();

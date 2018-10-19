@@ -6,12 +6,8 @@ const fs = require("fs");
 const path = require("path");
 exports.ExtensionRootDir = path.join(__dirname, '..');
 const jsonFileWithListOfOldFiles = path.join(__dirname, 'existingFiles.json');
-const filesNotToCheck = [];
 function getListOfExcludedFiles() {
-    if (filesNotToCheck.length === 0) {
-        const files = JSON.parse(fs.readFileSync(jsonFileWithListOfOldFiles).toString());
-        files.forEach(file => filesNotToCheck.push(path.join(exports.ExtensionRootDir, file)));
-    }
-    return filesNotToCheck;
+    const files = JSON.parse(fs.readFileSync(jsonFileWithListOfOldFiles).toString());
+    return files.map(file => path.join(exports.ExtensionRootDir, file));
 }
-exports.getListOfExcludedFiles = getListOfExcludedFiles;
+exports.filesNotToCheck = getListOfExcludedFiles();
