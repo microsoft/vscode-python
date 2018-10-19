@@ -565,7 +565,7 @@ function getFileListToProcess(options) {
 
 exports.hygiene = hygiene;
 
-// this allows us to run hygiene as a git pre-commit hook.
+// this allows us to run hygiene via CLI (e.g. `node gulfile.js`).
 if (require.main === module) {
     run({ exitOnError: true, mode: 'staged' });
 }

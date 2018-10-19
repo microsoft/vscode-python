@@ -145,7 +145,7 @@ From there use the ```Extension + Debugger``` launch option.
 ### Coding Standards
 
 Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-python/blob/master/CODING_STANDARDS.md).
-We have a pre-commit hook to ensure the code committed will adhere to the above coding standards.
+We have a CI tests to ensure the code committed will adhere to the above coding standards.
 
 ## Development process
 
