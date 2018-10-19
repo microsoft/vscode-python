@@ -5,7 +5,7 @@
 
 import * as Lint from 'tslint';
 import * as ts from 'typescript';
-import { getListOfExcludedFiles } from '../constants';
+import { BaseRuleWalker } from './baseRuleWalker';
 
 const copyrightHeader = [
     '// Copyright (c) Microsoft Corporation. All rights reserved.',
@@ -16,10 +16,9 @@ const copyrightHeader = [
 const allowedCopyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n')];
 const failureMessage = 'Header must contain copyright and \'use strict\' in the Python Extension';
 
-class NoFileWithoutCopyrightHeader extends Lint.RuleWalker {
-    private readonly filesToIgnore = getListOfExcludedFiles();
+class NoFileWithoutCopyrightHeader extends BaseRuleWalker {
     public visitSourceFile(sourceFile: ts.SourceFile) {
-        if (sourceFile && sourceFile.fileName && this.filesToIgnore.indexOf(sourceFile.fileName) === -1) {
+        if (!this.sholdIgnoreCcurrentFile(sourceFile)) {
             const sourceFileContents = sourceFile.getFullText();
             if (sourceFileContents) {
                 this.validateHeader(sourceFile, sourceFileContents);

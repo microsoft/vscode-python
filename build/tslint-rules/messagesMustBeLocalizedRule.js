@@ -4,7 +4,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");
 const ts = require("typescript");
-const constants_1 = require("../constants");
+const baseRuleWalker_1 = require("./baseRuleWalker");
 const methodNames = [
     // From IApplicationShell (vscode.window)
     'showErrorMessage', 'showInformationMessage',
@@ -13,15 +13,10 @@ const methodNames = [
     'appendLine', 'appendLine'
 ];
 const failureMessage = 'Messages must be locaclized in the Python Extension';
-class NoStringLiteralsInMessages extends Lint.RuleWalker {
-    constructor() {
-        super(...arguments);
-        this.filesToIgnore = constants_1.getListOfExcludedFiles();
-    }
+class NoStringLiteralsInMessages extends baseRuleWalker_1.BaseRuleWalker {
     visitCallExpression(node) {
-        const sourceFile = node.getSourceFile();
         const prop = node.expression;
-        if (sourceFile && sourceFile.fileName && this.filesToIgnore.indexOf(sourceFile.fileName) === -1 &&
+        if (!this.sholdIgnoreCcurrentFile(node) &&
             ts.isPropertyAccessExpression(node.expression) &&
             methodNames.indexOf(prop.name.text) >= 0) {
             node.arguments

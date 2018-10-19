@@ -3,7 +3,7 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 const Lint = require("tslint");
-const constants_1 = require("../constants");
+const baseRuleWalker_1 = require("./baseRuleWalker");
 const copyrightHeader = [
     '// Copyright (c) Microsoft Corporation. All rights reserved.',
     '// Licensed under the MIT License.',
@@ -12,13 +12,9 @@ const copyrightHeader = [
 ];
 const allowedCopyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n')];
 const failureMessage = 'Header must contain copyright and \'use strict\' in the Python Extension';
-class NoFileWithoutCopyrightHeader extends Lint.RuleWalker {
-    constructor() {
-        super(...arguments);
-        this.filesToIgnore = constants_1.getListOfExcludedFiles();
-    }
+class NoFileWithoutCopyrightHeader extends baseRuleWalker_1.BaseRuleWalker {
     visitSourceFile(sourceFile) {
-        if (sourceFile && sourceFile.fileName && this.filesToIgnore.indexOf(sourceFile.fileName) === -1) {
+        if (!this.sholdIgnoreCcurrentFile(sourceFile)) {
             const sourceFileContents = sourceFile.getFullText();
             if (sourceFileContents) {
                 this.validateHeader(sourceFile, sourceFileContents);
