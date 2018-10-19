@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
-import { error as traceError } from '../common/logger';
+import { traceError } from '../common/logger';
 import { IInstaller, Product } from '../common/types';
 import { IAvailableLinterActivator, ILinterInfo } from './types';
 
