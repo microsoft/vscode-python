@@ -1,6 +1,6 @@
 {
     "rulesDirectory": [
-        "./out/tools/tslint-rules"
+        "./build/tslint-rules"
     ],
     "extends": [
         "tslint-eslint-rules",
