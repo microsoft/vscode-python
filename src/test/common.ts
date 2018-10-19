@@ -6,7 +6,7 @@ import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
-import { error } from '../client/common/logger';
+import { traceError } from '../client/common/logger';
 import { BufferDecoder } from '../client/common/process/decoder';
 import { ProcessService } from '../client/common/process/proc';
 import { IProcessService } from '../client/common/process/types';
@@ -168,7 +168,7 @@ export async function getPythonSemVer(procService?: IProcessService): Promise<Se
         .then(strVersion => new SemVer(strVersion.stdout.trim()))
         .catch((err) => {
             // if the call fails this should make it loudly apparent.
-            error('getPythonSemVer', `[ERROR] shouldSkipForPythonVersion: ${err}`);
+            traceError('getPythonSemVer', err);
             return undefined;
         });
 }
@@ -252,7 +252,7 @@ export async function isPythonVersionInProcess(procService?: IProcessService, ..
     if (currentPyVersion) {
         return isVersionInList(currentPyVersion, ...versions);
     } else {
-        error('ERROR: isPythonVersionInProcess', `Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
+        traceError(`Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
         return false;
     }
 }
@@ -283,7 +283,7 @@ export async function isPythonVersion(...versions: string[]): Promise<boolean> {
     if (currentPyVersion) {
         return isVersionInList(currentPyVersion, ...versions);
     } else {
-        error('ERROR: isPythonVersion', `Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
+        traceError(`Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
         return false;
     }
 }
