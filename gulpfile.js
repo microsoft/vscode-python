@@ -519,6 +519,7 @@ function getModifiedFilesSync() {
         cp.execSync(`git remote set-branches --add ${originOrUpstream} master`, { encoding: 'utf8', cwd: __dirname });
         cp.execSync('git fetch', { encoding: 'utf8', cwd: __dirname });
         const cmd = `git diff --name-only HEAD ${originOrUpstream}/${isPR ? process.env.TRAVIS_BRANCH : 'master'}`;
+        console.info(cmd);
         const out = cp.execSync(cmd, { encoding: 'utf8', cwd: __dirname });
         return out
             .split(/\r?\n/)
