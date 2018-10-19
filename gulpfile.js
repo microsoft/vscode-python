@@ -488,7 +488,7 @@ function exitHandler(options, ex) {
 function run(options, done) {
     done = done || noop;
     options = options ? options : {};
-    options.exitOnError ? options.exitOnError : isCI;
+    options.exitOnError = typeof options.exitOnError === 'undefined' ? isCI : options.exitOnError;
     process.once('unhandledRejection', (reason, p) => {
         console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
         exitHandler(options);
