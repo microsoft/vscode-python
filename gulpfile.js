@@ -206,14 +206,6 @@ let configuration;
  */
 function getLinter(options) {
     configuration = configuration ? configuration : tslint.Configuration.findConfiguration(null, '.');
-    // Remove strict rules during compilation step.
-    if (options.mode === 'compile') {
-        for (const rule of ['messages-must-be-localized', 'files-must-have-copyright-and-strict-header']) {
-            if (configuration.results.rules.get(rule)) {
-                configuration.results.rules.delete(rule);
-            }
-        }
-    }
     const program = tslint.Linter.createProgram('./tsconfig.json');
     const linter = new tslint.Linter({ formatter: 'json' }, program);
     return { linter, configuration };

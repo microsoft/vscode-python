@@ -30,7 +30,6 @@ class NoStringLiteralsInMessages extends baseRuleWalker_1.BaseRuleWalker {
 }
 class Rule extends Lint.Rules.AbstractRule {
     apply(sourceFile) {
-        console.log('wow');
         return this.applyWithWalker(new NoStringLiteralsInMessages(sourceFile, this.getOptions()));
     }
 }

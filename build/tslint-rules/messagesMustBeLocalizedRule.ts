@@ -36,7 +36,6 @@ class NoStringLiteralsInMessages extends BaseRuleWalker {
 export class Rule extends Lint.Rules.AbstractRule {
     public static FAILURE_STRING = failureMessage;
     public apply(sourceFile: ts.SourceFile): Lint.RuleFailure[] {
-        console.log('wow');
         return this.applyWithWalker(new NoStringLiteralsInMessages(sourceFile, this.getOptions()));
     }
 }
