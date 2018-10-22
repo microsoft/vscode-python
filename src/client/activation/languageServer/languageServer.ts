@@ -32,7 +32,8 @@ import { IServiceContainer } from '../../ioc/types';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import {
     PYTHON_LANGUAGE_SERVER_ENABLED,
-    PYTHON_LANGUAGE_SERVER_ERROR
+    PYTHON_LANGUAGE_SERVER_ERROR,
+    PYTHON_LANGUAGE_SERVER_TELEMETRY
 } from '../../telemetry/constants';
 import { getTelemetryReporter } from '../../telemetry/telemetry';
 import { IUnitTestManagementService } from '../../unittests/types';
@@ -165,8 +166,9 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.languageClient = this.createSelfContainedLanguageClient(serverModule, clientOptions);
         try {
             await this.startLanguageClient();
-            this.languageClient.onTelemetry(data => {
-                reporter.sendTelemetryEvent('Microsoft Python Language Server', { data });
+            this.languageClient.onTelemetry(telemetryEvent => {
+                const eventName = telemetryEvent.Name ? telemetryEvent.Name : PYTHON_LANGUAGE_SERVER_TELEMETRY;
+                reporter.sendTelemetryEvent(eventName, telemetryEvent.Properties, telemetryEvent.Measurements);
             });
             return true;
         } catch (ex) {
