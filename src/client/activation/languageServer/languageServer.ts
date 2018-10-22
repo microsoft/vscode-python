@@ -167,7 +167,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             await this.startLanguageClient();
             this.languageClient.onTelemetry(telemetryEvent => {
                 const eventName = telemetryEvent.Name ? telemetryEvent.Name : PYTHON_LANGUAGE_SERVER_TELEMETRY;
-                reporter.sendTelemetryEvent(eventName, telemetryEvent.Properties, telemetryEvent.Measurements);
+                sendTelemetryEvent(eventName, telemetryEvent.Measurements,  telemetryEvent.Properties);
             });
             return true;
         } catch (ex) {
@@ -217,8 +217,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
     // tslint:disable-next-line:member-ordering
     public async getAnalysisOptions(): Promise<LanguageClientOptions | undefined> {
-        // tslint:disable-next-line:no-any
-        const properties = new Map<string, any>();
+        const properties = new Map<string, {}>();
         let interpreterData: InterpreterData | undefined;
         let pythonPath = '';
 
