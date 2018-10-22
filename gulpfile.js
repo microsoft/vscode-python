@@ -503,10 +503,11 @@ function getAddedFilesSync() {
         .map(l => path.join(__dirname, l.substring(2).trim()));
 }
 function getModifiedFilesSync() {
-    if (process.env.TRAVIS) {
+    const azurePRBranch = process.env['System.PullRequest.TargetBranch'];
+    if (process.env.TRAVIS || azurePRBranch) {
         // If on travis, get a list of modified files comparing either against
         // target (assumed 'upstream') PR branch or master of current (assumed 'origin') repo.
-        const isPR = process.env.TRAVIS_PULL_REQUEST === 'true';
+        const isPR = process.env.TRAVIS_PULL_REQUEST === 'true' || azurePRBranch;
         const originOrUpstream = isPR ? 'upstream' : 'origin';
         cp.execSync(`git remote set-branches --add ${originOrUpstream} master`, { encoding: 'utf8', cwd: __dirname });
         cp.execSync('git fetch', { encoding: 'utf8', cwd: __dirname });
