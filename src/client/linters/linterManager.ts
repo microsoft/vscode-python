@@ -127,7 +127,7 @@ export class LinterManager implements ILinterManager {
         throw new Error(error);
     }
 
-    private async enableUnconfiguredLinters(resource?: Uri): Promise<boolean> {
+    protected async enableUnconfiguredLinters(resource?: Uri): Promise<boolean> {
         // if we've already checked during this session, don't bother again
         if (this.checkedForInstalledLinters) {
             return false;
