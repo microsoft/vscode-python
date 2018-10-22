@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import { isTestExecution } from '../constants';
 
 type AsyncVoidAction = (...params: {}[]) => Promise<void>;
 type VoidAction = (...params: {}[]) => void;
@@ -26,7 +27,7 @@ export function debounce(wait?: number) {
  */
 export function swallowExceptions(scopeName: string) {
     // tslint:disable-next-line:no-any no-function-expression
-    return function (_target: any, propertyName: string, descriptor: TypedPropertyDescriptor<VoidAction> | TypedPropertyDescriptor<AsyncVoidAction>) {
+    return function (_target: any, propertyName: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value!;
         const errorMessage = `Python Extension (Error in ${scopeName}, method:${propertyName}):`;
         // tslint:disable-next-line:no-any no-function-expression
@@ -37,9 +38,17 @@ export function swallowExceptions(scopeName: string) {
 
                 // If method being wrapped returns a promise then wait and swallow errors.
                 if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
-                    return (result as Promise<void>).catch(error => console.error(errorMessage, error));
+                    return (result as Promise<void>).catch(error => {
+                        if (isTestExecution()) {
+                            return;
+                        }
+                        console.error(errorMessage, error);
+                    });
                 }
             } catch (error) {
+                if (isTestExecution()) {
+                    return;
+                }
                 console.error(errorMessage, error);
             }
         };

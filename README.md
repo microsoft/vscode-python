@@ -26,7 +26,6 @@ Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/L
 Command | Description
 --- | ---
 ```Python: Select Interpreter``` | Switch between Python interpreters, versions, and environments.
-```Python: Create Terminal``` | Create a VS Code terminal with the selected Python interpreter (environment) activated.
 ```Python: Start REPL``` | Start an interactive Python REPL using the selected interpreter in the VS Code terminal.
 ```Python: Run Python File in Terminal``` | Runs the active Python file in the VS Code terminal. You can also run a Python file by right-clicking on the file and selecting ```Run Python File in Terminal```.
 ```Python: Select Linter``` | Switch from PyLint to flake8 or other supported linters.
@@ -97,6 +96,7 @@ contributors (if you would like to contribute a translation, see the
 * Snippets
 * Miscellaneous
   + Running a file or selected text in python terminal
+  + Automatic activation of environments in the terminal
 * Refactoring
   + Rename refactorings
   + Extract variable refactorings

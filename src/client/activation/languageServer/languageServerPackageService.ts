@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { parse } from 'semver';
 import { PVSC_EXTENSION_ID } from '../../common/constants';
-import { log } from '../../common/logger';
+import { traceVerbose } from '../../common/logger';
 import { INugetRepository, INugetService, NugetPackage } from '../../common/nuget/types';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IExtensions, LanguageServerDownloadChannels } from '../../common/types';
@@ -44,13 +44,13 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
         }
     }
 
-    @log('Get latest language server nuget package version')
+    @traceVerbose('Get latest language server nuget package version')
     public async getLatestNugetPackageVersion(): Promise<NugetPackage> {
         const downloadChannel = this.getLanguageServerDownloadChannel();
         const nugetRepo = this.serviceContainer.get<INugetRepository>(INugetRepository, downloadChannel);
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
         const packageName = this.getNugetPackageName();
-        log(`Listing packages for ${downloadChannel} for ${packageName}`);
+        traceVerbose(`Listing packages for ${downloadChannel} for ${packageName}`);
         const packages = await nugetRepo.getPackages(packageName);
 
         const validPackages = packages

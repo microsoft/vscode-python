@@ -29,15 +29,15 @@
    - Run [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`)
    - Register any Python changes with [OSPO](https://opensource.microsoft.com/)
 - [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) and register any changes with OSPO
-- [ ] Create the `release-` [branch](https://github.com/Microsoft/vscode-python/)
+- [ ] Merge into the [`release` branch](https://github.com/microsoft/vscode-python/tree/release)
 - [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
 - [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post
 
 
-# Final (around a VS Code release)
+# Final (near a VS Code release)
 
 ## Preparation
-[Final PR should be against the `release-` branch and then cherrypicked into `master`]
+[Final PR should be against the `release` branch and then cherrypicked into `master`]
 
 - [ ] Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
 - [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the [documentation](https://code.visualstudio.com/docs/python/python-tutorial) -- including the [WOW](https://code.visualstudio.com/docs/languages/python) page -- are ready
@@ -69,5 +69,4 @@
 
 ## Clean up after _this_ release
 - [ ] Clean up any straggling [fixed issues needing validation](https://github.com/Microsoft/vscode-python/issues?q=label%3A%22validate+fix%22+is%3Aclosed)
-- [ ] Delete the previous releases' [branch](https://github.com/Microsoft/vscode-python/branches)
 - [ ] Go through [`needs more info` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22needs+more+info%22+sort%3Aupdated-asc) and close any that have no activity for over a month

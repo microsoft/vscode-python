@@ -3,12 +3,12 @@
 
 'use strict';
 
-import { common, createBlobServiceAnonymous } from 'azure-storage';
+import * as azStorageTypes from 'azure-storage';
 import { inject, injectable, unmanaged } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES } from '../../telemetry/constants';
-import { log, LogOptions } from '../logger';
+import { traceVerbose } from '../logger';
 import { INugetRepository, INugetService, NugetPackage } from './types';
 
 @injectable()
@@ -21,14 +21,16 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
     }
 
     @captureTelemetry(PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES)
-    @log('Listing Nuget Packages', LogOptions.Arguments)
+    @traceVerbose('Listing Nuget Packages')
     public listPackages(azureBlobStorageAccount: string, azureBlobStorageContainer: string, packageName: string) {
-        const blobStore = createBlobServiceAnonymous(azureBlobStorageAccount);
+        // tslint:disable-next-line:no-require-imports
+        const az = require('azure-storage') as typeof azStorageTypes;
+        const blobStore = az.createBlobServiceAnonymous(azureBlobStorageAccount);
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
         return new Promise<NugetPackage[]>((resolve, reject) => {
             // We must pass undefined according to docs, but type definition doesn't all it to be undefined or null!!!
             // tslint:disable-next-line:no-any
-            const token = undefined as any as common.ContinuationToken;
+            const token = undefined as any as azStorageTypes.common.ContinuationToken;
             blobStore.listBlobsSegmentedWithPrefix(azureBlobStorageContainer, packageName, token,
                 (error, result) => {
                     if (error) {

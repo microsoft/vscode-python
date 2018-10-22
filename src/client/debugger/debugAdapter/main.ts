@@ -17,6 +17,7 @@ import { Disposable } from 'vscode';
 import { DebugSession, ErrorDestination, Event, logger, OutputEvent, Response, TerminatedEvent } from 'vscode-debugadapter';
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import '../../common/extensions';
 import { isNotInstalledError } from '../../common/helpers';
 import { IFileSystem } from '../../common/platform/types';
@@ -470,7 +471,7 @@ class DebugManager implements Disposable {
 }
 
 async function startDebugger() {
-    logger.init(noop, path.join(__dirname, '..', '..', '..', 'debug.log'));
+    logger.init(noop, path.join(EXTENSION_ROOT_DIR, `debug${process.pid}.log`));
     const serviceContainer = initializeIoc();
     const protocolMessageWriter = serviceContainer.get<IProtocolMessageWriter>(IProtocolMessageWriter);
     try {

@@ -21,8 +21,8 @@ import {
 } from '../common/types';
 import { OSDistro, OSType } from '../common/utils/platform';
 import { IServiceContainer } from '../ioc/types';
+import { sendTelemetryEvent } from '../telemetry';
 import { PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED } from '../telemetry/constants';
-import { getTelemetryReporter } from '../telemetry/telemetry';
 import {
     ExtensionActivators, IExtensionActivationService,
     IExtensionActivator
@@ -69,10 +69,9 @@ export class ExtensionActivationService implements IExtensionActivationService, 
         let jedi = this.useJedi();
         if (!jedi && !isLSSupported(this.serviceContainer)) {
             this.appShell.showWarningMessage('The Python Language Server is not supported on your platform.');
-            const reporter = getTelemetryReporter();
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: Only send once (ever)?
-            reporter.sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED);
+            sendTelemetryEvent(PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED);
             jedi = true;
         }
 

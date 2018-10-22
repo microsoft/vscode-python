@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity, Uri } from 'vscode';
 import '../../../common/extensions';
-import { error } from '../../../common/logger';
+import { Logger } from '../../../common/logger';
 import { IConfigurationService } from '../../../common/types';
 import { IInterpreterHelper } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
@@ -67,7 +67,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService i
         }
 
         this.handle([new InvalidPythonPathInDebuggerDiagnostic()])
-            .catch(ex => error('Failed to handle invalid python path in debugger', ex))
+            .catch(ex => Logger.error('Failed to handle invalid python path in debugger', ex))
             .ignoreErrors();
         return false;
     }

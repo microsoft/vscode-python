@@ -34,6 +34,16 @@ export class PythonExecutionService implements IPythonExecutionService {
             ]);
 
             const json = JSON.parse(jsonValue) as { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
+            const version_info = json.versionInfo;
+            // Exclude PII from `version_info` to ensure we don't send this up via telemetry.
+            for (let index = 0; index < 3; index += 1) {
+                if (typeof version_info[index] !== 'number') {
+                    version_info[index] = 0;
+                }
+            }
+            if (['alpha', 'beta', 'candidate', 'final'].indexOf(version_info[3]) === -1) {
+                version_info[3] = 'unknown';
+            }
             return {
                 architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
                 path: this.pythonPath,

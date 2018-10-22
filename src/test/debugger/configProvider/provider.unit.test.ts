@@ -17,8 +17,8 @@ import { IFileSystem, IPlatformService } from '../../../client/common/platform/t
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { IConfigurationService, ILogger, IPythonSettings } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
-import { PythonV2DebugConfigurationProvider } from '../../../client/debugger/extension';
 import { ConfigurationProviderUtils } from '../../../client/debugger/extension/configProviders/configurationProviderUtils';
+import { PythonV2DebugConfigurationProvider } from '../../../client/debugger/extension/configProviders/pythonV2Provider';
 import { IConfigurationProviderUtils } from '../../../client/debugger/extension/configProviders/types';
 import { DebugOptions, LaunchRequestArguments } from '../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../client/interpreter/contracts';

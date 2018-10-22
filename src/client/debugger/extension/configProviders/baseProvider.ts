@@ -59,6 +59,8 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
         if (!debugConfiguration.host) {
             debugConfiguration.host = 'localhost';
         }
+        // Pass workspace folder so we can get this when we get debug events firing.
+        debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
     }
     protected async provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: LaunchRequestArguments): Promise<void> {
         this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
@@ -85,6 +87,8 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
+        // Pass workspace folder so we can get this when we get debug events firing.
+        debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
     }
     protected async validateLaunchConfiguration(debugConfiguration: LaunchRequestArguments): Promise<boolean> {
         const diagnosticService = this.serviceContainer.get<IInvalidPythonPathInDebuggerService>(IDiagnosticsService, InvalidPythonPathInDebuggerServiceId);

@@ -20,6 +20,10 @@ export type LanguageServerTelemetry = {
     lsVersion?: string;
 };
 
+export type LanguageServerErrorTelemetry = {
+    error: string;
+};
+
 export type LinterTrigger = 'auto' | 'save';
 
 export type LintingTelemetry = {
@@ -31,7 +35,7 @@ export type LintingTelemetry = {
 export type PythonInterpreterTelemetry = {
     trigger: 'ui' | 'shebang' | 'load';
     failed: boolean;
-    pyVersion?: string;
+    pythonVersion?: string;
     pipVersion?: string;
 };
 export type CodeExecutionTelemetry = {
@@ -89,6 +93,7 @@ export type TerminalTelemetry = {
 };
 export type TelemetryProperties = FormatTelemetry
     | LanguageServerTelemetry
+    | LanguageServerErrorTelemetry
     | LintingTelemetry
     | EditorLoadTelemetry
     | PythonInterpreterTelemetry
