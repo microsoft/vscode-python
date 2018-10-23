@@ -20,7 +20,6 @@ export class InterpreterData {
     // tslint:disable-next-line:no-shadowed-variable
     public readonly path: string,
     public readonly version: string,
-    public readonly prefix: string,
     public readonly searchPaths: string,
     public readonly hash: string
   ) { }
@@ -81,15 +80,13 @@ export class InterpreterDataService {
   }
 
   private async getInterpreterDataFromPython(execService: IPythonExecutionService, interpreterPath: string): Promise<InterpreterData> {
-    const result = await execService.exec(['-c', 'import sys; print(sys.version_info); print(sys.prefix)'], {});
-    // 2.7.14 (v2.7.14:84471935ed, Sep 16 2017, 20:19:30) <<SOMETIMES NEW LINE HERE>>
-    // [MSC v.1500 32 bit (Intel)]
-    // C:\Python27
+    const result = await execService.exec(['-c', 'import sys; print(sys.version_info)'], {});
+    // sys.version_info(major=3, minor=6, micro=6, releaselevel='final', serial=0)
     if (!result.stdout) {
       throw Error('Unable to determine Python interpreter version and system prefix.');
     }
     const output = result.stdout.splitLines({ removeEmptyEntries: true, trim: true });
-    if (!output || output.length < 2) {
+    if (!output || output.length < 1) {
       throw Error('Unable to parse version and and system prefix from the Python interpreter output.');
     }
     const majorMatches = output[0].match(/major=(\d*?),/);
@@ -97,10 +94,9 @@ export class InterpreterDataService {
     if (!majorMatches || majorMatches.length < 2 || !minorMatches || minorMatches.length < 2) {
       throw Error('Unable to parse interpreter version.');
     }
-    const prefix = output[output.length - 1];
     const hash = await this.getInterpreterHash(interpreterPath);
     const searchPaths = await this.getSearchPaths(execService);
-    return new InterpreterData(DataVersion, interpreterPath, `${majorMatches[1]}.${minorMatches[1]}`, prefix, searchPaths, hash);
+    return new InterpreterData(DataVersion, interpreterPath, `${majorMatches[1]}.${minorMatches[1]}`, searchPaths, hash);
   }
 
   private async getSearchPaths(execService: IPythonExecutionService): Promise<string> {

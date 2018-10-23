@@ -15,13 +15,17 @@ export type FormatTelemetry = {
     formatSelection: boolean;
 };
 
-export type LanguageServerTelemetry = {
+export type LanguageServerVersionTelemetry = {
     success: boolean;
     lsVersion?: string;
 };
 
 export type LanguageServerErrorTelemetry = {
     error: string;
+};
+
+export type LanguageServerTelemetry = {
+    [key: string]: string;
 };
 
 export type LinterTrigger = 'auto' | 'save';
@@ -92,6 +96,7 @@ export type TerminalTelemetry = {
 };
 export type TelemetryProperties = FormatTelemetry
     | LanguageServerTelemetry
+    | LanguageServerVersionTelemetry
     | LanguageServerErrorTelemetry
     | LintingTelemetry
     | EditorLoadTelemetry
