@@ -9,7 +9,7 @@ import { DebugSession, DebugSessionCustomEvent } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { sleep } from '../../../common/utils/async';
 import { swallowExceptions } from '../../../common/utils/decorators';
-import { ChildProcessLaunched, ProcessLaunched } from './constants';
+import { PTVSDEvents } from './constants';
 import { ChildProcessLaunchData, IDebugSessionEventHandlers, IProcessTerminationService } from './types';
 
 /**
@@ -22,44 +22,81 @@ import { ChildProcessLaunchData, IDebugSessionEventHandlers, IProcessTermination
  */
 @injectable()
 export class ProcessTerminationEventHandler implements IDebugSessionEventHandlers {
-    protected parentAndChildProcsToKill = new Map<number, Set<number>>();
+    /**
+     * List of PID that need to be killed when debugging ends.
+     * @protected
+     * @memberof ProcessTerminationEventHandler
+     */
+    protected procecssIdsTrackedToKill = new Set<number>();
+    /**
+     * Key value pair of the Debug Session ID + corresponding PID that need to be killed.
+     * @protected
+     * @memberof ProcessTerminationEventHandler
+     */
+    protected debugSessionsTrackedToKill = new Map<string, number>();
     constructor(@inject(IProcessTerminationService) private readonly processTermination: IProcessTerminationService) { }
 
-    @swallowExceptions('Track child process for termination')
+    @swallowExceptions('Track processes for termination')
     public async handleCustomEvent(event: DebugSessionCustomEvent): Promise<void> {
         if (!event) {
             return;
         }
 
         switch (event.event) {
-            case ChildProcessLaunched:
+            case PTVSDEvents.ChildProcessLaunched:
                 return this.handleSubProcessLaunch(event.body! as ChildProcessLaunchData);
-            case ProcessLaunched:
+            case PTVSDEvents.ProcessLaunched:
                 // tslint:disable-next-line:no-any
-                return this.handleProcessLaunch(event as any as DebugProtocol.ProcessEvent);
+                return this.handleProcessLaunch(event as any as DebugProtocol.ProcessEvent, event.session.id);
             default:
                 return;
         }
     }
     @swallowExceptions('Terminate debugger processes')
     public async handleTerminateEvent(event: DebugSession): Promise<void> {
+        const pid = this.debugSessionsTrackedToKill.get(event.id);
+        if (pid) {
+            this.processTermination.terminateProcess(pid);
+        }
+        await this.waitForCleanup();
+        this.processTermination.terminateOrphanedProcesses();
+    }
+    protected async waitForCleanup() {
         // Wait till all house cleaning to take place.
         await sleep(5000);
-        this.processTermination.terminateChildProcesses();
     }
-    protected handleProcessLaunch(event: DebugProtocol.ProcessEvent) {
-        if (event.body.startMethod !== 'launch' || !event.body.systemProcessId) {
+    protected handleProcessLaunch(event: DebugProtocol.ProcessEvent, debugSessionId: string) {
+        if (!event.body.systemProcessId) {
             return;
         }
 
-        this.processTermination.trackProcess(event.body.systemProcessId);
+        switch (event.body.startMethod) {
+            case 'launch': {
+                this.processTermination.trackProcess(event.body.systemProcessId);
+                this.debugSessionsTrackedToKill.set(debugSessionId, event.body.systemProcessId);
+                break;
+            }
+            case 'attach': {
+                // Only if attaching to a child process part of a multi process launch debug.
+                if (this.procecssIdsTrackedToKill.has(event.body.systemProcessId)) {
+                    this.procecssIdsTrackedToKill.delete(event.body.systemProcessId);
+                    this.debugSessionsTrackedToKill.set(debugSessionId, event.body.systemProcessId);
+                }
+            }
+            default:
+                break;
+        }
     }
     protected handleSubProcessLaunch(data: ChildProcessLaunchData) {
         // We need to track root & parent process that is a part of multi-proc `launch` debugging.
-        if (!data.initialProcessId || data.rootStartRequest.arguments.request !== 'launch') {
+        if (!data.rootProcessId || data.rootStartRequest.arguments.request !== 'launch') {
             return;
         }
         this.processTermination.trackProcess(data.processId, data.parentProcessId);
-        this.processTermination.trackProcess(data.processId, data.initialProcessId);
+        this.processTermination.trackProcess(data.processId, data.rootProcessId);
+
+        this.procecssIdsTrackedToKill.add(data.processId);
+        this.procecssIdsTrackedToKill.add(data.parentProcessId);
+        this.procecssIdsTrackedToKill.add(data.rootProcessId);
     }
 }

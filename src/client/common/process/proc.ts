@@ -13,6 +13,24 @@ import { ExecutionResult, IBufferDecoder, IProcessService, ObservableExecutionRe
 
 export class ProcessService implements IProcessService {
     constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) { }
+    public static isAlive(pid: number): boolean {
+        try {
+            process.kill(pid, 0);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+    public static kill(pid: number): void {
+        // tslint:disable-next-line:no-require-imports
+        const killProcessTree = require('tree-kill');
+        try {
+            killProcessTree(pid);
+        } catch {
+            // Ignore.
+        }
+
+    }
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         const encoding = options.encoding = typeof options.encoding === 'string' && options.encoding.length > 0 ? options.encoding : DEFAULT_ENCODING;
         delete options.encoding;

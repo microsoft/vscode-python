@@ -6,6 +6,8 @@
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
 import { Disposable } from 'vscode';
+import { IDebugService } from '../../../common/application/types';
+import { ProcessService } from '../../../common/process/proc';
 import { IDisposableRegistry } from '../../../common/types';
 import { IProcessTerminationService } from './types';
 /**
@@ -19,10 +21,11 @@ import { IProcessTerminationService } from './types';
 @injectable()
 export class ProcessTerminationService implements IProcessTerminationService {
     protected parentAndChildProcsToKill = new Map<number, Set<number>>();
+    protected initialized = false;
     constructor(@inject(IDisposableRegistry) disposables: Disposable[]) {
         disposables.push(this);
     }
-    public dispose = () => this.terminateChildProcesses();
+    public dispose = () => this.terminateTrackedProcesses();
     public trackProcess(pid: number, ancestorPid?: number): void {
         // If we have an ancestor Pid, then track those as well, they'll need to be killed off,
         // and we'll need to kill the child procs when the ancestors die.
@@ -30,7 +33,7 @@ export class ProcessTerminationService implements IProcessTerminationService {
             if (this.parentAndChildProcsToKill.has(ancestorPid)) {
                 this.parentAndChildProcsToKill.get(ancestorPid)!.add(pid);
             } else {
-                this.parentAndChildProcsToKill.set(pid, new Set<number>([ancestorPid, pid]));
+                this.parentAndChildProcsToKill.set(ancestorPid, new Set<number>([ancestorPid, pid]));
             }
         }
         // Track the proc that needs to be killed off (including any of its children).
@@ -38,45 +41,56 @@ export class ProcessTerminationService implements IProcessTerminationService {
             this.parentAndChildProcsToKill.set(pid, new Set<number>([pid]));
         }
     }
-
-    public terminateChildProcesses() {
-        // tslint:disable-next-line:no-require-imports
-        const killProcessTree = require('tree-kill');
-
-        const procIds = this.getDeadAncestorProcessIds();
-        const childProcs = _.flatten(procIds.map(procId => {
-            if (this.parentAndChildProcsToKill.has(procId)) {
-                return Array.from(this.parentAndChildProcsToKill.get(procId)!.values());
-            } else {
-                return [];
+    public terminateProcess(pid: number): void {
+        ProcessService.kill(pid);
+        this.terminateProcesses(pid);
+    }
+    public terminateTrackedProcesses(): void {
+        for (const kv of this.parentAndChildProcsToKill) {
+            for (const childProcIds of kv[1].values()) {
+                try {
+                    ProcessService.kill(childProcIds);
+                } catch {
+                    // Ignore.
+                }
             }
-        }));
+        }
+        this.parentAndChildProcsToKill.clear();
+    }
+    public terminateOrphanedProcesses() {
+        this.terminateProcesses();
+    }
+
+    public terminateProcesses(parentPid?: number) {
+
+        const parentProcId = parentPid ? [parentPid] : [];
+        const procIds = [...this.getDeadProcessIds(), ...parentProcId];
+        const childProcIds = _.flatten(procIds.map(item => this.getAllChildProcs(item)));
         // Kill the parent and all tracked child processes.
-        [...procIds, ...childProcs].forEach(procId => {
+        [...procIds, ...childProcIds].forEach(procId => {
             try {
                 this.parentAndChildProcsToKill.delete(procId);
-                killProcessTree(procId);
+                ProcessService.kill(procId);
             } catch {
                 // Ignore.
             }
         });
     }
 
-    protected getDeadAncestorProcessIds() {
-        const deadProcessIds: number[] = [];
-        for (const procId of this.parentAndChildProcsToKill.keys()) {
-            if (!this.isProcessIdAlive(procId)) {
-                deadProcessIds.push(procId);
-            }
-        }
-        return deadProcessIds;
+    protected getDeadProcessIds() {
+        return Array.from(this.parentAndChildProcsToKill.keys())
+            .filter(pid => !ProcessService.isAlive(pid));
     }
-    protected isProcessIdAlive(pid: number) {
-        try {
-            process.kill(pid, 0);
-            return true;
-        } catch {
-            return false;
+    protected getAllChildProcs(parentPid: number) {
+        const childProcIds: number[] = [];
+        for (const kv of this.parentAndChildProcsToKill) {
+            if (kv[0] !== parentPid) {
+                continue;
+            }
+            const values = Array.from(kv[1].values());
+            childProcIds.push(...values.filter(pid => pid !== parentPid));
         }
+        const grandChildren = _.flatten(childProcIds.map(pid => this.getAllChildProcs(pid)));
+        return [...childProcIds, ...grandChildren];
     }
 }
