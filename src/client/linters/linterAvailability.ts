@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import { traceError } from '../common/logger';
-import { IInstaller, Product } from '../common/types';
+import { IConfigurationService, IInstaller, Product } from '../common/types';
 import { IAvailableLinterActivator, ILinterInfo } from './types';
 
 @injectable()
@@ -15,7 +15,8 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IInstaller) private installer: IInstaller,
-        @inject(IWorkspaceService) private workspaceConfig: IWorkspaceService
+        @inject(IWorkspaceService) private workspaceConfig: IWorkspaceService,
+        @inject(IConfigurationService) private configService: IConfigurationService
     ) { }
 
     /**
@@ -121,8 +122,6 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * @returns true if the global default for python.jediEnabled is false.
      */
     public get isFeatureEnabled(): boolean {
-        const ws = this.workspaceConfig.getConfiguration('python');
-        const jediEnabled = ws!.inspect('jediEnabled');
-        return (!jediEnabled || jediEnabled.defaultValue === false);
+        return !this.configService.getSettings().jediEnabled;
     }
 }
