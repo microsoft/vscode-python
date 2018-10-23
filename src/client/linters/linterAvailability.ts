@@ -30,7 +30,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      */
     public async promptIfLinterAvailable(linterInfo: ILinterInfo, resource?: Uri): Promise<boolean> {
         // Has the feature been enabled yet?
-        if (!this.isFeatureEnabled()) {
+        if (!this.isFeatureEnabled) {
             return false;
         }
 
@@ -120,7 +120,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      *
      * @returns true if the global default for python.jediEnabled is false.
      */
-    public isFeatureEnabled(): boolean {
+    public get isFeatureEnabled(): boolean {
         const ws = this.workspaceConfig.getConfiguration('python');
         const jediEnabled = ws!.inspect('jediEnabled');
         return (!jediEnabled || jediEnabled.defaultValue === false);

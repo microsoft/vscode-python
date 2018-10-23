@@ -21,16 +21,14 @@ suite('Linter Availability Provider tests', () => {
         const expectedResult = false;
 
         // arrange
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        const wkspcConfigSrvcMock = setupWorkspaceServiceForJediSettingTest(jediEnabledValue);
+        const [appShellMock, installerMock, wkspcConfigSrvcMock] = getDependenciesForAvailabilityTests();
+        setupWorkspaceServiceForJediSettingTest(jediEnabledValue, wkspcConfigSrvcMock);
 
         // call
         const availabilityProvider = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
-        const result = availabilityProvider.isFeatureEnabled();
 
         // check expectaions
-        expect(result).is.equal(expectedResult);
+        expect(availabilityProvider.isFeatureEnabled).is.equal(expectedResult, 'Avaialability feature should be disabled when python.jediEnabled defaults to true');
         wkspcConfigSrvcMock.verifyAll();
     });
 
@@ -40,15 +38,12 @@ suite('Linter Availability Provider tests', () => {
         const expectedResult = true;
 
         // arrange
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        const wkspcConfigSrvcMock = setupWorkspaceServiceForJediSettingTest(jediEnabledValue);
+        const [appShellMock, installerMock, wkspcConfigSrvcMock] = getDependenciesForAvailabilityTests();
+        setupWorkspaceServiceForJediSettingTest(jediEnabledValue, wkspcConfigSrvcMock);
 
         const availabilityProvider = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
 
-        const result = availabilityProvider.isFeatureEnabled();
-
-        expect(result).is.equal(expectedResult);
+        expect(availabilityProvider.isFeatureEnabled).is.equal(expectedResult, 'Avaialability feature should be enabled when python.jediEnabled defaults to false');
         wkspcConfigSrvcMock.verifyAll();
     });
 
@@ -59,18 +54,14 @@ suite('Linter Availability Provider tests', () => {
         const pylintWorkspaceFolderValue = undefined;
         const expectedResult = true;
 
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        const wkspcConfigSrvcMock = setupWorkspaceMockForLinterConfiguredTests(pylintUserValue, pylintWorkspaceValue, pylintWorkspaceFolderValue);
+        const [appShellMock, installerMock, wkspcConfigSrvcMock, linterInfo] = getDependenciesForAvailabilityTests();
+        setupWorkspaceMockForLinterConfiguredTests(pylintUserValue, pylintWorkspaceValue, pylintWorkspaceFolderValue, wkspcConfigSrvcMock);
 
         const availabilityProvider = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
 
-        const pylintInfo = new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
+        const result = availabilityProvider.isLinterUsingDefaultConfiguration(linterInfo);
 
-        const result = availabilityProvider.isLinterUsingDefaultConfiguration(pylintInfo);
-
-        expect(result).to.equal(expectedResult);
+        expect(result).to.equal(expectedResult, 'Linter is unconfigured but prompt did not get raised');
         wkspcConfigSrvcMock.verifyAll();
     });
 
@@ -81,16 +72,13 @@ suite('Linter Availability Provider tests', () => {
         const pylintWorkspaceFolderValue = undefined;
         const expectedResult = false;
 
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        const wkspcConfigSrvcMock = setupWorkspaceMockForLinterConfiguredTests(pylintUserValue, pylintWorkspaceValue, pylintWorkspaceFolderValue);
+        const [appShellMock, installerMock, wkspcConfigSrvcMock, linterInfo] = getDependenciesForAvailabilityTests();
+        setupWorkspaceMockForLinterConfiguredTests(pylintUserValue, pylintWorkspaceValue, pylintWorkspaceFolderValue, wkspcConfigSrvcMock);
 
         const availabilityProvider = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
 
-        const pylintInfo = new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
-        const result = availabilityProvider.isLinterUsingDefaultConfiguration(pylintInfo);
-        expect(result).to.equal(expectedResult);
+        const result = availabilityProvider.isLinterUsingDefaultConfiguration(linterInfo);
+        expect(result).to.equal(expectedResult, 'Available linter prompt should not be shown when linter is configured for workspace.');
         wkspcConfigSrvcMock.verifyAll();
     });
 
@@ -101,16 +89,13 @@ suite('Linter Availability Provider tests', () => {
         const pylintWorkspaceFolderValue = undefined;
         const expectedResult = false;
 
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        const wkspcConfigSrvcMock = setupWorkspaceMockForLinterConfiguredTests(pylintUserValue, pylintWorkspaceValue, pylintWorkspaceFolderValue);
-
+        // arrange
+        const [appShellMock, installerMock, wkspcConfigSrvcMock, linterInfo] = getDependenciesForAvailabilityTests();
+        setupWorkspaceMockForLinterConfiguredTests(pylintUserValue, pylintWorkspaceValue, pylintWorkspaceFolderValue, wkspcConfigSrvcMock);
         const availabilityProvider = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
 
-        const pylintInfo = new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
-        const result = availabilityProvider.isLinterUsingDefaultConfiguration(pylintInfo);
-        expect(result).to.equal(expectedResult);
+        const result = availabilityProvider.isLinterUsingDefaultConfiguration(linterInfo);
+        expect(result).to.equal(expectedResult, 'Available linter prompt should not be shown when linter is configured for user.');
         wkspcConfigSrvcMock.verifyAll();
     });
 
@@ -121,34 +106,23 @@ suite('Linter Availability Provider tests', () => {
         const pylintWorkspaceFolderValue = true;
         const expectedResult = false;
 
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-
-        const wkspcConfigSrvcMock = setupWorkspaceMockForLinterConfiguredTests(pylintUserValue, pylintWorkspaceValue, pylintWorkspaceFolderValue);
-
+        // arrange
+        const [appShellMock, installerMock, wkspcConfigSrvcMock, linterInfo] = getDependenciesForAvailabilityTests();
+        setupWorkspaceMockForLinterConfiguredTests(pylintUserValue, pylintWorkspaceValue, pylintWorkspaceFolderValue, wkspcConfigSrvcMock);
         const availabilityProvider = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
 
-        const pylintInfo = new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
-        const result = availabilityProvider.isLinterUsingDefaultConfiguration(pylintInfo);
-        expect(result).to.equal(expectedResult);
+        const result = availabilityProvider.isLinterUsingDefaultConfiguration(linterInfo);
+        expect(result).to.equal(expectedResult, 'Available linter prompt should not be shown when linter is configured for workspace-folder.');
         wkspcConfigSrvcMock.verifyAll();
     });
 
-    test('Linter is enabled after being prompted and "Enable <linter>" is selected', async () => {
-        // set expectation
-        const promptReply = { title: 'Enable pylint', enabled: true };
-        const expectedResult = true;
-
+    async function testForLinterPromptResponse(promptReply: { title: string; enabled: boolean } | undefined): Promise<boolean> {
         // arrange
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        const wkspcConfigSrvcMock = TypeMoq.Mock.ofType<IWorkspaceService>();
-
+        const [appShellMock, installerMock, wkspcConfigSrvcMock] = getDependenciesForAvailabilityTests();
         const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
 
         const linterInfo = new class extends LinterInfo {
-            public testIsEnabled: boolean = !promptReply.enabled;
+            public testIsEnabled: boolean = promptReply ? promptReply.enabled : false;
 
             public async enableAsync(enabled: boolean, resource?: Uri): Promise<void> {
                 this.testIsEnabled = enabled;
@@ -168,12 +142,26 @@ suite('Linter Availability Provider tests', () => {
             })
             .verifiable(TypeMoq.Times.once());
 
-        // call
+        // perform test
         const availabilityProvider = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
         const result = await availabilityProvider.promptToConfigureAvailableLinter(linterInfo);
+        if (promptReply) {
+            expect(linterInfo.testIsEnabled).to.equal(promptReply.enabled, 'LinterInfo test class was not updated as a result of the test.');
+        }
 
+        return result;
+    }
+
+    test('Linter is enabled after being prompted and "Enable <linter>" is selected', async () => {
+        // set expectations
+        const expectedResult = true;
+        const promptReply = { title: 'Enable pylint', enabled: true };
+
+        // run scenario
+        const result = await testForLinterPromptResponse(promptReply);
+
+        // test results
         expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.');
-        expect(linterInfo.testIsEnabled).to.equal(promptReply.enabled, 'LinterInfo test class was not updated as a result of the test.');
     });
 
     test('Linter is disabled after being prompted and "Disable <linter>" is selected', async () => {
@@ -181,40 +169,11 @@ suite('Linter Availability Provider tests', () => {
         const promptReply = { title: 'Disable pylint', enabled: false };
         const expectedResult = true;
 
-        // arrange
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        const wkspcConfigSrvcMock = TypeMoq.Mock.ofType<IWorkspaceService>();
+        // run scenario
+        const result = await testForLinterPromptResponse(promptReply);
 
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-
-        const linterInfo = new class extends LinterInfo {
-            public testIsEnabled: boolean = !promptReply.enabled;
-
-            public async enableAsync(enabled: boolean, resource?: Uri): Promise<void> {
-                this.testIsEnabled = enabled;
-                return Promise.resolve();
-            }
-
-        }(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
-
-        appShellMock.setup(ap => ap.showInformationMessage(
-            TypeMoq.It.isValue(`Linter ${linterInfo.id} is available but not enabled.`),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny())
-        )
-            .returns(() => {
-                // tslint:disable-next-line:no-any
-                return promptReply as any;
-            })
-            .verifiable(TypeMoq.Times.once());
-
-        // call
-        const availabilityProvider = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
-        const result = await availabilityProvider.promptToConfigureAvailableLinter(linterInfo);
-
+        // test results
         expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.');
-        expect(linterInfo.testIsEnabled).to.equal(promptReply.enabled, 'LinterInfo test class was not updated as a result of the test.');
     });
 
     test('Linter is left unconfigured after being prompted and the prompt is disabled without any selection made', async () => {
@@ -222,258 +181,137 @@ suite('Linter Availability Provider tests', () => {
         const promptReply = undefined;
         const expectedResult = false;
 
+        // run scenario
+        const result = await testForLinterPromptResponse(promptReply);
+
+        // test results
+        expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.');
+    });
+
+    // Options to test the implementation of the IAvailableLinterActivator.
+    // All options default to values that would otherwise allow the prompt to appear.
+    class AvailablityTestOverallOptions {
+        public jediEnabledValue: boolean = false;
+        public pylintUserEnabled?: boolean;
+        public pylintWorkspaceEnabled?: boolean;
+        public pylintWorkspaceFolderEnabled?: boolean;
+        public linterIsInstalled: boolean = true;
+        public promptReply?: { title: string; enabled: boolean };
+    }
+
+    async function performTestOfOverallImplementation(options: AvailablityTestOverallOptions): Promise<boolean> {
         // arrange
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        const wkspcConfigSrvcMock = TypeMoq.Mock.ofType<IWorkspaceService>();
-
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-
-        const linterInfo = new class extends LinterInfo {
-            public testIsEnabled: boolean = false;
-
-            public async enableAsync(enabled: boolean, resource?: Uri): Promise<void> {
-                this.testIsEnabled = enabled;
-                return Promise.resolve();
-            }
-
-        }(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
-
+        const [appShellMock, installerMock, wkspcConfigSrvcMock, linterInfo] = getDependenciesForAvailabilityTests();
         appShellMock.setup(ap => ap.showInformationMessage(
             TypeMoq.It.isValue(`Linter ${linterInfo.id} is available but not enabled.`),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny())
         )
-            .returns(() => {
-                // tslint:disable-next-line:no-any
-                return promptReply as any;
-            })
+            // tslint:disable-next-line:no-any
+            .returns(() => options.promptReply as any)
             .verifiable(TypeMoq.Times.once());
 
-        // call
-        const availabilityProvider = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
-        const result = await availabilityProvider.promptToConfigureAvailableLinter(linterInfo);
+        installerMock.setup(im => im.isInstalled(linterInfo.product, TypeMoq.It.isAny()))
+            .returns(async () => options.linterIsInstalled)
+            .verifiable(TypeMoq.Times.once());
 
-        expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.');
-    });
-
-    test('Overall implementation does not change configuration when feature disabled', async () => {
-        // set expectations
-        const jediEnabledValue = true;
-        const expectedResult = false;
-
-        // arrange
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        const wkspcConfigSrvcMock = setupWorkspaceServiceForJediSettingTest(jediEnabledValue);
-        const pylintInfo = new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
+        setupWorkspaceServiceForJediSettingTest(options.jediEnabledValue, wkspcConfigSrvcMock);
+        setupWorkspaceMockForLinterConfiguredTests(
+            options.pylintUserEnabled,
+            options.pylintWorkspaceEnabled,
+            options.pylintWorkspaceFolderEnabled,
+            wkspcConfigSrvcMock
+        );
 
         // perform test
         const availabilityProvider: IAvailableLinterActivator = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
-        const result = await availabilityProvider.promptIfLinterAvailable(pylintInfo);
+        return availabilityProvider.promptIfLinterAvailable(linterInfo);
+    }
 
+    test('Overall implementation does not change configuration when feature disabled', async () => {
+        // set expectations
+        const testOpts = new AvailablityTestOverallOptions();
+        testOpts.jediEnabledValue = true;
+        const expectedResult = false;
+
+        // arrange
+        const result = await performTestOfOverallImplementation(testOpts);
+
+        // perform test
         expect(expectedResult).to.equal(result, 'promptIfLinterAvailable should not change any configuration when python.jediEnabled is true.');
-        wkspcConfigSrvcMock.verifyAll();
     });
 
     test('Overall implementation does not change configuration when linter is configured (enabled)', async () => {
         // set expectations
-        const jediEnabledValue = false;
-        const pylintUserEnabled = undefined;
-        const pylintWorkspaceEnabled = true;
-        const pylintWorkspaceFolderEnabled = undefined;
+        const testOpts = new AvailablityTestOverallOptions();
+        testOpts.pylintWorkspaceEnabled = true;
         const expectedResult = false;
 
         // arrange
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        let wkspcConfigSrvcMock = setupWorkspaceServiceForJediSettingTest(jediEnabledValue);
-        wkspcConfigSrvcMock = setupWorkspaceMockForLinterConfiguredTests(pylintUserEnabled, pylintWorkspaceEnabled, pylintWorkspaceFolderEnabled, wkspcConfigSrvcMock);
-        const pylintInfo = new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
-
-        // perform test
-        const availabilityProvider: IAvailableLinterActivator = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
-        const result = await availabilityProvider.promptIfLinterAvailable(pylintInfo);
+        const result = await performTestOfOverallImplementation(testOpts);
 
         // perform test
         expect(expectedResult).to.equal(result, 'Configuration should not change if the linter is configured in any way.');
-        wkspcConfigSrvcMock.verifyAll();
     });
 
     test('Overall implementation does not change configuration when linter is configured (disabled)', async () => {
         // set expectations
-        const jediEnabledValue = false;
-        const pylintUserEnabled = undefined;
-        const pylintWorkspaceEnabled = true;
-        const pylintWorkspaceFolderEnabled = undefined;
+        const testOpts = new AvailablityTestOverallOptions();
+        testOpts.pylintWorkspaceEnabled = false;
         const expectedResult = false;
 
         // arrange
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        let wkspcConfigSrvcMock = setupWorkspaceServiceForJediSettingTest(jediEnabledValue);
-        wkspcConfigSrvcMock = setupWorkspaceMockForLinterConfiguredTests(pylintUserEnabled, pylintWorkspaceEnabled, pylintWorkspaceFolderEnabled, wkspcConfigSrvcMock);
-        const pylintInfo = new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
+        const result = await performTestOfOverallImplementation(testOpts);
 
-        // perform test
-        const availabilityProvider: IAvailableLinterActivator = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
-        const result = await availabilityProvider.promptIfLinterAvailable(pylintInfo);
-
-        // perform test
         expect(expectedResult).to.equal(result, 'Configuration should not change if the linter is disabled in any way.');
-        wkspcConfigSrvcMock.verifyAll();
     });
 
     test('Overall implementation does not change configuration when linter is unavailable in current workspace environment', async () => {
         // set expectations
-        const jediEnabledValue = false;
-        const pylintUserEnabled = undefined;
-        const pylintWorkspaceEnabled = true;
-        const pylintWorkspaceFolderEnabled = undefined;
-        const linterIsInstalled = false;
+        const testOpts = new AvailablityTestOverallOptions();
+        testOpts.pylintWorkspaceEnabled = true;
         const expectedResult = false;
 
         // arrange
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        const pylintInfo = new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        installerMock.setup(im => im.isInstalled(pylintInfo.product, TypeMoq.It.isAny()))
-            .returns(async () => linterIsInstalled)
-            .verifiable(TypeMoq.Times.once());
-        let wkspcConfigSrvcMock = setupWorkspaceServiceForJediSettingTest(jediEnabledValue);
-        wkspcConfigSrvcMock = setupWorkspaceMockForLinterConfiguredTests(pylintUserEnabled, pylintWorkspaceEnabled, pylintWorkspaceFolderEnabled, wkspcConfigSrvcMock);
-
-        // perform test
-        const availabilityProvider: IAvailableLinterActivator = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
-        const result = await availabilityProvider.promptIfLinterAvailable(pylintInfo);
+        const result = await performTestOfOverallImplementation(testOpts);
 
         expect(expectedResult).to.equal(result, 'Configuration should not change if the linter is unavailable in the current workspace environment.');
-        wkspcConfigSrvcMock.verifyAll();
     });
 
     test('Overall implementation does not change configuration when user is prompted and prompt is dismissed', async () => {
         // set expectations
-        const jediEnabledValue = false;
-        const pylintUserEnabled = undefined;
-        const pylintWorkspaceEnabled = undefined;
-        const pylintWorkspaceFolderEnabled = undefined;
-        const linterIsInstalled = true;
-        const promptReply = undefined;
+        const testOpts = new AvailablityTestOverallOptions();
+        testOpts.promptReply = undefined; // just being explicit for test readability - this is the default
         const expectedResult = false;
 
         // arrange
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        const pylintInfo = new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        appShellMock.setup(ap => ap.showInformationMessage(
-            TypeMoq.It.isValue(`Linter ${pylintInfo.id} is available but not enabled.`),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny())
-        )
-            // tslint:disable-next-line:no-any
-            .returns(() => promptReply as any)
-            .verifiable(TypeMoq.Times.once());
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        installerMock.setup(im => im.isInstalled(pylintInfo.product, TypeMoq.It.isAny()))
-            .returns(async () => linterIsInstalled)
-            .verifiable(TypeMoq.Times.once());
-        let wkspcConfigSrvcMock = setupWorkspaceServiceForJediSettingTest(jediEnabledValue);
-        wkspcConfigSrvcMock = setupWorkspaceMockForLinterConfiguredTests(pylintUserEnabled, pylintWorkspaceEnabled, pylintWorkspaceFolderEnabled, wkspcConfigSrvcMock);
-
-        // perform test
-        const availabilityProvider: IAvailableLinterActivator = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
-        const result = await availabilityProvider.promptIfLinterAvailable(pylintInfo);
+        const result = await performTestOfOverallImplementation(testOpts);
 
         expect(expectedResult).to.equal(result, 'Configuration should not change if the user is prompted and they dismiss the prompt.');
-        wkspcConfigSrvcMock.verifyAll();
-        appShellMock.verifyAll();
-        installerMock.verifyAll();
     });
 
     test('Overall implementation changes configuration when user is prompted and "Disable <linter>" is selected', async () => {
         // set expectations
-        const jediEnabledValue = false;
-        const pylintUserEnabled = undefined;
-        const pylintWorkspaceEnabled = undefined;
-        const pylintWorkspaceFolderEnabled = undefined;
-        const linterIsInstalled = true;
-        const promptReply = { title: 'Disable pylint', enabled: false };
+        const testOpts = new AvailablityTestOverallOptions();
+        testOpts.promptReply = { title: 'Disable pylint', enabled: false };
         const expectedResult = true;
 
         // arrange
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        const pylintInfo = new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        appShellMock.setup(ap => ap.showInformationMessage(
-            TypeMoq.It.isValue(`Linter ${pylintInfo.id} is available but not enabled.`),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny())
-        )
-            .returns(() => {
-                // tslint:disable-next-line:no-any
-                return promptReply as any;
-            })
-            .verifiable(TypeMoq.Times.once());
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        installerMock.setup(im => im.isInstalled(pylintInfo.product, TypeMoq.It.isAny()))
-            .returns(async () => linterIsInstalled)
-            .verifiable(TypeMoq.Times.once());
-        let wkspcConfigSrvcMock = setupWorkspaceServiceForJediSettingTest(jediEnabledValue);
-        wkspcConfigSrvcMock = setupWorkspaceMockForLinterConfiguredTests(pylintUserEnabled, pylintWorkspaceEnabled, pylintWorkspaceFolderEnabled, wkspcConfigSrvcMock);
+        const result = await performTestOfOverallImplementation(testOpts);
 
-        // perform test
-        const availabilityProvider: IAvailableLinterActivator = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
-        const result = await availabilityProvider.promptIfLinterAvailable(pylintInfo);
-
-        expect(expectedResult).to.equal(result, 'Configuration should not change if the user is prompted and they dismiss the prompt.');
-        wkspcConfigSrvcMock.verifyAll();
-        appShellMock.verifyAll();
-        installerMock.verifyAll();
+        expect(expectedResult).to.equal(result, 'Configuration should change if the user is prompted and they choose to update the linter config.');
     });
 
     test('Overall implementation changes configuration when user is prompted and "Enable <linter>" is selected', async () => {
         // set expectations
-        const jediEnabledValue = false;
-        const pylintUserEnabled = undefined;
-        const pylintWorkspaceEnabled = undefined;
-        const pylintWorkspaceFolderEnabled = undefined;
-        const linterIsInstalled = true;
-        const promptReply = { title: 'Enable pylint', enabled: true };
+        const testOpts = new AvailablityTestOverallOptions();
+        testOpts.promptReply = { title: 'Enable pylint', enabled: true };
         const expectedResult = true;
 
         // arrange
-        const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
-        const pylintInfo = new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
-        const appShellMock = TypeMoq.Mock.ofType<IApplicationShell>();
-        appShellMock.setup(ap => ap.showInformationMessage(
-            TypeMoq.It.isValue(`Linter ${pylintInfo.id} is available but not enabled.`),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny())
-        )
-            .returns(() => {
-                // tslint:disable-next-line:no-any
-                return promptReply as any;
-            })
-            .verifiable(TypeMoq.Times.once());
-        const installerMock = TypeMoq.Mock.ofType<IInstaller>();
-        installerMock.setup(im => im.isInstalled(pylintInfo.product, TypeMoq.It.isAny()))
-            .returns(async () => linterIsInstalled)
-            .verifiable(TypeMoq.Times.once());
-        let wkspcConfigSrvcMock = setupWorkspaceServiceForJediSettingTest(jediEnabledValue);
-        wkspcConfigSrvcMock = setupWorkspaceMockForLinterConfiguredTests(pylintUserEnabled, pylintWorkspaceEnabled, pylintWorkspaceFolderEnabled, wkspcConfigSrvcMock);
+        const result = await performTestOfOverallImplementation(testOpts);
 
-        // perform test
-        const availabilityProvider: IAvailableLinterActivator = new AvailableLinterActivator(appShellMock.object, installerMock.object, wkspcConfigSrvcMock.object);
-        const result = await availabilityProvider.promptIfLinterAvailable(pylintInfo);
-
-        expect(expectedResult).to.equal(result, 'Configuration should not change if the user is prompted and they dismiss the prompt.');
-        wkspcConfigSrvcMock.verifyAll();
-        appShellMock.verifyAll();
-        installerMock.verifyAll();
+        expect(expectedResult).to.equal(result, 'Configuration should change if the user is prompted and they choose to update the linter config.');
     });
 
     test('Discovery of linter is available in the environment returns true when it succeeds and is present', async () => {
@@ -601,4 +439,19 @@ function setupWorkspaceServiceForJediSettingTest(jediEnabledValue: boolean, wksp
         .returns(() => workspaceConfiguration.object)
         .verifiable(TypeMoq.Times.once());
     return wkspcConfigSrvcMock;
+}
+
+function getDependenciesForAvailabilityTests(): [
+    TypeMoq.IMock<IApplicationShell>,
+    TypeMoq.IMock<IInstaller>,
+    TypeMoq.IMock<IWorkspaceService>,
+    LinterInfo
+] {
+    const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
+    return [
+        TypeMoq.Mock.ofType<IApplicationShell>(),
+        TypeMoq.Mock.ofType<IInstaller>(),
+        TypeMoq.Mock.ofType<IWorkspaceService>(),
+        new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc'])
+    ];
 }
