@@ -44,13 +44,6 @@ export type CodeExecutionTelemetry = {
 export type DebuggerTelemetry = {
     trigger: 'launch' | 'attach';
     console?: 'none' | 'integratedTerminal' | 'externalTerminal';
-    debugOptions?: string;
-    pyspark?: boolean;
-    hasEnvVars?: boolean;
-};
-export type DebuggerTelemetryV2 = {
-    trigger: 'launch' | 'attach';
-    console?: 'none' | 'integratedTerminal' | 'externalTerminal';
     hasEnvVars: boolean;
     hasArgs: boolean;
     django: boolean;
@@ -102,5 +95,5 @@ export type TelemetryProperties = FormatTelemetry
     | TestDiscoverytTelemetry
     | FeedbackTelemetry
     | TerminalTelemetry
-    | DebuggerTelemetryV2
+    | DebuggerTelemetry
     | SettingsTelemetry;

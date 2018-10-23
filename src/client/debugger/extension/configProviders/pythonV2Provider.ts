@@ -9,7 +9,7 @@ import { IPlatformService } from '../../../common/platform/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { DEBUGGER } from '../../../telemetry/constants';
-import { DebuggerTelemetryV2 } from '../../../telemetry/types';
+import { DebuggerTelemetry } from '../../../telemetry/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../types';
 import { BaseConfigurationProvider } from './baseProvider';
 import { IConfigurationProviderUtils } from './types';
@@ -127,7 +127,7 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
         return (debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK') ? true : false;
     }
     private sendTelemetry(trigger: 'launch' | 'attach', debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
-        const telemetryProps: DebuggerTelemetryV2 = {
+        const telemetryProps: DebuggerTelemetry = {
             trigger,
             console: debugConfiguration.console,
             hasEnvVars: typeof debugConfiguration.env === 'object' && Object.keys(debugConfiguration.env).length > 0,
