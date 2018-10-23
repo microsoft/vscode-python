@@ -23,7 +23,7 @@ export class LocalDebugClientV2 extends LocalDebugClient {
         if (multiProcess) {
             additionalPtvsdArgs.push('--multiprocess');
         }
-        return [launcher, ...additionalPtvsdArgs, '--host', 'localhost', '--port', debugPort.toString()];
+        return [launcher, ...additionalPtvsdArgs, '--client', '--host', 'localhost', '--port', debugPort.toString()];
     }
     protected buildStandardArguments() {
         const programArgs = Array.isArray(this.args.args) && this.args.args.length > 0 ? this.args.args : [];
