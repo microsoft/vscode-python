@@ -29,6 +29,10 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * @returns true if configuration was updated in any way, false otherwise.
      */
     public async promptIfLinterAvailable(linterInfo: ILinterInfo, resource?: Uri): Promise<boolean> {
+        // Has the feature been enabled yet?
+        if (!this.isFeatureEnabled()) {
+            return false;
+        }
 
         // Has the linter in question has been configured explicitly? If so, no need to continue.
         if (!this.isLinterUsingDefaultConfiguration(linterInfo, resource)) {
@@ -101,9 +105,24 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      *
      * @returns true if the linter has not been configured at the user, workspace, or workspace-folder scope. false otherwise.
      */
-    public isLinterUsingDefaultConfiguration(linterInfo: ILinterInfo, resource?: Uri) {
+    public isLinterUsingDefaultConfiguration(linterInfo: ILinterInfo, resource?: Uri): boolean {
         const ws = this.workspaceConfig.getConfiguration('python.linting', resource);
         const pe = ws!.inspect(linterInfo.enabledSettingName);
         return (pe!.globalValue === undefined && pe!.workspaceValue === undefined && pe!.workspaceFolderValue === undefined);
+    }
+
+    /**
+     * Check if this feature is enabled yet.
+     *
+     * This is a feature of the vscode-python extension that will become enabled once the
+     * Python Language Server becomes the default, replacing Jedi as the default. Testing
+     * the global default setting for `"python.jediEnabled": false` enables it.
+     *
+     * @returns true if the global default for python.jediEnabled is false.
+     */
+    public isFeatureEnabled(): boolean {
+        const ws = this.workspaceConfig.getConfiguration('python');
+        const jediEnabled = ws!.inspect('jediEnabled');
+        return (!jediEnabled || jediEnabled.defaultValue === false);
     }
 }
