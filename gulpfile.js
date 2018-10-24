@@ -90,11 +90,7 @@ gulp.task('hygiene', (done) => run({ mode: 'all', skipFormatCheck: true, skipInd
 
 gulp.task('compile', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }, done));
 
-gulp.task('hygiene-modified', (done) => {
-    done();
-});
-gulp.task('checkNativeDependencies', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
-// gulp.task('hygiene-modified', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
+gulp.task('hygiene-modified', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
 
 gulp.task('watch', gulp.parallel('hygiene-modified', 'hygiene-watch'));
 
@@ -113,13 +109,12 @@ gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
 
 gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
 
-// gulp.task('checkNativeDependencies', (done) => {
-//     run({ exitOnError: true, mode: 'staged' }, done);
-//     // if (hasNativeDependencies()) {
-//     //     throw new Error('Native dependencies deteced');
-//     // }
-//     // done();
-// });
+gulp.task('checkNativeDependencies', (done) => {
+    if (hasNativeDependencies()) {
+        throw new Error('Native dependencies deteced');
+    }
+    done();
+});
 
 gulp.task('cover:enable', () => {
     return gulp.src("./build/coverconfig.json")
@@ -509,41 +504,23 @@ function getAddedFilesSync() {
         .filter(l => _.intersection(['A', '?', 'U'], l.substring(0, 2).trim().split('')).length > 0)
         .map(l => path.join(__dirname, l.substring(2).trim()));
 }
-function logVariable(varName) {
-    console.log(varName);
-    console.log(process.env[varName]);
-    console.log(process.env[varName.toUpperCase()]);
-    console.log(process.env[varName.replace(/\./g, '_').toUpperCase()]);
-}
 function getAzureDevOpsVarValue(varName) {
     return process.env[varName.replace(/\./g, '_').toUpperCase()]
 }
 function getModifiedFilesSync() {
-    console.log('getModifiedFilesSync');
-    console.log(isCI);
     if (isCI) {
         const isAzurePR = getAzureDevOpsVarValue('System.PullRequest.SourceBranch') !== undefined;
         const isTravisPR = process.env.TRAVIS_PULL_REQUEST !== undefined && process.env.TRAVIS_PULL_REQUEST !== 'true';
-        console.log('isTravisPR');
-        console.log(isTravisPR);
         if (!isAzurePR && !isTravisPR) {
-            console.log('NOT a PR');
             return [];
         }
         const targetBranch = process.env.TRAVIS_BRANCH || getAzureDevOpsVarValue('System.PullRequest.TargetBranch');
-        console.log('targetBranch');
-        console.log(targetBranch);
-        console.log(process.env.TRAVIS_BRANCH);
         if (targetBranch !== 'master') {
             return [];
         }
 
         const repo = process.env.TRAVIS_REPO_SLUG || getAzureDevOpsVarValue('Build.Repository.Name');
-        console.log('process.env.TRAVIS_REPO_SLUG');
-        console.log(process.env.TRAVIS_REPO_SLUG);
         const originOrUpstream = (repo.toUpperCase() === 'MICROSOFT/VSCODE-PYTHON' || repo.toUpperCase() === 'VSCODE-PYTHON-DATASCIENCE/VSCODE-PYTHON') ? 'origin' : 'upstream';
-        console.info('originOrUpstream');
-        console.info(originOrUpstream);
 
         // If on CI, get a list of modified files comparing against
         // PR branch and master of current (assumed 'origin') repo.
@@ -552,7 +529,6 @@ function getModifiedFilesSync() {
         const cmd = `git diff --name-only HEAD ${originOrUpstream}/master`;
         console.info(cmd);
         const out = cp.execSync(cmd, { encoding: 'utf8', cwd: __dirname });
-        console.info(out);
         return out
             .split(/\r?\n/)
             .filter(l => !!l)
@@ -600,12 +576,12 @@ exports.hygiene = hygiene;
 
 // this allows us to run hygiene via CLI (e.g. `node gulfile.js`).
 if (require.main === module) {
-    // const args = process.argv0.length > 2 ? process.argv.slice(2) : [];
-    // const isPreCommit = args.findIndex(arg => arg.startsWith('precommit='));
-    // const performPreCommitCheck = isPreCommit >= 0 ? args[isPreCommit].split('=')[1].trim().toUpperCase().startsWith('T') : false;
-    // // Allow precommit hooks for those with a file `./out/precommit.hook`.
-    // if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
-    //     return;
-    // }
+    const args = process.argv0.length > 2 ? process.argv.slice(2) : [];
+    const isPreCommit = args.findIndex(arg => arg.startsWith('precommit='));
+    const performPreCommitCheck = isPreCommit >= 0 ? args[isPreCommit].split('=')[1].trim().toUpperCase().startsWith('T') : false;
+    // Allow precommit hooks for those with a file `./out/precommit.hook`.
+    if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
+        return;
+    }
     run({ exitOnError: true, mode: 'staged' });
 }
