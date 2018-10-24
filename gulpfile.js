@@ -109,6 +109,7 @@ gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
 gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
 
 gulp.task('checkNativeDependencies', (done) => {
+    logVars();
     if (hasNativeDependencies()) {
         throw new Error('Native dependencies deteced');
     }
@@ -509,14 +510,17 @@ function logVariable(varName) {
     console.log(process.env[varName.toUpperCase()]);
     console.log(process.env[varName.replace(/\./g, '_').toUpperCase()]);
 }
-function getModifiedFilesSync() {
-    const azurePRBranch = process.env['SYSTEM_PULLREQUEST_TARGETBRANCH'];
+function logVars() {
     logVariable('Build.Repository.Name');
     logVariable('System.PullRequest.PullRequestId');
     logVariable('System.PullRequest.TargetBranch');
     logVariable('System.PullRequest.SourceBranch');
     logVariable('Build.SourceBranchName');
     logVariable('TRAVIS_BRANCH');
+}
+function getModifiedFilesSync() {
+    const azurePRBranch = process.env['SYSTEM_PULLREQUEST_TARGETBRANCH'];
+    logVars();
     if (process.env.TRAVIS || azurePRBranch) {
         // If on travis, get a list of modified files comparing either against
         // target (assumed 'upstream') PR branch or master of current (assumed 'origin') repo.
