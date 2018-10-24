@@ -689,7 +689,7 @@
                             "FLASK_APP": "app.py",
                             "FLASK_ENV": "development",
                             "FLASK_DEBUG": "1"
-                    },
+                        },
                         "args": [
                             "run"
                         ],
@@ -1596,7 +1596,7 @@
         "untildify": "^3.0.2",
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
-        "vscode-extension-telemetry": "^0.0.22",
+        "vscode-extension-telemetry": "^0.1.0",
         "vscode-languageclient": "^4.4.0",
         "vscode-languageserver": "^4.4.0",
         "vscode-languageserver-protocol": "^3.10.3",
