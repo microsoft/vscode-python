@@ -523,7 +523,7 @@ function getModifiedFilesSync() {
     console.log(isCI);
     if (isCI) {
         const isAzurePR = getAzureDevOpsVarValue('System.PullRequest.SourceBranch') !== undefined;
-        const isTravisPR = process.env.TRAVIS_PULL_REQUEST === 'true';
+        const isTravisPR = process.env.TRAVIS_PULL_REQUEST !== undefined && process.env.TRAVIS_PULL_REQUEST !== 'true';
         console.log('isTravisPR');
         console.log(isTravisPR);
         if (!isAzurePR && !isTravisPR) {
