@@ -35,8 +35,7 @@ const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
-console.log('process.env.TRAVIS');
-console.log(process.env.TRAVIS);
+
 const noop = function () { };
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -520,19 +519,30 @@ function getAzureDevOpsVarValue(varName) {
     return process.env[varName.replace(/\./g, '_').toUpperCase()]
 }
 function getModifiedFilesSync() {
+    console.log('getModifiedFilesSync');
+    console.log(isCI);
     if (isCI) {
         const isAzurePR = getAzureDevOpsVarValue('System.PullRequest.SourceBranch') !== undefined;
         const isTravisPR = process.env.TRAVIS_PULL_REQUEST === 'true';
+        console.log('isTravisPR');
+        console.log(isTravisPR);
         if (!isAzurePR && !isTravisPR) {
+            console.log('NOT a PR');
             return [];
         }
         const targetBranch = process.env.TRAVIS_BRANCH || getAzureDevOpsVarValue('System.PullRequest.TargetBranch');
+        console.log('targetBranch');
+        console.log(targetBranch);
+        console.log(process.env.TRAVIS_BRANCH);
         if (targetBranch !== 'master') {
             return [];
         }
 
         const repo = process.env.TRAVIS_REPO_SLUG || getAzureDevOpsVarValue('Build.Repository.Name');
-        const originOrUpstream = repo.toUpperCase() === 'MICROSOFT/VSCODE-PYTHON' ? 'origin' : 'upstream';
+        console.log('process.env.TRAVIS_REPO_SLUG');
+        console.log(process.env.TRAVIS_REPO_SLUG);
+        const originOrUpstream = (repo.toUpperCase() === 'MICROSOFT/VSCODE-PYTHON' || repo.toUpperCase() === 'VSCODE-PYTHON-DATASCIENCE/VSCODE-PYTHON') ? 'origin' : 'upstream';
+        console.info('originOrUpstream');
         console.info(originOrUpstream);
 
         // If on CI, get a list of modified files comparing against
