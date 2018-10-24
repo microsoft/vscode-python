@@ -35,6 +35,8 @@ const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
+console.log('process.env.TRAVIS');
+console.log(process.env.TRAVIS);
 const noop = function () { };
 /**
 * Hygiene works by creating cascading subsets of all our files and
