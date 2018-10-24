@@ -505,6 +505,7 @@ function getAddedFilesSync() {
 }
 function getModifiedFilesSync() {
     const azurePRBranch = process.env['SYSTEM_PULLREQUEST_TARGETBRANCH'];
+    console.log(azurePRBranch);
     if (process.env.TRAVIS || azurePRBranch) {
         // If on travis, get a list of modified files comparing either against
         // target (assumed 'upstream') PR branch or master of current (assumed 'origin') repo.
