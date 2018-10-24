@@ -34,7 +34,7 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
 
-const isCI = process.env.TRAVIS === 'true';
+const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 const noop = function () { };
 /**
 * Hygiene works by creating cascading subsets of all our files and
@@ -109,7 +109,6 @@ gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
 gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
 
 gulp.task('checkNativeDependencies', (done) => {
-    logVars();
     if (hasNativeDependencies()) {
         throw new Error('Native dependencies deteced');
     }
@@ -510,28 +509,33 @@ function logVariable(varName) {
     console.log(process.env[varName.toUpperCase()]);
     console.log(process.env[varName.replace(/\./g, '_').toUpperCase()]);
 }
-function logVars() {
-    logVariable('Build.Repository.Name');
-    logVariable('System.PullRequest.PullRequestId');
-    logVariable('System.PullRequest.TargetBranch');
-    logVariable('System.PullRequest.SourceBranch');
-    logVariable('Build.SourceBranchName');
-    logVariable('TRAVIS_BRANCH');
+function getAzureDevOpsVarValue(varName) {
+    return process.env[varName.replace(/\./g, '_').toUpperCase()]
 }
 function getModifiedFilesSync() {
-    const azurePRBranch = process.env['SYSTEM_PULLREQUEST_TARGETBRANCH'];
-    logVars();
-    if (process.env.TRAVIS || azurePRBranch) {
-        // If on travis, get a list of modified files comparing either against
-        // target (assumed 'upstream') PR branch or master of current (assumed 'origin') repo.
-        const isPR = process.env.TRAVIS_PULL_REQUEST === 'true' || azurePRBranch;
-        const originOrUpstream = isPR ? 'upstream' : 'origin';
+    if (isCI) {
+        const isAzurePR = getAzureDevOpsVarValue('System.PullRequest.SourceBranch') !== undefined;
+        const isTravisPR = process.env.TRAVIS_PULL_REQUEST === 'true';
+        if (!isAzurePR && !isTravisPR) {
+            return [];
+        }
+        const targetBranch = process.env.TRAVIS_BRANCH || getAzureDevOpsVarValue('System.PullRequest.TargetBranch');
+        if (targetBranch !== 'master') {
+            return [];
+        }
+
+        const repo = process.env.TRAVIS_REPO_SLUG || getAzureDevOpsVarValue('Build.Repository.Name');
+        const originOrUpstream = repo.toUpperCase() === 'MICROSOFT/VSCODE-PYTHON' ? 'origin' : 'upstream';
+        console.info(originOrUpstream);
+
+        // If on CI, get a list of modified files comparing against
+        // PR branch and master of current (assumed 'origin') repo.
         cp.execSync(`git remote set-branches --add ${originOrUpstream} master`, { encoding: 'utf8', cwd: __dirname });
         cp.execSync('git fetch', { encoding: 'utf8', cwd: __dirname });
-        const cmd = `git diff --name-only HEAD ${originOrUpstream}/${isPR ? process.env.TRAVIS_BRANCH : 'master'}`;
+        const cmd = `git diff --name-only HEAD ${originOrUpstream}/master`;
         console.info(cmd);
-        // This needs to be removed after we confirm things work as expected in master branch of extension.
         const out = cp.execSync(cmd, { encoding: 'utf8', cwd: __dirname });
+        console.info(out);
         return out
             .split(/\r?\n/)
             .filter(l => !!l)
