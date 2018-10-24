@@ -503,22 +503,20 @@ function getAddedFilesSync() {
         .filter(l => _.intersection(['A', '?', 'U'], l.substring(0, 2).trim().split('')).length > 0)
         .map(l => path.join(__dirname, l.substring(2).trim()));
 }
+function logVariable(varName) {
+    console.log(varName);
+    console.log(process.env[varName]);
+    console.log(process.env[varName.toUpperCase()]);
+    console.log(process.env[varName.replace(/\./g, '_').toUpperCase()]);
+}
 function getModifiedFilesSync() {
     const azurePRBranch = process.env['SYSTEM_PULLREQUEST_TARGETBRANCH'];
-    console.log('1');
-    console.log(azurePRBranch);
-    console.log('1');
-    console.log(process.env['System.PullRequest.TargetBranch']);
-    console.log('1');
-    console.log(process.env['System.PullRequest.TargetBranch']);
-    console.log('1');
-    console.log(process.env['Build.SourceBranchName']);
-    console.log('1');
-    console.log(process.env['BUILD_SOURCEBRANCHNAME']);
-    console.log('1');
-    console.log(process.env['MY_BRANCH_NAME']);
-    console.log('1');
-    console.log(process.env['TRAVIS_BRANCH']);
+    logVariable('Build.Repository.Name');
+    logVariable('System.PullRequest.PullRequestId');
+    logVariable('System.PullRequest.TargetBranch');
+    logVariable('System.PullRequest.SourceBranch');
+    logVariable('Build.SourceBranchName');
+    logVariable('TRAVIS_BRANCH');
     if (process.env.TRAVIS || azurePRBranch) {
         // If on travis, get a list of modified files comparing either against
         // target (assumed 'upstream') PR branch or master of current (assumed 'origin') repo.
