@@ -1,7 +1,13 @@
+'use strict';
+
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { CancellationTokenSource, Position, Uri, window, workspace } from 'vscode';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
+import {
+    CancellationTokenSource, Position, Uri, window, workspace
+} from 'vscode';
+import {
+    IProcessServiceFactory, IPythonExecutionFactory
+} from '../../client/common/process/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
@@ -26,7 +32,7 @@ let formattedBlack = '';
 let formattedAutoPep8 = '';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Formatting', () => {
+suite('Formatting - General', () => {
     let ioc: UnitTestIocContainer;
 
     suiteSetup(async () => {
@@ -37,12 +43,10 @@ suite('Formatting', () => {
         });
         fs.ensureDirSync(path.dirname(autoPep8FileToFormat));
         const pythonProcess = await ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(workspaceRootPath) });
-        const py2 = await ioc.getPythonMajorVersion(Uri.parse(originalUnformattedFile)) === 2;
         const yapf = pythonProcess.execModule('yapf', [originalUnformattedFile], { cwd: workspaceRootPath });
         const autoPep8 = pythonProcess.execModule('autopep8', [originalUnformattedFile], { cwd: workspaceRootPath });
         const formatters = [yapf, autoPep8];
-        // When testing against 3.5 and older, this will break.
-        if (!py2) {
+        if (await formattingTestIsBlackSupported()) {
             // Black doesn't support emitting only to stdout; it either works
             // through a pipe, emits a diff, or rewrites the file in-place.
             // Thus it's easier to let it do its in-place rewrite and then
@@ -50,14 +54,21 @@ suite('Formatting', () => {
             const black = pythonProcess.execModule('black', [blackReferenceFile], { cwd: workspaceRootPath });
             formatters.push(black);
         }
-        await Promise.all(formatters).then(formattedResults => {
+        await Promise.all(formatters).then(async formattedResults => {
             formattedYapf = formattedResults[0].stdout;
             formattedAutoPep8 = formattedResults[1].stdout;
-            if (!py2) {
+            if (await formattingTestIsBlackSupported()) {
                 formattedBlack = fs.readFileSync(blackReferenceFile).toString();
             }
         });
     });
+
+    async function formattingTestIsBlackSupported(): Promise<boolean> {
+        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)
+            .create(Uri.file(workspaceRootPath));
+        return !(await isPythonVersionInProcess(processService, '2', '3.0', '3.1', '3.2', '3.3', '3.4', '3.5'));
+    }
+
     setup(async () => {
         await initializeTest();
         initializeDI();
@@ -121,9 +132,7 @@ suite('Formatting', () => {
     });
     // tslint:disable-next-line:no-function-expression
     test('Black', async function () {
-        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)
-            .create(Uri.file(workspaceRootPath));
-        if (await isPythonVersionInProcess(processService, '2.7', '3.4', '3.5')) {
+        if (!await formattingTestIsBlackSupported()) {
             // Skip for versions of python below 3.6, as Black doesn't support them at all.
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
