@@ -61,5 +61,5 @@ process.on('unhandledRejection', (ex: string | Error, a) => {
     console.error(`Unhandled Promise Rejection with the message ${message.join(', ')}`);
 });
 
-testRunner.configure(options, { coverageConfig: '../coverconfig.json' });
+testRunner.configure(options, { coverageConfig: '../build/coverconfig.json' });
 module.exports = testRunner;

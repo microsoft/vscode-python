@@ -145,7 +145,7 @@ From there use the ```Extension + Debugger``` launch option.
 ### Coding Standards
 
 Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-python/blob/master/CODING_STANDARDS.md).
-We have CI tests to ensure the code committed will adhere to the above coding standards. *You can run this locally by executing the command `npx gulp hygiene-modified` or `node gulpfile.js`.
+We have CI tests to ensure the code committed will adhere to the above coding standards. *You can run this locally by executing the command `npx gulp precommit` or use the `precommit` Task.
 
 ## Development process
 

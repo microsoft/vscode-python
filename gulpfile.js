@@ -81,6 +81,7 @@ const copyrightHeader = [
 ];
 const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n')];
 
+gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done));
 
 gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
 
@@ -115,7 +116,7 @@ gulp.task('checkNativeDependencies', (done) => {
 });
 
 gulp.task('cover:enable', () => {
-    return gulp.src("./coverconfig.json")
+    return gulp.src("./build/coverconfig.json")
         .pipe(jeditor((json) => {
             json.enabled = true;
             return json;
@@ -124,7 +125,7 @@ gulp.task('cover:enable', () => {
 });
 
 gulp.task('cover:disable', () => {
-    return gulp.src("./coverconfig.json")
+    return gulp.src("./build/coverconfig.json")
         .pipe(jeditor((json) => {
             json.enabled = false;
             return json;
@@ -563,12 +564,12 @@ exports.hygiene = hygiene;
 
 // this allows us to run hygiene via CLI (e.g. `node gulfile.js`).
 if (require.main === module) {
-    const args = process.argv0.length > 2 ? process.argv.slice(2) : [];
-    const isPreCommit = args.findIndex(arg => arg.startsWith('precommit='));
-    const performPreCommitCheck = isPreCommit >= 0 ? args[isPreCommit].split('=')[1].trim().toUpperCase().startsWith('T') : false;
-    // Allow precommit hooks for those with a file `./out/precommit.hook`.
-    if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
-        return;
-    }
+    // const args = process.argv0.length > 2 ? process.argv.slice(2) : [];
+    // const isPreCommit = args.findIndex(arg => arg.startsWith('precommit='));
+    // const performPreCommitCheck = isPreCommit >= 0 ? args[isPreCommit].split('=')[1].trim().toUpperCase().startsWith('T') : false;
+    // // Allow precommit hooks for those with a file `./out/precommit.hook`.
+    // if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
+    //     return;
+    // }
     run({ exitOnError: true, mode: 'staged' });
 }
