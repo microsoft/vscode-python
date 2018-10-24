@@ -8,6 +8,7 @@ import {
     ConfigurationTarget, Disposable, ExtensionContext,
     TextDocument, Uri, workspace
 } from 'vscode';
+import '../../../typings/extensions';
 import { IDocumentManager } from '../common/application/types';
 import { ConfigSettingMonitor } from '../common/configSettingMonitor';
 import { isTestExecution } from '../common/constants';
@@ -43,7 +44,7 @@ export class LinterProvider implements Disposable {
 
         this.documents.onDidOpenTextDocument(e => this.onDocumentOpened(e), this.context.subscriptions);
         this.documents.onDidCloseTextDocument(e => this.onDocumentClosed(e), this.context.subscriptions);
-        this.documents.onDidSaveTextDocument(async (e) => this.onDocumentSaved(e), this.context.subscriptions);
+        this.documents.onDidSaveTextDocument(e => this.onDocumentSaved(e), this.context.subscriptions);
 
         this.configMonitor = new ConfigSettingMonitor('linting');
         this.configMonitor.on('change', this.lintSettingsChangedHandler.bind(this));
@@ -82,19 +83,21 @@ export class LinterProvider implements Disposable {
         this.engine.lintDocument(document, 'auto').ignoreErrors();
     }
 
-    private async onDocumentSaved(document: TextDocument): Promise<void> {
+    private onDocumentSaved(document: TextDocument): void {
         const settings = this.configuration.getSettings(document.uri);
         if (document.languageId === 'python' && settings.linting.enabled && settings.linting.lintOnSave) {
-            await this.engine.lintDocument(document, 'save');
+            this.engine.lintDocument(document, 'save').ignoreErrors();
             return;
         }
 
-        const linters = await this.linterManager.getActiveLinters(false, document.uri);
-        const fileName = path.basename(document.uri.fsPath).toLowerCase();
-        const watchers = linters.filter((info) => info.configFileNames.indexOf(fileName) >= 0);
-        if (watchers.length > 0) {
-            setTimeout(() => this.engine.lintOpenPythonFiles(), 1000);
-        }
+        this.linterManager.getActiveLinters(false, document.uri)
+            .then((linters) => {
+                const fileName = path.basename(document.uri.fsPath).toLowerCase();
+                const watchers = linters.filter((info) => info.configFileNames.indexOf(fileName) >= 0);
+                if (watchers.length > 0) {
+                    setTimeout(() => this.engine.lintOpenPythonFiles(), 1000);
+                }
+            }).ignoreErrors();
     }
 
     private onDocumentClosed(document: TextDocument) {
