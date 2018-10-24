@@ -85,7 +85,7 @@ export class LinterProvider implements Disposable {
     private async onDocumentSaved(document: TextDocument): Promise<void> {
         const settings = this.configuration.getSettings(document.uri);
         if (document.languageId === 'python' && settings.linting.enabled && settings.linting.lintOnSave) {
-            this.engine.lintDocument(document, 'save').ignoreErrors();
+            await this.engine.lintDocument(document, 'save');
             return;
         }
 

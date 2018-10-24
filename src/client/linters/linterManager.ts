@@ -81,13 +81,7 @@ export class LinterManager implements ILinterManager {
         if (!silent) {
             await this.enableUnconfiguredLinters(resource);
         }
-        return this.linters.filter(x => {
-            let enabled = x.isEnabled(resource);
-            if (x.id === 'pylint') {
-                enabled = enabled === true;
-            }
-            return enabled === true;
-        });
+        return this.linters.filter(x => x.isEnabled(resource));
     }
 
     public async setActiveLintersAsync(products: Product[], resource?: Uri): Promise<void> {

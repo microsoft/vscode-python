@@ -4,15 +4,23 @@
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
-import { IDocumentManager } from '../../client/common/application/types';
+import {
+    IApplicationShell, IDocumentManager, IWorkspaceService
+} from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IConfigurationService, ILintingSettings, IPythonSettings, Product } from '../../client/common/types';
+import {
+    IConfigurationService, IInstaller, ILintingSettings,
+    IPythonSettings, Product
+} from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
+import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
 import { LinterManager } from '../../client/linters/linterManager';
-import { ILinterManager, ILintingEngine } from '../../client/linters/types';
+import {
+    IAvailableLinterActivator, ILinterManager, ILintingEngine
+} from '../../client/linters/types';
 import { LinterProvider } from '../../client/providers/linterProvider';
 import { initialize } from '../initialize';
 
@@ -29,6 +37,9 @@ suite('Linting - Provider', () => {
     let emitter: vscode.EventEmitter<vscode.TextDocument>;
     let document: TypeMoq.IMock<vscode.TextDocument>;
     let fs: TypeMoq.IMock<IFileSystem>;
+    let appShell: TypeMoq.IMock<IApplicationShell>;
+    let linterInstaller: TypeMoq.IMock<IInstaller>;
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
 
     suiteSetup(initialize);
     setup(async () => {
@@ -63,6 +74,14 @@ suite('Linting - Provider', () => {
         configService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
 
+        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        linterInstaller = TypeMoq.Mock.ofType<IInstaller>();
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
+        serviceManager.addSingletonInstance<IInstaller>(IInstaller, linterInstaller.object);
+        serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
+        serviceManager.add(IAvailableLinterActivator, AvailableLinterActivator);
+
         lm = new LinterManager(serviceContainer);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
         emitter = new vscode.EventEmitter<vscode.TextDocument>();
@@ -80,7 +99,7 @@ suite('Linting - Provider', () => {
         engine.verify(x => x.lintDocument(document.object, 'auto'), TypeMoq.Times.once());
     });
 
-    test('Lint on save file', () => {
+    test('Lint on save file', async () => {
         docManager.setup(x => x.onDidSaveTextDocument).returns(() => emitter.event);
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.py'));
         document.setup(x => x.languageId).returns(() => 'python');
