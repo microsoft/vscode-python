@@ -109,6 +109,7 @@ gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
 gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
 
 gulp.task('checkNativeDependencies', (done) => {
+    getModifiedFilesSync();
     if (hasNativeDependencies()) {
         throw new Error('Native dependencies deteced');
     }
