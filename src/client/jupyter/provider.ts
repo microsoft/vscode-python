@@ -8,7 +8,6 @@ export class JupyterProvider {
      * @memberOf LanguageProvider
      */
     get cellIdentifier(): RegExp {
-        window.showErrorMessage('Hello', 'one', 'two');
         return /^(# %%|#%%|# \<codecell\>|# In\[\d*?\]|# In\[ \])(.*)/i;
     }
 
