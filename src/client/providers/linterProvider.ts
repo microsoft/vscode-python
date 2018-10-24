@@ -8,10 +8,10 @@ import {
     ConfigurationTarget, Disposable, ExtensionContext,
     TextDocument, Uri, workspace
 } from 'vscode';
-import '../../../typings/extensions';
 import { IDocumentManager } from '../common/application/types';
 import { ConfigSettingMonitor } from '../common/configSettingMonitor';
 import { isTestExecution } from '../common/constants';
+import '../common/extensions';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
