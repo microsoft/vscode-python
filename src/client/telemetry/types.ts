@@ -59,6 +59,7 @@ export type DebuggerTelemetry = {
     stopOnEntry: boolean;
     showReturnValue: boolean;
     pyramid: boolean;
+    subProcess: boolean;
 };
 export type DebuggerPerformanceTelemetry = {
     duration: number;

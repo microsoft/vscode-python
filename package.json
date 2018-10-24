@@ -344,10 +344,10 @@
                             "program": "^\"\\${workspaceFolder}/manage.py\"",
                             "args": [
                                 "runserver",
-                                "--noreload",
                                 "--nothreading"
                             ],
-                            "django": true
+                            "django": true,
+                            "subProcess": true
                         }
                     },
                     {
@@ -366,7 +366,8 @@
                             "args": [
                                 "run"
                             ],
-                            "jinja": true
+                            "jinja": true,
+                            "subProcess": true
                         }
                     },
                     {
@@ -570,6 +571,11 @@
                                 "type": "boolean",
                                 "description": "Whether debugging Pyramid applications",
                                 "default": false
+                            },
+                            "subProcess": {
+                                "type": "boolean",
+                                "description": "Whether to enable Sub Process debugging",
+                                "default": false
                             }
                         }
                     },
@@ -641,6 +647,11 @@
                                 ],
                                 "description": "Jinja template debugging (e.g. Flask).",
                                 "default": null
+                            },
+                            "subProcess": {
+                                "type": "boolean",
+                                "description": "Whether to enable Sub Process debugging",
+                                "default": false
                             }
                         }
                     }
@@ -675,10 +686,10 @@
                         "console": "integratedTerminal",
                         "args": [
                             "runserver",
-                            "--noreload",
                             "--nothreading"
                         ],
-                        "django": true
+                        "django": true,
+                        "subProcess": true
                     },
                     {
                         "name": "Python: Flask",
@@ -689,11 +700,12 @@
                             "FLASK_APP": "app.py",
                             "FLASK_ENV": "development",
                             "FLASK_DEBUG": "1"
-                    },
+                        },
                         "args": [
                             "run"
                         ],
-                        "jinja": true
+                        "jinja": true,
+                        "subProcess": true
                     },
                     {
                         "name": "Python: Current File (External Terminal)",

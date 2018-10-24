@@ -9,14 +9,14 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
-import { IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { getNamesAndValues } from '../../../client/common/utils/enum';
-import { DebuggerTypeName } from '../../../client/debugger/constants';
-import { PythonV2DebugConfigurationProvider } from '../../../client/debugger/extension/configProviders/pythonV2Provider';
-import { AttachRequestArguments, DebugOptions } from '../../../client/debugger/types';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { IDocumentManager, IWorkspaceService } from '../../../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
+import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
+import { getNamesAndValues } from '../../../../client/common/utils/enum';
+import { DebuggerTypeName } from '../../../../client/debugger/constants';
+import { PythonV2DebugConfigurationProvider } from '../../../../client/debugger/extension/configProviders/pythonV2Provider';
+import { AttachRequestArguments, DebugOptions } from '../../../../client/debugger/types';
+import { IServiceContainer } from '../../../../client/ioc/types';
 
 enum OS {
     Windows,

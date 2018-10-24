@@ -18,7 +18,8 @@ export enum DebugOptions {
     WindowsClient = 'WindowsClient',
     UnixClient = 'UnixClient',
     StopOnEntry = 'StopOnEntry',
-    ShowReturnValue = 'ShowReturnValue'
+    ShowReturnValue = 'ShowReturnValue',
+    SubProcess = 'Multiprocess'
 }
 
 interface ICommonDebugArguments {
@@ -34,6 +35,7 @@ interface ICommonDebugArguments {
     host?: string;
     // Show return values of functions while stepping.
     showReturnValue?: boolean;
+    subProcess?: boolean;
 }
 export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     workspaceFolder?: string;

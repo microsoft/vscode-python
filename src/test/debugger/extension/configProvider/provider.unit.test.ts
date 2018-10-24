@@ -9,22 +9,22 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
-import { InvalidPythonPathInDebuggerServiceId } from '../../../client/application/diagnostics/checks/invalidPythonPathInDebugger';
-import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../client/application/diagnostics/types';
-import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
-import { IConfigurationService, ILogger, IPythonSettings } from '../../../client/common/types';
-import { DebuggerTypeName } from '../../../client/debugger/constants';
-import { ConfigurationProviderUtils } from '../../../client/debugger/extension/configProviders/configurationProviderUtils';
-import { PythonV2DebugConfigurationProvider } from '../../../client/debugger/extension/configProviders/pythonV2Provider';
-import { IConfigurationProviderUtils } from '../../../client/debugger/extension/configProviders/types';
-import { DebugOptions, LaunchRequestArguments } from '../../../client/debugger/types';
-import { IInterpreterHelper } from '../../../client/interpreter/contracts';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { InvalidPythonPathInDebuggerServiceId } from '../../../../client/application/diagnostics/checks/invalidPythonPathInDebugger';
+import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../../client/application/diagnostics/types';
+import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
+import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
+import { IConfigurationService, ILogger, IPythonSettings } from '../../../../client/common/types';
+import { DebuggerTypeName } from '../../../../client/debugger/constants';
+import { ConfigurationProviderUtils } from '../../../../client/debugger/extension/configProviders/configurationProviderUtils';
+import { PythonV2DebugConfigurationProvider } from '../../../../client/debugger/extension/configProviders/pythonV2Provider';
+import { IConfigurationProviderUtils } from '../../../../client/debugger/extension/configProviders/types';
+import { DebugOptions, LaunchRequestArguments } from '../../../../client/debugger/types';
+import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
+import { IServiceContainer } from '../../../../client/ioc/types';
 
-suite('Debugging - Config Provider', () => {
+suite('Debuggingx - Config Provider', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let debugProvider: DebugConfigurationProvider;
     let platformService: TypeMoq.IMock<IPlatformService>;
@@ -60,6 +60,7 @@ suite('Debugging - Config Provider', () => {
         diagnosticsService
             .setup(h => h.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true));
+        const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
 
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory))).returns(() => factory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => confgService.object);
@@ -448,5 +449,29 @@ suite('Debugging - Config Provider', () => {
 
         diagnosticsService.verifyAll();
         expect(debugConfig).to.not.be.equal(undefined, 'is undefined');
+    });
+    async function testSetting(requestType: 'launch' | 'attach', settings: { [key: string]: boolean }, debugOptionName: DebugOptions, mustHaveDebugOption: boolean) {
+        setupIoc('pythonPath');
+        const debugConfiguration: DebugConfiguration = { request: requestType, type: 'python', name: '', ...settings };
+        const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+
+
+        const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, debugConfiguration);
+        if (mustHaveDebugOption) {
+            expect((debugConfig as any).debugOptions).contains(debugOptionName);
+        } else {
+            expect((debugConfig as any).debugOptions).not.contains(debugOptionName);
+        }
+    }
+    ['launch', 'attach'].forEach((requestType: 'launch' | 'attach') => {
+        test(`Must not contain Sub Process when not specified (${requestType})`, async () => {
+            await testSetting(requestType, {}, DebugOptions.SubProcess, false);
+        });
+        test(`Must not contain Sub Process setting=false (${requestType})`, async () => {
+            await testSetting(requestType, { subProcess: false }, DebugOptions.SubProcess, false);
+        });
+        test(`Must not contain Sub Process setting=true (${requestType})`, async () => {
+            await testSetting(requestType, { subProcess: true }, DebugOptions.SubProcess, true);
+        });
     });
 });

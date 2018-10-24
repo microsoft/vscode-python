@@ -43,6 +43,9 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
         if (debugConfiguration.sudo) {
             this.debugOption(debugOptions, DebugOptions.Sudo);
         }
+        if (debugConfiguration.subProcess === true) {
+            this.debugOption(debugOptions, DebugOptions.SubProcess);
+        }
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
             this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
@@ -70,6 +73,9 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
         }
         if (debugConfiguration.jinja) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
+        }
+        if (debugConfiguration.subProcess === true) {
+            this.debugOption(debugOptions, DebugOptions.SubProcess);
         }
         if (debugConfiguration.pyramid
             && debugOptions.indexOf(DebugOptions.Jinja) === -1
@@ -140,7 +146,8 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
             jinja: !!debugConfiguration.jinja,
             pyramid: !!debugConfiguration.pyramid,
             stopOnEntry: !!debugConfiguration.stopOnEntry,
-            showReturnValue: !!debugConfiguration.showReturnValue
+            showReturnValue: !!debugConfiguration.showReturnValue,
+            subProcess: debugConfiguration.subProcess
         };
         sendTelemetryEvent(DEBUGGER, undefined, telemetryProps);
     }

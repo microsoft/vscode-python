@@ -8,12 +8,12 @@
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebugSession } from 'vscode';
-import { IApplicationShell, IDebugService } from '../../client/common/application/types';
+import { IApplicationShell, IDebugService } from '../../../client/common/application/types';
 import { IBrowserService, IDisposableRegistry,
-    ILogger, IPersistentState, IPersistentStateFactory, IRandom } from '../../client/common/types';
-import { DebuggerTypeName } from '../../client/debugger/constants';
-import { DebuggerBanner, PersistentStateKeys } from '../../client/debugger/extension/banner';
-import { IServiceContainer } from '../../client/ioc/types';
+    ILogger, IPersistentState, IPersistentStateFactory, IRandom } from '../../../client/common/types';
+import { DebuggerTypeName } from '../../../client/debugger/constants';
+import { DebuggerBanner, PersistentStateKeys } from '../../../client/debugger/extension/banner';
+import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Debugging - Banner', () => {
     let serviceContainer: typemoq.IMock<IServiceContainer>;
