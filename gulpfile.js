@@ -516,7 +516,6 @@ function getModifiedFilesSync() {
         console.info(cmd);
         // This needs to be removed after we confirm things work as expected in master branch of extension.
         const out = cp.execSync(cmd, { encoding: 'utf8', cwd: __dirname });
-        console.info(out);
         return out
             .split(/\r?\n/)
             .filter(l => !!l)

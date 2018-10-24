@@ -32,6 +32,7 @@ yarn.lock
 languageServer/**
 languageServer.*/**
 bin/**
+build/**
 BuildOutput/**
 coverage/**
 debug_coverage*/**

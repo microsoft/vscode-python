@@ -15,7 +15,7 @@ const methodNames = [
     'appendLine', 'appendLine'
 ];
 
-const failureMessage = 'Messages must be localized in the Python Extension';
+const failureMessage = 'Messages must be localized in the Python Extension (use src/client/common/utils/localize.ts)';
 
 class NoStringLiteralsInMessages extends BaseRuleWalker {
     protected visitCallExpression(node: ts.CallExpression): void {
