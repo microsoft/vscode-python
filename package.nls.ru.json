@@ -21,7 +21,7 @@
     "python.command.python.setLinter.title": "Выбрать анализатор кода",
     "python.command.python.enableLinting.title": "Включить анализатор кода",
     "python.command.python.runLinting.title": "Выполнить анализ кода",
-    "python.snippet.launch.standard.label": "Python: Current File",
+    "python.snippet.launch.standard.label": "Python: Текущий файл",
     "python.snippet.launch.standard.description": "Отладить программу Python со стандартным выводом",
     "python.snippet.launch.pyspark.label": "Python: PySpark",
     "python.snippet.launch.pyspark.description": "Отладка PySpark",
