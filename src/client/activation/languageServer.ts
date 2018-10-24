@@ -33,7 +33,8 @@ import { LanguageServerSymbolProvider } from '../providers/symbolProvider';
 import { sendTelemetryEvent } from '../telemetry';
 import {
     PYTHON_LANGUAGE_SERVER_ENABLED,
-    PYTHON_LANGUAGE_SERVER_ERROR
+    PYTHON_LANGUAGE_SERVER_ERROR,
+    PYTHON_LANGUAGE_SERVER_TELEMETRY
 } from '../telemetry/constants';
 import { IUnitTestManagementService } from '../unittests/types';
 import { LanguageServerDownloader } from './downloader';
@@ -164,6 +165,10 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.languageClient = this.createSelfContainedLanguageClient(serverModule, clientOptions);
         try {
             await this.startLanguageClient();
+            this.languageClient.onTelemetry(telemetryEvent => {
+                const eventName = telemetryEvent.Name ? telemetryEvent.Name : PYTHON_LANGUAGE_SERVER_TELEMETRY;
+                sendTelemetryEvent(eventName, telemetryEvent.Measurements,  telemetryEvent.Properties);
+            });
             return true;
         } catch (ex) {
             this.appShell.showErrorMessage(`Language server failed to start. Error ${ex}`);
@@ -212,8 +217,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
 
     // tslint:disable-next-line:member-ordering
     public async getAnalysisOptions(): Promise<LanguageClientOptions | undefined> {
-        // tslint:disable-next-line:no-any
-        const properties = new Map<string, any>();
+        const properties = new Map<string, {}>();
         let interpreterData: InterpreterData | undefined;
         let pythonPath = '';
 
@@ -231,8 +235,6 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             properties['InterpreterPath'] = interpreterData.path;
             // tslint:disable-next-line:no-string-literal
             properties['Version'] = interpreterData.version;
-            // tslint:disable-next-line:no-string-literal
-            properties['PrefixPath'] = interpreterData.prefix;
         }
 
         // tslint:disable-next-line:no-string-literal
