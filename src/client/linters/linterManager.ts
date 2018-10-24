@@ -81,20 +81,36 @@ export class LinterManager implements ILinterManager {
         if (!silent) {
             await this.enableUnconfiguredLinters(resource);
         }
-        return this.linters.filter(x => x.isEnabled(resource));
+        return this.linters.filter(x => {
+            let enabled = x.isEnabled(resource);
+            if (x.id === 'pylint') {
+                enabled = enabled === true;
+            }
+            return enabled === true;
+        });
     }
 
     public async setActiveLintersAsync(products: Product[], resource?: Uri): Promise<void> {
-        const active = await this.getActiveLinters(true, resource);
-        for (const x of active) {
-            await x.enableAsync(false, resource);
-        }
-        if (products.length > 0) {
-            const toActivate = this.linters.filter(x => products.findIndex(p => x.product === p) >= 0);
-            for (const x of toActivate) {
-                await x.enableAsync(true, resource);
+        // ensure we only allow valid linters to be set, otherwise leave things alone.
+        // filter out any invalid products:
+        const validProducts = products.filter(product => {
+            const foundIndex = this.linters.findIndex(validLinter => validLinter.product === product);
+            return foundIndex !== -1;
+        });
+
+        // if we have valid linter product(s), enable only those
+        if (validProducts.length > 0) {
+            const active = await this.getActiveLinters(true, resource);
+            for (const x of active) {
+                await x.enableAsync(false, resource);
             }
-            await this.enableLintingAsync(true, resource);
+            if (products.length > 0) {
+                const toActivate = this.linters.filter(x => products.findIndex(p => x.product === p) >= 0);
+                for (const x of toActivate) {
+                    await x.enableAsync(true, resource);
+                }
+                await this.enableLintingAsync(true, resource);
+            }
         }
     }
 

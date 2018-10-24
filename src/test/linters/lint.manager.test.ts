@@ -81,9 +81,9 @@ suite('Linting - Manager', () => {
 
     test('Enable/disable linting', async () => {
         await lm.enableLintingAsync(false);
-        assert.equal(lm.isLintingEnabled(true), false, 'Linting not disabled');
+        assert.equal(await lm.isLintingEnabled(true), false, 'Linting not disabled');
         await lm.enableLintingAsync(true);
-        assert.equal(lm.isLintingEnabled(true), true, 'Linting not enabled');
+        assert.equal(await lm.isLintingEnabled(true), true, 'Linting not enabled');
     });
 
     test('Set single linter', async () => {
