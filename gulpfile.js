@@ -91,7 +91,11 @@ gulp.task('hygiene', (done) => run({ mode: 'all', skipFormatCheck: true, skipInd
 
 gulp.task('compile', (done) => run({ mode: 'compile', skipFormatCheck: true, skipIndentationCheck: true, skipLinter: true }, done));
 
-gulp.task('hygiene-modified', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
+gulp.task('hygiene-modified', (done) => {
+    done();
+});
+gulp.task('checkNativeDependencies', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
+// gulp.task('hygiene-modified', gulp.series('compile', (done) => run({ mode: 'changes' }, done)));
 
 gulp.task('watch', gulp.parallel('hygiene-modified', 'hygiene-watch'));
 
@@ -110,13 +114,13 @@ gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
 
 gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
 
-gulp.task('checkNativeDependencies', (done) => {
-    run({ exitOnError: true, mode: 'staged' }, done);
-    // if (hasNativeDependencies()) {
-    //     throw new Error('Native dependencies deteced');
-    // }
-    // done();
-});
+// gulp.task('checkNativeDependencies', (done) => {
+//     run({ exitOnError: true, mode: 'staged' }, done);
+//     // if (hasNativeDependencies()) {
+//     //     throw new Error('Native dependencies deteced');
+//     // }
+//     // done();
+// });
 
 gulp.task('cover:enable', () => {
     return gulp.src("./build/coverconfig.json")
