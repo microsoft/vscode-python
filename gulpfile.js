@@ -504,7 +504,7 @@ function getAddedFilesSync() {
         .map(l => path.join(__dirname, l.substring(2).trim()));
 }
 function getModifiedFilesSync() {
-    const azurePRBranch = process.env['System.PullRequest.TargetBranch'];
+    const azurePRBranch = process.env['SYSTEM_PULLREQUEST_TARGETBRANCH'];
     if (process.env.TRAVIS || azurePRBranch) {
         // If on travis, get a list of modified files comparing either against
         // target (assumed 'upstream') PR branch or master of current (assumed 'origin') repo.
