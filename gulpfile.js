@@ -562,11 +562,13 @@ function getFileListToProcess(options) {
 
     // If we need only modified files, then filter the glob.
     if (options && options.mode === 'changes') {
-        return getModifiedFilesSync();
+        return getModifiedFilesSync()
+            .filter(file => fs.existsSync(file));
     }
 
     if (options && options.mode === 'staged') {
-        return getStagedFilesSync();
+        return getStagedFilesSync()
+            .filter(file => fs.existsSync(file));
     }
 
     return all;
