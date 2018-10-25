@@ -11,6 +11,9 @@ class BaseRuleWalker extends Lint.RuleWalker {
     }
     sholdIgnoreCcurrentFile(node) {
         const sourceFile = node.getSourceFile();
+        if (sourceFile && sourceFile.fileName) {
+            console.log(sourceFile.fileName);
+        }
         return sourceFile && sourceFile.fileName && this.filesToIgnore.indexOf(sourceFile.fileName) >= 0;
     }
 }
