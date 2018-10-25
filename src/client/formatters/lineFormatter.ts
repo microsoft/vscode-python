@@ -163,6 +163,7 @@ export class LineFormatter {
                 }
             }
         }
+        
 
         // Do not append space if operator is preceded by '(' or ',' as in foo(**kwarg)
         if (prev && (this.isOpenBraceType(prev.type) || prev.type === TokenType.Comma)) {

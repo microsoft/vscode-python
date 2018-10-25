@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Disposable, OutputChannel, Uri, window } from 'vscode';
 import { PythonSettings } from '../common/configSettings';
+import { Disposable, OutputChannel, Uri, window } from 'vscode';
 import { IProcessServiceFactory } from '../common/process/types';
-import { IPythonSettings } from '../common/types';
 import { captureTelemetry } from '../telemetry';
+import { IPythonSettings } from '../common/types';
 import { WORKSPACE_SYMBOLS_BUILD } from '../telemetry/constants';
 
 export class Generator implements Disposable {
@@ -17,6 +17,7 @@ export class Generator implements Disposable {
     public get enabled(): boolean {
         return this.pythonSettings.workspaceSymbols.enabled;
     }
+
     constructor(public readonly workspaceFolder: Uri, private readonly output: OutputChannel,
         private readonly processServiceFactory: IProcessServiceFactory) {
         this.disposables = [];
