@@ -529,7 +529,6 @@ function getModifiedFilesSync() {
         const cmd = `git diff --name-only HEAD ${originOrUpstream}/master`;
         console.info(cmd);
         const out = cp.execSync(cmd, { encoding: 'utf8', cwd: __dirname });
-        console.log(out);
         return out
             .split(/\r?\n/)
             .filter(l => !!l)

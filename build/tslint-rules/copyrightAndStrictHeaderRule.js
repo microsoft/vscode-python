@@ -29,8 +29,6 @@ class NoFileWithoutCopyrightHeader extends baseRuleWalker_1.BaseRuleWalker {
                 return;
             }
         }
-        console.log(_sourceFile.fileName);
-        console.log(this.sholdIgnoreCcurrentFile(_sourceFile));
         const line1 = sourceFileContents.length > 0 ? sourceFileContents.split(/\r\n|\r|\n/)[0] : '';
         const fix = Lint.Replacement.appendText(0, `${copyrightHeader.join(os_1.EOL)}\n\n`);
         this.addFailure(this.createFailure(0, line1.length, failureMessage, fix));

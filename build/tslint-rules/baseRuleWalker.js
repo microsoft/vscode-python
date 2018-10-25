@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+const path = require("path");
 const Lint = require("tslint");
 const constants_1 = require("../constants");
 class BaseRuleWalker extends Lint.RuleWalker {
@@ -11,10 +12,7 @@ class BaseRuleWalker extends Lint.RuleWalker {
     }
     sholdIgnoreCcurrentFile(node) {
         const sourceFile = node.getSourceFile();
-        if (sourceFile && sourceFile.fileName) {
-            console.log(sourceFile.fileName);
-        }
-        return sourceFile && sourceFile.fileName && this.filesToIgnore.indexOf(sourceFile.fileName) >= 0;
+        return sourceFile && sourceFile.fileName && this.filesToIgnore.indexOf(sourceFile.fileName.replace(/\//g, path.sep)) >= 0;
     }
 }
 exports.BaseRuleWalker = BaseRuleWalker;

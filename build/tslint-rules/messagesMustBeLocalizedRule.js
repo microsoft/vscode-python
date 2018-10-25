@@ -12,7 +12,7 @@ const methodNames = [
     // From IOutputChannel (vscode.OutputChannel)
     'appendLine', 'appendLine'
 ];
-const failureMessage = 'Messages must be localized in the Python Extension';
+const failureMessage = 'Messages must be localized in the Python Extension (use src/client/common/utils/localize.ts)';
 class NoStringLiteralsInMessages extends baseRuleWalker_1.BaseRuleWalker {
     visitCallExpression(node) {
         const prop = node.expression;
