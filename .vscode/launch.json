@@ -70,7 +70,8 @@
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
-            ]
+            ],
+            "preLaunchTask": "Compile"
         },
         {
             "name": "Tests (Multiroot, VS Code, *.test.ts)",
