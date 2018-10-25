@@ -92,8 +92,9 @@ export class ProcessTerminationEventHandler implements IDebugSessionEventHandler
         if (!data.rootProcessId || data.rootStartRequest.arguments.request !== 'launch') {
             return;
         }
-        this.processTermination.trackProcess(data.processId, data.parentProcessId);
-        this.processTermination.trackProcess(data.processId, data.rootProcessId);
+        this.processTermination.trackProcess(data.parentProcessId);
+        // this.processTermination.trackProcess(data.processId, data.parentProcessId);
+        // this.processTermination.trackProcess(data.processId, data.rootProcessId);
 
         this.procecssIdsTrackedToKill.add(data.processId);
         this.procecssIdsTrackedToKill.add(data.parentProcessId);

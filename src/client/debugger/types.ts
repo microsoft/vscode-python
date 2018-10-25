@@ -30,7 +30,6 @@ interface ICommonDebugArguments {
     debugStdLib?: boolean;
     logToFile?: boolean;
     debugOptions?: DebugOptions[];
-    multiProcess?: boolean;
     port?: number;
     host?: string;
     // Show return values of functions while stepping.

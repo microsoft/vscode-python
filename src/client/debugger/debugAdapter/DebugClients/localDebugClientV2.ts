@@ -4,7 +4,7 @@
 'use strict';
 
 import { DebugSession } from 'vscode-debugadapter';
-import { IKnownLaunchRequestArguments, LaunchRequestArguments } from '../../types';
+import { LaunchRequestArguments } from '../../types';
 import { IDebugLauncherScriptProvider } from '../types';
 import { LocalDebugClient } from './LocalDebugClient';
 
@@ -17,11 +17,6 @@ export class LocalDebugClientV2 extends LocalDebugClient {
         const additionalPtvsdArgs: string[] = [];
         if (this.args.noDebug) {
             additionalPtvsdArgs.push('--nodebug');
-        }
-        const multiProcessPropety: keyof IKnownLaunchRequestArguments = 'multiProcess';
-        const multiProcess = (this.args as Object).hasOwnProperty(multiProcessPropety) ? this.args.multiProcess : true;
-        if (multiProcess) {
-            additionalPtvsdArgs.push('--multiprocess');
         }
         return [launcher, ...additionalPtvsdArgs, '--client', '--host', 'localhost', '--port', debugPort.toString()];
     }
