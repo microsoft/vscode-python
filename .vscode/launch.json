@@ -70,8 +70,7 @@
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
-            ],
-            "preLaunchTask": "Compile"
+            ]
         },
         {
             "name": "Tests (Multiroot, VS Code, *.test.ts)",
@@ -126,7 +125,10 @@
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
-            ]
+            ],
+            "env": {
+                "MOCHA_REPORTER_JUNIT": "true"
+            }
         },
         {
             "name": "Unit Tests (without VS Code, *.unit.test.ts)",
