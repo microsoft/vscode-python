@@ -11,15 +11,19 @@ import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IConfigurationService } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { IVirtualEnvironmentsSearchPathProvider } from '../../contracts';
+import { IInterpreterWatcher, IInterpreterWatcherBuilder, IVirtualEnvironmentsSearchPathProvider } from '../../contracts';
 import { BaseVirtualEnvService } from './baseVirtualEnvService';
 
 @injectable()
 export class WorkspaceVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
-        @inject(IVirtualEnvironmentsSearchPathProvider) @named('workspace') globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(globalVirtualEnvPathProvider, serviceContainer, 'WorkspaceVirtualEnvService', true);
+        @inject(IVirtualEnvironmentsSearchPathProvider) @named('workspace') workspaceVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IInterpreterWatcherBuilder) private readonly watcherFactory: IInterpreterWatcherBuilder) {
+        super(workspaceVirtualEnvPathProvider, serviceContainer, 'WorkspaceVirtualEnvService', true);
+    }
+    protected async getInterpreterWatchers(resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
+        return [await this.watcherFactory.getWorkspaceVirtualEnvInterpreterWatcher(resource)];
     }
 }
 

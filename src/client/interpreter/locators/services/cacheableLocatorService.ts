@@ -5,16 +5,18 @@
 
 import { injectable, unmanaged } from 'inversify';
 import * as md5 from 'md5';
-import { Uri } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
-import { IPersistentStateFactory } from '../../../common/types';
+import { Logger } from '../../../common/logger';
+import { IDisposableRegistry, IPersistentStateFactory } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterLocatorService, PythonInterpreter } from '../../contracts';
+import { IInterpreterLocatorService, IInterpreterWatcher, PythonInterpreter } from '../../contracts';
 
 @injectable()
 export abstract class CacheableLocatorService implements IInterpreterLocatorService {
     private readonly promisesPerResource = new Map<string, Deferred<PythonInterpreter[]>>();
+    private readonly handlersAddedToResource = new Set<string>();
     private readonly cacheKeyPrefix: string;
     constructor(@unmanaged() name: string,
         @unmanaged() protected readonly serviceContainer: IServiceContainer,
@@ -25,9 +27,14 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
         const cacheKey = this.getCacheKey(resource);
         let deferred = this.promisesPerResource.get(cacheKey);
+
         if (!deferred) {
             deferred = createDeferred<PythonInterpreter[]>();
             this.promisesPerResource.set(cacheKey, deferred);
+
+            this.addHandlersForInterpreterWatchers(cacheKey, resource)
+                .ignoreErrors();
+
             this.getInterpretersImplementation(resource)
                 .then(async items => {
                     await this.cacheInterpreters(items, resource);
@@ -41,6 +48,25 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
 
         const cachedInterpreters = this.getCachedInterpreters(resource);
         return Array.isArray(cachedInterpreters) ? cachedInterpreters : deferred.promise;
+    }
+    protected async addHandlersForInterpreterWatchers(cacheKey: string, resource: Uri | undefined): Promise<void> {
+        if (this.handlersAddedToResource.has(cacheKey)) {
+            return;
+        }
+        this.handlersAddedToResource.add(cacheKey);
+        const watchers = await this.getInterpreterWatchers(resource);
+        const disposableRegisry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
+        watchers.forEach(watcher => {
+            watcher.onDidCreate(() => {
+                Logger.verbose(`Interpreter Watcher change handler for ${this.cacheKeyPrefix}`);
+                // Clear and load the items in the background.
+                this.promisesPerResource.delete(cacheKey);
+                // setTimeout(() => this.getInterpreters(resource).ignoreErrors(), 100);
+            }, this, disposableRegisry);
+        });
+    }
+    protected async getInterpreterWatchers(_resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
+        return [];
     }
 
     protected abstract getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]>;

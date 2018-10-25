@@ -16,6 +16,10 @@ export class Logger implements ILogger {
     public static warn(title: string = '', message: any = '') {
         new Logger().logWarning(`${title}, ${message}`);
     }
+    // tslint:disable-next-line:no-any
+    public static verbose(title: string = '') {
+        new Logger().logInformation(title);
+    }
     @skipIfTest(false)
     public logError(message: string, ex?: Error) {
         if (ex) {

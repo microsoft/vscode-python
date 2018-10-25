@@ -116,3 +116,13 @@ export const IInterpreterLocatorHelper = Symbol('IInterpreterLocatorHelper');
 export interface IInterpreterLocatorHelper {
     mergeInterpreters(interpreters: PythonInterpreter[]): PythonInterpreter[];
 }
+
+export const IInterpreterWatcher = Symbol('IInterpreterWatcher');
+export interface IInterpreterWatcher {
+    onDidCreate: Event<void>;
+}
+
+export const IInterpreterWatcherBuilder = Symbol('IInterpreterWatcherBuilder');
+export interface IInterpreterWatcherBuilder {
+    getWorkspaceVirtualEnvInterpreterWatcher(resource: Uri | undefined): Promise<IInterpreterWatcher>;
+}
