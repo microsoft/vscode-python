@@ -84,7 +84,7 @@ const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n
 
 gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done));
 
-gulp.task('hygiene-watch', () => gulp.watch(tsFilter, debounce(() => run({ mode: 'changes', skipFormatCheck: true, skipIndentationCheck: true, skipCopyrightCheck: true }), 100)));
+gulp.task('hygiene-watch', () => gulp.watch(tsFilter, gulp.series('hygiene-modified')));
 
 gulp.task('hygiene', (done) => run({ mode: 'all', skipFormatCheck: true, skipIndentationCheck: true }, done));
 
