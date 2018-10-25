@@ -8,6 +8,8 @@ exports.ExtensionRootDir = path.join(__dirname, '..');
 const jsonFileWithListOfOldFiles = path.join(__dirname, 'existingFiles.json');
 function getListOfExcludedFiles() {
     const files = JSON.parse(fs.readFileSync(jsonFileWithListOfOldFiles).toString());
-    return files.map(file => path.join(exports.ExtensionRootDir, file.replace(/\//g, path.sep)));
+    const x = files.map(file => path.join(exports.ExtensionRootDir, file.replace(/\//g, path.sep)));
+    console.log(x);
+    return x;
 }
 exports.filesNotToCheck = getListOfExcludedFiles();
