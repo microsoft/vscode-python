@@ -166,7 +166,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         try {
             await this.startLanguageClient();
             this.languageClient.onTelemetry(telemetryEvent => {
-                const eventName = telemetryEvent.Name ? telemetryEvent.Name : PYTHON_LANGUAGE_SERVER_TELEMETRY;
+                const eventName = telemetryEvent.EventName ? telemetryEvent.EventName : PYTHON_LANGUAGE_SERVER_TELEMETRY;
                 sendTelemetryEvent(eventName, telemetryEvent.Measurements,  telemetryEvent.Properties);
             });
             return true;
