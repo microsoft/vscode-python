@@ -5,7 +5,6 @@ import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
-import * as fssync from 'fs';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
@@ -43,12 +42,12 @@ export class JupyterServer implements IJupyterServer {
         this.process = new JupyterProcess(pythonService);
     }
 
-    public async start(notebookFile? : string) : Promise<boolean> {
+    public async start() : Promise<boolean> {
 
         if (await JupyterProcess.exists(this.pythonService)) {
 
             // First generate a temporary notebook. We need this as input to the session
-            this.tempFile = await this.generateTempFile(notebookFile);
+            this.tempFile = await this.generateTempFile();
 
             // start our process in the same directory as our ipynb file.
             this.process.start(path.dirname(this.tempFile), this.logger);
@@ -469,19 +468,12 @@ export class JupyterServer implements IJupyterServer {
         this.addToCellData(cell, output);
     }
 
-    private async generateTempFile(notebookFile?: string) : Promise<string> {
+    private async generateTempFile() : Promise<string> {
         // Create a temp file on disk
         const file = await this.fileSystem.createTemporaryFile('.ipynb');
 
         // Save in our list disposable
         this.disposableRegistry.push(file);
-
-        // Copy the notebook file into it if necessary
-        if (notebookFile && file) {
-            if (await fs.pathExists(notebookFile)) {
-                fssync.copyFileSync(notebookFile, file.filePath);
-            }
-        }
 
         return file.filePath;
     }
