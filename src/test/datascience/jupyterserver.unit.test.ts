@@ -10,7 +10,7 @@ import { Disposable } from 'vscode';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { ILogger } from '../../client/common/types';
-import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
+import { JupyterServerProvider } from '../../client/datascience/jupyterserverprovider';
 import { IJupyterServerProvider } from '../../client/datascience/types';
 import { MockPythonExecutionService } from './executionServiceMock';
 

@@ -34,9 +34,9 @@ import { IFileSystem, IPlatformService } from '../../client/common/platform/type
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { IDisposableRegistry, ILogger } from '../../client/common/types';
 import { Cell } from '../../client/datascience/history-react/cell';
-import { MainPanel } from '../../client/datascience/history-react/mainPanel';
+import { MainPanel } from '../../client/datascience/history-react/MainPanel';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { JupyterServerProvider } from '../../client/datascience/jupyterServerProvider';
+import { JupyterServerProvider } from '../../client/datascience/jupyterserverprovider';
 import { IVsCodeApi } from '../../client/datascience/react-common/postOffice';
 import { IHistoryProvider, IJupyterServerProvider  } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';

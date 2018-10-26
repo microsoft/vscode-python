@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
 import { IWebPanelMessageListener, IWebPanelProvider } from './types';
-import { WebPanel } from './webpanel';
+import { WebPanel } from './webPanel';
 
 @injectable()
 export class WebPanelProvider implements IWebPanelProvider {
