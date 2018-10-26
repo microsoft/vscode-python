@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+'use strict';
 
 import { Socket } from 'net';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
@@ -117,6 +118,7 @@ export interface ICurrentProcess {
     readonly argv: string[];
     readonly stdout: NodeJS.WriteStream;
     readonly stdin: NodeJS.ReadStream;
+    readonly execPath: string;
     on(event: string | symbol, listener: Function): this;
 }
 
@@ -142,6 +144,7 @@ export interface IPythonSettings {
     readonly globalModuleInstallation: boolean;
     readonly analysis: IAnalysisSettings;
     readonly autoUpdateLanguageServer: boolean;
+    readonly datascience : IDataScienceSettings;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -258,6 +261,10 @@ export interface IAnalysisSettings {
     readonly disabled: string[];
     readonly traceLogging: boolean;
     readonly logLevel: LogLevel;
+}
+
+export interface IDataScienceSettings {
+    allowImportFromNotebook : boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

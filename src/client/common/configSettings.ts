@@ -13,6 +13,7 @@ import { isTestExecution } from './constants';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
+    IDataScienceSettings,
     IFormattingSettings,
     ILintingSettings,
     IPythonSettings,
@@ -51,6 +52,7 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
     public globalModuleInstallation = false;
     public analysis!: IAnalysisSettings;
     public autoUpdateLanguageServer: boolean = true;
+    public datascience!: IDataScienceSettings;
 
     private workspaceRoot: Uri;
     private disposables: Disposable[] = [];
@@ -321,6 +323,14 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
             launchArgs: [],
             activateEnvironment: true
         };
+
+        const dataScienceSettings = systemVariables.resolveAny(pythonSettings.get<IDataScienceSettings>('dataScience'))!;
+        if (this.datascience) {
+            Object.assign<IDataScienceSettings, IDataScienceSettings>(this.datascience, dataScienceSettings);
+        } else {
+            this.datascience = dataScienceSettings;
+        }
+
     }
 
     public get pythonPath(): string {

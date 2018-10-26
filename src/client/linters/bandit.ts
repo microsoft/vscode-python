@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
 import '../common/extensions';
 import { Product } from '../common/types';

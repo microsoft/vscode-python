@@ -32,6 +32,8 @@ import {
 } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
+import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
+import { IDataScience } from './datascience/types';
 import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
@@ -105,7 +107,11 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
 
     const jupyterExtension = extensions.getExtension('donjayamanne.jupyter');
     const lintingEngine = serviceManager.get<ILintingEngine>(ILintingEngine);
-    lintingEngine.linkJupiterExtension(jupyterExtension).ignoreErrors();
+    lintingEngine.linkJupyterExtension(jupyterExtension).ignoreErrors();
+
+    // Activate data science features
+    const dataScience = serviceManager.get<IDataScience>(IDataScience);
+    dataScience.activate().ignoreErrors();
 
     context.subscriptions.push(new LinterCommands(serviceManager));
     const linterProvider = new LinterProvider(context, serviceManager);
@@ -184,6 +190,7 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     platformRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
+    dataScienceRegisterTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
     appRegisterTypes(serviceManager);
     providersRegisterTypes(serviceManager);

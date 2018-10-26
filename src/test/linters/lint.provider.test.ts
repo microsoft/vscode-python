@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+'use strict';
 
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';

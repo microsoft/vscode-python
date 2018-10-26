@@ -14,6 +14,7 @@ import * as path from 'path';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
 import { MOCHA_CI_REPORTER_ID, MOCHA_CI_REPORTFILE,
     MOCHA_REPORTER_JUNIT } from './ciConstants';
+import { setUpDomEnvironment } from './datascience/reactHelpers';
 import * as vscodeMoscks from './vscode-mock';
 
 process.env.VSC_PYTHON_CI_TEST = '1';
@@ -30,6 +31,10 @@ export function runTests(testOptions?: { grep?: string; timeout?: number }) {
         timeout,
         grep
     };
+
+    // nteract/transforms-full expects to run in the browser so we have to fake
+    // parts of the browser here.
+    setUpDomEnvironment();
 
     let temp_mocha: Mocha | undefined;
 

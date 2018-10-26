@@ -33,6 +33,11 @@ const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
+const webpack = require('webpack');
+const webpack_config = require('./webpack.default.config');
+const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages');
+const chalk = require('chalk');
+const printBuildError = require('react-dev-utils/printBuildError');
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
@@ -52,17 +57,18 @@ const all = [
 ];
 
 const tsFilter = [
-    'src/**/*.ts',
+    'src/**/*.ts*',
+    '!out/**/*'
 ];
 
 const indentationFilter = [
-    'src/**/*.ts',
+    'src/**/*.ts*',
     '!**/typings/**/*',
 ];
 
 const tslintFilter = [
-    'src/**/*.ts',
-    'test/**/*.ts',
+    'src/**/*.ts*',
+    'test/**/*.ts*',
     '!**/node_modules/**',
     '!out/**/*',
     '!images/**/*',
@@ -71,7 +77,8 @@ const tslintFilter = [
     '!resources/**/*',
     '!snippets/**/*',
     '!syntaxes/**/*',
-    '!**/typings/**/*'
+    '!**/typings/**/*',
+    '!**/*.d.ts'
 ];
 
 const copyrightHeader = [
@@ -80,7 +87,12 @@ const copyrightHeader = [
     '',
     '\'use strict\';'
 ];
-const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n')];
+const copyrightHeaderNoSpace = [
+    '// Copyright (c) Microsoft Corporation. All rights reserved.',
+    '// Licensed under the MIT License.',
+    '\'use strict\';'
+];
+const copyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n'), copyrightHeaderNoSpace.join('\n'), copyrightHeaderNoSpace.join('\r\n')];
 
 gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done));
 
@@ -99,7 +111,11 @@ gulp.task('watchProblems', gulp.parallel('hygiene-modified', 'hygiene-watch'));
 
 gulp.task('debugger-coverage', buildDebugAdapterCoverage);
 
+gulp.task('hygiene-watch-branch', () => gulp.watch(tsFilter, gulp.series('hygiene-branch')));
+
 gulp.task('hygiene-all', (done) => run({ mode: 'all' }, done));
+
+gulp.task('hygiene-branch', (done) => run({ mode: 'diffMaster' }, done));
 
 gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 
@@ -144,6 +160,96 @@ gulp.task('inlinesource', () => {
         .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
 
+gulp.task('compile-webviews', (done) => {
+    // Clear screen before starting
+    console.log('\x1Bc');
+
+    // First copy the files/css/svg/png files to the output folder
+    gulp.src('./src/**/*.{png,svg,css}')
+        .pipe(gulp.dest('./out'));
+
+    // Then run webpack on the output files
+    gulp.src('./out/**/*react/index.js')
+        .pipe(es.through(file => webify(file, false)));
+
+    done();
+});
+
+gulp.task('compile-webviews-watch', () => {
+    // Watch all files that are written by the compile task, except for the bundle generated
+    // by compile-webviews. Watch the css files too, but in the src directory because webpack
+    // will modify the output ones.
+    gulp.watch(['./out/**/*react*/*.js', './src/**/*react*/*.{png,svg,css}', './out/**/react*/*.js', '!./out/**/*react*/*_bundle.js'], gulp.series('compile-webviews'));
+});
+
+const webify = (file) => {
+    console.log('Webpacking ' + file.path);
+
+    // Replace the entry with our actual file
+    let config = Object.assign({}, webpack_config);
+    config.entry = [...config.entry, file.path];
+
+    // Update the output path to be next to our bundle.js
+    const split = path.parse(file.path);
+    config.output.path = split.dir;
+
+    // Update our template to be based on our source
+    const srcpath = path.join(__dirname, 'src', file.relative);
+    const html = path.join(path.parse(srcpath).dir, 'index.html');
+    config.plugins[0].options.template = html;
+
+    // Then spawn our webpack on the base name
+    let compiler = webpack(config);
+    return new Promise((resolve, reject) => {
+
+        // Create a callback for errors and such
+        const compilerCallback = (err, stats) => {
+            if (err) {
+                return reject(err);
+            }
+            const messages = formatWebpackMessages(stats.toJson({}, true));
+            if (messages.errors.length) {
+                // Only keep the first error. Others are often indicative
+                // of the same problem, but confuse the reader with noise.
+                if (messages.errors.length > 1) {
+                    messages.errors.length = 1;
+                }
+                return reject(new Error(messages.errors.join('\n\n')));
+            }
+            if (
+                process.env.CI &&
+                (typeof process.env.CI !== 'string' ||
+                    process.env.CI.toLowerCase() !== 'false') &&
+                messages.warnings.length
+            ) {
+                console.log(
+                    chalk.yellow(
+                        '\nTreating warnings as errors because process.env.CI = true.\n' +
+                        'Most CI servers set it automatically.\n'
+                    )
+                );
+                return reject(new Error(messages.warnings.join('\n\n')));
+            }
+            return resolve({
+                stats,
+                warnings: messages.warnings,
+            });
+        }
+
+        // Watch doesn't seem to work
+        compiler.run(compilerCallback);
+    }).then(
+        stats => {
+            console.log(chalk.white('Finished ' + file.path + '.\n'));
+            printBuildError(stats.warnings);
+        }).catch(
+            err => {
+                console.log(chalk.red('Failed to compile.\n'));
+                printBuildError(err);
+            }
+        )
+}
+
 function hasNativeDependencies() {
     let nativeDependencies = nativeDependencyChecker.check(path.join(__dirname, 'node_modules'));
     if (!Array.isArray(nativeDependencies) || nativeDependencies.length === 0) {
@@ -183,7 +289,7 @@ function buildDebugAdapterCoverage(done) {
 
 /**
 * @typedef {Object} hygieneOptions - creates a new type named 'SpecialType'
-* @property {'changes'|'staged'|'all'|'compile'} [mode=] - Mode.
+* @property {'changes'|'staged'|'all'|'compile'|'diffMaster'} [mode=] - Mode.
 * @property {boolean=} skipIndentationCheck - Skip indentation checks.
 * @property {boolean=} skipFormatCheck - Skip format checks.
 * @property {boolean=} skipCopyrightCheck - Skip copyright checks.
@@ -358,17 +464,18 @@ const hygiene = (options, done) => {
     const tsc = function () {
         function customReporter() {
             return {
-                error: function (error) {
+                error: function (error, typescript) {
                     const fullFilename = error.fullFilename || '';
                     const relativeFilename = error.relativeFilename || '';
                     if (tsFiles.findIndex(file => fullFilename === file || relativeFilename === file) === -1) {
                         return;
                     }
+                    console.error(`Error: ${error.message}`);
                     errorCount += 1;
-                    console.error(error.message);
                 },
                 finish: function () {
                     // forget the summary.
+                    console.log('Finished compilation');
                 }
             };
         }
@@ -408,10 +515,15 @@ const hygiene = (options, done) => {
         .pipe(sourcemaps.init())
         .pipe(tsc())
         .pipe(sourcemaps.mapSources(function (sourcePath, file) {
-            const tsFileName = path.basename(file.path).replace(/js$/, 'ts');
+            let tsFileName = path.basename(file.path).replace(/js$/, 'ts');
             const qualifiedSourcePath = path.dirname(file.path).replace('out/', 'src/').replace('out\\', 'src\\');
             if (!fs.existsSync(path.join(qualifiedSourcePath, tsFileName))) {
-                console.error(`ERROR: (source-maps) ${file.path}[1,1]: Source file not found`);
+                const tsxFileName = path.basename(file.path).replace(/js$/, 'tsx');
+                if (!fs.existsSync(path.join(qualifiedSourcePath, tsxFileName))) {
+                    console.error(`ERROR: (source-maps) ${file.path}[1,1]: Source file not found`);
+                } else {
+                    tsFileName = tsxFileName;
+                }
             }
             return path.join(path.relative(path.dirname(file.path), qualifiedSourcePath), tsFileName);
         }))
@@ -432,7 +544,7 @@ const hygiene = (options, done) => {
             if (reRunCompilation) {
                 reRunCompilation = false;
                 setTimeout(() => {
-                    hygiene(options);
+                    hygiene(options, done);
                 }, 10);
             }
             done();
@@ -488,16 +600,28 @@ function run(options, done) {
         exitHandler(options);
     });
 
+    // Clear screen each time
+    console.log('\x1Bc');
+    const startMessage = `Hygiene starting`;
+    console.log(colors.blue(startMessage));
+
+
     hygiene(options, done);
 }
+
+function git(args) {
+    let result = cp.spawnSync('git', args, { encoding: 'utf-8' });
+    return result.output.join('\n');
+}
+
 function getStagedFilesSync() {
-    const out = cp.execSync('git diff --cached --name-only', { encoding: 'utf8' });
+    const out = git(['diff','--cached','--name-only']);
     return out
         .split(/\r?\n/)
         .filter(l => !!l);
 }
 function getAddedFilesSync() {
-    const out = cp.execSync('git status -u -s', { encoding: 'utf8' });
+    const out = git(['status','-u','-s']);
     return out
         .split(/\r?\n/)
         .filter(l => !!l)
@@ -545,6 +669,14 @@ function getModifiedFilesSync() {
     }
 }
 
+function getDifferentFromMasterFilesSync() {
+    const out = git(['diff','--name-status','master']);
+    return out
+        .split(/\r?\n/)
+        .filter(l => !!l)
+        .map(l => path.join(__dirname, l.substring(2).trim()));
+}
+
 /**
 * @param {hygieneOptions} options
 */
@@ -562,13 +694,15 @@ function getFileListToProcess(options) {
 
     // If we need only modified files, then filter the glob.
     if (options && options.mode === 'changes') {
-        return getModifiedFilesSync()
-            .filter(file => fs.existsSync(file));
+        return getModifiedFilesSync().filter(f => fs.existsSync(f));
     }
 
     if (options && options.mode === 'staged') {
-        return getStagedFilesSync()
-            .filter(file => fs.existsSync(file));
+        return getStagedFilesSync().filter(f => fs.existsSync(f));;
+    }
+
+    if (options && options.mode === 'diffMaster') {
+        return getDifferentFromMasterFilesSync().filter(f => fs.existsSync(f));;
     }
 
     return all;
@@ -585,5 +719,5 @@ if (require.main === module) {
     if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
         return;
     }
-    run({ exitOnError: true, mode: 'staged' });
+    run({ exitOnError: true, mode: 'staged' }, () => {});
 }

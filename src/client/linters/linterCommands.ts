@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+'use strict';
 
 import * as vscode from 'vscode';
 import { IApplicationShell, ICommandManager } from '../common/application/types';
@@ -53,6 +54,7 @@ export class LinterCommands implements vscode.Disposable {
         if (selection !== undefined) {
             const index = linters.findIndex(x => x.id === selection);
             if (activeLinters.length > 1) {
+                // tslint:disable-next-line:messages-must-be-localized
                 const response = await this.appShell.showWarningMessage(`Multiple linters are enabled in settings. Replace with '${selection}'?`, 'Yes', 'No');
                 if (response !== 'Yes') {
                     return;

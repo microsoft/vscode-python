@@ -1,0 +1,37 @@
+.execution-count {
+    font-weight: bold;
+    color: green;
+ }
+
+ .execution-count-busy-outer {
+    font-weight: bold;
+    color: green;
+    display:flex;
+    width: 16px;
+    height: 16px;
+}
+ .execution-count-busy-svg {
+    animation-name: spin;
+    animation-duration: 4000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    transform-origin: 50% 50%;
+    width: 16px;
+    height: 16px;
+}
+
+.execution-count-busy-polyline {
+    fill: none;
+    stroke: green;
+    stroke-width: 5;
+}
+
+ @keyframes spin {
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
+}
+

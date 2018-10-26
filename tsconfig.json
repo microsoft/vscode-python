@@ -4,11 +4,13 @@
         "target": "es6",
         "outDir": "out",
         "lib": [
-            "es6"
+            "es6", "dom"
         ],
+        "jsx": "react",
         "sourceMap": true,
         "rootDir": "src",
         "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
         "noImplicitThis": false
         // TODO: enable to ensure all code complies with strict coding standards
         // , "noUnusedLocals": true

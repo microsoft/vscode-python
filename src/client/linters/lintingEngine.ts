@@ -143,17 +143,17 @@ export class LintingEngine implements ILintingEngine {
     }
 
     // tslint:disable-next-line:no-any
-    public async linkJupiterExtension(jupiter: vscode.Extension<any> | undefined): Promise<void> {
-        if (!jupiter) {
+    public async linkJupyterExtension(jupyter: vscode.Extension<any> | undefined): Promise<void> {
+        if (!jupyter) {
             return;
         }
-        if (!jupiter.isActive) {
-            await jupiter.activate();
+        if (!jupyter.isActive) {
+            await jupyter.activate();
         }
         // tslint:disable-next-line:no-unsafe-any
-        jupiter.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
+        jupyter.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
         // tslint:disable-next-line:no-unsafe-any
-        this.documentHasJupyterCodeCells = jupiter.exports.hasCodeCells;
+        this.documentHasJupyterCodeCells = jupyter.exports.hasCodeCells;
     }
 
     private sendLinterRunTelemetry(info: ILinterInfo, resource: vscode.Uri, promise: Promise<ILintMessage[]>, stopWatch: StopWatch, trigger: LinterTrigger): void {

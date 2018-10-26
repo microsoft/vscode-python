@@ -35,7 +35,7 @@ export class ProgressReporting implements Disposable {
 
       this.progressDeferred = createDeferred<void>();
       this.progressTimer = new StopWatch();
-      this.progressTimeout = setTimeout(
+      this.progressTimeout = global.setTimeout(
         this.handleTimeout.bind(this),
         ANALYSIS_TIMEOUT_MS
       );
