@@ -11,7 +11,7 @@ import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { IDisposableRegistry } from '../types';
-import { IWebPanel, IWebPanelMessage, IWebPanelMessageListener } from './types';
+import { IWebPanel, WebPanelMessage, IWebPanelMessageListener } from './types';
 
 export class WebPanel implements IWebPanel {
 
@@ -54,7 +54,7 @@ export class WebPanel implements IWebPanel {
         return this.panel ? this.panel.visible : false;
     }
 
-    public postMessage(message: IWebPanelMessage) {
+    public postMessage(message: WebPanelMessage) {
         if (this.panel && this.panel.webview) {
             this.panel.webview.postMessage(message);
         }

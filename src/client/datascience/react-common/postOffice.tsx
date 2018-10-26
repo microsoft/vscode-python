@@ -4,7 +4,7 @@
 'use strict';
 
 import * as React from 'react';
-import { IWebPanelMessage } from '../../common/application/types';
+import { WebPanelMessage } from '../../common/application/types';
 
 export interface IVsCodeApi {
     // tslint:disable-next-line:no-any
@@ -42,7 +42,7 @@ export class PostOffice extends React.Component<IPostOfficeProps> {
         return false;
     }
 
-    public static sendMessage(message: IWebPanelMessage) {
+    public static sendMessage(message: WebPanelMessage) {
         if (PostOffice.canSendMessages()) {
             const api = PostOffice.acquireApi();
             if (api) {
@@ -77,7 +77,7 @@ export class PostOffice extends React.Component<IPostOfficeProps> {
 
     private handleMessages = async (ev: MessageEvent) => {
         if (this.props) {
-            const msg = ev.data as IWebPanelMessage;
+            const msg = ev.data as WebPanelMessage;
             if (msg) {
                 this.props.messageHandlers.forEach((h : IMessageHandler) => {
                     h.handleMessage(msg.type, msg.payload);

@@ -10,7 +10,7 @@ import { Disposable } from 'vscode';
 
 import {
     IWebPanel,
-    IWebPanelMessage,
+    WebPanelMessage,
     IWebPanelMessageListener,
     IWebPanelProvider,
 } from '../../client/common/application/types';
@@ -87,7 +87,7 @@ suite('History output tests', () => {
             // Return our dummy web panel
             return webPanel.object;
         });
-        webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m : IWebPanelMessage) => window.postMessage(m, '*')); // See JSDOM valid target origins
+        webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m : WebPanelMessage) => window.postMessage(m, '*')); // See JSDOM valid target origins
         webPanel.setup(p => p.show());
 
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny())).returns(() => disposables);
