@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 
+import { FileSystem } from '../../client/common/platform/fileSystem';
+import { PlatformService } from '../../client/common/platform/platformService';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { ILogger } from '../../client/common/types';
@@ -15,7 +16,7 @@ import { IJupyterServerProvider } from '../../client/datascience/types';
 import { MockPythonExecutionService } from './executionServiceMock';
 
 suite('Jupyter server tests', () => {
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let fileSystem: IFileSystem;
     let logger: TypeMoq.IMock<ILogger>;
     const disposables: Disposable[] = [];
     let serverProvider: IJupyterServerProvider;
@@ -24,16 +25,16 @@ suite('Jupyter server tests', () => {
 
     setup(() => {
         pythonExecutionService = new MockPythonExecutionService();
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        const platformService = new PlatformService();
+        fileSystem = new FileSystem(platformService);
         logger = TypeMoq.Mock.ofType<ILogger>();
         factory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
 
         factory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService));
-        fileSystem.setup(f => f.getFileHash(TypeMoq.It.isAny())).returns(() => Promise.resolve('42'));
 
         // tslint:disable-next-line:no-empty
         logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => {}); // console.log(m)); // REnable this to debug the server
-        serverProvider = new JupyterServerProvider(disposables, logger.object, factory.object);
+        serverProvider = new JupyterServerProvider(disposables, logger.object, factory.object, fileSystem);
     });
 
     teardown(() => {

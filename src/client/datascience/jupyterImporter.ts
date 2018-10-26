@@ -3,12 +3,11 @@
 'use strict';
 import { IDisposable } from '@phosphor/disposable';
 import * as fs from 'fs-extra';
-import * as temp from 'temp';
-import * as tp from 'typed-promisify';
 import { Disposable } from 'vscode-jsonrpc';
 
+import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
-import { ILogger } from '../common/types';
+import { IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -33,13 +32,17 @@ export class JupyterImporter implements IDisposable {
     private pythonExecutionService : Deferred<IPythonExecutionService> | undefined;
     private templatePromise : Promise<string>;
     private interpreterService : IInterpreterService;
+    private fileSystem : IFileSystem;
     private settingsChangedDiposable : Disposable;
     private logger : ILogger;
+    private disposableRegistry : IDisposableRegistry;
 
     constructor(private serviceContainer: IServiceContainer) {
         this.logger = this.serviceContainer.get<ILogger>(ILogger);
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.settingsChangedDiposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
+        this.disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.templatePromise = this.createTemplateFile();
         this.createExecutionServicePromise();
     }
@@ -87,14 +90,16 @@ export class JupyterImporter implements IDisposable {
 
     private createTemplateFile = async () : Promise<string> => {
         // Create a temp file on disk
-        const asyncOpen = tp.promisify(temp.open);
-        const file: temp.OpenFile = await asyncOpen({ suffix: '.tpl'});
+        const file = await this.fileSystem.createTemporaryFile('.tpl');
 
         // Write our template into it
-        await fs.appendFile(file.path, this.nbconvertTemplate);
+        await fs.appendFile(file.filePath, this.nbconvertTemplate);
+
+        // Save this file into our disposables so the temp file goes away
+        this.disposableRegistry.push(file);
 
         // Now we should have a template that will convert
-        return file.path;
+        return file.filePath;
     }
 
     private onSettingsChanged = () => {

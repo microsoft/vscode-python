@@ -1,7 +1,33 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
+
+import * as assert from 'assert';
+import { mount } from 'enzyme';
+import * as React from 'react';
+import * as TypeMoq from 'typemoq';
+import { Disposable } from 'vscode';
+
+import {
+    IWebPanel,
+    IWebPanelMessage,
+    IWebPanelMessageListener,
+    IWebPanelProvider,
+} from '../../client/common/application/types';
+import { FileSystem } from '../../client/common/platform/fileSystem';
+import { PlatformService } from '../../client/common/platform/platformService';
+import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
+import { IDisposableRegistry, ILogger } from '../../client/common/types';
+import { Cell } from '../../client/datascience/history-react/cell';
+import { MainPanel } from '../../client/datascience/history-react/MainPanel';
+import { HistoryProvider } from '../../client/datascience/historyProvider';
+import { JupyterServerProvider } from '../../client/datascience/jupyterserverprovider';
+import { IVsCodeApi } from '../../client/datascience/react-common/postOffice';
+import { IHistoryProvider, IJupyterServerProvider } from '../../client/datascience/types';
+import { IServiceContainer } from '../../client/ioc/types';
+import { MockPythonExecutionService } from './executionServiceMock';
+import { waitForUpdate } from './reactHelpers';
 
 // Custom module loader so we skip .css files that break non webpack wrapped compiles
 // tslint:disable-next-line:no-var-requires no-require-imports
@@ -23,29 +49,9 @@ const Module = require('module');
     };
 })();
 
-import * as assert from 'assert';
-import { mount } from 'enzyme';
-import * as React from 'react';
-import * as TypeMoq from 'typemoq';
-import { Disposable } from 'vscode';
-import { IWebPanel, IWebPanelMessage, IWebPanelMessageListener, IWebPanelProvider  } from '../../client/common/application/types';
-import { PlatformService } from '../../client/common/platform/platformService';
-import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
-import { IDisposableRegistry, ILogger } from '../../client/common/types';
-import { Cell } from '../../client/datascience/history-react/cell';
-import { MainPanel } from '../../client/datascience/history-react/MainPanel';
-import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { JupyterServerProvider } from '../../client/datascience/jupyterserverprovider';
-import { IVsCodeApi } from '../../client/datascience/react-common/postOffice';
-import { IHistoryProvider, IJupyterServerProvider  } from '../../client/datascience/types';
-import { IServiceContainer } from '../../client/ioc/types';
-import { MockPythonExecutionService } from './executionServiceMock';
-import { waitForUpdate } from './reactHelpers';
-
 // tslint:disable-next-line:max-func-body-length
 suite('History output tests', () => {
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let fileSystem: IFileSystem;
     let logger: TypeMoq.IMock<ILogger>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     const disposables: Disposable[] = [];
@@ -61,8 +67,8 @@ suite('History output tests', () => {
 
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         platformService = new PlatformService();
+        fileSystem = new FileSystem(platformService);
         logger = TypeMoq.Mock.ofType<ILogger>();
         webPanelProvider = TypeMoq.Mock.ofType<IWebPanelProvider>();
         webPanel = TypeMoq.Mock.ofType<IWebPanel>();
@@ -70,7 +76,6 @@ suite('History output tests', () => {
         factory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
 
         factory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService));
-        fileSystem.setup(f => f.getFileHash(TypeMoq.It.isAny())).returns(() => Promise.resolve('42'));
         // tslint:disable-next-line:no-empty
         logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => {}); // console.log(m)); // REnable this to debug the server
 
@@ -86,12 +91,12 @@ suite('History output tests', () => {
         webPanel.setup(p => p.show());
 
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny())).returns(() => disposables);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny())).returns(() => platformService);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IJupyterServerProvider), TypeMoq.It.isAny())).returns(() => serverProvider);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWebPanelProvider), TypeMoq.It.isAny())).returns(() => webPanelProvider.object);
-        serverProvider = new JupyterServerProvider(disposables, logger.object, factory.object);
+        serverProvider = new JupyterServerProvider(disposables, logger.object, factory.object, fileSystem);
         historyProvider = new HistoryProvider(serviceContainer.object);
 
         // Setup a global for the acquireVsCodeApi so that the React PostOffice can find it
@@ -123,6 +128,7 @@ suite('History output tests', () => {
                 disposable.dispose();
             }
         });
+        delete global['ascquireVsCodeApi'];
     });
 
     test('Simple text', async () => {

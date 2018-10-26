@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
 import { inject, injectable } from 'inversify';
+
+import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IDisposableRegistry, ILogger } from '../common/types';
 import { JupyterProcess } from './jupyterProcess';
@@ -16,13 +16,14 @@ export class JupyterServerProvider implements IJupyterServerProvider {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(ILogger) private logger: ILogger,
-        @inject(IPythonExecutionFactory) private pythonExecutionFactory : IPythonExecutionFactory) {
+        @inject(IPythonExecutionFactory) private pythonExecutionFactory : IPythonExecutionFactory,
+        @inject(IFileSystem) private fileSystem: IFileSystem) {
     }
 
     public async start(notebookFile? : string): Promise<IJupyterServer> {
         // Use the default python service (should match the currently selected one?)
         const pythonService = await this.pythonExecutionFactory.create({});
-        const server = new JupyterServer(this.logger, pythonService);
+        const server = new JupyterServer(this.logger, pythonService, this.fileSystem, this.disposableRegistry);
         this.disposableRegistry.push(server);
         await server.start(notebookFile);
         return server;

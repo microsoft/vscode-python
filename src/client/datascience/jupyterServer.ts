@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
@@ -10,13 +9,12 @@ import * as fssync from 'fs';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
-import * as temp from 'temp';
-import * as tp from 'typed-promisify';
 import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 
+import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionService } from '../common/process/types';
-import { ILogger } from '../common/types';
+import { IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { RegExpValues } from './constants';
@@ -27,18 +25,21 @@ import { CellState, ICell, IJupyterServer } from './types';
 // https://www.npmjs.com/package/@jupyterlab/services
 
 export class JupyterServer implements IJupyterServer {
-    private static trackingTemps: boolean = false;
     public isDisposed: boolean = false;
     private session: Session.ISession | undefined;
-    private tempFile: temp.OpenFile | undefined;
+    private tempFile: string | undefined;
     private process: JupyterProcess;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
     private logger: ILogger;
     private pythonService : IPythonExecutionService;
+    private disposableRegistry : IDisposableRegistry;
+    private fileSystem : IFileSystem;
 
-    constructor(logger: ILogger, pythonService: IPythonExecutionService) {
+    constructor(logger: ILogger, pythonService: IPythonExecutionService, fileSystem : IFileSystem, disposableRegistry : IDisposableRegistry) {
         this.logger = logger;
         this.pythonService = pythonService;
+        this.fileSystem = fileSystem;
+        this.disposableRegistry = disposableRegistry;
         this.process = new JupyterProcess(pythonService);
     }
 
@@ -50,14 +51,14 @@ export class JupyterServer implements IJupyterServer {
             this.tempFile = await this.generateTempFile(notebookFile);
 
             // start our process in the same directory as our ipynb file.
-            this.process.start(path.dirname(this.tempFile.path), this.logger);
+            this.process.start(path.dirname(this.tempFile), this.logger);
 
             // Wait for connection information. We'll stick that into the options
             const connInfo = await this.process.getConnectionInformation();
 
             // Create our session options using this temporary notebook and our connection info
             const options: Session.IOptions = {
-                path: this.tempFile.path,
+                path: this.tempFile,
                 kernelName: 'python',
                 serverSettings: ServerConnection.makeSettings(
                     {
@@ -468,24 +469,20 @@ export class JupyterServer implements IJupyterServer {
         this.addToCellData(cell, output);
     }
 
-    private async generateTempFile(notebookFile?: string) : Promise<temp.OpenFile> {
-        // Make sure we cleanup these temp files.
-        if (!JupyterServer.trackingTemps) {
-            JupyterServer.trackingTemps = true;
-            temp.track();
-        }
-
+    private async generateTempFile(notebookFile?: string) : Promise<string> {
         // Create a temp file on disk
-        const asyncOpen = tp.promisify(temp.open);
-        const file: temp.OpenFile = await asyncOpen({ suffix: '.ipynb'});
+        const file = await this.fileSystem.createTemporaryFile('.ipynb');
+
+        // Save in our list disposable
+        this.disposableRegistry.push(file);
 
         // Copy the notebook file into it if necessary
         if (notebookFile && file) {
             if (await fs.pathExists(notebookFile)) {
-                fssync.copyFileSync(notebookFile, file.path);
+                fssync.copyFileSync(notebookFile, file.filePath);
             }
         }
 
-        return file;
+        return file.filePath;
     }
 }

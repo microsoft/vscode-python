@@ -2,7 +2,6 @@
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 var path = require('path');
-var inlineCompiler = require('./scripts/inlinePlugin');
 
 module.exports = {
   entry: ['babel-polyfill'],
@@ -34,7 +33,7 @@ module.exports = {
             include: /node_modules.*remark.*default.*js/,
             use: [
                 {
-                    loader: path.resolve('./scripts/remarkLoader.js'),
+                    loader: path.resolve('./build/datascience/remarkLoader.js'),
                     options : {}
                 }
             ]
@@ -73,7 +72,7 @@ module.exports = {
             include: /node_modules.*remark.*/,
             use: [
                 {
-                    loader: path.resolve('./scripts/jsonloader.js'),
+                    loader: path.resolve('./build/datascience/jsonloader.js'),
                     options : {}
                 }
             ]
