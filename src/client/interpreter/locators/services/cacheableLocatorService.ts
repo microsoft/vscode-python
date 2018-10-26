@@ -59,9 +59,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         watchers.forEach(watcher => {
             watcher.onDidCreate(() => {
                 Logger.verbose(`Interpreter Watcher change handler for ${this.cacheKeyPrefix}`);
-                // Clear and load the items in the background.
                 this.promisesPerResource.delete(cacheKey);
-                // setTimeout(() => this.getInterpreters(resource).ignoreErrors(), 100);
             }, this, disposableRegisry);
         });
     }
@@ -70,7 +68,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     }
 
     protected abstract getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]>;
-    private createPersistenceStore(resource?: Uri) {
+    protected createPersistenceStore(resource?: Uri) {
         const cacheKey = this.getCacheKey(resource);
         const persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         if (this.cachePerWorkspace) {
@@ -80,7 +78,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         }
 
     }
-    private getCachedInterpreters(resource?: Uri) {
+    protected getCachedInterpreters(resource?: Uri): PythonInterpreter[] | undefined {
         const persistence = this.createPersistenceStore(resource);
         if (!Array.isArray(persistence.value)) {
             return;
@@ -92,11 +90,11 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             };
         });
     }
-    private async cacheInterpreters(interpreters: PythonInterpreter[], resource?: Uri) {
+    protected async cacheInterpreters(interpreters: PythonInterpreter[], resource?: Uri) {
         const persistence = this.createPersistenceStore(resource);
         await persistence.updateValue(interpreters);
     }
-    private getCacheKey(resource?: Uri) {
+    protected getCacheKey(resource?: Uri) {
         if (!resource || !this.cachePerWorkspace) {
             return this.cacheKeyPrefix;
         }

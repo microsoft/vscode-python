@@ -19,11 +19,11 @@ export class WorkspaceVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
         @inject(IVirtualEnvironmentsSearchPathProvider) @named('workspace') workspaceVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IInterpreterWatcherBuilder) private readonly watcherFactory: IInterpreterWatcherBuilder) {
+        @inject(IInterpreterWatcherBuilder) private readonly builder: IInterpreterWatcherBuilder) {
         super(workspaceVirtualEnvPathProvider, serviceContainer, 'WorkspaceVirtualEnvService', true);
     }
     protected async getInterpreterWatchers(resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
-        return [await this.watcherFactory.getWorkspaceVirtualEnvInterpreterWatcher(resource)];
+        return [await this.builder.getWorkspaceVirtualEnvInterpreterWatcher(resource)];
     }
 }
 

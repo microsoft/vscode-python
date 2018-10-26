@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
@@ -11,26 +11,30 @@ import { Logger, traceVerbose } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
 import { IDisposableRegistry } from '../../../common/types';
 import { debounce } from '../../../common/utils/decorators';
-import { IInterpreterWatcher, IVirtualEnvironmentsSearchPathProvider } from '../../contracts';
+import { IInterpreterWatcher } from '../../contracts';
 
 @injectable()
-export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher {
-    private readonly didCreate = new EventEmitter<void>();
+export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, Disposable {
+    private readonly didCreate;
+    private timer?: NodeJS.Timer;
     private fsWatchers: FileSystemWatcher[] = [];
     constructor(@inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IVirtualEnvironmentsSearchPathProvider) @named('workspace') private readonly workspaceVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
         @inject(IPlatformService) private readonly platformService: IPlatformService) {
+        this.didCreate = new EventEmitter<void>();
+        disposableRegistry.push(this);
     }
     public get onDidCreate(): Event<void> {
         return this.didCreate.event;
     }
+    public dispose() {
+        this.clearTimer();
+    }
     @traceVerbose('Register Intepreter Watcher')
-    public async register(resource: Uri | undefined): Promise<void> {
+    public async register(): Promise<void> {
         if (this.fsWatchers.length > 0) {
             return;
         }
-        const pathsToWatch = await this.workspaceVirtualEnvPathProvider.getSearchPaths(resource);
         const patterns: string[] = [];
         if (this.platformService.isWindows) {
             patterns.push(...[
@@ -46,16 +50,14 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher {
             ]);
         }
 
-        for (const rootDir of pathsToWatch) {
-            for (const pattern of patterns) {
-                Logger.verbose(`Create file systemwatcher with pattern ${pattern}, for ${rootDir}`);
+        for (const pattern of patterns) {
+            Logger.verbose(`Create file systemwatcher with pattern ${pattern}`);
 
-                const fsWatcher = this.workspaceService.createFileSystemWatcher(pattern);
-                fsWatcher.onDidCreate(e => this.createHandler(e), this, this.disposableRegistry);
+            const fsWatcher = this.workspaceService.createFileSystemWatcher(pattern);
+            fsWatcher.onDidCreate(e => this.createHandler(e), this, this.disposableRegistry);
 
-                this.disposableRegistry.push(fsWatcher);
-                this.fsWatchers.push(fsWatcher);
-            }
+            this.disposableRegistry.push(fsWatcher);
+            this.fsWatchers.push(fsWatcher);
         }
     }
     @debounce(2000)
@@ -63,6 +65,17 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher {
     protected createHandler(e: Uri) {
         this.didCreate.fire();
         // On Windows, creation of environments are slow, hence lets notify again after 10 seconds.
-        setTimeout(() => this.didCreate.fire(), 10000);
+        this.clearTimer();
+
+        this.timer = setTimeout(() => {
+            this.timer = undefined;
+            this.didCreate.fire();
+        }, 10000);
+    }
+    private clearTimer() {
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = undefined;
+        }
     }
 }

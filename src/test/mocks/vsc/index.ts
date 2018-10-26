@@ -54,7 +54,7 @@ export namespace vscMock {
         public event: vscode.Event<T>;
         public emitter: NodeEventEmitter;
         constructor() {
-            this.event = this.add;
+            this.event = this.add.bind(this);
             this.emitter = new NodeEventEmitter();
         }
         public fire(data?: T): void {
@@ -75,11 +75,11 @@ export namespace vscMock {
     }
 
     export class CancellationToken extends EventEmitter<any> implements vscode.CancellationToken {
-        public isCancellationRequested: boolean;
+        public isCancellationRequested!: boolean;
         public onCancellationRequested: vscode.Event<any>;
         constructor() {
             super();
-            this.onCancellationRequested = this.add;
+            this.onCancellationRequested = this.add.bind(this);
         }
         public cancel() {
             this.isCancellationRequested = true;

@@ -38,7 +38,7 @@ export class DebugService implements IDebugService {
     public registerDebugConfigurationProvider(debugType: string, provider: any): Disposable {
         return debug.registerDebugConfigurationProvider(debugType, provider);
     }
-    public startDebugging(folder: WorkspaceFolder, nameOrConfiguration: string | DebugConfiguration): Thenable<boolean> {
+    public startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration): Thenable<boolean> {
         return debug.startDebugging(folder, nameOrConfiguration);
     }
     public addBreakpoints(breakpoints: Breakpoint[]): void {

@@ -15,7 +15,7 @@ import { ChildProcessAttachService } from '../../../../client/debugger/extension
 import { ChildProcessLaunchData } from '../../../../client/debugger/extension/hooks/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../../../client/debugger/types';
 
-suite('Debugy - Attach to Child Process', () => {
+suite('Debug - Attach to Child Process', () => {
     test('Message is not displayed if debugger is launched', async () => {
         const shell = mock(ApplicationShell);
         const debugService = mock(DebugService);
@@ -192,7 +192,7 @@ suite('Debugy - Attach to Child Process', () => {
 
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(undefined, anything())).once();
-        const [_, secondArg] = capture(debugService.startDebugging).last();
+        const [, secondArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);
         verify(shell.showErrorMessage(anything())).never();
     });
@@ -235,7 +235,7 @@ suite('Debugy - Attach to Child Process', () => {
 
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(undefined, anything())).once();
-        const [_, secondArg] = capture(debugService.startDebugging).last();
+        const [, secondArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);
         verify(shell.showErrorMessage(anything())).never();
     });

@@ -15,6 +15,13 @@ import { WorkspaceVirtualEnvWatcherService } from './workspaceVirtualEnvWatcherS
 @injectable()
 export class InterpreterWatcherBuilder implements IInterpreterWatcherBuilder {
     private readonly watchersByResource = new Map<string, Promise<IInterpreterWatcher>>();
+    /**
+     * Creates an instance of InterpreterWatcherBuilder.
+     * Inject the DI container, as we need to get a new instance of IInterpreterWatcher to build it.
+     * @param {IWorkspaceService} workspaceService
+     * @param {IServiceContainer} serviceContainer
+     * @memberof InterpreterWatcherBuilder
+     */
     constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) { }
@@ -26,7 +33,7 @@ export class InterpreterWatcherBuilder implements IInterpreterWatcherBuilder {
             const deferred = createDeferred<IInterpreterWatcher>();
             this.watchersByResource.set(key, deferred.promise);
             const watcher = this.serviceContainer.get<WorkspaceVirtualEnvWatcherService>(IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE);
-            await watcher.register(resource);
+            await watcher.register();
             deferred.resolve(watcher);
         }
         return this.watchersByResource.get(key)!;

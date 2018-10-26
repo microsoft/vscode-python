@@ -75,6 +75,16 @@ export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
 export function isTestExecution(): boolean {
     return process.env.VSC_PYTHON_CI_TEST === '1';
 }
+
+/**
+ * Whether we're running unit tests (*.unit.test.ts).
+ * These tests have a speacial meaning, they run fast.
+ * @export
+ * @returns {boolean}
+ */
+export function isUnitTestExecution(): boolean {
+    return process.env.VSC_PYTHON_UNIT_TEST === '1';
+}
 export function isLanguageServerTest(): boolean {
     return process.env.VSC_PYTHON_LANGUAGE_SERVER === '1';
 }

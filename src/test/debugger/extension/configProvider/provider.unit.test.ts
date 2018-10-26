@@ -24,7 +24,7 @@ import { DebugOptions, LaunchRequestArguments } from '../../../../client/debugge
 import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
-suite('Debuggingx - Config Provider', () => {
+suite('Debugging - Config Provider', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let debugProvider: DebugConfigurationProvider;
     let platformService: TypeMoq.IMock<IPlatformService>;
@@ -60,7 +60,6 @@ suite('Debuggingx - Config Provider', () => {
         diagnosticsService
             .setup(h => h.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true));
-        const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
 
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory))).returns(() => factory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => confgService.object);
@@ -455,7 +454,6 @@ suite('Debuggingx - Config Provider', () => {
         const debugConfiguration: DebugConfiguration = { request: requestType, type: 'python', name: '', ...settings };
         const workspaceFolder = createMoqWorkspaceFolder(__dirname);
 
-
         const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, debugConfiguration);
         if (mustHaveDebugOption) {
             expect((debugConfig as any).debugOptions).contains(debugOptionName);
@@ -463,7 +461,9 @@ suite('Debuggingx - Config Provider', () => {
             expect((debugConfig as any).debugOptions).not.contains(debugOptionName);
         }
     }
-    ['launch', 'attach'].forEach((requestType: 'launch' | 'attach') => {
+    type LaunchOrAttach = 'launch' | 'attach';
+    const items: LaunchOrAttach[] = ['launch', 'attach'];
+    items.forEach(requestType => {
         test(`Must not contain Sub Process when not specified (${requestType})`, async () => {
             await testSetting(requestType, {}, DebugOptions.SubProcess, false);
         });

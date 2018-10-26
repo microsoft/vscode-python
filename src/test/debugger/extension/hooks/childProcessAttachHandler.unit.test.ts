@@ -10,7 +10,7 @@ import { ChildProcessAttachEventHandler } from '../../../../client/debugger/exte
 import { ChildProcessAttachService } from '../../../../client/debugger/extension/hooks/childProcessAttachService';
 import { PTVSDEvents } from '../../../../client/debugger/extension/hooks/constants';
 
-suite('Debugy - Child Process', () => {
+suite('Debug - Child Process', () => {
     test('Do not attach to child process if event is invalid', async () => {
         const attachService = mock(ChildProcessAttachService);
         const handler = new ChildProcessAttachEventHandler(instance(attachService));
