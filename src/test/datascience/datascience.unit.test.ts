@@ -6,7 +6,6 @@
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
 import { IDisposableRegistry } from '../../client/common/types';
-import { Commands } from '../../client/datascience/constants';
 import { DataScience } from '../../client/datascience/datascience';
 import { IDataScience } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
