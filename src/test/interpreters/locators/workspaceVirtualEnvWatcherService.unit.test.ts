@@ -10,6 +10,7 @@ import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, FileSystemWatcher, Uri } from 'vscode';
 import { WorkspaceService } from '../../../client/common/application/workspace';
+import { isUnitTestExecution } from '../../../client/common/constants';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { sleep } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
@@ -18,6 +19,12 @@ import { WorkspaceVirtualEnvWatcherService } from '../../../client/interpreter/l
 
 suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
     let disposables: Disposable[] = [];
+    setup(function () {
+        if (!isUnitTestExecution()) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        }
+    });
     teardown(() => {
         disposables.forEach(d => {
             try {
