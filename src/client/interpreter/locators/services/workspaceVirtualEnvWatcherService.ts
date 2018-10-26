@@ -51,7 +51,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher {
                 Logger.verbose(`Create file systemwatcher with pattern ${pattern}, for ${rootDir}`);
 
                 const fsWatcher = this.workspaceService.createFileSystemWatcher(pattern);
-                fsWatcher.onDidCreate(e => this.createHandler(e, pathsToWatch), this, this.disposableRegistry);
+                fsWatcher.onDidCreate(e => this.createHandler(e), this, this.disposableRegistry);
 
                 this.disposableRegistry.push(fsWatcher);
                 this.fsWatchers.push(fsWatcher);
@@ -60,13 +60,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher {
     }
     @debounce(2000)
     @traceVerbose('Intepreter Watcher change handler')
-    protected createHandler(e: Uri, pathsToCheck: string[]) {
-        const hasMatch = pathsToCheck.some(pathToCheck => e.fsPath.startsWith(pathToCheck));
-        if (!hasMatch) {
-            return;
-        }
-        Logger.verbose(`Invoked ${e.fsPath}`);
-        // Notifiy within a second
+    protected createHandler(e: Uri) {
         this.didCreate.fire();
         // On Windows, creation of environments are slow, hence lets notify again after 10 seconds.
         setTimeout(() => this.didCreate.fire(), 10000);
