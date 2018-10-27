@@ -24,7 +24,7 @@ export interface IDataScienceCommandListener {
 // Factory for jupyter servers
 export const IJupyterServerProvider = Symbol('IJupyterServerFactory');
 export interface IJupyterServerProvider {
-    start(notebookFile? : string): Promise<IJupyterServer>;
+    start(): Promise<IJupyterServer>;
     isSupported() : Promise<boolean>;
 }
 

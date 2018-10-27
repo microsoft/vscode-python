@@ -20,12 +20,12 @@ export class JupyterServerProvider implements IJupyterServerProvider {
         @inject(IFileSystem) private fileSystem: IFileSystem) {
     }
 
-    public async start(notebookFile? : string): Promise<IJupyterServer> {
+    public async start(): Promise<IJupyterServer> {
         // Use the default python service (should match the currently selected one?)
         const pythonService = await this.pythonExecutionFactory.create({});
         const server = new JupyterServer(this.logger, pythonService, this.fileSystem, this.disposableRegistry);
         this.disposableRegistry.push(server);
-        await server.start(notebookFile);
+        await server.start();
         return server;
     }
 
