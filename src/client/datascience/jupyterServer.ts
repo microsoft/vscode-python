@@ -151,7 +151,7 @@ export class JupyterServer implements IJupyterServer {
         });
     }
 
-    public async executeSilently(code: string) : Promise<void> {
+    public executeSilently(code: string) : Promise<void> {
         // If we have a session, execute the code now.
         if (this.session) {
                 const request = this.session.kernel.requestExecute(
@@ -165,9 +165,15 @@ export class JupyterServer implements IJupyterServer {
                     true
                 );
 
-                await this.generateExecuteObservable(code, 'file', 0, '0', request).toPromise();
-
-                return;
+                return new Promise((resolve, reject) => {
+                    // Just wait for our observable to finish
+                    const observable = this.generateExecuteObservable(code, 'file', 0, '0', request);
+                    // tslint:disable-next-line:no-empty
+                    observable.subscribe(() => {
+                        },
+                        reject,
+                        resolve);
+                });
         }
 
         return Promise.reject(localize.DataScience.sessionDisposed);

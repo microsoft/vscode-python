@@ -29,15 +29,15 @@ export class CodeCssGenerator {
     }
 
     public generateThemeCss = async () : Promise<string> => {
-        // First compute our current theme.
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        const theme = workbench.get<string>('colorTheme');
-        const editor = this.workspaceService.getConfiguration('editor', undefined);
-        const font = editor.get<string>('fontFamily');
-        const fontSize = editor.get<number>('fontSize');
-
-        // Then we have to find where the theme resources are loaded from
         try {
+            // First compute our current theme.
+            const workbench = this.workspaceService.getConfiguration('workbench');
+            const theme = workbench.get<string>('colorTheme');
+            const editor = this.workspaceService.getConfiguration('editor', undefined);
+            const font = editor.get<string>('fontFamily');
+            const fontSize = editor.get<number>('fontSize');
+
+            // Then we have to find where the theme resources are loaded from
             if (theme) {
                 const tokenColors = await this.findTokenColors(theme);
 

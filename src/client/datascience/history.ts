@@ -238,14 +238,17 @@ export class History implements IWebPanelMessageListener {
 
     private loadJupyterServer = async (serviceContainer: IServiceContainer) : Promise<void> => {
         // Startup our jupyter server
-        const status = this.applicationShell.setStatusBarMessage(localize.DataScience.startingJupyter());
+        const status = this.applicationShell ? this.applicationShell.setStatusBarMessage(localize.DataScience.startingJupyter()) :
+            undefined;
         try {
             const provider = serviceContainer.get<IJupyterServerProvider>(IJupyterServerProvider);
             this.jupyterServer = await provider.start();
         } catch (err) {
             throw err;
         } finally {
-            status.dispose();
+            if (status) {
+                status.dispose();
+            }
         }
     }
 

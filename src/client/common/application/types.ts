@@ -740,7 +740,7 @@ export type WebPanelMessage = {
      * Payload
      */
     payload?: any;
-}
+};
 
 // Wraps the VS Code webview panel
 export const IWebPanel = Symbol('IWebPanel');

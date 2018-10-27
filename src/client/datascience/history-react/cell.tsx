@@ -225,11 +225,19 @@ export class Cell extends React.Component<ICellProps> {
             };
         } else if (copy.output_type === 'error') {
             const error = copy as nbformat.IError;
-            const converter = new ansiToHtml();
-            const trace = converter.toHtml(error.traceback.join('\n'));
-            copy.data = {
-                'text/html' : trace
-            };
+            try {
+                const converter = new ansiToHtml();
+                const trace = converter.toHtml(error.traceback.join('\n'));
+                copy.data = {
+                    'text/html': trace
+                };
+            } catch {
+                // This can fail during unit tests, just use the raw data
+                copy.data = {
+                    'text/html': error.evalue
+                };
+
+            }
         }
 
         // Jupyter style MIME bundle

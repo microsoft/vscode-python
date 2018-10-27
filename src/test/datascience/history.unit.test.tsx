@@ -1,18 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 import * as assert from 'assert';
 import { mount } from 'enzyme';
 import * as React from 'react';
 import * as TypeMoq from 'typemoq';
-import { Disposable } from 'vscode';
+import { Disposable, EventEmitter } from 'vscode';
 
 import {
     IWebPanel,
-    WebPanelMessage,
     IWebPanelMessageListener,
     IWebPanelProvider,
+    WebPanelMessage
 } from '../../client/common/application/types';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PlatformService } from '../../client/common/platform/platformService';
@@ -25,29 +24,10 @@ import { HistoryProvider } from '../../client/datascience/historyProvider';
 import { JupyterServerProvider } from '../../client/datascience/jupyterserverprovider';
 import { IVsCodeApi } from '../../client/datascience/react-common/postOffice';
 import { IHistoryProvider, IJupyterServerProvider } from '../../client/datascience/types';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 import { MockPythonExecutionService } from './executionServiceMock';
 import { waitForUpdate } from './reactHelpers';
-
-// Custom module loader so we skip .css files that break non webpack wrapped compiles
-// tslint:disable-next-line:no-var-requires no-require-imports
-const Module = require('module');
-
-// tslint:disable-next-line:no-function-expression
-(function() {
-    const origRequire = Module.prototype.require;
-    const _require = (context, path) => {
-        return origRequire.call(context, path);
-    };
-
-    Module.prototype.require = function(path) {
-        if (path.endsWith('.css')) {
-            return '';
-        }
-        // tslint:disable-next-line:no-invalid-this
-        return _require(this, path);
-    };
-})();
 
 // tslint:disable-next-line:max-func-body-length
 suite('History output tests', () => {
@@ -64,6 +44,7 @@ suite('History output tests', () => {
     let historyProvider : IHistoryProvider;
     let webPanelListener : IWebPanelMessageListener;
     let globalAcquireVsCodeApi : () => IVsCodeApi;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
 
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -74,13 +55,14 @@ suite('History output tests', () => {
         webPanel = TypeMoq.Mock.ofType<IWebPanel>();
         pythonExecutionService = new MockPythonExecutionService();
         factory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
 
         factory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService));
         // tslint:disable-next-line:no-empty
         logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => {}); // console.log(m)); // REnable this to debug the server
 
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns((listener : IWebPanelMessageListener, title: string, script: string) => {
+        webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns((listener : IWebPanelMessageListener, title: string, script: string, css?: string) => {
             // Keep track of the current listener. It listens to messages through the vscode api
             webPanelListener = listener;
 
@@ -96,6 +78,10 @@ suite('History output tests', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny())).returns(() => platformService);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IJupyterServerProvider), TypeMoq.It.isAny())).returns(() => serverProvider);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWebPanelProvider), TypeMoq.It.isAny())).returns(() => webPanelProvider.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
+        const e = new EventEmitter<void>();
+        e.event = e.event.bind(e);
+        interpreterService.setup(x => x.onDidChangeInterpreter).returns(() => e.event);
         serverProvider = new JupyterServerProvider(disposables, logger.object, factory.object, fileSystem);
         historyProvider = new HistoryProvider(serviceContainer.object);
 

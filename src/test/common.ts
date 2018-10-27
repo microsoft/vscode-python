@@ -290,3 +290,23 @@ export async function isPythonVersion(...versions: string[]): Promise<boolean> {
         return false;
     }
 }
+
+// Custom module loader so we skip .css files that break non webpack wrapped compiles
+// tslint:disable-next-line:no-var-requires no-require-imports
+const Module = require('module');
+
+// tslint:disable-next-line:no-function-expression
+(function() {
+    const origRequire = Module.prototype.require;
+    const _require = (context, filepath) => {
+        return origRequire.call(context, filepath);
+    };
+
+    Module.prototype.require = function(filepath) {
+        if (filepath.endsWith('.css')) {
+            return '';
+        }
+        // tslint:disable-next-line:no-invalid-this
+        return _require(this, filepath);
+    };
+})();
