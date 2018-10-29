@@ -41,7 +41,6 @@ import { registerTypes as formattersRegisterTypes } from './formatters/serviceRe
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import { ICondaService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
-import { setServiceContainer } from './ioc';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -73,7 +72,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     const cont = new Container();
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
-    setServiceContainer(serviceContainer);
+
     registerServices(context, serviceManager, serviceContainer);
     initializeServices(context, serviceManager, serviceContainer);
 
@@ -159,7 +158,10 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    return { ready: activationDeferred.promise };
+    // In test environment return the DI Container.
+    const diContainer = isTestExecution() ? serviceContainer : undefined;
+    // tslint:disable-next-line:no-any
+    return { ready: activationDeferred.promise, diContainer } as any as IExtensionApi;
 }
 
 function registerServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {

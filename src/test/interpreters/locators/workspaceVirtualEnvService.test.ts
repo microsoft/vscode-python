@@ -10,16 +10,18 @@ import * as path from 'path';
 import { sleep } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import { IInterpreterLocatorService, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../client/interpreter/contracts';
-import { getServiceContainer } from '../../../client/ioc';
+import { IServiceContainer } from '../../../client/ioc/types';
 import { isPythonVersionInProcess, PYTHON_PATH, rootWorkspaceUri } from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
+import { initialize } from '../../initialize';
 
 suite('Interpreters - Workspace VirtualEnv Service', () => {
-    const ioc = getServiceContainer();
+    let serviceContainer: IServiceContainer;
     const firstEnvDir = path.join(rootWorkspaceUri.fsPath, '.venv1');
     const secondEnvDir = path.join(rootWorkspaceUri.fsPath, '.venv2');
 
     setup(async function () {
+        serviceContainer = (await initialize()).serviceContainer;
         if (!await isPythonVersionInProcess(undefined, '3') || IS_MULTI_ROOT_TEST) {
             return this.skip();
         }
@@ -49,7 +51,7 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
         throw new Error(`${predicateTitle}, Environments not detected in the workspacce ${rootWorkspaceUri.fsPath}`);
     }
     test('Environment Detection', async () => {
-        const locator = ioc.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
+        const locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
         // Ensure environment in our workspace folder is detected.
         const firstEnvName = path.basename(firstEnvDir);
         await waitForLocaInterpreterToBeDetected(locator, item => !item.cachedEntry && item.envName === firstEnvName, 'Standard');

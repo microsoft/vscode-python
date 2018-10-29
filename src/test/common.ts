@@ -4,6 +4,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
+import { IExtensionApi } from '../client/api';
 import { PythonSettings } from '../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
 import { traceError } from '../client/common/logger';
@@ -11,6 +12,7 @@ import { BufferDecoder } from '../client/common/process/decoder';
 import { ProcessService } from '../client/common/process/proc';
 import { IProcessService } from '../client/common/process/types';
 import { getOSType, OSType } from '../client/common/utils/platform';
+import { IServiceContainer } from '../client/ioc/types';
 import { IS_MULTI_ROOT_TEST } from './initialize';
 
 export { sleep } from './core';
@@ -287,4 +289,8 @@ export async function isPythonVersion(...versions: string[]): Promise<boolean> {
         traceError(`Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
         return false;
     }
+}
+
+export interface IExtensionTestApi extends IExtensionApi {
+    serviceContainer: IServiceContainer;
 }
