@@ -36,9 +36,6 @@ export async function initialize(): Promise<IExtensionTestApi> {
 }
 export async function activateExtension() {
     const extension = vscode.extensions.getExtension<IExtensionApi>(PVSC_EXTENSION_ID)!;
-    if (extension.isActive) {
-        return;
-    }
     const api = await extension.activate();
     // Wait untill its ready to use.
     await api.ready;
