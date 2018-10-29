@@ -1,5 +1,18 @@
 # Changelog
 
+## 2018.9.2 (29 Oct 2018)
+
+### Fixes
+
+1. Update version of `vscode-extension-telemetry` to resolve issue with regards to spawning of numerous `powershell` processes.
+   ([#2996](https://github.com/Microsoft/vscode-python/issues/2996))
+
+### Code Health
+
+1. Forward telemetry from the language server.
+   ([#2940](https://github.com/Microsoft/vscode-python/issues/2940))
+
+
 ## 2018.9.1 (18 Oct 2018)
 
 ### Fixes
