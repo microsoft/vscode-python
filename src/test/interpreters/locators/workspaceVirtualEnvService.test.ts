@@ -59,7 +59,7 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
         await waitForLocaInterpreterToBeDetected(locator, item => !item.cachedEntry && item.envName === firstEnvName, 'Standard', 1);
     }).timeout(120_000);
 
-    test('Dynamic Environments Detection', async () => {
+    test('Dynamic Environment Detection', async () => {
         const locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
         // Ensure environment in our workspace folder is detected.
         const firstEnvName = path.basename(firstEnvDir);
