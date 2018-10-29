@@ -42,7 +42,7 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
     }
     async function waitForLocaInterpreterToBeDetected(locator: IInterpreterLocatorService, predicate: (item: PythonInterpreter) => boolean, predicateTitle: string, expectedCount: number) {
         // tslint:disable-next-line:prefer-array-literal
-        for (const _ of new Array(60)) {
+        for (const _ of new Array(120)) {
             const items = await locator.getInterpreters(rootWorkspaceUri);
             const identified = items.filter(predicate).length;
             if (identified === expectedCount) {
