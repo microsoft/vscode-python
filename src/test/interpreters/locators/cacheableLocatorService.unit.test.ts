@@ -57,7 +57,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             serviceContainer = mock(ServiceContainer);
         });
 
-        test('Interpreters mus be retrieved once, then cached', async () => {
+        test('Interpreters must be retrieved once, then cached', async () => {
             const expectedInterpreters = [1, 2] as any;
             const mockedLocatorForVerification = mock(MockLocator);
             const locator = new class extends Locator {
