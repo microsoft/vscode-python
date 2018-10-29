@@ -20,13 +20,15 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
     const firstEnvDir = path.join(rootWorkspaceUri.fsPath, '.venv1');
     const secondEnvDir = path.join(rootWorkspaceUri.fsPath, '.venv2');
 
-    setup(async function () {
+    suiteSetup(async function () {
+        this.timeout(120_000);
         serviceContainer = (await initialize()).serviceContainer;
         if (!await isPythonVersionInProcess(undefined, '3') || IS_MULTI_ROOT_TEST) {
             return this.skip();
         }
-        await createPythonEnvironment(firstEnvDir);
+        await deletePythonEnvironments();
     });
+    setup(() => createPythonEnvironment(firstEnvDir));
     teardown(deletePythonEnvironments);
 
     async function createPythonEnvironment(envDir: string) {
@@ -38,12 +40,12 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
         await fs.remove(firstEnvDir).catch(noop);
         await fs.remove(secondEnvDir).catch(noop);
     }
-    async function waitForLocaInterpreterToBeDetected(locator: IInterpreterLocatorService, predicate: (item: PythonInterpreter) => boolean, predicateTitle: string) {
+    async function waitForLocaInterpreterToBeDetected(locator: IInterpreterLocatorService, predicate: (item: PythonInterpreter) => boolean, predicateTitle: string, expectedCount: number) {
         // tslint:disable-next-line:prefer-array-literal
-        for (const _ of new Array(30)) {
+        for (const _ of new Array(60)) {
             const items = await locator.getInterpreters(rootWorkspaceUri);
             const identified = items.filter(predicate).length;
-            if (identified > 0) {
+            if (identified === expectedCount) {
                 return;
             }
             await sleep(500);
@@ -54,14 +56,20 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
         const locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
         // Ensure environment in our workspace folder is detected.
         const firstEnvName = path.basename(firstEnvDir);
-        await waitForLocaInterpreterToBeDetected(locator, item => !item.cachedEntry && item.envName === firstEnvName, 'Standard');
+        await waitForLocaInterpreterToBeDetected(locator, item => !item.cachedEntry && item.envName === firstEnvName, 'Standard', 1);
+    }).timeout(120_000);
 
-        // Create a new workspace virtual env, and ensure we return a cached list of environments.
+    test('Dynamic Environments Detection', async () => {
+        const locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
+        // Ensure environment in our workspace folder is detected.
+        const firstEnvName = path.basename(firstEnvDir);
+        await waitForLocaInterpreterToBeDetected(locator, item => !item.cachedEntry && item.envName === firstEnvName, 'Standard', 1);
+
         await createPythonEnvironment(secondEnvDir);
-        await waitForLocaInterpreterToBeDetected(locator, item => item.cachedEntry === true, 'Cached');
 
         // Ensure the new virtual env is also detected.
         const secondEnvName = path.basename(secondEnvDir);
-        await waitForLocaInterpreterToBeDetected(locator, item => !item.cachedEntry && item.envName === secondEnvName, 'New Environment');
-    }).timeout(60000);
+        await waitForLocaInterpreterToBeDetected(locator, () => true, 'New Environment', 2);
+        await waitForLocaInterpreterToBeDetected(locator, item => !item.cachedEntry && item.envName === secondEnvName, 'Second Environment', 1);
+    }).timeout(180_000);
 });
