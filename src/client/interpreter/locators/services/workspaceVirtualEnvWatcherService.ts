@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { Logger, traceVerbose } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
@@ -31,34 +31,22 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
         this.clearTimer();
     }
     @traceVerbose('Register Intepreter Watcher')
-    public async register(): Promise<void> {
+    public async register(resource: Uri | undefined): Promise<void> {
         if (this.fsWatchers.length > 0) {
             return;
         }
-        const patterns: string[] = [];
-        if (this.platformService.isWindows) {
-            patterns.push(...[
-                path.join('**', '*python*.exe'),
-                path.join('**', '*Python*.exe'),
-                path.join('**', 'Scripts', 'activate.*'),
-                path.join('**', 'Scripts', 'Activate.*')
-            ]);
-        } else {
-            patterns.push(...[
-                path.join('**', '*python*'),
-                path.join('*', 'bin', 'activate*')
-            ]);
-        }
 
-        for (const pattern of patterns) {
-            Logger.verbose(`Create file systemwatcher with pattern ${pattern}`);
+        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
+        const executable = this.platformService.isWindows ? 'python.exe' : 'python';
+        const pattern = path.join('**', executable);
+        const globPatern = workspaceFolder ? new RelativePattern(workspaceFolder.uri.fsPath, pattern) : pattern;
+        Logger.verbose(`Create file systemwatcher with pattern ${pattern}`);
 
-            const fsWatcher = this.workspaceService.createFileSystemWatcher(pattern);
-            fsWatcher.onDidCreate(e => this.createHandler(e), this, this.disposableRegistry);
+        const fsWatcher = this.workspaceService.createFileSystemWatcher(globPatern);
+        fsWatcher.onDidCreate(e => this.createHandler(e), this, this.disposableRegistry);
 
-            this.disposableRegistry.push(fsWatcher);
-            this.fsWatchers.push(fsWatcher);
-        }
+        this.disposableRegistry.push(fsWatcher);
+        this.fsWatchers.push(fsWatcher);
     }
     @debounce(2000)
     @traceVerbose('Intepreter Watcher change handler')

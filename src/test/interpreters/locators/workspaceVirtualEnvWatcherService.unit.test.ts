@@ -7,8 +7,8 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Disposable, FileSystemWatcher, Uri } from 'vscode';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
+import { Disposable, FileSystemWatcher, RelativePattern, Uri, WorkspaceFolder } from 'vscode';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { isUnitTestExecution } from '../../../client/common/constants';
 import { PlatformService } from '../../../client/common/platform/platformService';
@@ -34,7 +34,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         disposables = [];
     });
 
-    async function checkForFileChanges(os: OSType, expectedGlobs: string[]) {
+    async function checkForFileChanges(os: OSType, expectedGlob: string, resource: Uri | undefined, hasWorkspaceFolder: boolean) {
         const workspaceService = mock(WorkspaceService);
         const platformService = mock(PlatformService);
         const watcher = new WorkspaceVirtualEnvWatcherService([], instance(workspaceService), instance(platformService));
@@ -48,42 +48,44 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
                 return { dispose: noop };
             }
         }
-        const fsWatchers: FSWatcher[] = [];
-        for (const glob of expectedGlobs) {
-            const fsWatcher = mock(FSWatcher);
-            fsWatchers.push(fsWatcher);
-            when(workspaceService.createFileSystemWatcher(glob)).thenReturn(instance(fsWatcher as any as FileSystemWatcher));
-        }
-        await watcher.register();
 
-        for (const glob of expectedGlobs) {
-            verify(workspaceService.createFileSystemWatcher(glob)).once();
+        const workspaceFolder: WorkspaceFolder = { name: 'one', index: 1, uri: Uri.file(path.join('root', 'dev')) };
+        if (!hasWorkspaceFolder || !resource) {
+            when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
+        } else {
+            when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
         }
-        for (const fsWatcher of fsWatchers) {
-            verify(fsWatcher.onDidCreate(anything(), anything(), anything())).once();
+
+        const fsWatcher = mock(FSWatcher);
+        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(instance(fsWatcher as any as FileSystemWatcher));
+
+        await watcher.register(resource);
+
+        if (resource && hasWorkspaceFolder) {
+            const args = capture(workspaceService.createFileSystemWatcher).last();
+            const pattern = args[0] as RelativePattern;
+            expect(pattern.pattern).to.be.equal(expectedGlob);
+            expect(pattern.base).to.be.equal(workspaceFolder.uri.fsPath);
+
+        } else {
+            verify(workspaceService.createFileSystemWatcher(anything())).once();
+        }
+        verify(fsWatcher.onDidCreate(anything(), anything(), anything())).once();
+    }
+    for (const uri of [undefined, Uri.file('abc')]) {
+        for (const hasWorkspaceFolder of [true, false]) {
+            const uriSuffix = uri ? ` (with resource & ${hasWorkspaceFolder ? 'with' : 'without'} workspace folder)` : '';
+            test(`Register for file changes on windows ${uriSuffix}`, async () => {
+                await checkForFileChanges(OSType.Windows, path.join('**', 'python.exe'), uri, hasWorkspaceFolder);
+            });
+            test(`Register for file changes on Mac ${uriSuffix}`, async () => {
+                await checkForFileChanges(OSType.OSX, path.join('**', 'python'), uri, hasWorkspaceFolder);
+            });
+            test(`Register for file changes on Linux ${uriSuffix}`, async () => {
+                await checkForFileChanges(OSType.Linux, path.join('**', 'python'), uri, hasWorkspaceFolder);
+            });
         }
     }
-    test('Register for file changes on windows', async () => {
-        await checkForFileChanges(OSType.Windows, [
-            path.join('**', '*python*.exe'),
-            path.join('**', '*Python*.exe'),
-            path.join('**', 'Scripts', 'activate.*'),
-            path.join('**', 'Scripts', 'Activate.*')
-        ]);
-    });
-    test('Register for file changes on Mac', async () => {
-        await checkForFileChanges(OSType.OSX, [
-            path.join('**', '*python*'),
-            path.join('*', 'bin', 'activate*')
-        ]);
-    });
-    test('Register for file changes on Linux', async () => {
-        await checkForFileChanges(OSType.Linux, [
-            path.join('**', '*python*'),
-            path.join('*', 'bin', 'activate*')
-        ]);
-    });
-
     async function ensureFileChanesAreHandled(os: OSType) {
         const workspaceService = mock(WorkspaceService);
         const platformService = mock(PlatformService);
@@ -104,8 +106,9 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
             }
         }
         const fsWatcher = new FSWatcher();
+        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
         when(workspaceService.createFileSystemWatcher(anything())).thenReturn(fsWatcher as any as FileSystemWatcher);
-        await watcher.register();
+        await watcher.register(undefined);
         let invoked = false;
         watcher.onDidCreate(() => invoked = true, watcher);
 

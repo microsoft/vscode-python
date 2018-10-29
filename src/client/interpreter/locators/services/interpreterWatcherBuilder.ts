@@ -33,7 +33,7 @@ export class InterpreterWatcherBuilder implements IInterpreterWatcherBuilder {
             const deferred = createDeferred<IInterpreterWatcher>();
             this.watchersByResource.set(key, deferred.promise);
             const watcher = this.serviceContainer.get<WorkspaceVirtualEnvWatcherService>(IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE);
-            await watcher.register();
+            await watcher.register(resource);
             deferred.resolve(watcher);
         }
         return this.watchersByResource.get(key)!;
