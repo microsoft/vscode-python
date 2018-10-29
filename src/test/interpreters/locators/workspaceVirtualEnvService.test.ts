@@ -17,8 +17,9 @@ import { initialize } from '../../initialize';
 
 suite('Interpreters - Workspace VirtualEnv Service', () => {
     let serviceContainer: IServiceContainer;
-    const firstEnvDir = path.join(rootWorkspaceUri.fsPath, '.venv1');
-    const secondEnvDir = path.join(rootWorkspaceUri.fsPath, '.venv2');
+    const envSuffix = + new Date().getTime().toString();
+    const firstEnvDir = path.join(rootWorkspaceUri.fsPath, `.venv1${envSuffix}`);
+    const secondEnvDir = path.join(rootWorkspaceUri.fsPath, `.venv2${envSuffix}`);
 
     suiteSetup(async function () {
         this.timeout(120_000);
@@ -45,7 +46,7 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
         for (const _ of new Array(120)) {
             const items = await locator.getInterpreters(rootWorkspaceUri);
             const identified = items.filter(predicate).length;
-            if (identified === expectedCount) {
+            if (identified >= expectedCount) {
                 return;
             }
             await sleep(500);
@@ -69,7 +70,6 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
 
         // Ensure the new virtual env is also detected.
         const secondEnvName = path.basename(secondEnvDir);
-        await waitForLocaInterpreterToBeDetected(locator, () => true, 'New Environment', 2);
         await waitForLocaInterpreterToBeDetected(locator, item => !item.cachedEntry && item.envName === secondEnvName, 'Second Environment', 1);
     }).timeout(180_000);
 });
