@@ -80,7 +80,6 @@ suite('History output tests', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWebPanelProvider), TypeMoq.It.isAny())).returns(() => webPanelProvider.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
         const e = new EventEmitter<void>();
-        e.event = e.event.bind(e);
         interpreterService.setup(x => x.onDidChangeInterpreter).returns(() => e.event);
         serverProvider = new JupyterServerProvider(disposables, logger.object, factory.object, fileSystem);
         historyProvider = new HistoryProvider(serviceContainer.object);
