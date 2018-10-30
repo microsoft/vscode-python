@@ -713,3 +713,64 @@ export interface IApplicationEnvironment {
      */
     sessionId: string;
 }
+
+export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
+export interface IWebPanelMessageListener {
+    /**
+     * Listens to web panel messages
+     * @param message: the message being sent
+     * @param payload: extra data that came with the message
+     * @return A IWebPanel that can be used to show html pages.
+     */
+    onMessage(message: string, payload: any): void;
+
+    /**
+     * Called when the panel is closed/disposed
+     */
+    onDisposed(): void;
+}
+
+export type WebPanelMessage = {
+    /**
+     * Message type
+     */
+    type: string;
+
+    /**
+     * Payload
+     */
+    payload?: any;
+};
+
+// Wraps the VS Code webview panel
+export const IWebPanel = Symbol('IWebPanel');
+export interface IWebPanel {
+    /**
+     * Makes the webpanel show up.
+     * @return A Promise that can be waited on
+     */
+    show(): Promise<void>;
+
+    /**
+     * Indicates if this web panel is visible or not.
+     */
+    isVisible(): boolean;
+
+    /**
+     * Sends a message to the hosted html page
+     */
+    postMessage(message: WebPanelMessage);
+}
+
+// Wraps the VS Code api for creating a web panel
+export const IWebPanelProvider = Symbol('IWebPanelProvider');
+export interface IWebPanelProvider {
+    /**
+     * Creates a new webpanel
+     * @param listener for messages from the panel
+     * @param title: title of the panel when it shows
+     * @param: mainScriptPath: full path in the output folder to the script
+     * @return A IWebPanel that can be used to show html pages.
+     */
+    create(listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string): IWebPanel;
+}

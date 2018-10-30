@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+'use strict';
 
 import * as vscode from 'vscode';
 import { ExecutionInfo, Product } from '../common/types';
@@ -69,6 +70,6 @@ export interface ILintingEngine {
     lintOpenPythonFiles(): Promise<vscode.DiagnosticCollection>;
     lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void>;
     // tslint:disable-next-line:no-any
-    linkJupiterExtension(jupiter: vscode.Extension<any> | undefined): Promise<void>;
+    linkJupyterExtension(jupyter: vscode.Extension<any> | undefined): Promise<void>;
     clearDiagnostics(document: vscode.TextDocument): void;
 }

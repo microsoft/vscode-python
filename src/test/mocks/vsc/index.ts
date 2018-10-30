@@ -64,7 +64,7 @@ export namespace vscMock {
             this.emitter.removeAllListeners();
         }
 
-        protected add(listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]): Disposable {
+        protected add = (listener: (e: T) => any, thisArgs?: any, disposables?: Disposable[]): Disposable => {
             this.emitter.addListener('evt', listener);
             return {
                 dispose: () => {

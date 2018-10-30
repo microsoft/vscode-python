@@ -3,6 +3,8 @@
 'use strict';
 
 import { IServiceManager } from '../../ioc/types';
+import { IWebPanelProvider } from '../application/types';
+import { WebPanelProvider } from '../application/webPanelProvider';
 import { ProductType } from '../types';
 import { InstallationChannelManager } from './channelManager';
 import { CondaInstaller } from './condaInstaller';
@@ -24,4 +26,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
     serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
     serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
+    serviceManager.addSingleton<IWebPanelProvider>(IWebPanelProvider, WebPanelProvider);
 }

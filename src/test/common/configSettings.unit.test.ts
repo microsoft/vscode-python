@@ -15,6 +15,7 @@ import {
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
+    IDataScienceSettings,
     IFormattingSettings,
     ILintingSettings,
     ISortImportSettings,
@@ -92,6 +93,8 @@ suite('Python Settings', () => {
             .returns(() => sourceSettings.unitTest);
         config.setup(c => c.get<ITerminalSettings>('terminal'))
             .returns(() => sourceSettings.terminal);
+        config.setup(c => c.get<IDataScienceSettings>('dataScience'))
+            .returns(() => sourceSettings.datascience);
     }
 
     test('condaPath updated', () => {

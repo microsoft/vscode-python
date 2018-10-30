@@ -1,0 +1,17 @@
+.collapse-input-svg-rotate {
+    transform: rotate(45deg);
+    transform-origin: 0% 100%;
+}
+
+.collapse-input-svg-vscode-light {
+    fill: black;
+}
+
+.collapse-input-svg-vscode-dark {
+    fill: lightgray;
+}
+
+.remove-style {
+    background-color:transparent;
+    border:transparent;
+}

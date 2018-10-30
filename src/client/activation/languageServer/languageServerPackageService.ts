@@ -75,6 +75,6 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
         const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
         const extension = extensions.getExtension(PVSC_EXTENSION_ID)!;
         const version = parse(extension.packageJSON.version)!;
-        return version.prerelease === ['alpha'];
+        return version.prerelease.length > 0 && version.prerelease[0] === 'alpha';
     }
 }

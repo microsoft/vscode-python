@@ -1,3 +1,7 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
+
 // tslint:disable:no-any
 
 import { injectable } from 'inversify';
@@ -21,5 +25,9 @@ export class CurrentProcess implements ICurrentProcess {
     }
     public get stdin(): NodeJS.ReadStream {
         return process.stdin;
+    }
+
+    public get execPath(): string {
+        return process.execPath;
     }
 }

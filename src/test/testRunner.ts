@@ -12,6 +12,7 @@ import * as Mocha from 'mocha';
 import * as path from 'path';
 import { MochaSetupOptions } from 'vscode/lib/testrunner';
 const remapIstanbul = require('remap-istanbul');
+import { setUpDomEnvironment } from './datascience/reactHelpers';
 
 interface ITestRunnerOptions {
     enabled?: boolean;
@@ -72,6 +73,10 @@ export function configure(setupOptions: SetupOptions, coverageOpts?: { coverageC
 export function run(testsRoot: string, callback: TestCallback): void {
     // Enable source map support.
     require('source-map-support').install();
+
+    // nteract/transforms-full expects to run in the browser so we have to fake
+    // parts of the browser here.
+    setUpDomEnvironment();
 
     // Check whether code coverage is enabled.
     const options = getCoverageOptions(testsRoot);

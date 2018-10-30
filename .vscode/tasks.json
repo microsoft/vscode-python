@@ -25,6 +25,17 @@
             }
         },
         {
+            "label": "Compile Web Views",
+            "type": "npm",
+            "script": "compile-webviews-watch",
+            "isBackground": true,
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Run Unit Tests",
             "type": "npm",
             "script": "test:unittests",
@@ -51,7 +62,23 @@
             "problemMatcher": []
         },
         {
-            // Use this to run hygiene and display errors in problems window (very slow on Windows)
+            "label": "Hygiene Watch Branch",
+            "type": "gulp",
+            "task": "hygiene-watch-branch",
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "dedicated"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Hygiene (Problems Window)",
             "type": "gulp",
             "task": "watchProblems",

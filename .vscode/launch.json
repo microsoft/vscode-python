@@ -3,6 +3,15 @@
     "version": "0.1.0",
     "configurations": [
         {
+            "type": "node",
+            "request": "launch",
+            "name": "Gulp watch",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "args": [
+                "watch"
+            ]
+        },
+        {
             "name": "Extension",
             "type": "extensionHost",
             "request": "launch",
@@ -139,8 +148,8 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "args": [
-                "timeout=60000",
-                "grep="
+                "timeout=300000",
+                "grep=History"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

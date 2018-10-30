@@ -85,7 +85,9 @@
         "onCommand:python.setLinter",
         "onCommand:python.enableLinting",
         "onCommand:python.createTerminal",
-        "onCommand:python.discoverTests"
+        "onCommand:python.discoverTests",
+        "onCommand:python.datascience.showhistorypane",
+        "onCommand:python.datascience.importnotebook"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -100,6 +102,11 @@
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
                 "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed"
+            },
+            {
+                "command": "python.datascience.runcurrentcelladvance",
+                "key": "ctrl+shift+enter",
+                "when": "python.datascience.hascodecells"
             }
         ],
         "commands": [
@@ -222,6 +229,38 @@
                 "command": "python.runLinting",
                 "title": "%python.command.python.runLinting.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.runcurrentcell",
+                "title": "%python.command.python.datascience.runcurrentcell.title%",
+                "category": "Python",
+                "when": "python.datascience.hascodecells"
+            },
+            {
+                "command": "python.datascience.runcurrentcelladvance",
+                "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
+                "category": "Python",
+                "when": "python.datascience.hascodecells"
+            },
+            {
+                "command": "python.datascience.showhistorypane",
+                "title": "%python.command.python.datascience.showhistorypane.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.runallcells",
+                "title": "%python.command.python.datascience.runallcells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.runcell",
+                "title": "%python.command.python.datascience.runcell.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.importnotebook",
+                "title": "%python.command.python.datascience.importnotebook.title%",
+                "category": "Python"
             }
         ],
         "menus": {
@@ -263,6 +302,21 @@
                     "when": "resourceLangId == python",
                     "command": "python.runCurrentTestFile",
                     "group": "Python"
+                },
+                {
+                    "when": "python.datascience.hascodecells",
+                    "command": "python.datascience.runcurrentcell",
+                    "group": "Python"
+                },
+                {
+                    "when": "python.datascience.hascodecells",
+                    "command": "python.datascience.runcurrentcelladvance",
+                    "group": "Python"
+                },
+                {
+                    "when": "resourceLangId == jupyter",
+                    "command": "python.datascience.importnotebook",
+                    "group": "Python"
                 }
             ],
             "explorer/context": [
@@ -279,6 +333,11 @@
                 {
                     "when": "resourceLangId == python",
                     "command": "python.execInTerminal",
+                    "group": "Python"
+                },
+                {
+                    "when": "resourceLangId == jupyter",
+                    "command": "python.datascience.importnotebook",
                     "group": "Python"
                 }
             ]
@@ -344,10 +403,10 @@
                             "program": "^\"\\${workspaceFolder}/manage.py\"",
                             "args": [
                                 "runserver",
+                                "--noreload",
                                 "--nothreading"
                             ],
-                            "django": true,
-                            "subProcess": true
+                            "django": true
                         }
                     },
                     {
@@ -361,13 +420,14 @@
                             "env": {
                                 "FLASK_APP": "app.py",
                                 "FLASK_ENV": "development",
-                                "FLASK_DEBUG": "1"
+                                "FLASK_DEBUG": "0"
                             },
                             "args": [
-                                "run"
+                                "run",
+                                "--no-debugger",
+                                "--no-reload"
                             ],
-                            "jinja": true,
-                            "subProcess": true
+                            "jinja": true
                         }
                     },
                     {
@@ -686,10 +746,10 @@
                         "console": "integratedTerminal",
                         "args": [
                             "runserver",
+                            "--noreload",
                             "--nothreading"
                         ],
-                        "django": true,
-                        "subProcess": true
+                        "django": true
                     },
                     {
                         "name": "Python: Flask",
@@ -697,15 +757,14 @@
                         "request": "launch",
                         "module": "flask",
                         "env": {
-                            "FLASK_APP": "app.py",
-                            "FLASK_ENV": "development",
-                            "FLASK_DEBUG": "1"
+                            "FLASK_APP": "app.py"
                         },
                         "args": [
-                            "run"
+                            "run",
+                            "--no-debugger",
+                            "--no-reload"
                         ],
-                        "jinja": true,
-                        "subProcess": true
+                        "jinja": true
                     },
                     {
                         "name": "Python: Current File (External Terminal)",
@@ -753,6 +812,12 @@
                     "default": true,
                     "description": "Automatically update the language server.",
                     "scope": "application"
+                },
+                "python.dataScience.allowImportFromNotebook": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
+                    "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
@@ -1516,6 +1581,12 @@
                 "aliases": [
                     "Jinja"
                 ]
+            },
+            {
+                "id": "jupyter",
+                "extensions": [
+                    ".ipynb"
+                ]
             }
         ],
         "grammars": [
@@ -1555,8 +1626,10 @@
         ]
     },
     "scripts": {
-        "vscode:prepublish": "gulp checkNativeDependencies && tsc -p ./",
+        "vscode:prepublish": "gulp checkNativeDependencies && tsc -p ./ && npm run compile-webviews",
         "compile": "tsc -watch -p ./",
+        "compile-webviews-watch": "gulp compile-webviews-watch",
+        "compile-webviews": "gulp compile-webviews",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "node ./out/test/unittests.js",
@@ -1575,10 +1648,12 @@
         "cover:inlinesource": "gulp inlinesource"
     },
     "dependencies": {
+        "@jupyterlab/services": "^3.1.4",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
         "dotenv": "^5.0.1",
+        "file-matcher": "^1.3.0",
         "fs-extra": "^4.0.3",
         "fuzzy": "^0.1.3",
         "get-port": "^3.2.0",
@@ -1616,43 +1691,70 @@
         "xml2js": "^0.4.19"
     },
     "devDependencies": {
+        "@babel/core": "^7.1.0",
+        "@babel/preset-env": "^7.1.0",
+        "@babel/preset-react": "^7.0.0",
+        "@nteract/transform-dataresource": "^4.3.5",
+        "@nteract/transform-geojson": "^3.2.3",
+        "@nteract/transform-model-debug": "^3.2.3",
+        "@nteract/transform-plotly": "^3.2.3",
+        "@nteract/transforms": "^4.4.4",
+        "@types/prismjs": "^1.9.0",
         "@types/chai": "^4.1.2",
         "@types/chai-arrays": "^1.0.2",
         "@types/chai-as-promised": "^7.1.0",
         "@types/del": "^3.0.0",
         "@types/dotenv": "^4.0.3",
         "@types/download": "^6.2.2",
+        "@types/enzyme": "^3.1.14",
+        "@types/enzyme-adapter-react-16": "^1.0.3",
         "@types/event-stream": "^3.3.33",
         "@types/fs-extra": "^5.0.1",
         "@types/get-port": "^3.2.0",
         "@types/glob": "^5.0.35",
         "@types/iconv-lite": "^0.0.1",
         "@types/istanbul": "^0.4.29",
+        "@types/jsdom": "^11.12.0",
         "@types/lodash": "^4.14.104",
         "@types/md5": "^2.1.32",
         "@types/mocha": "^2.2.48",
         "@types/node": "9.4.7",
+        "@types/promisify-node": "^0.4.0",
+        "@types/react": "^16.4.14",
+        "@types/react-dom": "^16.0.8",
+        "@types/react-json-tree": "^0.6.8",
         "@types/request": "^2.47.0",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
         "@types/sinon": "^4.3.0",
+        "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
         "JSONStream": "^1.3.2",
+        "ansi-to-html": "^0.6.7",
+        "babel-loader": "^8.0.3",
+        "babel-plugin-inline-json-import": "^0.3.1",
+        "babel-plugin-prismjs": "^1.0.2",
+        "babel-plugin-transform-runtime": "^6.23.0",
+        "babel-polyfill": "^6.26.0",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
         "codecov": "^3.0.0",
         "colors": "^1.2.1",
         "cross-spawn": "^6.0.5",
+        "css-loader": "^1.0.0",
         "debounce": "^1.1.0",
         "decache": "^4.4.0",
         "del": "^3.0.0",
         "download": "^7.0.0",
+        "enzyme": "^3.7.0",
+        "enzyme-adapter-react-16": "^1.6.0",
         "event-stream": "^3.3.4",
+        "file-loader": "^2.0.0",
         "flat": "^4.0.0",
         "gulp": "^4.0.0",
         "gulp-debounced-watch": "^1.0.4",
@@ -1663,17 +1765,29 @@
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^4.0.1",
         "gulp-watch": "^5.0.0",
+        "html-webpack-plugin": "^3.2.0",
         "husky": "^1.1.2",
         "is-running": "^2.1.0",
         "istanbul": "^0.4.5",
+        "jsdom": "^12.2.0",
+        "json-loader": "^0.5.7",
         "mocha": "^5.0.4",
         "mocha-junit-reporter": "^1.17.0",
         "node-has-native-dependencies": "^1.0.2",
+        "prismjs": "^1.15.0",
+        "raw-loader": "^0.5.1",
+        "react": "^16.5.2",
+        "react-dev-utils": "^5.0.2",
+        "react-dom": "^16.5.2",
+        "react-json-tree": "^0.11.0",
         "relative": "^3.0.2",
         "remap-istanbul": "^0.10.1",
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
         "shortid": "^2.2.8",
         "sinon": "^4.4.5",
+        "styled-jsx": "^3.1.0",
+        "style-loader": "^0.23.0",
+        "svg-inline-loader": "^0.8.0",
         "ts-mockito": "^2.3.1",
         "tslint": "^5.9.1",
         "tslint-eslint-rules": "^5.1.0",
@@ -1681,9 +1795,14 @@
         "typemoq": "^2.1.0",
         "typescript": "^3.1.3",
         "typescript-formatter": "^7.1.0",
-        "uuid": "^3.2.1",
+        "typed-react-markdown": "^0.1.0",
+        "url-loader": "^1.1.1",
+        "uuid": "^3.3.2",
         "vscode": "^1.1.21",
-        "vscode-debugadapter-testsupport": "^1.27.0"
+        "vscode-debugadapter-testsupport": "^1.27.0",
+        "webpack": "^4.20.2",
+        "webpack-fix-default-import-plugin": "^1.0.3",
+        "yargs": "^12.0.2"
     },
     "__metadata": {
         "id": "f1f59ae4-9318-4f3c-a9b5-81b2eaa5f8a5",

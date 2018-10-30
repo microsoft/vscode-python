@@ -1,0 +1,100 @@
+.cell-wrapper {
+    margin: 5px;
+    padding: 2px;
+    display: block;
+}
+
+.cell-wrapper:after {
+    content: "";
+    clear: both;
+    display: block;
+}
+
+.cell-outer {
+    display:flex;
+    flex-direction: row;
+    justify-content: left;
+    width: 100%;
+}
+
+.content-div {
+    float: left;
+    width: 100%;
+}
+
+.controls-div {
+    float: left;
+}
+
+.hide {
+    display: none;
+}
+
+.cell-result-container {
+    width: 100%;
+}
+
+.cell-input {
+    margin: 0;
+}
+
+.cell-input pre{
+    margin: 0px;
+    padding: 0px;
+}
+
+.cell-output {
+    margin-top: 5px;
+    background: var(--vscode-notifications-background);
+}
+
+.cell-output table {
+    background-color: transparent;
+    border: none;
+    border-collapse: collapse;
+    border-spacing: 0px;
+    font-size: 12px;
+    table-layout: fixed;
+}
+
+.cell-output thead {
+    border-bottom-color: var(--vscode-editor-foreground);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    vertical-align: bottom;
+}
+
+.cell-output tr,
+.cell-output th,
+.cell-output td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.cell-output th {
+  font-weight: bold;
+}
+.cell-output tbody tr:nth-child(even) {
+  background: var(--vscode-editor-background); /* Force to white because the default color for output is gray */
+}
+.cell-output tbody tr:hover {
+  background: var(--vscode-editor-selectionBackground);
+}
+.cell-output * + table {
+  margin-top: 1em;
+}
+
+.controls-flex {
+    display:flex;
+    min-width: 40px;
+}
+
+.center-img {
+    display: block;
+    margin: 0 auto;
+}
+

@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+'use strict';
 
 import { injectable } from 'inversify';
 import * as TypeMoq from 'typemoq';
@@ -20,5 +21,9 @@ export class MockProcess implements ICurrentProcess {
     }
     public get stdin(): NodeJS.ReadStream {
         return TypeMoq.Mock.ofType<NodeJS.ReadStream>().object;
+    }
+
+    public get execPath() : string {
+        return '';
     }
 }

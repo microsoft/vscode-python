@@ -147,7 +147,7 @@ export class PythonV2DebugConfigurationProvider extends BaseConfigurationProvide
             pyramid: !!debugConfiguration.pyramid,
             stopOnEntry: !!debugConfiguration.stopOnEntry,
             showReturnValue: !!debugConfiguration.showReturnValue,
-            subProcess: debugConfiguration.subProcess
+            subProcess: !!debugConfiguration.subProcess
         };
         sendTelemetryEvent(DEBUGGER, undefined, telemetryProps);
     }
