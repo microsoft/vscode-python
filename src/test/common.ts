@@ -151,13 +151,6 @@ function getPythonPath(): string {
     return 'python';
 }
 
-export function getPythonExeutable() {
-    const result = spawnSync(PYTHON_PATH, ['-c', 'import sys;print(sys.executable)']);
-    if (result.stderr.toString().length > 0) {
-        throw new Error(`Failed to get python executable ${PYTHON_PATH}, Error: ${result.stderr.toString()}`);
-    }
-    return result.stdout.toString().trim();
-}
 /**
  * Determine if the current platform is included in a list of platforms.
  *

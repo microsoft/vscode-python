@@ -3,12 +3,12 @@
 
 'use strict';
 
-// tslint:disable:no-any max-classes-per-file max-func-body-length
+// tslint:disable:no-any max-classes-per-file max-func-body-length no-invalid-this
 
 import { expect } from 'chai';
 import * as path from 'path';
-import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import { Disposable, FileSystemWatcher, RelativePattern, Uri, WorkspaceFolder } from 'vscode';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { Disposable, FileSystemWatcher, Uri, WorkspaceFolder } from 'vscode';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { isUnitTestExecution } from '../../../client/common/constants';
 import { PlatformService } from '../../../client/common/platform/platformService';
@@ -21,7 +21,6 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
     let disposables: Disposable[] = [];
     setup(function () {
         if (!isUnitTestExecution()) {
-            // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
     });
@@ -34,7 +33,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         disposables = [];
     });
 
-    async function checkForFileChanges(os: OSType, expectedGlob: string, resource: Uri | undefined, hasWorkspaceFolder: boolean) {
+    async function checkForFileChanges(os: OSType, resource: Uri | undefined, hasWorkspaceFolder: boolean) {
         const workspaceService = mock(WorkspaceService);
         const platformService = mock(PlatformService);
         const watcher = new WorkspaceVirtualEnvWatcherService([], instance(workspaceService), instance(platformService));
@@ -61,28 +60,20 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
 
         await watcher.register(resource);
 
-        if (resource && hasWorkspaceFolder) {
-            const args = capture(workspaceService.createFileSystemWatcher).last();
-            const pattern = args[0] as RelativePattern;
-            expect(pattern.pattern).to.be.equal(expectedGlob);
-            expect(pattern.base).to.be.equal(workspaceFolder.uri.fsPath);
-
-        } else {
-            verify(workspaceService.createFileSystemWatcher(anything())).once();
-        }
-        verify(fsWatcher.onDidCreate(anything(), anything(), anything())).once();
+        verify(workspaceService.createFileSystemWatcher(anything())).twice();
+        verify(fsWatcher.onDidCreate(anything(), anything(), anything())).twice();
     }
     for (const uri of [undefined, Uri.file('abc')]) {
         for (const hasWorkspaceFolder of [true, false]) {
             const uriSuffix = uri ? ` (with resource & ${hasWorkspaceFolder ? 'with' : 'without'} workspace folder)` : '';
             test(`Register for file changes on windows ${uriSuffix}`, async () => {
-                await checkForFileChanges(OSType.Windows, path.join('**', 'python*.exe'), uri, hasWorkspaceFolder);
+                await checkForFileChanges(OSType.Windows, uri, hasWorkspaceFolder);
             });
             test(`Register for file changes on Mac ${uriSuffix}`, async () => {
-                await checkForFileChanges(OSType.OSX, path.join('**', 'python*'), uri, hasWorkspaceFolder);
+                await checkForFileChanges(OSType.OSX, uri, hasWorkspaceFolder);
             });
             test(`Register for file changes on Linux ${uriSuffix}`, async () => {
-                await checkForFileChanges(OSType.Linux, path.join('**', 'python*'), uri, hasWorkspaceFolder);
+                await checkForFileChanges(OSType.Linux, uri, hasWorkspaceFolder);
             });
         }
     }
