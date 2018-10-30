@@ -3,9 +3,10 @@
 
 'use strict';
 
+// tslint:disable:no-require-imports
+
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-// tslint:disable-next-line:no-require-imports
 import untildify = require('untildify');
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';

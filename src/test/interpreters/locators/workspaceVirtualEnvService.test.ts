@@ -5,15 +5,15 @@
 
 // tslint:disable:no-any max-classes-per-file max-func-body-length no-invalid-this
 import { expect } from 'chai';
+import { spawn } from 'child_process';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { sleep, createDeferred } from '../../../client/common/utils/async';
+import { sleep } from '../../../client/common/utils/async';
 import { IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { deleteFiles, rootWorkspaceUri, isPythonVersionInProcess, PYTHON_PATH } from '../../common';
+import { deleteFiles, isPythonVersionInProcess, PYTHON_PATH, rootWorkspaceUri } from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
 import { initialize, multirootPath } from '../../initialize';
-import { spawn } from 'child_process';
 
 const timeoutSecs = 120;
 suite('Interpreters - Workspace VirtualEnv Service', function () {

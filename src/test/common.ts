@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { spawnSync } from 'child_process';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
