@@ -53,6 +53,8 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
 
         await deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`));
     });
+
+    suiteTeardown(() => deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`)));
     teardown(() => deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`)));
 
     test('Detect Workspace Virtual Environment', async () => {
