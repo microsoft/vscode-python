@@ -37,7 +37,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
         }
 
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
-        const executable = this.platformService.isWindows ? 'python.exe' : 'python';
+        const executable = this.platformService.isWindows ? 'python*.exe' : 'python*';
         const pattern = path.join('**', executable);
         const globPatern = workspaceFolder ? new RelativePattern(workspaceFolder.uri.fsPath, pattern) : pattern;
         Logger.verbose(`Create file systemwatcher with pattern ${pattern}`);

@@ -76,13 +76,13 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         for (const hasWorkspaceFolder of [true, false]) {
             const uriSuffix = uri ? ` (with resource & ${hasWorkspaceFolder ? 'with' : 'without'} workspace folder)` : '';
             test(`Register for file changes on windows ${uriSuffix}`, async () => {
-                await checkForFileChanges(OSType.Windows, path.join('**', 'python.exe'), uri, hasWorkspaceFolder);
+                await checkForFileChanges(OSType.Windows, path.join('**', 'python*.exe'), uri, hasWorkspaceFolder);
             });
             test(`Register for file changes on Mac ${uriSuffix}`, async () => {
-                await checkForFileChanges(OSType.OSX, path.join('**', 'python'), uri, hasWorkspaceFolder);
+                await checkForFileChanges(OSType.OSX, path.join('**', 'python*'), uri, hasWorkspaceFolder);
             });
             test(`Register for file changes on Linux ${uriSuffix}`, async () => {
-                await checkForFileChanges(OSType.Linux, path.join('**', 'python'), uri, hasWorkspaceFolder);
+                await checkForFileChanges(OSType.Linux, path.join('**', 'python*'), uri, hasWorkspaceFolder);
             });
         }
     }
