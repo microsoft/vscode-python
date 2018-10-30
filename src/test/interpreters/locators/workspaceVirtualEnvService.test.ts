@@ -42,7 +42,6 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
             (ex) => ex ? reject(ex) : resolve()));
     }
     async function deletePythonEnvironments() {
-        await sleep(1000);
         await fs.remove(firstEnvDir).catch(noop);
         await fs.remove(secondEnvDir).catch(noop);
     }
