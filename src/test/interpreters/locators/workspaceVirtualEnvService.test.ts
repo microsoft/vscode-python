@@ -47,7 +47,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
                 if (stdErr.length === 0) {
                     return resolve(envName);
                 }
-                const err = new Error(`Failed to create Env ${envName}, Error: ${stdErr.toString()}`);
+                const err = new Error(`Failed to create Env ${envName}, ${PYTHON_PATH}, Error: ${stdErr.toString()}`);
                 reject(err);
             });
         });
