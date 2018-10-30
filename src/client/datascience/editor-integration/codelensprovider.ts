@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
+import { IConfigurationService } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../types';
 import { CodeWatcher } from './codewatcher';
@@ -12,7 +13,8 @@ import { CodeWatcher } from './codewatcher';
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider {
     private activeCodeWatchers: ICodeWatcher[] = [];
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer)
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+                @inject(IConfigurationService) private configuration: IConfigurationService)
     {
     }
 
@@ -20,6 +22,17 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     // Some implementation based on DonJayamanne's jupyter extension work
     public provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken):
         vscode.CodeLens[] {
+            // Don't provide any code lenses if we have not enabled data science
+            const settings = this.configuration.getSettings();
+            if (!settings.datascience.enabled) {
+                // Clear out any existing code watchers, providecodelenses is called on settings change
+                // so we don't need to watch the settings change specifically here
+                if (this.activeCodeWatchers.length > 0) {
+                    this.activeCodeWatchers = [];
+                }
+                return [];
+            }
+
             // See if we already have a watcher for this file and version
             const codeWatcher: ICodeWatcher | undefined = this.matchWatcher(document.fileName, document.version);
             if (codeWatcher) {

@@ -14,6 +14,7 @@ export namespace Commands {
 
 export namespace EditorContexts {
     export const HasCodeCells = 'python.datascience.hascodecells';
+    export const DataScienceEnabled = 'python.datascience.featureenabled';
 }
 
 export namespace RegExpValues {

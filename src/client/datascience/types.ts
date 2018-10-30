@@ -12,7 +12,7 @@ import { ICommandManager } from '../common/application/types';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
-export interface IDataScience {
+export interface IDataScience extends IDisposable {
     activate(): Promise<void>;
 }
 

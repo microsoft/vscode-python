@@ -265,6 +265,7 @@ export interface IAnalysisSettings {
 
 export interface IDataScienceSettings {
     allowImportFromNotebook : boolean;
+    enabled : boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
