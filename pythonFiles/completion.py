@@ -1,10 +1,12 @@
-import os
 import io
+import json
+import os
+import platform
 import re
 import sys
-import json
 import traceback
-import platform
+
+import jedi
 
 jediPreview = False
 
@@ -23,6 +25,7 @@ class RedirectStdout(object):
         os.dup2(self.oldstdout_fno, 1)
         os.close(self.oldstdout_fno)
 
+        
 class JediCompletion(object):
     basic_types = {
         'module': 'import',
@@ -624,6 +627,7 @@ class JediCompletion(object):
                 sys.stderr.write(traceback.format_exc() + '\n')
                 sys.stderr.flush()
 
+
 if __name__ == '__main__':
     cachePrefix = 'v'
     modulesToLoad = ''
@@ -640,7 +644,7 @@ if __name__ == '__main__':
             modulesToLoad = sys.argv[1]
 
     sys.path.insert(0, jediPath)
-    import jedi
+
     if jediPreview:
         jedi.settings.cache_directory = os.path.join(
             jedi.settings.cache_directory, cachePrefix + jedi.__version__.replace('.', ''))
