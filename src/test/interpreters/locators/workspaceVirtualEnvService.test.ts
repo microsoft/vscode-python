@@ -54,7 +54,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
     }
 
     suiteSetup(async function () {
-        if (!isPythonVersionInProcess(undefined, '3')) {
+        if (!await isPythonVersionInProcess(undefined, '3')) {
             return this.skip();
         }
         serviceContainer = (await initialize()).serviceContainer;
