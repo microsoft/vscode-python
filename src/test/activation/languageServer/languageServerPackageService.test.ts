@@ -76,7 +76,7 @@ suite('Language Server Package Service', () => {
         const platformService = new PlatformService();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
         const defaultStorageChannel = LanguageServerPackageStorageContainers.stable;
-        const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.blob.core.windows.net', defaultStorageChannel);
+        const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.azureedge.net', defaultStorageChannel);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
         const lsPackageService = new LanguageServerPackageService(serviceContainer.object);
         const packageName = lsPackageService.getNugetPackageName();

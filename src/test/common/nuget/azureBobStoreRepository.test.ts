@@ -29,7 +29,7 @@ suite('Nuget Azure Storage Repository', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService.object);
         const defaultStorageChannel = LanguageServerPackageStorageContainers.stable;
 
-        repo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.blob.core.windows.net', defaultStorageChannel);
+        repo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.azureedge.net', defaultStorageChannel);
     });
 
     test('Get all packages', async function () {
