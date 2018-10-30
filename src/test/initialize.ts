@@ -11,7 +11,7 @@ export * from './constants';
 export * from './ciConstants';
 
 const dummyPythonFile = path.join(__dirname, '..', '..', 'src', 'test', 'pythonFiles', 'dummy.py');
-const multirootPath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc');
+export const multirootPath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc');
 const workspace3Uri = vscode.Uri.file(path.join(multirootPath, 'workspace3'));
 
 //First thing to be executed.

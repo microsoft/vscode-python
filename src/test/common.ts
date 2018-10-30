@@ -1,6 +1,8 @@
 'use strict';
 
+import { spawnSync } from 'child_process';
 import * as fs from 'fs-extra';
+import * as glob from 'glob';
 import * as path from 'path';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Uri, workspace } from 'vscode';
@@ -11,6 +13,7 @@ import { traceError } from '../client/common/logger';
 import { BufferDecoder } from '../client/common/process/decoder';
 import { ProcessService } from '../client/common/process/proc';
 import { IProcessService } from '../client/common/process/types';
+import { noop } from '../client/common/utils/misc';
 import { getOSType, OSType } from '../client/common/utils/platform';
 import { IServiceContainer } from '../client/ioc/types';
 import { IS_MULTI_ROOT_TEST } from './initialize';
@@ -134,6 +137,13 @@ export async function deleteFile(file: string) {
     }
 }
 
+export async function deleteFiles(globPattern: string) {
+    const items = await new Promise<string[]>((resolve, reject) => {
+        glob(globPattern, (ex, files) => ex ? reject(ex) : resolve(files));
+    });
+
+    return Promise.all(items.map(item => fs.remove(item).catch(noop)));
+}
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
         return process.env.CI_PYTHON_PATH;
@@ -141,6 +151,13 @@ function getPythonPath(): string {
     return 'python';
 }
 
+export function getPythonExeutable() {
+    const result = spawnSync(PYTHON_PATH, ['-c', 'import sys;print(sys.executable)']);
+    if (result.stderr.toString().length > 0) {
+        throw new Error(`Failed to get python executable ${PYTHON_PATH}, Error: ${result.stderr.toString()}`);
+    }
+    return result.stdout.toString().trim();
+}
 /**
  * Determine if the current platform is included in a list of platforms.
  *

@@ -4,83 +4,86 @@
 'use strict';
 
 // tslint:disable:no-any max-classes-per-file max-func-body-length no-invalid-this
-import { spawnSync } from 'child_process';
+import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { getVirtualEnvBinName } from '../../../client/common/platform/osinfo';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { sleep } from '../../../client/common/utils/async';
-import { noop } from '../../../client/common/utils/misc';
-import { IInterpreterLocatorService, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../client/interpreter/contracts';
+import { IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { PYTHON_PATH, rootWorkspaceUri } from '../../common';
+import { deleteFiles, getPythonExeutable, rootWorkspaceUri } from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
-import { initialize } from '../../initialize';
+import { initialize, multirootPath } from '../../initialize';
 
-suite('Interpreters - Workspace VirtualEnv Service', () => {
+suite('Interpreters - Workspace VirtualEnv Service', function () {
+    this.timeout(60_000);
 
+    let locator: IInterpreterLocatorService;
+    const workspaceUri = IS_MULTI_ROOT_TEST ? Uri.file(path.join(multirootPath, 'workspace3')) : rootWorkspaceUri;
+    const workspace4 = Uri.file(path.join(multirootPath, 'workspace4'));
+    const venvPrefix = '.venv';
     let serviceContainer: IServiceContainer;
     let pythonExecutable = '';
-    const envSuffix = + new Date().getTime().toString();
-    const firstEnvDir = path.join(rootWorkspaceUri.fsPath, `.venv1${envSuffix}`);
-    const secondEnvDir = path.join(rootWorkspaceUri.fsPath, `.venv2${envSuffix}`);
 
-    suiteSetup(async function () {
-        if (IS_MULTI_ROOT_TEST) {
-            return this.skip();
-        }
-        this.timeout(60_000);
-        const result = spawnSync(PYTHON_PATH, ['-c', 'import sys;print(sys.executable)']);
-        if (result.stderr.toString().length > 0) {
-            throw new Error(`Failed to get python executable ${PYTHON_PATH}, Error: ${result.stderr.toString()}`);
-        }
-        pythonExecutable = result.stdout.toString().trim();
-        serviceContainer = (await initialize()).serviceContainer;
-        await deletePythonEnvironments();
-    });
-    setup(() => createPythonEnvironment(firstEnvDir));
-    teardown(deletePythonEnvironments);
-
-    async function createPythonEnvironment(envDir: string) {
-        const executable = path.basename(pythonExecutable);
-        const scriptsBinDir = getVirtualEnvBinName(new PlatformService().info);
-        const target = path.join(envDir, scriptsBinDir, executable);
-        await fs.ensureDir(path.join(envDir, scriptsBinDir));
-        fs.copyFileSync(pythonExecutable, target);
-    }
-    async function deletePythonEnvironments() {
-        await fs.remove(firstEnvDir).catch(noop);
-        await fs.remove(secondEnvDir).catch(noop);
-    }
-    async function waitForLocaInterpreterToBeDetected(locator: IInterpreterLocatorService, predicate: (item: PythonInterpreter) => boolean, predicateTitle: string) {
-        // tslint:disable-next-line:prefer-array-literal
-        for (const _ of new Array(60)) {
-            const items = await locator.getInterpreters(rootWorkspaceUri);
-            const identified = items.filter(predicate).length;
-            if (identified > 0) {
+    async function waitForInterpreterToBeDetected(envNameToLookFor: string) {
+        for (let i = 0; i < 60; i += 1) {
+            const items = await locator.getInterpreters(workspaceUri);
+            if (items.some(item => item.envName === envNameToLookFor && !item.cachedEntry)) {
                 return;
             }
             await sleep(500);
         }
-        throw new Error(`${predicateTitle}, Environments not detected in the workspacce ${rootWorkspaceUri.fsPath}`);
+        throw new Error(`${envNameToLookFor}, Environment not detected in the workspace ${workspaceUri.fsPath}`);
     }
-    test('Environment Detection', async () => {
-        const locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
-        // Ensure environment in our workspace folder is detected.
-        const firstEnvName = path.basename(firstEnvDir);
-        await waitForLocaInterpreterToBeDetected(locator, item => item.envName === firstEnvName, 'Standard');
+    async function createPythonEnvironment(envSuffix: string) {
+        // Ensure env is random to avoid conflicts in tests (currupting test data).
+        const envName = `${venvPrefix}${envSuffix}${new Date().getTime().toString()}`;
+        const target = path.join(workspaceUri.fsPath, envName, getVirtualEnvBinName(new PlatformService().info), path.basename(pythonExecutable));
+        await fs.ensureDir(path.dirname(target));
+        fs.copyFileSync(pythonExecutable, target);
+        return envName;
+    }
+
+    suiteSetup(async () => {
+        pythonExecutable = getPythonExeutable();
+        serviceContainer = (await initialize()).serviceContainer;
+        locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
+
+        await deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`));
+    });
+    teardown(() => deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`)));
+
+    test('Detect Workspace Virtual Environment', async () => {
+        const envName = await createPythonEnvironment('one');
+
+        await waitForInterpreterToBeDetected(envName);
     });
 
-    test('Dynamic Environment Detection', async () => {
-        const locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
-        // Ensure environment in our workspace folder is detected.
-        const firstEnvName = path.basename(firstEnvDir);
-        await waitForLocaInterpreterToBeDetected(locator, item => item.envName === firstEnvName, 'Standard');
+    test('Detect a new Workspace Virtual Environment', async () => {
+        const env1 = await createPythonEnvironment('first');
 
-        await createPythonEnvironment(secondEnvDir);
+        await waitForInterpreterToBeDetected(env1);
 
-        // Ensure the new virtual env is also detected.
-        const secondEnvName = path.basename(secondEnvDir);
-        await waitForLocaInterpreterToBeDetected(locator, item => item.envName === secondEnvName, 'Second Environment');
+        // Ensure second environment in our workspace folder is detected when created.
+        const env2 = await createPythonEnvironment('second');
+        await waitForInterpreterToBeDetected(env2);
+    });
+
+    test('Detect a new Workspace Virtual Environment, and other workspace folder must not be affected (multiroot)', async function () {
+        if (!IS_MULTI_ROOT_TEST) {
+            return this.skip();
+        }
+        // There should be nothing in workspacec4.
+        let items4 = await locator.getInterpreters(workspace4);
+        expect(items4).to.be.lengthOf(0);
+
+        const [env1, env2] = await Promise.all([createPythonEnvironment('first3'), createPythonEnvironment('second3')]);
+        await Promise.all([waitForInterpreterToBeDetected(env1), waitForInterpreterToBeDetected(env2)]);
+
+        // Workspace4 should still not have any interpreters.
+        items4 = await locator.getInterpreters(workspace4);
+        expect(items4).to.be.lengthOf(0);
     });
 });
