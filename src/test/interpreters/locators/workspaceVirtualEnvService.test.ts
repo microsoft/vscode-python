@@ -12,7 +12,7 @@ import { sleep } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import { IInterpreterLocatorService, PythonInterpreter, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { isPythonVersionInProcess, PYTHON_PATH, rootWorkspaceUri } from '../../common';
+import { PYTHON_PATH, rootWorkspaceUri } from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 
@@ -24,11 +24,11 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
     const secondEnvDir = path.join(rootWorkspaceUri.fsPath, `.venv2${envSuffix}`);
 
     suiteSetup(async function () {
-        this.timeout(60_000);
-        serviceContainer = (await initialize()).serviceContainer;
-        if (IS_MULTI_ROOT_TEST || !await isPythonVersionInProcess(undefined, '3')) {
+        if (IS_MULTI_ROOT_TEST) {
             return this.skip();
         }
+        this.timeout(60_000);
+        serviceContainer = (await initialize()).serviceContainer;
         await deletePythonEnvironments();
     });
     setup(() => createPythonEnvironment(firstEnvDir));
