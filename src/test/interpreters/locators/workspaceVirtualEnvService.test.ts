@@ -4,6 +4,7 @@
 'use strict';
 
 // tslint:disable:no-any max-classes-per-file max-func-body-length no-invalid-this
+import { spawnSync } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { getVirtualEnvBinName } from '../../../client/common/platform/osinfo';
@@ -19,6 +20,7 @@ import { initialize } from '../../initialize';
 suite('Interpreters - Workspace VirtualEnv Service', () => {
 
     let serviceContainer: IServiceContainer;
+    let pythonExecutable = '';
     const envSuffix = + new Date().getTime().toString();
     const firstEnvDir = path.join(rootWorkspaceUri.fsPath, `.venv1${envSuffix}`);
     const secondEnvDir = path.join(rootWorkspaceUri.fsPath, `.venv2${envSuffix}`);
@@ -28,6 +30,11 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
             return this.skip();
         }
         this.timeout(60_000);
+        const result = spawnSync(PYTHON_PATH, ['-c', 'import sys;print(sys.executable)']);
+        if (result.stderr.toString().length > 0) {
+            throw new Error(`Failed to get python executable ${PYTHON_PATH}, Error: ${result.stderr.toString()}`);
+        }
+        pythonExecutable = result.stdout.toString().trim();
         serviceContainer = (await initialize()).serviceContainer;
         await deletePythonEnvironments();
     });
@@ -35,11 +42,11 @@ suite('Interpreters - Workspace VirtualEnv Service', () => {
     teardown(deletePythonEnvironments);
 
     async function createPythonEnvironment(envDir: string) {
-        const executable = path.basename(PYTHON_PATH);
+        const executable = path.basename(pythonExecutable);
         const scriptsBinDir = getVirtualEnvBinName(new PlatformService().info);
+        const target = path.join(envDir, scriptsBinDir, executable);
         await fs.ensureDir(path.join(envDir, scriptsBinDir));
-        await new Promise((resolve, reject) => fs.copyFile(PYTHON_PATH, path.join(envDir, scriptsBinDir, executable),
-            (ex) => ex ? reject(ex) : resolve()));
+        fs.copyFileSync(pythonExecutable, target);
     }
     async function deletePythonEnvironments() {
         await fs.remove(firstEnvDir).catch(noop);
