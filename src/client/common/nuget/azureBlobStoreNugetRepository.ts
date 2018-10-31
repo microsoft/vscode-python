@@ -15,14 +15,15 @@ import { INugetRepository, INugetService, NugetPackage } from './types';
 export class AzureBlobStoreNugetRepository implements INugetRepository {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @unmanaged() protected readonly azureBlobStorageAccount: string,
-        @unmanaged() protected readonly azureBlobStorageContainer: string) { }
+        @unmanaged() protected readonly azureBlobStorageContainer: string,
+        @unmanaged() protected readonly azureCDNBlobStorageAccount: string) { }
     public async getPackages(packageName: string): Promise<NugetPackage[]> {
-        return this.listPackages(this.azureBlobStorageAccount, this.azureBlobStorageContainer, packageName);
+        return this.listPackages(this.azureBlobStorageAccount, this.azureBlobStorageContainer, packageName, this.azureCDNBlobStorageAccount);
     }
 
     @captureTelemetry(PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES)
     @traceVerbose('Listing Nuget Packages')
-    public listPackages(azureBlobStorageAccount: string, azureBlobStorageContainer: string, packageName: string) {
+    protected listPackages(azureBlobStorageAccount: string, azureBlobStorageContainer: string, packageName: string, azureCDNBlobStorageAccount: string) {
         // tslint:disable-next-line:no-require-imports
         const az = require('azure-storage') as typeof azStorageTypes;
         const blobStore = az.createBlobServiceAnonymous(azureBlobStorageAccount);
@@ -39,7 +40,7 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
                     resolve(result.entries.map(item => {
                         return {
                             package: item.name,
-                            uri: `${azureBlobStorageAccount}/${azureBlobStorageContainer}/${item.name}`,
+                            uri: `${azureCDNBlobStorageAccount}/${azureBlobStorageContainer}/${item.name}`,
                             version: nugetService.getVersionFromPackageFileName(item.name)
                         };
                     }));
