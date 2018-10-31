@@ -55,10 +55,13 @@ def _top_level_package_filenames(tarball_paths):
 LICENSE_FILENAMES = frozenset(
     x.lower()
     for x in (
+        "LICENCE",  # Common typo.
         "license",
         "license.md",
         "license.mkd",
         "license.txt",
+        "LICENSE.BSD",
+        "LICENSE.MIT",
         "LICENSE-MIT",
         "LICENSE-MIT.txt",
     )
@@ -105,6 +108,7 @@ async def fill_in_licenses(requested_projects):
             license_or_exc = await _fetch_license(session, details.url)
             if isinstance(license_or_exc, Exception):
                 details.error = license_or_exc
+                details.purpose = "npm"
                 failures[name] = details
             else:
                 details.license = license_or_exc

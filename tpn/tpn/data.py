@@ -15,3 +15,4 @@ class Project:
     url: str
     license: Optional[str] = None
     error: Optional[Exception] = None
+    purpose: Optional[str] = None
