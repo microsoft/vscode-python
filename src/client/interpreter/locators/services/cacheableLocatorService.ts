@@ -7,6 +7,7 @@ import { injectable, unmanaged } from 'inversify';
 import * as md5 from 'md5';
 import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
+import '../../../common/extensions';
 import { Logger } from '../../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -60,6 +61,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             watcher.onDidCreate(() => {
                 Logger.verbose(`Interpreter Watcher change handler for ${this.cacheKeyPrefix}`);
                 this.promisesPerResource.delete(cacheKey);
+                this.getInterpreters(resource).ignoreErrors();
             }, this, disposableRegisry);
         });
     }
