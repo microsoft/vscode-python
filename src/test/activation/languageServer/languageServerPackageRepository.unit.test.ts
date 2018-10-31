@@ -35,7 +35,7 @@ suite('Language Server Download Channels', () => {
         }
         const instance = new class extends classToCreate {
             constructor() { super(serviceContainer.object); }
-            public get storageAccount() { return this.azureBlobStorageAccount; }
+            public get storageAccount() { return this.azureCDNBlobStorageAccount; }
             public get storageContainer() { return this.azureBlobStorageContainer; }
         }();
 
