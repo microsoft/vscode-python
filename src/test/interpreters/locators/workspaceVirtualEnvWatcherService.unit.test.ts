@@ -12,6 +12,7 @@ import { Disposable, FileSystemWatcher, Uri, WorkspaceFolder } from 'vscode';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { isUnitTestExecution } from '../../../client/common/constants';
 import { PlatformService } from '../../../client/common/platform/platformService';
+import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { sleep } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import { OSType } from '../../../client/common/utils/platform';
@@ -36,7 +37,8 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
     async function checkForFileChanges(os: OSType, resource: Uri | undefined, hasWorkspaceFolder: boolean) {
         const workspaceService = mock(WorkspaceService);
         const platformService = mock(PlatformService);
-        const watcher = new WorkspaceVirtualEnvWatcherService([], instance(workspaceService), instance(platformService));
+        const execFactory = mock(PythonExecutionFactory);
+        const watcher = new WorkspaceVirtualEnvWatcherService([], instance(workspaceService), instance(platformService), instance(execFactory));
 
         when(platformService.isWindows).thenReturn(os === OSType.Windows);
         when(platformService.isLinux).thenReturn(os === OSType.Linux);
@@ -80,7 +82,8 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
     async function ensureFileChanesAreHandled(os: OSType) {
         const workspaceService = mock(WorkspaceService);
         const platformService = mock(PlatformService);
-        const watcher = new WorkspaceVirtualEnvWatcherService(disposables, instance(workspaceService), instance(platformService));
+        const execFactory = mock(PythonExecutionFactory);
+        const watcher = new WorkspaceVirtualEnvWatcherService(disposables, instance(workspaceService), instance(platformService), instance(execFactory));
 
         when(platformService.isWindows).thenReturn(os === OSType.Windows);
         when(platformService.isLinux).thenReturn(os === OSType.Linux);
