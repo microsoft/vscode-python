@@ -58,8 +58,7 @@ export interface INotebookImporter extends IDisposable {
 
 export const IHistoryProvider = Symbol('IHistoryProvider');
 export interface IHistoryProvider {
-    getActive() : IHistory;
-    setActive(history : IHistory);
+    active : IHistory;
     create() : IHistory;
 }
 

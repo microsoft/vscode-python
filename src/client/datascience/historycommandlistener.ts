@@ -90,7 +90,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
 
     @captureTelemetry(Telemetry.ShowHistoryPane, {}, false)
     private showHistoryPane() : Promise<void>{
-        const active = this.historyProvider.getActive();
+        const active = this.historyProvider.active;
         return active.show();
     }
 

@@ -15,15 +15,15 @@ export class HistoryProvider implements IHistoryProvider {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
     }
 
-    public getActive = () : IHistory => {
+    public get active() : IHistory {
         if (!this.activeHistory) {
-            this.activeHistory = this.serviceContainer.get<IHistory>(IHistory);
+            this.activeHistory = this.create();
         }
 
         return this.activeHistory;
     }
 
-    public setActive = (history : IHistory) => {
+    public set active(history : IHistory) {
         this.activeHistory = history;
     }
 
