@@ -14,6 +14,7 @@ import asyncio
 import json
 import pathlib
 import sys
+import textwrap
 
 import docopt
 import pytoml as toml
@@ -72,8 +73,19 @@ def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
         print("*" * 20)  # Make failure stand out more.
         for name, details in failures.items():
             print(
-                f"FAILED to find license for {name} {details.version} @ {details.url}: {details.error}"
+                f"FAILED for {name} {details.version} @ {details.url}: {details.error}"
             )
+            print(textwrap.dedent(f"""
+            [[project]]
+            name = "{name}"
+            version = "{details.version}"
+            url = "{details.url}"
+            purpose = "{details.purpose or "XXX"}"
+            license = \"\"\"
+            XXX
+            \"\"\"
+            """))
+        print(f"Could not find a license for {len(failures)} projects")
         sys.exit(1)
     with open(tpn_path, "w", encoding="utf-8", newline="\n") as file:
         file.write(tpnfile.generate_tpn(config_data, projects))
