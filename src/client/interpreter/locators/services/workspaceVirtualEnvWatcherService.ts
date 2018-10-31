@@ -7,15 +7,15 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
+import '../../../common/extensions';
 import { Logger, traceVerbose } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { IDisposableRegistry } from '../../../common/types';
-import { debounce } from '../../../common/utils/decorators';
 import { IInterpreterWatcher } from '../../contracts';
 
 const maxTimeToWaitForEnvCreation = 60_000;
-const timeToPollForEnvCreation = 5_000;
+const timeToPollForEnvCreation = 2_000;
 
 @injectable()
 export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, Disposable {
@@ -56,31 +56,30 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
             this.fsWatchers.push(fsWatcher);
         }
     }
-    @debounce(2000)
     @traceVerbose('Intepreter Watcher change handler')
-    protected createHandler(e: Uri) {
+    protected async createHandler(e: Uri) {
         this.didCreate.fire();
-
         // On Windows, creation of environments are very slow, hence lets notify again after
         // the python executable is accessible (i.e. when we can launch the process).
         this.notifyCreationWhenReady(e.fsPath).ignoreErrors();
     }
     protected async notifyCreationWhenReady(pythonPath: string) {
+        const counter = this.timers.has(pythonPath) ? this.timers.get(pythonPath)!.counter + 1 : 0;
         const isValid = await this.isValidExecutable(pythonPath);
         if (isValid) {
-            this.timers.delete(pythonPath);
-            return this.didCreate.fire();
+            if (counter > 0) {
+                this.didCreate.fire();
+            }
+            return this.timers.delete(pythonPath);
         }
-        const counter = this.timers.has(pythonPath) ? this.timers.get(pythonPath)!.counter + 1 : 0;
         if (counter > (maxTimeToWaitForEnvCreation / timeToPollForEnvCreation)) {
+            // Send notification before we give up trying.
+            this.didCreate.fire();
             this.timers.delete(pythonPath);
             return;
         }
 
-        const timer = setTimeout(() => {
-            this.didCreate.fire();
-            this.notifyCreationWhenReady(pythonPath).ignoreErrors();
-        }, timeToPollForEnvCreation);
+        const timer = setTimeout(() => this.notifyCreationWhenReady(pythonPath).ignoreErrors(), timeToPollForEnvCreation);
         this.timers.set(pythonPath, { timer, counter });
     }
     private clearTimers() {
