@@ -15,6 +15,9 @@ import { PlatformService } from '../../../client/common/platform/platformService
 import { IPlatformService } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
+const azureBlobStorageAccount = 'https://pvsc.blob.core.windows.net';
+const azureCDNBlobStorageAccount = 'https://pvsc.azureedge.net';
+
 suite('Nuget Azure Storage Repository', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     let httpClient: typeMoq.IMock<IHttpClient>;
@@ -29,7 +32,7 @@ suite('Nuget Azure Storage Repository', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService.object);
         const defaultStorageChannel = LanguageServerPackageStorageContainers.stable;
 
-        repo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.azureedge.net', defaultStorageChannel);
+        repo = new AzureBlobStoreNugetRepository(serviceContainer.object, azureBlobStorageAccount, defaultStorageChannel, azureCDNBlobStorageAccount);
     });
 
     test('Get all packages', async function () {

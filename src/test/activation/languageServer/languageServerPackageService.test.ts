@@ -21,6 +21,9 @@ import { PlatformService } from '../../../client/common/platform/platformService
 import { IPlatformService } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
+const azureBlobStorageAccount = 'https://pvsc.blob.core.windows.net';
+const azureCDNBlobStorageAccount = 'https://pvsc.azureedge.net';
+
 suite('Language Server Package Service', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     setup(() => {
@@ -76,7 +79,7 @@ suite('Language Server Package Service', () => {
         const platformService = new PlatformService();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
         const defaultStorageChannel = LanguageServerPackageStorageContainers.stable;
-        const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, 'https://pvsc.azureedge.net', defaultStorageChannel);
+        const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, azureBlobStorageAccount, defaultStorageChannel, azureCDNBlobStorageAccount);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
         const lsPackageService = new LanguageServerPackageService(serviceContainer.object);
         const packageName = lsPackageService.getNugetPackageName();
