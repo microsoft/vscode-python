@@ -88,10 +88,12 @@ def get_flow_branch_keyword(flow_node, node):
             keyword = first_leaf
     return 0
 
+
 def get_statement_of_position(node, pos):
     for c in node.children:
         if c.start_pos <= pos <= c.end_pos:
-            if c.type not in ('decorated', 'simple_stmt', 'suite') \
+            if c.type not in ('decorated', 'simple_stmt', 'suite',
+                              'async_stmt', 'async_funcdef') \
                     and not isinstance(c, (tree.Flow, tree.ClassOrFunc)):
                 return c
             else:
@@ -156,7 +158,11 @@ def get_call_signature(funcdef, width=72, call_string=None):
         p = '(' + ''.join(param.get_code() for param in funcdef.get_params()).strip() + ')'
     else:
         p = funcdef.children[2].get_code()
-    code = call_string + p
+    if funcdef.annotation:
+        rtype = " ->" + funcdef.annotation.get_code()
+    else:
+        rtype = ""
+    code = call_string + p + rtype
 
     return '\n'.join(textwrap.wrap(code, width))
 

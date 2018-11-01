@@ -12,6 +12,8 @@ from jedi import debug
 from jedi._compatibility import Python3Method, zip_longest, unicode
 from jedi.parser_utils import clean_scope_docstring, get_doc_with_call_signature
 from jedi.common import BaseContextSet, BaseContext
+from jedi.evaluate.helpers import EvaluatorIndexError, EvaluatorTypeError, \
+    EvaluatorKeyError
 
 
 class Context(BaseContext):
@@ -128,11 +130,15 @@ class Context(BaseContext):
             else:
                 try:
                     result |= getitem(index)
-                except IndexError:
+                except EvaluatorIndexError:
                     result |= iterate_contexts(ContextSet(self))
-                except KeyError:
+                except EvaluatorKeyError:
                     # Must be a dict. Lists don't raise KeyErrors.
                     result |= self.dict_values()
+                except EvaluatorTypeError:
+                    # The type is wrong and therefore it makes no sense to do
+                    # anything anymore.
+                    result = NO_CONTEXTS
         return result
 
     def eval_node(self, node):
@@ -193,9 +199,10 @@ def iterate_contexts(contexts, contextualized_node=None, is_async=False):
 
 
 class TreeContext(Context):
-    def __init__(self, evaluator, parent_context=None):
+    def __init__(self, evaluator, parent_context, tree_node):
         super(TreeContext, self).__init__(evaluator, parent_context)
         self.predefined_names = {}
+        self.tree_node = tree_node
 
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, self.tree_node)

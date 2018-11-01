@@ -1,3 +1,5 @@
+import re
+
 from parso.python import tree
 
 from jedi._compatibility import zip_longest
@@ -8,7 +10,7 @@ from jedi.evaluate.lazy_context import LazyKnownContext, LazyKnownContexts, \
 from jedi.evaluate.filters import ParamName
 from jedi.evaluate.base_context import NO_CONTEXTS
 from jedi.evaluate.context import iterable
-from jedi.evaluate.param import get_params, ExecutedParam
+from jedi.evaluate.param import get_executed_params, ExecutedParam
 
 
 def try_iter_content(types, depth=0):
@@ -28,31 +30,82 @@ def try_iter_content(types, depth=0):
                 try_iter_content(lazy_context.infer(), depth + 1)
 
 
+def repack_with_argument_clinic(string, keep_arguments_param=False):
+    """
+    Transforms a function or method with arguments to the signature that is
+    given as an argument clinic notation.
+
+    Argument clinic is part of CPython and used for all the functions that are
+    implemented in C (Python 3.7):
+
+        str.split.__text_signature__
+        # Results in: '($self, /, sep=None, maxsplit=-1)'
+    """
+    clinic_args = list(_parse_argument_clinic(string))
+
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if keep_arguments_param:
+                arguments = kwargs['arguments']
+            else:
+                arguments = kwargs.pop('arguments')
+            try:
+                args += tuple(_iterate_argument_clinic(arguments, clinic_args))
+            except ValueError:
+                return NO_CONTEXTS
+            else:
+                return func(*args, **kwargs)
+
+        return wrapper
+    return decorator
+
+
+def _iterate_argument_clinic(arguments, parameters):
+    """Uses a list with argument clinic information (see PEP 436)."""
+    iterator = arguments.unpack()
+    for i, (name, optional, allow_kwargs) in enumerate(parameters):
+        key, argument = next(iterator, (None, None))
+        if key is not None:
+            debug.warning('Keyword arguments in argument clinic are currently not supported.')
+            raise ValueError
+        if argument is None and not optional:
+            debug.warning('TypeError: %s expected at least %s arguments, got %s',
+                          name, len(parameters), i)
+            raise ValueError
+
+        context_set = NO_CONTEXTS if argument is None else argument.infer()
+
+        if not context_set and not optional:
+            # For the stdlib we always want values. If we don't get them,
+            # that's ok, maybe something is too hard to resolve, however,
+            # we will not proceed with the evaluation of that function.
+            debug.warning('argument_clinic "%s" not resolvable.', name)
+            raise ValueError
+        yield context_set
+
+
+def _parse_argument_clinic(string):
+    allow_kwargs = False
+    optional = False
+    while string:
+        # Optional arguments have to begin with a bracket. And should always be
+        # at the end of the arguments. This is therefore not a proper argument
+        # clinic implementation. `range()` for exmple allows an optional start
+        # value at the beginning.
+        match = re.match('(?:(?:(\[),? ?|, ?|)(\w+)|, ?/)\]*', string)
+        string = string[len(match.group(0)):]
+        if not match.group(2):  # A slash -> allow named arguments
+            allow_kwargs = True
+            continue
+        optional = optional or bool(match.group(1))
+        word = match.group(2)
+        yield (word, optional, allow_kwargs)
+
+
 class AbstractArguments(object):
     context = None
     argument_node = None
     trailer = None
-
-    def eval_argument_clinic(self, parameters):
-        """Uses a list with argument clinic information (see PEP 436)."""
-        iterator = self.unpack()
-        for i, (name, optional, allow_kwargs) in enumerate(parameters):
-            key, argument = next(iterator, (None, None))
-            if key is not None:
-                raise NotImplementedError
-            if argument is None and not optional:
-                debug.warning('TypeError: %s expected at least %s arguments, got %s',
-                              name, len(parameters), i)
-                raise ValueError
-            values = NO_CONTEXTS if argument is None else argument.infer()
-
-            if not values and not optional:
-                # For the stdlib we always want values. If we don't get them,
-                # that's ok, maybe something is too hard to resolve, however,
-                # we will not proceed with the evaluation of that function.
-                debug.warning('argument_clinic "%s" not resolvable.', name)
-                raise ValueError
-            yield values
 
     def eval_all(self, funcdef=None):
         """
@@ -64,23 +117,26 @@ class AbstractArguments(object):
             try_iter_content(types)
 
     def get_calling_nodes(self):
-        raise NotImplementedError
+        return []
 
     def unpack(self, funcdef=None):
         raise NotImplementedError
 
-    def get_params(self, execution_context):
-        return get_params(execution_context, self)
+    def get_executed_params(self, execution_context):
+        return get_executed_params(execution_context, self)
 
 
 class AnonymousArguments(AbstractArguments):
-    def get_params(self, execution_context):
+    def get_executed_params(self, execution_context):
         from jedi.evaluate.dynamic import search_params
         return search_params(
             execution_context.evaluator,
             execution_context,
             execution_context.tree_node
         )
+
+    def __repr__(self):
+        return '%s()' % self.__class__.__name__
 
 
 class TreeArguments(AbstractArguments):
@@ -171,7 +227,7 @@ class TreeArguments(AbstractArguments):
         return '<%s: %s>' % (self.__class__.__name__, self.argument_node)
 
     def get_calling_nodes(self):
-        from jedi.evaluate.dynamic import MergedExecutedParams
+        from jedi.evaluate.dynamic import DynamicExecutedParams
         old_arguments_list = []
         arguments = self
 
@@ -190,7 +246,7 @@ class TreeArguments(AbstractArguments):
                 if not isinstance(names[0], ParamName):
                     break
                 param = names[0].get_param()
-                if isinstance(param, MergedExecutedParams):
+                if isinstance(param, DynamicExecutedParams):
                     # For dynamic searches we don't even want to see errors.
                     return []
                 if not isinstance(param, ExecutedParam):
@@ -214,9 +270,6 @@ class ValuesArguments(AbstractArguments):
     def unpack(self, funcdef=None):
         for values in self._values_list:
             yield None, LazyKnownContexts(values)
-
-    def get_calling_nodes(self):
-        return []
 
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, self._values_list)

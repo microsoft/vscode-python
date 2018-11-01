@@ -306,12 +306,12 @@ class ErrorFinder(Normalizer):
 
     def visit_leaf(self, leaf):
         if leaf.type == 'error_leaf':
-            if leaf.original_type in ('indent', 'error_dedent'):
+            if leaf.token_type in ('INDENT', 'ERROR_DEDENT'):
                 # Indents/Dedents itself never have a prefix. They are just
                 # "pseudo" tokens that get removed by the syntax tree later.
                 # Therefore in case of an error we also have to check for this.
                 spacing = list(leaf.get_next_leaf()._split_prefix())[-1]
-                if leaf.original_type == 'indent':
+                if leaf.token_type == 'INDENT':
                     message = 'unexpected indent'
                 else:
                     message = 'unindent does not match any outer indentation level'
