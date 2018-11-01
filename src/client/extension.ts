@@ -164,8 +164,6 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    intializeServicesPostActivation(serviceContainer);
-
     const api = { ready: activationDeferred.promise };
     // In test environment return the DI Container.
     if (isTestExecution()) {
@@ -217,8 +215,7 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     const disposables = serviceManager.get<IDisposableRegistry>(IDisposableRegistry);
     const dispatcher = new DebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
     dispatcher.registerEventHandlers();
-}
-function intializeServicesPostActivation(serviceContainer: ServiceContainer) {
+
     // Get latest interpreter list.
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
