@@ -6,54 +6,49 @@ import '../common/extensions';
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 
 import { IFileSystem } from '../common/platform/types';
-import { IPythonExecutionService } from '../common/process/types';
 import { IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { RegExpValues } from './constants';
-import { JupyterProcess } from './jupyterProcess';
-import { CellState, ICell, IJupyterServer } from './types';
+import { CellState, ICell, IJupyterAvailability, INotebookProcess, INotebookServer } from './types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
-export class JupyterServer implements IJupyterServer {
+@injectable()
+export class JupyterServer implements INotebookServer {
     public isDisposed: boolean = false;
     private session: Session.ISession | undefined;
     private tempFile: string | undefined;
-    private process: JupyterProcess;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
-    private logger: ILogger;
-    private pythonService : IPythonExecutionService;
-    private disposableRegistry : IDisposableRegistry;
-    private fileSystem : IFileSystem;
 
-    constructor(logger: ILogger, pythonService: IPythonExecutionService, fileSystem : IFileSystem, disposableRegistry : IDisposableRegistry) {
-        this.logger = logger;
-        this.pythonService = pythonService;
-        this.fileSystem = fileSystem;
-        this.disposableRegistry = disposableRegistry;
-        this.process = new JupyterProcess(pythonService);
+    constructor(
+        @inject(ILogger) private logger: ILogger,
+        @inject(INotebookProcess) private process: INotebookProcess,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+        @inject(IJupyterAvailability) private availability : IJupyterAvailability) {
     }
 
-    public async start() : Promise<boolean> {
+    public start = async () : Promise<boolean> => {
 
-        if (await JupyterProcess.exists(this.pythonService)) {
+        if (await this.availability.isNotebookSupported()) {
 
             // First generate a temporary notebook. We need this as input to the session
             this.tempFile = await this.generateTempFile();
 
             // start our process in the same directory as our ipynb file.
-            this.process.start(path.dirname(this.tempFile), this.logger);
+            await this.process.start(path.dirname(this.tempFile));
 
             // Wait for connection information. We'll stick that into the options
-            const connInfo = await this.process.getConnectionInformation();
+            const connInfo = await this.process.waitForConnectionInformation();
 
             // Create our session options using this temporary notebook and our connection info
             const options: Session.IOptions = {
@@ -85,6 +80,17 @@ export class JupyterServer implements IJupyterServer {
 
     }
 
+    public shutdown = async () : Promise<void> => {
+        if (this.session) {
+            await this.session.shutdown();
+            this.session.dispose();
+            this.session = undefined;
+        }
+        if (this.process) {
+            this.process.dispose();
+        }
+    }
+
     public getCurrentState() : Promise<ICell[]> {
         return Promise.resolve([]);
     }
@@ -112,7 +118,7 @@ export class JupyterServer implements IJupyterServer {
         return deferred.promise;
     }
 
-    public executeObservable(code: string, file: string, line: number) : Observable<ICell[]> {
+    public executeObservable = (code: string, file: string, line: number) : Observable<ICell[]> => {
         // If we have a session, execute the code now.
         if (this.session) {
 
@@ -150,29 +156,29 @@ export class JupyterServer implements IJupyterServer {
         });
     }
 
-    public executeSilently(code: string) : Promise<void> {
+    public executeSilently = (code: string) : Promise<void> => {
         // If we have a session, execute the code now.
         if (this.session) {
-                const request = this.session.kernel.requestExecute(
-                    {
-                        // Replace windows line endings with unix line endings.
-                        code : code.replace('\r\n', '\n'),
-                        stop_on_error: false,
-                        allow_stdin: false,
-                        silent: true
-                    },
-                    true
-                );
+            const request = this.session.kernel.requestExecute(
+                {
+                    // Replace windows line endings with unix line endings.
+                    code: code.replace('\r\n', '\n'),
+                    stop_on_error: false,
+                    allow_stdin: false,
+                    silent: true
+                },
+                true
+            );
 
-                return new Promise((resolve, reject) => {
-                    // Just wait for our observable to finish
-                    const observable = this.generateExecuteObservable(code, 'file', 0, '0', request);
-                    // tslint:disable-next-line:no-empty
-                    observable.subscribe(() => {
-                        },
-                        reject,
-                        resolve);
-                });
+            return new Promise((resolve, reject) => {
+                // Just wait for our observable to finish
+                const observable = this.generateExecuteObservable(code, 'file', -1, '0', request);
+                // tslint:disable-next-line:no-empty
+                observable.subscribe(() => {
+                },
+                    reject,
+                    resolve);
+            });
         }
 
         return Promise.reject(localize.DataScience.sessionDisposed);
@@ -182,17 +188,11 @@ export class JupyterServer implements IJupyterServer {
         return this.onStatusChangedEvent.event.bind(this.onStatusChangedEvent);
     }
 
-    public async dispose() {
+    public dispose = async () => {
         if (!this.isDisposed) {
             this.isDisposed = true;
             this.onStatusChangedEvent.dispose();
-            if (this.session) {
-                await this.session.shutdown();
-                this.session.dispose();
-            }
-            if (this.process) {
-                this.process.dispose();
-            }
+            this.shutdown().ignoreErrors();
         }
     }
 
@@ -202,12 +202,12 @@ export class JupyterServer implements IJupyterServer {
         }
     }
 
-    public async translateToNotebook (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> {
+    public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
 
         if (this.process) {
 
             // First we need the python version we're running
-            const pythonVersion = await this.process.getPythonVersionString();
+            const pythonVersion = await this.process.waitForPythonVersionString();
 
             // Pull off the first number. Should be  3 or a 2
             const first = pythonVersion.substr(0, 1);
@@ -245,7 +245,7 @@ export class JupyterServer implements IJupyterServer {
         }
     }
 
-    public async launchNotebook(file: string) : Promise<boolean> {
+    public launchNotebook = async (file: string) : Promise<boolean> => {
         if (this.process) {
             await this.process.spawn(file);
             return true;

@@ -14,6 +14,10 @@ export namespace LanguageServiceSurveyBanner {
     export const bannerLabelNo = localize('LanguageServiceSurveyBanner.bannerLabelNo', 'No, thanks');
 }
 
+export namespace Interpreters {
+    export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');
+}
+
 export namespace DataScience {
     export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
     export const badWebPanelFormatString = localize('DataScience.badWebPanelFormatString', '<html><body><h1>{0} is not a valid file name</h1></body></html>');

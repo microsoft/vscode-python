@@ -4,11 +4,12 @@
 import { JSONArray, JSONObject, JSONValue } from '@phosphor/coreutils';
 import * as fm from 'file-matcher';
 import * as fs from 'fs-extra';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
 import { IWorkspaceService } from '../common/application/types';
 import { ICurrentProcess, ILogger } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
+import { ICodeCssGenerator } from './types';
 
 // This class generates css using the current theme in order to colorize code.
 //
@@ -16,15 +17,12 @@ import { IServiceContainer } from '../ioc/types';
 // in order for this to work.
 // See this vscode issue for the real way we think this should happen:
 // https://github.com/Microsoft/vscode/issues/32813
-export class CodeCssGenerator {
-    private workspaceService : IWorkspaceService;
-    private currentProcess : ICurrentProcess;
-    private logger : ILogger;
-
-    constructor(serviceContainer: IServiceContainer) {
-        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        this.currentProcess = serviceContainer.get<ICurrentProcess>(ICurrentProcess);
-        this.logger = serviceContainer.get<ILogger>(ILogger);
+@injectable()
+export class CodeCssGenerator implements ICodeCssGenerator {
+    constructor(
+        @inject(IWorkspaceService) private workspaceService : IWorkspaceService,
+        @inject(ICurrentProcess) private currentProcess : ICurrentProcess,
+        @inject(ILogger) private logger : ILogger) {
     }
 
     public generateThemeCss = async () : Promise<string> => {

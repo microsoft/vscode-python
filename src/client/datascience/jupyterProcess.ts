@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 
-import { IDisposable } from '@phosphor/disposable';
+import { inject, injectable } from 'inversify';
 import * as tk from 'tree-kill';
 import { URL } from 'url';
-import { ExecutionResult, IPythonExecutionService, ObservableExecutionResult, Output } from '../common/process/types';
+
+import { ExecutionResult, IPythonExecutionFactory, ObservableExecutionResult, Output } from '../common/process/types';
 import { ILogger } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
+import { INotebookProcess } from './types';
 
 export interface IConnectionInfo {
     baseUrl: string;
@@ -16,32 +17,19 @@ export interface IConnectionInfo {
 }
 
 // This class communicates with an instance of jupyter that's running in the background
-export class JupyterProcess implements IDisposable {
-
+@injectable()
+export class JupyterProcess implements INotebookProcess {
     private static urlPattern = /http:\/\/localhost:[0-9]+\/\?token=[a-z0-9]+/g;
-
     public isDisposed: boolean = false;
-
     private startPromise: Deferred<IConnectionInfo> | undefined;
     private startObservable: ObservableExecutionResult<string> | undefined;
-    private logger: ILogger | undefined;
 
-    constructor(private pythonService: IPythonExecutionService) {
-
+    constructor(
+        @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
+        @inject(ILogger) private logger: ILogger) {
     }
 
-    public static async exists(pythonService: IPythonExecutionService) : Promise<boolean> {
-        // Spawn jupyter --version and see if it returns something
-        try {
-            const result = await pythonService.execModule('jupyter', ['notebook', '--version'], { throwOnStdErr: true, encoding: 'utf8' });
-            return (!result.stderr);
-        } catch {
-            return false;
-        }
-    }
-
-    public start(notebookdir: string, logger: ILogger) {
-        this.logger = logger;
+    public start = async (notebookdir: string) : Promise<void> => {
 
         // Compute args based on if inside a workspace or not
         const args: string [] = ['notebook', '--no-browser', `--notebook-dir=${notebookdir}`];
@@ -50,7 +38,8 @@ export class JupyterProcess implements IDisposable {
         this.startPromise = createDeferred<IConnectionInfo>();
 
         // Use the IPythonExecutionService to find Jupyter
-        this.startObservable = this.pythonService.execModuleObservable('jupyter', args, {throwOnStdErr: false, encoding: 'utf8'});
+        const pythonService = await this.executionFactory.create({});
+        this.startObservable = pythonService.execModuleObservable('jupyter', args, {throwOnStdErr: false, encoding: 'utf8'});
 
         // Listen on stderr for its connection information
         this.startObservable.out.subscribe((output : Output<string>) => {
@@ -62,22 +51,33 @@ export class JupyterProcess implements IDisposable {
         });
     }
 
-    public spawn(notebookFile: string) : Promise<ExecutionResult<string>> {
+    public shutdown = async () : Promise<void> => {
+        if (this.startObservable && this.startObservable.proc) {
+            if (!this.startObservable.proc.killed) {
+                tk(this.startObservable.proc.pid);
+            }
+            this.startObservable = undefined;
+        }
+    }
+
+    public spawn = async (notebookFile: string) : Promise<ExecutionResult<string>> => {
 
         // Compute args for the file
         const args: string [] = ['notebook', `--NotebookApp.file_to_run=${notebookFile}`];
 
         // Use the IPythonExecutionService to find Jupyter
-        return this.pythonService.execModule('jupyter', args, {throwOnStdErr: true, encoding: 'utf8'});
+        const pythonService = await this.executionFactory.create({});
+        return pythonService.execModule('jupyter', args, {throwOnStdErr: true, encoding: 'utf8'});
     }
 
-    public async getPythonVersionString() : Promise<string> {
-        const info = await this.pythonService.getInterpreterInformation();
+    public async waitForPythonVersionString() : Promise<string> {
+        const pythonService = await this.executionFactory.create({});
+        const info = await pythonService.getInterpreterInformation();
         return info ? info.version : '3';
     }
 
     // Returns the information necessary to talk to this instance
-    public getConnectionInformation() : Promise<IConnectionInfo> {
+    public waitForConnectionInformation() : Promise<IConnectionInfo> {
         if (this.startPromise) {
             return this.startPromise!.promise;
         }
@@ -86,11 +86,9 @@ export class JupyterProcess implements IDisposable {
     }
 
     public dispose() {
-        if (!this.isDisposed && this.startObservable && this.startObservable.proc) {
+        if (!this.isDisposed) {
             this.isDisposed = true;
-            if (!this.startObservable.proc.killed) {
-                tk(this.startObservable.proc.pid);
-            }
+            this.shutdown().ignoreErrors();
         }
     }
 

@@ -40,7 +40,7 @@ export class InterpreterDataService {
     }
 
     const cacheKey = `InterpreterData-${interpreterPath}`;
-    let interpreterData = this.context.globalState.get(cacheKey) as InterpreterData;
+    let interpreterData = this.context.globalState.get<InterpreterData>(cacheKey);
     let interpreterChanged = false;
     if (interpreterData) {
       // Check if interpreter executable changed

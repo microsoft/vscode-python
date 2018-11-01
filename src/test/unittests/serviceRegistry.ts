@@ -1,15 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 
 import { Uri } from 'vscode';
+
 import { IProcessServiceFactory } from '../../client/common/process/types';
-import { IServiceContainer } from '../../client/ioc/types';
+import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
+import { History } from '../../client/datascience/history';
+import { HistoryProvider } from '../../client/datascience/historyProvider';
+import { JupyterAvailability } from '../../client/datascience/jupyterAvailability';
+import { JupyterImporter } from '../../client/datascience/jupyterImporter';
+import { JupyterServer } from '../../client/datascience/jupyterServer';
 import {
-    NOSETEST_PROVIDER, PYTEST_PROVIDER,
-    UNITTEST_PROVIDER
-} from '../../client/unittests/common/constants';
+    ICodeCssGenerator,
+    IHistory,
+    IHistoryProvider,
+    IJupyterAvailability,
+    INotebookImporter,
+    INotebookServer
+} from '../../client/datascience/types';
+import { IServiceContainer } from '../../client/ioc/types';
+import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/unittests/common/constants';
 import { TestCollectionStorageService } from '../../client/unittests/common/services/storageService';
 import { TestManagerService } from '../../client/unittests/common/services/testManagerService';
 import { TestResultsService } from '../../client/unittests/common/services/testResultsService';
@@ -18,10 +29,18 @@ import { TestFlatteningVisitor } from '../../client/unittests/common/testVisitor
 import { TestFolderGenerationVisitor } from '../../client/unittests/common/testVisitors/folderGenerationVisitor';
 import { TestResultResetVisitor } from '../../client/unittests/common/testVisitors/resultResetVisitor';
 import {
-    ITestCollectionStorageService, ITestDiscoveryService, ITestManager,
-    ITestManagerFactory, ITestManagerService, ITestManagerServiceFactory,
-    ITestResultsService, ITestsHelper, ITestsParser, ITestVisitor,
-    IUnitTestSocketServer, TestProvider
+    ITestCollectionStorageService,
+    ITestDiscoveryService,
+    ITestManager,
+    ITestManagerFactory,
+    ITestManagerService,
+    ITestManagerServiceFactory,
+    ITestResultsService,
+    ITestsHelper,
+    ITestsParser,
+    ITestVisitor,
+    IUnitTestSocketServer,
+    TestProvider
 } from '../../client/unittests/common/types';
 import { TestManager as NoseTestManager } from '../../client/unittests/nosetest/main';
 import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/unittests/nosetest/services/discoveryService';
@@ -30,7 +49,9 @@ import { TestManager as PyTestTestManager } from '../../client/unittests/pytest/
 import { TestDiscoveryService as PytestTestDiscoveryService } from '../../client/unittests/pytest/services/discoveryService';
 import { TestsParser as PytestTestsParser } from '../../client/unittests/pytest/services/parserService';
 import { TestManager as UnitTestTestManager } from '../../client/unittests/unittest/main';
-import { TestDiscoveryService as UnitTestTestDiscoveryService } from '../../client/unittests/unittest/services/discoveryService';
+import {
+    TestDiscoveryService as UnitTestTestDiscoveryService
+} from '../../client/unittests/unittest/services/discoveryService';
 import { TestsParser as UnitTestTestsParser } from '../../client/unittests/unittest/services/parserService';
 import { getPythonSemVer } from '../common';
 import { IocContainer } from '../serviceRegistry';
@@ -116,5 +137,14 @@ export class UnitTestIocContainer extends IocContainer {
 
     public registerMockUnitTestSocketServer() {
         this.serviceManager.addSingleton<IUnitTestSocketServer>(IUnitTestSocketServer, MockUnitTestSocketServer);
+    }
+
+    public registerDataScienceTypes() {
+        this.serviceManager.addSingleton<IJupyterAvailability>(IJupyterAvailability, JupyterAvailability);
+        this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
+        this.serviceManager.add<IHistory>(IHistory, History);
+        this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
+        this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServer);
+        this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     }
 }

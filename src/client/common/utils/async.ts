@@ -64,3 +64,12 @@ class DeferredImpl<T> implements Deferred<T> {
 export function createDeferred<T>(scope: any = null): Deferred<T> {
     return new DeferredImpl<T>(scope);
 }
+
+export function createDeferredFrom<T>(...promises: Promise<T>[]): Deferred<T> {
+    const deferred = createDeferred<T>();
+    Promise.all(promises)
+        .then(deferred.resolve.bind(deferred))
+        .catch(deferred.reject.bind(deferred));
+
+    return deferred;
+}

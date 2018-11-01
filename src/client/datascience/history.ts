@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as fs from 'fs-extra';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
@@ -17,49 +18,31 @@ import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
-import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { CodeCssGenerator } from './codeCssGenerator';
 import { HistoryMessages, Telemetry } from './constants';
-import { CellState, ICell, IJupyterServer, IJupyterServerProvider } from './types';
+import { CellState, ICell, ICodeCssGenerator, IHistory, INotebookServer } from './types';
 
-export class History implements IWebPanelMessageListener {
+@injectable()
+export class History implements IWebPanelMessageListener, IHistory {
     private static activeHistory: History;
     private webPanel : IWebPanel | undefined;
-    // tslint:disable-next-line: no-unused-variable
-    private jupyterServer: IJupyterServer | undefined;
     // tslint:disable-next-line: no-any
     private loadPromise: Promise<any>;
-    private documentManager : IDocumentManager;
-    private applicationShell : IApplicationShell;
-    private interpreterService : IInterpreterService;
-    private serviceContainer : IServiceContainer;
     private settingsChangedDisposable : Disposable;
 
-    constructor(serviceContainer: IServiceContainer) {
-        this.serviceContainer = serviceContainer;
-
-        // Save our services
-        this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
-        this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+    constructor(
+        @inject(IApplicationShell) private applicationShell: IApplicationShell,
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(INotebookServer) private jupyterServer: INotebookServer,
+        @inject(IWebPanelProvider) private provider: IWebPanelProvider,
+        @inject(ICodeCssGenerator) private cssGenerator : ICodeCssGenerator) {
 
         // Sign up for configuration changes
-        this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.settingsChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
 
         // Load on a background thread.
-        this.loadPromise = this.load(serviceContainer);
-    }
-
-    public static getOrCreateActive(serviceContainer: IServiceContainer) {
-        if (!(History.activeHistory)) {
-            History.activeHistory = new History(serviceContainer);
-        }
-        return History.activeHistory;
-    }
-
-    public static setActive(active: History) {
-        History.activeHistory = active;
+        this.loadPromise = this.load();
     }
 
     public async show() : Promise<void> {
@@ -200,11 +183,10 @@ export class History implements IWebPanelMessageListener {
         if (this.loadPromise) {
             await this.loadPromise;
             if (this.jupyterServer) {
-                this.jupyterServer.dispose();
-                this.jupyterServer = undefined;
+                await this.jupyterServer.shutdown();
             }
         }
-        this.loadPromise = this.loadJupyterServer(this.serviceContainer);
+        this.loadPromise = this.loadJupyterServer();
     }
 
     @captureTelemetry(Telemetry.GotoSourceCode)
@@ -269,13 +251,12 @@ export class History implements IWebPanelMessageListener {
         }
     }
 
-    private loadJupyterServer = async (serviceContainer: IServiceContainer) : Promise<void> => {
+    private loadJupyterServer = async () : Promise<void> => {
         // Startup our jupyter server
         const status = this.applicationShell ? this.applicationShell.setStatusBarMessage(localize.DataScience.startingJupyter()) :
             undefined;
         try {
-            const provider = serviceContainer.get<IJupyterServerProvider>(IJupyterServerProvider);
-            this.jupyterServer = await provider.start();
+            await this.jupyterServer.start();
         } catch (err) {
             throw err;
         } finally {
@@ -285,26 +266,24 @@ export class History implements IWebPanelMessageListener {
         }
     }
 
-    private loadWebPanel = async (serviceContainer: IServiceContainer) : Promise<void> => {
+    private loadWebPanel = async () : Promise<void> => {
         // Create our web panel (it's the UI that shows up for the history)
-        const provider = serviceContainer.get<IWebPanelProvider>(IWebPanelProvider);
 
         // Figure out the name of our main bundle. Should be in our output directory
         const mainScriptPath = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js');
 
         // Generate a css to put into the webpanel for viewing code
-        const codeCssGenerator = new CodeCssGenerator(serviceContainer);
-        const css = await codeCssGenerator.generateThemeCss();
+        const css = await this.cssGenerator.generateThemeCss();
 
         // Use this script to create our web view panel. It should contain all of the necessary
         // script to communicate with this class.
-        this.webPanel = provider.create(this, localize.DataScience.historyTitle(), mainScriptPath, css);
+        this.webPanel = this.provider.create(this, localize.DataScience.historyTitle(), mainScriptPath, css);
     }
 
-    private load = (serviceContainer: IServiceContainer) : Promise<[void, void]> => {
+    private load = () : Promise<[void, void]> => {
         return Promise.all([
-            this.loadWebPanel(serviceContainer),
-            this.loadJupyterServer(serviceContainer)
+            this.loadWebPanel(),
+            this.loadJupyterServer()
         ]);
     }
 }

@@ -23,8 +23,8 @@ export class OnTypeFormattingDispatcher implements OnTypeFormattingEditProvider 
     }
 
     public getTriggerCharacters(): { first: string; more: string[] } | undefined {
-        let keys = Object.keys(this.providers);
-        keys = keys.sort(); // Make output deterministic
+        const keys = Object.keys(this.providers);
+        keys.sort(); // Make output deterministic
 
         const first = keys.shift();
 

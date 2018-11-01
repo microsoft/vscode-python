@@ -9,33 +9,22 @@ import { Disposable, Position, TextDocument, Uri, ViewColumn } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { IConfigurationService, IDisposableRegistry, ILogger } from '../common/types';
 import * as localize from '../common/utils/localize';
-import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
 import { CommandSource } from '../unittests/common/constants';
 import { Commands, Telemetry } from './constants';
-import { JupyterImporter } from './jupyterImporter';
-import { IDataScienceCommandListener, IHistoryProvider } from './types';
+import { IDataScienceCommandListener, IHistoryProvider, INotebookImporter } from './types';
 
 @injectable()
 export class HistoryCommandListener implements IDataScienceCommandListener {
-    private readonly disposableRegistry: IDisposableRegistry;
-    private readonly historyProvider : IHistoryProvider;
-    private readonly jupyterImporter : JupyterImporter;
-    private readonly documentManager: IDocumentManager;
-    private readonly applicationShell : IApplicationShell;
-    private readonly configuration : IConfigurationService;
-    private readonly logger : ILogger;
-
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer)
+    constructor(
+        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+        @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
+        @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(IApplicationShell) private applicationShell: IApplicationShell,
+        @inject(ILogger) private logger: ILogger,
+        @inject(IConfigurationService) private configuration: IConfigurationService)
     {
-        this.historyProvider = this.serviceContainer.get<IHistoryProvider>(IHistoryProvider);
-        this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
-        this.applicationShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        this.configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.jupyterImporter = new JupyterImporter(serviceContainer);
-        this.logger = this.serviceContainer.get<ILogger>(ILogger);
-
         // Listen to document open commands. We want to ask the user if they want to import.
         const disposable = this.documentManager.onDidOpenTextDocument(this.onOpenedDocument);
         this.disposableRegistry.push(disposable);
@@ -100,8 +89,8 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     }
 
     @captureTelemetry(Telemetry.ShowHistoryPane, {}, false)
-    private async showHistoryPane() : Promise<void>{
-        const active = await this.historyProvider.getOrCreateHistory();
+    private showHistoryPane() : Promise<void>{
+        const active = this.historyProvider.getActive();
         return active.show();
     }
 

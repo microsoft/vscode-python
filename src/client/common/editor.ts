@@ -158,7 +158,7 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
     let line = startLine;
     let character = 0;
     if (line > 0) {
-        const beforeLines = <string[]>before.split(/\r?\n/g);
+        const beforeLines = before.split(/\r?\n/g);
         beforeLines.filter((l, i) => i < line).forEach(l => character += l.length + NEW_LINE_LENGTH);
     }
     const edits: Edit[] = [];

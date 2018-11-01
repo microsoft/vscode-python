@@ -9,7 +9,7 @@ function parseEnvironmentVariables(contents: string): EnvironmentVariables | und
         return undefined;
     }
 
-    const env = {} as EnvironmentVariables;
+    const env: EnvironmentVariables = {};
     contents.split('\n').forEach(line => {
         const match = line.match(/^\s*([\w\.\-]+)\s*=\s*(.*)?\s*$/);
         if (match !== null) {
@@ -40,7 +40,9 @@ export function parseEnvFile(envFile: string, mergeWithProcessEnvVars: boolean =
 export function mergeEnvVariables(targetEnvVars: EnvironmentVariables, sourceEnvVars: EnvironmentVariables = process.env): EnvironmentVariables {
     const service = new EnvironmentVariablesService(new PathUtils(IS_WINDOWS));
     service.mergeVariables(sourceEnvVars, targetEnvVars);
-    service.appendPythonPath(targetEnvVars, sourceEnvVars.PYTHONPATH);
+    if (sourceEnvVars.PYTHONPATH) {
+        service.appendPythonPath(targetEnvVars, sourceEnvVars.PYTHONPATH);
+    }
     return targetEnvVars;
 }
 
@@ -57,6 +59,6 @@ export function mergePythonPath(env: EnvironmentVariables, currentPythonPath: st
         return env;
     }
     const service = new EnvironmentVariablesService(new PathUtils(IS_WINDOWS));
-    service.appendPythonPath(env, currentPythonPath!);
+    service.appendPythonPath(env, currentPythonPath);
     return env;
 }

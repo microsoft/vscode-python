@@ -3,38 +3,22 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
-import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 
-import { FileSystem } from '../../client/common/platform/fileSystem';
-import { PlatformService } from '../../client/common/platform/platformService';
-import { IFileSystem } from '../../client/common/platform/types';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
-import { ILogger } from '../../client/common/types';
-import { JupyterServerProvider } from '../../client/datascience/jupyterserverprovider';
-import { IJupyterServerProvider } from '../../client/datascience/types';
-import { MockPythonExecutionService } from './executionServiceMock';
+import { IJupyterAvailability, INotebookServer } from '../../client/datascience/types';
+import { DataScienceIocContainer } from './dataScienceIocContainer';
 
-suite('Jupyter server tests', () => {
-    let fileSystem: IFileSystem;
-    let logger: TypeMoq.IMock<ILogger>;
+suite('Jupyter notebook tests', () => {
     const disposables: Disposable[] = [];
-    let serverProvider: IJupyterServerProvider;
-    let pythonExecutionService : IPythonExecutionService;
-    let factory : TypeMoq.IMock<IPythonExecutionFactory>;
+    let availability: IJupyterAvailability;
+    let jupyterServer : INotebookServer;
+    let ioc: DataScienceIocContainer;
 
     setup(() => {
-        pythonExecutionService = new MockPythonExecutionService();
-        const platformService = new PlatformService();
-        fileSystem = new FileSystem(platformService);
-        logger = TypeMoq.Mock.ofType<ILogger>();
-        factory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
-
-        factory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService));
-
-        // tslint:disable-next-line:no-empty
-        logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => {}); // console.log(m)); // REnable this to debug the server
-        serverProvider = new JupyterServerProvider(disposables, logger.object, factory.object, fileSystem);
+        ioc = new DataScienceIocContainer();
+        ioc.registerDataScienceTypes();
+        jupyterServer = ioc.serviceManager.get<INotebookServer>(INotebookServer);
+        availability = ioc.serviceManager.get<IJupyterAvailability>(IJupyterAvailability);
     });
 
     teardown(() => {
@@ -46,8 +30,8 @@ suite('Jupyter server tests', () => {
     });
 
     test('Creation', async () => {
-        if (await serverProvider.isSupported()) {
-            const server = await serverProvider.start();
+        if (await availability.isNotebookSupported()) {
+            const server = await jupyterServer.start();
             if (!server) {
                 assert.fail('Server not created');
             }
@@ -58,16 +42,16 @@ suite('Jupyter server tests', () => {
     }).timeout(60000);
 
     test('Execution', async () => {
-        if (await serverProvider.isSupported()) {
-            const server = await serverProvider.start();
+        if (await availability.isNotebookSupported()) {
+            const server = await jupyterServer.start();
             if (!server) {
                 assert.fail('Server not created');
             }
             let statusCount: number = 0;
-            server.onStatusChanged((bool: boolean) => {
+            jupyterServer.onStatusChanged((bool: boolean) => {
                 statusCount += 1;
             });
-            const cells = await server.execute('a = 1\r\na', 'foo.py', 2);
+            const cells = await jupyterServer.execute('a = 1\r\na', 'foo.py', 2);
             assert.equal(cells.length, 1, 'Wrong number of cells returned');
             assert.equal(cells[0].data.cell_type, 'code', 'Wrong type of cell returned');
             const cell = cells[0].data as nbformat.ICodeCell;

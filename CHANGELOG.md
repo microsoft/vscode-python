@@ -1,5 +1,150 @@
 # Changelog
 
+## 2018.10.0-beta (31 Oct 2018)
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort 4.3.4](https://pypi.org/project/isort/4.3.4/)
+- [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
+  and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
+- [Microsoft Python Language Server 2018.10.0](https://github.com/Microsoft/python-language-server/releases/tag/2018.10.0)
+- [ptvsd 4.1.4](https://github.com/Microsoft/ptvsd/releases/tag/v4.1.4)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [bandit](https://pypi.org/project/bandit/),
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+### Enhancements
+
+1. Add support for code completion in the debug console window.
+   ([#1076](https://github.com/Microsoft/vscode-python/issues/1076))
+1. Add a new simple snippet for `if __name__ == '__main__':` block. The snippet can be accessed by typing `__main__`
+   (thanks [R S Nikhil Krishna](https://github.com/rsnk96/))
+   ([#2242](https://github.com/Microsoft/vscode-python/issues/2242))
+1. Add Python Interactive mode for data science.
+   ([#2302](https://github.com/Microsoft/vscode-python/issues/2302))
+1. Add support for automatic reloading of flask in the debugger.
+   ([#2326](https://github.com/Microsoft/vscode-python/issues/2326))
+1. Add a debugger setting to show return values of functions while stepping.
+   ([#2463](https://github.com/Microsoft/vscode-python/issues/2463))
+1. Enable on-type formatting from language server
+   ([#2690](https://github.com/Microsoft/vscode-python/issues/2690))
+1. Add [bandit](https://pypi.org/project/bandit/) to supported linters.
+   (thanks [Steven Demurjian Jr.](https://github.com/demus/))
+   ([#2775](https://github.com/Microsoft/vscode-python/issues/2775))
+1. Ensure `python.condaPath` supports paths relative to `Home`. E.g. `"python.condaPath":"~/anaconda3/bin/conda"`.
+   ([#2781](https://github.com/Microsoft/vscode-python/issues/2781))
+1. Add localization of strings. Localized versions are specified in the package.nls.\<locale\>.json files.
+   ([#463](https://github.com/Microsoft/vscode-python/issues/463))
+1. Clear cached list of interpreters when an interpeter is created in the workspace folder (this allows for virtual environments created in one's workspace folder to be detectable immediately).
+   ([#656](https://github.com/Microsoft/vscode-python/issues/656))
+1. Add support for multi process debugging.
+   ([#80](https://github.com/Microsoft/vscode-python/issues/80))
+1. Pylint is no longer enabled by default. Users that have not configured pylint but who have installed it in their workspace will be asked if they'd like to enable it.
+   ([#974](https://github.com/Microsoft/vscode-python/issues/974))
+
+### Fixes
+
+1. Support `conda activate` after 4.4.0.
+   ([#1882](https://github.com/Microsoft/vscode-python/issues/1882))
+1. Fix installation of codna packages when conda environment contains spaces.
+   ([#2015](https://github.com/Microsoft/vscode-python/issues/2015))
+1. Ensure `python.formatting.blackPath` supports paths relative to `Home`. E.g. `"python.formatting.blackPath":"~/venv/bin/black"`.
+   ([#2274](https://github.com/Microsoft/vscode-python/issues/2274))
+1. Correct errors with timing, resetting, and exceptions, related to unittest during discovery and execution of tests. Re-enable `unittest.test` suite.
+   ([#2692](https://github.com/Microsoft/vscode-python/issues/2692))
+1. Fix colon-triggered block formatting.
+   ([#2714](https://github.com/Microsoft/vscode-python/issues/2714))
+1. Ensure relative paths to python interpreters in `python.pythonPath` of `settings.json` are prefixed with `./` or `.\\` (depending on the OS).
+   ([#2744](https://github.com/Microsoft/vscode-python/issues/2744))
+1. Give preference to PTSVD in current path.
+   ([#2818](https://github.com/Microsoft/vscode-python/issues/2818))
+1. Fixed a typo in the Python interpreter selection balloon for macOS.
+   (thanks [Joe Graham](https://github.com/joe-graham))
+   ([#2868](https://github.com/Microsoft/vscode-python/issues/2868))
+
+### Code Health
+
+1. Remove test-specific code from `configSettings.ts` class.
+   ([#2678](https://github.com/Microsoft/vscode-python/issues/2678))
+1. Add a unit test for the MyPy output regex.
+   ([#2696](https://github.com/Microsoft/vscode-python/issues/2696))
+1. Update all npm dependencies to use the caret operator.
+   ([#2746](https://github.com/Microsoft/vscode-python/issues/2746))
+1. Move contents of the folder `src/utils` into `src/client/common/utils`.
+   ([#2748](https://github.com/Microsoft/vscode-python/issues/2748))
+1. Moved languageServer-related files to a languageServer folder.
+   ([#2756](https://github.com/Microsoft/vscode-python/issues/2756))
+1. Skip known failing tests for specific OS and Python version combinations to get CI running cleanly.
+   ([#2795](https://github.com/Microsoft/vscode-python/issues/2795))
+1. Move the linting error code out of the linting message and let [VS Code manage it in the Problems panel](https://code.visualstudio.com/updates/v1_28#_problems-panel)
+   (Thanks [Nafly Mohammed](https://github.com/naflymim)).
+   ([#2815](https://github.com/Microsoft/vscode-python/issues/2815))
+1. Remove code related to the old debugger.
+   ([#2828](https://github.com/Microsoft/vscode-python/issues/2828))
+1. Upgrade Gulp to 4.0.0.
+   ([#2909](https://github.com/Microsoft/vscode-python/issues/2909))
+1. Remove pre-commit hooks.
+   ([#2963](https://github.com/Microsoft/vscode-python/issues/2963))
+1. Only perform Black-related formatting tests when the current Python-version supports it.
+   ([#2999](https://github.com/Microsoft/vscode-python/issues/2999))
+1. Move language server downloads to the CDN.
+   ([#3000](https://github.com/Microsoft/vscode-python/issues/3000))
+
+
+
+## 2018.9.2 (29 Oct 2018)
+
+### Fixes
+
+1. Update version of `vscode-extension-telemetry` to resolve issue with regards to spawning of numerous `powershell` processes.
+   ([#2996](https://github.com/Microsoft/vscode-python/issues/2996))
+
+### Code Health
+
+1. Forward telemetry from the language server.
+   ([#2940](https://github.com/Microsoft/vscode-python/issues/2940))
+
+
 ## 2018.9.1 (18 Oct 2018)
 
 ### Fixes

@@ -1,19 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IDisposable } from '@phosphor/disposable';
 import * as fs from 'fs-extra';
+import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode-jsonrpc';
 
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types';
-import { IDisposableRegistry, ILogger } from '../common/types';
+import { IDisposableRegistry } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
-import { IServiceContainer } from '../ioc/types';
+import { IJupyterAvailability, INotebookImporter } from './types';
 
-export class JupyterImporter implements IDisposable {
+@injectable()
+export class JupyterImporter implements INotebookImporter {
     public isDisposed : boolean = false;
     // Template that changes markdown cells to have # %% [markdown] in the comments
     private readonly nbconvertTemplate =
@@ -31,18 +32,16 @@ export class JupyterImporter implements IDisposable {
 
     private pythonExecutionService : Deferred<IPythonExecutionService> | undefined;
     private templatePromise : Promise<string>;
-    private interpreterService : IInterpreterService;
-    private fileSystem : IFileSystem;
     private settingsChangedDiposable : Disposable;
-    private logger : ILogger;
-    private disposableRegistry : IDisposableRegistry;
 
-    constructor(private serviceContainer: IServiceContainer) {
-        this.logger = this.serviceContainer.get<ILogger>(ILogger);
-        this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+    constructor(
+        @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IJupyterAvailability) private availability : IJupyterAvailability) {
+
         this.settingsChangedDiposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
-        this.disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.templatePromise = this.createTemplateFile();
         this.createExecutionServicePromise();
     }
@@ -51,7 +50,7 @@ export class JupyterImporter implements IDisposable {
         const template = await this.templatePromise;
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
-        if (await this.isSupported()) {
+        if (await this.availability.isImportSupported()) {
             const executionService = await this.getExecutionService();
             const result = await executionService.execModule('jupyter', ['nbconvert', file, '--to', 'python', '--stdout', '--template', template], { throwOnStdErr: false, encoding: 'utf8' });
             if (result.stdout.trim().length === 0) {
@@ -61,18 +60,6 @@ export class JupyterImporter implements IDisposable {
         }
 
         throw localize.DataScience.jupyterNotSupported();
-    }
-
-    public isSupported = async () : Promise<boolean> => {
-        try {
-            // Make sure we have nbconvert installed
-            const executionService = await this.getExecutionService();
-            const result = await executionService.execModule('jupyter', ['nbconvert', '--version'], { throwOnStdErr: true, encoding: 'utf8' });
-            return (!result.stderr);
-        } catch (err) {
-            this.logger.logError(err);
-            return false;
-        }
     }
 
     public dispose = () => {
@@ -110,7 +97,7 @@ export class JupyterImporter implements IDisposable {
     private createExecutionServicePromise = () => {
         // Create a deferred promise that resolves when we have an execution service
         this.pythonExecutionService = createDeferred<IPythonExecutionService>();
-        this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
+        this.executionFactory
             .create({})
             .then((p : IPythonExecutionService) => { if (this.pythonExecutionService) { this.pythonExecutionService.resolve(p); } })
             .catch(err => { if (this.pythonExecutionService) { this.pythonExecutionService.reject(err); } });
