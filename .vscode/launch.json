@@ -140,7 +140,23 @@
             "sourceMaps": true,
             "args": [
                 "timeout=300000",
-                "grep=History"
+                "grep="
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "Compile"
+        },
+        {
+            "name": "Functional Tests (without VS Code, *.functional.test.ts)",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/out/test/functionalTests.js",
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "args": [
+                "timeout=300000",
+                "grep=Jupyter"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

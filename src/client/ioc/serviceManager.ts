@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import { Container, injectable, interfaces } from 'inversify';
-import { Abstract, IServiceManager, Newable } from './types';
+
+import { Abstract, ClassType, IServiceManager, Newable } from './types';
 
 type identifier<T> = string | symbol | Newable<T> | Abstract<T>;
 
@@ -43,4 +43,13 @@ export class ServiceManager implements IServiceManager {
     public getAll<T>(serviceIdentifier: identifier<T>, name?: string | number | symbol | undefined): T[] {
         return name ? this.container.getAllNamed<T>(serviceIdentifier, name) : this.container.getAll<T>(serviceIdentifier);
     }
+
+    public rebind<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, constructor: ClassType<T>, name?: string | number | symbol): void {
+        if (name) {
+            this.container.rebind<T>(serviceIdentifier).to(constructor).whenTargetNamed(name);
+        } else {
+            this.container.rebind<T>(serviceIdentifier).to(constructor);
+        }
+    }
+
 }

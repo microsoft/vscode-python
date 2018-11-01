@@ -16,7 +16,7 @@ process.env.VSC_PYTHON_UNIT_TEST = '1';
 // this allows us to run hygiene as a git pre-commit hook or via debugger.
 if (require.main === module) {
     // When running from debugger, allow custom args.
-    const args = extractParams();
+    const args = extractParams(1000);
 
     runTests({ filePattern: '**/**.unit.test.js', grep: args.grep, timeout: args.timeout });
 }
