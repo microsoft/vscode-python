@@ -8,7 +8,7 @@ import { DataScienceCodeLensProvider } from './editor-integration/codelensprovid
 import { History } from './history';
 import { HistoryCommandListener } from './historycommandlistener';
 import { HistoryProvider } from './historyProvider';
-import { JupyterExecution } from './jupyterAvailability';
+import { JupyterExecution } from './jupyterExecution';
 import { JupyterImporter } from './jupyterImporter';
 import { JupyterProcess } from './jupyterProcess';
 import { JupyterServer } from './jupyterServer';

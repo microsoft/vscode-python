@@ -11,7 +11,7 @@ import { IConfigurationService, ICurrentProcess, ILogger, IPythonSettings } from
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { JupyterExecution } from '../../client/datascience/jupyterAvailability';
+import { JupyterExecution } from '../../client/datascience/jupyterExecution';
 import { JupyterImporter } from '../../client/datascience/jupyterImporter';
 import { JupyterProcess } from '../../client/datascience/jupyterProcess';
 import { JupyterServer } from '../../client/datascience/jupyterServer';
