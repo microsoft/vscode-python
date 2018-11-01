@@ -13,7 +13,7 @@ import {
     IWebPanelProvider,
     WebPanelMessage
 } from '../../client/common/application/types';
-import { IHistoryProvider, IJupyterAvailability } from '../../client/datascience/types';
+import { IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { Cell } from '../../datascience-ui/history-react/cell';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
@@ -23,7 +23,7 @@ import { waitForUpdate } from './reactHelpers';
 // tslint:disable-next-line:max-func-body-length
 suite('History output tests', () => {
     const disposables: Disposable[] = [];
-    let jupyterAvailability: IJupyterAvailability;
+    let jupyterExecution: IJupyterExecution;
     let webPanelProvider : TypeMoq.IMock<IWebPanelProvider>;
     let webPanel : TypeMoq.IMock<IWebPanel>;
     let historyProvider : IHistoryProvider;
@@ -51,7 +51,7 @@ suite('History output tests', () => {
         webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m : WebPanelMessage) => window.postMessage(m, '*')); // See JSDOM valid target origins
         webPanel.setup(p => p.show());
 
-        jupyterAvailability = ioc.serviceManager.get<IJupyterAvailability>(IJupyterAvailability);
+        jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         historyProvider = ioc.serviceManager.get<IHistoryProvider>(IHistoryProvider);
 
         // Setup a global for the acquireVsCodeApi so that the React PostOffice can find it
@@ -91,7 +91,7 @@ suite('History output tests', () => {
     });
 
     test('Simple text', async () => {
-        if (await jupyterAvailability.isNotebookSupported()) {
+        if (await jupyterExecution.isNotebookSupported()) {
             // Create our main panel and tie it into the JSDOM
             const wrapper = mount(<MainPanel theme='vscode-light' skipDefault={true} />);
 

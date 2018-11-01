@@ -281,7 +281,7 @@ export class CondaService implements ICondaService {
             const interpreters = await this.registryLookupForConda.getInterpreters();
             const condaInterpreters = interpreters.filter(this.detectCondaEnvironment);
             const condaInterpreter = this.getLatestVersion(condaInterpreters);
-            const condaPath = condaInterpreter ? path.join(path.dirname(condaInterpreter.path), 'conda.exe') : '';
+            const condaPath = condaInterpreter ? path.join(path.dirname(condaInterpreter.path), 'Scripts', 'conda.exe') : '';
             if (await fileSystem.fileExists(condaPath)) {
                 return condaPath;
             }

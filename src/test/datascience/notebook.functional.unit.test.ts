@@ -5,12 +5,12 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import { Disposable } from 'vscode';
 
-import { IJupyterAvailability, INotebookServer } from '../../client/datascience/types';
+import { IJupyterExecution, INotebookServer } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 suite('Jupyter notebook tests', () => {
     const disposables: Disposable[] = [];
-    let availability: IJupyterAvailability;
+    let jupyterExecution: IJupyterExecution;
     let jupyterServer : INotebookServer;
     let ioc: DataScienceIocContainer;
 
@@ -18,7 +18,7 @@ suite('Jupyter notebook tests', () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         jupyterServer = ioc.serviceManager.get<INotebookServer>(INotebookServer);
-        availability = ioc.serviceManager.get<IJupyterAvailability>(IJupyterAvailability);
+        jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
     });
 
     teardown(() => {
@@ -30,7 +30,7 @@ suite('Jupyter notebook tests', () => {
     });
 
     test('Creation', async () => {
-        if (await availability.isNotebookSupported()) {
+        if (await jupyterExecution.isNotebookSupported()) {
             const server = await jupyterServer.start();
             if (!server) {
                 assert.fail('Server not created');
@@ -42,7 +42,7 @@ suite('Jupyter notebook tests', () => {
     }).timeout(60000);
 
     test('Execution', async () => {
-        if (await availability.isNotebookSupported()) {
+        if (await jupyterExecution.isNotebookSupported()) {
             const server = await jupyterServer.start();
             if (!server) {
                 assert.fail('Server not created');

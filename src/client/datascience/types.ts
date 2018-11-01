@@ -8,7 +8,7 @@ import { Observable } from 'rxjs/Observable';
 import { CodeLens, CodeLensProvider, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
-import { ExecutionResult } from '../common/process/types';
+import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IConnectionInfo } from './jupyterProcess';
 
 // Main interface
@@ -44,11 +44,12 @@ export interface INotebookProcess extends IDisposable {
     waitForPythonVersionString() : Promise<string>;
     spawn(notebookFile: string) : Promise<ExecutionResult<string>>;
 }
-
-export const IJupyterAvailability = Symbol('IJupyterAvailablity');
-export interface IJupyterAvailability {
+export const IJupyterExecution = Symbol('IJupyterAvailablity');
+export interface IJupyterExecution {
     isNotebookSupported() : Promise<boolean>;
     isImportSupported() : Promise<boolean>;
+    execModuleObservable(args: string[], options: SpawnOptions) : Promise<ObservableExecutionResult<string>>;
+    execModule(args: string[], options: SpawnOptions) : Promise<ExecutionResult<string>>;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');

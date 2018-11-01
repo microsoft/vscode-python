@@ -11,7 +11,7 @@ import { IConfigurationService, ICurrentProcess, ILogger, IPythonSettings } from
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { JupyterAvailability } from '../../client/datascience/jupyterAvailability';
+import { JupyterExecution } from '../../client/datascience/jupyterAvailability';
 import { JupyterImporter } from '../../client/datascience/jupyterImporter';
 import { JupyterProcess } from '../../client/datascience/jupyterProcess';
 import { JupyterServer } from '../../client/datascience/jupyterServer';
@@ -19,7 +19,7 @@ import {
     ICodeCssGenerator,
     IHistory,
     IHistoryProvider,
-    IJupyterAvailability,
+    IJupyterExecution,
     INotebookImporter,
     INotebookProcess,
     INotebookServer
@@ -35,7 +35,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     public registerDataScienceTypes() {
         this.registerFileSystemTypes();
-        this.serviceManager.addSingleton<IJupyterAvailability>(IJupyterAvailability, JupyterAvailability);
+        this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecution);
         this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
         this.serviceManager.add<IHistory>(IHistory, History);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
