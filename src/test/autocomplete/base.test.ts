@@ -3,11 +3,9 @@
 
 // tslint:disable:no-unused-variable
 import * as assert from 'assert';
-import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IConfigurationService } from '../../client/common/types';
-import { rootWorkspaceUri } from '../common';
+import { isPythonVersion } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IsLanguageServerTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -22,11 +20,10 @@ const fileEncodingUsed = path.join(autoCompPath, 'five.py');
 const fileSuppress = path.join(autoCompPath, 'suppress.py');
 
 // tslint:disable-next-line:max-func-body-length
-suite('Autocomplete', function () {
+suite('Autocomplete Base Tests', function () {
     // Attempt to fix #1301
     // tslint:disable-next-line:no-invalid-this
     this.timeout(60000);
-    let isPython2: boolean;
     let ioc: UnitTestIocContainer;
 
     suiteSetup(async function () {
@@ -35,7 +32,6 @@ suite('Autocomplete', function () {
         this.timeout(60000);
         await initialize();
         initializeDI();
-        isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -55,7 +51,7 @@ suite('Autocomplete', function () {
         vscode.workspace.openTextDocument(fileOne).then(document => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
-        }).then(editor => {
+        }).then(() => {
             assert(vscode.window.activeTextEditor, 'No active editor');
             const position = new vscode.Position(3, 10);
             return vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
@@ -65,12 +61,22 @@ suite('Autocomplete', function () {
     });
 
     // https://github.com/DonJayamanne/pythonVSCode/issues/975
-    test('For "import *"', async () => {
+    test('For "import *" find a specific completion for known lib [fstat]', async () => {
         const textDocument = await vscode.workspace.openTextDocument(fileImport);
         await vscode.window.showTextDocument(textDocument);
-        const position = new vscode.Position(1, 4);
-        const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
-        assert.equal(list!.items.filter(item => item.label === 'fstat').length, 1, 'fstat not found');
+        const lineNum = 1;
+        const colNum = 4;
+        const position = new vscode.Position(lineNum, colNum);
+        const list = await vscode.commands.executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            textDocument.uri,
+            position);
+
+        const indexOfFstat = list.items.findIndex((val: vscode.CompletionItem) => val.label === 'fstat');
+
+        assert(
+            indexOfFstat !== -1,
+            `fstat was not found as a completion in ${fileImport} at line ${lineNum}, col ${colNum}`);
     });
 
     // https://github.com/DonJayamanne/pythonVSCode/issues/898
@@ -87,10 +93,9 @@ suite('Autocomplete', function () {
 
     // https://github.com/DonJayamanne/pythonVSCode/issues/265
     test('For "lambda"', async function () {
-        if (isPython2) {
+        if (await isPythonVersion('2')) {
             // tslint:disable-next-line:no-invalid-this
-            this.skip();
-            return;
+            return this.skip();
         }
         const textDocument = await vscode.workspace.openTextDocument(fileLambda);
         await vscode.window.showTextDocument(textDocument);
