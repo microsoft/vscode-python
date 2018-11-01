@@ -65,8 +65,8 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
         if (dirs.length === 0) {
             return;
         }
-        const sortedDirs = dirs.sort((a, b) => a.version.compare(b.version));
-        return sortedDirs[sortedDirs.length - 1];
+        dirs.sort((a, b) => a.version.compare(b.version));
+        return dirs[dirs.length - 1];
     }
     public async getExistingLanguageServerDirectories(): Promise<FolderVersionPair[]> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
