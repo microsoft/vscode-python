@@ -12,7 +12,7 @@ if ((Reflect as any).metadata === undefined) {
 import { extractParams, runTests } from './nonUiTests';
 
 process.env.VSC_PYTHON_CI_TEST = '1';
-process.env.VSC_PYTHON_FUNCTIONAL_TEST = '1';
+process.env.VSC_PYTHON_UNIT_TEST = '1'; // This is checked to make tests run fast.
 
 // this allows us to run hygiene as a git pre-commit hook or via debugger.
 if (require.main === module) {
