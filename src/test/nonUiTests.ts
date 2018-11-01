@@ -41,6 +41,10 @@ import * as vscodeMoscks from './vscode-mock';
 process.env.VSC_PYTHON_CI_TEST = '1';
 
 export function runTests(testOptions?: { filePattern: string; grep?: string; timeout?: number }) {
+    // nteract/transforms-full expects to run in the browser so we have to fake
+    // parts of the browser here.
+    setUpDomEnvironment();
+
     vscodeMoscks.initialize();
 
     const grep: string | undefined = testOptions ? testOptions.grep : undefined;
@@ -53,10 +57,6 @@ export function runTests(testOptions?: { filePattern: string; grep?: string; tim
         timeout,
         grep
     };
-
-    // nteract/transforms-full expects to run in the browser so we have to fake
-    // parts of the browser here.
-    setUpDomEnvironment();
 
     let temp_mocha: Mocha | undefined;
 
