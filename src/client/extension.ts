@@ -219,6 +219,12 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     dispatcher.registerEventHandlers();
 }
 function intializeServicesPostActivation(serviceContainer: ServiceContainer) {
+    // Get latest interpreter list.
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
+    const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+    interpreterService.getInterpreters(mainWorkspaceUri).ignoreErrors();
+
     // Display progress of interpreter refreshes only after extension has activated.
     serviceContainer.get<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler).register();
     serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
