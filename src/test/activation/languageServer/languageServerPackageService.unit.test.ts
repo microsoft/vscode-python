@@ -8,8 +8,10 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
+import { azureCDNBlobStorageAccount, LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { PlatformName } from '../../../client/activation/platformData';
+import { IApplicationEnvironment } from '../../../client/common/application/types';
 import { NugetService } from '../../../client/common/nuget/nugetService';
 import { INugetRepository, INugetService, NugetPackage } from '../../../client/common/nuget/types';
 import { IPlatformService } from '../../../client/common/platform/types';
@@ -22,14 +24,19 @@ suite('Language Server Package Service', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     let platform: typeMoq.IMock<IPlatformService>;
     let lsPackageService: LanguageServerPackageService;
+    let appVersion: typeMoq.IMock<IApplicationEnvironment>;
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         platform = typeMoq.Mock.ofType<IPlatformService>();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platform.object);
-
-        lsPackageService = new LanguageServerPackageService(serviceContainer.object);
+        appVersion = typeMoq.Mock.ofType<IApplicationEnvironment>();
+        lsPackageService = new LanguageServerPackageService(serviceContainer.object, appVersion.object);
         lsPackageService.getLanguageServerDownloadChannel = () => 'stable';
     });
+    function setMinVersionOfLs(version: string) {
+        const packageJson = { languageServerVersion: version };
+        appVersion.setup(e => e.packageJson).returns(() => packageJson);
+    }
     [true, false].forEach(is64Bit => {
         const bitness = is64Bit ? '64bit' : '32bit';
         const architecture = is64Bit ? Architecture.x64 : Architecture.x86;
@@ -74,6 +81,7 @@ suite('Language Server Package Service', () => {
         const packageName = 'packageName';
         lsPackageService.getNugetPackageName = () => packageName;
         lsPackageService.maxMajorVersion = 3;
+        setMinVersionOfLs('0.0.1');
         const packages: NugetPackage[] = [
             { package: '', uri: '', version: new SemVer('1.1.1') },
             { package: '', uri: '', version: new SemVer('3.4.1') },
@@ -102,6 +110,7 @@ suite('Language Server Package Service', () => {
         expect(info).to.deep.equal(expectedPackage);
     });
     test('Get latest nuget package version (excluding non-release)', async () => {
+        setMinVersionOfLs('0.0.1');
         const packageName = 'packageName';
         lsPackageService.getNugetPackageName = () => packageName;
         lsPackageService.maxMajorVersion = 1;
@@ -125,6 +134,36 @@ suite('Language Server Package Service', () => {
         const info = await lsPackageService.getLatestNugetPackageVersion();
 
         repo.verifyAll();
+        expect(info).to.deep.equal(expectedPackage);
+    });
+    test('Ensure minimum version of package is used', async () => {
+        const minimumVersion = '0.1.50';
+        setMinVersionOfLs(minimumVersion);
+        const packageName = 'packageName';
+        lsPackageService.getNugetPackageName = () => packageName;
+        lsPackageService.maxMajorVersion = 0;
+        const packages: NugetPackage[] = [
+            { package: '', uri: '', version: new SemVer('0.1.48') },
+            { package: '', uri: '', version: new SemVer('0.1.49') }
+        ];
+        const repo = typeMoq.Mock.ofType<INugetRepository>();
+        const nuget = new NugetService();
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny())).returns(() => repo.object);
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget);
+
+        repo
+            .setup(n => n.getPackages(typeMoq.It.isValue(packageName)))
+            .returns(() => Promise.resolve(packages))
+            .verifiable(typeMoq.Times.once());
+
+        const info = await lsPackageService.getLatestNugetPackageVersion();
+
+        repo.verifyAll();
+        const expectedPackage: NugetPackage = {
+            version: new SemVer(minimumVersion),
+            package: LanguageServerPackageStorageContainers.stable,
+            uri: `${azureCDNBlobStorageAccount}/${LanguageServerPackageStorageContainers.stable}.${minimumVersion}.nupkg`
+        };
         expect(info).to.deep.equal(expectedPackage);
     });
 });

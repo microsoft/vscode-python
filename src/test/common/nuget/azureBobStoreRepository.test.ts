@@ -9,6 +9,7 @@ import * as typeMoq from 'typemoq';
 import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { IHttpClient } from '../../../client/activation/types';
+import { IApplicationEnvironment } from '../../../client/common/application/types';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
 import { INugetService } from '../../../client/common/nuget/types';
 import { PlatformService } from '../../../client/common/platform/platformService';
@@ -40,7 +41,10 @@ suite('Nuget Azure Storage Repository', () => {
         this.timeout(15000);
         const platformService = new PlatformService();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
-        const lsPackageService = new LanguageServerPackageService(serviceContainer.object);
+        const packageJson = { languageServerVersion: '0.1.0' };
+        const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
+        appEnv.setup(e => e.packageJson).returns(() => packageJson);
+        const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object);
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await repo.getPackages(packageName);
 

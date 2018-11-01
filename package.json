@@ -3,6 +3,7 @@
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
     "version": "2018.10.0-beta",
+    "languageServerVersion": "0.1.50",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -1680,7 +1681,7 @@
         "compile-webviews": "gulp compile-webviews",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
-        "test:unittests": "node ./out/test/unittests.js",
+        "test:unittests": "node ./out/test/unittests.js grep='Language Server Package Service'",
         "test:functional": "node ./out/test/functionalTests.js",
         "testDebugger": "node ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/standardTest.js",
