@@ -3,20 +3,19 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 
-import { IPythonExecutionFactory } from '../common/process/types';
-import { IJupyterExecution } from './types';
-import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IPlatformService } from '../common/platform/types';
-import { IConfigurationService } from '../common/types';
+import { ExecutionResult, IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
+import { IConfigurationService, ILogger } from '../common/types';
 import { ICondaService } from '../interpreter/contracts';
+import { IJupyterExecution } from './types';
 
 @injectable()
 export class JupyterExecution implements IJupyterExecution {
-
     constructor(@inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
                 @inject(IPlatformService) private platformService: IPlatformService,
                 @inject(IConfigurationService) private configuration: IConfigurationService,
-                @inject(ICondaService) private condaService: ICondaService) {
+                @inject(ICondaService) private condaService: ICondaService,
+                @inject(ILogger) private logger: ILogger) {
     }
 
     public execModuleObservable = async (args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> => {
@@ -35,7 +34,8 @@ export class JupyterExecution implements IJupyterExecution {
         try {
             const result = await this.execModule(['notebook', '--version'], { throwOnStdErr: true, encoding: 'utf8' });
             return (!result.stderr);
-        } catch {
+        } catch (err) {
+            this.logger.logWarning(err);
             return false;
         }
     }
@@ -45,7 +45,8 @@ export class JupyterExecution implements IJupyterExecution {
         try {
             const result = await this.execModule(['nbconvert', '--version'], { throwOnStdErr: true, encoding: 'utf8' });
             return (!result.stderr);
-        } catch {
+        } catch (err) {
+            this.logger.logWarning(err);
             return false;
         }
     }
@@ -56,12 +57,12 @@ export class JupyterExecution implements IJupyterExecution {
         if (condaEnv) {
             if (this.platformService.isWindows) {
                 const scriptsPath = condaEnv.path.concat('\\Scripts\\;');
-                let newOptions = {...inputOptions};
+                const newOptions = {...inputOptions};
                 if (newOptions.env && newOptions.env.Path) {
-                    newOptions.env.Path = scriptsPath.concat(newOptions.env.Path); 
+                    newOptions.env.Path = scriptsPath.concat(newOptions.env.Path);
                 } else {
                     newOptions.env = process.env;
-                    newOptions.env.Path = scriptsPath.concat(newOptions.env.Path); 
+                    newOptions.env.Path = scriptsPath.concat(newOptions.env.Path);
                 }
                 return newOptions;
             }

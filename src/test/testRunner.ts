@@ -88,7 +88,7 @@ export function run(testsRoot: string, callback: TestCallback): void {
     }
 
     // Run the tests.
-    glob(`**/**.${testFilesGlob}.js`, { cwd: testsRoot }, (error, files) => {
+    glob(`**/**.${testFilesGlob}.js`, { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'], cwd: testsRoot }, (error, files) => {
         if (error) {
             return callback(error);
         }

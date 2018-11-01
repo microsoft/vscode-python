@@ -27,6 +27,8 @@ suite('Jupyter notebook tests', () => {
                 disposable.dispose();
             }
         });
+        jupyterServer.dispose();
+        ioc.dispose();
     });
 
     test('Creation', async () => {
