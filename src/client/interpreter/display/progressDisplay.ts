@@ -12,11 +12,10 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
 import { IInterpreterLocatorProgressService, InterpreterLocatorProgressHandler } from '../contracts';
 
-const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Interpreters.refreshing() };
-
 @injectable()
 export class InterpreterLocatorProgressStatubarHandler implements InterpreterLocatorProgressHandler {
     private deferred: Deferred<void> | undefined;
+    private isFirstTimeLoadingInterpreters = true;
     constructor(@inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IInterpreterLocatorProgressService) private readonly progressService: IInterpreterLocatorProgressService,
         @inject(IDisposableRegistry) private readonly disposables: Disposable[]) { }
@@ -38,6 +37,11 @@ export class InterpreterLocatorProgressStatubarHandler implements InterpreterLoc
         }
     }
     private createProgress() {
+        const progressOptions: ProgressOptions = {
+            location: ProgressLocation.Window,
+            title: this.isFirstTimeLoadingInterpreters ? Interpreters.loading() : Interpreters.refreshing()
+        };
+        this.isFirstTimeLoadingInterpreters = false;
         this.shell.withProgress(progressOptions, () => {
             this.deferred = createDeferred();
             return this.deferred.promise;
