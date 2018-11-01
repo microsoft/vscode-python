@@ -140,7 +140,7 @@
             "sourceMaps": true,
             "args": [
                 "timeout=300000",
-                "grep=History"
+                "grep="
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

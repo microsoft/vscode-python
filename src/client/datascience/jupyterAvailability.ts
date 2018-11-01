@@ -3,28 +3,28 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 
-import { IPlatformService } from '../common/platform/types';
 import { ExecutionResult, IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
-import { IConfigurationService, ILogger } from '../common/types';
-import { ICondaService } from '../interpreter/contracts';
+import { ILogger } from '../common/types';
+import { ICondaService, IInterpreterService, InterpreterType } from '../interpreter/contracts';
 import { IJupyterExecution } from './types';
 
 @injectable()
 export class JupyterExecution implements IJupyterExecution {
     constructor(@inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
-                @inject(IPlatformService) private platformService: IPlatformService,
-                @inject(IConfigurationService) private configuration: IConfigurationService,
                 @inject(ICondaService) private condaService: ICondaService,
+                @inject(IInterpreterService) private interpreterService: IInterpreterService,
                 @inject(ILogger) private logger: ILogger) {
     }
 
     public execModuleObservable = async (args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> => {
-        const newOptions = await this.fixupCondaEnv(options);
+        const newOptions = {...options};
+        newOptions.env = await this.fixupCondaEnv(newOptions.env);
         const pythonService = await this.executionFactory.create({});
         return pythonService.execModuleObservable('jupyter', args, newOptions);
     }
     public execModule = async (args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> => {
-        const newOptions = await this.fixupCondaEnv(options);
+        const newOptions = {...options};
+        newOptions.env = await this.fixupCondaEnv(newOptions.env);
         const pythonService = await this.executionFactory.create({});
         return pythonService.execModule('jupyter', args, newOptions);
     }
@@ -51,22 +51,21 @@ export class JupyterExecution implements IJupyterExecution {
         }
     }
 
-    private fixupCondaEnv = async (inputOptions: SpawnOptions): Promise<SpawnOptions> => {
-        const settings = this.configuration.getSettings();
-        const condaEnv = await this.condaService.getCondaEnvironment(settings.pythonPath);
-        if (condaEnv) {
-            if (this.platformService.isWindows) {
-                const scriptsPath = condaEnv.path.concat('\\Scripts\\;');
-                const newOptions = {...inputOptions};
-                if (newOptions.env && newOptions.env.Path) {
-                    newOptions.env.Path = scriptsPath.concat(newOptions.env.Path);
-                } else {
-                    newOptions.env = process.env;
-                    newOptions.env.Path = scriptsPath.concat(newOptions.env.Path);
-                }
-                return newOptions;
-            }
+    /**
+     * Conda needs specific paths and env vars set to be happy. Call this function to fix up
+     * (or created if not present) our environment to run jupyter
+     */
+    // Base Node.js SpawnOptions uses any for environment, so use that here as well
+    // tslint:disable-next-line:no-any
+    private fixupCondaEnv = async (inputEnv: any | undefined): Promise<any> => {
+        if (!inputEnv) {
+            inputEnv = process.env;
         }
-        return inputOptions;
+        const interpreter = await this.interpreterService.getActiveInterpreter();
+        if (interpreter.type === InterpreterType.Conda) {
+            return this.condaService.getActivatedCondaEnvironment(interpreter, inputEnv);
+        }
+
+        return inputEnv;
     }
 }
