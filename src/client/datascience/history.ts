@@ -200,7 +200,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     @captureTelemetry(Telemetry.RestartKernel)
     private restartKernel() {
         if (this.jupyterServer) {
-            this.jupyterServer.restartKernel();
+            this.jupyterServer.restartKernel().ignoreErrors();
         }
     }
 

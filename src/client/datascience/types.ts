@@ -31,7 +31,7 @@ export interface INotebookServer extends IDisposable {
     getCurrentState() : Promise<ICell[]>;
     executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
     execute(code: string, file: string, line: number) : Promise<ICell[]>;
-    restartKernel();
+    restartKernel() : Promise<void>;
     translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
     launchNotebook(file: string) : Promise<boolean>;
 }
