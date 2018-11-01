@@ -5,8 +5,9 @@
 
 import { injectable, unmanaged } from 'inversify';
 import * as md5 from 'md5';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
+import '../../../common/extensions';
 import { Logger } from '../../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -18,10 +19,14 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     private readonly promisesPerResource = new Map<string, Deferred<PythonInterpreter[]>>();
     private readonly handlersAddedToResource = new Set<string>();
     private readonly cacheKeyPrefix: string;
+    private readonly locating = new EventEmitter<Promise<PythonInterpreter[]>>();
     constructor(@unmanaged() name: string,
         @unmanaged() protected readonly serviceContainer: IServiceContainer,
         @unmanaged() private cachePerWorkspace: boolean = false) {
         this.cacheKeyPrefix = `INTERPRETERS_CACHE_v2_${name}`;
+    }
+    public get onLocating(): Event<Promise<PythonInterpreter[]>> {
+        return this.locating.event;
     }
     public abstract dispose();
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
@@ -41,6 +46,8 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                     deferred!.resolve(items);
                 })
                 .catch(ex => deferred!.reject(ex));
+
+            this.locating.fire(deferred.promise);
         }
         if (deferred.completed) {
             return deferred.promise;
@@ -60,6 +67,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             watcher.onDidCreate(() => {
                 Logger.verbose(`Interpreter Watcher change handler for ${this.cacheKeyPrefix}`);
                 this.promisesPerResource.delete(cacheKey);
+                this.getInterpreters(resource).ignoreErrors();
             }, this, disposableRegisry);
         });
     }

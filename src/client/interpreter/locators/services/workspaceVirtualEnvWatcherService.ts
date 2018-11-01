@@ -7,20 +7,25 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
+import '../../../common/extensions';
 import { Logger, traceVerbose } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
+import { IPythonExecutionFactory } from '../../../common/process/types';
 import { IDisposableRegistry } from '../../../common/types';
-import { debounce } from '../../../common/utils/decorators';
 import { IInterpreterWatcher } from '../../contracts';
+
+const maxTimeToWaitForEnvCreation = 60_000;
+const timeToPollForEnvCreation = 2_000;
 
 @injectable()
 export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, Disposable {
-    private readonly didCreate;
-    private timer?: NodeJS.Timer;
+    private readonly didCreate: EventEmitter<void>;
+    private timers = new Map<string, { timer: NodeJS.Timer; counter: number }>();
     private fsWatchers: FileSystemWatcher[] = [];
     constructor(@inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IPlatformService) private readonly platformService: IPlatformService) {
+        @inject(IPlatformService) private readonly platformService: IPlatformService,
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory) {
         this.didCreate = new EventEmitter<void>();
         disposableRegistry.push(this);
     }
@@ -28,7 +33,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
         return this.didCreate.event;
     }
     public dispose() {
-        this.clearTimer();
+        this.clearTimers();
     }
     @traceVerbose('Register Intepreter Watcher')
     public async register(resource: Uri | undefined): Promise<void> {
@@ -51,22 +56,39 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
             this.fsWatchers.push(fsWatcher);
         }
     }
-    @debounce(2000)
     @traceVerbose('Intepreter Watcher change handler')
-    protected createHandler(e: Uri) {
+    protected async createHandler(e: Uri) {
         this.didCreate.fire();
-        // On Windows, creation of environments are slow, hence lets notify again after 10 seconds.
-        this.clearTimer();
-
-        this.timer = setTimeout(() => {
-            this.timer = undefined;
-            this.didCreate.fire();
-        }, 10000);
+        // On Windows, creation of environments are very slow, hence lets notify again after
+        // the python executable is accessible (i.e. when we can launch the process).
+        this.notifyCreationWhenReady(e.fsPath).ignoreErrors();
     }
-    private clearTimer() {
-        if (this.timer) {
-            clearTimeout(this.timer);
-            this.timer = undefined;
+    protected async notifyCreationWhenReady(pythonPath: string) {
+        const counter = this.timers.has(pythonPath) ? this.timers.get(pythonPath)!.counter + 1 : 0;
+        const isValid = await this.isValidExecutable(pythonPath);
+        if (isValid) {
+            if (counter > 0) {
+                this.didCreate.fire();
+            }
+            return this.timers.delete(pythonPath);
         }
+        if (counter > (maxTimeToWaitForEnvCreation / timeToPollForEnvCreation)) {
+            // Send notification before we give up trying.
+            this.didCreate.fire();
+            this.timers.delete(pythonPath);
+            return;
+        }
+
+        const timer = setTimeout(() => this.notifyCreationWhenReady(pythonPath).ignoreErrors(), timeToPollForEnvCreation);
+        this.timers.set(pythonPath, { timer, counter });
+    }
+    private clearTimers() {
+        this.timers.forEach(item => clearTimeout(item.timer));
+        this.timers.clear();
+    }
+    private async isValidExecutable(pythonPath: string): Promise<boolean> {
+        const execService = await this.pythonExecFactory.create({ pythonPath });
+        const info = await execService.getInterpreterInformation().catch(() => undefined);
+        return info !== undefined;
     }
 }

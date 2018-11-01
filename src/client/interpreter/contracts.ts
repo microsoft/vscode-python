@@ -28,6 +28,7 @@ export interface IVirtualEnvironmentsSearchPathProvider {
 export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
 
 export interface IInterpreterLocatorService extends Disposable {
+    readonly onLocating: Event<Promise<PythonInterpreter[]>>;
     getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
 }
 
@@ -83,7 +84,7 @@ export interface IInterpreterService {
     autoSetInterpreter(): Promise<void>;
     getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonInterpreter>;
-    refresh(): Promise<void>;
+    refresh(resource: Uri | undefined): Promise<void>;
     initialize(): void;
     getDisplayName(interpreter: Partial<PythonInterpreter>): Promise<string>;
     shouldAutoSetInterpreter(): Promise<boolean>;
@@ -125,4 +126,16 @@ export interface IInterpreterWatcher {
 export const IInterpreterWatcherBuilder = Symbol('IInterpreterWatcherBuilder');
 export interface IInterpreterWatcherBuilder {
     getWorkspaceVirtualEnvInterpreterWatcher(resource: Uri | undefined): Promise<IInterpreterWatcher>;
+}
+
+export const InterpreterLocatorProgressHandler = Symbol('InterpreterLocatorProgressHandler');
+export interface InterpreterLocatorProgressHandler {
+    register(): void;
+}
+
+export const IInterpreterLocatorProgressService = Symbol('IInterpreterLocatorProgressService');
+export interface IInterpreterLocatorProgressService {
+    readonly onRefreshing: Event<void>;
+    readonly onRefreshed: Event<void>;
+    register(): void;
 }

@@ -41,7 +41,7 @@ import { registerTypes as debugConfigurationRegisterTypes } from './debugger/ext
 import { IDebugConfigurationProvider, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
-import { ICondaService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
+import { ICondaService, IInterpreterLocatorProgressService, IInterpreterService, InterpreterLocatorProgressHandler, PythonInterpreter } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
@@ -102,7 +102,8 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
     sendStartupTelemetry(activationDeferred.promise, serviceContainer).ignoreErrors();
 
-    interpreterManager.refresh()
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    interpreterManager.refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
         .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
 
     const jupyterExtension = extensions.getExtension('donjayamanne.jupyter');
@@ -214,8 +215,17 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     const disposables = serviceManager.get<IDisposableRegistry>(IDisposableRegistry);
     const dispatcher = new DebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
     dispatcher.registerEventHandlers();
-}
 
+    // Display progress of interpreter refreshes only after extension has activated.
+    serviceContainer.get<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler).register();
+    serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
+
+    // Get latest interpreter list.
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
+    const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+    interpreterService.getInterpreters(mainWorkspaceUri).ignoreErrors();
+}
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {
     const logger = serviceContainer.get<ILogger>(ILogger);
     try {
@@ -224,12 +234,13 @@ async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceCont
         const terminalShellType = terminalHelper.identifyTerminalShell(terminalHelper.getTerminalShellPath());
         const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
         const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
         const [condaVersion, interpreter, interpreters] = await Promise.all([
             condaLocator.getCondaVersion().then(ver => ver ? ver.raw : '').catch<string>(() => ''),
             interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
-            interpreterService.getInterpreters().catch<PythonInterpreter[]>(() => [])
+            interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
         ]);
-        const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
         const pythonVersion = interpreter ? interpreter.version_info.join('.') : undefined;
         const interpreterType = interpreter ? interpreter.type : undefined;

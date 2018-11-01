@@ -7,9 +7,9 @@
 import {
     Breakpoint, BreakpointsChangeEvent, CancellationToken, ConfigurationChangeEvent, DebugConfiguration, DebugConfigurationProvider, DebugConsole, DebugSession, DebugSessionCustomEvent, Disposable,
     Event, FileSystemWatcher, GlobPattern, InputBoxOptions, MessageItem,
-    MessageOptions, OpenDialogOptions, QuickPickItem, QuickPickOptions, SaveDialogOptions, StatusBarAlignment, StatusBarItem,
-    Terminal, TerminalOptions, TextDocument, TextDocumentShowOptions, TextEditor, TextEditorEdit, TextEditorOptionsChangeEvent, TextEditorSelectionChangeEvent,
-    TextEditorViewColumnChangeEvent, Uri, ViewColumn, WorkspaceConfiguration, WorkspaceEdit, WorkspaceFolder, WorkspaceFolderPickOptions, WorkspaceFoldersChangeEvent
+    MessageOptions, OpenDialogOptions, Progress, ProgressOptions, QuickPickItem, QuickPickOptions, SaveDialogOptions,
+    StatusBarAlignment, StatusBarItem, Terminal, TerminalOptions, TextDocument, TextDocumentShowOptions, TextEditor, TextEditorEdit,
+    TextEditorOptionsChangeEvent, TextEditorSelectionChangeEvent, TextEditorViewColumnChangeEvent, Uri, ViewColumn, WorkspaceConfiguration, WorkspaceEdit, WorkspaceFolder, WorkspaceFolderPickOptions, WorkspaceFoldersChangeEvent
 } from 'vscode';
 
 export const IApplicationShell = Symbol('IApplicationShell');
@@ -248,6 +248,27 @@ export interface IApplicationShell {
      * @return A promise that resolves to the workspace folder or `undefined`.
      */
     showWorkspaceFolderPick(options?: WorkspaceFolderPickOptions): Thenable<WorkspaceFolder | undefined>;
+
+    /**
+     * Show progress in the editor. Progress is shown while running the given callback
+     * and while the promise it returned isn't resolved nor rejected. The location at which
+     * progress should show (and other details) is defined via the passed [`ProgressOptions`](#ProgressOptions).
+     *
+     * @param task A callback returning a promise. Progress state can be reported with
+     * the provided [progress](#Progress)-object.
+     *
+     * To report discrete progress, use `increment` to indicate how much work has been completed. Each call with
+     * a `increment` value will be summed up and reflected as overall progress until 100% is reached (a value of
+     * e.g. `10` accounts for `10%` of work done).
+     * Note that currently only `ProgressLocation.Notification` is capable of showing discrete progress.
+     *
+     * To monitor if the operation has been cancelled by the user, use the provided [`CancellationToken`](#CancellationToken).
+     * Note that currently only `ProgressLocation.Notification` is supporting to show a cancel button to cancel the
+     * long running operation.
+     *
+     * @return The thenable the task-callback returned.
+     */
+    withProgress<R>(options: ProgressOptions, task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>): Thenable<R>;
 }
 
 export const ICommandManager = Symbol('ICommandManager');
