@@ -164,6 +164,8 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
+    intializeServicesPostActivation(serviceContainer);
+
     const api = { ready: activationDeferred.promise };
     // In test environment return the DI Container.
     if (isTestExecution()) {
@@ -215,11 +217,12 @@ function initializeServices(context: ExtensionContext, serviceManager: ServiceMa
     const disposables = serviceManager.get<IDisposableRegistry>(IDisposableRegistry);
     const dispatcher = new DebugSessionEventDispatcher(handlers, DebugService.instance, disposables);
     dispatcher.registerEventHandlers();
-
-    serviceManager.get<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler).register();
-    serviceManager.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
 }
-
+function intializeServicesPostActivation(serviceContainer: ServiceContainer) {
+    // Display progress of interpreter refreshes only after extension has activated.
+    serviceContainer.get<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler).register();
+    serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
+}
 async function sendStartupTelemetry(activatedPromise: Promise<void>, serviceContainer: IServiceContainer) {
     const logger = serviceContainer.get<ILogger>(ILogger);
     try {
