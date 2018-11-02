@@ -113,12 +113,12 @@ function reportErrors(error?: Error, failures?: number) {
         process.exit(1);
     }
 }
-export function extractParams() : { grep: string; timeout: number } {
+export function extractParams(defaultTimeout?: number) : { grep: string; timeout: number } {
     // When running from debugger, allow custom args.
     const args = process.argv0.length > 2 ? process.argv.slice(2) : [];
     const timeoutArgIndex = args.findIndex(arg => arg.startsWith('timeout='));
     const grepArgIndex = args.findIndex(arg => arg.startsWith('grep='));
-    const timeout: number | undefined = timeoutArgIndex >= 0 ? parseInt(args[timeoutArgIndex].split('=')[1].trim(), 10) : undefined;
+    const timeout: number | undefined = timeoutArgIndex >= 0 ? parseInt(args[timeoutArgIndex].split('=')[1].trim(), 10) : defaultTimeout;
     let grep: string | undefined = grepArgIndex >= 0 ? args[grepArgIndex].split('=')[1].trim() : undefined;
     grep = grep && grep.length > 0 ? grep : undefined;
     return { grep: grep, timeout: timeout };

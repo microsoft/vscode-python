@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as _ from 'lodash';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IPlatformService } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -26,13 +26,23 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     private readonly disposables: Disposable[] = [];
     private readonly platform: IPlatformService;
     private readonly interpreterLocatorHelper: IInterpreterLocatorHelper;
-
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
         this.interpreterLocatorHelper = serviceContainer.get<IInterpreterLocatorHelper>(IInterpreterLocatorHelper);
+    }
+    /**
+     * This class should never emit events when we're locating.
+     * The events will be fired by the indivitual locators retrieved in `getLocators`.
+     *
+     * @readonly
+     * @type {Event<Promise<PythonInterpreter[]>>}
+     * @memberof PythonInterpreterLocatorService
+     */
+    public get onLocating(): Event<Promise<PythonInterpreter[]>> {
+        return new EventEmitter<Promise<PythonInterpreter[]>>().event;
     }
 
     /**

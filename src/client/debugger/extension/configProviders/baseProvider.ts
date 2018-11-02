@@ -68,7 +68,7 @@ export abstract class BaseConfigurationProvider implements DebugConfigurationPro
             debugConfiguration.cwd = workspaceFolder.fsPath;
         }
         if (typeof debugConfiguration.envFile !== 'string' && workspaceFolder) {
-            const envFile = workspaceFolder ? path.join(workspaceFolder.fsPath, '.env') : '';
+            const envFile = path.join(workspaceFolder.fsPath, '.env');
             debugConfiguration.envFile = envFile;
         }
         if (typeof debugConfiguration.stopOnEntry !== 'boolean') {

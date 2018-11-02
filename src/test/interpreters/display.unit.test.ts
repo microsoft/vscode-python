@@ -136,7 +136,7 @@ suite('Interpreters Display', () => {
         await interpreterDisplay.refresh(resource);
 
         statusBar.verify(s => s.color = TypeMoq.It.isValue('yellow'), TypeMoq.Times.once());
-        statusBar.verify(s => s.text = TypeMoq.It.isValue('$(alert) Select Python Environment'), TypeMoq.Times.once());
+        statusBar.verify(s => s.text = TypeMoq.It.isValue('$(alert) Select Python Interpreter'), TypeMoq.Times.once());
     });
     test('Ensure we try to identify the active workspace when a resource is not provided ', async () => {
         const workspaceFolder = Uri.file('x');

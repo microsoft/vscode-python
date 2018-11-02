@@ -17,6 +17,7 @@ import {
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterLocatorHelper,
+    IInterpreterLocatorProgressService,
     IInterpreterLocatorService,
     IInterpreterService,
     IInterpreterVersionService,
@@ -24,6 +25,7 @@ import {
     IInterpreterWatcherBuilder,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
+    InterpreterLocatorProgressHandler,
     IPipEnvService,
     IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
@@ -33,12 +35,14 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from './contracts';
 import { InterpreterDisplay } from './display';
+import { InterpreterLocatorProgressStatubarHandler } from './display/progressDisplay';
 import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
 import { InterpreterHelper } from './helpers';
 import { InterpreterService } from './interpreterService';
 import { InterpreterVersionService } from './interpreterVersion';
 import { InterpreterLocatorHelper } from './locators/helpers';
 import { PythonInterpreterLocatorService } from './locators/index';
+import { InterpreterLocatorProgressService } from './locators/progressService';
 import { CondaEnvFileService } from './locators/services/condaEnvFileService';
 import { CondaEnvService } from './locators/services/condaEnvService';
 import { CondaService } from './locators/services/condaService';
@@ -90,4 +94,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterComparer>(IInterpreterComparer, InterpreterComparer);
+
+    serviceManager.addSingleton<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler, InterpreterLocatorProgressStatubarHandler);
+    serviceManager.addSingleton<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService, InterpreterLocatorProgressService);
 }

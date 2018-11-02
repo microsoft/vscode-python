@@ -16,7 +16,7 @@ import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
 import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService, IInvalidPythonPathInDebuggerService } from '../types';
 
-const InvalidPythonPathInDebuggerMessage = 'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Python Environment" in the status bar.';
+const InvalidPythonPathInDebuggerMessage = 'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Python Interpreter" in the status bar.';
 
 export class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
     constructor() {

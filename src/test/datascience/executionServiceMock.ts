@@ -1,13 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
 import { ErrorUtils } from '../../client/common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../client/common/errors/moduleNotInstalledError';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
-import { ExecutionResult, InterpreterInfomation, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from '../../client/common/process/types';
+import {
+    ExecutionResult,
+    InterpreterInfomation,
+    IPythonExecutionService,
+    ObservableExecutionResult,
+    PythonVersionInfo,
+    SpawnOptions
+} from '../../client/common/process/types';
+import { Architecture } from '../../client/common/utils/platform';
 
 export class MockPythonExecutionService implements IPythonExecutionService {
 
@@ -18,7 +24,15 @@ export class MockPythonExecutionService implements IPythonExecutionService {
         this.procService = new ProcessService(new BufferDecoder());
     }
     public getInterpreterInformation(): Promise<InterpreterInfomation> {
-        throw new Error('Method not implemented.');
+        return Promise.resolve(
+            {
+                path: '',
+                version: '3.6',
+                sysVersion: '1.0',
+                sysPrefix: '1.0',
+                architecture: Architecture.x64,
+                version_info: [ 3, 6, 0, 'beta'] as PythonVersionInfo
+            });
     }
 
     public getExecutablePath(): Promise<string> {

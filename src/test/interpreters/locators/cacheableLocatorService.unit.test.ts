@@ -145,6 +145,24 @@ suite('Interpreters - Cacheable Locator Service', () => {
             verify(mockedLocatorForVerification.getInterpretersImplementation()).twice();
             verify(mockedLocatorForVerification.cacheInterpreters()).twice();
         });
+        test('Ensure locating event is raised', async () => {
+            const mockedLocatorForVerification = mock(MockLocator);
+            const locator = new class extends Locator {
+                protected async getInterpreterWatchers(_resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
+                    return [];
+                }
+            }('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
+
+            let locatingEventRaised = false;
+            locator.onLocating(() => locatingEventRaised = true);
+
+            when(mockedLocatorForVerification.getInterpretersImplementation()).thenResolve([1, 2] as any);
+            when(mockedLocatorForVerification.getCacheKey()).thenReturn('xyz');
+            when(mockedLocatorForVerification.getCachedInterpreters()).thenResolve();
+
+            await locator.getInterpreters();
+            expect(locatingEventRaised).to.be.equal(true, 'Locating Event not raised');
+        });
     });
     suite('Cache Key', () => {
         class Locator extends CacheableLocatorService {
