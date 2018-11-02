@@ -11,7 +11,7 @@ import {
     IWebPanel,
     IWebPanelMessageListener,
     IWebPanelProvider,
-    WebPanelMessage
+    WebPanelMessage,
 } from '../../client/common/application/types';
 import { IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { Cell } from '../../datascience-ui/history-react/cell';
@@ -19,7 +19,6 @@ import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { waitForUpdate } from './reactHelpers';
-import { JupyterExecution } from '../../client/datascience/jupyterExecution';
 
 // tslint:disable-next-line:max-func-body-length
 suite('History output tests', () => {
