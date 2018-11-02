@@ -24,7 +24,7 @@ import {
     INotebookProcess,
     INotebookServer
 } from '../../client/datascience/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
+import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 import { MockPythonExecutionService } from './executionServiceMock';
 
@@ -48,6 +48,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const pythonExecutionService = new MockPythonExecutionService();
         const factory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
         const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        const condaService = TypeMoq.Mock.ofType<ICondaService>();
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -59,6 +60,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<ILogger>(ILogger, logger.object);
         this.serviceManager.addSingletonInstance<IPythonExecutionFactory>(IPythonExecutionFactory, factory.object);
         this.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
+        this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, documentManager.object);
         this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
