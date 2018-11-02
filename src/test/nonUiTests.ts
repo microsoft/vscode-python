@@ -113,7 +113,7 @@ function reportErrors(error?: Error, failures?: number) {
         process.exit(1);
     }
 }
-export function extractParams(defaultTimeout: number) : { grep: string; timeout: number } {
+export function extractParams(defaultTimeout?: number) : { grep: string; timeout: number } {
     // When running from debugger, allow custom args.
     const args = process.argv0.length > 2 ? process.argv.slice(2) : [];
     const timeoutArgIndex = args.findIndex(arg => arg.startsWith('timeout='));
