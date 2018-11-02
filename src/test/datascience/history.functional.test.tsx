@@ -122,16 +122,21 @@ suite('History output tests', () => {
 
     test('Dispose test', async () => {
         // tslint:disable-next-line:no-any
-        const history = historyProvider.active;
-        await history.show(); // Have to wait for the load to finish
-        history.dispose();
-        // tslint:disable-next-line:no-any
-        const h2 = historyProvider.active;
-        // Check equal and then dispose so the test goes away
-        const equal = Object.is(history, h2);
-        await h2.show();
-        assert.ok(!equal, 'Disposing is not removing the active history');
-    });
+        if (await jupyterAvailability.isNotebookSupported()) {
+            const history = historyProvider.active;
+            await history.show(); // Have to wait for the load to finish
+            history.dispose();
+            // tslint:disable-next-line:no-any
+            const h2 = historyProvider.active;
+            // Check equal and then dispose so the test goes away
+            const equal = Object.is(history, h2);
+            await h2.show();
+            assert.ok(!equal, 'Disposing is not removing the active history');
+        } else {
+            // tslint:disable-next-line:no-console
+            console.log('History test skipped, no Jupyter installed');
+        }
+});
 
     // Tests to do:
     // 1) Cell output works on different mime types. Could just use a notebook to drive
