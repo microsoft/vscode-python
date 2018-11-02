@@ -181,7 +181,7 @@ export class JupyterServer implements INotebookServer {
             });
         }
 
-        return Promise.reject(localize.DataScience.sessionDisposed());
+        return Promise.reject(new Error(localize.DataScience.sessionDisposed()));
     }
 
     public get onStatusChanged() : vscode.Event<boolean> {
@@ -201,7 +201,7 @@ export class JupyterServer implements INotebookServer {
             return this.session.kernel.restart();
         }
 
-        return Promise.reject(localize.DataScience.sessionDisposed());
+        return Promise.reject(new Error(localize.DataScience.sessionDisposed()));
     }
 
     public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {

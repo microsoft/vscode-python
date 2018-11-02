@@ -140,7 +140,7 @@
             "sourceMaps": true,
             "args": [
                 "timeout=300000",
-                "grep=Ensure.*terminal.*is.*created.*upon.*invoking.*initializeRepl.*(windows)"
+                "grep="
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
