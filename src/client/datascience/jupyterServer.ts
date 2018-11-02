@@ -17,7 +17,7 @@ import { IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { RegExpValues } from './constants';
-import { CellState, ICell, IJupyterAvailability, INotebookProcess, INotebookServer } from './types';
+import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer } from './types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -34,12 +34,12 @@ export class JupyterServer implements INotebookServer {
         @inject(INotebookProcess) private process: INotebookProcess,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IJupyterAvailability) private availability : IJupyterAvailability) {
+        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution) {
     }
 
     public start = async () : Promise<boolean> => {
 
-        if (await this.availability.isNotebookSupported()) {
+        if (await this.jupyterExecution.isNotebookSupported()) {
 
             // First generate a temporary notebook. We need this as input to the session
             this.tempFile = await this.generateTempFile();

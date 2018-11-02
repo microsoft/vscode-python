@@ -8,7 +8,7 @@ import { DataScienceCodeLensProvider } from './editor-integration/codelensprovid
 import { History } from './history';
 import { HistoryCommandListener } from './historycommandlistener';
 import { HistoryProvider } from './historyProvider';
-import { JupyterAvailability } from './jupyterAvailability';
+import { JupyterExecution } from './jupyterExecution';
 import { JupyterImporter } from './jupyterImporter';
 import { JupyterProcess } from './jupyterProcess';
 import { JupyterServer } from './jupyterServer';
@@ -19,7 +19,7 @@ import {
     IDataScienceCommandListener,
     IHistory,
     IHistoryProvider,
-    IJupyterAvailability,
+    IJupyterExecution,
     INotebookImporter,
     INotebookProcess,
     INotebookServer
@@ -28,7 +28,7 @@ import {
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
-    serviceManager.addSingleton<IJupyterAvailability>(IJupyterAvailability, JupyterAvailability);
+    serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecution);
     serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
     serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
     serviceManager.add<IHistory>(IHistory, History);

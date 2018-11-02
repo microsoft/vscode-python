@@ -9,7 +9,7 @@ import { URL } from 'url';
 import { ExecutionResult, IPythonExecutionFactory, ObservableExecutionResult, Output } from '../common/process/types';
 import { ILogger } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { INotebookProcess } from './types';
+import { IJupyterExecution, INotebookProcess } from './types';
 
 export interface IConnectionInfo {
     baseUrl: string;
@@ -26,6 +26,7 @@ export class JupyterProcess implements INotebookProcess {
 
     constructor(
         @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
+        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
         @inject(ILogger) private logger: ILogger) {
     }
 
@@ -38,8 +39,7 @@ export class JupyterProcess implements INotebookProcess {
         this.startPromise = createDeferred<IConnectionInfo>();
 
         // Use the IPythonExecutionService to find Jupyter
-        const pythonService = await this.executionFactory.create({});
-        this.startObservable = pythonService.execModuleObservable('jupyter', args, {throwOnStdErr: false, encoding: 'utf8'});
+        this.startObservable = await this.jupyterExecution.execModuleObservable(args, { throwOnStdErr: false, encoding: 'utf8'});
 
         // Listen on stderr for its connection information
         this.startObservable.out.subscribe((output : Output<string>) => {
@@ -66,8 +66,7 @@ export class JupyterProcess implements INotebookProcess {
         const args: string [] = ['notebook', `--NotebookApp.file_to_run=${notebookFile}`];
 
         // Use the IPythonExecutionService to find Jupyter
-        const pythonService = await this.executionFactory.create({});
-        return pythonService.execModule('jupyter', args, {throwOnStdErr: true, encoding: 'utf8'});
+        return this.jupyterExecution.execModule(args, {throwOnStdErr: true, encoding: 'utf8'});
     }
 
     public async waitForPythonVersionString() : Promise<string> {

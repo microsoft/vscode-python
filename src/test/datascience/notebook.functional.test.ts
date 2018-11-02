@@ -9,9 +9,9 @@ import { Disposable } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
-import { JupyterAvailability } from '../../client/datascience/jupyterAvailability';
+import { JupyterExecution } from '../../client/datascience/jupyterExecution';
 import { IConnectionInfo, JupyterProcess } from '../../client/datascience/jupyterProcess';
-import { IJupyterAvailability, INotebookImporter, INotebookProcess, INotebookServer } from '../../client/datascience/types';
+import { IJupyterExecution, INotebookImporter, INotebookProcess, INotebookServer } from '../../client/datascience/types';
 import { Cell, ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -19,7 +19,7 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 // tslint:disable:no-any no-multiline-string max-func-body-length
 suite('Jupyter notebook tests', () => {
     const disposables: Disposable[] = [];
-    let availability: IJupyterAvailability;
+    let jupyterExecution: IJupyterExecution;
     let jupyterServer : INotebookServer;
     let ioc: DataScienceIocContainer;
 
@@ -27,7 +27,7 @@ suite('Jupyter notebook tests', () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         jupyterServer = ioc.serviceManager.get<INotebookServer>(INotebookServer);
-        availability = ioc.serviceManager.get<IJupyterAvailability>(IJupyterAvailability);
+        jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
     });
 
     teardown(() => {
@@ -146,7 +146,7 @@ suite('Jupyter notebook tests', () => {
 
     function runTest(name: string, func: () => Promise<void>) {
         test(name, async () => {
-            if (await availability.isNotebookSupported()) {
+            if (await jupyterExecution.isNotebookSupported()) {
                 return func();
             } else {
                 // tslint:disable-next-line:no-console
@@ -180,12 +180,12 @@ suite('Jupyter notebook tests', () => {
     test('Not installed', async () => {
         jupyterServer.shutdown().ignoreErrors();
         // Make a dummy class that will fail during launch
-        class FailedAvailability extends JupyterAvailability {
+        class FailedAvailability extends JupyterExecution {
             public isNotebookSupported = () : Promise<boolean> => {
                 return Promise.resolve(false);
             }
         }
-        ioc.serviceManager.rebind<IJupyterAvailability>(IJupyterAvailability, FailedAvailability);
+        ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedAvailability);
         jupyterServer = ioc.serviceManager.get<INotebookServer>(INotebookServer);
         return assertThrows(async () => {
             await jupyterServer.start();

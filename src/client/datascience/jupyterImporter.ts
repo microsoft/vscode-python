@@ -11,7 +11,7 @@ import { IDisposableRegistry } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
-import { IJupyterAvailability, INotebookImporter } from './types';
+import { IJupyterExecution, INotebookImporter } from './types';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {
@@ -39,7 +39,7 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IJupyterAvailability) private availability : IJupyterAvailability) {
+        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution) {
 
         this.settingsChangedDiposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
         this.templatePromise = this.createTemplateFile();
@@ -50,9 +50,8 @@ export class JupyterImporter implements INotebookImporter {
         const template = await this.templatePromise;
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
-        if (await this.availability.isImportSupported()) {
-            const executionService = await this.getExecutionService();
-            const result = await executionService.execModule('jupyter', ['nbconvert', file, '--to', 'python', '--stdout', '--template', template], { throwOnStdErr: false, encoding: 'utf8' });
+        if (await this.jupyterExecution.isImportSupported()) {
+            const result = await this.jupyterExecution.execModule(['nbconvert', file, '--to', 'python', '--stdout', '--template', template], { throwOnStdErr: false, encoding: 'utf8' });
             if (result.stdout.trim().length === 0) {
                 throw result.stderr;
             }
@@ -65,14 +64,6 @@ export class JupyterImporter implements INotebookImporter {
     public dispose = () => {
         this.isDisposed = true;
         this.settingsChangedDiposable.dispose();
-    }
-
-    private getExecutionService = () : Promise<IPythonExecutionService> => {
-        if (this.pythonExecutionService) {
-            return this.pythonExecutionService.promise;
-        }
-
-        return Promise.reject();
     }
 
     private createTemplateFile = async () : Promise<string> => {

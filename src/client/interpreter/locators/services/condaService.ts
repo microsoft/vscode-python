@@ -240,6 +240,42 @@ export class CondaService implements ICondaService {
     }
 
     /**
+     * For the given interpreter return an activated Conda environment object
+     * with the correct addition to the path and environmental variables
+     */
+    // Base Node.js SpawnOptions uses any for environment, so use that here as well
+    // tslint:disable-next-line:no-any
+    public getActivatedCondaEnvironment(interpreter: PythonInterpreter, inputEnvironment: any): any {
+        if (interpreter.type !== InterpreterType.Conda) {
+            return;
+        }
+
+        const activatedEnvironment = {...inputEnvironment};
+        const isWindows = this.platform.isWindows;
+
+        if (interpreter.envPath) {
+            if (isWindows) {
+                // Windows: Path, ; as separator, 'Scripts' as directory
+                const condaPath = path.join(interpreter.envPath, 'Scripts');
+                activatedEnvironment.Path = condaPath.concat(';', `${inputEnvironment.Path ? inputEnvironment.Path : ''}`);
+            } else {
+                // Mac: PATH, : as separator, 'bin' as directory
+                const condaPath = path.join(interpreter.envPath, 'bin');
+                activatedEnvironment.PATH = condaPath.concat(':', `${inputEnvironment.PATH ? inputEnvironment.PATH : ''}`);
+            }
+
+            // Conda also wants a couple of environmental variables set
+            activatedEnvironment.CONDA_PREFIX = interpreter.envPath;
+        }
+
+        if (interpreter.envName) {
+            activatedEnvironment.CONDA_DEFAULT_ENV = interpreter.envName;
+        }
+
+        return activatedEnvironment;
+    }
+
+    /**
      * Is the given interpreter from conda?
      */
     private detectCondaEnvironment(interpreter: PythonInterpreter) {
@@ -281,7 +317,13 @@ export class CondaService implements ICondaService {
             const interpreters = await this.registryLookupForConda.getInterpreters();
             const condaInterpreters = interpreters.filter(this.detectCondaEnvironment);
             const condaInterpreter = this.getLatestVersion(condaInterpreters);
-            const condaPath = condaInterpreter ? path.join(path.dirname(condaInterpreter.path), 'conda.exe') : '';
+            let condaPath = condaInterpreter ? path.join(path.dirname(condaInterpreter.path), 'conda.exe') : '';
+            if (await fileSystem.fileExists(condaPath)) {
+                return condaPath;
+            }
+            // Conda path has changed locations, check the new location in the scripts directory after checking
+            // the old location
+            condaPath = condaInterpreter ? path.join(path.dirname(condaInterpreter.path), 'Scripts', 'conda.exe') : '';
             if (await fileSystem.fileExists(condaPath)) {
                 return condaPath;
             }

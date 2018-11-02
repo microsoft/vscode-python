@@ -8,14 +8,14 @@ import { IProcessServiceFactory } from '../../client/common/process/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
-import { JupyterAvailability } from '../../client/datascience/jupyterAvailability';
+import { JupyterExecution } from '../../client/datascience/jupyterExecution';
 import { JupyterImporter } from '../../client/datascience/jupyterImporter';
 import { JupyterServer } from '../../client/datascience/jupyterServer';
 import {
     ICodeCssGenerator,
     IHistory,
     IHistoryProvider,
-    IJupyterAvailability,
+    IJupyterExecution,
     INotebookImporter,
     INotebookServer
 } from '../../client/datascience/types';
@@ -140,7 +140,7 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerDataScienceTypes() {
-        this.serviceManager.addSingleton<IJupyterAvailability>(IJupyterAvailability, JupyterAvailability);
+        this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecution);
         this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
         this.serviceManager.add<IHistory>(IHistory, History);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
