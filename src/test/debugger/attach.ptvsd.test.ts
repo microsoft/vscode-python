@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
-// tslint:disable:no-invalid-this max-func-body-length no-empty no-increment-decrement
+import '../../client/common/extensions';
 
 import { ChildProcess, spawn } from 'child_process';
 import * as getFreePort from 'get-port';
@@ -11,9 +9,8 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, Uri } from 'vscode';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
+
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import '../../client/common/extensions';
-import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { IPlatformService } from '../../client/common/platform/types';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
 import { PythonV2DebugConfigurationProvider } from '../../client/debugger/extension/configProviders/pythonV2Provider';
@@ -22,8 +19,8 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { continueDebugging, createDebugAdapter } from './utils';
-import { AssertionError } from 'assert';
 
+// tslint:disable:no-invalid-this max-func-body-length no-empty no-increment-decrement no-unused-variable
 const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd.py');
 
 suite('Attach Debugger', () => {
@@ -127,7 +124,7 @@ suite('Attach Debugger', () => {
     }
     test('Confirm we are able to attach to a running program', async () => {
         // tslint:disable-next-line:no-console
-        console.log('test disabled until debugger can fix attach');
+        console.log('test disabled until debugger can fix attach - issue # 3181');
         // await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
     });
 });
