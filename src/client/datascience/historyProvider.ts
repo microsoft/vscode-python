@@ -18,7 +18,7 @@ export class HistoryProvider implements IHistoryProvider {
     }
 
     public get active() : IHistory {
-        if (!this.activeHistory || this.activeHistory.isDisposed) {
+        if (!this.activeHistory || this.activeHistory.isDisposed()) {
             this.activeHistory = this.create();
         }
 
