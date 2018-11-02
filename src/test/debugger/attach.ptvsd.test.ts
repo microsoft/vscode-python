@@ -123,8 +123,7 @@ suite('Attach Debugger', () => {
         ]);
     }
     test('Confirm we are able to attach to a running program', async () => {
-        // tslint:disable-next-line:no-console
-        console.log('test disabled until debugger can fix attach - issue # 3181');
+        // Test disabled until debugger can fix attach - issue # 3181
         // await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
     });
 });
