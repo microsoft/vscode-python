@@ -3,9 +3,8 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
-import { IDisposable } from '@phosphor/disposable';
 import { Observable } from 'rxjs/Observable';
-import { CodeLens, CodeLensProvider, Event, Range, TextDocument, TextEditor } from 'vscode';
+import { CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -13,7 +12,7 @@ import { IConnectionInfo } from './jupyterProcess';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
-export interface IDataScience extends IDisposable {
+export interface IDataScience extends Disposable {
     activate(): Promise<void>;
 }
 
@@ -24,7 +23,7 @@ export interface IDataScienceCommandListener {
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
-export interface INotebookServer extends IDisposable {
+export interface INotebookServer extends Disposable {
     onStatusChanged: Event<boolean>;
     start(notebookFile? : string) : Promise<boolean>;
     shutdown() : Promise<void>;
@@ -37,7 +36,7 @@ export interface INotebookServer extends IDisposable {
 }
 
 export const INotebookProcess = Symbol('INotebookProcess');
-export interface INotebookProcess extends IDisposable {
+export interface INotebookProcess extends Disposable {
     start(notebookFile: string) : Promise<void>;
     shutdown() : Promise<void>;
     waitForConnectionInformation() : Promise<IConnectionInfo>;
@@ -53,7 +52,7 @@ export interface IJupyterExecution {
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
-export interface INotebookImporter extends IDisposable {
+export interface INotebookImporter extends Disposable {
     importFromFile(file: string) : Promise<string>;
 }
 
@@ -64,9 +63,10 @@ export interface IHistoryProvider {
 }
 
 export const IHistory = Symbol('IHistory');
-export interface IHistory extends IDisposable {
+export interface IHistory extends Disposable {
     show() : Promise<void>;
     addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
+    isDisposed() : boolean;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview

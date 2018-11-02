@@ -26,7 +26,7 @@ import { CellState, ICell, ICodeCssGenerator, IHistory, INotebookServer } from '
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
-    public isDisposed : boolean = false;
+    private disposed : boolean = false;
     private webPanel : IWebPanel | undefined;
     // tslint:disable-next-line: no-any
     private loadPromise: Promise<any>;
@@ -48,7 +48,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     public async show() : Promise<void> {
-        if (!this.isDisposed) {
+        if (!this.disposed) {
             // Make sure we're loaded first
             await this.loadPromise;
 
@@ -57,6 +57,10 @@ export class History implements IWebPanelMessageListener, IHistory {
                 await this.webPanel.show();
             }
         }
+    }
+
+    public isDisposed() : boolean {
+        return this.disposed;
     }
 
     public async addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
@@ -136,8 +140,8 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     public dispose() {
-        if (!this.isDisposed) {
-            this.isDisposed = true;
+        if (!this.disposed) {
+            this.disposed = true;
             this.settingsChangedDisposable.dispose();
             if (this.jupyterServer) {
                 this.jupyterServer.dispose();

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IDisposable } from '@phosphor/disposable';
 import {
     Breakpoint,
     BreakpointsChangeEvent,
@@ -771,7 +770,7 @@ export interface IApplicationEnvironment {
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
-export interface IWebPanelMessageListener extends IDisposable {
+export interface IWebPanelMessageListener extends Disposable {
     /**
      * Listens to web panel messages
      * @param message: the message being sent
