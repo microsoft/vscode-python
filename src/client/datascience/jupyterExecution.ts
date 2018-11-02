@@ -62,7 +62,7 @@ export class JupyterExecution implements IJupyterExecution {
             inputEnv = process.env;
         }
         const interpreter = await this.interpreterService.getActiveInterpreter();
-        if (interpreter.type === InterpreterType.Conda) {
+        if (interpreter && interpreter.type === InterpreterType.Conda) {
             return this.condaService.getActivatedCondaEnvironment(interpreter, inputEnv);
         }
 
