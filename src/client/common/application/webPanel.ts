@@ -70,7 +70,7 @@ export class WebPanel implements IWebPanel {
                 // Reset when the current panel is closed
                 this.disposableRegistry.push(this.panel.onDidDispose(() => {
                     this.panel = undefined;
-                    this.listener.onDisposed();
+                    this.listener.dispose();
                 }));
 
                 this.disposableRegistry.push(this.panel.webview.onDidReceiveMessage(message => {

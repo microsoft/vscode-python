@@ -63,7 +63,7 @@ export interface IHistoryProvider {
 }
 
 export const IHistory = Symbol('IHistory');
-export interface IHistory {
+export interface IHistory extends IDisposable {
     show() : Promise<void>;
     addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
 }

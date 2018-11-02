@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../common/extensions';
+
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -24,7 +26,7 @@ import { CellState, ICell, ICodeCssGenerator, IHistory, INotebookServer } from '
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
-    private static activeHistory: History;
+    public isDisposed : boolean = false;
     private webPanel : IWebPanel | undefined;
     // tslint:disable-next-line: no-any
     private loadPromise: Promise<any>;
@@ -46,12 +48,14 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     public async show() : Promise<void> {
-        // Make sure we're loaded first
-        await this.loadPromise;
+        if (!this.isDisposed) {
+            // Make sure we're loaded first
+            await this.loadPromise;
 
-        // Then show our web panel.
-        if (this.webPanel) {
-            await this.webPanel.show();
+            // Then show our web panel.
+            if (this.webPanel) {
+                await this.webPanel.show();
+            }
         }
     }
 
@@ -131,13 +135,13 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    public onDisposed() {
-        this.settingsChangedDisposable.dispose();
-        if (this.jupyterServer) {
-            this.jupyterServer.dispose();
-        }
-        if (History.activeHistory === this) {
-            delete History.activeHistory;
+    public dispose() {
+        if (!this.isDisposed) {
+            this.isDisposed = true;
+            this.settingsChangedDisposable.dispose();
+            if (this.jupyterServer) {
+                this.jupyterServer.dispose();
+            }
         }
     }
 
