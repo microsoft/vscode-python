@@ -11,7 +11,7 @@ import {
     IWebPanel,
     IWebPanelMessageListener,
     IWebPanelProvider,
-    WebPanelMessage,
+    WebPanelMessage
 } from '../../client/common/application/types';
 import { IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { Cell } from '../../datascience-ui/history-react/cell';
