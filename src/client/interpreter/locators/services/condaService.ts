@@ -254,10 +254,15 @@ export class CondaService implements ICondaService {
         const isWindows = this.platform.isWindows;
 
         if (interpreter.envPath) {
-            // Linux: Python and Conda in root/bin
-            // Windows: Python at root and Conda in root/Scripts
-            const condaPath = path.join(interpreter.envPath, `${isWindows ? 'Scripts' : 'bin'}`);
-            activatedEnvironment.Path = condaPath.concat(';', `${inputEnvironment.Path ? inputEnvironment.Path : ''}`);
+            if (isWindows) {
+                // Windows: Path, ; as separator, 'Scripts' as directory
+                const condaPath = path.join(interpreter.envPath, 'Scripts');
+                activatedEnvironment.Path = condaPath.concat(';', `${inputEnvironment.Path ? inputEnvironment.Path : ''}`);
+            } else {
+                // Mac: PATH, : as separator, 'bin' as directory
+                const condaPath = path.join(interpreter.envPath, 'bin');
+                activatedEnvironment.PATH = condaPath.concat(':', `${inputEnvironment.PATH ? inputEnvironment.PATH : ''}`);
+            }
 
             // Conda also wants a couple of environmental variables set
             activatedEnvironment.CONDA_PREFIX = interpreter.envPath;
