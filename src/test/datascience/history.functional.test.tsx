@@ -19,6 +19,7 @@ import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { waitForUpdate } from './reactHelpers';
+import { JupyterExecution } from '../../client/datascience/jupyterExecution';
 
 // tslint:disable-next-line:max-func-body-length
 suite('History output tests', () => {
@@ -122,7 +123,7 @@ suite('History output tests', () => {
 
     test('Dispose test', async () => {
         // tslint:disable-next-line:no-any
-        if (await jupyterAvailability.isNotebookSupported()) {
+        if (await jupyterExecution.isNotebookSupported()) {
             const history = historyProvider.active;
             await history.show(); // Have to wait for the load to finish
             history.dispose();
