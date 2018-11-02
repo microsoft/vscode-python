@@ -628,4 +628,32 @@ suite('Interpreters Conda Service', () => {
         fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
         await testFailureOfGettingCondaEnvironments(false, true, false, pythonPath);
     });
+    test('Create activated conda environment for Windows', async () => {
+        const pythonInterpreter: PythonInterpreter = {...info, type: InterpreterType.Conda, envPath: 'C:\\Anaconda', envName: 'Anaconda'};
+        const environment: any = { Path: 'C:\\test' };
+
+        platformService.setup(p => p.isWindows).returns(() => true);
+
+        const newEnvironment = condaService.getActivatedCondaEnvironment(pythonInterpreter, environment);
+
+        // This part depends on the OS of path.join in getActivatedCondaEnvironment, so compute it here to match
+        const expectedPath = path.join(pythonInterpreter.envPath, 'Scripts');
+        expect(newEnvironment.Path).to.be.equal(expectedPath.concat(';', environment.Path), 'Incorrect Windows Path Value');
+        expect(newEnvironment.CONDA_PREFIX).to.be.equal(pythonInterpreter.envPath, 'Incorrect Windows CONDA_PREFIX Value');
+        expect(newEnvironment.CONDA_DEFAULT_ENV).to.be.equal(pythonInterpreter.envName, 'Incorrect Windows CONDA_DEFAULT_ENV Value');
+    });
+    test('Create activated conda environment for Non-Windows', async () => {
+        const pythonInterpreter: PythonInterpreter = {...info, type: InterpreterType.Conda, envPath: 'usr/Anaconda', envName: 'Anaconda'};
+        const environment: any = { PATH: 'usr/test' };
+
+        platformService.setup(p => p.isWindows).returns(() => false);
+
+        const newEnvironment = condaService.getActivatedCondaEnvironment(pythonInterpreter, environment);
+
+        // This part depends on the OS of path.join in getActivatedCondaEnvironment, so compute it here to match
+        const expectedPath = path.join('usr/Anaconda', 'bin');
+        expect(newEnvironment.PATH).to.be.equal(expectedPath.concat(':', environment.PATH), 'Incorrect Non-Windows Path Value');
+        expect(newEnvironment.CONDA_PREFIX).to.be.equal(pythonInterpreter.envPath, 'Incorrect Non-Windows CONDA_PREFIX Value');
+        expect(newEnvironment.CONDA_DEFAULT_ENV).to.be.equal(pythonInterpreter.envName, 'Incorrect Non-Windows CONDA_DEFAULT_ENV Value');
+    });
 });
