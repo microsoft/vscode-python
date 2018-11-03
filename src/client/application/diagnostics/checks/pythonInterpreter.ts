@@ -20,7 +20,8 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerSer
 const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]: 'Python is not installed. Please download and install Python before using the extension.',
     [DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic]: 'You have selected the macOS system install of Python, which is not recommended for use with the Python extension. Some functionality will be limited, please select a different interpreter.',
-    [DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic]: 'The macOS system install of Python is not recommended, some functionality in the extension will be limited. Install another version of Python for the best experience.'
+    [DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic]: 'The macOS system install of Python is not recommended, some functionality in the extension will be limited. Install another version of Python for the best experience.',
+    [DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic]: 'Please select the appropriate Python interpreter.'
 };
 
 export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
@@ -36,9 +37,13 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
     protected changeThrottleTimeout = 1000;
     private timeOut?: NodeJS.Timer;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super([DiagnosticCodes.NoPythonInterpretersDiagnostic,
-        DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
-        DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic], serviceContainer);
+        super(
+            [
+                DiagnosticCodes.NoPythonInterpretersDiagnostic,
+                DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
+                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
+                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic
+            ], serviceContainer);
         this.addPythonPathChangedHandler();
     }
     public async diagnose(): Promise<IDiagnostic[]> {
@@ -55,6 +60,11 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             return [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic)];
         }
 
+        const currentInterpreter = await interpreterService.getActiveInterpreter();
+        if (!currentInterpreter) {
+            return [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic)];
+        }
+
         const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         if (!platform.isMac) {
             return [];
@@ -64,8 +74,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
         if (!helper.isMacDefaultPythonPath(settings.pythonPath)) {
             return [];
         }
-        const interpreter = await interpreterService.getActiveInterpreter();
-        if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
+        if (!currentInterpreter || currentInterpreter.type !== InterpreterType.Unknown) {
             return [];
         }
         if (interpreters.filter(i => !helper.isMacDefaultPythonPath(i.path)).length === 0) {
@@ -117,7 +126,8 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                     command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://www.python.org/downloads' })
                 }];
             }
-            case DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic: {
+            case DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic:
+            case DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic: {
                 return [{
                     prompt: 'Select Python Interpreter',
                     command: commandFactory.createCommand(diagnostic, { type: 'executeVSCCommand', options: 'python.setInterpreter' })
