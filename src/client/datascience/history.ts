@@ -14,11 +14,10 @@ import {
     IDocumentManager,
     IWebPanel,
     IWebPanelMessageListener,
-    IWebPanelProvider
+    IWebPanelProvider,
 } from '../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { IDisposableRegistry } from '../common/types';
-import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
@@ -241,7 +240,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             this.unfinishedCells.forEach(c => {
                 c.state = CellState.error;
                 this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: c });
-            }) ;
+            });
             this.unfinishedCells = [];
 
             // Then restart the kernel
