@@ -139,8 +139,6 @@ export class CodeWatcher implements ICodeWatcher {
         }
 
         if (currentRunCellLens) {
-            await this.runCell(currentRunCellLens.range);
-
             // Either use the next cell that we found, or add a new one into the document
             let nextRange: Range;
             if (!nextRunCellLens) {
@@ -152,6 +150,9 @@ export class CodeWatcher implements ICodeWatcher {
             if (nextRange) {
                 this.advanceToRange(nextRange);
             }
+
+            // Run the cell after moving the selection
+            await this.runCell(currentRunCellLens.range);
         }
     }
 
