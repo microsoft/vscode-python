@@ -25,6 +25,7 @@ export namespace RegExpValues {
 export namespace HistoryMessages {
     export const StartCell = 'start_cell';
     export const FinishCell = 'finish_cell';
+    export const UpdateCell = 'update_cell';
     export const GotoCodeCell = 'gotocell_code';
     export const RestartKernel = 'restart_kernel';
     export const Export = 'export_to_ipynb';

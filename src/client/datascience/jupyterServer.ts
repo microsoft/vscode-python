@@ -26,6 +26,7 @@ import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer 
 export class JupyterServer implements INotebookServer {
     public isDisposed: boolean = false;
     private session: Session.ISession | undefined;
+    private sessionStartTime: number | undefined;
     private tempFile: string | undefined;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
 
@@ -67,6 +68,9 @@ export class JupyterServer implements INotebookServer {
 
             // Start a new session
             this.session = await Session.startNew(options);
+
+            // Setup our start time. We reject anything that comes in before this time during execute
+            this.sessionStartTime = Date.now();
 
             // Setup the default imports (this should be configurable in the future)
             this.executeSilently(
@@ -198,6 +202,10 @@ export class JupyterServer implements INotebookServer {
 
     public restartKernel = () : Promise<void> => {
         if (this.session && this.session.kernel) {
+            // Update our start time so we don't keep sending responses
+            this.sessionStartTime = Date.now();
+
+            // Restart our kernel
             return this.session.kernel.restart();
         }
 
@@ -423,15 +431,17 @@ export class JupyterServer implements INotebookServer {
                 id: id,
                 file: file,
                 line: line,
-                state: CellState.init
+                state: CellState.init,
             };
+
+            // Keep track of when we started.
+            const startTime = Date.now();
 
             // Tell our listener.
             subscriber.next(cell);
 
             // Transition to the busy stage
             cell.state = CellState.executing;
-            subscriber.next(cell);
 
             // Listen to the reponse messages and update state as we go
             if (request) {
@@ -456,17 +466,26 @@ export class JupyterServer implements INotebookServer {
                     if (msg.content.execution_count) {
                         cell.data.execution_count = msg.content.execution_count as number;
                     }
+
+                    // Show our update if any new output
+                    subscriber.next(cell);
                 };
 
                 // Create completion and error functions so we can bind our cell object
                 const completion = () => {
                     cell.state = CellState.finished;
-                    subscriber.next(cell);
+                    // Only do this if start time is still valid
+                    if (startTime > this.sessionStartTime) {
+                        subscriber.next(cell);
+                    }
                     subscriber.complete();
                 };
                 const error = () => {
                     cell.state = CellState.error;
-                    subscriber.next(cell);
+                    // Only do this if start time is still valid
+                    if (startTime > this.sessionStartTime) {
+                        subscriber.next(cell);
+                    }
                     subscriber.complete();
                 };
 

@@ -33,6 +33,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     private loadPromise: Promise<any>;
     private settingsChangedDisposable : Disposable;
     private closedEvent : EventEmitter<IHistory>;
+    private unfinishedCells: ICell[] = [];
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -74,10 +75,10 @@ export class History implements IWebPanelMessageListener, IHistory {
         // Make sure we're loaded first.
         await this.loadPromise;
 
-        if (this.jupyterServer) {
-            // Create a deferred that we'll fire when we're done
-            const deferred = createDeferred();
+        // Then show our webpanel
+        await this.show();
 
+        if (this.jupyterServer) {
             // Attempt to evaluate this cell in the jupyter notebook
             const observable = this.jupyterServer.executeObservable(code, file, line);
 
@@ -88,17 +89,7 @@ export class History implements IWebPanelMessageListener, IHistory {
                 },
                 (error) => {
                     this.applicationShell.showErrorMessage(error);
-                    deferred.resolve();
-                },
-                () => {
-                    deferred.resolve();
                 });
-
-            // Wait for the execution to finish
-            await deferred.promise;
-
-            // Then show our webpanel
-            await this.show();
         }
     }
 
@@ -169,12 +160,23 @@ export class History implements IWebPanelMessageListener, IHistory {
                     case CellState.init:
                         // Tell the react controls we have a new cell
                         this.webPanel.postMessage({ type: HistoryMessages.StartCell, payload: cell });
+
+                        // Keep track of this unfinished cell so if we restart we can finish right away.
+                        this.unfinishedCells.push(cell);
+                        break;
+
+                    case CellState.executing:
+                        // Tell the react controls we have an update
+                        this.webPanel.postMessage({ type: HistoryMessages.UpdateCell, payload: cell });
                         break;
 
                     case CellState.error:
                     case CellState.finished:
                         // Tell the react controls we're done
                         this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: cell });
+
+                        // Remove from the list of unfinished cells
+                        this.unfinishedCells = this.unfinishedCells.filter(c => c.id !== cell.id);
                         break;
 
                     default:
@@ -235,6 +237,14 @@ export class History implements IWebPanelMessageListener, IHistory {
     @captureTelemetry(Telemetry.RestartKernel)
     private restartKernel() {
         if (this.jupyterServer) {
+            // First we need to finish all outstanding cells.
+            this.unfinishedCells.forEach(c => {
+                c.state = CellState.error;
+                this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: c });
+            }) ;
+            this.unfinishedCells = [];
+
+            // Then restart the kernel
             this.jupyterServer.restartKernel().ignoreErrors();
         }
     }

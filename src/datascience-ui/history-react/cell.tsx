@@ -117,6 +117,10 @@ export class Cell extends React.Component<ICellProps> {
         return this.props.cellVM.cell.data.cell_type === 'code';
     }
 
+    private hasOutput = () => {
+        return this.getCell().state === CellState.finished || this.getCell().state === CellState.error || this.getCell().state === CellState.executing;
+    }
+
     private getCodeCell = () => {
         return this.props.cellVM.cell.data as nbformat.ICodeCell;
     }
@@ -148,9 +152,7 @@ export class Cell extends React.Component<ICellProps> {
         return <div className={outputClassNames}>{results}</div>;
     }
     private renderCodeOutputs = () => {
-        if (this.isCodeCell() &&
-            (this.getCell().state === CellState.finished || this.getCell().state === CellState.error)) {
-
+        if (this.isCodeCell() && this.hasOutput()) {
             // Render the outputs
             return this.getCodeCell().outputs.map((output: nbformat.IOutput, index: number) => {
                 return this.renderOutput(output, index);
