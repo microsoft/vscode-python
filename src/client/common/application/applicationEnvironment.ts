@@ -30,4 +30,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         // tslint:disable-next-line:non-literal-require
         return require(path.join(EXTENSION_ROOT_DIR, 'package.json')).displayName;
     }
+    // tslint:disable-next-line:no-any
+    public get packageJson(): any {
+        // tslint:disable-next-line:non-literal-require
+        return require(path.join(EXTENSION_ROOT_DIR, 'package.json'));
+    }
 }

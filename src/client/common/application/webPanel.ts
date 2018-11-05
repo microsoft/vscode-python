@@ -33,7 +33,7 @@ export class WebPanel implements IWebPanel {
         this.panel = window.createWebviewPanel(
             title.toLowerCase().replace(' ', ''),
             title,
-            ViewColumn.Two,
+            {viewColumn: ViewColumn.Two, preserveFocus: true},
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
@@ -45,7 +45,7 @@ export class WebPanel implements IWebPanel {
     public async show() {
         await this.loadPromise;
         if (this.panel) {
-            this.panel.reveal(ViewColumn.Two);
+            this.panel.reveal(ViewColumn.Two, true);
         }
     }
 

@@ -4,7 +4,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { parse } from 'semver';
+import { parse, SemVer } from 'semver';
+import { IApplicationEnvironment } from '../../common/application/types';
 import { PVSC_EXTENSION_ID } from '../../common/constants';
 import { traceVerbose } from '../../common/logger';
 import { INugetRepository, INugetService, NugetPackage } from '../../common/nuget/types';
@@ -14,6 +15,7 @@ import { Architecture, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import { PlatformName } from '../platformData';
 import { ILanguageServerPackageService } from '../types';
+import { azureCDNBlobStorageAccount, LanguageServerPackageStorageContainers } from './languageServerPackageRepository';
 
 const downloadBaseFileName = 'Python-Language-Server';
 export const maxMajorVersion = 0;
@@ -27,7 +29,8 @@ export const PackageNames = {
 @injectable()
 export class LanguageServerPackageService implements ILanguageServerPackageService {
     public maxMajorVersion: number = maxMajorVersion;
-    constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment) { }
     public getNugetPackageName(): string {
         const plaform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         switch (plaform.info.type) {
@@ -48,16 +51,11 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
     public async getLatestNugetPackageVersion(): Promise<NugetPackage> {
         const downloadChannel = this.getLanguageServerDownloadChannel();
         const nugetRepo = this.serviceContainer.get<INugetRepository>(INugetRepository, downloadChannel);
-        const nugetService = this.serviceContainer.get<INugetService>(INugetService);
         const packageName = this.getNugetPackageName();
         traceVerbose(`Listing packages for ${downloadChannel} for ${packageName}`);
         const packages = await nugetRepo.getPackages(packageName);
 
-        const validPackages = packages
-            .filter(item => item.version.major === this.maxMajorVersion)
-            .filter(item => nugetService.isReleaseVersion(item.version))
-            .sort((a, b) => a.version.compare(b.version));
-        return validPackages[validPackages.length - 1];
+        return this.getValidPackage(packages);
     }
 
     public getLanguageServerDownloadChannel(): LanguageServerDownloadChannels {
@@ -69,6 +67,27 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
 
         const isAlphaVersion = this.isAlphaVersionOfExtension();
         return isAlphaVersion ? 'beta' : 'stable';
+    }
+    protected getValidPackage(packages: NugetPackage[]): NugetPackage {
+        const nugetService = this.serviceContainer.get<INugetService>(INugetService);
+        const validPackages = packages
+            .filter(item => item.version.major === this.maxMajorVersion)
+            .filter(item => nugetService.isReleaseVersion(item.version))
+            .sort((a, b) => a.version.compare(b.version));
+
+        const pkg = validPackages[validPackages.length - 1];
+        const minimumVersion = this.appEnv.packageJson.languageServerVersion as string;
+        if (pkg.version.compare(minimumVersion) > 0) {
+            return validPackages[validPackages.length - 1];
+        }
+
+        // This is a fall back, if the wrong version is returned, e.g. version is cached downstream in some proxy server or similar.
+        // This way, we always ensure we have the minimum version that's compatible.
+        return {
+            version: new SemVer(minimumVersion),
+            package: LanguageServerPackageStorageContainers.stable,
+            uri: `${azureCDNBlobStorageAccount}/${LanguageServerPackageStorageContainers.stable}.${minimumVersion}.nupkg`
+        };
     }
 
     private isAlphaVersionOfExtension() {

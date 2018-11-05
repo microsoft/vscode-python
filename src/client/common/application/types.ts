@@ -767,6 +767,13 @@ export interface IApplicationEnvironment {
      * @readonly
      */
     sessionId: string;
+    /**
+     * Contents of `package.json` as a JSON object.
+     *
+     * @type {any}
+     * @memberof IApplicationEnvironment
+     */
+    packageJson: any;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');

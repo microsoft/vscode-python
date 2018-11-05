@@ -3,6 +3,7 @@
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
     "version": "2018.10.0-beta",
+    "languageServerVersion": "0.1.50",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -263,8 +264,7 @@
             {
                 "command": "python.datascience.importnotebook",
                 "title": "%python.command.python.datascience.importnotebook.title%",
-                "category": "Python",
-                "when": "python.datascience.featureenabled"
+                "category": "Python"
             }
         ],
         "menus": {
@@ -340,7 +340,7 @@
                     "group": "Python"
                 },
                 {
-                    "when": "resourceLangId == jupyter && python.datascience.featureenabled",
+                    "when": "resourceLangId == jupyter",
                     "command": "python.datascience.importnotebook",
                     "group": "Python"
                 }
@@ -379,8 +379,7 @@
                 {
                     "command": "python.datascience.importnotebook",
                     "title": "%python.command.python.datascience.importnotebook.title%",
-                    "category": "Python",
-                    "when": "python.datascience.featureenabled"
+                    "category": "Python"
                 }
             ]
         },

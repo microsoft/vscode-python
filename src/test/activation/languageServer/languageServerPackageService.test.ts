@@ -11,7 +11,7 @@ import { WorkspaceConfiguration } from 'vscode';
 import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { IHttpClient } from '../../../client/activation/types';
-import { IWorkspaceService } from '../../../client/common/application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { HttpClient } from '../../../client/common/net/httpClient';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
 import { NugetRepository } from '../../../client/common/nuget/nugetRepository';
@@ -57,7 +57,10 @@ suite('Language Server Package Service', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
         const nugetRepo = new NugetRepository(serviceContainer.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
-        const lsPackageService = new LanguageServerPackageService(serviceContainer.object);
+        const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
+        const packageJson = { languageServerVersion: '0.1.0' };
+        appEnv.setup(e => e.packageJson).returns(() => packageJson);
+        const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object);
 
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await nugetRepo.getPackages(packageName);
@@ -81,7 +84,10 @@ suite('Language Server Package Service', () => {
         const defaultStorageChannel = LanguageServerPackageStorageContainers.stable;
         const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, azureBlobStorageAccount, defaultStorageChannel, azureCDNBlobStorageAccount);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
-        const lsPackageService = new LanguageServerPackageService(serviceContainer.object);
+        const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
+        const packageJson = { languageServerVersion: '0.1.0' };
+        appEnv.setup(e => e.packageJson).returns(() => packageJson);
+        const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object);
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await nugetRepo.getPackages(packageName);
 
