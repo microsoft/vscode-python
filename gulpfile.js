@@ -18,9 +18,7 @@ const ts = require('gulp-typescript');
 const cp = require('child_process');
 const spawn = require('cross-spawn');
 const colors = require('colors/safe');
-const gitmodified = require('gulp-gitmodified');
 const path = require('path');
-const debounce = require('debounce');
 const jeditor = require("gulp-json-editor");
 const del = require('del');
 const sourcemaps = require('gulp-sourcemaps');
@@ -29,16 +27,11 @@ const fsExtra = require('fs-extra');
 const remapIstanbul = require('remap-istanbul');
 const istanbul = require('istanbul');
 const glob = require('glob');
-const os = require('os');
 const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
-const webpack = require('webpack');
-const webpack_config = require('./webpack.datascience-ui.config');
-const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages');
 const chalk = require('chalk');
-const printBuildError = require('react-dev-utils/printBuildError');
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
@@ -161,105 +154,53 @@ gulp.task('inlinesource', () => {
         .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
 
-gulp.task('compile-webviews', () => webify(true));
+gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
 
-gulp.task('check-datascience-dependencies', (done) => {
+function buildDatascienceDependencies() {
     fsExtra.ensureDirSync(path.join(__dirname, 'tmp'));
     spawn.sync('npm', ['run', 'dump-datascience-webpack-stats']);
-    done();
-});
-
-gulp.task('check-datascience-dependencies', gulp.series('check-datascience-dependencies', () => checkDatascienceDependencies()));
+}
 
 async function checkDatascienceDependencies() {
+    buildDatascienceDependencies();
+
     const existingModulesFileName = 'package.datascience-ui.dependencies.json';
     const existingModulesFile = path.join(__dirname, existingModulesFileName);
     const existingModulesList = JSON.parse(await fsExtra.readFile(existingModulesFile).then(data => data.toString()));
     const existingModules = new Set(existingModulesList);
+    const existingModulesCopy = new Set(existingModulesList);
 
     const statsOutput = path.join(__dirname, 'tmp', 'ds-stats.json');
     const contents = await fsExtra.readFile(statsOutput).then(data => data.toString());
     const startIndex = contents.toString().indexOf('{') - 1;
 
     const json = JSON.parse(contents.substring(startIndex));
-    let hasNewDependencies = false;
-    const modules = new Set();
+    const newModules = new Set();
     json.children[0].modules.forEach(m => {
         const name = m.name;
         if (!name.startsWith('./node_modules')) {
             return;
         }
-        const moduleName = name.split(path.sep)[2];
-        if (existingModules.has(moduleName) || modules.has(moduleName)) {
+        const moduleName = name.split('/')[2];
+        if (existingModulesCopy.has(moduleName)) {
+            existingModulesCopy.delete(moduleName);
+        }
+        if (existingModules.has(moduleName) || newModules.has(moduleName)) {
             return;
         }
-        modules.add(moduleName);
-        hasNewDependencies = true;
-        console.error(colors.red(`New dependency added to datascience-ui, please add '${moduleName}' to the file ${existingModulesFileName}.`));
+        newModules.add(moduleName);
     });
-
-    if (hasNewDependencies) {
-        throw new Error(`Please add the untracked dependencies to ${existingModulesFileName}`);
+    const errorMessages = [];
+    if (newModules.size > 0) {
+        errorMessages.push(`Add the untracked dependencies '${Array.from(newModules.values()).join(', ')}' to ${existingModulesFileName}`);
     }
-}
-
-const webify = (clear) => {
-    if (!clear) {
-        // Clear screen before starting
-        console.log('\x1Bc');
+    if (existingModulesCopy.size > 0) {
+        errorMessages.push(`Remove the unused '${Array.from(existingModulesCopy.values()).join(', ')}' dependencies from ${existingModulesFileName}`);
     }
-    console.log('Webpacking ' + file.path);
-
-    // Then spawn our webpack on the base name
-    let compiler = webpack(webpack_config);
-    return new Promise((resolve, reject) => {
-
-        // Create a callback for errors and such
-        const compilerCallback = (err, stats) => {
-            if (err) {
-                return reject(err);
-            }
-            const messages = formatWebpackMessages(stats.toJson({}, true));
-            if (messages.errors.length) {
-                // Only keep the first error. Others are often indicative
-                // of the same problem, but confuse the reader with noise.
-                if (messages.errors.length > 1) {
-                    messages.errors.length = 1;
-                }
-                return reject(new Error(messages.errors.join('\n\n')));
-            }
-            if (
-                process.env.CI &&
-                (typeof process.env.CI !== 'string' ||
-                    process.env.CI.toLowerCase() !== 'false') &&
-                messages.warnings.length
-            ) {
-                console.log(
-                    chalk.yellow(
-                        '\nTreating warnings as errors because process.env.CI = true.\n' +
-                        'Most CI servers set it automatically.\n'
-                    )
-                );
-                return reject(new Error(messages.warnings.join('\n\n')));
-            }
-            return resolve({
-                stats,
-                warnings: messages.warnings,
-            });
-        }
-
-        // Watch doesn't seem to work
-        compiler.run(compilerCallback);
-    }).then(
-        stats => {
-            console.log(chalk.white('Finished ' + file.path + '.\n'));
-            printBuildError(stats.warnings);
-        }).catch(
-            err => {
-                console.log(chalk.red('Failed to compile.\n'));
-                printBuildError(err);
-            }
-        )
+    if (errorMessages.length > 0) {
+        errorMessages.forEach(message => console.error(colors.red(message)));
+        throw new Error(errorMessages.join('\n'));
+    }
 }
 
 function hasNativeDependencies() {
@@ -722,14 +663,14 @@ function getFileListToProcess(options) {
 
 exports.hygiene = hygiene;
 
-// this allows us to run hygiene via CLI (e.g. `node gulfile.js`).
-if (require.main === module) {
-    const args = process.argv0.length > 2 ? process.argv.slice(2) : [];
-    const isPreCommit = args.findIndex(arg => arg.startsWith('precommit='));
-    const performPreCommitCheck = isPreCommit >= 0 ? args[isPreCommit].split('=')[1].trim().toUpperCase().startsWith('T') : false;
-    // Allow precommit hooks for those with a file `./out/precommit.hook`.
-    if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
-        return;
-    }
-    run({ exitOnError: true, mode: 'staged' }, () => { });
-}
+// // this allows us to run hygiene via CLI (e.g. `node gulfile.js`).
+// if (require.main === module) {
+//     const args = process.argv0.length > 2 ? process.argv.slice(2) : [];
+//     const isPreCommit = args.findIndex(arg => arg.startsWith('precommit='));
+//     const performPreCommitCheck = isPreCommit >= 0 ? args[isPreCommit].split('=')[1].trim().toUpperCase().startsWith('T') : false;
+//     // Allow precommit hooks for those with a file `./out/precommit.hook`.
+//     if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
+//         return;
+//     }
+//     run({ exitOnError: true, mode: 'staged' }, () => { });
+// }
