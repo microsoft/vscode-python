@@ -14,7 +14,7 @@ import {
     IDocumentManager,
     IWebPanel,
     IWebPanelMessageListener,
-    IWebPanelProvider,
+    IWebPanelProvider
 } from '../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { IDisposableRegistry } from '../common/types';
