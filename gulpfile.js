@@ -25,6 +25,7 @@ const jeditor = require("gulp-json-editor");
 const del = require('del');
 const sourcemaps = require('gulp-sourcemaps');
 const fs = require('fs');
+const fsExtra = require('fs-extra');
 const remapIstanbul = require('remap-istanbul');
 const istanbul = require('istanbul');
 const glob = require('glob');
@@ -34,7 +35,7 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
 const webpack = require('webpack');
-const webpack_config = require('./webpack.default.config');
+const webpack_config = require('./webpack.datascience-ui.config');
 const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages');
 const chalk = require('chalk');
 const printBuildError = require('react-dev-utils/printBuildError');
@@ -160,50 +161,57 @@ gulp.task('inlinesource', () => {
         .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
 
-gulp.task('compile-webviews', (done) => {
-    // Clear screen before starting
-    console.log('\x1Bc');
+gulp.task('compile-webviews', () => webify(true));
 
-    // First copy the files/css/svg/png files to the output folder
-    gulp.src('./src/**/*.{png,svg,css}')
-        .pipe(gulp.dest('./out'));
-
-    // Then our theme json
-    gulp.src('./src/**/*theme*.json')
-        .pipe(gulp.dest('./out'));
-
-    // Then run webpack on the output files
-    gulp.src('./out/**/*react/index.js')
-        .pipe(es.through(file => webify(file, false)));
-
+gulp.task('check-datascience-dependencies', (done) => {
+    fsExtra.ensureDirSync(path.join(__dirname, 'tmp'));
+    spawn.sync('npm', ['run', 'dump-datascience-webpack-stats']);
     done();
 });
 
-gulp.task('compile-webviews-watch', () => {
-    // Watch all files that are written by the compile task, except for the bundle generated
-    // by compile-webviews. Watch the css files too, but in the src directory because webpack
-    // will modify the output ones.
-    gulp.watch(['./out/**/*react*/*.js', './src/**/*react*/*.{png,svg,css}', './out/**/react*/*.js', '!./out/**/*react*/*_bundle.js'], gulp.series('compile-webviews'));
-});
+gulp.task('check-datascience-dependencies', gulp.series('check-datascience-dependencies', () => checkDatascienceDependencies()));
 
-const webify = (file) => {
+async function checkDatascienceDependencies() {
+    const existingModulesFileName = 'package.datascience-ui.dependencies.json';
+    const existingModulesFile = path.join(__dirname, existingModulesFileName);
+    const existingModulesList = JSON.parse(await fsExtra.readFile(existingModulesFile).then(data => data.toString()));
+    const existingModules = new Set(existingModulesList);
+
+    const statsOutput = path.join(__dirname, 'tmp', 'ds-stats.json');
+    const contents = await fsExtra.readFile(statsOutput).then(data => data.toString());
+    const startIndex = contents.toString().indexOf('{') - 1;
+
+    const json = JSON.parse(contents.substring(startIndex));
+    let hasNewDependencies = false;
+    const modules = new Set();
+    json.children[0].modules.forEach(m => {
+        const name = m.name;
+        if (!name.startsWith('./node_modules')) {
+            return;
+        }
+        const moduleName = name.split(path.sep)[2];
+        if (existingModules.has(moduleName) || modules.has(moduleName)) {
+            return;
+        }
+        modules.add(moduleName);
+        hasNewDependencies = true;
+        console.error(colors.red(`New dependency added to datascience-ui, please add '${moduleName}' to the file ${existingModulesFileName}.`));
+    });
+
+    if (hasNewDependencies) {
+        throw new Error(`Please add the untracked dependencies to ${existingModulesFileName}`);
+    }
+}
+
+const webify = (clear) => {
+    if (!clear) {
+        // Clear screen before starting
+        console.log('\x1Bc');
+    }
     console.log('Webpacking ' + file.path);
 
-    // Replace the entry with our actual file
-    let config = Object.assign({}, webpack_config);
-    config.entry = [...config.entry, file.path];
-
-    // Update the output path to be next to our bundle.js
-    const split = path.parse(file.path);
-    config.output.path = split.dir;
-
-    // Update our template to be based on our source
-    const srcpath = path.join(__dirname, 'src', file.relative);
-    const html = path.join(path.parse(srcpath).dir, 'index.html');
-    config.plugins[0].options.template = html;
-
     // Then spawn our webpack on the base name
-    let compiler = webpack(config);
+    let compiler = webpack(webpack_config);
     return new Promise((resolve, reject) => {
 
         // Create a callback for errors and such
@@ -619,13 +627,13 @@ function git(args) {
 }
 
 function getStagedFilesSync() {
-    const out = git(['diff','--cached','--name-only']);
+    const out = git(['diff', '--cached', '--name-only']);
     return out
         .split(/\r?\n/)
         .filter(l => !!l);
 }
 function getAddedFilesSync() {
-    const out = git(['status','-u','-s']);
+    const out = git(['status', '-u', '-s']);
     return out
         .split(/\r?\n/)
         .filter(l => !!l)
@@ -674,7 +682,7 @@ function getModifiedFilesSync() {
 }
 
 function getDifferentFromMasterFilesSync() {
-    const out = git(['diff','--name-status','master']);
+    const out = git(['diff', '--name-status', 'master']);
     return out
         .split(/\r?\n/)
         .filter(l => !!l)
@@ -723,5 +731,5 @@ if (require.main === module) {
     if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
         return;
     }
-    run({ exitOnError: true, mode: 'staged' }, () => {});
+    run({ exitOnError: true, mode: 'staged' }, () => { });
 }
