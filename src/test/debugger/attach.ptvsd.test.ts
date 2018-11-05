@@ -12,6 +12,7 @@ import { DebugClient } from 'vscode-debugadapter-testsupport';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IPlatformService } from '../../client/common/platform/types';
+import { IS_WINDOWS } from '../../client/common/util';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
 import { PythonV2DebugConfigurationProvider } from '../../client/debugger/extension/configProviders/pythonV2Provider';
 import { AttachRequestArguments, DebugOptions } from '../../client/debugger/types';
@@ -31,7 +32,7 @@ suite('Attach Debugger', () => {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
-        this.timeout(30000);
+        this.timeout(60000);
         const coverageDirectory = path.join(EXTENSION_ROOT_DIR, 'debug_coverage_attach_ptvsd');
         debugClient = await createDebugAdapter(coverageDirectory);
     });
@@ -123,7 +124,6 @@ suite('Attach Debugger', () => {
         ]);
     }
     test('Confirm we are able to attach to a running program', async () => {
-        // Test disabled until debugger can fix attach - issue # 3181
-        // await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
+        await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
     });
 });
