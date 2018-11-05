@@ -18,7 +18,7 @@ export class HistoryProvider implements IHistoryProvider {
     }
 
     public get active() : IHistory {
-        if (!this.activeHistory || this.activeHistory.isDisposed()) {
+        if (!this.activeHistory) {
             this.activeHistory = this.create();
         }
 
@@ -31,8 +31,16 @@ export class HistoryProvider implements IHistoryProvider {
 
     public create = () => {
         const result = this.serviceContainer.get<IHistory>(IHistory);
+        const handler = result.closed(this.onHistoryClosed);
         this.disposables.push(result);
+        this.disposables.push(handler);
         return result;
+    }
+
+    private onHistoryClosed = (history: IHistory) => {
+        if (this.activeHistory === history) {
+            this.activeHistory = undefined;
+        }
     }
 
 }

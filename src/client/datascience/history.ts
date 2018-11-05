@@ -6,7 +6,7 @@ import '../common/extensions';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 
 import {
@@ -17,6 +17,7 @@ import {
     IWebPanelProvider
 } from '../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
+import { IDisposableRegistry } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -31,6 +32,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     // tslint:disable-next-line: no-any
     private loadPromise: Promise<any>;
     private settingsChangedDisposable : Disposable;
+    private closedEvent : EventEmitter<IHistory>;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -38,10 +40,15 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(INotebookServer) private jupyterServer: INotebookServer,
         @inject(IWebPanelProvider) private provider: IWebPanelProvider,
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) private cssGenerator : ICodeCssGenerator) {
 
         // Sign up for configuration changes
         this.settingsChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
+
+        // Create our event emitter
+        this.closedEvent = new EventEmitter<IHistory>();
+        this.disposables.push(this.closedEvent);
 
         // Load on a background thread.
         this.loadPromise = this.load();
@@ -59,8 +66,8 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    public isDisposed() : boolean {
-        return this.disposed;
+    public get closed() : Event<IHistory> {
+        return this.closedEvent.event;
     }
 
     public async addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
@@ -146,6 +153,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             if (this.jupyterServer) {
                 this.jupyterServer.dispose();
             }
+            this.closedEvent.fire(this);
         }
     }
 

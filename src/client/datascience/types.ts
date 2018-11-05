@@ -64,9 +64,9 @@ export interface IHistoryProvider {
 
 export const IHistory = Symbol('IHistory');
 export interface IHistory extends Disposable {
+    closed: Event<IHistory>;
     show() : Promise<void>;
     addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
-    isDisposed() : boolean;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
