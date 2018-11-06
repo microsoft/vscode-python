@@ -417,4 +417,21 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }
         }
     }
+
+    // tslint:disable-next-line:no-any
+    private updateCell = (payload?: any) => {
+        if (payload) {
+            const cell = payload as ICell;
+            if (cell) {
+
+                // Find this cell in our current state
+                const index = this.state.cellVMs.findIndex((c : ICellViewModel) => c.cell.id === cell.id);
+                if (index >= 0) {
+                    // Update this cell
+                    this.state.cellVMs[index].cell = cell;
+                    this.forceUpdate();
+                }
+            }
+        }
+    }
 }
