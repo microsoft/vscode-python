@@ -4,12 +4,12 @@
 import '../../client/common/extensions';
 
 import { ChildProcess, spawn } from 'child_process';
+import * as fs from 'fs-extra';
 import * as getFreePort from 'get-port';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, Uri } from 'vscode';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
-import * as fs from 'fs-extra';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IS_WINDOWS } from '../../client/common/util';
@@ -21,7 +21,7 @@ import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { continueDebugging, createDebugAdapter } from './utils';
 
-// tslint:disable:no-invalid-this max-func-body-length no-empty no-increment-decrement no-unused-variable
+// tslint:disable:no-invalid-this max-func-body-length no-empty no-increment-decrement no-unused-variable no-console
 const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd.py');
 
 suite('Attach Debugger', () => {
