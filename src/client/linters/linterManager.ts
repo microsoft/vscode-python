@@ -143,7 +143,7 @@ export class LinterManager implements ILinterManager {
         if (!settings.linting.pylintEnabled || !settings.linting.enabled) {
             return;
         }
-        // if we've already checked during this session for the same workspace and python path, then don't bother again.
+        // If we've already checked during this session for the same workspace and Python path, then don't bother again.
         const workspaceKey = `${this.workspaceService.getWorkspaceFolderIdentifier(resource)}${settings.pythonPath}`;
         if (this.checkedForInstalledLinters.has(workspaceKey)) {
             return;
