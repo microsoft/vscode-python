@@ -114,7 +114,7 @@ export class JupyterServer implements INotebookServer {
             await this.session.kernel.ready;
 
             while (this.session.kernel.status !== 'idle') {
-                await setTimeout(() => {}, 10);
+                await this.timeout(10);
             }
         }
     }
@@ -295,6 +295,10 @@ export class JupyterServer implements INotebookServer {
             },
             true
         );
+    }
+
+    private timeout(ms : number) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     private findKernelName = async (manager: SessionManager) : Promise<string> => {
