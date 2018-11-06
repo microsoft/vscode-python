@@ -26,11 +26,12 @@ const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', '
 suite('Attach Debugger', () => {
     let debugClient: DebugClient;
     let proc: ChildProcess;
+
     setup(async function () {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
-        this.timeout(60000);
+        this.timeout(30000);
         const coverageDirectory = path.join(EXTENSION_ROOT_DIR, 'debug_coverage_attach_ptvsd');
         debugClient = await createDebugAdapter(coverageDirectory);
     });
@@ -57,7 +58,6 @@ suite('Attach Debugger', () => {
         const pythonArgs = ['-m', 'ptvsd', '--host', 'localhost', '--wait', '--port', `${port}`, '--file', fileToDebug.fileToCommandArgument()];
         proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });
         const exited = new Promise(resolve => proc.once('close', resolve));
-
         await sleep(3000);
 
         // Send initialize, attach
@@ -78,7 +78,7 @@ suite('Attach Debugger', () => {
             type: DebuggerTypeName,
             port: port,
             host: 'localhost',
-            logToFile: true,
+            logToFile: false,
             debugOptions: [DebugOptions.RedirectOutput]
         };
         const platformService = TypeMoq.Mock.ofType<IPlatformService>();
