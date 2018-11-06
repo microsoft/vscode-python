@@ -5,6 +5,9 @@ matrix:
     include:
         - os: linux
           python: "2.7"
+          env: UNIT_TEST=true
+        - os: linux
+          python: "2.7"
           env: DEBUGGER_TEST=true
         - os: linux
           python: "2.7"
@@ -69,9 +72,15 @@ install:
   - npx gulp hygiene-modified
   - python -m pip install --upgrade -r requirements.txt
   - python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
-  - npm run test:unittests
 
 script:
+  - if [ $UNIT_TEST == "true" ]; then
+        npm run cover:enable;
+        npm run test:unittests;
+    fi
+  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
+        bash <(curl -s https://codecov.io/bash);
+    fi
   - if [ $DEBUGGER_TEST == "true" ]; then
         npm run cover:enable;
         npm run testDebugger --silent;
