@@ -30,6 +30,7 @@ export class JupyterServer implements INotebookServer {
     private sessionStartTime: number | undefined;
     private tempFile: string | undefined;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
+    private pendingRequests : Kernel.IFuture[] = [];
 
     constructor(
         @inject(ILogger) private logger: ILogger,
@@ -174,16 +175,8 @@ export class JupyterServer implements INotebookServer {
     public executeSilently = (code: string) : Promise<void> => {
         // If we have a session, execute the code now.
         if (this.session) {
-            const request = this.session.kernel.requestExecute(
-                {
-                    // Replace windows line endings with unix line endings.
-                    code: code.replace('\r\n', '\n'),
-                    stop_on_error: false,
-                    allow_stdin: false,
-                    silent: true
-                },
-                true
-            );
+            // Generate a new request and wrap it in a promise as we wait for it to finish
+            const request = this.generateRequest(code, true);
 
             return new Promise((resolve, reject) => {
                 // Just wait for our observable to finish
@@ -215,6 +208,12 @@ export class JupyterServer implements INotebookServer {
         if (this.session && this.session.kernel) {
             // Update our start time so we don't keep sending responses
             this.sessionStartTime = Date.now();
+
+            // Dispose of all of our pending requests so they don't error out when
+            // we restart
+            const copy = [...this.pendingRequests];
+            this.pendingRequests = [];
+            copy.forEach(p => p.dispose());
 
             // Restart our kernel
             return this.session.kernel.restart();
@@ -272,6 +271,24 @@ export class JupyterServer implements INotebookServer {
             return true;
         }
         return false;
+    }
+
+    private generateRequest = (code: string, silent: boolean) : Kernel.IFuture => {
+        const request = this.session.kernel.requestExecute(
+            {
+                // Replace windows line endings with unix line endings.
+                code: code.replace('\r\n', '\n'),
+                stop_on_error: false,
+                allow_stdin: false,
+                silent: silent
+            },
+            true
+        );
+
+        // Stick in our pending requests so we cancel this when we restart the kernel
+        this.pendingRequests.push(request);
+
+        return request;
     }
 
     private findKernelName = async (manager: SessionManager) : Promise<string> => {
@@ -440,14 +457,7 @@ export class JupyterServer implements INotebookServer {
     private executeCodeObservableInternal = (code: string, file: string, line: number) : Observable<ICell> => {
         // Send an execute request with this code
         const id = uuid();
-        const request = this.session ? this.session.kernel.requestExecute(
-            {
-                code: code,
-                stop_on_error: false,
-                allow_stdin: false
-            },
-            true
-        ) : undefined;
+        const request = this.session ? this.generateRequest(code, false) : undefined;
 
         return this.generateExecuteObservable(code, file, line, id, request);
     }
@@ -537,16 +547,9 @@ export class JupyterServer implements INotebookServer {
                 };
 
                 // Create completion and error functions so we can bind our cell object
-                const completion = () => {
-                    cell.state = CellState.finished;
-                    // Only do this if start time is still valid
-                    if (startTime > this.sessionStartTime) {
-                        subscriber.next(cell);
-                    }
-                    subscriber.complete();
-                };
-                const error = () => {
-                    cell.state = CellState.error;
+                const completion = (error : boolean) => {
+                    this.pendingRequests = this.pendingRequests.filter(v => v !== request);
+                    cell.state = error ? CellState.error : CellState.finished;
                     // Only do this if start time is still valid
                     if (startTime > this.sessionStartTime) {
                         subscriber.next(cell);
@@ -555,7 +558,7 @@ export class JupyterServer implements INotebookServer {
                 };
 
                 // When the request finishes we are done
-                request.done.then(completion, error);
+                request.done.then(() => completion(false), () => completion(true));
             } else {
                 subscriber.error(localize.DataScience.sessionDisposed());
             }
