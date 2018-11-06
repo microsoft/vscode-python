@@ -184,7 +184,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Now assign our new array copy to state
         this.setState({
-            cellVMs: newCells
+            cellVMs: newCells,
+            skipNextScroll: true
         });
     }
 
@@ -201,7 +202,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Now assign our new array copy to state
         this.setState({
-            cellVMs: newCells
+            cellVMs: newCells,
+            skipNextScroll: true
         });
     }
 
