@@ -45,7 +45,7 @@ export class DataScience implements IDataScience {
 
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();
-       (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
+        (this.configuration.getSettings() as PythonSettings).addListener('change', this.onSettingsChanged);
         this.disposableRegistry.push(this);
     }
 
@@ -58,7 +58,7 @@ export class DataScience implements IDataScience {
 
     public async runAllCells(codeWatcher: ICodeWatcher): Promise<void> {
         if (!isTestExecution()) {
-            await this.dataScienceSurveyBanner.showBanner();
+            this.dataScienceSurveyBanner.showBanner().ignoreErrors();
         }
         let activeCodeWatcher: ICodeWatcher | undefined = codeWatcher;
         if (!activeCodeWatcher) {
@@ -73,7 +73,7 @@ export class DataScience implements IDataScience {
 
     public async runCell(codeWatcher: ICodeWatcher, range: vscode.Range): Promise<void> {
         if (!isTestExecution()) {
-            await this.dataScienceSurveyBanner.showBanner();
+            this.dataScienceSurveyBanner.showBanner().ignoreErrors();
         }
         if (codeWatcher) {
             return codeWatcher.runCell(range);
@@ -84,7 +84,7 @@ export class DataScience implements IDataScience {
 
     public async runCurrentCell(): Promise<void> {
         if (!isTestExecution()) {
-            await this.dataScienceSurveyBanner.showBanner();
+            this.dataScienceSurveyBanner.showBanner().ignoreErrors();
         }
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
@@ -96,7 +96,7 @@ export class DataScience implements IDataScience {
 
     public async runCurrentCellAndAdvance(): Promise<void> {
         if (!isTestExecution()) {
-            await this.dataScienceSurveyBanner.showBanner();
+            this.dataScienceSurveyBanner.showBanner().ignoreErrors();
         }
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
