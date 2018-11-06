@@ -31,10 +31,13 @@ def _projects(package_data, overrides=frozenset()):
     return packages
 
 
-async def projects_from_data(raw_data, raw_overrides_data="[]"):
+async def projects_from_data(raw_data, raw_overrides_data=None):
     """Create projects from the file contents of a package-lock.json."""
     json_data = json.loads(raw_data)
-    overrides_data = frozenset(json.loads(raw_overrides_data))
+    if raw_overrides_data:
+        overrides_data = frozenset(json.loads(raw_overrides_data))
+    else:
+        overrides_data = frozenset()
     # "lockfileVersion": 1
     if "lockfileVersion" not in json_data:
         raise ValueError("npm data does not appear to be from a package-lock.json file")
