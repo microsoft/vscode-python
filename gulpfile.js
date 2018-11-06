@@ -175,12 +175,37 @@ async function checkDatascienceDependencies() {
 
     const json = JSON.parse(contents.substring(startIndex));
     const newModules = new Set();
+    const packageLock = JSON.parse(await fsExtra.readFile('package-lock.json').then(data => data.toString()));
+    const modulesInPackageLock = Object.keys(packageLock.dependencies);
+
+    // Right now the script only handles two parts in the dependency name (with one '/').
+    // If we have dependencies with more than one '/', then update this code.
+    if (modulesInPackageLock.some(dependency => dependency.indexOf('/') !== dependency.lastIndexOf('/'))) {
+        throwAndLogError('Dependencies detected with more than one \'/\', please update this script.');
+    }
     json.children[0].modules.forEach(m => {
         const name = m.name;
         if (!name.startsWith('./node_modules')) {
             return;
         }
-        const moduleName = name.split('/')[2];
+        const nameWithoutNodeModules = name.substring('./node_modules'.length);
+        let moduleName1 = nameWithoutNodeModules.split('/')[1];
+        moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
+        const moduleName2 = path.join(nameWithoutNodeModules.split('/')[1], nameWithoutNodeModules.split('/')[2]);
+
+        const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1);
+        switch (matchedModules.length) {
+            case 0:
+                throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
+                break;
+            case 1:
+                break;
+            default: {
+                throwAndLogError(`Exact Dependency not found in package-lock.json, Dependency = '${name}'`);
+            }
+        }
+
+        const moduleName = matchedModules[0];
         if (existingModulesCopy.has(moduleName)) {
             existingModulesCopy.delete(moduleName);
         }
@@ -189,6 +214,7 @@ async function checkDatascienceDependencies() {
         }
         newModules.add(moduleName);
     });
+
     const errorMessages = [];
     if (newModules.size > 0) {
         errorMessages.push(`Add the untracked dependencies '${Array.from(newModules.values()).join(', ')}' to ${existingModulesFileName}`);
@@ -197,11 +223,15 @@ async function checkDatascienceDependencies() {
         errorMessages.push(`Remove the unused '${Array.from(existingModulesCopy.values()).join(', ')}' dependencies from ${existingModulesFileName}`);
     }
     if (errorMessages.length > 0) {
-        errorMessages.forEach(message => console.error(colors.red(message)));
-        throw new Error(errorMessages.join('\n'));
+        throwAndLogError(errorMessages.join('\n'));
     }
 }
-
+function throwAndLogError(message) {
+    if (message.length > 0) {
+        console.error(colors.red(message));
+        throw new Error(message);
+    }
+}
 function hasNativeDependencies() {
     let nativeDependencies = nativeDependencyChecker.check(path.join(__dirname, 'node_modules'));
     if (!Array.isArray(nativeDependencies) || nativeDependencies.length === 0) {
