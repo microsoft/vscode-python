@@ -65,8 +65,8 @@ suite('Attach Debugger', () => {
         console.log(pythonArgs);
         proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });
 
-        proc.stderr.on('data', (data: Buffer) => console.error('\nStdErr:' + data.toString()));
-        proc.stdout.on('data', (data: Buffer) => console.info('\nStdOut:' + data.toString()));
+        proc.stderr.on('data', (data: Buffer) => console.error(`\nStdErr:${data.toString()}`));
+        proc.stdout.on('data', (data: Buffer) => console.info(`\nStdOut:${data.toString()}`));
         proc.once('error', ex => {
             console.error('error in proc');
             console.error(ex);
