@@ -33,15 +33,22 @@ suite('Attach Debugger', () => {
             this.skip();
         }
         this.timeout(60000);
+        await logToConsole();
         fs.removeSync(logFile);
         const coverageDirectory = path.join(EXTENSION_ROOT_DIR, 'debug_coverage_attach_ptvsd');
         debugClient = await createDebugAdapter(coverageDirectory);
     });
-    teardown(async () => {
+    async function logToConsole() {
+        console.log('Logging file details');
         if (await fs.pathExists(logFile)) {
             const contents = fs.readFile(path.join(EXTENSION_ROOT_DIR, 'debug.log'), { encoding: 'utf8' });
             console.log(contents);
+        } else {
+            console.error('No log file');
         }
+    }
+    teardown(async () => {
+        await logToConsole();
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
         await sleep(1000);
         try {
@@ -52,6 +59,7 @@ suite('Attach Debugger', () => {
                 proc.kill();
             } catch { }
         }
+        await logToConsole();
     });
     async function testAttachingToRemoteProcess(localRoot: string, remoteRoot: string, isLocalHostWindows: boolean) {
         const localHostPathSeparator = isLocalHostWindows ? '\\' : '/';
@@ -73,7 +81,7 @@ suite('Attach Debugger', () => {
         });
 
         await sleep(3000);
-
+        await logToConsole();
         // Send initialize, attach
         const initializePromise = debugClient.initializeRequest({
             adapterID: DebuggerTypeName,
@@ -101,8 +109,10 @@ suite('Attach Debugger', () => {
         serviceContainer.setup(c => c.get(IPlatformService, TypeMoq.It.isAny())).returns(() => platformService.object);
         const configProvider = new PythonV2DebugConfigurationProvider(serviceContainer.object);
         console.log('Step1');
+        await logToConsole();
         await configProvider.resolveDebugConfiguration({ index: 0, name: 'root', uri: Uri.file(localRoot) }, options);
         console.log('Step2');
+        await logToConsole();
         const attachPromise = debugClient.attachRequest(options);
 
         await Promise.all([
@@ -111,6 +121,7 @@ suite('Attach Debugger', () => {
             debugClient.waitForEvent('initialized')
         ]);
         console.log('Step3');
+        await logToConsole();
         // const stdOutPromise = debugClient.assertOutput('stdout', 'this is stdout');
         // const stdErrPromise = debugClient.assertOutput('stderr', 'this is stderr');
 
@@ -125,6 +136,7 @@ suite('Attach Debugger', () => {
         const exceptionBreakpointPromise = debugClient.setExceptionBreakpointsRequest({ filters: [] });
         const breakpointStoppedPromise = debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
         console.log('Step4');
+        await logToConsole();
         await Promise.all([
             breakpointPromise, exceptionBreakpointPromise,
             debugClient.configurationDoneRequest(), debugClient.threadsRequest(),
@@ -132,13 +144,12 @@ suite('Attach Debugger', () => {
             breakpointStoppedPromise
         ]);
         console.log('Step5');
+        await logToConsole();
         await Promise.all([
-            continueDebugging(debugClient),
-            // debugClient.assertOutput('stdout', 'this is print'),
-            debugClient.waitForEvent('exited'),
-            debugClient.waitForEvent('terminated')
+            continueDebugging(debugClient)
         ]);
         console.log('Step6');
+        await logToConsole();
     }
     test('Confirm we are able to attach to a running program', async () => {
         await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
