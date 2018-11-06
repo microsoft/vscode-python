@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-any no-invalid-this max-func-body-length
+// tslint:disable:no-any no-invalid-this max-func-body-length no-unused-variable
 
 import { expect } from 'chai';
 import { SemVer } from 'semver';
