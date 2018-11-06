@@ -7,6 +7,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { CancellationTokenSource, ConfigurationTarget, DiagnosticCollection, Uri, window, workspace } from 'vscode';
 import { ICommandManager } from '../../client/common/application/types';
+import { WorkspaceService } from '../../client/common/application/workspace';
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { Product } from '../../client/common/installer/productInstaller';
 import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
@@ -127,7 +128,7 @@ suite('Linting - General Tests', () => {
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
         ioc.registerPlatformTypes();
-        linterManager = new LinterManager(ioc.serviceContainer);
+        linterManager = new LinterManager(ioc.serviceContainer, new WorkspaceService());
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);

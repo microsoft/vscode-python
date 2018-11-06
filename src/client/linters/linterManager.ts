@@ -7,13 +7,14 @@ import { inject, injectable } from 'inversify';
 import {
     CancellationToken, OutputChannel, TextDocument, Uri
 } from 'vscode';
+import { IWorkspaceService } from '../common/application/types';
 import {
     IConfigurationService, ILogger, Product
 } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Bandit } from './bandit';
 import { Flake8 } from './flake8';
-import { LinterInfo } from './linterInfo';
+import { LinterInfo, PylintLinterInfo } from './linterInfo';
 import { MyPy } from './mypy';
 import { Pep8 } from './pep8';
 import { Prospector } from './prospector';
@@ -36,17 +37,17 @@ class DisabledLinter implements ILinter {
 
 @injectable()
 export class LinterManager implements ILinterManager {
-    private lintingEnabledSettingName = 'enabled';
     private linters: ILinterInfo[];
     private configService: IConfigurationService;
-    private checkedForInstalledLinters: boolean = false;
+    private checkedForInstalledLinters = new Set<string>();
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.linters = [
             new LinterInfo(Product.bandit, 'bandit', this.configService),
             new LinterInfo(Product.flake8, 'flake8', this.configService),
-            new LinterInfo(Product.pylint, 'pylint', this.configService, ['.pylintrc', 'pylintrc']),
+            new PylintLinterInfo(this.configService, this.workspaceService, ['.pylintrc', 'pylintrc']),
             new LinterInfo(Product.mypy, 'mypy', this.configService),
             new LinterInfo(Product.pep8, 'pep8', this.configService),
             new LinterInfo(Product.prospector, 'prospector', this.configService),
@@ -70,11 +71,11 @@ export class LinterManager implements ILinterManager {
     public async isLintingEnabled(silent: boolean, resource?: Uri): Promise<boolean> {
         const settings = this.configService.getSettings(resource);
         const activeLintersPresent = await this.getActiveLinters(silent, resource);
-        return (settings.linting[this.lintingEnabledSettingName] as boolean) && activeLintersPresent.length > 0;
+        return settings.linting.enabled && activeLintersPresent.length > 0;
     }
 
     public async enableLintingAsync(enable: boolean, resource?: Uri): Promise<void> {
-        await this.configService.updateSetting(`linting.${this.lintingEnabledSettingName}`, enable, resource);
+        await this.configService.updateSetting('linting.enabled', enable, resource);
     }
 
     public async getActiveLinters(silent: boolean, resource?: Uri): Promise<ILinterInfo[]> {
@@ -137,23 +138,21 @@ export class LinterManager implements ILinterManager {
         throw new Error(error);
     }
 
-    protected async enableUnconfiguredLinters(resource?: Uri): Promise<boolean> {
-        // if we've already checked during this session, don't bother again
-        if (this.checkedForInstalledLinters) {
-            return false;
+    protected async enableUnconfiguredLinters(resource?: Uri): Promise<void> {
+        const settings = this.configService.getSettings(resource);
+        if (!settings.linting.pylintEnabled || !settings.linting.enabled) {
+            return;
         }
-        this.checkedForInstalledLinters = true;
+        // if we've already checked during this session for the same workspace and python path, then don't bother again.
+        const workspaceKey = `${this.workspaceService.getWorkspaceFolderIdentifier(resource)}${settings.pythonPath}`;
+        if (this.checkedForInstalledLinters.has(workspaceKey)) {
+            return;
+        }
+        this.checkedForInstalledLinters.add(workspaceKey);
 
         // only check & ask the user if they'd like to enable pylint
-        const pylintInfo = this.linters.find(
-            (linter: ILinterInfo) => linter.id === 'pylint'
-        );
-
-        // If linting is disabled, don't bother checking further.
-        if (pylintInfo && await this.isLintingEnabled(true, resource)) {
-            const activator = this.serviceContainer.get<IAvailableLinterActivator>(IAvailableLinterActivator);
-            return activator.promptIfLinterAvailable(pylintInfo, resource);
-        }
-        return false;
+        const pylintInfo = this.linters.find(linter => linter.id === 'pylint');
+        const activator = this.serviceContainer.get<IAvailableLinterActivator>(IAvailableLinterActivator);
+        await activator.promptIfLinterAvailable(pylintInfo!, resource);
     }
 }

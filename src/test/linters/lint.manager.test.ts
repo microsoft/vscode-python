@@ -4,6 +4,8 @@
 
 import * as assert from 'assert';
 import { Container } from 'inversify';
+import * as typeMoq from 'typemoq';
+import { IWorkspaceService } from '../../client/common/application/types';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { IConfigurationService, ILintingSettings, IPythonSettings, Product } from '../../client/common/types';
 import * as EnumEx from '../../client/common/utils/enum';
@@ -31,7 +33,8 @@ suite('Linting - Manager', () => {
         configService = serviceManager.get<IConfigurationService>(IConfigurationService);
 
         settings = configService.getSettings();
-        lm = new LinterManager(serviceContainer);
+        const workspaceService = typeMoq.Mock.ofType<IWorkspaceService>();
+        lm = new LinterManager(serviceContainer, workspaceService.object);
 
         await lm.setActiveLintersAsync([Product.pylint]);
         await lm.enableLintingAsync(true);

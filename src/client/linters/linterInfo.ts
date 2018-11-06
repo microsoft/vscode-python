@@ -3,6 +3,7 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { IWorkspaceService } from '../common/application/types';
 import { ExecutionInfo, IConfigurationService, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
 
@@ -11,7 +12,7 @@ export class LinterInfo implements ILinterInfo {
     private _product: Product;
     private _configFileNames: string[];
 
-    constructor(product: Product, id: LinterId, private configService: IConfigurationService, configFileNames: string[] = []) {
+    constructor(product: Product, id: LinterId, protected configService: IConfigurationService, configFileNames: string[] = []) {
         this._product = product;
         this._id = id;
         this._configFileNames = configFileNames;
@@ -65,5 +66,23 @@ export class LinterInfo implements ILinterInfo {
         }
 
         return { execPath, moduleName, args, product: this.product };
+    }
+}
+
+export class PylintLinterInfo extends LinterInfo {
+    constructor(configService: IConfigurationService, private readonly workspaceService: IWorkspaceService, configFileNames: string[] = []) {
+        super(Product.pylint, 'pylint', configService, configFileNames);
+    }
+    public isEnabled(resource?: Uri): boolean {
+        const enabled = super.isEnabled(resource);
+        if (!enabled || this.configService.getSettings(resource).jediEnabled) {
+            return enabled;
+        }
+        // If we're using new LS, then by default Pylint is disabled (unless the user provides a value).
+        const inspection = this.workspaceService.getConfiguration('python.linting', resource).inspect<boolean>('pylintEnabled');
+        if (!inspection || inspection.globalValue === undefined && inspection.workspaceFolderValue === undefined || inspection.workspaceValue === undefined) {
+            return false;
+        }
+        return enabled;
     }
 }

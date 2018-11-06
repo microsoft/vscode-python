@@ -6,6 +6,7 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
+import { IWorkspaceService } from '../../client/common/application/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LinterManager } from '../../client/linters/linterManager';
@@ -14,9 +15,8 @@ import { LinterManager } from '../../client/linters/linterManager';
 class TestLinterManager extends LinterManager {
     public enableUnconfiguredLintersCallCount: number = 0;
 
-    protected async enableUnconfiguredLinters(resource?: Uri): Promise<boolean> {
+    protected async enableUnconfiguredLinters(resource?: Uri): Promise<void> {
         this.enableUnconfiguredLintersCallCount += 1;
-        return false;
     }
 }
 
@@ -33,7 +33,7 @@ function getServiceContainerMockForLinterManagerTests(): TypeMoq.IMock<IServiceC
 
 // tslint:disable-next-line:max-func-body-length
 suite('Lint Manager Unit Tests', () => {
-
+    const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
     test('Linter manager isLintingEnabled checks availability when silent = false.', async () => {
         // set expectations
         const expectedCallCount = 1;
@@ -43,7 +43,7 @@ suite('Lint Manager Unit Tests', () => {
         const serviceContainerMock = getServiceContainerMockForLinterManagerTests();
 
         // make the call
-        const lm = new TestLinterManager(serviceContainerMock.object);
+        const lm = new TestLinterManager(serviceContainerMock.object, workspaceService.object);
         await lm.isLintingEnabled(silentFlag);
 
         // test expectations
@@ -59,7 +59,7 @@ suite('Lint Manager Unit Tests', () => {
         const serviceContainerMock = getServiceContainerMockForLinterManagerTests();
 
         // make the call
-        const lm: TestLinterManager = new TestLinterManager(serviceContainerMock.object);
+        const lm: TestLinterManager = new TestLinterManager(serviceContainerMock.object, workspaceService.object);
         await lm.isLintingEnabled(silentFlag);
 
         // test expectations
@@ -75,7 +75,7 @@ suite('Lint Manager Unit Tests', () => {
         const serviceContainerMock = getServiceContainerMockForLinterManagerTests();
 
         // make the call
-        const lm: TestLinterManager = new TestLinterManager(serviceContainerMock.object);
+        const lm: TestLinterManager = new TestLinterManager(serviceContainerMock.object, workspaceService.object);
         await lm.getActiveLinters(silentFlag);
 
         // test expectations
@@ -91,7 +91,7 @@ suite('Lint Manager Unit Tests', () => {
         const serviceContainerMock = getServiceContainerMockForLinterManagerTests();
 
         // make the call
-        const lm: TestLinterManager = new TestLinterManager(serviceContainerMock.object);
+        const lm: TestLinterManager = new TestLinterManager(serviceContainerMock.object, workspaceService.object);
         await lm.getActiveLinters(silentFlag);
 
         // test expectations

@@ -6,7 +6,7 @@ import * as assert from 'assert';
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import { QuickPickOptions } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { IConfigurationService, Product } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -49,7 +49,8 @@ suite('Linting - Linter Selector', () => {
         engine = TypeMoq.Mock.ofType<ILintingEngine>();
         serviceManager.addSingletonInstance<ILintingEngine>(ILintingEngine, engine.object);
 
-        lm = new LinterManager(serviceContainer);
+        const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        lm = new LinterManager(serviceContainer, workspaceService.object);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
 
         commands = new LinterCommands(serviceContainer);

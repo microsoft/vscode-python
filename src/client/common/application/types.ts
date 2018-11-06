@@ -557,6 +557,13 @@ export interface IWorkspaceService {
     getWorkspaceFolder(uri: Uri): WorkspaceFolder | undefined;
 
     /**
+     * Generate a key that's unique to the workspace folder (could be fsPath).
+     * @param {(Uri | undefined)} resource
+     * @returns {string}
+     * @memberof IWorkspaceService
+     */
+    getWorkspaceFolderIdentifier(resource: Uri | undefined): string;
+    /**
      * Returns a path that is relative to the workspace folder or folders.
      *
      * When there are no [workspace folders](#workspace.workspaceFolders) or when the path
