@@ -431,7 +431,7 @@ export class JupyterServer implements INotebookServer {
                 id: id,
                 file: file,
                 line: line,
-                state: CellState.init,
+                state: CellState.init
             };
 
             // Keep track of when we started.

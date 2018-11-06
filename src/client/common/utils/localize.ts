@@ -42,9 +42,9 @@ export namespace DataScience {
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter backend');
     export const runAllCellsLensCommandTitle = localize('python.command.python.datascience.runallcells.title', 'Run all cells');
 
-    export const restartKernelMessage = localize('DataScience.restartKernelMessage', 'Do you want to restart the Jupter kernel? All variables will be lost.')
-    export const restartKernelMessageYes = localize('DataScience.restartKernelMessageYes', 'Restart')
-    export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel')
+    export const restartKernelMessage = localize('DataScience.restartKernelMessage', 'Do you want to restart the Jupter kernel? All variables will be lost.');
+    export const restartKernelMessageYes = localize('DataScience.restartKernelMessageYes', 'Restart');
+    export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
