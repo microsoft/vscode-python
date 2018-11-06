@@ -33,6 +33,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     private settingsChangedDisposable : Disposable;
     private closedEvent : EventEmitter<IHistory>;
     private unfinishedCells: ICell[] = [];
+    private restartingKernel: boolean = false;
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -235,7 +236,9 @@ export class History implements IWebPanelMessageListener, IHistory {
 
     @captureTelemetry(Telemetry.RestartKernel)
     private restartKernel() {
-        if (this.jupyterServer) {
+        if (this.jupyterServer && !this.restartingKernel) {
+            this.restartingKernel = true;
+
             // Ask the user if they want us to restart or not.
             const message = localize.DataScience.restartKernelMessage();
             const yes = localize.DataScience.restartKernelMessageYes();
@@ -252,6 +255,9 @@ export class History implements IWebPanelMessageListener, IHistory {
 
                     // Then restart the kernel
                     this.jupyterServer.restartKernel().ignoreErrors();
+                    this.restartingKernel = false;
+                } else {
+                    this.restartingKernel = false;
                 }
             });
         }
