@@ -77,7 +77,7 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
 
         const pkg = validPackages[validPackages.length - 1];
         const minimumVersion = this.appEnv.packageJson.languageServerVersion as string;
-        if (pkg.version.compare(minimumVersion) > 0) {
+        if (pkg.version.compare(minimumVersion) >= 0) {
             return validPackages[validPackages.length - 1];
         }
 
@@ -86,7 +86,7 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
         return {
             version: new SemVer(minimumVersion),
             package: LanguageServerPackageStorageContainers.stable,
-            uri: `${azureCDNBlobStorageAccount}/${LanguageServerPackageStorageContainers.stable}.${minimumVersion}.nupkg`
+            uri: `${azureCDNBlobStorageAccount}/${LanguageServerPackageStorageContainers.stable}/${this.getNugetPackageName()}.${minimumVersion}.nupkg`
         };
     }
 
