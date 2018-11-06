@@ -30,7 +30,6 @@ export class JupyterServer implements INotebookServer {
     private sessionStartTime: number | undefined;
     private tempFile: string | undefined;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
-    private pendingRequests : Kernel.IFuture[] = [];
 
     constructor(
         @inject(ILogger) private logger: ILogger,
@@ -209,12 +208,6 @@ export class JupyterServer implements INotebookServer {
             // Update our start time so we don't keep sending responses
             this.sessionStartTime = Date.now();
 
-            // Dispose of all of our pending requests so they don't error out when
-            // we restart
-            const copy = [...this.pendingRequests];
-            this.pendingRequests = [];
-            copy.forEach(p => p.dispose());
-
             // Restart our kernel
             return this.session.kernel.restart();
         }
@@ -274,7 +267,7 @@ export class JupyterServer implements INotebookServer {
     }
 
     private generateRequest = (code: string, silent: boolean) : Kernel.IFuture => {
-        const request = this.session.kernel.requestExecute(
+        return this.session.kernel.requestExecute(
             {
                 // Replace windows line endings with unix line endings.
                 code: code.replace('\r\n', '\n'),
@@ -284,11 +277,6 @@ export class JupyterServer implements INotebookServer {
             },
             true
         );
-
-        // Stick in our pending requests so we cancel this when we restart the kernel
-        this.pendingRequests.push(request);
-
-        return request;
     }
 
     private findKernelName = async (manager: SessionManager) : Promise<string> => {
@@ -306,7 +294,7 @@ export class JupyterServer implements INotebookServer {
         // Enumerate all of the kernel specs, scoring each as follows
         // - Path match = 10 Points. Very likely this is the right one
         // - Language match = 1 point. Might be a match
-        // - Version match = 4, 2, 1 points for different version parts.
+        // - Version match = 4 points for major version match
         const keys = Object.keys(manager.specs.kernelspecs);
         for (let i = 0; i < keys.length; i += 1) {
             const spec = manager.specs.kernelspecs[keys[i]];
@@ -521,34 +509,41 @@ export class JupyterServer implements INotebookServer {
             // Listen to the reponse messages and update state as we go
             if (request) {
                 request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-                    if (KernelMessage.isExecuteResultMsg(msg)) {
-                        this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
-                    } else if (KernelMessage.isExecuteInputMsg(msg)) {
-                        this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
-                    } else if (KernelMessage.isStatusMsg(msg)) {
-                        this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
-                    } else if (KernelMessage.isStreamMsg(msg)) {
-                        this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
-                    } else if (KernelMessage.isDisplayDataMsg(msg)) {
-                        this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
-                    } else if (KernelMessage.isErrorMsg(msg)) {
-                        this.handleError(msg as KernelMessage.IErrorMsg, cell);
-                    } else {
-                        this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
-                    }
+                    try {
+                        if (KernelMessage.isExecuteResultMsg(msg)) {
+                            this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
+                        } else if (KernelMessage.isExecuteInputMsg(msg)) {
+                            this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
+                        } else if (KernelMessage.isStatusMsg(msg)) {
+                            this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
+                        } else if (KernelMessage.isStreamMsg(msg)) {
+                            this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
+                        } else if (KernelMessage.isDisplayDataMsg(msg)) {
+                            this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
+                        } else if (KernelMessage.isErrorMsg(msg)) {
+                            this.handleError(msg as KernelMessage.IErrorMsg, cell);
+                        } else {
+                            this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+                        }
 
-                    // Set execution count, all messages should have it
-                    if (msg.content.execution_count) {
-                        cell.data.execution_count = msg.content.execution_count as number;
-                    }
+                        // Set execution count, all messages should have it
+                        if (msg.content.execution_count) {
+                            cell.data.execution_count = msg.content.execution_count as number;
+                        }
 
-                    // Show our update if any new output
-                    subscriber.next(cell);
+                        // Show our update if any new output
+                        subscriber.next(cell);
+                    } catch (err) {
+                        // If not a restart error, then tell the subscriber
+                        if (startTime > this.sessionStartTime) {
+                            this.logger.logError(`Error during message ${msg.header.msg_type}`);
+                            subscriber.error(err);
+                        }
+                    }
                 };
 
                 // Create completion and error functions so we can bind our cell object
                 const completion = (error : boolean) => {
-                    this.pendingRequests = this.pendingRequests.filter(v => v !== request);
                     cell.state = error ? CellState.error : CellState.finished;
                     // Only do this if start time is still valid
                     if (startTime > this.sessionStartTime) {
