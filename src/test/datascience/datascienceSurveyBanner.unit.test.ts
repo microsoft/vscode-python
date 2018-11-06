@@ -24,7 +24,7 @@ suite('Data Science Survey Banner', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         browser = typemoq.Mock.ofType<IBrowserService>();
     });
-    test('Data science banner should be enabled after we hit our command execution count', () => {
+    test('Data science banner should be enabled after we hit our command execution count', async () => {
         const enabledValue: boolean = true;
         const attemptCounter: number = 1000;
         const testBanner: DataScienceSurveyBanner = preparePopup(attemptCounter, enabledValue, 0, appShell.object, browser.object, targetUri);
@@ -36,7 +36,7 @@ suite('Data Science Survey Banner', () => {
                 return a === expectedUri;
             }))
         ).verifiable(typemoq.Times.once());
-        testBanner.launchSurvey();
+        await testBanner.launchSurvey();
         // This is technically not necessary, but it gives
         // better output than the .verifyAll messages do.
         expect(receivedUri).is.equal(expectedUri, 'Uri given to launch mock is incorrect.');
