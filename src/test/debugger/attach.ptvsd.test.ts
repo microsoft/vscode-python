@@ -146,12 +146,9 @@ suite('Attach Debugger', () => {
         ]);
         console.log('Step5');
         await logToConsole();
-        await Promise.all([
-            continueDebugging(debugClient),
-            // debugClient.assertOutput('stdout', 'this is print'),
-            debugClient.waitForEvent('exited'),
-            debugClient.waitForEvent('terminated')
-        ]);
+        await continueDebugging(debugClient);
+        await sleep(500);
+
         console.log('Step6');
         await logToConsole();
     }
