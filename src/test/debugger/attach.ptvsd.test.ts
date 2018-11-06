@@ -32,6 +32,7 @@ suite('Attach Debugger', () => {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
+        console.log(`Log file path ${logFile}`);
         this.timeout(60000);
         await logToConsole();
         fs.removeSync(logFile);
@@ -41,7 +42,7 @@ suite('Attach Debugger', () => {
     async function logToConsole() {
         console.log('Logging file details');
         if (await fs.pathExists(logFile)) {
-            const contents = fs.readFile(path.join(EXTENSION_ROOT_DIR, 'debug.log'), { encoding: 'utf8' });
+            const contents = await fs.readFile(path.join(EXTENSION_ROOT_DIR, 'debug.log'), { encoding: 'utf8' });
             console.log(contents);
         } else {
             console.error('No log file');
@@ -146,7 +147,10 @@ suite('Attach Debugger', () => {
         console.log('Step5');
         await logToConsole();
         await Promise.all([
-            continueDebugging(debugClient)
+            continueDebugging(debugClient),
+            // debugClient.assertOutput('stdout', 'this is print'),
+            debugClient.waitForEvent('exited'),
+            debugClient.waitForEvent('terminated')
         ]);
         console.log('Step6');
         await logToConsole();
