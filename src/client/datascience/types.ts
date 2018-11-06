@@ -33,6 +33,7 @@ export interface INotebookServer extends Disposable {
     restartKernel() : Promise<void>;
     translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
     launchNotebook(file: string) : Promise<boolean>;
+    waitForIdle() : Promise<void>;
 }
 
 export const INotebookProcess = Symbol('INotebookProcess');

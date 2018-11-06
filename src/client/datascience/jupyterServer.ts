@@ -81,6 +81,9 @@ export class JupyterServer implements INotebookServer {
             // Setup our start time. We reject anything that comes in before this time during execute
             this.sessionStartTime = Date.now();
 
+            // Wait for it to be ready
+            await this.session.kernel.ready;
+
             // Setup the default imports (this should be configurable in the future)
             this.executeSilently(
                 'import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt'
@@ -103,6 +106,16 @@ export class JupyterServer implements INotebookServer {
         }
         if (this.process) {
             this.process.dispose();
+        }
+    }
+
+    public waitForIdle = async () : Promise<void> => {
+        if (this.session && this.session.kernel) {
+            await this.session.kernel.ready;
+
+            while (this.session.kernel.status !== 'idle') {
+                await setTimeout(() => {}, 10);
+            }
         }
     }
 
@@ -203,16 +216,21 @@ export class JupyterServer implements INotebookServer {
         }
     }
 
-    public restartKernel = () : Promise<void> => {
+    public restartKernel = async () : Promise<void> => {
         if (this.session && this.session.kernel) {
             // Update our start time so we don't keep sending responses
             this.sessionStartTime = Date.now();
 
             // Restart our kernel
-            return this.session.kernel.restart();
+            await this.session.kernel.restart();
+
+            // Wait for it to be ready
+            await this.session.kernel.ready;
+
+            return;
         }
 
-        return Promise.reject(new Error(localize.DataScience.sessionDisposed()));
+        throw new Error(localize.DataScience.sessionDisposed());
     }
 
     public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {

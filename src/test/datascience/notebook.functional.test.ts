@@ -230,6 +230,10 @@ suite('Jupyter notebook tests', () => {
         await verifySimple('a+=1\r\na', 2);
         await verifySimple('a+=4\r\na', 6);
 
+        // In unit tests we have to wait for status idle before restarting. Unit tests
+        // seem to be timing out if the restart throws any exceptions (even if they're caught)
+        await jupyterServer.waitForIdle();
+
         await jupyterServer.restartKernel();
 
         await verifyError('a', `name 'a' is not defined`);
