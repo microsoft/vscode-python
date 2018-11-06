@@ -16,7 +16,7 @@ import { Cell, ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
-// tslint:disable:no-any no-multiline-string max-func-body-length
+// tslint:disable:no-any no-multiline-string max-func-body-length no-console
 suite('Jupyter notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
@@ -230,12 +230,20 @@ suite('Jupyter notebook tests', () => {
         await verifySimple('a+=1\r\na', 2);
         await verifySimple('a+=4\r\na', 6);
 
+        console.log('Waiting for idle');
+
         // In unit tests we have to wait for status idle before restarting. Unit tests
         // seem to be timing out if the restart throws any exceptions (even if they're caught)
         await jupyterServer.waitForIdle();
 
+        console.log('Restarting kernel');
+
         await jupyterServer.restartKernel();
 
+        console.log('Waiting for idle');
+        await jupyterServer.waitForIdle();
+
+        console.log('Verifying restart');
         await verifyError('a', `name 'a' is not defined`);
     });
 
