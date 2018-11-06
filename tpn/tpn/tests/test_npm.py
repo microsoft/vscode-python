@@ -66,6 +66,12 @@ async def test_projects():
         url="https://registry.npmjs.org/applicationinsights/-/applicationinsights-1.0.1.tgz",
     )
 
+    packages = await npm.projects_from_data(json.dumps(json_data), '["archy"]')
+    assert len(packages) == 3
+    assert "arch" in packages
+    assert "applicationinsights" in packages
+    assert "archy" in packages
+
     modified_data = json_data.copy()
     del modified_data["lockfileVersion"]
     with pytest.raises(ValueError):
