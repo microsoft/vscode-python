@@ -4,7 +4,6 @@
 import '../../client/common/extensions';
 
 import { ChildProcess, spawn } from 'child_process';
-import * as fs from 'fs-extra';
 import * as getFreePort from 'get-port';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
@@ -27,29 +26,15 @@ const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', '
 suite('Attach Debugger', () => {
     let debugClient: DebugClient;
     let proc: ChildProcess;
-    const logFile = path.join(EXTENSION_ROOT_DIR, 'debug.log');
     setup(async function () {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
-        console.log(`Log file path ${logFile}`);
         this.timeout(60000);
-        await logToConsole();
-        fs.removeSync(logFile);
         const coverageDirectory = path.join(EXTENSION_ROOT_DIR, 'debug_coverage_attach_ptvsd');
         debugClient = await createDebugAdapter(coverageDirectory);
     });
-    async function logToConsole() {
-        console.log('Logging file details');
-        if (await fs.pathExists(logFile)) {
-            const contents = await fs.readFile(path.join(EXTENSION_ROOT_DIR, 'debug.log'), { encoding: 'utf8' });
-            console.log(contents);
-        } else {
-            console.error('No log file');
-        }
-    }
     teardown(async () => {
-        await logToConsole();
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
         await sleep(1000);
         try {
@@ -60,7 +45,6 @@ suite('Attach Debugger', () => {
                 proc.kill();
             } catch { }
         }
-        await logToConsole();
     });
     async function testAttachingToRemoteProcess(localRoot: string, remoteRoot: string, isLocalHostWindows: boolean) {
         const localHostPathSeparator = isLocalHostWindows ? '\\' : '/';
@@ -71,18 +55,11 @@ suite('Attach Debugger', () => {
         // tslint:disable-next-line:no-string-literal
         env['PYTHONPATH'] = PTVSD_PATH;
         const pythonArgs = ['-m', 'ptvsd', '--host', 'localhost', '--wait', '--port', `${port}`, '--file', fileToDebug.fileToCommandArgument()];
-        console.log(pythonArgs);
         proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });
-
-        proc.stderr.on('data', (data: Buffer) => console.error(`\nStdErr:${data.toString()}`));
-        proc.stdout.on('data', (data: Buffer) => console.info(`\nStdOut:${data.toString()}`));
-        proc.once('error', ex => {
-            console.error('error in proc');
-            console.error(ex);
-        });
+        const exited = new Promise(resolve => proc.once('close', resolve));
 
         await sleep(3000);
-        await logToConsole();
+
         // Send initialize, attach
         const initializePromise = debugClient.initializeRequest({
             adapterID: DebuggerTypeName,
@@ -109,11 +86,8 @@ suite('Attach Debugger', () => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer.setup(c => c.get(IPlatformService, TypeMoq.It.isAny())).returns(() => platformService.object);
         const configProvider = new PythonV2DebugConfigurationProvider(serviceContainer.object);
-        console.log('Step1');
-        await logToConsole();
+
         await configProvider.resolveDebugConfiguration({ index: 0, name: 'root', uri: Uri.file(localRoot) }, options);
-        console.log('Step2');
-        await logToConsole();
         const attachPromise = debugClient.attachRequest(options);
 
         await Promise.all([
@@ -121,10 +95,9 @@ suite('Attach Debugger', () => {
             attachPromise,
             debugClient.waitForEvent('initialized')
         ]);
-        console.log('Step3');
-        await logToConsole();
-        // const stdOutPromise = debugClient.assertOutput('stdout', 'this is stdout');
-        // const stdErrPromise = debugClient.assertOutput('stderr', 'this is stderr');
+
+        const stdOutPromise = debugClient.assertOutput('stdout', 'this is stdout');
+        const stdErrPromise = debugClient.assertOutput('stderr', 'this is stderr');
 
         // Don't use path utils, as we're building the paths manually (mimic windows paths on unix test servers and vice versa).
         const localFileName = `${localRoot}${localHostPathSeparator}${path.basename(fileToDebug)}`;
@@ -136,21 +109,16 @@ suite('Attach Debugger', () => {
         });
         const exceptionBreakpointPromise = debugClient.setExceptionBreakpointsRequest({ filters: [] });
         const breakpointStoppedPromise = debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
-        console.log('Step4');
-        await logToConsole();
+
         await Promise.all([
             breakpointPromise, exceptionBreakpointPromise,
             debugClient.configurationDoneRequest(), debugClient.threadsRequest(),
-            // stdOutPromise, stdErrPromise,
+            stdOutPromise, stdErrPromise,
             breakpointStoppedPromise
         ]);
-        console.log('Step5');
-        await logToConsole();
-        await continueDebugging(debugClient);
-        await sleep(500);
 
-        console.log('Step6');
-        await logToConsole();
+        await continueDebugging(debugClient);
+        await exited;
     }
     test('Confirm we are able to attach to a running program', async () => {
         await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
