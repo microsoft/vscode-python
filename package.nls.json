@@ -83,5 +83,8 @@
     "Interpreters.LoadingInterpreters": "Loading Python Interpreters",
     "DataScience.restartKernelMessage" : "Do you want to restart the Jupter kernel? All variables will be lost.",
     "DataScience.restartKernelMessageYes" : "Restart",
-    "DataScience.restartKernelMessageNo" : "Cancel"
+    "DataScience.restartKernelMessageNo" : "Cancel",
+    "DataScienceSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Python Data Science features are working for you?",
+    "DataScienceSurveyBanner.bannerLabelYes": "Yes, take survey now",
+    "DataScienceSurveyBanner.bannerLabelNo": "No, thanks"
 }
