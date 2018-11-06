@@ -162,7 +162,7 @@ suite('Language Server Package Service', () => {
         const expectedPackage: NugetPackage = {
             version: new SemVer(minimumVersion),
             package: LanguageServerPackageStorageContainers.stable,
-            uri: `${azureCDNBlobStorageAccount}/${LanguageServerPackageStorageContainers.stable}.${minimumVersion}.nupkg`
+            uri: `${azureCDNBlobStorageAccount}/${LanguageServerPackageStorageContainers.stable}/${packageName}.${minimumVersion}.nupkg`
         };
         expect(info).to.deep.equal(expectedPackage);
     });
