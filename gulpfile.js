@@ -191,7 +191,7 @@ async function checkDatascienceDependencies() {
         const nameWithoutNodeModules = name.substring('./node_modules'.length);
         let moduleName1 = nameWithoutNodeModules.split('/')[1];
         moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
-        const moduleName2 = path.join(nameWithoutNodeModules.split('/')[1], nameWithoutNodeModules.split('/')[2]);
+        const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
 
         const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1);
         switch (matchedModules.length) {
