@@ -30,6 +30,17 @@ def test_news_entry_formatting(directory):
         assert result.description == body
 
 
+def test_news_entry_sorting(directory):
+    oldest_entry = directory / "45.md"
+    newest_entry = directory / "123.md"
+    oldest_entry.write_text("45", encoding="utf-8")
+    newest_entry.write_text("123", encoding="utf-8")
+    results = list(ann.news_entries(directory))
+    assert len(results) == 2
+    assert results[0].issue_number == 45
+    assert results[1].issue_number == 123
+
+
 def test_only_utf8(directory):
     entry = directory / "42.md"
     entry.write_text("Hello, world", encoding="utf-16")
