@@ -22,9 +22,8 @@ import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { HistoryMessages, Telemetry } from './constants';
-import { CellState, ICell, ICodeCssGenerator, IHistory, INotebookServer, IStatusProvider, IJupyterExecution } from './types';
-import { Deferred, createDeferred, createDeferredFrom } from '../common/utils/async';
 import { JupyterInstallError } from './jupyterInstallError';
+import { CellState, ICell, ICodeCssGenerator, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
@@ -45,7 +44,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(IWebPanelProvider) private provider: IWebPanelProvider,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) private cssGenerator : ICodeCssGenerator,
-        @inject(IStatusProvider) private statusProvider : IStatusProvider, 
+        @inject(IStatusProvider) private statusProvider : IStatusProvider,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution) {
 
         // Sign up for configuration changes

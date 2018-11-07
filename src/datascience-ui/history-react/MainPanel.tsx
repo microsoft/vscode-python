@@ -20,6 +20,7 @@ import { MenuBar } from './menuBar';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
+    ignoreProgress? : boolean;
     theme: string;
 }
 
@@ -65,7 +66,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const expandAllImage = this.props.theme !== 'vscode-dark' ? './images/ExpandAll/ExpandAll_16x_vscode.svg' :
         './images/ExpandAll/ExpandAll_16x_vscode_dark.svg';
 
-        const progressBar = this.state.busy ? <Progress /> : undefined;
+        const progressBar = this.state.busy && !this.props.ignoreProgress ? <Progress /> : undefined;
 
         return (
             <div className='main-panel'>
@@ -122,11 +123,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 return true;
 
             case HistoryMessages.StartProgress:
-                this.setState({...this.state, busy: true});
+                if (!this.props.ignoreProgress) {
+                    this.setState({busy: true});
+                }
                 break;
 
             case HistoryMessages.StopProgress:
-                this.setState({...this.state, busy: false});
+                if (!this.props.ignoreProgress) {
+                    this.setState({busy: false});
+                }
                 break;
 
             default:
@@ -197,7 +202,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Now assign our new array copy to state
         this.setState({
-            ...this.state,
             cellVMs: newCells,
             skipNextScroll: true
         });
@@ -216,7 +220,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Now assign our new array copy to state
         this.setState({
-            ...this.state,
             cellVMs: newCells,
             skipNextScroll: true
         });
@@ -268,7 +271,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }),
             undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
             skipNextScroll: true,
-            busy: this.state.busy
         });
     }
 
@@ -295,7 +297,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             undoStack: undoStack,
             redoStack: redoStack,
             skipNextScroll: true,
-            busy: this.state.busy
         });
     }
 
@@ -310,7 +311,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             undoStack : undoStack,
             redoStack : redoStack,
             skipNextScroll : true,
-            busy: this.state.busy
         });
     }
 
@@ -354,7 +354,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                     redoStack: this.state.redoStack,
                     skipNextScroll: false,
-                    busy: this.state.busy
                 });
             }
         }
@@ -375,7 +374,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             cellVMArray[cellVMIndex] = this.toggleCellVM(targetCellVM);
 
             this.setState({
-                ...this.state,
                 skipNextScroll: true,
                 cellVMs: cellVMArray
             });

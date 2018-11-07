@@ -10,8 +10,8 @@ import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, EditorContexts, RegExpValues, Telemetry } from '../constants';
-import { ICodeWatcher, IHistoryProvider } from '../types';
 import { JupyterInstallError } from '../jupyterInstallError';
+import { ICodeWatcher, IHistoryProvider } from '../types';
 
 export interface ICell {
     range: Range;
@@ -160,6 +160,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    // tslint:disable-next-line:no-any
     private handleError = (err : any) => {
         if ((<JupyterInstallError>err).actionTitle !== undefined) {
             const jupyterError = err as JupyterInstallError;
