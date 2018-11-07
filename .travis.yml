@@ -41,6 +41,9 @@ matrix:
           env: DEBUGGER_TEST_RELEASE=true
         - os: linux
           python: "3.7-dev"
+          env: LANGUAGE_SERVER_TEST=true
+        - os: linux
+          python: "3.7-dev"
           env: SINGLE_WORKSPACE_TEST=true
         - os: linux
           python: "3.7-dev"
@@ -96,6 +99,10 @@ script:
   - if [ $FUNCTIONAL_TEST == "true" ]; then
         python -m pip install --upgrade -r functionalTestRequirements.txt;
         npm run test:functional;
+    fi
+  - if [ $LANGUAGE_SERVER_TEST == "true" ]; then
+        npm run cover:enable;
+        npm run testAnalysisEngine --silent;
     fi
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then
         npm run cover:enable;
