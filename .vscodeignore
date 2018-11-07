@@ -5,6 +5,7 @@
 .gitattributes
 .gitignore
 .gitmodules
+.huskyrc.json
 .npmrc
 .travis.yml
 CODE_OF_CONDUCT.md

@@ -693,14 +693,7 @@ function getFileListToProcess(options) {
 
 exports.hygiene = hygiene;
 
-// // this allows us to run hygiene via CLI (e.g. `node gulfile.js`).
-// if (require.main === module) {
-//     const args = process.argv0.length > 2 ? process.argv.slice(2) : [];
-//     const isPreCommit = args.findIndex(arg => arg.startsWith('precommit='));
-//     const performPreCommitCheck = isPreCommit >= 0 ? args[isPreCommit].split('=')[1].trim().toUpperCase().startsWith('T') : false;
-//     // Allow precommit hooks for those with a file `./out/precommit.hook`.
-//     if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
-//         return;
-//     }
-//     run({ exitOnError: true, mode: 'staged' }, () => { });
-// }
+// this allows us to run hygiene via CLI (e.g. `node gulfile.js`).
+if (require.main === module) {
+    run({ exitOnError: true, mode: 'staged' }, () => {});
+}
