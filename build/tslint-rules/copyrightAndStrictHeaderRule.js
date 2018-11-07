@@ -11,14 +11,8 @@ const copyrightHeader = [
     '',
     '\'use strict\';'
 ];
-const copyrightHeaderNoSpace = [
-    '// Copyright (c) Microsoft Corporation. All rights reserved.',
-    '// Licensed under the MIT License.',
-    '\'use strict\';'
-];
-
-const allowedCopyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n'), copyrightHeaderNoSpace.join('\n'), copyrightHeaderNoSpace.join('\r\n')];
-const failureMessage = 'Header must contain copyright and \'use strict\' in the Python Extension';
+const allowedCopyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n'), '\'use strict\';'];
+const failureMessage = 'Header must contain \'use strict\' or both copyright and \'use strict\' in the Python Extension';
 class NoFileWithoutCopyrightHeader extends baseRuleWalker_1.BaseRuleWalker {
     visitSourceFile(sourceFile) {
         if (!this.sholdIgnoreCcurrentFile(sourceFile)) {
