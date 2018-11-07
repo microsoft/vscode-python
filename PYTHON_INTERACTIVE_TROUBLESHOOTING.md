@@ -1,15 +1,15 @@
 # Trouble shooting the Python Interactive Window
 
-This document is intended to help trouble shoot problems in the Python Interactive Window.
+This document is intended to help troubleshoot problems in the Python Interactive Window.
 
 ---
 ## Jupyter Not Installed
 This error can happen when you 
 
 * Don't have Jupyter installed
-* Have picked the wrong python environment (one that doesn't have Jupyter installed).
+* Have picked the wrong Python environment (one that doesn't have Jupyter installed).
 
-### The first step is to verify you are running the python environment you want. 
+### The first step is to verify you are running the Python environment you want. 
 
 You can do this by either selecting it in the dropdown at the bottom of VS Code:
 
@@ -21,7 +21,7 @@ import sys
 sys.version
 ```
 
-### The second step (if changing the python version doesn't work) is to install Jupyter
+### The second step (if changing the Python version doesn't work) is to install Jupyter
 
 You can do this in a number of different ways:
 
@@ -47,4 +47,4 @@ You can also install Jupyter using pip. This is a little more work because you h
 1. python -m pip install notebook
 1. python -m pip install nbconvert
 1. Restart VS Code
-1. Pick the python environment you did the pip install in
+1. Pick the Python environment you did the pip install in
