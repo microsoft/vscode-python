@@ -1,3 +1,4 @@
+// tslint:disable:no-useless-files copyright-and-strict-header
 // // Copyright (c) Microsoft Corporation. All rights reserved.
 // // Licensed under the MIT License.
 
