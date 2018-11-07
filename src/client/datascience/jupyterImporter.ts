@@ -58,7 +58,7 @@ export class JupyterImporter implements INotebookImporter {
             return result.stdout;
         }
 
-        throw localize.DataScience.jupyterNotSupported();
+        throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
     }
 
     public dispose = () => {

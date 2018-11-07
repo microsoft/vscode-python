@@ -58,3 +58,7 @@ export namespace Telemetry {
     export const ExpandAll = 'DATASCIENCE.EXPAND_ALL';
     export const CollapseAll = 'DATASCIENCE.COLLAPSE_ALL';
 }
+
+export namespace HelpLinks {
+    export const PythonInteractiveHelpLink = 'https://aka.ms/pyaiinstall';
+}
