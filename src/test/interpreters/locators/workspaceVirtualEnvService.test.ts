@@ -61,6 +61,8 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
         locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE);
 
         await deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`));
+        // https://github.com/Microsoft/vscode-python/issues/3239
+        this.skip();
     });
 
     suiteTeardown(() => deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`)));

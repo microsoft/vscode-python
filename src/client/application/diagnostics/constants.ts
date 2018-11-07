@@ -10,5 +10,6 @@ export enum DiagnosticCodes {
     MacInterpreterSelectedAndNoOtherInterpretersDiagnostic = 'MacInterpreterSelectedAndNoOtherInterpretersDiagnostic',
     MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic = 'MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic',
     InvalidPythonPathInDebuggerDiagnostic = 'InvalidPythonPathInDebuggerDiagnostic',
-    EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic = 'EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic'
+    EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic = 'EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic',
+    NoCurrentlySelectedPythonInterpreterDiagnostic = 'InvalidPythonInterpreterDiagnostic'
 }

@@ -47,13 +47,14 @@ _numpy_doc_string_cache = None
 
 def _get_numpy_doc_string_cls():
     global _numpy_doc_string_cache
+    if isinstance(_numpy_doc_string_cache, ImportError):
+        raise _numpy_doc_string_cache
     try:
         from numpydoc.docscrape import NumpyDocString
         _numpy_doc_string_cache = NumpyDocString
     except ImportError as e:
         _numpy_doc_string_cache = e
-    if isinstance(_numpy_doc_string_cache, ImportError):
-        raise _numpy_doc_string_cache
+        raise
     return _numpy_doc_string_cache
 
 
@@ -67,7 +68,7 @@ def _search_param_in_numpydocstr(docstr, param_str):
         return []
     for p_name, p_type, p_descr in params:
         if p_name == param_str:
-            m = re.match('([^,]+(,[^,]+)*?)(,[ ]*optional)?$', p_type)
+            m = re.match(r'([^,]+(,[^,]+)*?)(,[ ]*optional)?$', p_type)
             if m:
                 p_type = m.group(1)
             return list(_expand_typestr(p_type))
@@ -102,11 +103,11 @@ def _expand_typestr(type_str):
     Attempts to interpret the possible types in `type_str`
     """
     # Check if alternative types are specified with 'or'
-    if re.search('\\bor\\b', type_str):
+    if re.search(r'\bor\b', type_str):
         for t in type_str.split('or'):
             yield t.split('of')[0].strip()
     # Check if like "list of `type`" and set type to list
-    elif re.search('\\bof\\b', type_str):
+    elif re.search(r'\bof\b', type_str):
         yield type_str.split('of')[0]
     # Check if type has is a set of valid literal values eg: {'C', 'F', 'A'}
     elif type_str.startswith('{'):
@@ -193,7 +194,7 @@ def _evaluate_for_statement_string(module_context, string):
     if string is None:
         return []
 
-    for element in re.findall('((?:\w+\.)*\w+)\.', string):
+    for element in re.findall(r'((?:\w+\.)*\w+)\.', string):
         # Try to import module part in dotted name.
         # (e.g., 'threading' in 'threading.Thread').
         string = 'import %s\n' % element + string
@@ -212,6 +213,9 @@ def _evaluate_for_statement_string(module_context, string):
         # which is also not the last item, because there's a newline.
         stmt = funcdef.children[-1].children[-1].children[-2]
     except (AttributeError, IndexError):
+        return []
+
+    if stmt.type not in ('name', 'atom', 'atom_expr'):
         return []
 
     from jedi.evaluate.context import FunctionContext
@@ -262,7 +266,8 @@ def _execute_array_values(evaluator, array):
 
 @evaluator_method_cache()
 def infer_param(execution_context, param):
-    from jedi.evaluate.context.instance import AnonymousInstanceFunctionExecution
+    from jedi.evaluate.context.instance import InstanceArguments
+    from jedi.evaluate.context import FunctionExecutionContext
 
     def eval_docstring(docstring):
         return ContextSet.from_iterable(
@@ -276,9 +281,10 @@ def infer_param(execution_context, param):
         return NO_CONTEXTS
 
     types = eval_docstring(execution_context.py__doc__())
-    if isinstance(execution_context, AnonymousInstanceFunctionExecution) and \
-            execution_context.function_context.name.string_name == '__init__':
-        class_context = execution_context.instance.class_context
+    if isinstance(execution_context, FunctionExecutionContext) \
+            and isinstance(execution_context.var_args, InstanceArguments) \
+            and execution_context.function_context.py__name__() == '__init__':
+        class_context = execution_context.var_args.instance.class_context
         types |= eval_docstring(class_context.py__doc__())
 
     return types

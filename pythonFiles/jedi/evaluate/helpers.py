@@ -9,7 +9,6 @@ from parso.python import tree
 
 from jedi._compatibility import unicode
 from jedi.parser_utils import get_parent_scope
-from jedi.evaluate.compiled import CompiledObject
 
 
 def is_stdlib_path(path):
@@ -20,7 +19,7 @@ def is_stdlib_path(path):
         return False
 
     base_path = os.path.join(sys.prefix, 'lib', 'python')
-    return bool(re.match(re.escape(base_path) + '\d.\d', path))
+    return bool(re.match(re.escape(base_path) + r'\d.\d', path))
 
 
 def deep_ast_copy(obj):
@@ -65,6 +64,10 @@ def evaluate_call_of_leaf(context, leaf, cut_own_trailer=False):
     The option ``cut_own_trailer`` must be set to true for the second purpose.
     """
     trailer = leaf.parent
+    if trailer.type == 'fstring':
+        from jedi.evaluate import compiled
+        return compiled.get_string_context_set(context.evaluator)
+
     # The leaf may not be the last or first child, because there exist three
     # different trailers: `( x )`, `[ x ]` and `.x`. In the first two examples
     # we should not match anything more than x.
@@ -184,6 +187,7 @@ def predefine_names(context, flow_scope, dct):
 
 
 def is_compiled(context):
+    from jedi.evaluate.compiled import CompiledObject
     return isinstance(context, CompiledObject)
 
 
@@ -212,3 +216,24 @@ def get_int_or_none(context):
 
 def is_number(context):
     return _get_safe_value_or_none(context, (int, float)) is not None
+
+
+class EvaluatorTypeError(Exception):
+    pass
+
+
+class EvaluatorIndexError(Exception):
+    pass
+
+
+class EvaluatorKeyError(Exception):
+    pass
+
+
+@contextmanager
+def reraise_as_evaluator(*exception_classes):
+    try:
+        yield
+    except exception_classes as e:
+        new_exc_cls = globals()['Evaluator' + e.__class__.__name__]
+        raise new_exc_cls(e)

@@ -18,26 +18,19 @@ const ts = require('gulp-typescript');
 const cp = require('child_process');
 const spawn = require('cross-spawn');
 const colors = require('colors/safe');
-const gitmodified = require('gulp-gitmodified');
 const path = require('path');
-const debounce = require('debounce');
 const jeditor = require("gulp-json-editor");
 const del = require('del');
 const sourcemaps = require('gulp-sourcemaps');
 const fs = require('fs');
+const fsExtra = require('fs-extra');
 const remapIstanbul = require('remap-istanbul');
 const istanbul = require('istanbul');
 const glob = require('glob');
-const os = require('os');
 const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
-const webpack = require('webpack');
-const webpack_config = require('./webpack.default.config');
-const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages');
-const chalk = require('chalk');
-const printBuildError = require('react-dev-utils/printBuildError');
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
@@ -160,100 +153,85 @@ gulp.task('inlinesource', () => {
         .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
 
-gulp.task('compile-webviews', (done) => {
-    // Clear screen before starting
-    console.log('\x1Bc');
+gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
 
-    // First copy the files/css/svg/png files to the output folder
-    gulp.src('./src/**/*.{png,svg,css}')
-        .pipe(gulp.dest('./out'));
-
-    // Then our theme json
-    gulp.src('./src/**/*theme*.json')
-        .pipe(gulp.dest('./out'));
-
-    // Then run webpack on the output files
-    gulp.src('./out/**/*react/index.js')
-        .pipe(es.through(file => webify(file, false)));
-
-    done();
-});
-
-gulp.task('compile-webviews-watch', () => {
-    // Watch all files that are written by the compile task, except for the bundle generated
-    // by compile-webviews. Watch the css files too, but in the src directory because webpack
-    // will modify the output ones.
-    gulp.watch(['./out/**/*react*/*.js', './src/**/*react*/*.{png,svg,css}', './out/**/react*/*.js', '!./out/**/*react*/*_bundle.js'], gulp.series('compile-webviews'));
-});
-
-const webify = (file) => {
-    console.log('Webpacking ' + file.path);
-
-    // Replace the entry with our actual file
-    let config = Object.assign({}, webpack_config);
-    config.entry = [...config.entry, file.path];
-
-    // Update the output path to be next to our bundle.js
-    const split = path.parse(file.path);
-    config.output.path = split.dir;
-
-    // Update our template to be based on our source
-    const srcpath = path.join(__dirname, 'src', file.relative);
-    const html = path.join(path.parse(srcpath).dir, 'index.html');
-    config.plugins[0].options.template = html;
-
-    // Then spawn our webpack on the base name
-    let compiler = webpack(config);
-    return new Promise((resolve, reject) => {
-
-        // Create a callback for errors and such
-        const compilerCallback = (err, stats) => {
-            if (err) {
-                return reject(err);
-            }
-            const messages = formatWebpackMessages(stats.toJson({}, true));
-            if (messages.errors.length) {
-                // Only keep the first error. Others are often indicative
-                // of the same problem, but confuse the reader with noise.
-                if (messages.errors.length > 1) {
-                    messages.errors.length = 1;
-                }
-                return reject(new Error(messages.errors.join('\n\n')));
-            }
-            if (
-                process.env.CI &&
-                (typeof process.env.CI !== 'string' ||
-                    process.env.CI.toLowerCase() !== 'false') &&
-                messages.warnings.length
-            ) {
-                console.log(
-                    chalk.yellow(
-                        '\nTreating warnings as errors because process.env.CI = true.\n' +
-                        'Most CI servers set it automatically.\n'
-                    )
-                );
-                return reject(new Error(messages.warnings.join('\n\n')));
-            }
-            return resolve({
-                stats,
-                warnings: messages.warnings,
-            });
-        }
-
-        // Watch doesn't seem to work
-        compiler.run(compilerCallback);
-    }).then(
-        stats => {
-            console.log(chalk.white('Finished ' + file.path + '.\n'));
-            printBuildError(stats.warnings);
-        }).catch(
-            err => {
-                console.log(chalk.red('Failed to compile.\n'));
-                printBuildError(err);
-            }
-        )
+function buildDatascienceDependencies() {
+    fsExtra.ensureDirSync(path.join(__dirname, 'tmp'));
+    spawn.sync('npm', ['run', 'dump-datascience-webpack-stats']);
 }
 
+async function checkDatascienceDependencies() {
+    buildDatascienceDependencies();
+
+    const existingModulesFileName = 'package.datascience-ui.dependencies.json';
+    const existingModulesFile = path.join(__dirname, existingModulesFileName);
+    const existingModulesList = JSON.parse(await fsExtra.readFile(existingModulesFile).then(data => data.toString()));
+    const existingModules = new Set(existingModulesList);
+    const existingModulesCopy = new Set(existingModulesList);
+
+    const statsOutput = path.join(__dirname, 'tmp', 'ds-stats.json');
+    const contents = await fsExtra.readFile(statsOutput).then(data => data.toString());
+    const startIndex = contents.toString().indexOf('{') - 1;
+
+    const json = JSON.parse(contents.substring(startIndex));
+    const newModules = new Set();
+    const packageLock = JSON.parse(await fsExtra.readFile('package-lock.json').then(data => data.toString()));
+    const modulesInPackageLock = Object.keys(packageLock.dependencies);
+
+    // Right now the script only handles two parts in the dependency name (with one '/').
+    // If we have dependencies with more than one '/', then update this code.
+    if (modulesInPackageLock.some(dependency => dependency.indexOf('/') !== dependency.lastIndexOf('/'))) {
+        throwAndLogError('Dependencies detected with more than one \'/\', please update this script.');
+    }
+    json.children[0].modules.forEach(m => {
+        const name = m.name;
+        if (!name.startsWith('./node_modules')) {
+            return;
+        }
+        const nameWithoutNodeModules = name.substring('./node_modules'.length);
+        let moduleName1 = nameWithoutNodeModules.split('/')[1];
+        moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
+        const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
+
+        const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1);
+        switch (matchedModules.length) {
+            case 0:
+                throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
+                break;
+            case 1:
+                break;
+            default: {
+                throwAndLogError(`Exact Dependency not found in package-lock.json, Dependency = '${name}'`);
+            }
+        }
+
+        const moduleName = matchedModules[0];
+        if (existingModulesCopy.has(moduleName)) {
+            existingModulesCopy.delete(moduleName);
+        }
+        if (existingModules.has(moduleName) || newModules.has(moduleName)) {
+            return;
+        }
+        newModules.add(moduleName);
+    });
+
+    const errorMessages = [];
+    if (newModules.size > 0) {
+        errorMessages.push(`Add the untracked dependencies '${Array.from(newModules.values()).join(', ')}' to ${existingModulesFileName}`);
+    }
+    if (existingModulesCopy.size > 0) {
+        errorMessages.push(`Remove the unused '${Array.from(existingModulesCopy.values()).join(', ')}' dependencies from ${existingModulesFileName}`);
+    }
+    if (errorMessages.length > 0) {
+        throwAndLogError(errorMessages.join('\n'));
+    }
+}
+function throwAndLogError(message) {
+    if (message.length > 0) {
+        console.error(colors.red(message));
+        throw new Error(message);
+    }
+}
 function hasNativeDependencies() {
     let nativeDependencies = nativeDependencyChecker.check(path.join(__dirname, 'node_modules'));
     if (!Array.isArray(nativeDependencies) || nativeDependencies.length === 0) {
@@ -620,13 +598,13 @@ function git(args) {
 }
 
 function getStagedFilesSync() {
-    const out = git(['diff','--cached','--name-only']);
+    const out = git(['diff', '--cached', '--name-only']);
     return out
         .split(/\r?\n/)
         .filter(l => !!l);
 }
 function getAddedFilesSync() {
-    const out = git(['status','-u','-s']);
+    const out = git(['status', '-u', '-s']);
     return out
         .split(/\r?\n/)
         .filter(l => !!l)
@@ -675,7 +653,7 @@ function getModifiedFilesSync() {
 }
 
 function getDifferentFromMasterFilesSync() {
-    const out = git(['diff','--name-status','master']);
+    const out = git(['diff', '--name-status', 'master']);
     return out
         .split(/\r?\n/)
         .filter(l => !!l)
@@ -715,14 +693,14 @@ function getFileListToProcess(options) {
 
 exports.hygiene = hygiene;
 
-// this allows us to run hygiene via CLI (e.g. `node gulfile.js`).
-if (require.main === module) {
-    const args = process.argv0.length > 2 ? process.argv.slice(2) : [];
-    const isPreCommit = args.findIndex(arg => arg.startsWith('precommit='));
-    const performPreCommitCheck = isPreCommit >= 0 ? args[isPreCommit].split('=')[1].trim().toUpperCase().startsWith('T') : false;
-    // Allow precommit hooks for those with a file `./out/precommit.hook`.
-    if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
-        return;
-    }
-    run({ exitOnError: true, mode: 'staged' }, () => {});
-}
+// // this allows us to run hygiene via CLI (e.g. `node gulfile.js`).
+// if (require.main === module) {
+//     const args = process.argv0.length > 2 ? process.argv.slice(2) : [];
+//     const isPreCommit = args.findIndex(arg => arg.startsWith('precommit='));
+//     const performPreCommitCheck = isPreCommit >= 0 ? args[isPreCommit].split('=')[1].trim().toUpperCase().startsWith('T') : false;
+//     // Allow precommit hooks for those with a file `./out/precommit.hook`.
+//     if (args.length > 0 && (!performPreCommitCheck || !fs.existsSync(path.join(__dirname, 'precommit.hook')))) {
+//         return;
+//     }
+//     run({ exitOnError: true, mode: 'staged' }, () => { });
+// }
