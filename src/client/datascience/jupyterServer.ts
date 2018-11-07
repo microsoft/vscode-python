@@ -86,16 +86,18 @@ export class JupyterServer implements INotebookServer {
             // Wait for it to be ready
             await this.session.kernel.ready;
 
-            // Check for default dark theme, if so set matplot lib to use dark_background settings
-            let theme: string = '';
+            // Check for dark theme, if so set matplot lib to use dark_background settings
+            let darkTheme: boolean = false;
             const workbench = this.workspaceService.getConfiguration('workbench');
             if (workbench) {
-                theme = workbench.get<string>('colorTheme');
+                const theme = workbench.get<string>('colorTheme');
+                if (theme) {
+                    darkTheme = /dark/i.test(theme);
+                }
             }
 
-            // Setup the default imports (this should be configurable in the future)
             this.executeSilently(
-                `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${theme === 'Default Dark+' ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
+                `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
             ).ignoreErrors();
 
             return true;
