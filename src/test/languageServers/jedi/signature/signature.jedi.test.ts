@@ -6,11 +6,12 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
 import { rootWorkspaceUri } from '../../../common';
 import { closeActiveWindows, initialize, initializeTest } from '../../../initialize';
 import { UnitTestIocContainer } from '../../../unittests/serviceRegistry';
 
-const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'signature');
+const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'signature');
 
 class SignatureHelpResult {
     constructor(
