@@ -30,13 +30,13 @@ suite('Jupyter notebook tests', () => {
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
     });
 
-    teardown(() => {
+    teardown(async () => {
         disposables.forEach(disposable => {
             if (disposable) {
                 disposable.dispose();
             }
         });
-        jupyterServer.dispose();
+        await jupyterServer.shutdown();
         ioc.dispose();
     });
 

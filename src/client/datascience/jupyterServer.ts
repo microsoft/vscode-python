@@ -45,6 +45,8 @@ export class JupyterServer implements INotebookServer {
     public start = async () : Promise<boolean> => {
 
         if (await this.jupyterExecution.isNotebookSupported()) {
+            // If we're restarting, don't dispose
+            this.isDisposed = false;
 
             // First generate a temporary notebook. We need this as input to the session
             this.tempFile = await this.generateTempFile();
@@ -234,10 +236,7 @@ export class JupyterServer implements INotebookServer {
             this.sessionStartTime = Date.now();
 
             // Restart our kernel
-            await this.session.kernel.restart();
-
-            // Wait for it to be ready
-            await this.session.kernel.ready;
+            await this.forceRestart();
 
             return;
         }
@@ -309,8 +308,21 @@ export class JupyterServer implements INotebookServer {
         );
     }
 
-    private timeout(ms : number) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+    private forceRestart = async () : Promise<void> => {
+        // Wait for a restart and a timeout. If we timeout, then instead do a
+        // dispose and restart
+        const result = await Promise.race([this.session.kernel.restart(), this.timeout(5000)]);
+        if (typeof result === 'number') {
+            this.logger.logWarning('Restart of Jupyter Server failed. Forcing a full restart');
+
+            // Then we didn't restart. We timed out. Dispose and restart
+            await this.shutdown();
+            await this.start();
+        }
+    }
+
+    private timeout(ms : number) : Promise<number> {
+        return new Promise(resolve => setTimeout(resolve, ms, ms));
     }
 
     private findKernelName = async (manager: SessionManager) : Promise<string> => {
