@@ -282,8 +282,6 @@ let configuration;
  */
 function getLinter(options) {
     configuration = configuration ? configuration : tslint.Configuration.findConfiguration(null, '.');
-    // Copyright header is never to be made mandatory for external contributors.
-    configuration.results.rules.has('copyright-and-strict-header');
     const program = tslint.Linter.createProgram('./tsconfig.json');
     const linter = new tslint.Linter({ formatter: 'json' }, program);
     return { linter, configuration };

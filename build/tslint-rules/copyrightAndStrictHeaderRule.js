@@ -12,7 +12,7 @@ const copyrightHeader = [
     '\'use strict\';'
 ];
 const allowedCopyrightHeaders = [copyrightHeader.join('\n'), copyrightHeader.join('\r\n'), '\'use strict\';'];
-const failureMessage = 'Header must contain \'use strict\' or both copyright and \'use strict\' in the Python Extension';
+const failureMessage = 'Header must contain either \'use strict\' or [copyright] & \'use strict\' in the Python Extension files';
 class NoFileWithoutCopyrightHeader extends baseRuleWalker_1.BaseRuleWalker {
     visitSourceFile(sourceFile) {
         if (!this.sholdIgnoreCcurrentFile(sourceFile)) {
