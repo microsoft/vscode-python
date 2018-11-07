@@ -10,10 +10,10 @@ import * as chaipromise from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
 import { CancellationToken, Position, SignatureHelp,
     TextDocument, TextLine, Uri } from 'vscode';
-import { JediFactory } from '../../client/languageServices/jediProxyFactory';
-import { IArgumentsResult, JediProxyHandler } from '../../client/providers/jediProxy';
-import { isPositionInsideStringOrComment } from '../../client/providers/providerUtilities';
-import { PythonSignatureProvider } from '../../client/providers/signatureProvider';
+import { JediFactory } from '../../../client/languageServices/jediProxyFactory';
+import { IArgumentsResult, JediProxyHandler } from '../../../client/providers/jediProxy';
+import { isPositionInsideStringOrComment } from '../../../client/providers/providerUtilities';
+import { PythonSignatureProvider } from '../../../client/providers/signatureProvider';
 
 use(chaipromise);
 

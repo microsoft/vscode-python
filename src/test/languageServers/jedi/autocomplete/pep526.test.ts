@@ -1,17 +1,21 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 'use strict';
 
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { OSType } from '../../client/common/utils/platform';
-import { isOs, isPythonVersion, rootWorkspaceUri } from '../common';
+import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
+import { OSType } from '../../../../client/common/utils/platform';
+import { isOs, isPythonVersion, rootWorkspaceUri } from '../../../common';
 import {
     closeActiveWindows, initialize,
-    initializeTest, IsLanguageServerTest
-} from '../initialize';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+    initializeTest
+} from '../../../initialize';
+import { UnitTestIocContainer } from '../../../unittests/serviceRegistry';
 
-const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
+const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'autocomp');
 const filePep526 = path.join(autoCompPath, 'pep526.py');
 
 // tslint:disable-next-line:max-func-body-length
@@ -19,11 +23,6 @@ suite('Autocomplete PEP 526', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
     suiteSetup(async function () {
-        // https://github.com/Microsoft/PTVS/issues/3917
-        if (IsLanguageServerTest()) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-        }
         await initialize();
         initializeDI();
         isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
