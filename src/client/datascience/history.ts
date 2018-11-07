@@ -34,6 +34,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     private closedEvent : EventEmitter<IHistory>;
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
+    private potentiallyUnfinishedStatus: Disposable[] = [];
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -74,7 +75,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
     public async addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
         // Start a status item
-        const status = this.statusProvider.set(localize.DataScience.executingCode(), this);
+        const status = this.setStatus(localize.DataScience.executingCode());
 
         // Make sure we're loaded first.
         await this.loadPromise;
@@ -162,6 +163,12 @@ export class History implements IWebPanelMessageListener, IHistory {
             }
             this.closedEvent.fire(this);
         }
+    }
+
+    private setStatus = (message: string) : Disposable => {
+        const result = this.statusProvider.set(message, this);
+        this.potentiallyUnfinishedStatus.push(result);
+        return result;
     }
 
     private logTelemetry = (event : string) => {
@@ -268,6 +275,8 @@ export class History implements IWebPanelMessageListener, IHistory {
                         this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: c });
                     });
                     this.unfinishedCells = [];
+                    this.potentiallyUnfinishedStatus.forEach(s => s.dispose());
+                    this.potentiallyUnfinishedStatus = [];
 
                     // Set our status for the next 2 seconds.
                     this.statusProvider.set(localize.DataScience.restartingKernelStatus(), this, 2000);
@@ -331,8 +340,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
     private loadJupyterServer = async () : Promise<void> => {
         // Startup our jupyter server
-        const status = this.statusProvider ? this.statusProvider.set(localize.DataScience.startingJupyter(), this) :
-            undefined;
+        const status = this.setStatus(localize.DataScience.startingJupyter());
         try {
             await this.jupyterServer.start();
         } catch (err) {
