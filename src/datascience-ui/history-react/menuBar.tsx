@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-import * as React from 'react';
+
 import './menuBar.css';
+
+import * as React from 'react';
 
 interface IMenuBarProps {
     theme: string;
@@ -21,7 +22,6 @@ export class MenuBar extends React.Component<IMenuBarProps> {
         const classNames = this.props.stylePosition ?
             `menuBar-${this.props.stylePosition} menuBar-${this.props.stylePosition}-${this.props.theme}`
             : 'menuBar';
-
         return (
             <div className={classNames}>
                 {this.props.children}

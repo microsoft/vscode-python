@@ -12,7 +12,7 @@ import * as localize from '../common/utils/localize';
 import { captureTelemetry } from '../telemetry';
 import { CommandSource } from '../unittests/common/constants';
 import { Commands, Telemetry } from './constants';
-import { IDataScienceCommandListener, IHistoryProvider, INotebookImporter } from './types';
+import { IDataScienceCommandListener, IHistoryProvider, INotebookImporter, IStatusProvider } from './types';
 
 @injectable()
 export class HistoryCommandListener implements IDataScienceCommandListener {
@@ -23,7 +23,8 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(ILogger) private logger: ILogger,
-        @inject(IConfigurationService) private configuration: IConfigurationService)
+        @inject(IConfigurationService) private configuration: IConfigurationService,
+        @inject(IStatusProvider) private statusProvider : IStatusProvider)
     {
         // Listen to document open commands. We want to ask the user if they want to import.
         const disposable = this.documentManager.onDidOpenTextDocument(this.onOpenedDocument);
@@ -97,7 +98,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     private setImportStatus = (file: string) : Disposable => {
         const formatString = localize.DataScience.importingFormat();
         const message = formatString.format(file);
-        return this.applicationShell.setStatusBarMessage(message);
+        return this.statusProvider.set(message, null);
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)

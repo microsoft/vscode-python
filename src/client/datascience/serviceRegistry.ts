@@ -12,6 +12,7 @@ import { JupyterExecution } from './jupyterExecution';
 import { JupyterImporter } from './jupyterImporter';
 import { JupyterProcess } from './jupyterProcess';
 import { JupyterServer } from './jupyterServer';
+import { StatusProvider } from './statusProvider';
 import {
     ICodeCssGenerator,
     IDataScience,
@@ -22,7 +23,8 @@ import {
     IJupyterExecution,
     INotebookImporter,
     INotebookProcess,
-    INotebookServer
+    INotebookServer,
+    IStatusProvider
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -36,4 +38,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<INotebookServer>(INotebookServer, JupyterServer);
     serviceManager.add<INotebookProcess>(INotebookProcess, JupyterProcess);
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
+    serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
 }

@@ -70,6 +70,8 @@ export interface IHistory extends Disposable {
     closed: Event<IHistory>;
     show() : Promise<void>;
     addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
+    // tslint:disable-next-line:no-any
+    postMessage(type: string, payload?: any);
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
@@ -118,4 +120,11 @@ export interface ICell {
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
 export interface ICodeCssGenerator {
     generateThemeCss() : Promise<string>;
+}
+
+export const IStatusProvider = Symbol('IStatusProvider');
+export interface IStatusProvider {
+    // call this function to set the new status on the active
+    // history window. Dispose of the returned object when done.
+    set(message: string, history: IHistory, timeout?: number) : Disposable;
 }

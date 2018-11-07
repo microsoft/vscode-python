@@ -22,7 +22,7 @@ import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { HistoryMessages, Telemetry } from './constants';
-import { CellState, ICell, ICodeCssGenerator, IHistory, INotebookServer } from './types';
+import { CellState, ICell, ICodeCssGenerator, IHistory, INotebookServer, IStatusProvider } from './types';
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
@@ -42,7 +42,8 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(INotebookServer) private jupyterServer: INotebookServer,
         @inject(IWebPanelProvider) private provider: IWebPanelProvider,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(ICodeCssGenerator) private cssGenerator : ICodeCssGenerator) {
+        @inject(ICodeCssGenerator) private cssGenerator : ICodeCssGenerator,
+        @inject(IStatusProvider) private statusProvider : IStatusProvider) {
 
         // Sign up for configuration changes
         this.settingsChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
@@ -72,6 +73,9 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     public async addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
+        // Start a status item
+        const status = this.statusProvider.set(localize.DataScience.executingCode(), this);
+
         // Make sure we're loaded first.
         await this.loadPromise;
 
@@ -88,8 +92,20 @@ export class History implements IWebPanelMessageListener, IHistory {
                     this.onAddCodeEvent(cells, editor);
                 },
                 (error) => {
+                    status.dispose();
                     this.applicationShell.showErrorMessage(error);
+                },
+                () => {
+                    // Indicate executing until this cell is done.
+                    status.dispose();
                 });
+        }
+    }
+
+    // tslint:disable-next-line: no-any no-empty
+    public postMessage(type: string, payload?: any) {
+        if (this.webPanel) {
+            this.webPanel.postMessage({type: type, payload: payload});
         }
     }
 
@@ -253,6 +269,9 @@ export class History implements IWebPanelMessageListener, IHistory {
                     });
                     this.unfinishedCells = [];
 
+                    // Set our status for the next 2 seconds.
+                    this.statusProvider.set(localize.DataScience.restartingKernelStatus(), this, 2000);
+
                     // Then restart the kernel
                     this.jupyterServer.restartKernel().ignoreErrors();
                     this.restartingKernel = false;
@@ -312,7 +331,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
     private loadJupyterServer = async () : Promise<void> => {
         // Startup our jupyter server
-        const status = this.applicationShell ? this.applicationShell.setStatusBarMessage(localize.DataScience.startingJupyter()) :
+        const status = this.statusProvider ? this.statusProvider.set(localize.DataScience.startingJupyter(), this) :
             undefined;
         try {
             await this.jupyterServer.start();

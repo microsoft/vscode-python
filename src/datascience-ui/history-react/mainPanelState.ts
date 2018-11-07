@@ -19,7 +19,7 @@ export interface IMainPanelState {
 export function generateTestState(inputBlockToggled : (id: string) => void) : IMainPanelState {
     return {
         cellVMs : generateVMs(inputBlockToggled),
-        busy: false,
+        busy: true,
         skipNextScroll : false,
         undoStack : [],
         redoStack : []
@@ -97,7 +97,7 @@ function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbf
                             '1   31  1.1426     False  \n',
                             '2   32  0.0000      True  \n',
                             '3   21  0.9062     False  \n',
-                            '4   33  1.3790      True  '
+                            '4   33  1.3790      True  super long line that should wrap around but it isnt because we didnt put in the correct css super long line that should wrap around but it isnt because we didnt put in the correct css super long line that should wrap around but it isnt because we didnt put in the correct css'
                         ]
                     },
                     execution_count: 4,

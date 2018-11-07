@@ -1,7 +1,7 @@
 
 .menuBar{
 	position: relative;
-    margin: 10px;
+    margin-bottom: 2px;
     display:flex;
     flex-direction: row-reverse;
     justify-content: right;
@@ -37,6 +37,7 @@
     justify-content: right;
     padding-bottom: 2px;
     padding-top: 2px;
+    padding-right: 5px;
     border-bottom-width: 1px;
     border-top-width: 0px;
     border-right-width: 0px;

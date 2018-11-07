@@ -11,6 +11,7 @@ import { CellState, ICell } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
+import { Progress } from '../react-common/progress';
 import { RelativeImage } from '../react-common/relativeImage';
 import { Cell, ICellViewModel } from './cell';
 import { CellButton } from './cellButton';
@@ -30,7 +31,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, state: IMainPanelState) {
         super(props);
-        this.state = { cellVMs: [], busy: false, undoStack: [], redoStack : [] };
+
+        // Default state should show a busy message
+        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [] };
 
         if (!this.props.skipDefault) {
             this.state = generateTestState(this.inputBlockToggled);
@@ -61,7 +64,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         './images/CollapseAll/CollapseAll_16x_vscode_dark.svg';
         const expandAllImage = this.props.theme !== 'vscode-dark' ? './images/ExpandAll/ExpandAll_16x_vscode.svg' :
         './images/ExpandAll/ExpandAll_16x_vscode_dark.svg';
-        this.scrollToBottom();
+
+        const progressBar = this.state.busy ? <Progress /> : undefined;
 
         return (
             <div className='main-panel'>
@@ -86,11 +90,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     <CellButton theme={this.props.theme} onClick={this.redo} disabled={!this.canRedo()} tooltip={getLocString('DataScience.redo', 'Redo')}>
                         <RelativeImage class='cell-button-image' path={redoImage}/>
                     </CellButton>
-                    <CellButton theme={this.props.theme} onClick={this.clearAll} tooltip={getLocString('DataScience.clearAll', 'Delete All')}>
+                    <CellButton theme={this.props.theme} onClick={this.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove All Cells')}>
                         <RelativeImage class='cell-button-image' path={clearButtonImage}/>
                     </CellButton>
                 </MenuBar>
                 <div className='top-spacing'/>
+                {progressBar}
                 {this.renderCells()}
                 <div ref={this.updateBottom}/>
             </div>
@@ -115,6 +120,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             case HistoryMessages.GetAllCells:
                 this.getAllCells();
                 return true;
+
+            case HistoryMessages.StartProgress:
+                this.setState({...this.state, busy: true});
+                break;
+
+            case HistoryMessages.StopProgress:
+                this.setState({...this.state, busy: false});
+                break;
 
             default:
                 break;
@@ -184,6 +197,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Now assign our new array copy to state
         this.setState({
+            ...this.state,
             cellVMs: newCells,
             skipNextScroll: true
         });
@@ -202,6 +216,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Now assign our new array copy to state
         this.setState({
+            ...this.state,
             cellVMs: newCells,
             skipNextScroll: true
         });
@@ -253,7 +268,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }),
             undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
             skipNextScroll: true,
-            busy: false
+            busy: this.state.busy
         });
     }
 
@@ -265,7 +280,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             cellVMs: [],
             undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
             skipNextScroll: true,
-            busy: false});
+            busy: false // No more progress on delete all
+        });
     }
 
     private redo = () => {
@@ -279,7 +295,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             undoStack: undoStack,
             redoStack: redoStack,
             skipNextScroll: true,
-            busy: false
+            busy: this.state.busy
         });
     }
 
@@ -294,7 +310,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             undoStack : undoStack,
             redoStack : redoStack,
             skipNextScroll : true,
-            busy: false
+            busy: this.state.busy
         });
     }
 
@@ -338,7 +354,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                     redoStack: this.state.redoStack,
                     skipNextScroll: false,
-                    busy: false
+                    busy: this.state.busy
                 });
             }
         }
@@ -359,6 +375,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             cellVMArray[cellVMIndex] = this.toggleCellVM(targetCellVM);
 
             this.setState({
+                ...this.state,
+                skipNextScroll: true,
                 cellVMs: cellVMArray
             });
         }

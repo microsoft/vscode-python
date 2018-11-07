@@ -37,6 +37,8 @@ export namespace HistoryMessages {
     export const Redo = 'redo';
     export const ExpandAll = 'expand_all';
     export const CollapseAll = 'collapse_all';
+    export const StartProgress = 'start_progress';
+    export const StopProgress = 'stop_progress';
 }
 
 export namespace Telemetry {

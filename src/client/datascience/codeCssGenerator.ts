@@ -94,6 +94,9 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
         // Use these values to fill in our format string
         return `
+        :root {
+            --comment-color: ${comment}
+        }
         code[class*="language-"],
         pre[class*="language-"] {
             color: ${def};

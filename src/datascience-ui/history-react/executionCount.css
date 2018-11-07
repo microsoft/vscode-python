@@ -1,11 +1,11 @@
 .execution-count {
     font-weight: bold;
-    color: green;
+    color: var(--comment-color);
  }
 
  .execution-count-busy-outer {
     font-weight: bold;
-    color: green;
+    color: var(--comment-color);
     display:flex;
     width: 16px;
     height: 16px;
@@ -22,7 +22,7 @@
 
 .execution-count-busy-polyline {
     fill: none;
-    stroke: green;
+    stroke: var(--comment-color);
     stroke-width: 5;
 }
 

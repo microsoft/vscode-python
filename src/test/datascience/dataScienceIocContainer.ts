@@ -15,6 +15,7 @@ import { JupyterExecution } from '../../client/datascience/jupyterExecution';
 import { JupyterImporter } from '../../client/datascience/jupyterImporter';
 import { JupyterProcess } from '../../client/datascience/jupyterProcess';
 import { JupyterServer } from '../../client/datascience/jupyterServer';
+import { StatusProvider } from '../../client/datascience/statusProvider';
 import {
     ICodeCssGenerator,
     IHistory,
@@ -22,7 +23,8 @@ import {
     IJupyterExecution,
     INotebookImporter,
     INotebookProcess,
-    INotebookServer
+    INotebookServer,
+    IStatusProvider
 } from '../../client/datascience/types';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
@@ -42,6 +44,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServer);
         this.serviceManager.add<INotebookProcess>(INotebookProcess, JupyterProcess);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
+        this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
 
         // Also setup a mock execution service and interpreter service
         const logger = TypeMoq.Mock.ofType<ILogger>();

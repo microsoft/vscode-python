@@ -78,7 +78,7 @@
     "DataScience.jupyterNotSupported": "Jupyter is not installed",
     "DataScience.jupyterNbConvertNotSupported": "Jupyter nbconvert is not installed",
     "DataScience.importingFormat": "Importing {0}",
-    "DataScience.startingJupyter": "Starting Jupyter backend",
+    "DataScience.startingJupyter": "Starting Jupyter Server",
     "Interpreters.RefreshingInterpreters": "Refreshing Python Interpreters",
     "Interpreters.LoadingInterpreters": "Loading Python Interpreters",
     "DataScience.restartKernelMessage" : "Do you want to restart the Jupter kernel? All variables will be lost.",
@@ -86,5 +86,14 @@
     "DataScience.restartKernelMessageNo" : "Cancel",
     "DataScienceSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Python Data Science features are working for you?",
     "DataScienceSurveyBanner.bannerLabelYes": "Yes, take survey now",
-    "DataScienceSurveyBanner.bannerLabelNo": "No, thanks"
+    "DataScienceSurveyBanner.bannerLabelNo": "No, thanks",
+    "DataScience.restartingKernelStatus" : "Restarting Jupyter Kernel",
+    "DataScience.executingCode" : "Executing Cell",
+    "DataScience.collapseAll" : "Collapse all cell inputs",
+    "DataScience.expandAll" : "Expand all cell inputs",
+    "DataScience.export" : "Export as Jupyter Notebook",
+    "DataScience.restartServer" : "Restart iPython Kernel",
+    "DataScience.undo" : "Undo",
+    "DataScience.redo" : "Redo",
+    "DataScience.clearAll" : "Remove All Cells"
 }

@@ -45,12 +45,22 @@ export namespace DataScience {
     export const jupyterNotSupported = localize('DataScience.jupyterNotSupported', 'Jupyter is not installed');
     export const jupyterNbConvertNotSupported = localize('DataScience.jupyterNbConvertNotSupported', 'Jupyter nbconvert is not installed');
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
-    export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter backend');
+    export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter Server');
     export const runAllCellsLensCommandTitle = localize('python.command.python.datascience.runallcells.title', 'Run all cells');
 
     export const restartKernelMessage = localize('DataScience.restartKernelMessage', 'Do you want to restart the Jupter kernel? All variables will be lost.');
     export const restartKernelMessageYes = localize('DataScience.restartKernelMessageYes', 'Restart');
     export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
+    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Jupyter Kernel');
+    export const executingCode = localize('DataScience.executingCode', 'Executing Cell');
+    export const collapseAll = localize('DataScience.collapseAll', 'Collapse all cell inputs');
+    export const expandAll = localize('DataScience.expandAll', 'Expand all cell inputs');
+    export const exportKey = localize('DataScience.export', 'Export as Jupyter Notebook');
+    export const restartServer = localize('DataScience.restartServer', 'Restart iPython Kernel');
+    export const undo = localize('DataScience.undo', 'Undo');
+    export const redo = localize('DataScience.redo', 'Redo');
+
+    export const clearAll = localize('DataScience.clearAll', 'Remove All Cells');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

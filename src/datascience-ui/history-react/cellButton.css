@@ -1,5 +1,5 @@
 :root {
-    --button-size: 20px;
+    --button-size: 18px;
 }
 
 
@@ -12,9 +12,10 @@
     overflow: hidden;
     width: var(--button-size);
     height: var(--button-size);
-    margin-left: 2px;
+    margin-left: 10px;
     padding: 1px;
     background-color: transparent;
+    cursor: hand;
 }
 
 .cell-button-inner-disabled-filter {
@@ -31,39 +32,9 @@
     max-height: 100%;
 }
 
-.cell-button-vscode-light {
-    border-color: black;
-}
-
-.cell-button-vscode-light:hover {
-    background-color:black;
-    color: white;
-}
-
-.cell-button-vscode-light:disabled:hover {
-    background-color:transparent;
-}
-
 .cell-button-vscode-light:disabled {
     border-color: gray;
     filter: grayscale(100%);
-}
-
-.cell-button-vscode-dark {
-    border-color: white;
-}
-
-.cell-button-vscode-dark:disabled {
-    border-color: transparent;
-}
-
-.cell-button-vscode-dark:hover {
-    background-color:white;
-    color: black;
-}
-
-.cell-button-vscode-dark:disabled:hover {
-    background-color:transparent;
 }
 
 .cell-button-vscode-dark:disabled {
