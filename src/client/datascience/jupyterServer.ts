@@ -12,6 +12,7 @@ import { Observable } from 'rxjs/Observable';
 import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 
+import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
@@ -36,7 +37,8 @@ export class JupyterServer implements INotebookServer {
         @inject(INotebookProcess) private process: INotebookProcess,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution) {
+        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
     }
 
     public start = async () : Promise<boolean> => {
@@ -84,9 +86,18 @@ export class JupyterServer implements INotebookServer {
             // Wait for it to be ready
             await this.session.kernel.ready;
 
-            // Setup the default imports (this should be configurable in the future)
+            // Check for dark theme, if so set matplot lib to use dark_background settings
+            let darkTheme: boolean = false;
+            const workbench = this.workspaceService.getConfiguration('workbench');
+            if (workbench) {
+                const theme = workbench.get<string>('colorTheme');
+                if (theme) {
+                    darkTheme = /dark/i.test(theme);
+                }
+            }
+
             this.executeSilently(
-                'import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt'
+                `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
             ).ignoreErrors();
 
             return true;
