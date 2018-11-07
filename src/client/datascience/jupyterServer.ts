@@ -93,6 +93,7 @@ export class JupyterServer implements INotebookServer {
                 theme = workbench.get<string>('colorTheme');
             }
 
+            // Setup the default imports (this should be configurable in the future)
             this.executeSilently(
                 `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${theme === 'Default Dark+' ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
             ).ignoreErrors();
