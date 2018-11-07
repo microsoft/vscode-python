@@ -12,30 +12,38 @@ import aiohttp
 from . import data
 
 
-def _projects(package_data):
+def _projects(package_data, overrides=frozenset()):
     """Retrieve the list of projects from the package data.
 
     'package_data' is assumed to be from a 'package-lock.json' file. All
     dev-related dependencies are ignored.
 
+    'overrides' is assumed to be a set of npm package names which are known to
+    be included regardless of their "dev" dependency status. This commonly comes
+    up when use Webpack.
+
     """
     packages = {}
     for name, details in package_data["dependencies"].items():
-        if details.get("dev", False):
+        if details.get("dev", False) and name not in overrides:
             continue
         packages[name] = data.Project(name, details["version"], url=details["resolved"])
     return packages
 
 
-async def projects_from_data(raw_data):
+async def projects_from_data(raw_data, raw_overrides_data=None):
     """Create projects from the file contents of a package-lock.json."""
     json_data = json.loads(raw_data)
+    if raw_overrides_data:
+        overrides_data = frozenset(json.loads(raw_overrides_data))
+    else:
+        overrides_data = frozenset()
     # "lockfileVersion": 1
     if "lockfileVersion" not in json_data:
         raise ValueError("npm data does not appear to be from a package-lock.json file")
     elif json_data["lockfileVersion"] != 1:
         raise ValueError("unsupported package-lock.json format")
-    return _projects(json_data)
+    return _projects(json_data, overrides_data)
 
 
 def _top_level_package_filenames(tarball_paths):

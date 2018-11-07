@@ -3,11 +3,12 @@
 
 """Third-party notices generation.
 
-Usage: tpn [--npm=<package-lock.json>] --config=<TPN.toml> <tpn_path>
+Usage: tpn [--npm=<package-lock.json>] [--npm-overrides=<webpack-overrides.json>] --config=<TPN.toml> <tpn_path>
 
 Options:
-    --npm=<package.json>            Path to a package-lock.json for npm.
-    --config=<TPN.toml>             Path to the configuration file.
+    --npm=<package-lock.json>                 Path to a package-lock.json for npm.
+    --npm-overrides=<webpack-overrides.json>  Path to a JSON file containing an array of names to override "dev" in <package-lock.json>.
+    --config=<TPN.toml>                       Path to the configuration file.
 
 """
 import asyncio
@@ -27,11 +28,16 @@ from . import npm
 ACCEPTABLE_PURPOSES = frozenset({"explicit", "npm", "pypi"})
 
 
-async def handle_index(module, raw_path, config_projects, cached_projects):
+async def handle_index(module, raw_path, config_projects, cached_projects, overrides_path=None):
     _, _, index_name = module.__name__.rpartition(".")
     with open(raw_path, encoding="utf-8") as file:
         raw_data = file.read()
-    requested_projects = await module.projects_from_data(raw_data)
+    if overrides_path:
+        with open(overrides_path, encoding="utf-8") as file:
+            raw_overrides_data = file.read()
+    else:
+        raw_overrides_data = None
+    requested_projects = await module.projects_from_data(raw_data, raw_overrides_data)
     projects, stale = config.sort(index_name, config_projects, requested_projects)
     for name, details in projects.items():
         print(f"{name} {details.version}: sourced from configuration file")
@@ -44,7 +50,7 @@ async def handle_index(module, raw_path, config_projects, cached_projects):
     return projects, stale, failures
 
 
-def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
+def main(tpn_path, *, config_path, npm_path=None, npm_overrides=None, pypi_path=None):
     tpn_path = pathlib.Path(tpn_path)
     config_path = pathlib.Path(config_path)
     config_data = toml.loads(config_path.read_text(encoding="utf-8"))
@@ -56,7 +62,7 @@ def main(tpn_path, *, config_path, npm_path=None, pypi_path=None):
         cached_projects = {}
     tasks = []
     if npm_path:
-        tasks.append(handle_index(npm, npm_path, config_projects, cached_projects))
+        tasks.append(handle_index(npm, npm_path, config_projects, cached_projects, npm_overrides))
     if pypi_path:
         tasks.append(handle_index(pypi, pypi_path, config_projects, cached_projects))
     loop = asyncio.get_event_loop()
@@ -97,4 +103,5 @@ if __name__ == "__main__":
         arguments["<tpn_path>"],
         config_path=arguments["--config"],
         npm_path=arguments["--npm"],
+        npm_overrides=arguments["--npm-overrides"],
     )

@@ -155,6 +155,7 @@ Please also test for general accuracy on the most "interesting" code you can fin
 Sample file:
 ```python
 # There should be _some_ change after running `Format Document`.
+import os,sys;
 def foo():pass
 ```
 
@@ -162,9 +163,14 @@ def foo():pass
   - [ ] Installing `autopep8` works
   - [ ] Installing `black` works
   - [ ] Installing `yapf` works
-- [ ] autopep8 works
-- [ ] black works
-- [ ] yapf works
+- [ ] Formatters work with default settings (i.e. `"python.formatting.provider"` is specified but not matching `*Path`or `*Args` settings)
+  - [ ] autopep8
+  - [ ] black
+  - [ ] yapf
+- [ ] Formatters work when appropriate `*Path` and `*Args` settings are specified (use absolute paths; use `~` if possible)
+  - [ ] autopep8
+  - [ ] black
+  - [ ] yapf
 - [ ] `"editor.formatOnType": true` works and has expected results
 
 #### [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring)

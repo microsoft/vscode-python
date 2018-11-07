@@ -26,9 +26,6 @@ matrix:
           env: DEBUGGER_TEST_RELEASE=true
         - os: linux
           python: "3.6-dev"
-          env: FUNCTIONAL_TEST=true
-        - os: linux
-          python: "3.6-dev"
           env: SINGLE_WORKSPACE_TEST=true
         - os: linux
           python: "3.6-dev"
@@ -42,9 +39,6 @@ matrix:
         - os: linux
           python: "3.7-dev"
           env: DEBUGGER_TEST_RELEASE=true
-        - os: linux
-          python: "3.7-dev"
-          env: FUNCTIONAL_TEST=true
         - os: linux
           python: "3.7-dev"
           env: SINGLE_WORKSPACE_TEST=true
