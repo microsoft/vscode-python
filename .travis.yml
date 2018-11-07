@@ -66,7 +66,7 @@ before_install: |
   npm install -g azure-cli
   export CI_PYTHON_PATH=`which python`
 install:
-  - npm ci
+  - travis_restart npm ci
   - npm run clean
   - npm run vscode:prepublish
   - npx gulp hygiene-modified
