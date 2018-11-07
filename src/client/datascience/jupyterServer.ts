@@ -17,8 +17,8 @@ import { IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { RegExpValues } from './constants';
-import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer } from './types';
 import { JupyterInstallError } from './jupyterInstallError';
+import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer } from './types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services

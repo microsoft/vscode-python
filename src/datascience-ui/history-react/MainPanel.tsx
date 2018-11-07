@@ -270,7 +270,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 return i !== index;
             }),
             undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
-            skipNextScroll: true,
+            skipNextScroll: true
         });
     }
 
@@ -296,7 +296,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             cellVMs: cells,
             undoStack: undoStack,
             redoStack: redoStack,
-            skipNextScroll: true,
+            skipNextScroll: true
         });
     }
 
@@ -310,7 +310,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             cellVMs: cells,
             undoStack : undoStack,
             redoStack : redoStack,
-            skipNextScroll : true,
+            skipNextScroll : true
         });
     }
 
@@ -353,7 +353,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     cellVMs: [...this.state.cellVMs, cellVM],
                     undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                     redoStack: this.state.redoStack,
-                    skipNextScroll: false,
+                    skipNextScroll: false
                 });
             }
         }
