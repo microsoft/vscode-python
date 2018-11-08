@@ -9,6 +9,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
+import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 
@@ -148,7 +149,7 @@ export class JupyterServer implements INotebookServer {
                 output = cells;
             },
             (error) => {
-                deferred.resolve(output);
+                deferred.reject(error);
             },
             () => {
                 deferred.resolve(output);
@@ -197,18 +198,34 @@ export class JupyterServer implements INotebookServer {
     }
 
     public executeSilently = (code: string) : Promise<void> => {
-        // If we have a session, execute the code now.
-        if (this.session) {
-            // Generate a new request and wrap it in a promise as we wait for it to finish
-            const request = this.generateRequest(code, true);
+        return new Promise((resolve, reject) => {
+            // If we have a session, execute the code now.
+            if (this.session) {
+                // Generate a new request and resolve when it's done.
+                const request = this.generateRequest(code, true);
 
-            return new Promise((resolve, reject) => {
-                // Just wait for our request to finish
-                request.done.then(() => resolve).catch(reject);
-            });
-        }
+                if (request) {
 
-        return Promise.reject(new Error(localize.DataScience.sessionDisposed()));
+                    // // For debugging purposes when silently is failing.
+                    // request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+                    //     try {
+                    //         this.logger.logInformation(`Execute silently message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+                    //     } catch (err) {
+                    //         this.logger.logError(err);
+                    //     }
+                    // };
+
+                    request.done.then(() => {
+                        this.logger.logInformation(`Execute for ${code} silently finished.`);
+                        resolve();
+                    }).catch(reject);
+                } else {
+                    reject(new Error(localize.DataScience.sessionDisposed()));
+                }
+            } else {
+                reject(new Error(localize.DataScience.sessionDisposed()));
+            }
+        });
     }
 
     public get onStatusChanged() : vscode.Event<boolean> {
@@ -295,7 +312,7 @@ export class JupyterServer implements INotebookServer {
         return this.session.kernel.requestExecute(
             {
                 // Replace windows line endings with unix line endings.
-                code: code.replace('\r\n', '\n'),
+                code: code.replace(/\r\n/g, '\n'),
                 stop_on_error: false,
                 allow_stdin: false,
                 silent: silent
@@ -447,6 +464,75 @@ export class JupyterServer implements INotebookServer {
         });
     }
 
+    private changeDirectoryIfPossible = async (file: string, line: number) : Promise<void> => {
+        if (line >= 0 && await fs.pathExists(file)) {
+            const dir = path.dirname(file);
+            await this.executeSilently(`%cd "${dir}"`);
+        }
+    }
+
+    private handleCodeRequest = (subscriber: Subscriber<ICell>, startTime: number, cell: ICell, code: string) => {
+        // Generate a new request.
+        const request = this.generateRequest(code, false);
+
+        // Transition to the busy stage
+        cell.state = CellState.executing;
+
+        // Listen to the reponse messages and update state as we go
+        if (request) {
+            request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+                try {
+                    if (KernelMessage.isExecuteResultMsg(msg)) {
+                        this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
+                    } else if (KernelMessage.isExecuteInputMsg(msg)) {
+                        this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
+                    } else if (KernelMessage.isStatusMsg(msg)) {
+                        this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
+                    } else if (KernelMessage.isStreamMsg(msg)) {
+                        this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
+                    } else if (KernelMessage.isDisplayDataMsg(msg)) {
+                        this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
+                    } else if (KernelMessage.isErrorMsg(msg)) {
+                        this.handleError(msg as KernelMessage.IErrorMsg, cell);
+                    } else {
+                        this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+                    }
+
+                    // Set execution count, all messages should have it
+                    if (msg.content.execution_count) {
+                        cell.data.execution_count = msg.content.execution_count as number;
+                    }
+
+                    // Show our update if any new output
+                    subscriber.next(cell);
+                } catch (err) {
+                    // If not a restart error, then tell the subscriber
+                    if (startTime > this.sessionStartTime) {
+                        this.logger.logError(`Error during message ${msg.header.msg_type}`);
+                        subscriber.error(err);
+                    }
+                }
+            };
+
+            // Create completion and error functions so we can bind our cell object
+            // tslint:disable-next-line:no-any
+            const completion = (error?: any) => {
+                cell.state = error ? CellState.error : CellState.finished;
+                // Only do this if start time is still valid. Dont log an error to the subscriber. Error
+                // state should end up in the cell output.
+                if (startTime > this.sessionStartTime) {
+                    subscriber.next(cell);
+                }
+                subscriber.complete();
+            };
+
+            // When the request finishes we are done
+            request.done.then(completion).catch(completion);
+        } else {
+            subscriber.error(new Error(localize.DataScience.sessionDisposed()));
+        }
+    }
+
     private executeCodeObservable(code: string, file: string, line: number) : Observable<ICell> {
         return new Observable<ICell>(subscriber => {
             // Start out empty;
@@ -471,79 +557,16 @@ export class JupyterServer implements INotebookServer {
             // run before our cells.
             subscriber.next(cell);
 
-            // Create a handler we'll run after the change directory or not.
-            const executeHandler = () => {
-                const request = this.generateRequest(code, false);
-
-                // Transition to the busy stage
-                cell.state = CellState.executing;
-
-                // Listen to the reponse messages and update state as we go
-                if (request) {
-                    request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-                        try {
-                            if (KernelMessage.isExecuteResultMsg(msg)) {
-                                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
-                            } else if (KernelMessage.isExecuteInputMsg(msg)) {
-                                this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
-                            } else if (KernelMessage.isStatusMsg(msg)) {
-                                this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
-                            } else if (KernelMessage.isStreamMsg(msg)) {
-                                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
-                            } else if (KernelMessage.isDisplayDataMsg(msg)) {
-                                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
-                            } else if (KernelMessage.isErrorMsg(msg)) {
-                                this.handleError(msg as KernelMessage.IErrorMsg, cell);
-                            } else {
-                                this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
-                            }
-
-                            // Set execution count, all messages should have it
-                            if (msg.content.execution_count) {
-                                cell.data.execution_count = msg.content.execution_count as number;
-                            }
-
-                            // Show our update if any new output
-                            subscriber.next(cell);
-                        } catch (err) {
-                            // If not a restart error, then tell the subscriber
-                            if (startTime > this.sessionStartTime) {
-                                this.logger.logError(`Error during message ${msg.header.msg_type}`);
-                                subscriber.error(err);
-                            }
-                        }
-                    };
-
-                    // Create completion and error functions so we can bind our cell object
-                    const completion = (error: boolean) => {
-                        cell.state = error ? CellState.error : CellState.finished;
-                        // Only do this if start time is still valid
-                        if (startTime > this.sessionStartTime) {
-                            subscriber.next(cell);
-                        }
-                        subscriber.complete();
-                    };
-
-                    // When the request finishes we are done
-                    request.done.then(() => completion(false), () => completion(true));
-                } else {
-                    subscriber.error(new Error(localize.DataScience.sessionDisposed()));
-                }
-            };
-
-            // Change directory if necessary
-            if (line >= 0 && fs.existsSync(file)) {
-                const dir = path.dirname(file);
-                const cdrequest = this.generateRequest(`%cd "${dir}"`, true);
-                if (cdrequest) {
-                    cdrequest.done.then(executeHandler).catch(err => subscriber.error(err));
-                } else {
-                    subscriber.error(new Error(localize.DataScience.sessionDisposed()));
-                }
-            } else {
-                // Otherwise just continue normally.
-                executeHandler();
-            }
+            // Attempt to change to the current directory. When that finishes
+            // send our real request
+            this.changeDirectoryIfPossible(file, line)
+                .then(() => {
+                    this.handleCodeRequest(subscriber, startTime, cell, code);
+                })
+                .catch(() => {
+                    // Ignore errors if they occur. Just execute normally
+                    this.handleCodeRequest(subscriber, startTime, cell, code);
+                });
         });
     }
 
