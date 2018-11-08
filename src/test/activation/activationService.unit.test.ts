@@ -36,7 +36,7 @@ suite('Activation - ActivationService', () => {
             let cmdManager: TypeMoq.IMock<ICommandManager>;
             let workspaceService: TypeMoq.IMock<IWorkspaceService>;
             let platformService: TypeMoq.IMock<IPlatformService>;
-            setup(function () {
+            setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                 workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
