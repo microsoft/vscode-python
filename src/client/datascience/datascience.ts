@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
-import { isTestExecution, PYTHON } from '../common/constants';
+import { PYTHON } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { BANNER_NAME_DS_SURVEY, IConfigurationService, IDisposableRegistry, IExtensionContext, IPythonExtensionBanner } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -57,9 +57,8 @@ export class DataScience implements IDataScience {
     }
 
     public async runAllCells(codeWatcher: ICodeWatcher): Promise<void> {
-        if (!isTestExecution()) {
-            this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-        }
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+        
         let activeCodeWatcher: ICodeWatcher | undefined = codeWatcher;
         if (!activeCodeWatcher) {
             activeCodeWatcher = this.getCurrentCodeWatcher();
@@ -72,9 +71,8 @@ export class DataScience implements IDataScience {
     }
 
     public async runCell(codeWatcher: ICodeWatcher, range: vscode.Range): Promise<void> {
-        if (!isTestExecution()) {
-            this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-        }
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
         if (codeWatcher) {
             return codeWatcher.runCell(range);
         } else {
@@ -83,9 +81,8 @@ export class DataScience implements IDataScience {
     }
 
     public async runCurrentCell(): Promise<void> {
-        if (!isTestExecution()) {
-            this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-        }
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
             return activeCodeWatcher.runCurrentCell();
@@ -95,9 +92,8 @@ export class DataScience implements IDataScience {
     }
 
     public async runCurrentCellAndAdvance(): Promise<void> {
-        if (!isTestExecution()) {
-            this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-        }
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
             return activeCodeWatcher.runCurrentCellAndAdvance();
