@@ -9,6 +9,7 @@ import { ICommandManager } from '../common/application/types';
 import { PythonSettings } from '../common/configSettings';
 import { PYTHON } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
+import '../common/extensions';
 import { BANNER_NAME_DS_SURVEY, IConfigurationService, IDisposableRegistry, IExtensionContext, IPythonExtensionBanner } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Commands, EditorContexts } from './constants';
