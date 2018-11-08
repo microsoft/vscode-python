@@ -24,20 +24,18 @@ suite('Language Server: Integration', function () {
     // Large value to allow for LS to get downloaded.
     this.timeout(4 * 60000);
 
-    let wasJediEnabled = false;
     suiteSetup(async () => {
         if (!IS_LANGUAGE_SERVER_TEST) {
             return;
         }
         await removeLanguageServerFiles();
-        wasJediEnabled = isJediEnabled();
         await enableJedi(false);
         await updateSetting('linting.ignorePatterns', ['**/dir1/**']);
         await initialize();
     });
     setup(initializeTest);
     suiteTeardown(async () => {
-        await enableJedi(wasJediEnabled);
+        await enableJedi(undefined);
         await closeActiveWindows();
         await updateSetting('linting.ignorePatterns', undefined);
     });
@@ -67,7 +65,7 @@ suite('Language Server: Integration', function () {
         const settings = vscode.workspace.getConfiguration('python', resource);
         return settings.get<boolean>('jediEnabled') === true;
     }
-    async function enableJedi(enable: boolean) {
+    async function enableJedi(enable: boolean | undefined) {
         if (isJediEnabled() === enable) {
             return;
         }
