@@ -1687,7 +1687,6 @@
         "testMultiWorkspace": "node ./out/test/multiRootTest.js",
         "testAnalysisEngine": "node ./out/test/analysisEngineTest.js",
         "testPerformance": "node ./out/test/performanceTest.js",
-        "precommit": "node gulpfile.js precommit=true",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",

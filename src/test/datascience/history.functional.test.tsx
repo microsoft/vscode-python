@@ -125,7 +125,7 @@ suite('History output tests', () => {
         if (await jupyterExecution.isNotebookSupported()) {
             const history = historyProvider.active;
             await history.show(); // Have to wait for the load to finish
-            history.dispose();
+            await history.dispose();
             // tslint:disable-next-line:no-any
             const h2 = historyProvider.active;
             // Check equal and then dispose so the test goes away

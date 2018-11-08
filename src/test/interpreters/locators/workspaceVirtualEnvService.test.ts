@@ -18,7 +18,7 @@ import { initialize, multirootPath } from '../../initialize';
 const timeoutSecs = 120;
 suite('Interpreters - Workspace VirtualEnv Service', function () {
     this.timeout(timeoutSecs * 1000);
-    this.retries(0);
+    this.retries(1);
 
     let locator: IInterpreterLocatorService;
     const workspaceUri = IS_MULTI_ROOT_TEST ? Uri.file(path.join(multirootPath, 'workspace3')) : rootWorkspaceUri;

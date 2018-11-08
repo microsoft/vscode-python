@@ -46,6 +46,8 @@ export class JupyterServer implements INotebookServer {
     public start = async () : Promise<boolean> => {
 
         if (await this.jupyterExecution.isNotebookSupported()) {
+            // If we're restarting, don't dispose
+            this.isDisposed = false;
 
             // First generate a temporary notebook. We need this as input to the session
             this.tempFile = await this.generateTempFile();
@@ -110,7 +112,7 @@ export class JupyterServer implements INotebookServer {
     }
 
     public shutdown = async () : Promise<void> => {
-        if (this.session) {
+        if (this.session && this.sessionManager) {
             await this.sessionManager.shutdownAll();
             this.session.dispose();
             this.sessionManager.dispose();
@@ -246,10 +248,7 @@ export class JupyterServer implements INotebookServer {
             this.sessionStartTime = Date.now();
 
             // Restart our kernel
-            await this.session.kernel.restart();
-
-            // Wait for it to be ready
-            await this.session.kernel.ready;
+            await this.forceRestart();
 
             return;
         }
@@ -308,8 +307,8 @@ export class JupyterServer implements INotebookServer {
         return false;
     }
 
-    private generateRequest = (code: string, silent: boolean) : Kernel.IFuture => {
-        return this.session.kernel.requestExecute(
+    private generateRequest = (code: string, silent: boolean) : Kernel.IFuture | undefined => {
+        return this.session ? this.session.kernel.requestExecute(
             {
                 // Replace windows line endings with unix line endings.
                 code: code.replace(/\r\n/g, '\n'),
@@ -318,11 +317,26 @@ export class JupyterServer implements INotebookServer {
                 silent: silent
             },
             true
-        );
+        ) : undefined;
     }
 
-    private timeout(ms : number) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+    private forceRestart = async () : Promise<void> => {
+        // Wait for a restart and a timeout. If we timeout, then instead do a
+        // dispose and restart
+        if (this.session) {
+            const result = await Promise.race([this.session.kernel.restart(), this.timeout(5000)]);
+            if (typeof result === 'number') {
+                this.logger.logWarning('Restart of Jupyter Server failed. Forcing a full restart');
+
+                // Then we didn't restart. We timed out. Dispose and restart
+                await this.shutdown();
+                await this.start();
+            }
+        }
+    }
+
+    private timeout(ms : number) : Promise<number> {
+        return new Promise(resolve => setTimeout(resolve, ms, ms));
     }
 
     private findKernelName = async (manager: SessionManager) : Promise<string> => {
@@ -341,9 +355,10 @@ export class JupyterServer implements INotebookServer {
         // - Path match = 10 Points. Very likely this is the right one
         // - Language match = 1 point. Might be a match
         // - Version match = 4 points for major version match
-        const keys = Object.keys(manager.specs.kernelspecs);
-        for (let i = 0; i < keys.length; i += 1) {
-            const spec = manager.specs.kernelspecs[keys[i]];
+        const kernelspecs = manager.specs && manager.specs.kernelspecs ? manager.specs.kernelspecs : {};
+        const keys = Object.keys(kernelspecs);
+        for (let i = 0; keys && i < keys.length; i += 1) {
+            const spec = kernelspecs[keys[i]];
             let score = 0;
 
             if (spec.argv.length > 0 && spec.argv[0] === pythonPath) {
@@ -357,7 +372,7 @@ export class JupyterServer implements INotebookServer {
                 // See if the version is the same
                 if (pythonVersion) {
                     const digits = spec.name.match(/\d+/g);
-                    if (digits.length > 0 && parseInt(digits[0], 10) === pythonVersion[0]) {
+                    if (digits && digits.length > 0 && parseInt(digits[0], 10) === pythonVersion[0]) {
                         // Major version match
                         score += 4;
                     }
@@ -372,8 +387,8 @@ export class JupyterServer implements INotebookServer {
         }
 
         // If still not set, at least pick the first one
-        if (!bestSpec && keys.length > 0) {
-            bestSpec = manager.specs.kernelspecs[keys[0]].name;
+        if (!bestSpec && keys && keys.length > 0) {
+            bestSpec = kernelspecs[keys[0]].name;
         }
 
         return bestSpec;

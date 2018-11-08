@@ -42,6 +42,7 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "${workspaceFolder}/src/testMultiRootWkspc/multi.code-workspace",
+                "--disable-extensions",
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
@@ -63,6 +64,7 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "${workspaceFolder}/src/test",
+                "--disable-extensions",
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
@@ -80,6 +82,7 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "${workspaceFolder}/src/testMultiRootWkspc/multi.code-workspace",
+                "--disable-extensions",
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
@@ -98,6 +101,7 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "${workspaceFolder}/src/test",
+                "--disable-extensions",
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
@@ -108,7 +112,8 @@
             ],
             "preLaunchTask": "Compile",
             "env": {
-                "VSC_PYTHON_LANGUAGE_SERVER": "1"
+                "VSC_PYTHON_LANGUAGE_SERVER": "1",
+                "TEST_FILES_SUFFIX": "ls.test"
             }
         },
         {
@@ -118,6 +123,7 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "${workspaceFolder}/src/test",
+                "--disable-extensions",
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],

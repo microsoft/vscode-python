@@ -7,12 +7,12 @@
 
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CompletionItemKind, Position, SymbolKind, TextDocument, TextLine } from 'vscode';
-import { IAutoCompleteSettings, IConfigurationService, IPythonSettings } from '../../client/common/types';
-import { IServiceContainer } from '../../client/ioc/types';
-import { JediFactory } from '../../client/languageServices/jediProxyFactory';
-import { CompletionSource } from '../../client/providers/completionSource';
-import { IItemInfoSource } from '../../client/providers/itemInfoSource';
-import { IAutoCompleteItem, ICompletionResult, JediProxyHandler } from '../../client/providers/jediProxy';
+import { IAutoCompleteSettings, IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { IServiceContainer } from '../../../client/ioc/types';
+import { JediFactory } from '../../../client/languageServices/jediProxyFactory';
+import { CompletionSource } from '../../../client/providers/completionSource';
+import { IItemInfoSource } from '../../../client/providers/itemInfoSource';
+import { IAutoCompleteItem, ICompletionResult, JediProxyHandler } from '../../../client/providers/jediProxy';
 
 suite('Completion Provider', () => {
     let completionSource: CompletionSource;

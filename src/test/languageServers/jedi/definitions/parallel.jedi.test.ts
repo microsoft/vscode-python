@@ -1,30 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import * as assert from 'assert';
 import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { IsLanguageServerTest } from '../constants';
-import { closeActiveWindows, initialize } from '../initialize';
-import { normalizeMarkedString } from '../textUtils';
+import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
+import { IS_WINDOWS } from '../../../../client/common/platform/constants';
+import { closeActiveWindows, initialize } from '../../../initialize';
+import { normalizeMarkedString } from '../../../textUtils';
 
-const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
+const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'autocomp');
 const fileOne = path.join(autoCompPath, 'one.py');
 
-suite('Code, Hover Definition and Intellisense (Language Server)', () => {
-    suiteSetup(async function () {
-        // https://github.com/Microsoft/vscode-python/issues/1061
-        // tslint:disable-next-line:no-invalid-this
-        this.skip();
-
-        if (!IsLanguageServerTest()) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-        }
-        await initialize();
-    });
+suite('Code, Hover Definition and Intellisense (Jedi)', () => {
+    suiteSetup(initialize);
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 
