@@ -24,9 +24,9 @@ suite('Language Server: Integration', function () {
     // Large value to allow for LS to get downloaded.
     this.timeout(4 * 60000);
 
-    suiteSetup(async () => {
+    suiteSetup(async function () {
         if (!IS_LANGUAGE_SERVER_TEST) {
-            return;
+            return this.skip();
         }
         await removeLanguageServerFiles();
         await enableJedi(false);
