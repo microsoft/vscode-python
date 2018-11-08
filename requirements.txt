@@ -12,5 +12,3 @@ pydocstyle
 nose
 pytest==3.6.3
 rope
-flask
-django

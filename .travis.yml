@@ -45,6 +45,9 @@ matrix:
         - os: linux
           python: "3.7-dev"
           env: MULTIROOT_WORKSPACE_TEST=true
+        - os: linux
+          python: "3.7-dev"
+          env: LANGUAGE_SERVER_TEST=true          
 before_install: |
   if [ $TRAVIS_OS_NAME == "linux" ]; then
     export CXX="g++-4.9" CC="gcc-4.9" DISPLAY=:99.0;
@@ -100,6 +103,13 @@ script:
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then
         npm run cover:enable;
         npm run testSingleWorkspace --silent;
+    fi
+  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
+        bash <(curl -s https://codecov.io/bash);
+    fi
+  - if [ $LANGUAGE_SERVER_TEST == "true" ]; then
+        npm run cover:enable;
+        npm run testAnalysisEngine --silent;
     fi
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
