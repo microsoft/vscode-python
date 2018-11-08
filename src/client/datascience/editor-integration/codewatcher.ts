@@ -5,10 +5,12 @@ import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditor
 
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import { ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, EditorContexts, RegExpValues, Telemetry } from '../constants';
+import { JupyterInstallError } from '../jupyterInstallError';
 import { ICodeWatcher, IHistoryProvider } from '../types';
 
 export interface ICell {
@@ -24,11 +26,13 @@ export class CodeWatcher implements ICodeWatcher {
     private historyProvider: IHistoryProvider;
     private commandManager: ICommandManager;
     private applicationShell: IApplicationShell;
+    private logger: ILogger;
 
     constructor(serviceContainer: IServiceContainer, document: TextDocument) {
         this.historyProvider = serviceContainer.get<IHistoryProvider>(IHistoryProvider);
         this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.logger = serviceContainer.get<ILogger>(ILogger);
 
         this.document = document;
 
@@ -95,7 +99,7 @@ export class CodeWatcher implements ICodeWatcher {
             try {
                 await activeHistory.addCode(code, this.getFileName(), range.start.line, window.activeTextEditor);
             } catch (err) {
-                this.applicationShell.showErrorMessage(err);
+                this.handleError(err);
             }
 
         }
@@ -154,6 +158,26 @@ export class CodeWatcher implements ICodeWatcher {
             // Run the cell after moving the selection
             await this.runCell(currentRunCellLens.range);
         }
+    }
+
+    // tslint:disable-next-line:no-any
+    private handleError = (err : any) => {
+        if ((<JupyterInstallError>err).actionTitle !== undefined) {
+            const jupyterError = err as JupyterInstallError;
+
+            // This is a special error that shows a link to open for more help
+            this.applicationShell.showErrorMessage(jupyterError.message, jupyterError.actionTitle).then(v => {
+                // User clicked on the link, open it.
+                if (v === jupyterError.actionTitle) {
+                    this.applicationShell.openUrl(jupyterError.action);
+                }
+            });
+        } else if (err.message) {
+            this.applicationShell.showErrorMessage(err.message);
+        } else {
+            this.applicationShell.showErrorMessage(err.toString());
+        }
+        this.logger.logError(err);
     }
 
     // User has picked run and advance on the last cell of a document

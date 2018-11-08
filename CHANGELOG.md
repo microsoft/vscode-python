@@ -1,6 +1,6 @@
 # Changelog
 
-## 2018.10.0-beta (31 Oct 2018)
+## 2018.10.0-rc (07 Nov 2018)
 
 ### Thanks
 
@@ -9,8 +9,8 @@ our features:
 - [isort 4.3.4](https://pypi.org/project/isort/4.3.4/)
 - [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
   and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
-- [Microsoft Python Language Server 2018.10.0](https://github.com/Microsoft/python-language-server/releases/tag/2018.10.0)
-- [ptvsd 4.1.4](https://github.com/Microsoft/ptvsd/releases/tag/v4.1.4)
+- Microsoft Python Language Server
+- ptvsd
 - [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
 - [rope](https://pypi.org/project/rope/) (user-installed)
 
@@ -64,7 +64,7 @@ part of!
    ([#2302](https://github.com/Microsoft/vscode-python/issues/2302))
 1. Add support for automatic reloading of flask in the debugger.
    ([#2326](https://github.com/Microsoft/vscode-python/issues/2326))
-1. Add a debugger setting to show return values of functions while stepping.
+1. Added a debugger setting to show return values of functions while stepping.
    ([#2463](https://github.com/Microsoft/vscode-python/issues/2463))
 1. Enable on-type formatting from language server
    ([#2690](https://github.com/Microsoft/vscode-python/issues/2690))
@@ -73,6 +73,17 @@ part of!
    ([#2775](https://github.com/Microsoft/vscode-python/issues/2775))
 1. Ensure `python.condaPath` supports paths relative to `Home`. E.g. `"python.condaPath":"~/anaconda3/bin/conda"`.
    ([#2781](https://github.com/Microsoft/vscode-python/issues/2781))
+1. Updated the [language server](https://github.com/Microsoft/python-language-server) to [0.1.57/2018.11.0](https://github.com/Microsoft/python-language-server/releases/tag/2018.11.0) (from 2018.10.0)
+   and the [debugger](https://pypi.org/project/ptvsd/) to
+   [4.2.0](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.0) (from 4.1.3). Highlights include:
+   * Language server
+     - Completion support for [`collections.namedtuple`](https://docs.python.org/3/library/collections.html#collections.namedtuple).
+     - Support [`typing.NewType`](https://docs.python.org/3/library/typing.html#typing.NewType)
+       and [`typing.TypeVar`](https://docs.python.org/3/library/typing.html#typing.TypeVar).
+   * Debugger
+     - Add support for multi-processing debugging (set `"subProcess": true` in your `launch.json` to use).
+     - Add support for [pyside2](https://pypi.org/project/PySide2/).
+   ([#3235](https://github.com/Microsoft/vscode-python/issues/3235))
 1. Add localization of strings. Localized versions are specified in the package.nls.\<locale\>.json files.
    ([#463](https://github.com/Microsoft/vscode-python/issues/463))
 1. Clear cached list of interpreters when an interpeter is created in the workspace folder (this allows for virtual environments created in one's workspace folder to be detectable immediately).
@@ -84,7 +95,7 @@ part of!
 
 ### Fixes
 
-1. Support `conda activate` after 4.4.0.
+1. Support "conda activate" after 4.4.0.
    ([#1882](https://github.com/Microsoft/vscode-python/issues/1882))
 1. Fix installation of codna packages when conda environment contains spaces.
    ([#2015](https://github.com/Microsoft/vscode-python/issues/2015))
@@ -101,6 +112,21 @@ part of!
 1. Fixed a typo in the Python interpreter selection balloon for macOS.
    (thanks [Joe Graham](https://github.com/joe-graham))
    ([#2868](https://github.com/Microsoft/vscode-python/issues/2868))
+1. Updated the [language server](https://github.com/Microsoft/python-language-server) to [0.1.57/2018.11.0](https://github.com/Microsoft/python-language-server/releases/tag/2018.11.0) (from 2018.10.0)
+   and the [debugger](https://pypi.org/project/ptvsd/) to
+   [4.2.0](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.0) (from 4.1.3). Highlights include:
+   * Language server
+     - Completions on generic containers work (e.g. `x: List[T]` now have completions for `x`, not just `x[]`).
+     - Fixed issues relating to `Go to Definition` for `from ... import` statements.
+     - `None` is no longer flagged as undefined.
+     - `BadSourceException` should no longer be raised.
+     - Fixed a null reference exception when handling certain function overloads.
+   * Debugger
+     - Properly deal with handled or unhandled exception in top level frames.
+     - Any folder ending with `site-packages` is considered a library.
+     - Treat any code not in `site-packages` as user code.
+     - Handle case where no completions are provided by the debugger.
+   ([#3235](https://github.com/Microsoft/vscode-python/issues/3235))
 
 ### Code Health
 
@@ -129,6 +155,10 @@ part of!
    ([#2999](https://github.com/Microsoft/vscode-python/issues/2999))
 1. Move language server downloads to the CDN.
    ([#3000](https://github.com/Microsoft/vscode-python/issues/3000))
+1. Pin extension to a minimum version of the language server.
+   ([#3125](https://github.com/Microsoft/vscode-python/issues/3125))
+
+
 
 
 

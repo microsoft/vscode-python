@@ -68,16 +68,10 @@ def eval_node(context, element):
     debug.dbg('eval_node %s@%s', element, element.start_pos)
     evaluator = context.evaluator
     typ = element.type
-    if typ in ('name', 'number', 'string', 'atom', 'strings'):
+    if typ in ('name', 'number', 'string', 'atom', 'strings', 'keyword'):
         return eval_atom(context, element)
-    elif typ == 'keyword':
-        # For False/True/None
-        if element.value in ('False', 'True', 'None'):
-            return ContextSet(compiled.builtin_from_name(evaluator, element.value))
-        # else: print e.g. could be evaluated like this in Python 2.7
-        return NO_CONTEXTS
     elif typ == 'lambdef':
-        return ContextSet(FunctionContext(evaluator, context, element))
+        return ContextSet(FunctionContext.from_context(context, element))
     elif typ == 'expr_stmt':
         return eval_expr_stmt(context, element)
     elif typ in ('power', 'atom_expr'):
@@ -207,6 +201,18 @@ def eval_atom(context, atom):
             position=stmt.start_pos,
             search_global=True
         )
+    elif atom.type == 'keyword':
+        # For False/True/None
+        if atom.value in ('False', 'True', 'None'):
+            return ContextSet(compiled.builtin_from_name(context.evaluator, atom.value))
+        elif atom.value == 'print':
+            # print e.g. could be evaluated like this in Python 2.7
+            return NO_CONTEXTS
+        elif atom.value == 'yield':
+            # Contrary to yield from, yield can just appear alone to return a
+            # value when used with `.send()`.
+            return NO_CONTEXTS
+        assert False, 'Cannot evaluate the keyword %s' % atom
 
     elif isinstance(atom, tree.Literal):
         string = context.evaluator.compiled_subprocess.safe_literal_eval(atom.value)
@@ -249,7 +255,8 @@ def eval_atom(context, atom):
             array_node_c = array_node.children
         except AttributeError:
             array_node_c = []
-        if c[0] == '{' and (array_node == '}' or ':' in array_node_c):
+        if c[0] == '{' and (array_node == '}' or ':' in array_node_c or
+                            '**' in array_node_c):
             context = iterable.DictLiteralContext(context.evaluator, context, atom)
         else:
             context = iterable.SequenceLiteralContext(context.evaluator, context, atom)
@@ -264,7 +271,7 @@ def eval_expr_stmt(context, stmt, seek_name=None):
         # necessary.
         if not allowed and context.get_root_context() == context.evaluator.builtins_module:
             try:
-                instance = context.instance
+                instance = context.var_args.instance
             except AttributeError:
                 pass
             else:
@@ -574,14 +581,10 @@ def _apply_decorators(context, node):
         decoratee_context = ClassContext(
             context.evaluator,
             parent_context=context,
-            classdef=node
+            tree_node=node
         )
     else:
-        decoratee_context = FunctionContext(
-            context.evaluator,
-            parent_context=context,
-            funcdef=node
-        )
+        decoratee_context = FunctionContext.from_context(context, node)
     initial = values = ContextSet(decoratee_context)
     for dec in reversed(node.get_decorators()):
         debug.dbg('decorator: %s %s', dec, values)

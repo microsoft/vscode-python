@@ -18,6 +18,7 @@ import { IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { RegExpValues } from './constants';
+import { JupyterInstallError } from './jupyterInstallError';
 import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer } from './types';
 
 // This code is based on the examples here:
@@ -102,7 +103,7 @@ export class JupyterServer implements INotebookServer {
 
             return true;
         } else {
-            throw localize.DataScience.jupyterNotSupported();
+            throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
         }
 
     }
@@ -190,7 +191,7 @@ export class JupyterServer implements INotebookServer {
 
         // Can't run because no session
         return new Observable<ICell[]>(subscriber => {
-            subscriber.error(localize.DataScience.sessionDisposed());
+            subscriber.error(new Error(localize.DataScience.sessionDisposed()));
             subscriber.complete();
         });
     }
@@ -470,7 +471,7 @@ export class JupyterServer implements INotebookServer {
         }
 
         return new Observable<ICell>(subscriber => {
-            subscriber.error(localize.DataScience.sessionDisposed());
+            subscriber.error(new Error(localize.DataScience.sessionDisposed()));
             subscriber.complete();
         });
     }
@@ -588,7 +589,7 @@ export class JupyterServer implements INotebookServer {
                 // When the request finishes we are done
                 request.done.then(() => completion(false), () => completion(true));
             } else {
-                subscriber.error(localize.DataScience.sessionDisposed());
+                subscriber.error(new Error(localize.DataScience.sessionDisposed()));
             }
 
         });

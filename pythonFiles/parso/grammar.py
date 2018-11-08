@@ -2,11 +2,11 @@ import hashlib
 import os
 
 from parso._compatibility import FileNotFoundError, is_pypy
-from parso.pgen2.pgen import generate_grammar
+from parso.pgen2 import generate_grammar
 from parso.utils import split_lines, python_bytes_to_unicode, parse_version_string
 from parso.python.diff import DiffParser
 from parso.python.tokenize import tokenize_lines, tokenize
-from parso.python import token
+from parso.python.token import PythonTokenTypes
 from parso.cache import parser_cache, load_module, save_module
 from parso.parser import BaseParser
 from parso.python.parser import Parser as PythonParser
@@ -51,8 +51,8 @@ class Grammar(object):
             it is invalid, it will be returned as an error node. If disabled,
             you will get a ParseError when encountering syntax errors in your
             code.
-        :param str start_symbol: The grammar symbol that you want to parse. Only
-            allowed to be used when error_recovery is False.
+        :param str start_symbol: The grammar rule (nonterminal) that you want
+            to parse. Only allowed to be used when error_recovery is False.
         :param str path: The path to the file you want to open. Only needed for caching.
         :param bool cache: Keeps a copy of the parser tree in RAM and on disk
             if a path is given. Returns the cached trees if the corresponding
@@ -88,7 +88,7 @@ class Grammar(object):
             raise TypeError("Please provide either code or a path.")
 
         if start_symbol is None:
-            start_symbol = self._start_symbol
+            start_symbol = self._start_nonterminal
 
         if error_recovery and start_symbol != 'file_input':
             raise NotImplementedError("This is currently not implemented.")
@@ -136,7 +136,7 @@ class Grammar(object):
         p = self._parser(
             self._pgen_grammar,
             error_recovery=error_recovery,
-            start_symbol=start_symbol
+            start_nonterminal=start_symbol
         )
         root_node = p.parse(tokens=tokens)
 
@@ -186,15 +186,15 @@ class Grammar(object):
         return normalizer.issues
 
     def __repr__(self):
-        labels = self._pgen_grammar.number2symbol.values()
-        txt = ' '.join(list(labels)[:3]) + ' ...'
+        nonterminals = self._pgen_grammar._nonterminal_to_dfas.keys()
+        txt = ' '.join(list(nonterminals)[:3]) + ' ...'
         return '<%s:%s>' % (self.__class__.__name__, txt)
 
 
 class PythonGrammar(Grammar):
     _error_normalizer_config = ErrorFinderConfig()
-    _token_namespace = token
-    _start_symbol = 'file_input'
+    _token_namespace = PythonTokenTypes
+    _start_nonterminal = 'file_input'
 
     def __init__(self, version_info, bnf_text):
         super(PythonGrammar, self).__init__(

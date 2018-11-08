@@ -95,7 +95,6 @@ script:
     fi
   - if [ $FUNCTIONAL_TEST == "true" ]; then
         python -m pip install --upgrade -r functionalTestRequirements.txt;
-        npm run cover:enable;
         npm run test:functional;
     fi
   - if [ $SINGLE_WORKSPACE_TEST == "true" ]; then

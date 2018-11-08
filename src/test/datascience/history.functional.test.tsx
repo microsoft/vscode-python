@@ -89,8 +89,8 @@ suite('History output tests', () => {
 
     test('Simple text', async () => {
         if (await jupyterExecution.isNotebookSupported()) {
-            // Create our main panel and tie it into the JSDOM
-            const wrapper = mount(<MainPanel theme='vscode-light' skipDefault={true} />);
+            // Create our main panel and tie it into the JSDOM. Ignore progress so we only get a single render
+            const wrapper = mount(<MainPanel theme='vscode-light' ignoreProgress={true} skipDefault={true} />);
 
             // Get an update promise so we can wait for the add code
             const updatePromise = waitForUpdate(wrapper, MainPanel);

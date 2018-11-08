@@ -5,11 +5,9 @@ from textwrap import dedent
 import operator as op
 from collections import namedtuple
 
-from jedi import debug
-from jedi._compatibility import unicode, is_py3, is_py34, builtins, \
+from jedi._compatibility import unicode, is_py3, builtins, \
     py_version, force_unicode, print_to_stderr
 from jedi.evaluate.compiled.getattr_static import getattr_static
-from jedi.evaluate.utils import dotted_from_fs_path
 
 
 MethodDescriptorType = type(str.replace)
@@ -33,10 +31,9 @@ NOT_CLASS_TYPES = (
 if is_py3:
     NOT_CLASS_TYPES += (
         types.MappingProxyType,
-        types.SimpleNamespace
+        types.SimpleNamespace,
+        types.DynamicClassAttribute,
     )
-    if is_py34:
-        NOT_CLASS_TYPES += (types.DynamicClassAttribute,)
 
 
 # Those types don't exist in typing.
@@ -137,20 +134,13 @@ def create_access(evaluator, obj):
     return evaluator.compiled_subprocess.get_or_create_access_handle(obj)
 
 
-def load_module(evaluator, path=None, name=None, sys_path=None):
-    if sys_path is None:
-        sys_path = list(evaluator.get_sys_path())
-    if path is not None:
-        dotted_path = dotted_from_fs_path(path, sys_path=sys_path)
-    else:
-        dotted_path = name
-
+def load_module(evaluator, dotted_name, sys_path):
     temp, sys.path = sys.path, sys_path
     try:
-        __import__(dotted_path)
+        __import__(dotted_name)
     except ImportError:
         # If a module is "corrupt" or not really a Python module or whatever.
-        debug.warning('Module %s not importable in path %s.', dotted_path, path)
+        print_to_stderr('Module %s not importable in path %s.' % (dotted_name, sys_path))
         return None
     except Exception:
         # Since __import__ pretty much makes code execution possible, just
@@ -163,7 +153,7 @@ def load_module(evaluator, path=None, name=None, sys_path=None):
 
     # Just access the cache after import, because of #59 as well as the very
     # complicated import structure of Python.
-    module = sys.modules[dotted_path]
+    module = sys.modules[dotted_name]
     return create_access_path(evaluator, module)
 
 
@@ -261,6 +251,9 @@ class DirectObjectAccess(object):
 
     def py__bases__(self):
         return [self._create_access_path(base) for base in self._obj.__bases__]
+
+    def py__path__(self):
+        return self._obj.__path__
 
     @_force_unicode_decorator
     def get_repr(self):
@@ -476,7 +469,7 @@ else:
 
 class _SPECIAL_OBJECTS(object):
     FUNCTION_CLASS = types.FunctionType
-    METHOD_CLASS = type(DirectObjectAccess.py__bool__)
+    BOUND_METHOD_CLASS = type(DirectObjectAccess(None, None).py__bool__)
     MODULE_CLASS = types.ModuleType
     GENERATOR_OBJECT = _a_generator(1.0)
     BUILTINS = builtins

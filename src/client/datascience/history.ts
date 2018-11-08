@@ -22,14 +22,14 @@ import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { HistoryMessages, Telemetry } from './constants';
-import { CellState, ICell, ICodeCssGenerator, IHistory, INotebookServer, IStatusProvider } from './types';
+import { JupyterInstallError } from './jupyterInstallError';
+import { CellState, ICell, ICodeCssGenerator, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
     private disposed : boolean = false;
     private webPanel : IWebPanel | undefined;
-    // tslint:disable-next-line: no-any
-    private loadPromise: Promise<any>;
+    private loadPromise: Promise<void>;
     private settingsChangedDisposable : Disposable;
     private closedEvent : EventEmitter<IHistory>;
     private unfinishedCells: ICell[] = [];
@@ -44,7 +44,8 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(IWebPanelProvider) private provider: IWebPanelProvider,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) private cssGenerator : ICodeCssGenerator,
-        @inject(IStatusProvider) private statusProvider : IStatusProvider) {
+        @inject(IStatusProvider) private statusProvider : IStatusProvider,
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution) {
 
         // Sign up for configuration changes
         this.settingsChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
@@ -63,7 +64,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             await this.loadPromise;
 
             // Then show our web panel.
-            if (this.webPanel) {
+            if (this.webPanel && this.jupyterServer) {
                 await this.webPanel.show();
             }
         }
@@ -77,29 +78,38 @@ export class History implements IWebPanelMessageListener, IHistory {
         // Start a status item
         const status = this.setStatus(localize.DataScience.executingCode());
 
-        // Make sure we're loaded first.
-        await this.loadPromise;
+        try {
+            // Make sure we're loaded first.
+            await this.loadPromise;
 
-        // Then show our webpanel
-        await this.show();
+            // Then show our webpanel
+            await this.show();
 
-        if (this.jupyterServer) {
-            // Attempt to evaluate this cell in the jupyter notebook
-            const observable = this.jupyterServer.executeObservable(code, file, line);
+            if (this.jupyterServer) {
+                // Attempt to evaluate this cell in the jupyter notebook
+                const observable = this.jupyterServer.executeObservable(code, file, line);
 
-            // Sign up for cell changes
-            observable.subscribe(
-                (cells: ICell[]) => {
-                    this.onAddCodeEvent(cells, editor);
-                },
-                (error) => {
-                    status.dispose();
-                    this.applicationShell.showErrorMessage(error);
-                },
-                () => {
-                    // Indicate executing until this cell is done.
-                    status.dispose();
-                });
+                // Sign up for cell changes
+                observable.subscribe(
+                    (cells: ICell[]) => {
+                        this.onAddCodeEvent(cells, editor);
+                    },
+                    (error) => {
+                        status.dispose();
+                        this.applicationShell.showErrorMessage(error);
+                    },
+                    () => {
+                        // Indicate executing until this cell is done.
+                        status.dispose();
+                    });
+            }
+        } catch (err) {
+            status.dispose();
+
+            // We failed, dispose of ourselves too so that nobody uses us again
+            this.dispose();
+
+            throw err;
         }
     }
 
@@ -366,10 +376,14 @@ export class History implements IWebPanelMessageListener, IHistory {
         this.webPanel = this.provider.create(this, localize.DataScience.historyTitle(), mainScriptPath, css);
     }
 
-    private load = () : Promise<[void, void]> => {
-        return Promise.all([
-            this.loadWebPanel(),
-            this.loadJupyterServer()
-        ]);
+    private load = async () : Promise<void> => {
+
+        // Check to see if we support jupyter or not. If not quick fail
+        if (!(await this.jupyterExecution.isImportSupported())) {
+            throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
+        }
+
+        // Otherwise wait for both
+        await Promise.all([this.loadJupyterServer(), this.loadWebPanel()]);
     }
 }
