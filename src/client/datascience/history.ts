@@ -107,7 +107,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             status.dispose();
 
             // We failed, dispose of ourselves too so that nobody uses us again
-            this.dispose();
+            this.dispose().ignoreErrors();
 
             throw err;
         }
