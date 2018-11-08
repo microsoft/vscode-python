@@ -58,7 +58,7 @@ export class DataScience implements IDataScience {
 
     public async runAllCells(codeWatcher: ICodeWatcher): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-        
+
         let activeCodeWatcher: ICodeWatcher | undefined = codeWatcher;
         if (!activeCodeWatcher) {
             activeCodeWatcher = this.getCurrentCodeWatcher();
