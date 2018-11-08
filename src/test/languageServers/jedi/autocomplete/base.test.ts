@@ -7,11 +7,12 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
 import { isPythonVersion } from '../../../common';
 import { closeActiveWindows, initialize, initializeTest } from '../../../initialize';
 import { UnitTestIocContainer } from '../../../unittests/serviceRegistry';
 
-const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
+const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'autocomp');
 const fileOne = path.join(autoCompPath, 'one.py');
 const fileImport = path.join(autoCompPath, 'imp.py');
 const fileDoc = path.join(autoCompPath, 'doc.py');
