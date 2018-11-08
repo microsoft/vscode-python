@@ -5,7 +5,6 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { rootWorkspaceUri } from '../common';
-import { IsLanguageServerTest } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -24,11 +23,7 @@ class SignatureHelpResult {
 suite('Signatures (Language Server)', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
-    suiteSetup(async function () {
-        if (!IsLanguageServerTest()) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-        }
+    suiteSetup(async () => {
         await initialize();
         initializeDI();
         isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;

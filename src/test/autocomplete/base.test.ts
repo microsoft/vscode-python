@@ -6,7 +6,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { isPythonVersion } from '../common';
-import { closeActiveWindows, initialize, initializeTest, IsLanguageServerTest } from '../initialize';
+import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'autocomp');
@@ -108,10 +108,6 @@ suite('Autocomplete Base Tests', function () {
 
     // https://github.com/DonJayamanne/pythonVSCode/issues/630
     test('For "abc.decorators"', async () => {
-        // Disabled for the Language Server, see https://github.com/Microsoft/PTVS/issues/3857
-        if (IsLanguageServerTest()) {
-            return;
-        }
         const textDocument = await vscode.workspace.openTextDocument(fileDecorator);
         await vscode.window.showTextDocument(textDocument);
         let position = new vscode.Position(3, 9);
@@ -208,11 +204,6 @@ suite('Autocomplete Base Tests', function () {
 
     // https://github.com/Microsoft/vscode-python/issues/110
     test('Suppress in strings/comments', async () => {
-        // Excluded from the Language Server b/c skipping of strings and comments
-        // is not yet there. See https://github.com/Microsoft/PTVS/issues/3798
-        if (IsLanguageServerTest()) {
-            return;
-        }
         const positions = [
             new vscode.Position(0, 1),  // false
             new vscode.Position(0, 9),  // true

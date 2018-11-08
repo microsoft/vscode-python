@@ -18,7 +18,6 @@ import {
     IApplicationShell, ICommandManager,
     IWorkspaceService
 } from '../../client/common/application/types';
-import { isLanguageServerTest } from '../../client/common/constants';
 import { IPlatformService } from '../../client/common/platform/types';
 import {
     IConfigurationService, IDisposableRegistry,
@@ -38,10 +37,6 @@ suite('Activation - ActivationService', () => {
             let workspaceService: TypeMoq.IMock<IWorkspaceService>;
             let platformService: TypeMoq.IMock<IPlatformService>;
             setup(function () {
-                if (isLanguageServerTest()) {
-                    // tslint:disable-next-line:no-invalid-this
-                    return this.skip();
-                }
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                 workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();

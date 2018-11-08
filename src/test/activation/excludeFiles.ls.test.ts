@@ -11,7 +11,7 @@ import { IConfigurationService } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../../client/ioc/types';
-import { IsLanguageServerTest } from '../constants';
+import { IS_LANGUAGE_SERVER_TEST } from '../constants';
 import { activateExtension, closeActiveWindows } from '../initialize';
 
 const wksPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'exclusions');
@@ -25,7 +25,7 @@ suite('Exclude files (Language Server)', () => {
     let configService: IConfigurationService;
 
     suiteSetup(async function () {
-        if (!IsLanguageServerTest()) {
+        if (!IS_LANGUAGE_SERVER_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }

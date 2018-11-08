@@ -2,7 +2,6 @@ import * as assert from 'assert';
 import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IsLanguageServerTest } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { normalizeMarkedString } from '../textUtils';
 
@@ -17,13 +16,7 @@ const fileStringFormat = path.join(hoverPath, 'functionHover.py');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Hover Definition (Jedi)', () => {
-    suiteSetup(async function () {
-        if (IsLanguageServerTest()) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-        }
-        await initialize();
-    });
+    suiteSetup(initialize);
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);

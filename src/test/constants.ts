@@ -9,6 +9,7 @@ export const IS_MULTI_ROOT_TEST = isMultitrootTest();
 
 // If running on CI server, then run debugger tests ONLY if the corresponding flag is enabled.
 export const TEST_DEBUGGER = IS_CI_SERVER ? IS_CI_SERVER_TEST_DEBUGGER : true;
+export const IS_LANGUAGE_SERVER_TEST = process.env.VSC_PYTHON_LANGUAGE_SERVER === '1';
 
 function isMultitrootTest() {
     // tslint:disable-next-line:no-require-imports
@@ -16,6 +17,3 @@ function isMultitrootTest() {
     const workspace = vscode.workspace;
     return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;
 }
-
-export const IsLanguageServerTest = () =>
-    !IS_TRAVIS && (process.env.VSC_PYTHON_LANGUAGE_SERVER === '1' || !PythonSettings.getInstance().jediEnabled);

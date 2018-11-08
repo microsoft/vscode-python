@@ -7,7 +7,7 @@ import { OSType } from '../../client/common/utils/platform';
 import { isOs, isPythonVersion, rootWorkspaceUri } from '../common';
 import {
     closeActiveWindows, initialize,
-    initializeTest, IsLanguageServerTest
+    initializeTest
 } from '../initialize';
 import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
@@ -19,11 +19,6 @@ suite('Autocomplete PEP 526', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
     suiteSetup(async function () {
-        // https://github.com/Microsoft/PTVS/issues/3917
-        if (IsLanguageServerTest()) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-        }
         await initialize();
         initializeDI();
         isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;

@@ -3,7 +3,6 @@ import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { IsLanguageServerTest } from '../constants';
 import { closeActiveWindows, initialize } from '../initialize';
 import { normalizeMarkedString } from '../textUtils';
 
@@ -11,13 +10,7 @@ const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pyth
 const fileOne = path.join(autoCompPath, 'one.py');
 
 suite('Code, Hover Definition and Intellisense (Jedi)', () => {
-    suiteSetup(async function () {
-        if (IsLanguageServerTest()) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-        }
-        await initialize();
-    });
+    suiteSetup(initialize);
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 

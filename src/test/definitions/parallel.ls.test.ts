@@ -6,7 +6,6 @@ import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { IsLanguageServerTest } from '../constants';
 import { closeActiveWindows, initialize } from '../initialize';
 import { normalizeMarkedString } from '../textUtils';
 
@@ -19,10 +18,6 @@ suite('Code, Hover Definition and Intellisense (Language Server)', () => {
         // tslint:disable-next-line:no-invalid-this
         this.skip();
 
-        if (!IsLanguageServerTest()) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-        }
         await initialize();
     });
     suiteTeardown(closeActiveWindows);
