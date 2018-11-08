@@ -62,8 +62,6 @@ part of!
    ([#2242](https://github.com/Microsoft/vscode-python/issues/2242))
 1. Add Python Interactive mode for data science.
    ([#2302](https://github.com/Microsoft/vscode-python/issues/2302))
-1. Add support for automatic reloading of flask in the debugger.
-   ([#2326](https://github.com/Microsoft/vscode-python/issues/2326))
 1. Added a debugger setting to show return values of functions while stepping.
    ([#2463](https://github.com/Microsoft/vscode-python/issues/2463))
 1. Enable on-type formatting from language server
@@ -81,16 +79,13 @@ part of!
      - Support [`typing.NewType`](https://docs.python.org/3/library/typing.html#typing.NewType)
        and [`typing.TypeVar`](https://docs.python.org/3/library/typing.html#typing.TypeVar).
    * Debugger
-     - Add support for multi-processing debugging (set `"subProcess": true` in your `launch.json` to use).
+     - Add support for sub-process debugging (set `"subProcess": true` in your `launch.json` to use).
      - Add support for [pyside2](https://pypi.org/project/PySide2/).
-   ([#3235](https://github.com/Microsoft/vscode-python/issues/3235))
 1. Add localization of strings. Localized versions are specified in the package.nls.\<locale\>.json files.
    ([#463](https://github.com/Microsoft/vscode-python/issues/463))
 1. Clear cached list of interpreters when an interpeter is created in the workspace folder (this allows for virtual environments created in one's workspace folder to be detectable immediately).
    ([#656](https://github.com/Microsoft/vscode-python/issues/656))
-1. Add support for multi process debugging.
-   ([#80](https://github.com/Microsoft/vscode-python/issues/80))
-1. Pylint is no longer enabled by default. Users that have not configured pylint but who have installed it in their workspace will be asked if they'd like to enable it.
+1. Pylint is no longer enabled by default when using the language server. Users that have not configured pylint but who have installed it in their workspace will be asked if they'd like to enable it.
    ([#974](https://github.com/Microsoft/vscode-python/issues/974))
 
 ### Fixes
@@ -126,7 +121,6 @@ part of!
      - Any folder ending with `site-packages` is considered a library.
      - Treat any code not in `site-packages` as user code.
      - Handle case where no completions are provided by the debugger.
-   ([#3235](https://github.com/Microsoft/vscode-python/issues/3235))
 
 ### Code Health
 
