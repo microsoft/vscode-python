@@ -21,6 +21,7 @@ import * as localize from '../common/utils/localize';
 import { RegExpValues } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
 import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer } from './types';
+import { IInterpreterService } from '../interpreter/contracts';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -40,7 +41,8 @@ export class JupyterServer implements INotebookServer {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService) {
     }
 
     public start = async () : Promise<boolean> => {
@@ -355,11 +357,23 @@ export class JupyterServer implements INotebookServer {
                 score += 1;
 
                 // See if the version is the same
-                if (pythonVersion) {
-                    const digits = spec.name.match(/\d+/g);
-                    if (digits.length > 0 && parseInt(digits[0], 10) === pythonVersion[0]) {
-                        // Major version match
-                        score += 4;
+                if (pythonVersion && spec.argv.length > 0) {
+                    const details = await this.interpreterService.getInterpreterDetails(spec.argv[0])
+                    if (details) {
+                        if (details.version_info[0] === pythonVersion[0]) {
+                            // Major version match
+                            score += 4;
+
+                            if (details.version_info[1] === pythonVersion[1]) {
+                                // Minor version match
+                                score += 2;
+
+                                if (details.version_info[2] === pythonVersion[2]) {
+                                    // Minor version match
+                                    score += 1;
+                                }
+                            }
+                        }
                     }
                 }
             }
