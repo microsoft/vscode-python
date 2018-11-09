@@ -5,6 +5,7 @@
 .gitattributes
 .gitignore
 .gitmodules
+.huskyrc.json
 .npmrc
 .travis.yml
 CODE_OF_CONDUCT.md
@@ -12,8 +13,12 @@ CODING_STANDARDS.md
 CONTRIBUTING.md
 CONTRIBUTING - LANGUAGE SERVER.md
 coverconfig.json
+functionalTestRequirements.txt
 gulpfile.js
+package-lock.json
 packageExtension.cmd
+pvsc-dev-ext.py
+PYTHON_INTERACTIVE_TROUBLESHOOTING.md
 tsconfig.json
 tsfmt.json
 tslint.json
@@ -21,7 +26,7 @@ typings.json
 vsc-extension-quickstart.md
 vscode-python-signing.*
 webpack.config.js
-yarn.lock
+webpack.default.config.js
 
 .github/**
 .mocha-reporter/**

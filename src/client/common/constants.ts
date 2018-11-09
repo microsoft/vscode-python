@@ -85,8 +85,5 @@ export function isTestExecution(): boolean {
 export function isUnitTestExecution(): boolean {
     return process.env.VSC_PYTHON_UNIT_TEST === '1';
 }
-export function isLanguageServerTest(): boolean {
-    return process.env.VSC_PYTHON_LANGUAGE_SERVER === '1';
-}
 
 export const EXTENSION_ROOT_DIR = path.join(__dirname, '..', '..', '..');

@@ -3,7 +3,7 @@
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
     "version": "2018.11.0-alpha",
-    "languageServerVersion": "0.1.50",
+    "languageServerVersion": "0.1.60",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -1687,7 +1687,6 @@
         "testMultiWorkspace": "node ./out/test/multiRootTest.js",
         "testAnalysisEngine": "node ./out/test/analysisEngineTest.js",
         "testPerformance": "node ./out/test/performanceTest.js",
-        "precommit": "node gulpfile.js precommit=true",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",

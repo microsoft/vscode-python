@@ -39,7 +39,7 @@ Press Enter to close. . .''')
 def run(cwd, testRunner, args):
     """Runs the test
     cwd -- the current directory to be set
-    testRuner -- test runner to be used `pytest` or `nose`
+    testRunner -- test runner to be used `pytest` or `nose`
     args -- arguments passed into the test runner
     """
     

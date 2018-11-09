@@ -107,7 +107,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             status.dispose();
 
             // We failed, dispose of ourselves too so that nobody uses us again
-            this.dispose();
+            this.dispose().ignoreErrors();
 
             throw err;
         }
@@ -164,12 +164,12 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    public dispose() {
+    public async dispose() {
         if (!this.disposed) {
             this.disposed = true;
             this.settingsChangedDisposable.dispose();
             if (this.jupyterServer) {
-                this.jupyterServer.dispose();
+                await this.jupyterServer.shutdown();
             }
             this.closedEvent.fire(this);
         }

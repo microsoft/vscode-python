@@ -1,18 +1,20 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 'use strict';
+
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { isLanguageServerTest } from '../../client/common/constants';
-import { closeActiveWindows, initialize, initializeTest } from '../initialize';
+import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
+import { closeActiveWindows, initialize, initializeTest } from '../../../initialize';
 
-const decoratorsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'definition', 'navigation');
+const decoratorsPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'definition', 'navigation');
 const fileDefinitions = path.join(decoratorsPath, 'definitions.py');
 const fileUsages = path.join(decoratorsPath, 'usages.py');
 
 // tslint:disable-next-line:max-func-body-length
-suite('Definition Navigation', () => {
+suite('Language Server: Definition Navigation', () => {
     suiteSetup(initialize);
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -53,82 +55,76 @@ suite('Definition Navigation', () => {
         fileDefinitions,
         new vscode.Position(2, 6),
         [fileDefinitions],
-        isLanguageServerTest() ? [new vscode.Range(2, 4, 2, 16)] : [new vscode.Range(2, 0, 11, 17)]
+        [new vscode.Range(2, 0, 11, 17)]
     ));
 
     test('Nested function', buildTest(
         fileDefinitions,
         new vscode.Position(11, 16),
         [fileDefinitions],
-        isLanguageServerTest() ? [new vscode.Range(6, 8, 6, 15)] : [new vscode.Range(6, 4, 10, 16)]
+        [new vscode.Range(6, 4, 10, 16)]
     ));
 
     test('Decorator usage', buildTest(
         fileDefinitions,
         new vscode.Position(13, 1),
         [fileDefinitions],
-        isLanguageServerTest() ? [new vscode.Range(2, 4, 2, 16)] : [new vscode.Range(2, 0, 11, 17)]
+        [new vscode.Range(2, 0, 11, 17)]
     ));
 
     test('Function decorated by stdlib', buildTest(
         fileDefinitions,
         new vscode.Position(29, 6),
         [fileDefinitions],
-        isLanguageServerTest() ? [new vscode.Range(21, 4, 21, 22)] : [new vscode.Range(21, 0, 27, 17)]
+        [new vscode.Range(21, 0, 27, 17)]
     ));
 
     test('Function decorated by local decorator', buildTest(
         fileDefinitions,
         new vscode.Position(30, 6),
         [fileDefinitions],
-        isLanguageServerTest() ? [new vscode.Range(14, 4, 14, 9)] : [new vscode.Range(14, 0, 18, 7)]
+        [new vscode.Range(14, 0, 18, 7)]
     ));
 
     test('Module imported decorator usage', buildTest(
         fileUsages,
         new vscode.Position(3, 15),
         [fileDefinitions],
-        isLanguageServerTest() ? [new vscode.Range(2, 4, 2, 16)] : [new vscode.Range(2, 0, 11, 17)]
+        [new vscode.Range(2, 0, 11, 17)]
     ));
 
     test('Module imported function decorated by stdlib', buildTest(
         fileUsages,
         new vscode.Position(11, 19),
         [fileDefinitions],
-        isLanguageServerTest() ? [new vscode.Range(21, 4, 21, 22)] : [new vscode.Range(21, 0, 27, 17)]
+        [new vscode.Range(21, 0, 27, 17)]
     ));
 
     test('Module imported function decorated by local decorator', buildTest(
         fileUsages,
         new vscode.Position(12, 19),
         [fileDefinitions],
-        isLanguageServerTest() ? [new vscode.Range(14, 4, 14, 9)] : [new vscode.Range(14, 0, 18, 7)]
+        [new vscode.Range(14, 0, 18, 7)]
     ));
 
     test('Specifically imported decorator usage', buildTest(
         fileUsages,
         new vscode.Position(7, 1),
-        isLanguageServerTest() ? [fileDefinitions] : [fileDefinitions],
-        isLanguageServerTest()
-            ? [new vscode.Range(2, 4, 2, 16)]
-            : [new vscode.Range(2, 0, 11, 17)]
+        [fileDefinitions],
+        [new vscode.Range(2, 0, 11, 17)]
     ));
 
     test('Specifically imported function decorated by stdlib', buildTest(
         fileUsages,
         new vscode.Position(14, 6),
-        isLanguageServerTest() ? [fileDefinitions] : [fileDefinitions],
-        isLanguageServerTest()
-            ? [new vscode.Range(21, 4, 21, 22)]
-            : [new vscode.Range(21, 0, 27, 17)]
+        [fileDefinitions],
+        [new vscode.Range(21, 0, 27, 17)]
     ));
 
     test('Specifically imported function decorated by local decorator', buildTest(
         fileUsages,
         new vscode.Position(15, 6),
-        isLanguageServerTest() ? [fileDefinitions] : [fileDefinitions],
-        isLanguageServerTest()
-            ? [new vscode.Range(14, 4, 14, 9)]
-            : [new vscode.Range(14, 0, 18, 7)]
+        [fileDefinitions],
+        [new vscode.Range(14, 0, 18, 7)]
     ));
 });

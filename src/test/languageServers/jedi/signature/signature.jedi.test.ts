@@ -1,15 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { rootWorkspaceUri } from '../common';
-import { IsLanguageServerTest } from '../constants';
-import { closeActiveWindows, initialize, initializeTest } from '../initialize';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
+import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
+import { rootWorkspaceUri } from '../../../common';
+import { closeActiveWindows, initialize, initializeTest } from '../../../initialize';
+import { UnitTestIocContainer } from '../../../unittests/serviceRegistry';
 
-const autoCompPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'signature');
+const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'signature');
 
 class SignatureHelpResult {
     constructor(
@@ -21,14 +23,10 @@ class SignatureHelpResult {
 }
 
 // tslint:disable-next-line:max-func-body-length
-suite('Signatures (Language Server)', () => {
+suite('Signatures (Jedi)', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
-    suiteSetup(async function () {
-        if (!IsLanguageServerTest()) {
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-        }
+    suiteSetup(async () => {
         await initialize();
         initializeDI();
         isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri) === 2;
@@ -48,16 +46,16 @@ suite('Signatures (Language Server)', () => {
 
     test('For ctor', async () => {
         const expected = [
-            new SignatureHelpResult(5, 11, 1, -1, null),
+            new SignatureHelpResult(5, 11, 0, 0, null),
             new SignatureHelpResult(5, 12, 1, 0, 'name'),
-            new SignatureHelpResult(5, 13, 1, 0, 'name'),
-            new SignatureHelpResult(5, 14, 1, 0, 'name'),
-            new SignatureHelpResult(5, 15, 1, 0, 'name'),
-            new SignatureHelpResult(5, 16, 1, 0, 'name'),
-            new SignatureHelpResult(5, 17, 1, 0, 'name'),
+            new SignatureHelpResult(5, 13, 0, 0, null),
+            new SignatureHelpResult(5, 14, 0, 0, null),
+            new SignatureHelpResult(5, 15, 0, 0, null),
+            new SignatureHelpResult(5, 16, 0, 0, null),
+            new SignatureHelpResult(5, 17, 0, 0, null),
             new SignatureHelpResult(5, 18, 1, 1, 'age'),
             new SignatureHelpResult(5, 19, 1, 1, 'age'),
-            new SignatureHelpResult(5, 20, 1, -1, null)
+            new SignatureHelpResult(5, 20, 0, 0, null)
         ];
 
         const document = await openDocument(path.join(autoCompPath, 'classCtor.py'));
@@ -68,18 +66,21 @@ suite('Signatures (Language Server)', () => {
 
     test('For intrinsic', async () => {
         const expected = [
-            new SignatureHelpResult(0, 0, 1, -1, null),
-            new SignatureHelpResult(0, 1, 1, -1, null),
-            new SignatureHelpResult(0, 2, 1, -1, null),
-            new SignatureHelpResult(0, 3, 1, -1, null),
-            new SignatureHelpResult(0, 4, 1, -1, null),
-            new SignatureHelpResult(0, 5, 1, -1, null),
-            new SignatureHelpResult(0, 6, 1, 0, 'start'),
-            new SignatureHelpResult(0, 7, 1, 0, 'start'),
-            new SignatureHelpResult(0, 8, 1, 1, 'stop'),
-            new SignatureHelpResult(0, 9, 1, 1, 'stop'),
-            new SignatureHelpResult(0, 10, 1, 1, 'stop'),
-            new SignatureHelpResult(0, 11, 1, 2, 'step')
+            new SignatureHelpResult(0, 0, 0, 0, null),
+            new SignatureHelpResult(0, 1, 0, 0, null),
+            new SignatureHelpResult(0, 2, 0, 0, null),
+            new SignatureHelpResult(0, 3, 0, 0, null),
+            new SignatureHelpResult(0, 4, 0, 0, null),
+            new SignatureHelpResult(0, 5, 0, 0, null),
+            new SignatureHelpResult(0, 6, 1, 0, 'stop'),
+            new SignatureHelpResult(0, 7, 1, 0, 'stop')
+            // new SignatureHelpResult(0, 6, 1, 0, 'start'),
+            // new SignatureHelpResult(0, 7, 1, 0, 'start'),
+            // new SignatureHelpResult(0, 8, 1, 1, 'stop'),
+            // new SignatureHelpResult(0, 9, 1, 1, 'stop'),
+            // new SignatureHelpResult(0, 10, 1, 1, 'stop'),
+            // new SignatureHelpResult(0, 11, 1, 2, 'step'),
+            // new SignatureHelpResult(1, 0, 1, 2, 'step')
         ];
 
         const document = await openDocument(path.join(autoCompPath, 'basicSig.py'));
@@ -95,7 +96,7 @@ suite('Signatures (Language Server)', () => {
             return;
         }
         const expected = [
-            new SignatureHelpResult(0, 5, 1, -1, null),
+            new SignatureHelpResult(0, 5, 0, 0, null),
             new SignatureHelpResult(0, 6, 1, 0, 'value'),
             new SignatureHelpResult(0, 7, 1, 0, 'value'),
             new SignatureHelpResult(0, 8, 1, 1, '...'),
