@@ -9,7 +9,7 @@ module.exports = {
     entry: ['babel-polyfill', './src/datascience-ui/history-react/index.tsx'],
     output: {
         path: path.join(__dirname, 'out'),
-        filename: 'index_bundle.js',
+        filename: 'datascience-ui/history-react/index_bundle.js',
         publicPath: './'
     },
 
