@@ -18,10 +18,10 @@ import { IFileSystem } from '../common/platform/types';
 import { IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
+import { IInterpreterService } from '../interpreter/contracts';
 import { RegExpValues } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
 import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer } from './types';
-import { IInterpreterService } from '../interpreter/contracts';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -373,7 +373,7 @@ export class JupyterServer implements INotebookServer {
 
                 // See if the version is the same
                 if (pythonVersion && spec.argv.length > 0 && await fs.pathExists(spec.argv[0])) {
-                    const details = await this.interpreterService.getInterpreterDetails(spec.argv[0])
+                    const details = await this.interpreterService.getInterpreterDetails(spec.argv[0]);
                     if (details && details.version_info) {
                         if (details.version_info[0] === pythonVersion[0]) {
                             // Major version match
