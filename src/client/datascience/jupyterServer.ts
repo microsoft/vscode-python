@@ -357,7 +357,7 @@ export class JupyterServer implements INotebookServer {
                 score += 1;
 
                 // See if the version is the same
-                if (pythonVersion && spec.argv.length > 0) {
+                if (pythonVersion && spec.argv.length > 0 && await fs.pathExists(spec.argv[0])) {
                     const details = await this.interpreterService.getInterpreterDetails(spec.argv[0])
                     if (details) {
                         if (details.version_info[0] === pythonVersion[0]) {
