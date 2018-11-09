@@ -92,6 +92,7 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
 export interface ICodeWatcher {
+    addFile(document: TextDocument);
     getFileName() : string;
     getVersion() : number;
     getCodeLenses() : CodeLens[];

@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+
+import { inject, injectable } from 'inversify';
 import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditorRevealType, window } from 'vscode';
 
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, EditorContexts, RegExpValues, Telemetry } from '../constants';
 import { JupyterInstallError } from '../jupyterInstallError';
@@ -18,22 +19,19 @@ export interface ICell {
     title: string;
 }
 
+@injectable()
 export class CodeWatcher implements ICodeWatcher {
     private document?: TextDocument;
     private version: number = -1;
     private fileName: string = '';
     private codeLenses: CodeLens[] = [];
-    private historyProvider: IHistoryProvider;
-    private commandManager: ICommandManager;
-    private applicationShell: IApplicationShell;
-    private logger: ILogger;
 
-    constructor(serviceContainer: IServiceContainer, document: TextDocument) {
-        this.historyProvider = serviceContainer.get<IHistoryProvider>(IHistoryProvider);
-        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-        this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.logger = serviceContainer.get<ILogger>(ILogger);
+    constructor(@inject(ICommandManager) private commandManager: ICommandManager,
+                @inject(IApplicationShell) private applicationShell: IApplicationShell,
+                @inject(ILogger) private logger: ILogger,
+                @inject(IHistoryProvider) private historyProvider) {}
 
+    public addFile(document: TextDocument) { 
         this.document = document;
 
         // Cache these, we don't want to pull an old version if the document is updated
