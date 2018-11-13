@@ -1,9 +1,10 @@
-const path = require('path');
-const nodeExternals = require('webpack-node-externals');
-// const configFileName = 'tsconfig.extension.json';
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const webpack = require('webpack');
-const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+const path = require("path");
+const nodeExternals = require("webpack-node-externals");
+const configFileName = 'tsconfig.extension.json';
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer")
+    .BundleAnalyzerPlugin;
+const webpack = require("webpack");
+const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 
 // const extensionTools = require('./build/webpack/extension');
 
@@ -13,12 +14,11 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 // console.log(exteranlSourceToIgnore);
 module.exports = {
-    mode: 'none',
-    // mode: 'production'
-    target: 'node',
+    mode: "production",
+    target: "node",
     entry: {
-        extension: './src/client/extension.ts',
-        debugAdapter: './src/client/debugger/debugAdapter/main.ts',
+        extension: "./src/client/extension.ts",
+        debugAdapter: "./src/client/debugger/debugAdapter/main.ts"
         // ...nodeModuleBundleEntries,
         // "untildifyx": "untildify"
         // unicode_category_Lu: './node_modules/unicode/category/Lu.js',
@@ -31,8 +31,8 @@ module.exports = {
         // unicode_category_Nd: './node_modules/unicode/category/Nd.js',
         // unicode_category_Pc: './node_modules/unicode/category/Pc.js'
     },
-    // devtool: 'source-map',
-    devtool: 'none',
+    devtool: 'source-map',
+    // devtool: "none",
     node: {
         __dirname: false
     },
@@ -47,14 +47,15 @@ module.exports = {
             {
                 test: /\.ts$/,
                 exclude: /node_modules/,
-                use: [{
-                    loader: 'ts-loader',
-                },
+                use: [
+                    {
+                        loader: "ts-loader"
+                    }
                     // {
                     //     loader: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/myloader.js'
                     // }
                 ]
-            },
+            }
             // {
             //     test: /\.ts$/,
             //     use: [
@@ -90,8 +91,8 @@ module.exports = {
     },
     plugins: [
         new BundleAnalyzerPlugin({
-            analyzerMode: 'static'
-        }),
+            analyzerMode: "static"
+        })
         // new webpack.HashedModuleIdsPlugin(), // so that file hashes don't change unexpectedly
         // new webpack.optimize.CommonsChunkPlugin({
         //     name: 'node-static',
@@ -138,7 +139,9 @@ module.exports = {
     },
     // externals: [nodeExternals(), 'vscode'],
     // externals: ["commonjs", "vscode"],
-    externals: ["vscode",
+    externals: [
+        "vscode",
+        "commonjs",
         // "lodash",
         // "azure-storage",
         // "vscode-extension-telemetry",
@@ -149,36 +152,50 @@ module.exports = {
         "unicode/category/Nl", "unicode/category/Mn", "unicode/category/Mc",
         "unicode/category/Nd", "unicode/category/Pc",
 
+        "out/unicode/category/Lu", "out/unicode/category/Ll", "out/unicode/category/Lt",
+        "out/unicode/category/Lo", "out/unicode/category/Lo", "out/unicode/category/Lm",
+        "out/unicode/category/Nl", "out/unicode/category/Mn", "out/unicode/category/Mc",
+        "out/unicode/category/Nd", "out/unicode/category/Pc",
+
+        "./out/unicode/category/Lu", "./out/unicode/category/Ll", "./out/unicode/category/Lt",
+        "./out/unicode/category/Lo", "./out/unicode/category/Lo", "./out/unicode/category/Lm",
+        "./out/unicode/category/Nl", "./out/unicode/category/Mn", "./out/unicode/category/Mc",
+        "./out/unicode/category/Nd", "./out/unicode/category/Pc",
+
+        "./out/unicode/category/Lu.js", "./out/unicode/category/Ll.js", "./out/unicode/category/Lt.js",
+        "./out/unicode/category/Lo.js", "./out/unicode/category/Lo.js", "./out/unicode/category/Lm.js",
+        "./out/unicode/category/Nl.js", "./out/unicode/category/Mn.js", "./out/unicode/category/Mc.js",
+        "./out/unicode/category/Nd.js", "./out/unicode/category/Pc.js",
+
         // 'out/client/unicode_category_Llxyz.js',
         // './out/client/unicode_category_Llxyz.js',
         // './out/client/HELLO.js',
         // 'out/client/unicode_category_Lu.js',
         // ...exteranlSourceToIgcnore
 
-
         // path.join(__dirname, 'out', 'client', 'unicode_category_Lu'),
         // path.join(__dirname, 'out', 'client', 'unicode_category_Lu.js'),
     ],
     // externals: 'commonjs vscode',
     // externals: {
-    //     vscode: "commonjs vscode lodash azure-storage unicode unicode/category" // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed
+    //     vscode: "commonjs vscode" // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed
     // },
     resolve: {
-        extensions: ['.ts', '.js'],
+        extensions: [".ts", ".js"],
         // plugins: [new TsconfigPathsPlugin({ configFile: configFileName })],
-        // alias: {
-        //     'unicode/category/Lu$': 'out/client/unicode_category_Lu.js',
-        //     'unicode/category/Lu': 'out/client/unicode_category_Lu.js',
-        //     // 'unicode/category/Lu$': path.join(__dirname, 'out', 'client', 'unicode_category_Lu.js'),
-        //     // 'unicode/category/Lu': path.join(__dirname, 'out', 'client', 'unicode_category_Lu.js'),
-        // }
+        alias: {
+            'unicode/category/Lu$': 'out/client/unicode_category_Lu.js',
+            'unicode/category/Lu': 'out/client/unicode_category_Lu.js',
+            // 'unicode/category/Lu$': path.join(__dirname, 'out', 'client', 'unicode_category_Lu.js'),
+            // 'unicode/category/Lu': path.join(__dirname, 'out', 'client', 'unicode_category_Lu.js'),
+        }
     },
     output: {
         // filename: 'index.js',c
-        filename: '[name].js',
+        filename: "[name].js",
         // chunkFilename: '[name].bundle.js',
-        path: path.resolve(__dirname, 'out', 'client'),
+        path: path.resolve(__dirname, "out", "client"),
         libraryTarget: "commonjs2",
-
+        devtoolModuleFilenameTemplate: "../[resource-path]",
     }
 };
