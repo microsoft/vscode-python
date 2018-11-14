@@ -7,16 +7,24 @@
 
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../common/constants';
-import { IDebugLauncherScriptProvider } from '../types';
+import { IDebugLauncherScriptProvider, IRemoteDebugLauncherScriptProvider, LocalDebugOptions, RemoteDebugOptions } from '../types';
 
-export class NoDebugLauncherScriptProvider implements IDebugLauncherScriptProvider {
-    public getLauncherFilePath(): string {
-        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd_launcher.py');
+const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd_launcher.py');
+export class NoDebugLauncherScriptProvider implements IDebugLauncherScriptProvider<LocalDebugOptions> {
+    public getLauncherArgs(options: LocalDebugOptions): string[] {
+        return [script, '--nodebug', '--client', '--host', options.host, '--port', options.port.toString()];
     }
 }
 
-export class DebuggerLauncherScriptProvider implements IDebugLauncherScriptProvider {
-    public getLauncherFilePath(): string {
-        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd_launcher.py');
+export class DebuggerLauncherScriptProvider implements IDebugLauncherScriptProvider<LocalDebugOptions>  {
+    public getLauncherArgs(options: LocalDebugOptions): string[] {
+        return [script, '--client', '--host', options.host, '--port', options.port.toString()];
+    }
+}
+
+export class RemoteDebuggerLauncherScriptProvider implements IRemoteDebugLauncherScriptProvider {
+    public getLauncherArgs(options: RemoteDebugOptions): string[] {
+        const waitArgs = options.waitUntilDebuggerAttaches ? ['--wait'] : [];
+        return [script, '--host', options.host, '--port', options.port.toString()].concat(waitArgs);
     }
 }

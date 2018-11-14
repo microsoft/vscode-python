@@ -35,6 +35,7 @@ import { registerTypes as variableRegisterTypes } from './common/variables/servi
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience } from './datascience/types';
 import { DebuggerTypeName } from './debugger/constants';
+import { RemoteDebuggerLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
@@ -164,7 +165,18 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const api = { ready: activationDeferred.promise };
+    return buildApi(serviceContainer);
+}
+
+export function buildApi(serviceContainer: ServiceContainer) {
+    const api = {
+        ready: activationDeferred.promise,
+        debug: {
+            async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
+                return new RemoteDebuggerLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
+            }
+        }
+    };
     // In test environment return the DI Container.
     if (isTestExecution()) {
         // tslint:disable-next-line:no-any
