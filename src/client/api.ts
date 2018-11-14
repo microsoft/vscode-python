@@ -3,6 +3,10 @@
 
 'use strict';
 
+import { isTestExecution } from './common/constants';
+import { RemoteDebuggerLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
+import { IServiceContainer } from './ioc/types';
+
 /*
  * Do not introduce any breaking changes to this API.
  * This is the public API for other extensions to interact with this extension.
@@ -27,4 +31,21 @@ export interface IExtensionApi {
          */
         getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean): Promise<string[]>;
     };
+}
+
+export function buildApi(ready: Promise<void>, serviceContainer: IServiceContainer) {
+    const api: IExtensionApi = {
+        ready,
+        debug: {
+            async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
+                return new RemoteDebuggerLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
+            }
+        }
+    };
+    // In test environment return the DI Container.
+    if (isTestExecution()) {
+        // tslint:disable-next-line:no-any
+        (api as any).serviceContainer = serviceContainer;
+    }
+    return api;
 }

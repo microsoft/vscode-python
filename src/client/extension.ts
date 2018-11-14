@@ -14,7 +14,7 @@ import { Container } from 'inversify';
 import { CodeActionKind, debug, DebugConfigurationProvider, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationService } from './activation/types';
-import { IExtensionApi } from './api';
+import { buildApi, IExtensionApi } from './api';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
@@ -35,7 +35,6 @@ import { registerTypes as variableRegisterTypes } from './common/variables/servi
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience } from './datascience/types';
 import { DebuggerTypeName } from './debugger/constants';
-import { RemoteDebuggerLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
@@ -165,24 +164,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    return buildApi(serviceContainer);
-}
-
-export function buildApi(serviceContainer: ServiceContainer) {
-    const api = {
-        ready: activationDeferred.promise,
-        debug: {
-            async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
-                return new RemoteDebuggerLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
-            }
-        }
-    };
-    // In test environment return the DI Container.
-    if (isTestExecution()) {
-        // tslint:disable-next-line:no-any
-        (api as any).serviceContainer = serviceContainer;
-    }
-    return api;
+    return buildApi(activationDeferred.promise, serviceContainer);
 }
 
 function registerServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
