@@ -115,6 +115,10 @@ export type DiagnosticsMessages = {
      */
     code: string;
 };
+export type ImportNotebook = {
+    scope: 'command';
+};
+
 export type TelemetryProperties = FormatTelemetry
     | LanguageServerVersionTelemetry
     | LanguageServerErrorTelemetry
@@ -129,4 +133,5 @@ export type TelemetryProperties = FormatTelemetry
     | DebuggerTelemetry
     | SettingsTelemetry
     | DiagnosticsAction
-    | DiagnosticsMessages;
+    | DiagnosticsMessages
+    | ImportNotebook;
