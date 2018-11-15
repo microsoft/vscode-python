@@ -77,14 +77,14 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     registerServices(context, serviceManager, serviceContainer);
     initializeServices(context, serviceManager, serviceContainer);
 
+    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
+    await interpreterManager.autoSetInterpreter();
+
     // When testing, do not perform health checks, as modal dialogs can be displayed.
     if (!isTestExecution()) {
         const appDiagnostics = serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics);
         await appDiagnostics.performPreStartupHealthCheck();
     }
-
-    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    await interpreterManager.autoSetInterpreter();
 
     serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);

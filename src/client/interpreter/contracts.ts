@@ -29,7 +29,7 @@ export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
 
 export interface IInterpreterLocatorService extends Disposable {
     readonly onLocating: Event<Promise<PythonInterpreter[]>>;
-    getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
+    getInterpreters(resource?: Uri, ignoreCache?: boolean): Promise<PythonInterpreter[]>;
 }
 
 export type CondaInfo = {
