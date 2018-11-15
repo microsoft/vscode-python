@@ -512,9 +512,9 @@ suite('Interpreters service', () => {
         }
 
         function setupLocators(wks: PythonInterpreter[], pipenv: PythonInterpreter[]) {
-            pipenvLocator.setup(x => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve(pipenv));
+            pipenvLocator.setup(x => x.getInterpreters(TypeMoq.It.isAny(), TypeMoq.It.isValue(true))).returns(() => Promise.resolve(pipenv));
             serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, pipenvLocator.object, PIPENV_SERVICE);
-            wksLocator.setup(x => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve(wks));
+            wksLocator.setup(x => x.getInterpreters(TypeMoq.It.isAny(), TypeMoq.It.isValue(true))).returns(() => Promise.resolve(wks));
             serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, wksLocator.object, WORKSPACE_VIRTUAL_ENV_SERVICE);
 
         }
