@@ -44,7 +44,11 @@
 - Make sure that you do not have `python.pythonPath` specified in your `settings.json` when testing automatic detection
 - Do note that the `Select Interpreter` drop-down window scrolls
 
-- [ ] Detected a single virtual environment at the top-level of the workspace folder (if you created this _after_ opening VS Code, then run `Reload Window` to pick up the new environment)
+- [ ] Detected a single virtual environment at the top-level of the workspace folder on Mac when when `python` command points to default Mac Python installation or `python` command fails in the terminal.
+  - [ ] Appropriate suffix label specified in status bar (e.g. `(venv)`)
+- [ ] Detected a single virtual environment at the top-level of the workspace folder on Windows when `python` fails in the terminal.
+  - [ ] Appropriate suffix label specified in status bar (e.g. `(venv)`)
+- [ ] Detected a single virtual environment at the top-level of the workspace folder
   - [ ] Appropriate suffix label specified in status bar (e.g. `(venv)`)
   - [ ] [`Create Terminal`](https://code.visualstudio.com/docs/python/environments#_activating-an-environment-in-the-terminal) works
     - [ ] Steals focus
