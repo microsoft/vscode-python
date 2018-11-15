@@ -25,10 +25,6 @@ export type LanguageServerErrorTelemetry = {
     error: string;
 };
 
-export type LanguageServerTelemetry = {
-    [key: string]: string;
-};
-
 export type LinterTrigger = 'auto' | 'save';
 
 export type LintingTelemetry = {
@@ -90,8 +86,40 @@ export type TerminalTelemetry = {
     pythonVersion?: string;
     interpreterType?: InterpreterType;
 };
+export type DiagnosticsAction = {
+    /**
+     * Diagnostics command executed.
+     * @type {string}
+     */
+    commandName?: string;
+    /**
+     * Diagnostisc code ignored (message will not be seen again).
+     * @type {string}
+     */
+    ignoreCode?: string;
+    /**
+     * Url of web page launched in browser.
+     * @type {string}
+     */
+    url?: string;
+    /**
+     * Custom actions performed.
+     * @type {'switchToCommandPrompt'}
+     */
+    action?: 'switchToCommandPrompt';
+};
+export type DiagnosticsMessages = {
+    /**
+     * Code of diagnostics message detected and displayed.
+     * @type {string}
+     */
+    code: string;
+};
+export type ImportNotebook = {
+    scope: 'command';
+};
+
 export type TelemetryProperties = FormatTelemetry
-    | LanguageServerTelemetry
     | LanguageServerVersionTelemetry
     | LanguageServerErrorTelemetry
     | LintingTelemetry
@@ -103,4 +131,7 @@ export type TelemetryProperties = FormatTelemetry
     | FeedbackTelemetry
     | TerminalTelemetry
     | DebuggerTelemetry
-    | SettingsTelemetry;
+    | SettingsTelemetry
+    | DiagnosticsAction
+    | DiagnosticsMessages
+    | ImportNotebook;

@@ -21,7 +21,7 @@ const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]: 'Python is not installed. Please download and install Python before using the extension.',
     [DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic]: 'You have selected the macOS system install of Python, which is not recommended for use with the Python extension. Some functionality will be limited, please select a different interpreter.',
     [DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic]: 'The macOS system install of Python is not recommended, some functionality in the extension will be limited. Install another version of Python for the best experience.',
-    [DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic]: 'Please select the appropriate Python interpreter.'
+    [DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic]: 'No Python interpreter is selected. You need to select a Python interpreter to enable features such as IntelliSense, linting, and debugging.'
 };
 
 export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {

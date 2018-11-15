@@ -1,5 +1,3 @@
-import * as path from 'path';
-
 export const PYTHON_LANGUAGE = 'python';
 export const PYTHON = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
@@ -86,4 +84,4 @@ export function isUnitTestExecution(): boolean {
     return process.env.VSC_PYTHON_UNIT_TEST === '1';
 }
 
-export const EXTENSION_ROOT_DIR = path.join(__dirname, '..', '..', '..');
+export * from '../constants';
