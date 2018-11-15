@@ -1,5 +1,12 @@
 # Changelog
 
+## 2018.10.1 (09 Nov 2018)
+
+### Fixes
+
+1. When attempting to 'Run Cell', get error - Cannot read property 'length' of null
+   ([#3286](https://github.com/Microsoft/vscode-python/issues/3286))
+
 ## 2018.10.0 (08 Nov 2018)
 
 ### Thanks
