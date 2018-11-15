@@ -19,6 +19,7 @@ import {
 import { PythonSettings } from '../../common/configSettings';
 // tslint:disable-next-line:ordered-imports
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
+import { Logger } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import {
     BANNER_NAME_LS_SURVEY, DeprecatedFeatureInfo, IConfigurationService,
@@ -225,7 +226,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
             const interpreterDataService = new InterpreterDataService(this.context, this.services);
             interpreterData = await interpreterDataService.getInterpreterData();
         } catch (ex) {
-            this.appShell.showWarningMessage('Unable to determine path to the Python interpreter. IntelliSense will be limited.');
+            Logger.error('Unable to determine path to the Python interpreter. IntelliSense will be limited.', ex);
         }
 
         this.interpreterHash = interpreterData ? interpreterData.hash : '';

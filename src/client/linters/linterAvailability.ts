@@ -75,7 +75,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
         ];
 
         // tslint:disable-next-line:messages-must-be-localized
-        const pick = await this.appShell.showInformationMessage(`Linter ${linterInfo.id} is available but not enabled.`, ...optButtons);
+        const pick = await this.appShell.showInformationMessage(`Linter ${linterInfo.id} is installed but not enabled.`, ...optButtons);
         if (pick) {
             await linterInfo.enableAsync(pick.enabled);
             return true;
