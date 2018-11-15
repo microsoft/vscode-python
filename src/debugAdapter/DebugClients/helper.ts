@@ -1,6 +1,11 @@
-import { ICurrentProcess, IPathUtils } from '../../../common/types';
-import { EnvironmentVariables, IEnvironmentVariablesService } from '../../../common/variables/types';
-import { LaunchRequestArguments } from '../../types';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
+import { ICurrentProcess, IPathUtils } from '../../client/common/types';
+import { EnvironmentVariables, IEnvironmentVariablesService } from '../../client/common/variables/types';
+import { LaunchRequestArguments } from '../../client/debugger/types';
 
 export class DebugClientHelper {
     constructor(private envParser: IEnvironmentVariablesService, private pathUtils: IPathUtils,

@@ -5,7 +5,7 @@
 
 import { ChildProcess } from 'child_process';
 import { DebugSession } from 'vscode-debugadapter';
-import { LaunchRequestArguments } from '../../types';
+import { LaunchRequestArguments } from '../../client/debugger/types';
 import { IDebugLauncherScriptProvider } from '../types';
 import { DebugType } from './DebugClient';
 import { LocalDebugClientV2 } from './localDebugClientV2';

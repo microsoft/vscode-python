@@ -1,11 +1,15 @@
-// tslint:disable:quotemark ordered-imports no-any no-empty
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 'use strict';
+
+// tslint:disable:quotemark ordered-imports no-any no-empty
 
 import { DebugSession } from 'vscode-debugadapter';
 import { IDebugServer } from '../Common/Contracts';
 import { EventEmitter } from 'events';
 import { Socket } from 'net';
-import { Deferred, createDeferred } from '../../../common/utils/async';
+import { Deferred, createDeferred } from '../../client/common/utils/async';
 
 export abstract class BaseDebugServer extends EventEmitter {
     protected clientSocket: Deferred<Socket>;

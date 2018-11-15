@@ -5,7 +5,7 @@
 
 import { Socket } from 'net';
 import { DebugSession } from 'vscode-debugadapter';
-import { AttachRequestArguments } from '../../types';
+import { AttachRequestArguments } from '../../client/debugger/types';
 import { IDebugServer } from '../Common/Contracts';
 import { BaseDebugServer } from './BaseDebugServer';
 

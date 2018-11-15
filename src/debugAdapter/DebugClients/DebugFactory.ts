@@ -1,5 +1,10 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { DebugSession } from 'vscode-debugadapter';
-import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
+import { AttachRequestArguments, LaunchRequestArguments } from '../../client/debugger/types';
 import { IDebugLauncherScriptProvider } from '../types';
 import { DebugClient } from './DebugClient';
 import { DebuggerLauncherScriptProvider, NoDebugLauncherScriptProvider } from './launcherProvider';

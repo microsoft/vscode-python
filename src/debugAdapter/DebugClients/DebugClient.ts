@@ -1,10 +1,15 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 // tslint:disable:quotemark ordered-imports no-any no-empty
 
 import { BaseDebugServer } from "../DebugServers/BaseDebugServer";
 import { IDebugServer } from "../Common/Contracts";
 import { DebugSession } from "vscode-debugadapter";
 import { EventEmitter } from 'events';
-import { IServiceContainer } from "../../../ioc/types";
+import { IServiceContainer } from "../../client/ioc/types";
 
 export enum DebugType {
     Local,

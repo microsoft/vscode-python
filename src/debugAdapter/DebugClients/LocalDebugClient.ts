@@ -1,14 +1,18 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { ChildProcess, spawn } from 'child_process';
 import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { open } from '../../../common/open';
-import { PathUtils } from '../../../common/platform/pathUtils';
-import { CurrentProcess } from '../../../common/process/currentProcess';
-import { noop } from '../../../common/utils/misc';
-import { EnvironmentVariablesService } from '../../../common/variables/environment';
-import { IServiceContainer } from '../../../ioc/types';
-import { DebugOptions, LaunchRequestArguments } from '../../types';
+import { open } from '../../client/common/open';
+import { PathUtils } from '../../client/common/platform/pathUtils';
+import { CurrentProcess } from '../../client/common/process/currentProcess';
+import { noop } from '../../client/common/utils/misc';
+import { EnvironmentVariablesService } from '../../client/common/variables/environment';
+import { IServiceContainer } from '../../client/ioc/types';
 import { IDebugServer } from '../Common/Contracts';
 import { IS_WINDOWS } from '../Common/Utils';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
@@ -16,6 +20,8 @@ import { LocalDebugServerV2 } from '../DebugServers/LocalDebugServerV2';
 import { IDebugLauncherScriptProvider } from '../types';
 import { DebugClient, DebugType } from './DebugClient';
 import { DebugClientHelper } from './helper';
+// tslint:disable-next-line:ordered-imports
+import { LaunchRequestArguments, DebugOptions } from '../../client/debugger/types';
 
 const VALID_DEBUG_OPTIONS = [
     'RedirectOutput',

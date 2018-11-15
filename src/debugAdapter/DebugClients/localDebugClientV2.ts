@@ -4,7 +4,7 @@
 'use strict';
 
 import { DebugSession } from 'vscode-debugadapter';
-import { LaunchRequestArguments } from '../../types';
+import { LaunchRequestArguments } from '../../client/debugger/types';
 import { IDebugLauncherScriptProvider } from '../types';
 import { LocalDebugClient } from './LocalDebugClient';
 

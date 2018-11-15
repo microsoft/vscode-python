@@ -1,4 +1,3 @@
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -6,10 +5,10 @@
 
 import * as net from 'net';
 import { DebugSession } from 'vscode-debugadapter';
-import { ISocketServer } from '../../../common/types';
-import { createDeferred } from '../../../common/utils/async';
-import { IServiceContainer } from '../../../ioc/types';
-import { LaunchRequestArguments } from '../../types';
+import { ISocketServer } from '../../client/common/types';
+import { createDeferred } from '../../client/common/utils/async';
+import { LaunchRequestArguments } from '../../client/debugger/types';
+import { IServiceContainer } from '../../client/ioc/types';
 import { IDebugServer } from '../Common/Contracts';
 import { BaseDebugServer } from './BaseDebugServer';
 

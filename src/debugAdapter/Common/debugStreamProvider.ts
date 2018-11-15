@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { inject, injectable } from 'inversify';
 import { createServer, Socket } from 'net';
-import { isTestExecution } from '../../../common/constants';
-import { ICurrentProcess } from '../../../common/types';
-import { IServiceContainer } from '../../../ioc/types';
+import { isTestExecution } from '../../client/common/constants';
+import { ICurrentProcess } from '../../client/common/types';
+import { IServiceContainer } from '../../client/ioc/types';
 import { IDebugStreamProvider } from '../types';
 
 @injectable()
