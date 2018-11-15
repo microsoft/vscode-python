@@ -136,7 +136,7 @@ suite('Linter Availability Provider tests', () => {
         }(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
 
         appShellMock.setup(ap => ap.showInformationMessage(
-            TypeMoq.It.isValue(`Linter ${linterInfo.id} is available but not enabled.`),
+            TypeMoq.It.isValue(`Linter ${linterInfo.id} is installed but not enabled.`),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny())
         )
@@ -207,7 +207,7 @@ suite('Linter Availability Provider tests', () => {
         // arrange
         const [appShellMock, installerMock, workspaceServiceMock, configServiceMock, linterInfo] = getDependenciesForAvailabilityTests();
         appShellMock.setup(ap => ap.showInformationMessage(
-            TypeMoq.It.isValue(`Linter ${linterInfo.id} is available but not enabled.`),
+            TypeMoq.It.isValue(`Linter ${linterInfo.id} is installed but not enabled.`),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny())
         )
