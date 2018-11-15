@@ -32,7 +32,7 @@ export class CodeWatcher implements ICodeWatcher {
                 @inject(IHistoryProvider) private historyProvider,
                 @inject(IDocumentManager) private documentManager) {}
 
-    public addFile(document: TextDocument) { 
+    public addFile(document: TextDocument) {
         this.document = document;
 
         // Cache these, we don't want to pull an old version if the document is updated

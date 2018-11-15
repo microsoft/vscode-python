@@ -7,7 +7,6 @@ import * as TypeMoq from 'typemoq';
 import { IApplicationShell, ICommandManager } from '../../client/common/application/types';
 import { IDisposableRegistry } from '../../client/common/types';
 import { DataScience } from '../../client/datascience/datascience';
-import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
 import { IDataScience } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
@@ -17,7 +16,6 @@ suite('Data Science Tests', () => {
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let disposableRegistry: TypeMoq.IMock<IDisposableRegistry>;
     let dataScience: IDataScience;
-    let codeLensProvider: DataScienceCodeLensProvider;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
