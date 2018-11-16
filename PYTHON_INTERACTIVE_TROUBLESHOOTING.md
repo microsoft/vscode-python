@@ -11,12 +11,12 @@ This error can happen when you
 
 ### The first step is to verify you are running the Python environment you want. 
 
-The python you're using is picked with this selection dropdown on the bottom left of the VS Code window:
+The python you're using is picked with the selection dropdown on the bottom left of the VS Code window:
 
 ![selector](resources/PythonSelector.png)
 
-You can verify this python version has jupyter by running the command 'Python: REPL' from the command palette
-and then attempting to run the following code in the terminal that opens:
+To verify this version of python supports Jupyter notebooks, start a 'Python: REPL' from the command palette
+and then type in the following code:
 
 ```python
 import jupyter_core
@@ -24,9 +24,9 @@ import notebook
 jupyter_core.version_info
 notebook.version_info
 ```
-If any of those commands fail, the python you have selected doesn't support launch jupyter notebooks.
+If any of these commands fail, the python you have selected doesn't support launching jupyter notebooks.
 
-Errors you'd get would be something like:
+Failures would look something like:
 
 ```
 >>> import jupyter
