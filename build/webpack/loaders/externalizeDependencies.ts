@@ -3,22 +3,20 @@
 
 'use strict';
 
+import { nodeModulesToExternalize } from '../constants';
+
+function replaceModule(contents: string, moduleName: string, quotes: '"' | '\''): string {
+    const stringToSearch = `${quotes}${moduleName}${quotes}`;
+    const stringToReplaceWith = `${quotes}./node_modules/${moduleName}${quotes}`;
+    return contents.replace(new RegExp(stringToSearch, 'gm'), stringToReplaceWith);
+}
 // tslint:disable:no-default-export no-invalid-this
 export default function (source: string) {
-    const sourcePath = this.resourcePath;
-    if (sourcePath.indexOf('node_modules') === -1) {
-        if (source.indexOf('unicode/category') > 0) {
-            source = source.replace(/\'unicode\/category\//gm, '\'./unicode_category_');
-            source = source.replace(/"unicode\/category\//gm, '"./unicode_category_');
+    nodeModulesToExternalize.forEach(moduleName => {
+        if (source.indexOf(moduleName) > 0) {
+            source = replaceModule(source, moduleName, '"');
+            source = replaceModule(source, moduleName, '\'');
         }
-        if (source.indexOf('@jupyterlab\/services') > 0) {
-            source = source.replace(/\'@jupyterlab\/services\'/gm, '\'./@jupyterlab/services\'');
-            source = source.replace(/"@jupyterlab\/services"/gm, '"./@jupyterlab/services"');
-        }
-        if (source.indexOf('azure-storage') > 0) {
-            source = source.replace(/\'azure-storage\'/gm, '\'./azure-storage\'');
-            source = source.replace(/"azure-storage"/gm, '"./azure-storage"');
-        }
-    }
+    });
     return source;
 }

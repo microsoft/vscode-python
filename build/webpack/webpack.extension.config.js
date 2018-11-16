@@ -8,7 +8,7 @@ const tsconfig_paths_webpack_plugin_1 = require("tsconfig-paths-webpack-plugin")
 const webpack_bundle_analyzer_1 = require("webpack-bundle-analyzer");
 const constants_1 = require("../constants");
 // tslint:disable-next-line:no-var-requires no-require-imports
-const WrapperPlugin = require('wrapper-webpack-plugin');
+// const WrapperPlugin = require('wrapper-webpack-plugin');
 const configFileName = path.join(constants_1.ExtensionRootDir, 'tsconfig.extension.json');
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
@@ -19,7 +19,7 @@ function getListOfExistingModulesInOutDir() {
     return files.map(filePath => `./${filePath.slice(0, -3)}`);
 }
 const config = {
-    mode: 'production',
+    mode: 'development',
     target: 'node',
     entry: {
         extension: './src/client/extension.ts',
@@ -31,6 +31,21 @@ const config = {
     },
     module: {
         rules: [
+            {
+                // JupyterServices imports node-fetch using `eval`.
+                test: require.resolve('@jupyterlab/services'),
+                use: 'imports-loader?_node_fetch=node-fetch'
+            },
+            {
+                // JupyterServices imports node-fetch using `eval`.
+                test: require.resolve('@jupyterlab/services'),
+                use: 'imports-loader?_ws=ws'
+            },
+            // {
+            //     // Ensure source-map-support is injected as a
+            //     test: /src\/client\/extension.ts$/,
+            //     use: 'imports-loader?_source_map_support=source-map-support'
+            // },
             {
                 test: /\.ts$/,
                 use: [
@@ -59,20 +74,6 @@ const config = {
         new webpack_bundle_analyzer_1.BundleAnalyzerPlugin({
             analyzerMode: 'static'
         }),
-        new WrapperPlugin({
-            test: /\.js$/,
-            header: 'require(\'source-map-support\').install();'
-        })
-        // new webpack.NormalModuleReplacementPlugin(/unicode\/category\//, (resource: { request: string }) => {
-        //     const fileName = path.basename(resource.request);
-        //     resource.request = path.join(ExtensionRootDir, 'out', 'client', `unicode_category_${fileName}`);
-        // }),
-        // new webpack.NormalModuleReplacementPlugin(/@jupyter\/services/, (resource: { request: string }) => {
-        //     resource.request = path.join(ExtensionRootDir, 'out', 'client', '@jupyter', 'services');
-        // }),
-        // new webpack.NormalModuleReplacementPlugin(/azure-storage/, (resource: { request: string }) => {
-        //     resource.request = path.join(ExtensionRootDir, 'out', 'client', 'azure-storage');
-        // })
     ],
     resolve: {
         extensions: ['.ts', '.js'],

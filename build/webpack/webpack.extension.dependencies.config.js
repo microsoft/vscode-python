@@ -5,28 +5,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
 const webpack_bundle_analyzer_1 = require("webpack-bundle-analyzer");
 const constants_1 = require("../constants");
+const constants_2 = require("./constants");
+const entryItems = {};
+constants_2.nodeModulesToExternalize.forEach(moduleName => {
+    entryItems[`node_modules/${moduleName}`] = `./node_modules/${moduleName}`;
+});
 const config = {
-    mode: 'production',
+    mode: 'development',
     target: 'node',
-    entry: {
-        unicode_category_Lu: './node_modules/unicode/category/Lu',
-        unicode_category_Ll: './node_modules/unicode/category/Ll',
-        unicode_category_Lt: './node_modules/unicode/category/Lt',
-        unicode_category_Lo: './node_modules/unicode/category/Lo',
-        unicode_category_Lm: './node_modules/unicode/category/Lm',
-        unicode_category_Nl: './node_modules/unicode/category/Nl',
-        unicode_category_Mn: './node_modules/unicode/category/Mn',
-        unicode_category_Mc: './node_modules/unicode/category/Mc',
-        unicode_category_Nd: './node_modules/unicode/category/Nd',
-        unicode_category_Pc: './node_modules/unicode/category/Pc',
-        '@jupyterlab/services': './node_modules/@jupyterlab/services',
-        'azure-storage': './node_modules/azure-storage'
-    },
+    entry: entryItems,
     devtool: 'source-map',
     node: {
         __dirname: false
     },
     externals: [
+        'vscode',
         'commonjs'
     ],
     plugins: [

@@ -11,7 +11,7 @@ import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { ExtensionRootDir } from '../constants';
 
 // tslint:disable-next-line:no-var-requires no-require-imports
-const WrapperPlugin = require('wrapper-webpack-plugin');
+// const WrapperPlugin = require('wrapper-webpack-plugin');
 const configFileName = path.join(ExtensionRootDir, 'tsconfig.extension.json');
 
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
@@ -24,7 +24,7 @@ function getListOfExistingModulesInOutDir() {
 }
 
 const config: webpack.Configuration = {
-    mode: 'production',
+    mode: 'development',
     target: 'node',
     entry: {
         extension: './src/client/extension.ts',
@@ -36,6 +36,21 @@ const config: webpack.Configuration = {
     },
     module: {
         rules: [
+            {
+                // JupyterServices imports node-fetch using `eval`.
+                test: require.resolve('@jupyterlab/services'),
+                use: 'imports-loader?_node_fetch=node-fetch'
+            },
+            {
+                // JupyterServices imports node-fetch using `eval`.
+                test: require.resolve('@jupyterlab/services'),
+                use: 'imports-loader?_ws=ws'
+            },
+            // {
+            //     // Ensure source-map-support is injected as a
+            //     test: /src\/client\/extension.ts$/,
+            //     use: 'imports-loader?_source_map_support=source-map-support'
+            // },
             {
                 test: /\.ts$/,
                 use: [
@@ -64,19 +79,9 @@ const config: webpack.Configuration = {
         new BundleAnalyzerPlugin({
             analyzerMode: 'static'
         }),
-        new WrapperPlugin({
-            test: /\.js$/,
-            header: 'require(\'source-map-support\').install();'
-        })
-        // new webpack.NormalModuleReplacementPlugin(/unicode\/category\//, (resource: { request: string }) => {
-        //     const fileName = path.basename(resource.request);
-        //     resource.request = path.join(ExtensionRootDir, 'out', 'client', `unicode_category_${fileName}`);
-        // }),
-        // new webpack.NormalModuleReplacementPlugin(/@jupyter\/services/, (resource: { request: string }) => {
-        //     resource.request = path.join(ExtensionRootDir, 'out', 'client', '@jupyter', 'services');
-        // }),
-        // new webpack.NormalModuleReplacementPlugin(/azure-storage/, (resource: { request: string }) => {
-        //     resource.request = path.join(ExtensionRootDir, 'out', 'client', 'azure-storage');
+        // new WrapperPlugin({
+        //     test: /\.js$/,
+        //     header: 'require(\'./node_modules/source-map-support\').install();'
         // })
     ],
     resolve: {
