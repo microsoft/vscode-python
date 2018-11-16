@@ -116,16 +116,16 @@ gulp.task('checkNativeDependencies', (done) => {
 
 gulp.task('cover:enable', () => {
     return gulp.src("./build/coverconfig.json")
-    .pipe(jeditor((json) => {
-        json.enabled = true;
-        return json;
-    }))
-    .pipe(gulp.dest("./out", { 'overwrite': true }));
+        .pipe(jeditor((json) => {
+            json.enabled = true;
+            return json;
+        }))
+        .pipe(gulp.dest("./out", { 'overwrite': true }));
 });
 
 gulp.task('cover:disable', () => {
     return gulp.src("./build/coverconfig.json")
-    .pipe(jeditor((json) => {
+        .pipe(jeditor((json) => {
             json.enabled = false;
             return json;
         }))
@@ -138,8 +138,8 @@ gulp.task('cover:disable', () => {
      */
     gulp.task('inlinesource', () => {
     return gulp.src('./coverage/lcov-report/*.html')
-    .pipe(inlinesource({ attribute: false }))
-    .pipe(gulp.dest('./coverage/lcov-report-inline'));
+        .pipe(inlinesource({ attribute: false }))
+        .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
 
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
@@ -148,12 +148,29 @@ gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies()
 gulp.task("compile", () => {
     const tsProject = ts.createProject("tsconfig.json");
     return tsProject.src()
-    .pipe(tsProject())
-    .js.pipe(gulp.dest("out"));
+        .pipe(tsProject())
+        .js.pipe(gulp.dest("out"));
 });
 
-gulp.task('prePublishBundle', gulp.series('checkNativeDependencies','check-datascience-dependencies', 'compile', 'clean:cleanExceptTests'));
 
+gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production']));
+gulp.task('webpack', async () => {
+    await spawnAsync('npx', ['webpack', '--mode', 'production', '--inline', '--progress']);
+    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production', '--inline', '--progress']);
+});
+
+gulp.task('prePublishWebpack', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack'));
+gulp.task('prePublishNonWebpack', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile-webviews'));
+
+function spawnAsync(command, args) {
+    return new Promise((resolve, reject) => {
+        const proc = spawn(command, args, { cwd: __dirname });
+        proc.stdout.on('data', data => console.log(data.toString()));
+        proc.stderr.on('data', data => console.error(data.toString()));
+        proc.on('close', () => resolve());
+        proc.on('error', error => reject(error));
+    });
+}
 function buildDatascienceDependencies() {
     fsExtra.ensureDirSync(path.join(__dirname, 'tmp'));
     spawn.sync('npm', ['run', 'dump-datascience-webpack-stats']);

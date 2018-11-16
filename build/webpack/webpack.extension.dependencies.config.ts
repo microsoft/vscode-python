@@ -15,7 +15,7 @@ nodeModulesToExternalize.forEach(moduleName => {
 });
 
 const config: webpack.Configuration = {
-    mode: 'development',
+    mode: 'production',
     target: 'node',
     entry: entryItems,
     devtool: 'source-map',

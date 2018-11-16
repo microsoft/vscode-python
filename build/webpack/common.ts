@@ -4,10 +4,8 @@
 
 'use strict';
 
-import * as webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { isCI } from '../constants';
-
 export const nodeModulesToExternalize = [
     // 'source-map-support',
     'unicode/category/Lu',
@@ -37,14 +35,8 @@ export const nodeModulesToExternalize = [
     // 'rxjs'
 ];
 
-// tslint:disable-next-line:no-any
-function progressReporter(percentage: any, message: any, ...args: any[]) {
-    // tslint:disable-next-line:no-console
-    console.info(percentage, message, ...args);
-}
-
 export function getDefaultPlugins(name: 'extension' | 'debugger' | 'dependencies' | 'datascience-ui') {
-    const plugins = [new webpack.ProgressPlugin(progressReporter)];
+    const plugins = [];
     if (!isCI) {
         plugins.push(
             new BundleAnalyzerPlugin({

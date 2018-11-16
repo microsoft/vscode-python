@@ -16,11 +16,11 @@ const config = {
         filename: 'datascience-ui/history-react/index_bundle.js',
         publicPath: path.join(__dirname, '..', '..')
     },
-    mode: 'development',
+    mode: 'production',
     // Use 'eval' for release and `eval-source-map` for development.
     // We need to use one where source is embedded, due to webviews (they restrict resources to specific schemes,
     //  this seems to prevent chrome from downloading the source maps)
-    devtool: 'eval-source-map',
+    devtool: 'eval',
     node: {
         fs: 'empty'
     },

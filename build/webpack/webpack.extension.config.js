@@ -19,7 +19,7 @@ function getListOfExistingModulesInOutDir() {
     return files.map(filePath => `./${filePath.slice(0, -3)}`);
 }
 const config = {
-    mode: 'development',
+    mode: 'production',
     target: 'node',
     entry: {
         extension: './src/client/extension.ts',

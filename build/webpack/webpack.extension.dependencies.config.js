@@ -10,7 +10,7 @@ common_1.nodeModulesToExternalize.forEach(moduleName => {
     entryItems[`node_modules/${moduleName}`] = `./node_modules/${moduleName}`;
 });
 const config = {
-    mode: 'development',
+    mode: 'production',
     target: 'node',
     entry: entryItems,
     devtool: 'source-map',

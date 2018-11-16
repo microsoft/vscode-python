@@ -25,7 +25,7 @@ function getListOfExistingModulesInOutDir() {
 }
 
 const config: webpack.Configuration = {
-    mode: 'development',
+    mode: 'production',
     target: 'node',
     entry: {
         extension: './src/client/extension.ts',

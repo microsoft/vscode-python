@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-const webpack = require("webpack");
 const webpack_bundle_analyzer_1 = require("webpack-bundle-analyzer");
 const constants_1 = require("../constants");
 exports.nodeModulesToExternalize = [
@@ -33,13 +32,8 @@ exports.nodeModulesToExternalize = [
     // 'vscode-debugadapter',
     // 'rxjs'
 ];
-// tslint:disable-next-line:no-any
-function progressReporter(percentage, message, ...args) {
-    // tslint:disable-next-line:no-console
-    console.info(percentage, message, ...args);
-}
 function getDefaultPlugins(name) {
-    const plugins = [new webpack.ProgressPlugin(progressReporter)];
+    const plugins = [];
     if (!constants_1.isCI) {
         plugins.push(new webpack_bundle_analyzer_1.BundleAnalyzerPlugin({
             analyzerMode: 'static',
