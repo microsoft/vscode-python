@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+
 // tslint:disable:no-default-export no-invalid-this
-function default_1(source) {
+export default function (source: string) {
     const sourcePath = this.resourcePath;
     if (sourcePath.indexOf('node_modules') === -1) {
         if (source.indexOf('unicode/category') > 0) {
@@ -21,4 +22,3 @@ function default_1(source) {
     }
     return source;
 }
-exports.default = default_1;

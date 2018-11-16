@@ -3,15 +3,25 @@
 
 'use strict';
 
+import * as glob from 'glob';
 import * as path from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import * as webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
-import * as nodeExternals from 'webpack-node-externals';
+import { ExtensionRootDir } from '../constants';
+
 // tslint:disable-next-line:no-var-requires no-require-imports
 const WrapperPlugin = require('wrapper-webpack-plugin');
+const configFileName = path.join(ExtensionRootDir, 'tsconfig.extension.json');
 
-const configFileName = path.join(__dirname, '..', '..', 'tsconfig.extension.json');
+// Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
+// We need to ensure they do not get bundled into the output (as they are large).
+const existingModulesInOutDir = getListOfExistingModulesInOutDir();
+function getListOfExistingModulesInOutDir() {
+    const outDir = path.join(ExtensionRootDir, 'out', 'client');
+    const files = glob.sync('**/*.js', { sync: true, cwd: outDir });
+    return files.map(filePath => `./${filePath.slice(0, -3)}`);
+}
 
 const config: webpack.Configuration = {
     mode: 'production',
@@ -28,6 +38,14 @@ const config: webpack.Configuration = {
         rules: [
             {
                 test: /\.ts$/,
+                use: [
+                    {
+                        loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
+                    }
+                ]
+            },
+            {
+                test: /\.ts$/,
                 exclude: /node_modules/,
                 use: [
                     {
@@ -40,7 +58,7 @@ const config: webpack.Configuration = {
     externals: [
         'vscode',
         'commonjs',
-        nodeExternals()
+        ...existingModulesInOutDir
     ],
     plugins: [
         new BundleAnalyzerPlugin({
@@ -50,6 +68,16 @@ const config: webpack.Configuration = {
             test: /\.js$/,
             header: 'require(\'source-map-support\').install();'
         })
+        // new webpack.NormalModuleReplacementPlugin(/unicode\/category\//, (resource: { request: string }) => {
+        //     const fileName = path.basename(resource.request);
+        //     resource.request = path.join(ExtensionRootDir, 'out', 'client', `unicode_category_${fileName}`);
+        // }),
+        // new webpack.NormalModuleReplacementPlugin(/@jupyter\/services/, (resource: { request: string }) => {
+        //     resource.request = path.join(ExtensionRootDir, 'out', 'client', '@jupyter', 'services');
+        // }),
+        // new webpack.NormalModuleReplacementPlugin(/azure-storage/, (resource: { request: string }) => {
+        //     resource.request = path.join(ExtensionRootDir, 'out', 'client', 'azure-storage');
+        // })
     ],
     resolve: {
         extensions: ['.ts', '.js'],
@@ -59,7 +87,7 @@ const config: webpack.Configuration = {
     },
     output: {
         filename: '[name].js',
-        path: path.resolve(__dirname, '..', '..', 'out', 'client'),
+        path: path.resolve(ExtensionRootDir, 'out', 'client'),
         libraryTarget: 'commonjs2',
         devtoolModuleFilenameTemplate: '../../[resource-path]'
     }

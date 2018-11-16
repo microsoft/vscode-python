@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
-const path = require("path");
-const webpack_bundle_analyzer_1 = require("webpack-bundle-analyzer");
-const constants_1 = require("../constants");
-const config = {
+
+import * as path from 'path';
+import * as webpack from 'webpack';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import { ExtensionRootDir } from '../constants';
+
+const config: webpack.Configuration = {
     mode: 'production',
     target: 'node',
     entry: {
@@ -30,7 +33,7 @@ const config = {
         'commonjs'
     ],
     plugins: [
-        new webpack_bundle_analyzer_1.BundleAnalyzerPlugin({
+        new BundleAnalyzerPlugin({
             analyzerMode: 'static'
         })
     ],
@@ -39,10 +42,11 @@ const config = {
     },
     output: {
         filename: '[name].js',
-        path: path.resolve(constants_1.ExtensionRootDir, 'out', 'client'),
+        path: path.resolve(ExtensionRootDir, 'out', 'client'),
         libraryTarget: 'commonjs2',
         devtoolModuleFilenameTemplate: '../../[resource-path]'
     }
 };
+
 // tslint:disable-next-line:no-default-export
-exports.default = config;
+export default config;
