@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as tk from 'tree-kill';
 import { URL } from 'url';
 
+import { IFileSystem } from '../common/platform/types';
 import { ExecutionResult, IPythonExecutionFactory, ObservableExecutionResult, Output, PythonVersionInfo } from '../common/process/types';
-import { ILogger, IConfigurationService } from '../common/types';
+import { IConfigurationService, ILogger} from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { IJupyterExecution, INotebookProcess, JupyterServerInfo } from './types';
-import { IFileSystem } from '../common/platform/types';
 
 export interface IConnectionInfo {
     baseUrl: string;
@@ -58,7 +59,7 @@ export class JupyterProcess implements INotebookProcess {
         const settings = this.configService.getSettings();
         const jupyterLaunchTimeout = settings.datascience.jupyterLaunchTimeout;
 
-        if (this.launchTimeout) { 
+        if (this.launchTimeout) {
             clearTimeout(this.launchTimeout);
         }
         this.launchTimeout = setTimeout(() => {
@@ -74,7 +75,6 @@ export class JupyterProcess implements INotebookProcess {
             }
         });
     }
-
 
     public shutdown = async () : Promise<void> => {
         clearTimeout(this.launchTimeout);
@@ -137,6 +137,7 @@ export class JupyterProcess implements INotebookProcess {
     }
 
     // From a list of jupyter server infos try to find the matching jupyter that we launched
+    // tslint:disable-next-line:no-any
     private getJupyterURL(serverInfos: JupyterServerInfo[], data: any) {
         if (serverInfos && !this.urlFound) {
             const matchInfo = serverInfos.find(info => this.fileSystem.arePathsSame(this.notebook_dir, info['notebook_dir']));
@@ -152,11 +153,12 @@ export class JupyterProcess implements INotebookProcess {
 
         // At this point we failed to get the server info or a matching server via the python code, so fall back to
         // our URL parse
-        if(!this.urlFound) {
+        if (!this.urlFound) {
             this.getJupyterURLFromString(data);
         }
     }
 
+    // tslint:disable-next-line:no-any
     private getJupyterURLFromString(data: any) {
         const urlMatch = JupyterProcess.urlPattern.exec(data);
         if (urlMatch && !this.urlFound) {
@@ -175,7 +177,7 @@ export class JupyterProcess implements INotebookProcess {
             clearTimeout(this.launchTimeout);
             this.startPromise.resolve({ baseUrl: `${url.protocol}//${url.host}${url.pathname}`, token: `${url.searchParams.get('token')}`});
         }
-    } 
+    }
 
     // tslint:disable-next-line:no-any
     private extractConnectionInformation(data: any) {
@@ -199,7 +201,7 @@ export class JupyterProcess implements INotebookProcess {
     }
 
     private launchTimedOut = () => {
-        if(!this.startPromise.completed) {
+        if (!this.startPromise.completed) {
             this.startPromise.reject(localize.DataScience.jupyterLaunchTimedOut());
         }
     }
