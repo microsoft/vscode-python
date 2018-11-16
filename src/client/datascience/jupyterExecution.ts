@@ -68,7 +68,7 @@ export class JupyterExecution implements IJupyterExecution {
     }
 
     public isipykernelSupported = async (): Promise<boolean> => {
-        // Spawn jupyter nbconvert --version and see if it returns something
+        // Spawn ipykernel --version and see if it returns something
         try {
             const result = await this.execModule('ipykernel', ['--version'], { throwOnStdErr: true, encoding: 'utf8' });
             return (!result.stderr);
@@ -79,7 +79,7 @@ export class JupyterExecution implements IJupyterExecution {
     }
 
     public isKernelSpecSupported = async (): Promise<boolean> => {
-        // Spawn jupyter nbconvert --version and see if it returns something
+        // Spawn jupyter kernelspec --version and see if it returns something
         try {
             const result = await this.execModule('jupyter', ['kernelspec', '--version'], { throwOnStdErr: true, encoding: 'utf8' });
             return (!result.stderr);

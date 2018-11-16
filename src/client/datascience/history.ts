@@ -196,7 +196,7 @@ export class History implements IWebPanelMessageListener, IHistory {
     private sendCell(cell: ICell, message: string) {
         // Remove our ignore count from the execution count prior to sending
         const copy = JSON.parse(JSON.stringify(cell));
-        if (copy.data.execution_count > 0 && copy.data.execution_count !== null) {
+        if (copy.data && copy.data.execution_count !== null && copy.data.execution_count > 0) {
             const count = cell.data.execution_count as number;
             copy.data.execution_count = count - this.ignoreCount;
         }
