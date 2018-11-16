@@ -489,7 +489,7 @@ export class History implements IWebPanelMessageListener, IHistory {
 
     private load = async () : Promise<void> => {
         // Check to see if we support jupyter or not. If not quick fail
-        if (!(await this.jupyterExecution.isImportSupported())) {
+        if (!(await this.jupyterExecution.isNotebookSupported())) {
             throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
         }
 
