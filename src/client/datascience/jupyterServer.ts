@@ -58,7 +58,6 @@ export class JupyterServer implements INotebookServer {
             this.tempFile = path.join(path.dirname(this.tempFile), uniqueDir, path.basename(this.tempFile));
             await this.fileSystem.createDirectory(path.dirname(this.tempFile));
 
-
             // start our process in the same directory as our ipynb file.
             await this.process.start(path.dirname(this.tempFile));
 
