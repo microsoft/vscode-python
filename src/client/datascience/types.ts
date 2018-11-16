@@ -46,12 +46,14 @@ export interface INotebookProcess extends Disposable {
     waitForPythonVersion() : Promise<PythonVersionInfo | undefined>;
     spawn(notebookFile: string) : Promise<ExecutionResult<string>>;
 }
+export type JupyterServerInfo = [string, string, string, boolean, number, number, boolean, string, string];
 export const IJupyterExecution = Symbol('IJupyterAvailablity');
 export interface IJupyterExecution {
     isNotebookSupported() : Promise<boolean>;
     isImportSupported() : Promise<boolean>;
     execModuleObservable(args: string[], options: SpawnOptions) : Promise<ObservableExecutionResult<string>>;
     execModule(args: string[], options: SpawnOptions) : Promise<ExecutionResult<string>>;
+    getJupyterServerInfo() : Promise<JupyterServerInfo[]>;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');

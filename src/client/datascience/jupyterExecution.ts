@@ -2,11 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 
+import { EXTENSION_ROOT_DIR } from '../constants';
 import { ExecutionResult, IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { ILogger } from '../common/types';
 import { ICondaService, IInterpreterService, InterpreterType } from '../interpreter/contracts';
-import { IJupyterExecution } from './types';
+import { IJupyterExecution, JupyterServerInfo } from './types';
 
 @injectable()
 export class JupyterExecution implements IJupyterExecution {
@@ -14,6 +16,23 @@ export class JupyterExecution implements IJupyterExecution {
                 @inject(ICondaService) private condaService: ICondaService,
                 @inject(IInterpreterService) private interpreterService: IInterpreterService,
                 @inject(ILogger) private logger: ILogger) {
+    }
+
+    public getJupyterServerInfo = async () : Promise<JupyterServerInfo[]> => {
+        const newOptions: SpawnOptions = {mergeStdOutErr: true};
+        newOptions.env = await this.fixupCondaEnv(newOptions.env);
+
+        const pythonService = await this.executionFactory.create({});
+        const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+        const serverInfoString = await pythonService.exec([file], newOptions);
+
+        let serverInfos: JupyterServerInfo[];
+        try {
+            serverInfos = JSON.parse(serverInfoString.stdout.trim()) as JupyterServerInfo[];
+        } catch (err) {
+            return undefined;
+        }
+        return serverInfos;
     }
 
     public execModuleObservable = async (args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> => {
