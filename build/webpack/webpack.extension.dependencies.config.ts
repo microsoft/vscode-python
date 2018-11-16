@@ -7,7 +7,7 @@ import * as path from 'path';
 import * as webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { ExtensionRootDir } from '../constants';
-import { nodeModulesToExternalize } from './constants';
+import { getDefaultPlugins, nodeModulesToExternalize } from './common';
 
 const entryItems: { [key: string]: string } = {};
 nodeModulesToExternalize.forEach(moduleName => {
@@ -27,9 +27,7 @@ const config: webpack.Configuration = {
         'commonjs'
     ],
     plugins: [
-        new BundleAnalyzerPlugin({
-            analyzerMode: 'static'
-        })
+        ...getDefaultPlugins('dependencies')
     ],
     resolve: {
         extensions: ['.js']

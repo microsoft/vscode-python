@@ -4,6 +4,7 @@ const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 const configFileName = 'tsconfig.datascience-ui.json';
+const common = require('./build/webpack/common');
 
 module.exports = {
     entry: ['babel-polyfill', './src/datascience-ui/history-react/index.tsx'],
@@ -22,6 +23,7 @@ module.exports = {
         fs: 'empty'
     },
     plugins: [
+        ...common.getDefaultPlugins('datascience-ui'),
         new HtmlWebpackPlugin({ template: 'src/datascience-ui/history-react/index.html', baseUrl: path.join(__dirname, 'out', 'dummy'), filename: './datascience-ui/history-react/index.html' }),
         new FixDefaultImportPlugin(),
         new CopyWebpackPlugin([

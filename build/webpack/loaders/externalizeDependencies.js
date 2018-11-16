@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-const constants_1 = require("../constants");
+const common_1 = require("../common");
 function replaceModule(contents, moduleName, quotes) {
     const stringToSearch = `${quotes}${moduleName}${quotes}`;
     const stringToReplaceWith = `${quotes}./node_modules/${moduleName}${quotes}`;
@@ -10,7 +10,7 @@ function replaceModule(contents, moduleName, quotes) {
 }
 // tslint:disable:no-default-export no-invalid-this
 function default_1(source) {
-    constants_1.nodeModulesToExternalize.forEach(moduleName => {
+    common_1.nodeModulesToExternalize.forEach(moduleName => {
         if (source.indexOf(moduleName) > 0) {
             source = replaceModule(source, moduleName, '"');
             source = replaceModule(source, moduleName, '\'');

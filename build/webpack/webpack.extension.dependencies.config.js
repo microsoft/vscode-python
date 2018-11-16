@@ -3,11 +3,10 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
-const webpack_bundle_analyzer_1 = require("webpack-bundle-analyzer");
 const constants_1 = require("../constants");
-const constants_2 = require("./constants");
+const common_1 = require("./common");
 const entryItems = {};
-constants_2.nodeModulesToExternalize.forEach(moduleName => {
+common_1.nodeModulesToExternalize.forEach(moduleName => {
     entryItems[`node_modules/${moduleName}`] = `./node_modules/${moduleName}`;
 });
 const config = {
@@ -23,9 +22,7 @@ const config = {
         'commonjs'
     ],
     plugins: [
-        new webpack_bundle_analyzer_1.BundleAnalyzerPlugin({
-            analyzerMode: 'static'
-        })
+        ...common_1.getDefaultPlugins('dependencies')
     ],
     resolve: {
         extensions: ['.js']

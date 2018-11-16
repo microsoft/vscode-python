@@ -5,8 +5,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const glob = require("glob");
 const path = require("path");
 const tsconfig_paths_webpack_plugin_1 = require("tsconfig-paths-webpack-plugin");
-const webpack_bundle_analyzer_1 = require("webpack-bundle-analyzer");
 const constants_1 = require("../constants");
+const common_1 = require("./common");
 // tslint:disable-next-line:no-var-requires no-require-imports
 // const WrapperPlugin = require('wrapper-webpack-plugin');
 const configFileName = path.join(constants_1.ExtensionRootDir, 'tsconfig.extension.json');
@@ -71,9 +71,11 @@ const config = {
         ...existingModulesInOutDir
     ],
     plugins: [
-        new webpack_bundle_analyzer_1.BundleAnalyzerPlugin({
-            analyzerMode: 'static'
-        }),
+        ...common_1.getDefaultPlugins('extension')
+        // new WrapperPlugin({
+        //     test: /\.js$/,
+        //     header: 'require(\'./node_modules/source-map-support\').install();'
+        // })
     ],
     resolve: {
         extensions: ['.ts', '.js'],

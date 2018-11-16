@@ -7,6 +7,7 @@ import * as CopyWebpackPlugin from 'copy-webpack-plugin';
 import * as  HtmlWebpackPlugin from 'html-webpack-plugin';
 import * as path from 'path';
 import * as webpack from 'webpack';
+import { getDefaultPlugins } from './common';
 
 // tslint:disable-next-line:no-var-requires no-require-imports
 const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
@@ -29,6 +30,7 @@ const config: webpack.Configuration = {
         fs: 'empty'
     },
     plugins: [
+        ...getDefaultPlugins('datascience-ui'),
         new HtmlWebpackPlugin({ template: 'src/datascience-ui/history-react/index.html', filename: 'datascience-ui/history-react/index.html' }),
         new FixDefaultImportPlugin(),
         new CopyWebpackPlugin([

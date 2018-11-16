@@ -5,6 +5,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const path = require("path");
+const common_1 = require("./common");
 // tslint:disable-next-line:no-var-requires no-require-imports
 const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 const configFileName = 'tsconfig.datascience-ui.json';
@@ -24,6 +25,7 @@ const config = {
         fs: 'empty'
     },
     plugins: [
+        ...common_1.getDefaultPlugins('datascience-ui'),
         new HtmlWebpackPlugin({ template: 'src/datascience-ui/history-react/index.html', filename: 'datascience-ui/history-react/index.html' }),
         new FixDefaultImportPlugin(),
         new CopyWebpackPlugin([

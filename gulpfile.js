@@ -101,6 +101,8 @@ gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 
 gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
 
+gulp.task('clean:cleanExceptTests', () => del(['out/client', 'out/datascience-ui', 'out/server']));
+
 gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
 
 gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
@@ -114,33 +116,43 @@ gulp.task('checkNativeDependencies', (done) => {
 
 gulp.task('cover:enable', () => {
     return gulp.src("./build/coverconfig.json")
-        .pipe(jeditor((json) => {
-            json.enabled = true;
-            return json;
-        }))
-        .pipe(gulp.dest("./out", { 'overwrite': true }));
+    .pipe(jeditor((json) => {
+        json.enabled = true;
+        return json;
+    }))
+    .pipe(gulp.dest("./out", { 'overwrite': true }));
 });
 
 gulp.task('cover:disable', () => {
     return gulp.src("./build/coverconfig.json")
-        .pipe(jeditor((json) => {
+    .pipe(jeditor((json) => {
             json.enabled = false;
             return json;
         }))
         .pipe(gulp.dest("./out", { 'overwrite': true }));
-});
+    });
 
-/**
- * Inline CSS into the coverage report for better visualizations on
- * the VSTS report page for code coverage.
- */
-gulp.task('inlinesource', () => {
+    /**
+     * Inline CSS into the coverage report for better visualizations on
+     * the VSTS report page for code coverage.
+     */
+    gulp.task('inlinesource', () => {
     return gulp.src('./coverage/lcov-report/*.html')
-        .pipe(inlinesource({ attribute: false }))
-        .pipe(gulp.dest('./coverage/lcov-report-inline'));
+    .pipe(inlinesource({ attribute: false }))
+    .pipe(gulp.dest('./coverage/lcov-report-inline'));
 });
 
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
+
+
+gulp.task("compile", () => {
+    const tsProject = ts.createProject("tsconfig.json");
+    return tsProject.src()
+    .pipe(tsProject())
+    .js.pipe(gulp.dest("out"));
+});
+
+gulp.task('prePublishBundle', gulp.series('checkNativeDependencies','check-datascience-dependencies', 'compile', 'clean:cleanExceptTests'));
 
 function buildDatascienceDependencies() {
     fsExtra.ensureDirSync(path.join(__dirname, 'tmp'));

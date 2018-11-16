@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
+// tslint:disable:no-console no-require-imports no-var-requires
+
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
@@ -18,6 +20,7 @@ import { noop } from '../client/common/utils/misc';
 import { getOSType, OSType } from '../client/common/utils/platform';
 import { IServiceContainer } from '../client/ioc/types';
 import { IS_MULTI_ROOT_TEST } from './initialize';
+const StreamZip = require('node-stream-zip');
 
 export { sleep } from './core';
 
@@ -304,4 +307,24 @@ export async function isPythonVersion(...versions: string[]): Promise<boolean> {
 
 export interface IExtensionTestApi extends IExtensionApi {
     serviceContainer: IServiceContainer;
+}
+
+export async function unzip(zipFile: string, targetFolder: string): Promise<void> {
+    await fs.ensureDir(targetFolder);
+    return new Promise<void>((resolve, reject) => {
+        const zip = new StreamZip({
+            file: zipFile,
+            storeEntries: true
+        });
+        zip.on('ready', async () => {
+            zip.extract('extension', targetFolder, err => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+                zip.close();
+            });
+        });
+    });
 }

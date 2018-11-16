@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { nodeModulesToExternalize } from '../constants';
+import { nodeModulesToExternalize } from '../common';
 
 function replaceModule(contents: string, moduleName: string, quotes: '"' | '\''): string {
     const stringToSearch = `${quotes}${moduleName}${quotes}`;

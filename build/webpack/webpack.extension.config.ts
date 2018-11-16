@@ -9,6 +9,7 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import * as webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { ExtensionRootDir } from '../constants';
+import { getDefaultPlugins } from './common';
 
 // tslint:disable-next-line:no-var-requires no-require-imports
 // const WrapperPlugin = require('wrapper-webpack-plugin');
@@ -76,9 +77,7 @@ const config: webpack.Configuration = {
         ...existingModulesInOutDir
     ],
     plugins: [
-        new BundleAnalyzerPlugin({
-            analyzerMode: 'static'
-        }),
+        ...getDefaultPlugins('extension')
         // new WrapperPlugin({
         //     test: /\.js$/,
         //     header: 'require(\'./node_modules/source-map-support\').install();'
