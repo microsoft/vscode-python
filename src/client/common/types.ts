@@ -264,8 +264,9 @@ export interface IAnalysisSettings {
 }
 
 export interface IDataScienceSettings {
-    allowImportFromNotebook : boolean;
-    enabled : boolean;
+    allowImportFromNotebook: boolean;
+    enabled: boolean;
+    jupyterLaunchTimeout: number;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
