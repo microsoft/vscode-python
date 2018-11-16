@@ -4,9 +4,9 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
-import { EXTENSION_ROOT_DIR } from '../constants';
 import { ExecutionResult, IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { ILogger } from '../common/types';
+import { EXTENSION_ROOT_DIR } from '../constants';
 import { ICondaService, IInterpreterService, InterpreterType } from '../interpreter/contracts';
 import { IJupyterExecution, JupyterServerInfo } from './types';
 
@@ -22,12 +22,14 @@ export class JupyterExecution implements IJupyterExecution {
         const newOptions: SpawnOptions = {mergeStdOutErr: true};
         newOptions.env = await this.fixupCondaEnv(newOptions.env);
 
+        // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const pythonService = await this.executionFactory.create({});
         const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
         const serverInfoString = await pythonService.exec([file], newOptions);
 
         let serverInfos: JupyterServerInfo[];
         try {
+            // Parse out our results, return undefined if we can't suss it out
             serverInfos = JSON.parse(serverInfoString.stdout.trim()) as JupyterServerInfo[];
         } catch (err) {
             return undefined;
