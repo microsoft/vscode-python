@@ -60,8 +60,10 @@ export namespace DataScience {
     export const restartServer = localize('DataScience.restartServer', 'Restart iPython Kernel');
     export const undo = localize('DataScience.undo', 'Undo');
     export const redo = localize('DataScience.redo', 'Redo');
-
     export const clearAll = localize('DataScience.clearAll', 'Remove All Cells');
+    export const pythonVersionHeader = localize('DataScience.pythonVersionHeader', 'Python Version:');
+    export const pythonRestartHeader = localize('DataScience.pythonRestartHeader', 'Restarted Kernel:');
+    export const pythonVersionHeaderNoPyKernel = localize('DataScience.pythonVersionHeaderNoPyKernel', 'Python Version may not match, no ipykernel found:');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

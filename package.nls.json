@@ -96,5 +96,8 @@
     "DataScience.restartServer" : "Restart iPython Kernel",
     "DataScience.undo" : "Undo",
     "DataScience.redo" : "Redo",
-    "DataScience.clearAll" : "Remove All Cells"
+    "DataScience.clearAll" : "Remove All Cells",
+    "DataScience.pythonVersionHeader" : "Python Version:",
+    "DataScience.pythonVersionHeaderNoPyKernel" : "Python Version may not match, no ipykernel found:",
+    "DataScience.pythonRestartHeader" : "Restarted Kernel:"
 }

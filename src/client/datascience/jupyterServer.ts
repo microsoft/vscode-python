@@ -18,7 +18,6 @@ import { IFileSystem } from '../common/platform/types';
 import { IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
-import { IInterpreterService } from '../interpreter/contracts';
 import { RegExpValues } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
 import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer } from './types';
@@ -41,8 +40,7 @@ export class JupyterServer implements INotebookServer {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService) {
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
     }
 
     public start = async () : Promise<boolean> => {
@@ -53,6 +51,10 @@ export class JupyterServer implements INotebookServer {
 
             // First generate a temporary notebook. We need this as input to the session
             this.tempFile = await this.generateTempFile();
+
+            // Find our kernel spec name (this will enumerate the spec json files and
+            // create a new spec if none match)
+            let kernelSpec = await this.jupyterExecution.getMatchingKernelSpec();
 
             // start our process in the same directory as our ipynb file.
             await this.process.start(path.dirname(this.tempFile));
@@ -73,13 +75,16 @@ export class JupyterServer implements INotebookServer {
                 });
             this.sessionManager = new SessionManager({ serverSettings: serverSettings });
 
-            // Ask Jupyter for its list of kernel specs.
-            const kernelName = await this.findKernelName(this.sessionManager);
+            // If our kernel spec wasn't found (possibly because jupyter kernelspec isn't installed)
+            // attempt to find it with our session manager instead
+            if (!kernelSpec) {
+                kernelSpec = await this.jupyterExecution.getMatchingKernelSpec(this.sessionManager);
+            }
 
             // Create our session options using this temporary notebook and our connection info
             const options: Session.IOptions = {
                 path: this.tempFile,
-                kernelName: kernelName,
+                kernelName: kernelSpec ? kernelSpec.name : '',
                 serverSettings: serverSettings
             };
 
@@ -293,7 +298,7 @@ export class JupyterServer implements INotebookServer {
 
             // Combine this into a JSON object
             return {
-                cells: cells.map((cell : ICell) => this.pruneCell(cell)),
+                cells: this.pruneCells(cells),
                 nbformat: 4,
                 nbformat_minor: 2,
                 metadata: metadata
@@ -310,6 +315,7 @@ export class JupyterServer implements INotebookServer {
     }
 
     private generateRequest = (code: string, silent: boolean) : Kernel.IFuture | undefined => {
+        //this.logger.logInformation(`Executing code in jupyter : ${code}`)
         return this.session ? this.session.kernel.requestExecute(
             {
                 // Replace windows line endings with unix line endings.
@@ -341,74 +347,14 @@ export class JupyterServer implements INotebookServer {
         return new Promise(resolve => setTimeout(resolve, ms, ms));
     }
 
-    private findKernelName = async (manager: SessionManager) : Promise<string> => {
-        // Ask the session manager to refresh its list of kernel specs. We're going to
-        // iterate through them finding the best match
-        await manager.refreshSpecs();
-
-        // Extract our current python information that the user has picked.
-        // We'll match against this.
-        const pythonVersion = await this.process.waitForPythonVersion();
-        const pythonPath = await this.process.waitForPythonPath();
-        let bestScore = 0;
-        let bestSpec;
-
-        // Enumerate all of the kernel specs, scoring each as follows
-        // - Path match = 10 Points. Very likely this is the right one
-        // - Language match = 1 point. Might be a match
-        // - Version match = 4 points for major version match
-        const kernelspecs = manager.specs && manager.specs.kernelspecs ? manager.specs.kernelspecs : {};
-        const keys = Object.keys(kernelspecs);
-        for (let i = 0; keys && i < keys.length; i += 1) {
-            const spec = kernelspecs[keys[i]];
-            let score = 0;
-
-            if (spec.argv.length > 0 && spec.argv[0] === pythonPath) {
-                // Path match
-                score += 10;
-            }
-            if (spec.language.toLocaleLowerCase() === 'python') {
-                // Language match
-                score += 1;
-
-                // See if the version is the same
-                if (pythonVersion && spec.argv.length > 0 && await fs.pathExists(spec.argv[0])) {
-                    const details = await this.interpreterService.getInterpreterDetails(spec.argv[0]);
-                    if (details && details.version_info) {
-                        if (details.version_info[0] === pythonVersion[0]) {
-                            // Major version match
-                            score += 4;
-
-                            if (details.version_info[1] === pythonVersion[1]) {
-                                // Minor version match
-                                score += 2;
-
-                                if (details.version_info[2] === pythonVersion[2]) {
-                                    // Minor version match
-                                    score += 1;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Update high score
-            if (score > bestScore) {
-                bestScore = score;
-                bestSpec = spec.name;
-            }
-        }
-
-        // If still not set, at least pick the first one
-        if (!bestSpec && keys && keys.length > 0) {
-            bestSpec = kernelspecs[keys[0]].name;
-        }
-
-        return bestSpec;
+    private pruneCells = (cells : ICell[]) : nbformat.IBaseCell[] => {
+        // First filter out sys info cells. Jupyter doesn't understand these
+        return cells.filter(c => c.data.cell_type !== 'sys_info')
+            // Then prune each cell down to just the cell data.
+            .map(this.pruneCell);
     }
 
-    private pruneCell(cell : ICell) : nbformat.IBaseCell {
+    private pruneCell = (cell : ICell) : nbformat.IBaseCell => {
         // Remove the #%% of the top of the source if there is any. We don't need
         // this to end up in the exported ipynb file.
         const copy = {...cell.data};
@@ -416,7 +362,7 @@ export class JupyterServer implements INotebookServer {
         return copy;
     }
 
-    private pruneSource(source : nbformat.MultilineString) : nbformat.MultilineString {
+    private pruneSource = (source : nbformat.MultilineString) : nbformat.MultilineString => {
 
         if (Array.isArray(source) && source.length > 0) {
             if (RegExpValues.PythonCellMarker.test(source[0])) {
@@ -546,7 +492,7 @@ export class JupyterServer implements INotebookServer {
             // Create completion and error functions so we can bind our cell object
             // tslint:disable-next-line:no-any
             const completion = (error?: any) => {
-                cell.state = error ? CellState.error : CellState.finished;
+                cell.state = error as Error ? CellState.error : CellState.finished;
                 // Only do this if start time is still valid. Dont log an error to the subscriber. Error
                 // state should end up in the cell output.
                 if (startTime > this.sessionStartTime) {

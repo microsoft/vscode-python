@@ -6,6 +6,7 @@ import './cell.css';
 import { nbformat } from '@jupyterlab/coreutils';
 import ansiToHtml from 'ansi-to-html';
 import * as React from 'react';
+
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
 
@@ -17,6 +18,7 @@ import { Code } from './code';
 import { CollapseButton } from './collapseButton';
 import { ExecutionCount } from './executionCount';
 import { MenuBar } from './menuBar';
+import { SysInfo } from './sysInfo';
 import { displayOrder, richestMimetype, transforms } from './transforms';
 
 interface ICellProps {
@@ -56,39 +58,11 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     public render() {
-        const clearButtonImage = this.props.theme !== 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
-            './images/Cancel/Cancel_16xMD_vscode_dark.svg';
-        const gotoSourceImage = this.props.theme !== 'vscode-dark' ? './images/GoToSourceCode/GoToSourceCode_16x_vscode.svg' :
-            './images/GoToSourceCode/GoToSourceCode_16x_vscode_dark.svg';
-
-        return (
-            <div className='cell-wrapper'>
-                <MenuBar theme={this.props.theme}>
-                    <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
-                        <RelativeImage class='cell-button-image' path={clearButtonImage} />
-                    </CellButton>
-                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()}>
-                        <RelativeImage class='cell-button-image' path={gotoSourceImage} />
-                    </CellButton>
-                </MenuBar>
-                <div className='cell-outer'>
-                    <div className='controls-div'>
-                        <div className='controls-flex'>
-                            <ExecutionCount cell={this.props.cellVM.cell} theme={this.props.theme} visible={this.isCodeCell()}/>
-                            <CollapseButton theme={this.props.theme} hidden={this.props.cellVM.inputBlockCollapseNeeded}
-                                open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock}
-                                tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
-                        </div>
-                    </div>
-                    <div className='content-div'>
-                        <div className='cell-result-container'>
-                            {this.renderInputs()}
-                            {this.renderResults()}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+        if (this.props.cellVM.cell.data.cell_type === 'sys_info') {
+            return <SysInfo theme={this.props.theme} path={this.props.cellVM.cell.data.path} message={this.props.cellVM.cell.data.message} version={this.props.cellVM.cell.data.version} />;
+        } else {
+            return this.renderNormalCell();
+        }
     }
 
     // Public for testing
@@ -127,6 +101,42 @@ export class Cell extends React.Component<ICellProps> {
 
     private getMarkdownCell = () => {
         return this.props.cellVM.cell.data as nbformat.IMarkdownCell;
+    }
+
+    private renderNormalCell() {
+        const clearButtonImage = this.props.theme !== 'vscode-dark' ? './images/Cancel/Cancel_16xMD_vscode.svg' :
+            './images/Cancel/Cancel_16xMD_vscode_dark.svg';
+        const gotoSourceImage = this.props.theme !== 'vscode-dark' ? './images/GoToSourceCode/GoToSourceCode_16x_vscode.svg' :
+            './images/GoToSourceCode/GoToSourceCode_16x_vscode_dark.svg';
+
+        return (
+            <div className='cell-wrapper'>
+                <MenuBar theme={this.props.theme}>
+                    <CellButton theme={this.props.theme} onClick={this.props.delete} tooltip={this.getDeleteString()}>
+                        <RelativeImage class='cell-button-image' path={clearButtonImage} />
+                    </CellButton>
+                    <CellButton theme={this.props.theme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()}>
+                        <RelativeImage class='cell-button-image' path={gotoSourceImage} />
+                    </CellButton>
+                </MenuBar>
+                <div className='cell-outer'>
+                    <div className='controls-div'>
+                        <div className='controls-flex'>
+                            <ExecutionCount cell={this.props.cellVM.cell} theme={this.props.theme} visible={this.isCodeCell()}/>
+                            <CollapseButton theme={this.props.theme} hidden={this.props.cellVM.inputBlockCollapseNeeded}
+                                open={this.props.cellVM.inputBlockOpen} onClick={this.toggleInputBlock}
+                                tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}/>
+                        </div>
+                    </div>
+                    <div className='content-div'>
+                        <div className='cell-result-container'>
+                            {this.renderInputs()}
+                            {this.renderResults()}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     private renderInputs = () => {
