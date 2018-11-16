@@ -52,6 +52,7 @@ export class JupyterServer implements INotebookServer {
             this.isDisposed = false;
 
             // First generate a temporary notebook. We need this as input to the session
+            // Use a UUID in the path so that we can verify the instance that we have started up
             this.tempFile = await this.generateTempFile();
             const uniqueDir = uuid();
             this.tempFile = path.join(path.dirname(this.tempFile), uniqueDir, path.basename(this.tempFile));
