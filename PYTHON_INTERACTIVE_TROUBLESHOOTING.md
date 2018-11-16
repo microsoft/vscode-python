@@ -11,14 +11,33 @@ This error can happen when you
 
 ### The first step is to verify you are running the Python environment you want. 
 
-You can do this by either selecting it in the dropdown at the bottom of VS Code:
+The python you're using is picked with this selection dropdown on the bottom left of the VS Code window:
 
 ![selector](resources/PythonSelector.png)
 
-Or by running some Python code in VS Code Python terminal:
+You can verify this python version has jupyter by running the command 'Python: REPL' from the command palette
+and then attempting to run the following code in the terminal that opens:
+
 ```python
-import sys
-sys.version
+import jupyter_core
+import notebook
+jupyter_core.version_info
+notebook.version_info
+```
+If any of those commands fail, the python you have selected doesn't support launch jupyter notebooks.
+
+Errors you'd get would be something like:
+
+```
+>>> import jupyter
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ImportError: No module named jupyter
+>>> import notebook
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ImportError: No module named notebook
+>>>
 ```
 
 ### The second step (if changing the Python version doesn't work) is to install Jupyter
