@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+import { Session } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
@@ -51,9 +52,17 @@ export const IJupyterExecution = Symbol('IJupyterAvailablity');
 export interface IJupyterExecution {
     isNotebookSupported() : Promise<boolean>;
     isImportSupported() : Promise<boolean>;
-    execModuleObservable(args: string[], options: SpawnOptions) : Promise<ObservableExecutionResult<string>>;
-    execModule(args: string[], options: SpawnOptions) : Promise<ExecutionResult<string>>;
     getJupyterServerInfo() : Promise<JupyterServerInfo[]>;
+    isipykernelSupported() : Promise<boolean>;
+    execModuleObservable(module: string, args: string[], options: SpawnOptions) : Promise<ObservableExecutionResult<string>>;
+    execModule(module: string, args: string[], options: SpawnOptions) : Promise<ExecutionResult<string>>;
+    getMatchingKernelSpec(sessionManager?: Session.IManager) : Promise<IJupyterKernelSpec | undefined>;
+}
+
+export interface IJupyterKernelSpec {
+    name: string;
+    language: string;
+    path: string;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
@@ -94,6 +103,7 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
 export interface ICodeWatcher {
+    addFile(document: TextDocument);
     getFileName() : string;
     getVersion() : number;
     getCodeLenses() : CodeLens[];
@@ -116,7 +126,14 @@ export interface ICell {
     file: string;
     line: number;
     state: CellState;
-    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell;
+    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | ISysInfo;
+}
+
+export interface ISysInfo extends nbformat.IBaseCell {
+    cell_type: 'sys_info';
+    version: string;
+    path: string;
+    message: string;
 }
 
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');

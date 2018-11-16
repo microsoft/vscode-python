@@ -22,8 +22,8 @@ export interface IConnectionInfo {
 // This class communicates with an instance of jupyter that's running in the background
 @injectable()
 export class JupyterProcess implements INotebookProcess {
-    private static urlPattern = /(https?:\/\/[^\s]+)/g;
-    private static forbiddenPattern = /Forbidden/g;
+    private static urlPattern = /(https?:\/\/[^\s]+)/;
+    private static forbiddenPattern = /Forbidden/;
     private static httpPattern = /https?:\/\//;
     public isDisposed: boolean = false;
     private startPromise: Deferred<IConnectionInfo> | undefined;
@@ -49,7 +49,7 @@ export class JupyterProcess implements INotebookProcess {
         this.startPromise = createDeferred<IConnectionInfo>();
 
         // Use the IPythonExecutionService to find Jupyter
-        this.startObservable = await this.jupyterExecution.execModuleObservable(args, { throwOnStdErr: false, encoding: 'utf8'});
+        this.startObservable = await this.jupyterExecution.execModuleObservable('jupyter', args, { throwOnStdErr: false, encoding: 'utf8'});
         // Save our notebook dir as we will use this to verify when we started up
         this.notebook_dir = notebookdir;
         // There can be multiple lines with urls in the output, so keep tabs on when we have found a URL to stop looking
@@ -91,7 +91,7 @@ export class JupyterProcess implements INotebookProcess {
         const args: string [] = ['notebook', `--NotebookApp.file_to_run=${notebookFile}`];
 
         // Use the IPythonExecutionService to find Jupyter
-        return this.jupyterExecution.execModule(args, {throwOnStdErr: true, encoding: 'utf8'});
+        return this.jupyterExecution.execModule('jupyter', args, {throwOnStdErr: true, encoding: 'utf8'});
     }
 
     public async waitForPythonVersionString() : Promise<string> {
@@ -130,7 +130,7 @@ export class JupyterProcess implements INotebookProcess {
     }
 
     // tslint:disable-next-line:no-any
-    private output(data: any) {
+    private output = (data: any) => {
         if (this.logger) {
             this.logger.logInformation(data.toString('utf8'));
         }
@@ -180,7 +180,7 @@ export class JupyterProcess implements INotebookProcess {
     }
 
     // tslint:disable-next-line:no-any
-    private extractConnectionInformation(data: any) {
+    private extractConnectionInformation = (data: any) => {
         this.output(data);
 
         const httpMatch = JupyterProcess.httpPattern.exec(data);

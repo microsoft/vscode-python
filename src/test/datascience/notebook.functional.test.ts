@@ -317,4 +317,8 @@ plt.show()`,
     // - changing directories
     // - Restart
     // - Error types
+    // Test to write after jupyter process abstraction
+    // - jupyter not installed
+    // - kernel spec not matching
+
 });

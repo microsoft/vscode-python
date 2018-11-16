@@ -5,6 +5,7 @@ import { IServiceManager } from '../ioc/types';
 import { CodeCssGenerator } from './codeCssGenerator';
 import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
+import { CodeWatcher } from './editor-integration/codewatcher';
 import { History } from './history';
 import { HistoryCommandListener } from './historycommandlistener';
 import { HistoryProvider } from './historyProvider';
@@ -15,6 +16,7 @@ import { JupyterServer } from './jupyterServer';
 import { StatusProvider } from './statusProvider';
 import {
     ICodeCssGenerator,
+    ICodeWatcher,
     IDataScience,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
@@ -39,4 +41,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<INotebookProcess>(INotebookProcess, JupyterProcess);
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
+    serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
 }

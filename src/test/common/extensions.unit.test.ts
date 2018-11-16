@@ -71,4 +71,16 @@ suite('String Extensions', () => {
         const expectedString = 'something two, one';
         expect(formatString.format('one', 'two', 'three')).to.be.equal(expectedString);
     });
+    test('String should remove quotes', () => {
+        //tslint:disable:no-multiline-string
+        const quotedString = `'foo is "bar" is foo' is bar'`;
+        const quotedString2 = `foo is "bar" is foo' is bar'`;
+        const quotedString3 = `foo is "bar" is foo' is bar`;
+        const quotedString4 = `"foo is "bar" is foo' is bar"`;
+        const expectedString = `foo is "bar" is foo' is bar`;
+        expect(quotedString.trimQuotes()).to.be.equal(expectedString);
+        expect(quotedString2.trimQuotes()).to.be.equal(expectedString);
+        expect(quotedString3.trimQuotes()).to.be.equal(expectedString);
+        expect(quotedString4.trimQuotes()).to.be.equal(expectedString);
+    });
 });
