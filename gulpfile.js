@@ -170,7 +170,7 @@ async function checkDatascienceDependencies() {
     if (modulesInPackageLock.some(dependency => dependency.indexOf('/') !== dependency.lastIndexOf('/'))) {
         throwAndLogError('Dependencies detected with more than one \'/\', please update this script.');
     }
-    json.children[0].modules.forEach(m => {
+    json.chunks[0].modules.forEach(m => {
         const name = m.name;
         if (!name.startsWith('./node_modules')) {
             return;

@@ -1676,7 +1676,7 @@
         "vscode:prepublish": "gulp checkNativeDependencies && gulp check-datascience-dependencies && tsc -p ./ && webpack",
         "compile": "tsc -watch -p ./",
         "compile-webviews-watch": "npx webpack --config webpack.datascience-ui.config.js --watch",
-        "dump-datascience-webpack-stats": "webpack --profile --json > tmp/ds-stats.json",
+        "dump-datascience-webpack-stats": "webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
         "compile-webviews": "npx webpack --config webpack.datascience-ui.config.js",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
