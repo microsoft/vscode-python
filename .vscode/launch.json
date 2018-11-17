@@ -162,7 +162,7 @@
             "sourceMaps": true,
             "args": [
                 "timeout=300000",
-                "grep="
+                "grep=Jupyter"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

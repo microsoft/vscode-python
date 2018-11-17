@@ -72,8 +72,9 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         if (!PythonSettings.pythonSettings.has(workspaceFolderKey)) {
             const settings = new PythonSettings(workspaceFolderUri);
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
-            const formatOnType = workspace.getConfiguration('editor', resource ? resource : null).get('formatOnType', false);
-            sendTelemetryEvent(COMPLETION_ADD_BRACKETS, undefined, { enabled: settings.autoComplete.addBrackets });
+            const config = workspace.getConfiguration('editor', resource ? resource : null);
+            const formatOnType = config ? config.get('formatOnType', false) : false;
+            sendTelemetryEvent(COMPLETION_ADD_BRACKETS, undefined, { enabled: settings.autoComplete ? settings.autoComplete.addBrackets : false });
             sendTelemetryEvent(FORMAT_ON_TYPE, undefined, { enabled: formatOnType });
         }
         // tslint:disable-next-line:no-non-null-assertion
@@ -330,7 +331,6 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         } else {
             this.datascience = dataScienceSettings;
         }
-
     }
 
     public get pythonPath(): string {
@@ -373,7 +373,7 @@ function getAbsolutePath(pathToCheck: string, rootDir: string): string {
     return path.isAbsolute(pathToCheck) ? pathToCheck : path.resolve(rootDir, pathToCheck);
 }
 
-function getPythonExecutable(pythonPath: string): string {
+export function getPythonExecutable(pythonPath: string): string {
     // tslint:disable-next-line:prefer-type-cast no-unsafe-any
     pythonPath = untildify(pythonPath) as string;
 

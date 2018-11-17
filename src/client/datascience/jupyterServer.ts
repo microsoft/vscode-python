@@ -14,126 +14,93 @@ import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
-import { IFileSystem } from '../common/platform/types';
-import { IDisposableRegistry, ILogger } from '../common/types';
+import { ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { RegExpValues } from './constants';
-import { JupyterInstallError } from './jupyterInstallError';
-import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer } from './types';
+import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer } from './types';
+import { noop } from '../common/utils/misc';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
 @injectable()
 export class JupyterServer implements INotebookServer {
-    public isDisposed: boolean = false;
+    private isDisposed: boolean = false;
+    private connInfo: IConnection | undefined;
     private session: Session.ISession | undefined;
     private sessionManager : SessionManager | undefined;
     private sessionStartTime: number | undefined;
-    private tempFile: string | undefined;
-    private tempDirList: string[] = [];
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
 
     constructor(
         @inject(ILogger) private logger: ILogger,
-        @inject(INotebookProcess) private process: INotebookProcess,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
     }
 
-    public start = async () : Promise<boolean> => {
+    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: string) : Promise<void> => {
+        // Save connection information so we can use it later during shutdown
+        this.connInfo = connInfo;
 
-        if (await this.jupyterExecution.isNotebookSupported()) {
-            // If we're restarting, don't dispose
-            this.isDisposed = false;
+        // First connect to the sesssion manager and find a kernel that matches our
+        // python we're using
+        const serverSettings = ServerConnection.makeSettings(
+            {
+                baseUrl: connInfo.baseUrl,
+                token: connInfo.token,
+                pageUrl: '',
+                // A web socket is required to allow token authentication
+                wsUrl: connInfo.baseUrl.replace('http', 'ws'),
+                init: { cache: 'no-store', credentials: 'same-origin' }
+            });
+        this.sessionManager = new SessionManager({ serverSettings: serverSettings });
 
-            // First generate a temporary notebook. We need this as input to the session
-            // Use a UUID in the path so that we can verify the instance that we have started up
-            this.tempFile = await this.generateTempFile();
-            const uniqueDir = uuid();
-            this.tempFile = path.join(path.dirname(this.tempFile), uniqueDir, path.basename(this.tempFile));
-            await this.fileSystem.createDirectory(path.dirname(this.tempFile));
-            this.tempDirList.push(path.dirname(this.tempFile));
+        // Create our session options using this temporary notebook and our connection info
+        const options: Session.IOptions = {
+            path: notebookFile,
+            kernelName: kernelSpec ? kernelSpec.name : '',
+            serverSettings: serverSettings
+        };
 
-            // Find our kernel spec name (this will enumerate the spec json files and
-            // create a new spec if none match)
-            let kernelSpec = await this.jupyterExecution.getMatchingKernelSpec();
+        // Start a new session
+        this.session = await this.sessionManager.startNew(options);
 
-            // start our process in the same directory as our ipynb file.
-            await this.process.start(path.dirname(this.tempFile));
+        // Setup our start time. We reject anything that comes in before this time during execute
+        this.sessionStartTime = Date.now();
 
-            // Wait for connection information. We'll stick that into the options
-            const connInfo = await this.process.waitForConnectionInformation();
+        // Wait for it to be ready
+        await this.session.kernel.ready;
 
-            // First connect to the sesssion manager and find a kernel that matches our
-            // python we're using
-            const serverSettings = ServerConnection.makeSettings(
-                {
-                    baseUrl: connInfo.baseUrl,
-                    token: connInfo.token,
-                    pageUrl: '',
-                    // A web socket is required to allow token authentication
-                    wsUrl: connInfo.baseUrl.replace('http', 'ws'),
-                    init: { cache: 'no-store', credentials: 'same-origin' }
-                });
-            this.sessionManager = new SessionManager({ serverSettings: serverSettings });
-
-            // If our kernel spec wasn't found (possibly because jupyter kernelspec isn't installed)
-            // attempt to find it with our session manager instead
-            if (!kernelSpec) {
-                kernelSpec = await this.jupyterExecution.getMatchingKernelSpec(this.sessionManager);
+        // Check for dark theme, if so set matplot lib to use dark_background settings
+        let darkTheme: boolean = false;
+        const workbench = this.workspaceService.getConfiguration('workbench');
+        if (workbench) {
+            const theme = workbench.get<string>('colorTheme');
+            if (theme) {
+                darkTheme = /dark/i.test(theme);
             }
-
-            // Create our session options using this temporary notebook and our connection info
-            const options: Session.IOptions = {
-                path: this.tempFile,
-                kernelName: kernelSpec ? kernelSpec.name : '',
-                serverSettings: serverSettings
-            };
-
-            // Start a new session
-            this.session = await this.sessionManager.startNew(options);
-
-            // Setup our start time. We reject anything that comes in before this time during execute
-            this.sessionStartTime = Date.now();
-
-            // Wait for it to be ready
-            await this.session.kernel.ready;
-
-            // Check for dark theme, if so set matplot lib to use dark_background settings
-            let darkTheme: boolean = false;
-            const workbench = this.workspaceService.getConfiguration('workbench');
-            if (workbench) {
-                const theme = workbench.get<string>('colorTheme');
-                if (theme) {
-                    darkTheme = /dark/i.test(theme);
-                }
-            }
-
-            this.executeSilently(
-                `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
-            ).ignoreErrors();
-
-            return true;
-        } else {
-            throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
         }
 
+        this.executeSilently(
+            `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
+        ).ignoreErrors();
     }
 
     public shutdown = async () : Promise<void> => {
         if (this.session && this.sessionManager) {
-            await this.sessionManager.shutdownAll();
-            this.session.dispose();
-            this.sessionManager.dispose();
+            try {
+                await this.sessionManager.shutdownAll();
+                this.session.dispose();
+                this.sessionManager.dispose();
+            } catch {
+                noop;
+            }
             this.session = undefined;
             this.sessionManager = undefined;
+
         }
-        if (this.process) {
-            this.process.dispose();
+        if (this.connInfo) {
+            this.connInfo.dispose(); // This should kill the process that's running
         }
 
         // Delete any temp .pynb directories that we created
@@ -147,7 +114,7 @@ export class JupyterServer implements INotebookServer {
             await this.session.kernel.ready;
 
             while (this.session.kernel.status !== 'idle') {
-                await this.timeout(10);
+                await this.timeout(0);
             }
         }
     }
@@ -252,12 +219,14 @@ export class JupyterServer implements INotebookServer {
         return this.onStatusChangedEvent.event.bind(this.onStatusChangedEvent);
     }
 
-    public dispose = async () => {
+    public dispose = () : Promise<void> => {
         if (!this.isDisposed) {
             this.isDisposed = true;
             this.onStatusChangedEvent.dispose();
-            this.shutdown().ignoreErrors();
+            return this.shutdown();
         }
+
+        return Promise.resolve();
     }
 
     public restartKernel = async () : Promise<void> => {
@@ -266,7 +235,7 @@ export class JupyterServer implements INotebookServer {
             this.sessionStartTime = Date.now();
 
             // Restart our kernel
-            await this.forceRestart();
+            await this.session.kernel.restart();
 
             return;
         }
@@ -276,26 +245,15 @@ export class JupyterServer implements INotebookServer {
 
     public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
 
-        if (this.process) {
-
-            // First we need the python version we're running
-            const pythonVersion = await this.process.waitForPythonVersionString();
-
-            // Pull off the first number. Should be  3 or a 2
-            const first = pythonVersion.substr(0, 1);
+        if (this.connInfo && this.connInfo.pythonMainVersion) {
 
             // Use this to build our metadata object
             const metadata : nbformat.INotebookMetadata = {
-                kernelspec: {
-                    display_name: `Python ${first}`,
-                    language: 'python',
-                    name: `python${first}`
-                },
                 language_info: {
                     name: 'python',
                     codemirror_mode: {
                         name: 'ipython',
-                        version: parseInt(first, 10)
+                        version: this.connInfo.pythonMainVersion
                     }
                 },
                 orig_nbformat : 2,
@@ -303,8 +261,8 @@ export class JupyterServer implements INotebookServer {
                 mimetype: 'text/x-python',
                 name: 'python',
                 npconvert_exporter: 'python',
-                pygments_lexer: `ipython${first}`,
-                version: pythonVersion
+                pygments_lexer: `ipython${this.connInfo.pythonMainVersion}`,
+                version: this.connInfo.pythonMainVersion
             };
 
             // Combine this into a JSON object
@@ -315,14 +273,6 @@ export class JupyterServer implements INotebookServer {
                 metadata: metadata
             };
         }
-    }
-
-    public launchNotebook = async (file: string) : Promise<boolean> => {
-        if (this.process) {
-            await this.process.spawn(file);
-            return true;
-        }
-        return false;
     }
 
     private generateRequest = (code: string, silent: boolean) : Kernel.IFuture | undefined => {
@@ -337,21 +287,6 @@ export class JupyterServer implements INotebookServer {
             },
             true
         ) : undefined;
-    }
-
-    private forceRestart = async () : Promise<void> => {
-        // Wait for a restart and a timeout. If we timeout, then instead do a
-        // dispose and restart
-        if (this.session) {
-            const result = await Promise.race([this.session.kernel.restart(), this.timeout(5000)]);
-            if (typeof result === 'number') {
-                this.logger.logWarning('Restart of Jupyter Server failed. Forcing a full restart');
-
-                // Then we didn't restart. We timed out. Dispose and restart
-                await this.shutdown();
-                await this.start();
-            }
-        }
     }
 
     private timeout(ms : number) : Promise<number> {
@@ -604,15 +539,5 @@ export class JupyterServer implements INotebookServer {
             traceback : msg.content.traceback
         };
         this.addToCellData(cell, output);
-    }
-
-    private async generateTempFile() : Promise<string> {
-        // Create a temp file on disk
-        const file = await this.fileSystem.createTemporaryFile('.ipynb');
-
-        // Save in our list disposable
-        this.disposableRegistry.push(file);
-
-        return file.filePath;
     }
 }

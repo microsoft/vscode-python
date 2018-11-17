@@ -9,7 +9,7 @@ import { CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, Tex
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, PythonVersionInfo, SpawnOptions } from '../common/process/types';
-import { IConnectionInfo } from './jupyterProcess';
+import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -22,41 +22,36 @@ export interface IDataScienceCommandListener {
     register(commandManager: ICommandManager);
 }
 
+// Connection information for talking to a jupyter notebook process
+export interface IConnection extends Disposable {
+    baseUrl: string;
+    token: string;
+    pythonMainVersion : number;
+}
+
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends Disposable {
     onStatusChanged: Event<boolean>;
-    start(notebookFile? : string) : Promise<boolean>;
-    shutdown() : Promise<void>;
+    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: string) : Promise<void>;
     getCurrentState() : Promise<ICell[]>;
     executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
     execute(code: string, file: string, line: number) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
     translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
-    launchNotebook(file: string) : Promise<boolean>;
     waitForIdle() : Promise<void>;
+    shutdown() : Promise<void>;
 }
 
-export const INotebookProcess = Symbol('INotebookProcess');
-export interface INotebookProcess extends Disposable {
-    start(notebookFile: string) : Promise<void>;
-    shutdown() : Promise<void>;
-    waitForConnectionInformation() : Promise<IConnectionInfo>;
-    waitForPythonVersionString() : Promise<string>;
-    waitForPythonPath() : Promise<string | undefined>;
-    waitForPythonVersion() : Promise<PythonVersionInfo | undefined>;
-    spawn(notebookFile: string) : Promise<ExecutionResult<string>>;
-}
-export type JupyterServerInfo = [string, string, string, boolean, number, number, boolean, string, string];
-export const IJupyterExecution = Symbol('IJupyterAvailablity');
+export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution {
     isNotebookSupported() : Promise<boolean>;
     isImportSupported() : Promise<boolean>;
-    getJupyterServerInfo() : Promise<JupyterServerInfo[]>;
-    isipykernelSupported() : Promise<boolean>;
-    execModuleObservable(module: string, args: string[], options: SpawnOptions) : Promise<ObservableExecutionResult<string>>;
-    execModule(module: string, args: string[], options: SpawnOptions) : Promise<ExecutionResult<string>>;
-    getMatchingKernelSpec(sessionManager?: Session.IManager) : Promise<IJupyterKernelSpec | undefined>;
+    isKernelCreateSupported(): Promise<boolean>;
+    startNotebookServer() : Promise<INotebookServer>;
+    spawnNotebook(file: string) : Promise<void>;
+    importNotebook(file: string, template: string) : Promise<string>;
+    getUsableJupyterPython() : Promise<PythonInterpreter>;
 }
 
 export interface IJupyterKernelSpec {
@@ -132,6 +127,7 @@ export interface ICell {
 export interface ISysInfo extends nbformat.IBaseCell {
     cell_type: 'sys_info';
     version: string;
+    notebook_version: string;
     path: string;
     message: string;
 }

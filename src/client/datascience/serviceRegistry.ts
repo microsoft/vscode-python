@@ -11,7 +11,6 @@ import { HistoryCommandListener } from './historycommandlistener';
 import { HistoryProvider } from './historyProvider';
 import { JupyterExecution } from './jupyterExecution';
 import { JupyterImporter } from './jupyterImporter';
-import { JupyterProcess } from './jupyterProcess';
 import { JupyterServer } from './jupyterServer';
 import { StatusProvider } from './statusProvider';
 import {
@@ -24,7 +23,6 @@ import {
     IHistoryProvider,
     IJupyterExecution,
     INotebookImporter,
-    INotebookProcess,
     INotebookServer,
     IStatusProvider
 } from './types';
@@ -38,7 +36,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IHistory>(IHistory, History);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
     serviceManager.add<INotebookServer>(INotebookServer, JupyterServer);
-    serviceManager.add<INotebookProcess>(INotebookProcess, JupyterProcess);
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);

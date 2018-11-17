@@ -61,9 +61,11 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         }
         const envFileWatcher = workspace.createFileSystemWatcher(envFile);
         this.fileWatchers.set(envFile, envFileWatcher);
-        this.disposables.push(envFileWatcher.onDidChange(() => this.onEnvironmentFileChanged(envFile, workspaceFolderUri)));
-        this.disposables.push(envFileWatcher.onDidCreate(() => this.onEnvironmentFileChanged(envFile, workspaceFolderUri)));
-        this.disposables.push(envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(envFile, workspaceFolderUri)));
+        if (envFileWatcher) {
+            this.disposables.push(envFileWatcher.onDidChange(() => this.onEnvironmentFileChanged(envFile, workspaceFolderUri)));
+            this.disposables.push(envFileWatcher.onDidCreate(() => this.onEnvironmentFileChanged(envFile, workspaceFolderUri)));
+            this.disposables.push(envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(envFile, workspaceFolderUri)));
+        }
     }
     private onEnvironmentFileChanged(envFile, workspaceFolderUri?: Uri) {
         this.cache.delete(envFile);

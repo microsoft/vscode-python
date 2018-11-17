@@ -79,6 +79,7 @@ function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbf
             cell_type: 'sys_info',
             path: 'c:\\data\\python.exe',
             version : '3.9.9.9 The Uber Version',
+            notebook_version: '(5, 9, 9)',
             source: [],
             metadata: {},
             message: 'You have this python data:'

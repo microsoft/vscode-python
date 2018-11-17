@@ -15,7 +15,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         this.pathVariable = pathUtils.getPathVariableName();
     }
     public async parseFile(filePath: string): Promise<EnvironmentVariables | undefined> {
-        const exists = await fs.pathExists(filePath);
+        const exists = filePath.length > 0 ? await fs.pathExists(filePath) : undefined;
         if (!exists) {
             return undefined;
         }
