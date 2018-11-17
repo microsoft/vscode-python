@@ -47,6 +47,15 @@ const config: webpack.Configuration = {
                 test: require.resolve('@jupyterlab/services'),
                 use: 'imports-loader?_ws=ws'
             },
+            {
+                // JupyterServices imports node-fetch using `eval`.
+                test: /@jupyterlab\/services\/.*js$/,
+                use: [
+                    {
+                        loader: path.join(__dirname, 'loaders', 'fixEvalRequire.js')
+                    }
+                ]
+            },
             // {
             //     // Ensure source-map-support is injected as a
             //     test: /src\/client\/extension.ts$/,

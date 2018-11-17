@@ -155,8 +155,8 @@ gulp.task("compile", () => {
 
 gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production']));
 gulp.task('webpack', async () => {
-    await spawnAsync('npx', ['webpack', '--mode', 'production', '--inline', '--progress']);
-    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production', '--inline', '--progress']);
+    await spawnAsync('npx', ['webpack', '--mode', 'production']);
+    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production']);
 });
 
 gulp.task('prePublishWebpack', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack'));
@@ -165,7 +165,12 @@ gulp.task('prePublishNonWebpack', gulp.series('checkNativeDependencies', 'check-
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {
         const proc = spawn(command, args, { cwd: __dirname });
-        proc.stdout.on('data', data => console.log(data.toString()));
+        proc.stdout.on('data', data => {
+            // Log output on CI.
+            if (isCI) {
+                console.log(data.toString());
+            }
+        });
         proc.stderr.on('data', data => console.error(data.toString()));
         proc.on('close', () => resolve());
         proc.on('error', error => reject(error));
