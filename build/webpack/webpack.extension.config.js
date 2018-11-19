@@ -7,9 +7,6 @@ const path = require("path");
 const tsconfig_paths_webpack_plugin_1 = require("tsconfig-paths-webpack-plugin");
 const constants_1 = require("../constants");
 const common_1 = require("./common");
-// tslint:disable-next-line:no-var-requires no-require-imports
-// const WrapperPlugin = require('wrapper-webpack-plugin');
-const configFileName = path.join(constants_1.ExtensionRootDir, 'tsconfig.extension.json');
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = getListOfExistingModulesInOutDir();
@@ -66,10 +63,6 @@ const config = {
     ],
     plugins: [
         ...common_1.getDefaultPlugins('extension')
-        // new WrapperPlugin({
-        //     test: /\.js$/,
-        //     header: 'require(\'./node_modules/source-map-support\').install();'
-        // })
     ],
     resolve: {
         extensions: ['.ts', '.js'],

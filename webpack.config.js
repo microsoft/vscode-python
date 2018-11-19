@@ -15,9 +15,5 @@ module.exports = [
     merge(extensionDependencies, {
         mode: 'production',
         devtool: 'source-map',
-    }),
-    // merge(extension, {
-    //     mode: 'production',
-    //     devtool: 'source-map',
-    // })
+    })
 ];

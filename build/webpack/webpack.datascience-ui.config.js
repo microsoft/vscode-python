@@ -19,7 +19,7 @@ const config = {
     mode: 'production',
     // Use 'eval' for release and `eval-source-map` for development.
     // We need to use one where source is embedded, due to webviews (they restrict resources to specific schemes,
-    //  this seems to prevent chrome from downloading the source maps)
+    // this seems to prevent chrome from downloading the source maps)
     devtool: 'eval',
     node: {
         fs: 'empty'
