@@ -22,7 +22,6 @@ module.exports = {
         fs: 'empty'
     },
     plugins: [
-        ...common.getDefaultPlugins('datascience-ui'),
         new HtmlWebpackPlugin({ template: 'src/datascience-ui/history-react/index.html', baseUrl: path.join(__dirname, 'out', 'dummy'), filename: './datascience-ui/history-react/index.html' }),
         new FixDefaultImportPlugin(),
         new CopyWebpackPlugin([
