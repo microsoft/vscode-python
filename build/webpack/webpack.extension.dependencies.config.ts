@@ -5,7 +5,6 @@
 
 import * as path from 'path';
 import * as webpack from 'webpack';
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { ExtensionRootDir } from '../constants';
 import { getDefaultPlugins, nodeModulesToExternalize } from './common';
 

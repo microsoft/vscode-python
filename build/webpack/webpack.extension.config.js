@@ -40,11 +40,6 @@ const config = {
                     }
                 ]
             },
-            // {
-            //     // Ensure source-map-support is injected as a
-            //     test: /src\/client\/extension.ts$/,
-            //     use: 'imports-loader?_source_map_support=source-map-support'
-            // },
             {
                 test: /\.ts$/,
                 use: [

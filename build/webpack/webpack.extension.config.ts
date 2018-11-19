@@ -7,7 +7,6 @@ import * as glob from 'glob';
 import * as path from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import * as webpack from 'webpack';
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { ExtensionRootDir } from '../constants';
 import { getDefaultPlugins } from './common';
 
@@ -46,11 +45,6 @@ const config: webpack.Configuration = {
                     }
                 ]
             },
-            // {
-            //     // Ensure source-map-support is injected as a
-            //     test: /src\/client\/extension.ts$/,
-            //     use: 'imports-loader?_source_map_support=source-map-support'
-            // },
             {
                 test: /\.ts$/,
                 use: [
