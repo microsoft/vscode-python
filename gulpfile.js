@@ -130,13 +130,13 @@ gulp.task('cover:disable', () => {
             return json;
         }))
         .pipe(gulp.dest("./out", { 'overwrite': true }));
-    });
+});
 
-    /**
-     * Inline CSS into the coverage report for better visualizations on
-     * the VSTS report page for code coverage.
-     */
-    gulp.task('inlinesource', () => {
+/**
+ * Inline CSS into the coverage report for better visualizations on
+ * the VSTS report page for code coverage.
+ */
+gulp.task('inlinesource', () => {
     return gulp.src('./coverage/lcov-report/*.html')
         .pipe(inlinesource({ attribute: false }))
         .pipe(gulp.dest('./coverage/lcov-report-inline'));
