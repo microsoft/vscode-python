@@ -77,7 +77,7 @@ const config = {
                 include: /node_modules.*remark.*/,
                 use: [
                     {
-                        loader: path.resolve('./build/datascience/jsonloader.js'),
+                        loader: path.resolve('./build/webpack/loaders/jsonloader.js'),
                         options: {}
                     }
                 ]
