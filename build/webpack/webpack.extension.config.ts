@@ -39,16 +39,6 @@ const config: webpack.Configuration = {
         rules: [
             {
                 // JupyterServices imports node-fetch using `eval`.
-                test: require.resolve('@jupyterlab/services'),
-                use: 'imports-loader?_node_fetch=node-fetch'
-            },
-            {
-                // JupyterServices imports node-fetch using `eval`.
-                test: require.resolve('@jupyterlab/services'),
-                use: 'imports-loader?_ws=ws'
-            },
-            {
-                // JupyterServices imports node-fetch using `eval`.
                 test: /@jupyterlab\/services\/.*js$/,
                 use: [
                     {
