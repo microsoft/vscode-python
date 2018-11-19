@@ -10,6 +10,9 @@ import * as webpack from 'webpack';
 import { ExtensionRootDir } from '../constants';
 import { getDefaultPlugins } from './common';
 
+// tslint:disable-next-line:no-var-requires no-require-imports
+const configFileName = path.join(ExtensionRootDir, 'tsconfig.extension.json');
+
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = getListOfExistingModulesInOutDir();
