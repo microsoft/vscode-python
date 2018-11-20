@@ -58,6 +58,7 @@ install:
   - npm run clean
   - npm run vscode:prepublish
   - npx gulp hygiene-modified
+  - python -m pip install --upgrade pip
   - python -m pip install --upgrade -r requirements.txt
   - python -m pip install -t ./pythonFiles/experimental/ptvsd --no-cache-dir --implementation py --no-deps ptvsd
 
