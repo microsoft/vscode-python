@@ -492,9 +492,14 @@ export class History implements IWebPanelMessageListener, IHistory {
     }
 
     private load = async () : Promise<void> => {
+        const status = this.setStatus(localize.DataScience.startingJupyter());
+
         // Check to see if we support ipykernel or not
         const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
         if (!usableInterpreter) {
+            // Not loading anymore
+            status.dispose();
+
             // Nobody is useable, throw an exception
             throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
         } else {
@@ -506,6 +511,10 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
 
         // Otherwise we continue loading
-        await Promise.all([this.loadJupyterServer(), this.loadWebPanel()]);
+        try {
+            await Promise.all([this.loadJupyterServer(), this.loadWebPanel()]);
+        } finally {
+            status.dispose();
+        }
     }
 }

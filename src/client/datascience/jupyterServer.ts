@@ -102,11 +102,6 @@ export class JupyterServer implements INotebookServer {
         if (this.connInfo) {
             this.connInfo.dispose(); // This should kill the process that's running
         }
-
-        // Delete any temp .pynb directories that we created
-        for (const tempDir of this.tempDirList) {
-            await this.fileSystem.deleteDirectory(tempDir);
-        }
     }
 
     public waitForIdle = async () : Promise<void> => {

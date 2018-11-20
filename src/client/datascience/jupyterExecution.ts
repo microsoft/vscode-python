@@ -26,10 +26,11 @@ import {
     PythonInterpreter
 } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
-import { JupyterConnection } from './jupyterConnection';
+import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { IConnection, IJupyterExecution, IJupyterKernelSpec, INotebookServer } from './types';
 import { fsReaddirAsync } from '../common/utils/fs';
 import { JupyterInstallError } from './jupyterInstallError';
+import { EXTENSION_ROOT_DIR } from '../constants';
 
 const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
 const NotebookCommand = 'notebook';
@@ -69,25 +70,6 @@ class JupyterCommand {
         this.interpreter = interpreter;
         this.condaService = condaService;
         this.interpreter.getInterpreterDetails(this.exe).then(i => this.mainVersion = i.version_info[0]).catch(e => this.mainVersion = 0);
-    }
-
-    public getJupyterServerInfo = async () : Promise<JupyterServerInfo[]> => {
-        const newOptions: SpawnOptions = {mergeStdOutErr: true};
-        newOptions.env = await this.fixupCondaEnv(newOptions.env);
-
-        // We have a small python file here that we will execute to get the server info from all running Jupyter instances
-        const pythonService = await this.executionFactory.create({});
-        const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
-        const serverInfoString = await pythonService.exec([file], newOptions);
-
-        let serverInfos: JupyterServerInfo[];
-        try {
-            // Parse out our results, return undefined if we can't suss it out
-            serverInfos = JSON.parse(serverInfoString.stdout.trim()) as JupyterServerInfo[];
-        } catch (err) {
-            return undefined;
-        }
-        return serverInfos;
     }
 
     public execObservable = async (args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> => {
@@ -265,7 +247,8 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8'});
 
             // Wait for the connection information on this result
-            const connection = await JupyterConnection.waitForConnection(launchResult, notebookCommand.mainVersion, this.logger);
+            const connection = await JupyterConnection.waitForConnection(
+                tempFile, this.getJupyterServerInfo, launchResult, notebookCommand.mainVersion, this.serviceContainer);
 
             // If the kernel spec didn't match, then try with our current process instead
             if (!kernelSpec) {
@@ -313,6 +296,31 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             this.logger.logInformation(result.stderr);
         }
         return result.stdout;
+    }
+
+    private getJupyterServerInfo = async () : Promise<JupyterServerInfo[]> => {
+        const path = await import('path');
+        const newOptions: SpawnOptions = {mergeStdOutErr: true};
+        newOptions.env = await this.fixupCondaEnv(newOptions.env);
+
+        // We have a small python file here that we will execute to get the server info from all running Jupyter instances
+        const bestInterpreter = await this.getUsableJupyterPython();
+        if (bestInterpreter) {
+            const processService = await this.processServiceFactory.create();
+            const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+            const serverInfoString = await processService.exec(bestInterpreter.path, [file], newOptions);
+
+            let serverInfos: JupyterServerInfo[];
+            try {
+                // Parse out our results, return undefined if we can't suss it out
+                serverInfos = JSON.parse(serverInfoString.stdout.trim()) as JupyterServerInfo[];
+            } catch (err) {
+                return undefined;
+            }
+            return serverInfos;
+        }
+
+        return undefined;
     }
 
     private onSettingsChanged = () : Promise<void> => {
@@ -398,13 +406,26 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     }
 
     private async generateTempFile() : Promise<string> {
+        const path = await import('path');
+
         // Create a temp file on disk
         const file = await this.fileSystem.createTemporaryFile('.ipynb');
 
-        // Save in our list disposable
-        this.disposableRegistry.push(file);
+        // Use a UUID in the path so that we can verify the instance that we have started up
+        const uniqueDir = uuid();
+        const resultDir = path.join(path.dirname(file.filePath), uniqueDir);
+        const result = path.join(resultDir, path.basename(file.filePath));
+        await this.fileSystem.createDirectory(resultDir);
+        await this.fileSystem.writeFile(result, {});
 
-        return file.filePath;
+        // Create  disposable that will delete the directory of the result
+        const disposable = {
+            dispose: () => {
+                return this.fileSystem.deleteDirectory(resultDir);
+            }
+        }
+        this.disposableRegistry.push(disposable);
+        return result;
     }
 
     private isCommandSupported = async (command: string) : Promise<boolean> => {
