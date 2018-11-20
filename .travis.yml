@@ -109,8 +109,6 @@ script:
         npm run clean;
         vsce package;
         azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
-        npm run package;
-        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders-bundled.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
   - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT ]]; then
         npm run package;
