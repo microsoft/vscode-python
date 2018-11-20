@@ -59,6 +59,12 @@ export class FileSystem implements IFileSystem {
         return fs.mkdirp(directoryPath);
     }
 
+    public deleteDirectory(directoryPath: string): Promise<void> {
+        const deferred = createDeferred<void>();
+        fs.rmdir(directoryPath, err => err ? deferred.reject(err) : deferred.resolve());
+        return deferred.promise;
+    }
+
     public getSubDirectories(rootDir: string): Promise<string[]> {
         return new Promise<string[]>(resolve => {
             fs.readdir(rootDir, (error, files) => {

@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2018.11.0-alpha",
+    "version": "2018.11.0-beta",
     "languageServerVersion": "0.1.60",
     "publisher": "ms-python",
     "author": {
@@ -864,6 +864,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enable the experimental data science features in the python extension.",
+                    "scope": "resource"
+                },
+                "python.dataScience.jupyterLaunchTimeout": {
+                    "type": "number",
+                    "default": 60000,
+                    "description": "Amount of time (in ms) to wait for the Jupyter Notebook server to start.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {

@@ -4,18 +4,18 @@ Do Not Translate or Localize
 
 Microsoft Python extension for Visual Studio Code incorporates third party material from the projects listed below. The original copyright notice and the license under which Microsoft received such third party material are set forth below. Microsoft reserves all other rights not expressly granted, whether by implication, estoppel or otherwise.
 
-1.	Go for Visual Studio Code (https://github.com/Microsoft/vscode-go)
-2.	Files from the Python Project (https://www.python.org/)
-3.	Google Diff Match and Patch  (https://github.com/GerHobbelt/google-diff-match-patch)
-4.	isort (https://github.com/timothycrosley/isort)
-5.	jedi (https://github.com/davidhalter/jedi)
-6.	omnisharp-vscode (https://github.com/OmniSharp/omnisharp-vscode)
-7.	parso  (https://github.com/davidhalter/parso)
-8.	PTVS (https://github.com/Microsoft/PTVS)
-9.	Python documentation (https://docs.python.org/)
-10.	python-functools32 (https://github.com/MiCHiLU/python-functools32/blob/master/functools32/functools32.py)
-11.	pythonVSCode (https://github.com/DonJayamanne/pythonVSCode)
-12.	Sphinx (http://sphinx-doc.org/)
+1.  Go for Visual Studio Code (https://github.com/Microsoft/vscode-go)
+2.  Files from the Python Project (https://www.python.org/)
+3.  Google Diff Match and Patch  (https://github.com/GerHobbelt/google-diff-match-patch)
+4.  isort (https://github.com/timothycrosley/isort)
+5.  jedi (https://github.com/davidhalter/jedi)
+6.  omnisharp-vscode (https://github.com/OmniSharp/omnisharp-vscode)
+7.  parso  (https://github.com/davidhalter/parso)
+8.  PTVS (https://github.com/Microsoft/PTVS)
+9.  Python documentation (https://docs.python.org/)
+10. python-functools32 (https://github.com/MiCHiLU/python-functools32/blob/master/functools32/functools32.py)
+11. pythonVSCode (https://github.com/DonJayamanne/pythonVSCode)
+12. Sphinx (http://sphinx-doc.org/)
 13. nteract (https://github.com/nteract/nteract)
 
 
