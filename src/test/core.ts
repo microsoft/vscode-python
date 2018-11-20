@@ -11,3 +11,5 @@ export async function sleep(milliseconds: number) {
 
 // tslint:disable-next-line:no-empty
 export function noop() { }
+
+export const isWindows = /^win/.test(process.platform);

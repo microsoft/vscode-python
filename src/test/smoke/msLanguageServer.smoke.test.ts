@@ -11,7 +11,7 @@ import * as glob from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST, SMOKE_TEST_EXTENSIONS_DIR } from '../constants';
-import { noop } from '../core';
+import { isWindows, noop } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 const decoratorsPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'definition', 'navigation');
@@ -84,8 +84,12 @@ suite('Smoke Test: Language Server', function () {
     }
 
     const assertFile = (expectedLocation: string, location: vscode.Uri) => {
-        const relLocation = vscode.workspace.asRelativePath(location);
-        const expectedRelLocation = vscode.workspace.asRelativePath(expectedLocation);
+        let relLocation = vscode.workspace.asRelativePath(location);
+        let expectedRelLocation = vscode.workspace.asRelativePath(expectedLocation);
+        if (isWindows) {
+            relLocation = relLocation.toUpperCase();
+            expectedRelLocation = expectedRelLocation.toUpperCase();
+        }
         assert.equal(expectedRelLocation, relLocation, 'Position is in wrong file');
     };
 
