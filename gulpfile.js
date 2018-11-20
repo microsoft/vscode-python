@@ -101,10 +101,11 @@ gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 
 gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
 
-gulp.task('clean:cleanExceptTests', () => del(['out/client', 'out/datascience-ui', 'out/server']));
+gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
+gulp.task('clean:vsix', () => del(['*.vsix']));
 gulp.task('clean:out', () => del(['out']));
 
-gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
+gulp.task('clean', gulp.parallel('output:clean', 'cover:clean', 'clean:vsix'));
 
 gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
 
