@@ -24,7 +24,6 @@ class TestRunner {
     private async  launchSmokeTests() {
         const env: { [key: string]: {} } = {
             VSC_PYTHON_SMOKE_TEST: '1',
-            VSC_PYTHON_LANGUAGE_SERVER: '1',
             CODE_EXTENSIONS_PATH: SMOKE_TEST_EXTENSIONS_DIR
         };
 

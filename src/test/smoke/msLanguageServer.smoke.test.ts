@@ -10,7 +10,7 @@ import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_LANGUAGE_SERVER_TEST, IS_SMOKE_TEST, SMOKE_TEST_EXTENSIONS_DIR } from '../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST, SMOKE_TEST_EXTENSIONS_DIR } from '../constants';
 import { noop } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
@@ -24,7 +24,7 @@ suite('Smoke Test: Language Server', function () {
     this.timeout(4 * 60000);
 
     suiteSetup(async function () {
-        if (!IS_LANGUAGE_SERVER_TEST || !IS_SMOKE_TEST) {
+        if (!IS_SMOKE_TEST) {
             return this.skip();
         }
         await removeLanguageServerFiles();
