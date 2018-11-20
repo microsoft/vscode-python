@@ -65,7 +65,7 @@ before_install: |
 install:
   - travis_wait 5 npm ci
   - npm run clean
-  - npm run vscode:prepublish
+  - npx gulp prePublishNonBundle
   - npx gulp hygiene-modified
   - python -m pip install --upgrade -r requirements.txt
   - python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
@@ -131,6 +131,8 @@ script:
         npm run clean;
         vsce package;
         azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
+        npm run package;
+        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders-bundled.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
   - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == release* && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;

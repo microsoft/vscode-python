@@ -1,4 +1,6 @@
+!out/**/*.map
 **/*.map
+*.vsix
 .appveyor.yml
 .editorconfig
 .eslintrc
@@ -26,7 +28,7 @@ typings.json
 vsc-extension-quickstart.md
 vscode-python-signing.*
 webpack.config.js
-webpack.default.config.js
+webpack.datascience-ui.config.js
 
 .github/**
 .mocha-reporter/**

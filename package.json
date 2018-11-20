@@ -1674,7 +1674,7 @@
     },
     "scripts": {
         "vscode:prepublish": "gulp checkNativeDependencies && gulp check-datascience-dependencies && gulp compile && webpack --inline --progress",
-        "package": "gulp prePublishWebpack && vsce package",
+        "package": "gulp clean:cleanExceptTests && gulp prePublishBundle && gulp updateVSCodeIgnore && gulp removePrePublishScript && vsce package && gulp restorePrePublishScript",
         "compile": "tsc -watch -p ./",
         "compile-webviews-watch": "npx webpack --config webpack.datascience-ui.config.js --watch",
         "dump-datascience-webpack-stats": "webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",

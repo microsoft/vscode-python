@@ -102,6 +102,7 @@ gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
 
 gulp.task('clean:cleanExceptTests', () => del(['out/client', 'out/datascience-ui', 'out/server']));
+gulp.task('clean:out', () => del(['out']));
 
 gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
 
@@ -155,12 +156,48 @@ gulp.task("compile", () => {
 
 gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production']));
 gulp.task('webpack', async () => {
+    await spawnAsync('npx', ['webpack', '--mode', 'production', '--inline', '--progress']);
+    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production', '--inline', '--progress']);
+});
+
+gulp.task('updateVSCodeIgnore', (done) => {
+    // Temporary work around, we need to old technique of building extension is still supported.
+    // Once Azure DevOps has been updated, we can hard code this value in `.vscodeignore`
+    fs.appendFileSync(path.join(__dirname, '.vscodeignore'), '\nnode_modules/**');
+    done();
+});
+
+gulp.task('removePrePublishScript', (done) => {
+    // Temporary work around
+    const packageJson = require('./package.json');
+    const scripts = packageJson.scripts;
+    if (scripts['vscode:prepublish']) {
+        scripts['vscode:prepublish_Old'] = scripts['vscode:prepublish'];
+        delete scripts['vscode:prepublish'];
+        fs.writeFileSync(path.join(__dirname, 'package.json'), JSON.stringify(packageJson, undefined, 4));
+    }
+    done();
+});
+
+gulp.task('restorePrePublishScript', (done) => {
+    // Temporary work around
+    const packageJson = require('./package.json');
+    const scripts = packageJson.scripts;
+    if (scripts['vscode:prepublish_Old']) {
+        scripts['vscode:prepublish'] = scripts['vscode:prepublish_Old'];
+        delete scripts['vscode:prepublish_Old'];
+        fs.writeFileSync(path.join(__dirname, 'package.json'), JSON.stringify(packageJson, undefined, 4));
+    }
+    done();
+});
+
+gulp.task('webpack', async () => {
     await spawnAsync('npx', ['webpack', '--mode', 'production']);
     await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production']);
 });
 
-gulp.task('prePublishWebpack', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack'));
-gulp.task('prePublishNonWebpack', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile-webviews'));
+gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack'));
+gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
 function spawnAsync(command, args) {
     return new Promise((resolve, reject) => {
