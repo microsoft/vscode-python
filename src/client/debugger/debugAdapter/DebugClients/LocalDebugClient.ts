@@ -134,7 +134,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
 
     // tslint:disable-next-line:member-ordering
     protected buildDebugArguments(cwd: string, debugPort: number): string[] {
-        throw new Error('No Implemented');
+        throw new Error('Not Implemented');
     }
     // tslint:disable-next-line:member-ordering
     protected buildStandardArguments() {

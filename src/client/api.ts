@@ -3,9 +3,7 @@
 
 'use strict';
 
-import { isTestExecution } from './common/constants';
 import { RemoteDebuggerLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
-import { IServiceContainer } from './ioc/types';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -33,8 +31,8 @@ export interface IExtensionApi {
     };
 }
 
-export function buildApi(ready: Promise<void>, serviceContainer: IServiceContainer) {
-    const api: IExtensionApi = {
+export function buildApi(ready: Promise<void>) {
+    return {
         ready,
         debug: {
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
@@ -42,10 +40,4 @@ export function buildApi(ready: Promise<void>, serviceContainer: IServiceContain
             }
         }
     };
-    // In test environment return the DI Container.
-    if (isTestExecution()) {
-        // tslint:disable-next-line:no-any
-        (api as any).serviceContainer = serviceContainer;
-    }
-    return api;
 }
