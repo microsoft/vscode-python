@@ -103,19 +103,8 @@ export class JupyterServer implements INotebookServer {
             // Wait for it to be ready
             await this.session.kernel.ready;
 
-            // Check for dark theme, if so set matplot lib to use dark_background settings
-            let darkTheme: boolean = false;
-            const workbench = this.workspaceService.getConfiguration('workbench');
-            if (workbench) {
-                const theme = workbench.get<string>('colorTheme');
-                if (theme) {
-                    darkTheme = /dark/i.test(theme);
-                }
-            }
-
-            this.executeSilently(
-                `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
-            ).ignoreErrors();
+            // Run our initial setup and plot magics
+            this.initialNotebookSetup();
 
             return true;
         } else {
@@ -350,8 +339,29 @@ export class JupyterServer implements INotebookServer {
                 // Then we didn't restart. We timed out. Dispose and restart
                 await this.shutdown();
                 await this.start();
+            } else {
+                // Wait for kernel ready after restart
+                await this.session.kernel.ready;
+                this.initialNotebookSetup();
             }
         }
+    }
+
+    // Set up our initial plotting and imports
+    private initialNotebookSetup = () => {
+        // Check for dark theme, if so set matplot lib to use dark_background settings
+        let darkTheme: boolean = false;
+        const workbench = this.workspaceService.getConfiguration('workbench');
+        if (workbench) {
+            const theme = workbench.get<string>('colorTheme');
+            if (theme) {
+                darkTheme = /dark/i.test(theme);
+            }
+        }
+
+        this.executeSilently(
+            `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
+        ).ignoreErrors();
     }
 
     private timeout(ms : number) : Promise<number> {
