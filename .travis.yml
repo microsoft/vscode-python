@@ -8,9 +8,6 @@ matrix:
           env: UNIT_TEST=true
         - os: linux
           python: "2.7"
-          env: DEBUGGER_TEST=true
-        - os: linux
-          python: "2.7"
           env: DEBUGGER_TEST_RELEASE=true
         - os: linux
           python: "2.7"
@@ -18,9 +15,6 @@ matrix:
         - os: linux
           python: "2.7"
           env: MULTIROOT_WORKSPACE_TEST=true
-        - os: linux
-          python: "3.6-dev"
-          env: DEBUGGER_TEST=true
         - os: linux
           python: "3.6-dev"
           env: DEBUGGER_TEST_RELEASE=true
@@ -33,9 +27,6 @@ matrix:
         - os: linux
           python: "3.6-dev"
           env: PERFORMANCE_TEST=true
-        - os: linux
-          python: "3.7-dev"
-          env: DEBUGGER_TEST=true
         - os: linux
           python: "3.7-dev"
           env: DEBUGGER_TEST_RELEASE=true
@@ -68,7 +59,7 @@ install:
   - npm run vscode:prepublish
   - npx gulp hygiene-modified
   - python -m pip install --upgrade -r requirements.txt
-  - python -m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/
+  - python -m pip install -t ./pythonFiles/experimental/ptvsd ptvsd --no-cache-dir;
 
 script:
   - if [ $UNIT_TEST == "true" ]; then
@@ -78,16 +69,6 @@ script:
   - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
         bash <(curl -s https://codecov.io/bash);
     fi
-  - if [ $DEBUGGER_TEST == "true" ]; then
-        npm run cover:enable;
-        npm run testDebugger --silent;
-    fi
-  - npm run debugger-coverage
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
-  - npm run clean:ptvsd
-  - pip install -t ./pythonFiles/experimental/ptvsd ptvsd --no-cache-dir;
   - if [ $DEBUGGER_TEST_RELEASE == "true" ]; then
         npm run cover:enable;
         npm run testDebugger --silent;
