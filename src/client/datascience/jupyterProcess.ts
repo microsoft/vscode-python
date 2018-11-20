@@ -31,7 +31,6 @@ export class JupyterProcess implements INotebookProcess {
     private launchTimeout: NodeJS.Timer;
 
     private notebook_dir: string;
-    private urlFound: boolean;
 
     constructor(
         @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
@@ -52,8 +51,6 @@ export class JupyterProcess implements INotebookProcess {
         this.startObservable = await this.jupyterExecution.execModuleObservable('jupyter', args, { throwOnStdErr: false, encoding: 'utf8'});
         // Save our notebook dir as we will use this to verify when we started up
         this.notebook_dir = notebookdir;
-        // There can be multiple lines with urls in the output, so keep tabs on when we have found a URL to stop looking
-        this.urlFound = false;
 
         // We want to reject our Jupyter connection after a specific timeout
         const settings = this.configService.getSettings();
@@ -139,21 +136,19 @@ export class JupyterProcess implements INotebookProcess {
     // From a list of jupyter server infos try to find the matching jupyter that we launched
     // tslint:disable-next-line:no-any
     private getJupyterURL(serverInfos: JupyterServerInfo[], data: any) {
-        if (serverInfos && !this.urlFound) {
+        if (serverInfos && !this.startPromise.completed) {
             const matchInfo = serverInfos.find(info => this.fileSystem.arePathsSame(this.notebook_dir, info['notebook_dir']));
             if (matchInfo) {
                 const url = matchInfo['url'];
                 const token = matchInfo['token'];
 
-                this.urlFound = true;
-                clearTimeout(this.launchTimeout);
-                this.startPromise.resolve({ baseUrl: url, token: token });
+                this.resolveStartPromise({ baseUrl: url, token: token });
             }
         }
 
         // At this point we failed to get the server info or a matching server via the python code, so fall back to
         // our URL parse
-        if (!this.urlFound) {
+        if (!this.startPromise.completed) {
             this.getJupyterURLFromString(data);
         }
     }
@@ -161,21 +156,18 @@ export class JupyterProcess implements INotebookProcess {
     // tslint:disable-next-line:no-any
     private getJupyterURLFromString(data: any) {
         const urlMatch = JupyterProcess.urlPattern.exec(data);
-        if (urlMatch && !this.urlFound) {
+        if (urlMatch && !this.startPromise.completed) {
             let url: URL;
             try {
                 url = new URL(urlMatch[0]);
             } catch (err) {
                 // Failed to parse the url either via server infos or the string
-                clearTimeout(this.launchTimeout);
-                this.startPromise.reject(localize.DataScience.jupyterLaunchNoURL);
+                this.rejectStartPromise(new Error(localize.DataScience.jupyterLaunchNoURL()));
                 return;
             }
 
             // Here we parsed the URL correctly
-            this.urlFound = true;
-            clearTimeout(this.launchTimeout);
-            this.startPromise.resolve({ baseUrl: `${url.protocol}//${url.host}${url.pathname}`, token: `${url.searchParams.get('token')}`});
+            this.resolveStartPromise({ baseUrl: `${url.protocol}//${url.host}${url.pathname}`, token: `${url.searchParams.get('token')}`});
         }
     }
 
@@ -185,7 +177,7 @@ export class JupyterProcess implements INotebookProcess {
 
         const httpMatch = JupyterProcess.httpPattern.exec(data);
 
-        if (httpMatch && this.notebook_dir && !this.urlFound && this.startPromise) {
+        if (httpMatch && this.notebook_dir && this.startPromise && !this.startPromise.completed) {
             // .then so that we can keep from pushing aync up to the subscribed observable function
             this.jupyterExecution.getJupyterServerInfo().then(serverInfos => {
                 this.getJupyterURL(serverInfos, data);
@@ -195,14 +187,25 @@ export class JupyterProcess implements INotebookProcess {
         // Look for 'Forbidden' in the result
         const forbiddenMatch = JupyterProcess.forbiddenPattern.exec(data);
         if (forbiddenMatch && this.startPromise && !this.startPromise.resolved) {
-            clearTimeout(this.launchTimeout);
-            this.startPromise.reject(new Error(data.toString('utf8')));
+            this.rejectStartPromise(new Error(data.toString('utf8')));
         }
     }
 
     private launchTimedOut = () => {
         if (!this.startPromise.completed) {
-            this.startPromise.reject(localize.DataScience.jupyterLaunchTimedOut());
+            this.rejectStartPromise(new Error(localize.DataScience.jupyterLaunchTimedOut()));
         }
     }
+
+    private resolveStartPromise = (value?: IConnectionInfo | PromiseLike<IConnectionInfo>) => {
+        clearTimeout(this.launchTimeout);
+        this.startPromise.resolve(value);
+    }
+
+    // tslint:disable-next-line:no-any
+    private rejectStartPromise = (reason?: any) => {
+        clearTimeout(this.launchTimeout);
+        this.startPromise.reject(reason);
+    }
+
 }

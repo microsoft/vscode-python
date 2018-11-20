@@ -49,6 +49,7 @@ export interface IFileSystem {
     fileExistsSync(path: string): boolean;
     directoryExists(path: string): Promise<boolean>;
     createDirectory(path: string): Promise<void>;
+    deleteDirectory(path: string): Promise<void>;
     getSubDirectories(rootDir: string): Promise<string[]>;
     arePathsSame(path1: string, path2: string): boolean;
     readFile(filePath: string): Promise<string>;
