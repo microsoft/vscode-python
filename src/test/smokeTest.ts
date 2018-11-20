@@ -31,6 +31,7 @@ class TestRunner {
     }
     private async enableLanguageServer(enable: boolean) {
         const settings = `{ "python.jediEnabled": ${!enable} }`;
+        await fs.ensureDir(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode'));
         await fs.writeFile(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode', 'settings.json'), settings);
     }
     private async  launchTest(customEnvVars: { [key: string]: {} }) {
@@ -61,4 +62,4 @@ class TestRunner {
     }
 }
 
-new TestRunner().start().catch(ex => console.error('Error in running Performance Tests', ex));
+new TestRunner().start().catch(ex => console.error('Error in running Smoke Tests', ex));
