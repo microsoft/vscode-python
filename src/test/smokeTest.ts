@@ -5,49 +5,44 @@
 
 // tslint:disable:no-console no-require-imports no-var-requires
 
+// Must always be on top to setup expected env.
+process.env.VSC_PYTHON_SMOKE_TEST = '1';
+
 import { spawn } from 'child_process';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../client/common/constants';
 import { unzip } from './common';
-
-const del = require('del');
-
-const tmpFolder = path.join(EXTENSION_ROOT_DIR, 'tmp');
-const publishedExtensionPath = path.join(tmpFolder, 'ext', 'testReleaseExtensionsFolder');
+import { EXTENSION_ROOT_DIR_FOR_TESTS, SMOKE_TEST_EXTENSIONS_DIR } from './constants';
 
 class TestRunner {
     public async start() {
-        await del([path.join(tmpFolder, '**')]);
-        await this.extractLatestExtension(publishedExtensionPath);
-
-        await this.enableLanguageServer(false);
+        await this.enableLanguageServer(true);
+        await this.extractLatestExtension(SMOKE_TEST_EXTENSIONS_DIR);
         await this.launchSmokeTests();
     }
-    private async enableLanguageServer(enable: boolean) {
-        const settings = `{ "python.jediEnabled": ${!enable} }`;
-        await fs.writeFile(path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'smokeTests'), settings);
-    }
-
     private async  launchSmokeTests() {
         const env: { [key: string]: {} } = {
-            VSCC_PYTHON_SMOKE_TEST: true,
-            CODE_EXTENSIONS_PATH: publishedExtensionPath
+            VSC_PYTHON_SMOKE_TEST: '1',
+            VSC_PYTHON_LANGUAGE_SERVER: '1',
+            CODE_EXTENSIONS_PATH: SMOKE_TEST_EXTENSIONS_DIR
         };
 
         await this.launchTest(env);
+    }
+    private async enableLanguageServer(enable: boolean) {
+        const settings = `{ "python.jediEnabled": ${!enable} }`;
+        await fs.writeFile(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode', 'settings.json'), settings);
     }
     private async  launchTest(customEnvVars: { [key: string]: {} }) {
         await new Promise((resolve, reject) => {
             const env: { [key: string]: {} } = {
                 TEST_FILES_SUFFIX: 'smoke.test',
-                CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'smokeTests'),
+                CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests'),
                 ...process.env,
                 ...customEnvVars
             };
-
-            const proc = spawn('node', [path.join(__dirname, 'standardTest.js')], { cwd: EXTENSION_ROOT_DIR, env });
+            const proc = spawn('node', [path.join(__dirname, 'standardTest.js')], { cwd: EXTENSION_ROOT_DIR_FOR_TESTS, env });
             proc.stdout.pipe(process.stdout);
             proc.stderr.pipe(process.stderr);
             proc.on('error', reject);

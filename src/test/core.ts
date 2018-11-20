@@ -8,3 +8,6 @@
 export async function sleep(milliseconds: number) {
     return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 }
+
+// tslint:disable-next-line:no-empty
+export function noop() { }

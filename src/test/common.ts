@@ -4,29 +4,25 @@
 
 // tslint:disable:no-console no-require-imports no-var-requires
 
+import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import { coerce, SemVer } from 'semver';
-import { ConfigurationTarget, Uri, workspace } from 'vscode';
+import { ConfigurationTarget, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
-import { PythonSettings } from '../client/common/configSettings';
-import { EXTENSION_ROOT_DIR } from '../client/common/constants';
-import { traceError } from '../client/common/logger';
-import { BufferDecoder } from '../client/common/process/decoder';
-import { ProcessService } from '../client/common/process/proc';
 import { IProcessService } from '../client/common/process/types';
-import { noop } from '../client/common/utils/misc';
-import { getOSType, OSType } from '../client/common/utils/platform';
+import { OSType } from '../client/common/utils/platform';
 import { IServiceContainer } from '../client/ioc/types';
-import { IS_MULTI_ROOT_TEST } from './initialize';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_SMOKE_TEST } from './constants';
+import { noop, sleep } from './core';
 const StreamZip = require('node-stream-zip');
 
 export { sleep } from './core';
 
 // tslint:disable:no-invalid-this no-any
 
-const fileInNonRootWorkspace = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'dummy.py');
+const fileInNonRootWorkspace = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'dummy.py');
 export const rootWorkspaceUri = getWorkspaceRoot();
 
 export const PYTHON_PATH = getPythonPath();
@@ -41,13 +37,21 @@ export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'unitTest.nosetestsEnabled' | 'unitTest.pyTestEnabled' | 'unitTest.unittestEnabled' |
     'envFile' | 'jediEnabled' | 'linting.ignorePatterns';
 
+async function disposePythonSettings() {
+    if (!IS_SMOKE_TEST) {
+        const configSettings = await import('../client/common/configSettings');
+        configSettings.PythonSettings.dispose();
+    }
+}
+
 export async function updateSetting(setting: PythonSettingKeys, value: {} | undefined, resource: Uri | undefined, configTarget: ConfigurationTarget) {
-    const settings = workspace.getConfiguration('python', resource);
+    const vscode = require('vscode') as typeof import('vscode');
+    const settings = vscode.workspace.getConfiguration('python', resource);
     const currentValue = settings.inspect(setting);
-    if (currentValue !== undefined && ((configTarget === ConfigurationTarget.Global && currentValue.globalValue === value) ||
-        (configTarget === ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
-        (configTarget === ConfigurationTarget.WorkspaceFolder && currentValue.workspaceFolderValue === value))) {
-        PythonSettings.dispose();
+    if (currentValue !== undefined && ((configTarget === vscode.ConfigurationTarget.Global && currentValue.globalValue === value) ||
+        (configTarget === vscode.ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
+        (configTarget === vscode.ConfigurationTarget.WorkspaceFolder && currentValue.workspaceFolderValue === value))) {
+        await disposePythonSettings();
         return;
     }
     await settings.update(setting, value, configTarget);
@@ -59,27 +63,34 @@ export async function updateSetting(setting: PythonSettingKeys, value: {} | unde
     // await sleep(2000);
     // ... please see issue #2356 and PR #2332 for a discussion on the matter
 
-    PythonSettings.dispose();
+    await disposePythonSettings();
 }
 
-// In some tests we will be mocking VS Code API (mocked classes)
-const globalPythonPathSetting = workspace.getConfiguration('python') ? workspace.getConfiguration('python').inspect('pythonPath')!.globalValue : 'python';
+export async function clearPythonPathInWorkspaceFolder(resource: string | Uri) {
+    const vscode = require('vscode') as typeof import('vscode');
+    return retryAsync(setPythonPathInWorkspace)(resource, vscode.ConfigurationTarget.WorkspaceFolder);
+}
 
-export const clearPythonPathInWorkspaceFolder = async (resource: string | Uri) => retryAsync(setPythonPathInWorkspace)(resource, ConfigurationTarget.WorkspaceFolder);
-
-export const setPythonPathInWorkspaceRoot = async (pythonPath: string) => retryAsync(setPythonPathInWorkspace)(undefined, ConfigurationTarget.Workspace, pythonPath);
+export async function setPythonPathInWorkspaceRoot(pythonPath: string) {
+    const vscode = require('vscode') as typeof import('vscode');
+    return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, pythonPath);
+}
 
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
 function getWorkspaceRoot() {
-    if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
-        return Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test'));
+    if (IS_SMOKE_TEST) {
+        return;
     }
-    if (workspace.workspaceFolders.length === 1) {
-        return workspace.workspaceFolders[0].uri;
+    const vscode = require('vscode') as typeof import('vscode');
+    if (!Array.isArray(vscode.workspace.workspaceFolders) || vscode.workspace.workspaceFolders.length === 0) {
+        return vscode.Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test'));
     }
-    const workspaceFolder = workspace.getWorkspaceFolder(Uri.file(fileInNonRootWorkspace));
-    return workspaceFolder ? workspaceFolder.uri : workspace.workspaceFolders[0].uri;
+    if (vscode.workspace.workspaceFolders.length === 1) {
+        return vscode.workspace.workspaceFolders[0].uri;
+    }
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(fileInNonRootWorkspace));
+    return workspaceFolder ? workspaceFolder.uri : vscode.workspace.workspaceFolders[0].uri;
 }
 
 export function retryAsync(wrapped: Function, retryCount: number = 2) {
@@ -106,25 +117,24 @@ export function retryAsync(wrapped: Function, retryCount: number = 2) {
 }
 
 async function setPythonPathInWorkspace(resource: string | Uri | undefined, config: ConfigurationTarget, pythonPath?: string) {
-    if (config === ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
+    const vscode = require('vscode') as typeof import('vscode');
+    if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
         return;
     }
-    const resourceUri = typeof resource === 'string' ? Uri.file(resource) : resource;
-    const settings = workspace.getConfiguration('python', resourceUri);
+    const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
+    const settings = vscode.workspace.getConfiguration('python', resourceUri);
     const value = settings.inspect<string>('pythonPath');
-    const prop: 'workspaceFolderValue' | 'workspaceValue' = config === ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
+    const prop: 'workspaceFolderValue' | 'workspaceValue' = config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (value && value[prop] !== pythonPath) {
         await settings.update('pythonPath', pythonPath, config);
-        PythonSettings.dispose();
+        await disposePythonSettings();
     }
 }
 async function restoreGlobalPythonPathSetting(): Promise<void> {
-    const pythonConfig = workspace.getConfiguration('python', null as any as Uri);
-    const currentGlobalPythonPathSetting = pythonConfig.inspect('pythonPath')!.globalValue;
-    if (globalPythonPathSetting !== currentGlobalPythonPathSetting) {
-        await pythonConfig.update('pythonPath', undefined, true);
-    }
-    PythonSettings.dispose();
+    const vscode = require('vscode') as typeof import('vscode');
+    const pythonConfig = vscode.workspace.getConfiguration('python', null as any as Uri);
+    await pythonConfig.update('pythonPath', undefined, true);
+    await disposePythonSettings();
 }
 
 export async function deleteDirectory(dir: string) {
@@ -162,8 +172,9 @@ function getPythonPath(): string {
  * @return true if the current OS matches one from the list, false otherwise.
  */
 export function isOs(...OSes: OSType[]): boolean {
+    const platform = require('../client/common/utils/platform') as typeof import('../client/common/utils/platform');
     // get current OS
-    const currentOS: OSType = getOSType();
+    const currentOS: OSType = platform.getOSType();
     // compare and return
     if (OSes.indexOf(currentOS) === -1) {
         return false;
@@ -178,14 +189,17 @@ export function isOs(...OSes: OSType[]): boolean {
  * @return `SemVer` version of the Python interpreter, or `undefined` if an error occurs.
  */
 export async function getPythonSemVer(procService?: IProcessService): Promise<SemVer | undefined> {
-    const pythonProcRunner = procService ? procService : new ProcessService(new BufferDecoder());
+    const decoder = await import('../client/common/process/decoder');
+    const proc = await import('../client/common/process/proc');
+
+    const pythonProcRunner = procService ? procService : new proc.ProcessService(new decoder.BufferDecoder());
     const pyVerArgs = ['-c', 'import sys;print("{0}.{1}.{2}".format(*sys.version_info[:3]))'];
 
     return pythonProcRunner.exec(PYTHON_PATH, pyVerArgs)
         .then(strVersion => new SemVer(strVersion.stdout.trim()))
         .catch((err) => {
             // if the call fails this should make it loudly apparent.
-            traceError('getPythonSemVer', err);
+            console.error('Failed to get Python Version in getPythonSemVer', err);
             return undefined;
         });
 }
@@ -269,7 +283,7 @@ export async function isPythonVersionInProcess(procService?: IProcessService, ..
     if (currentPyVersion) {
         return isVersionInList(currentPyVersion, ...versions);
     } else {
-        traceError(`Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
+        console.error(`Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
         return false;
     }
 }
@@ -300,7 +314,7 @@ export async function isPythonVersion(...versions: string[]): Promise<boolean> {
     if (currentPyVersion) {
         return isVersionInList(currentPyVersion, ...versions);
     } else {
-        traceError(`Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
+        console.error(`Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
         return false;
     }
 }
@@ -327,4 +341,35 @@ export async function unzip(zipFile: string, targetFolder: string): Promise<void
             });
         });
     });
+}
+
+export async function waitForCondition(condition: () => Promise<boolean>, timeoutMs: number, errorMessage: string): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+        let completed = false;
+        const timeout = setTimeout(() => {
+            if (!completed) {
+                reject(new Error(errorMessage));
+            }
+            completed = true;
+        }, timeoutMs);
+        for (let i = 0; i < timeoutMs / 1000; i += 1) {
+            if (await condition()) {
+                clearTimeout(timeout);
+                resolve();
+                return;
+            }
+            await sleep(500);
+            if (completed) {
+                return;
+            }
+        }
+    });
+}
+
+export async function openFile(file: string): Promise<TextDocument> {
+    const vscode = require('vscode') as typeof import('vscode');
+    const textDocument = await vscode.workspace.openTextDocument(file);
+    await vscode.window.showTextDocument(textDocument);
+    assert(vscode.window.activeTextEditor, 'No active editor');
+    return textDocument;
 }

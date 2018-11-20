@@ -1688,6 +1688,7 @@
         "testMultiWorkspace": "node ./out/test/multiRootTest.js",
         "testAnalysisEngine": "node ./out/test/analysisEngineTest.js",
         "testPerformance": "node ./out/test/performanceTest.js",
+        "testSmoke": "node ./out/test/smokeTest.js",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",

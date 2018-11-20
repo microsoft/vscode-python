@@ -3,9 +3,8 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IExtensionApi } from '../client/api';
-import { PythonSettings } from '../client/common/configSettings';
-import { PVSC_EXTENSION_ID } from '../client/common/constants';
 import { clearPythonPathInWorkspaceFolder, IExtensionTestApi, PYTHON_PATH, resetGlobalPythonPathSetting, setPythonPathInWorkspaceRoot } from './common';
+import { IS_SMOKE_TEST, PVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 
 export * from './constants';
 export * from './ciConstants';
@@ -29,13 +28,17 @@ export async function initializePython() {
 export async function initialize(): Promise<IExtensionTestApi> {
     await initializePython();
     const api = await activateExtension();
-    // Dispose any cached python settings (used only in test env).
-    PythonSettings.dispose();
+    if (!IS_SMOKE_TEST) {
+        // When running smoke tests, we won't have access to these.
+        const configSettings = await import('../client/common/configSettings');
+        // Dispose any cached python settings (used only in test env).
+        configSettings.PythonSettings.dispose();
+    }
     // tslint:disable-next-line:no-any
     return api as any as IExtensionTestApi;
 }
 export async function activateExtension() {
-    const extension = vscode.extensions.getExtension<IExtensionApi>(PVSC_EXTENSION_ID)!;
+    const extension = vscode.extensions.getExtension<IExtensionApi>(PVSC_EXTENSION_ID_FOR_TESTS)!;
     const api = await extension.activate();
     // Wait untill its ready to use.
     await api.ready;
@@ -45,8 +48,12 @@ export async function activateExtension() {
 export async function initializeTest(): Promise<any> {
     await initializePython();
     await closeActiveWindows();
-    // Dispose any cached python settings (used only in test env).
-    PythonSettings.dispose();
+    if (!IS_SMOKE_TEST) {
+        // When running smoke tests, we won't have access to these.
+        const configSettings = await import('../client/common/configSettings');
+        // Dispose any cached python settings (used only in test env).
+        configSettings.PythonSettings.dispose();
+    }
 }
 export async function closeActiveWindows(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
