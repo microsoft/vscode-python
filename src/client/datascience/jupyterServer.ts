@@ -32,6 +32,7 @@ export class JupyterServer implements INotebookServer {
     private sessionManager : SessionManager | undefined;
     private sessionStartTime: number | undefined;
     private tempFile: string | undefined;
+    private tempDirList: string[] = [];
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
 
     constructor(
@@ -50,7 +51,12 @@ export class JupyterServer implements INotebookServer {
             this.isDisposed = false;
 
             // First generate a temporary notebook. We need this as input to the session
+            // Use a UUID in the path so that we can verify the instance that we have started up
             this.tempFile = await this.generateTempFile();
+            const uniqueDir = uuid();
+            this.tempFile = path.join(path.dirname(this.tempFile), uniqueDir, path.basename(this.tempFile));
+            await this.fileSystem.createDirectory(path.dirname(this.tempFile));
+            this.tempDirList.push(path.dirname(this.tempFile));
 
             // Find our kernel spec name (this will enumerate the spec json files and
             // create a new spec if none match)
@@ -128,6 +134,11 @@ export class JupyterServer implements INotebookServer {
         }
         if (this.process) {
             this.process.dispose();
+        }
+
+        // Delete any temp .pynb directories that we created
+        for (const tempDir of this.tempDirList) {
+            await this.fileSystem.deleteDirectory(tempDir);
         }
     }
 

@@ -1,6 +1,6 @@
 import { DebugSession } from 'vscode-debugadapter';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
-import { IDebugLauncherScriptProvider } from '../types';
+import { ILocalDebugLauncherScriptProvider } from '../types';
 import { DebugClient } from './DebugClient';
 import { DebuggerLauncherScriptProvider, NoDebugLauncherScriptProvider } from './launcherProvider';
 import { LocalDebugClient } from './LocalDebugClient';
@@ -9,7 +9,7 @@ import { NonDebugClientV2 } from './nonDebugClientV2';
 import { RemoteDebugClient } from './RemoteDebugClient';
 
 export function CreateLaunchDebugClient(launchRequestOptions: LaunchRequestArguments, debugSession: DebugSession, canLaunchTerminal: boolean): DebugClient<{}> {
-    let launchScriptProvider: IDebugLauncherScriptProvider;
+    let launchScriptProvider: ILocalDebugLauncherScriptProvider;
     let debugClientClass: typeof LocalDebugClient;
     if (launchRequestOptions.noDebug === true) {
         launchScriptProvider = new NoDebugLauncherScriptProvider();

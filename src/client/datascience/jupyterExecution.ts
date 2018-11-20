@@ -10,8 +10,9 @@ import * as uuid from 'uuid/v4';
 import { ExecutionResult, IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { ILogger } from '../common/types';
 import * as localize from '../common/utils/localize';
+import { EXTENSION_ROOT_DIR } from '../constants';
 import { ICondaService, IInterpreterService, InterpreterType } from '../interpreter/contracts';
-import { IJupyterExecution, IJupyterKernelSpec } from './types';
+import { IJupyterExecution, IJupyterKernelSpec, JupyterServerInfo } from './types';
 
 class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;
@@ -30,6 +31,25 @@ export class JupyterExecution implements IJupyterExecution {
                 @inject(ICondaService) private condaService: ICondaService,
                 @inject(IInterpreterService) private interpreterService: IInterpreterService,
                 @inject(ILogger) private logger: ILogger) {
+    }
+
+    public getJupyterServerInfo = async () : Promise<JupyterServerInfo[]> => {
+        const newOptions: SpawnOptions = {mergeStdOutErr: true};
+        newOptions.env = await this.fixupCondaEnv(newOptions.env);
+
+        // We have a small python file here that we will execute to get the server info from all running Jupyter instances
+        const pythonService = await this.executionFactory.create({});
+        const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+        const serverInfoString = await pythonService.exec([file], newOptions);
+
+        let serverInfos: JupyterServerInfo[];
+        try {
+            // Parse out our results, return undefined if we can't suss it out
+            serverInfos = JSON.parse(serverInfoString.stdout.trim()) as JupyterServerInfo[];
+        } catch (err) {
+            return undefined;
+        }
+        return serverInfos;
     }
 
     public execModuleObservable = async (module: string, args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> => {
