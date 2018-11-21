@@ -22,37 +22,20 @@ steps:
 
       echo NPM Version = $NPM_VERSION
 
-      echo Mocha reportfile = $MOCHA_REPORTFILE
-
       echo MOCHA_CI_REPORTFILE = $MOCHA_CI_REPORTFILE
 
       echo MOCHA_CI_REPORTER_ID = $MOCHA_CI_REPORTER_ID
 
       echo MOCHA_REPORTER_JUNIT = $MOCHA_REPORTER_JUNIT
 
-      echo COV_UUID = $COV_UUID
-
-      echo Test Suite Name = $TEST_SUITE_NAME
-
-      echo params Test Suite Name = $OT_TEST_SUITE_NAME
-
-      echo giver Test Suite Name = $(TestSuiteName)
-
-      echo parameter Test Suite Name = ${{ parameters.TestSuiteName }}
+      echo Test Suite Name = $(TestSuiteName)
 
       echo pre-defined Build Number = $BUILD_BUILDNUMBER
 
-      echo My Build Number = $BUILD_NUM
-
-      echo Try just accessing a parameter 'platform' = $PARAMETERS_PLATFORM
-
-    displayName: 'Ch Ch Checkit Owt'
-    name: 'bash_tool_non_conditional_run'
+    displayName: 'Show build vars'
+    name: 'bash_tool_show_bld_vars'
     env:
-      BUILD_NUM: $(Build.BuildNumber)
-      MOCHA_REPORTFILE: $(mochaReportFile)
       TEST_SUITE_NAME: $(testSuiteName)
-      OT_TEST_SUITE_NAME: ${{ format('{0}', parameters.TestSuiteName) }}
       NODE_VERSION: $(nodeVersion)
       NPM_VERSION: $(npmVersion)
       PYTHON_VERSION: $(pythonVersion)
@@ -94,14 +77,14 @@ steps:
       versionSpec: '$(PythonVersion)'
 
 
-  - bash: echo INTERIM WHAZZUP PYTHON VERSION
+  - bash: echo SHOW ACQUIRED PYTHON
 
       echo Python Version = `python --version`
 
       echo Reported Python Path = `python -c "import sys;print(sys.executable)"`
 
-    displayName: 'See Python Version'
-    name: 'see_py_ver'
+    displayName: 'Show Python Version'
+    name: 'show_py_ver'
 
 
   - task: PythonScript@0
@@ -139,8 +122,8 @@ steps:
 
       echo Reported Python Path = `python -c "import sys;print(sys.executable)"`
 
-    displayName: 'See whazzzup'
-    name: 'see_what_is_up_dawg'
+    displayName: 'Show build dependency versions'
+    name: 'show_bld_deps_vers'
 
 
   - task: Npm@1

@@ -53,8 +53,8 @@ jobs:
 
         echo Run Hygiene = $(runHygiene)
 
-      displayName: 'Ch Ch Checkit Owt'
-      name: 'bash_tool_non_conditional_run'
+      displayName: 'Show build vars'
+      name: 'show_bld_vars'
 
 
     - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
@@ -94,6 +94,18 @@ jobs:
         verbose: true
 
         customCommand: ci
+
+
+    - bash: echo AVAILABLE DEPENDENCY VERSIONS
+
+        echo Node Version = `node -v`
+
+        echo NPM Version = `npm -v`
+
+        echo Python Version = `python --version`
+
+      displayName: 'Show build dependency versions'
+      name: 'show_bld_deps_vers'
 
 
     - task: Npm@1
@@ -183,16 +195,3 @@ jobs:
         ContainerName: $(azureStorageContainerName)
         BlobPrefix: '$(Build.BuildNumber)'
       condition: and(succeeded(), eq(variables['uploadBinary'], 'true'))
-
-
-    - bash: echo AVAILABLE DEPENDENCY VERSIONS
-
-        echo Node Version = `node -v`
-
-        echo NPM Version = `npm -v`
-
-        echo Python Version = `python --version`
-
-      displayName: 'See whazzzup'
-      name: 'see_what_is_up_dawg'
-
