@@ -67,17 +67,11 @@ script:
         npm run cover:enable;
         npm run test:unittests;
     fi
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
   - if [ $DEBUGGER_TEST_RELEASE == "true" ]; then
         npm run cover:enable;
         npm run testDebugger --silent;
     fi
   - npm run debugger-coverage
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
   - if [ $FUNCTIONAL_TEST == "true" ]; then
         python -m pip install --upgrade -r functionalTestRequirements.txt;
         npm run test:functional;
@@ -86,15 +80,9 @@ script:
         npm run cover:enable;
         npm run testSingleWorkspace --silent;
     fi
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
-    fi
   - if [ $MULTIROOT_WORKSPACE_TEST == "true" ]; then
         npm run cover:enable;
         npm run testMultiWorkspace --silent;
-    fi
-  - if [ $TRAVIS_UPLOAD_COVERAGE == "true" ]; then
-        bash <(curl -s https://codecov.io/bash);
     fi
   - if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" && "$PERFORMANCE_TEST" == "true" ]]; then
         npm run testPerformance --silent;
