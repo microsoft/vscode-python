@@ -37,10 +37,19 @@ const config: Configuration = {
         rules: [
             {
                 // JupyterServices imports node-fetch using `eval`.
-                test: /@jupyterlab\/services\/.*js$/,
+                test: /@jupyterlab[\\\/]services[\\\/].*js$/,
                 use: [
                     {
                         loader: path.join(__dirname, 'loaders', 'fixEvalRequire.js')
+                    }
+                ]
+            },
+            {
+                // Do not use __dirname in getos when using require.
+                test: /getos[\\\/]index.js$/,
+                use: [
+                    {
+                        loader: path.join(__dirname, 'loaders', 'fixGetosRequire.js')
                     }
                 ]
             },
