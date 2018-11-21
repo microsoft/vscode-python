@@ -7,7 +7,6 @@ parameters:
   MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
   MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
   MOCHA_REPORTER_JUNIT: true
-  PublishVsix: false
   RunHygiene: true
   UploadBinary: false
   AzureStorageAccountName: 'vscodepythonci'
@@ -23,7 +22,6 @@ jobs:
     nodeVersion: ${{ parameters.NodeVersion }}
     npmVersion: ${{ parameters.NpmVersion }}
     pythonVersion: ${{ parameters.PythonVersion }}
-    publishVsix: ${{ parameters.PublishVsix }}
     mochaReportFile: ${{ parameters.MOCHA_CI_REPORTFILE }}
     MOCHA_CI_REPORTER_ID: ${{ parameters.MOCHA_CI_REPORTER_ID }}
     MOCHA_CI_REPORTFILE: ${{ parameters.MOCHA_CI_REPORTFILE }}
@@ -42,8 +40,6 @@ jobs:
         echo Python Version = $(pythonVersion)
 
         echo NPM Version = $(npmVersion)
-
-        echo Publish VSIX? = $(publishVsix)
 
         echo Mocha reportfile = '$(mochaReportFile)'
 

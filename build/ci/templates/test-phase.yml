@@ -1,31 +1,17 @@
-parameters:
-  PythonVersion: '3.7'
-  NodeVersion: '8.11.2'
-  NpmVersion: 'latest'
-  BuildNumber: ''
-  MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
-  MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
-  MOCHA_REPORTER_JUNIT: true
-  CodeCovFlag: ''
-  DependsOn: ''
-  AzureStorageAccountName: 'vscodepythonartifacts'
-  AzureStorageContainerName: 'pvsc-ci-yaml-artifacts'
-  Platform: ''
-  TestSuiteName: ''
-
-
-# nodeVersion: ${{ parameters.NodeVersion }}
-# npmVersion: ${{ parameters.NpmVersion }}
-# pythonVersion: ${{ parameters.PythonVersion }}
-# mochaReportFile: ${{ parameters.MOCHA_CI_REPORTFILE }}
-# MOCHA_CI_REPORTER_ID: ${{ parameters.MOCHA_CI_REPORTER_ID }}
-# MOCHA_CI_REPORTFILE: ${{ parameters.MOCHA_CI_REPORTFILE }}
-# MOCHA_REPORTER_JUNIT: ${{ parameters.MOCHA_REPORTER_JUNIT }}
-# testSuiteName: ${{ parameters.TestSuiteName }}
-# codeCovFlag: ${{ parameters.Platform }}
-# azureStorageAcctName: ${{ parameters.AzureStorageAccountName }}
-# azureStorageContainerName: ${{ parameters.AzureStorageContainerName }}
-# platform: ${{ parameters.Platform }}
+# These are the used parameters in this definition:
+# TODO: Find a way to make default values become overridden with values
+#       specified in the master YAML definition...
+#   TestSuiteName: ''
+#   BuildNumber: ''
+#   Platform: ''
+#   PythonVersion: '3.7'
+#   NodeVersion: '8.11.2'
+#   NpmVersion: 'latest'
+#   MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+#   MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+#   MOCHA_REPORTER_JUNIT: true
+#   AzureStorageAccountName: 'vscodepythonartifacts'
+#   AzureStorageContainerName: 'pvsc-ci-yaml-artifacts'
 
 steps:
   - bash: echo REQUESTED VARIABLE VALUES
