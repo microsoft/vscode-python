@@ -61,7 +61,7 @@ class TestRunner {
         await unzip(extensionFile, targetDir);
         console.log(`Extension extracted into ${targetDir}`);
         await new Promise(resolve => {
-            glob('*.*', { cwd: targetDir }, (err, items) => {
+            glob('**/*.*', { cwd: targetDir }, (err, items) => {
                 if (err) {
                     console.error('Failed to extract', err);
                 } else {
