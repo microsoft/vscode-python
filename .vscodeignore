@@ -1,4 +1,4 @@
-!out/**/*.map
+!out/client/**/*.map
 **/*.map
 *.vsix
 .appveyor.yml

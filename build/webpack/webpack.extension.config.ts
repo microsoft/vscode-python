@@ -6,7 +6,7 @@
 import * as glob from 'glob';
 import * as path from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import * as webpack from 'webpack';
+import { Configuration, ContextReplacementPlugin } from 'webpack';
 import { ExtensionRootDir } from '../constants';
 import { getDefaultPlugins } from './common';
 
@@ -22,7 +22,7 @@ function getListOfExistingModulesInOutDir() {
     return files.map(filePath => `./${filePath.slice(0, -3)}`);
 }
 
-const config: webpack.Configuration = {
+const config: Configuration = {
     mode: 'production',
     target: 'node',
     entry: {
@@ -69,7 +69,8 @@ const config: webpack.Configuration = {
         ...existingModulesInOutDir
     ],
     plugins: [
-        ...getDefaultPlugins('extension')
+        ...getDefaultPlugins('extension'),
+        new ContextReplacementPlugin(/getos/, /logic\/.*.js/)
     ],
     resolve: {
         extensions: ['.ts', '.js'],
