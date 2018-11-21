@@ -1,0 +1,242 @@
+parameters:
+  PythonVersion: '3.7'
+  NodeVersion: '8.11.2'
+  NpmVersion: 'latest'
+  BuildNumber: ''
+  MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+  MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+  MOCHA_REPORTER_JUNIT: true
+  CodeCovFlag: ''
+  DependsOn: ''
+  AzureStorageAccountName: 'vscodepythonartifacts'
+  AzureStorageContainerName: 'pvsc-ci-yaml-artifacts'
+  Platform: ''
+  TestSuiteName: ''
+
+
+# nodeVersion: ${{ parameters.NodeVersion }}
+# npmVersion: ${{ parameters.NpmVersion }}
+# pythonVersion: ${{ parameters.PythonVersion }}
+# mochaReportFile: ${{ parameters.MOCHA_CI_REPORTFILE }}
+# MOCHA_CI_REPORTER_ID: ${{ parameters.MOCHA_CI_REPORTER_ID }}
+# MOCHA_CI_REPORTFILE: ${{ parameters.MOCHA_CI_REPORTFILE }}
+# MOCHA_REPORTER_JUNIT: ${{ parameters.MOCHA_REPORTER_JUNIT }}
+# testSuiteName: ${{ parameters.TestSuiteName }}
+# codeCovFlag: ${{ parameters.Platform }}
+# azureStorageAcctName: ${{ parameters.AzureStorageAccountName }}
+# azureStorageContainerName: ${{ parameters.AzureStorageContainerName }}
+# platform: ${{ parameters.Platform }}
+
+steps:
+  - bash: echo REQUESTED VARIABLE VALUES
+
+      echo Node Version = $NODE_VERSION
+
+      echo Python Version = $PYTHON_VERSION
+
+      echo NPM Version = $NPM_VERSION
+
+      echo Mocha reportfile = $MOCHA_REPORTFILE
+
+      echo MOCHA_CI_REPORTFILE = $MOCHA_CI_REPORTFILE
+
+      echo MOCHA_CI_REPORTER_ID = $MOCHA_CI_REPORTER_ID
+
+      echo MOCHA_REPORTER_JUNIT = $MOCHA_REPORTER_JUNIT
+
+      echo COV_UUID = $COV_UUID
+
+      echo Test Suite Name = $TEST_SUITE_NAME
+
+      echo params Test Suite Name = $OT_TEST_SUITE_NAME
+
+      echo giver Test Suite Name = $(TestSuiteName)
+
+      echo pre-defined Build Number = $BUILD_BUILDNUMBER
+
+      echo My Build Number = $BUILD_NUM
+
+      echo Try just accessing a parameter 'platform' = $PARAMETERS_PLATFORM
+
+    displayName: 'Ch Ch Checkit Owt'
+    name: 'bash_tool_non_conditional_run'
+    env:
+      BUILD_NUM: $(Build.BuildNumber)
+      MOCHA_REPORTFILE: $(mochaReportFile)
+      TEST_SUITE_NAME: $(testSuiteName)
+      OT_TEST_SUITE_NAME: ${{ format('{0}', parameters.TestSuiteName) }}
+      NODE_VERSION: $(nodeVersion)
+      NPM_VERSION: $(npmVersion)
+      PYTHON_VERSION: $(pythonVersion)
+
+
+  - powershell: |
+      New-Item -ItemType directory -Path "$(System.ArtifactsDirectory)/bin-artifacts"
+
+      $buildArtifactUri = "https://${{ parameters.AzureStorageAccountName }}.blob.core.windows.net/${{ parameters.AzureStorageContainerName }}/$(Build.BuildNumber)/bin-artifacts.zip"
+      Write-Verbose "Downloading from $buildArtifactUri"
+
+      $destination = "$(System.ArtifactsDirectory)/bin-artifacts/bin-artifacts.zip"
+      Write-Verbose "Destination file: $destination"
+
+      Invoke-WebRequest -Uri $buildArtifactUri -OutFile $destination -Verbose
+
+    displayName: 'Download bin-artifacts from cloud-storage'
+
+
+  - task: ExtractFiles@1
+    displayName: 'Splat bin-artifacts'
+    inputs:
+      archiveFilePatterns: '$(System.ArtifactsDirectory)/bin-artifacts/bin-artifacts.zip'
+
+      destinationFolder: '$(Build.SourcesDirectory)'
+
+      cleanDestinationFolder: false
+
+
+  - task: NodeTool@0
+    displayName: 'Use Node ${{ parameters.NodeVersion }}'
+    inputs:
+      versionSpec: '${{ parameters.NodeVersion }}'
+
+
+  - task: UsePythonVersion@0
+    displayName: 'Use Python ${{ parameters.PythonVersion }}'
+    inputs:
+      versionSpec: '${{ parameters.PythonVersion }}'
+
+
+  - bash: echo INTERIM WHAZZUP PYTHON VERSION
+
+      echo Python Version = `python --version`
+
+      echo Reported Python Path = `python -c "import sys;print(sys.executable)"`
+
+    displayName: 'See Python Version'
+    name: 'see_py_ver'
+
+
+  - task: PythonScript@0
+    displayName: 'Set CI_PYTHON_PATH'
+    inputs:
+      scriptSource: inline
+      failOnStderr: true
+      script: |
+        from __future__ import print_function
+
+        import sys
+
+        print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))
+
+
+  - task: Npm@1
+    displayName: 'update npm'
+    inputs:
+      command: custom
+
+      verbose: true
+
+      customCommand: ${{ format('install -g npm@{0}', parameters.NpmVersion) }}
+
+
+  - bash: echo AVAILABLE DEPENDENCY VERSIONS
+
+      echo Node Version = `node -v`
+
+      echo NPM Version = `npm -v`
+
+      echo Python Version = `python --version`
+
+      echo CI_PYTHON_PATH = $CI_PYTHON_PATH
+
+      echo Reported Python Path = `python -c "import sys;print(sys.executable)"`
+
+    displayName: 'See whazzzup'
+    name: 'see_what_is_up_dawg'
+
+
+  - task: Npm@1
+    displayName: 'npm ci'
+    inputs:
+      command: custom
+
+      verbose: true
+
+      customCommand: ci
+
+
+  - task: CmdLine@1
+    displayName: 'pip install requirements'
+    inputs:
+      filename: python
+
+      arguments: '-m pip install --upgrade -r ./requirements.txt'
+
+
+  - task: CmdLine@1
+    displayName: 'pip install ptvsd'
+    inputs:
+      filename: python
+
+      arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd ptvsd --no-cache-dir'
+
+    enabled: false
+
+
+  - task: CmdLine@1
+    displayName: 'pip install ptvsd [dev]'
+    inputs:
+      filename: python
+
+      arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/'
+
+
+  - task: Npm@1
+    displayName: 'run $(TestSuiteName)'
+    inputs:
+      command: custom
+
+      verbose: true
+
+      customCommand: 'run $(TestSuiteName)'
+
+
+  - task: PythonScript@0
+    displayName: 'Ensure test results'
+    inputs:
+      scriptSource: inline
+      failOnStderr: true
+      script: |
+        from __future__ import print_function
+
+        import os
+        import sys
+
+
+        test_logfile = os.environ.get('MOCHA_CI_REPORTFILE')
+
+        if not os.path.exists(test_logfile):
+            print('##vso[task.logissue type=error]Cannot find mocha test results file {}. Did the test run actually fail?'.format(test_logfile))
+            print('ERROR: Log file could not be found. Ensure test run did not fail.', file=sys.stderr)
+
+
+  - task: PublishTestResults@2
+    displayName: 'Publish JUnit test results'
+    inputs:
+      testResultsFiles: '**/junit-report.xml'
+
+      searchFolder: '$(Build.ArtifactStagingDirectory)'
+
+      testRunTitle: ${{ format('{0}_{1}_{2}', parameters.Platform, parameters.BuildNumber, parameters.TestSuiteName) }}
+
+      buildPlatform: ${{ parameters.Platform }}
+
+      buildConfiguration: '${{ parameters.TestSuiteName }}'
+
+    condition: always()
+
+
+  - bash: 'bash <(curl -s https://codecov.io/bash) -t $COV_UUID -F ${{ parameters.Platform }}'
+    displayName: 'publish codecov'
+    continueOnError: true
+    condition: always()

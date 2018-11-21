@@ -1,0 +1,205 @@
+parameters:
+  name: 'Unit_Test_Run'
+  PythonVersion: '3.7'
+  NodeVersion: '8.11.2'
+  NpmVersion: 'latest'
+  PoolName: 'Hosted Ubuntu 1604'
+  MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+  MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+  MOCHA_REPORTER_JUNIT: true
+  PublishVsix: false
+  RunHygiene: true
+  UploadBinary: false
+  AzureStorageAccountName: 'vscodepythonartifacts'
+  AzureStorageContainerName: 'pvsc-ci-yaml-artifacts'
+
+jobs:
+- job: ${{ parameters.name }}
+  pool:
+    name: ${{ parameters.PoolName }}
+
+  variables:
+    # TODO: use {{ insert }}: {{ parameters.variables }}, it would not work at time I wrote this
+    nodeVersion: ${{ parameters.NodeVersion }}
+    npmVersion: ${{ parameters.NpmVersion }}
+    pythonVersion: ${{ parameters.PythonVersion }}
+    publishVsix: ${{ parameters.PublishVsix }}
+    mochaReportFile: ${{ parameters.MOCHA_CI_REPORTFILE }}
+    MOCHA_CI_REPORTER_ID: ${{ parameters.MOCHA_CI_REPORTER_ID }}
+    MOCHA_CI_REPORTFILE: ${{ parameters.MOCHA_CI_REPORTFILE }}
+    MOCHA_REPORTER_JUNIT: ${{ parameters.MOCHA_REPORTER_JUNIT }}
+    runHygiene: ${{ parameters.RunHygiene }}
+    uploadBinary: ${{ parameters.UploadBinary }}
+    azureStorageAcctName: ${{ parameters.AzureStorageAccountName }}
+    azureStorageContainerName: ${{ parameters.AzureStorageContainerName }}
+    plaform: ${{ parameters.Platform }}
+
+  steps:
+    - bash: echo REQUESTED VARIABLE VALUES
+
+        echo Node Version = $(nodeVersion)
+
+        echo Python Version = $(pythonVersion)
+
+        echo NPM Version = $(npmVersion)
+
+        echo Publish VSIX? = $(publishVsix)
+
+        echo Mocha reportfile = '$(mochaReportFile)'
+
+        echo MOCHA_CI_REPORTFILE = $MOCHA_CI_REPORTFILE
+
+        echo MOCHA_CI_REPORTER_ID = $MOCHA_CI_REPORTER_ID
+
+        echo MOCHA_REPORTER_JUNIT = $MOCHA_REPORTER_JUNIT
+
+        echo COV_UUID = $COV_UUID
+
+        echo Run Hygiene = $(runHygiene)
+
+      displayName: 'Ch Ch Checkit Owt'
+      name: 'bash_tool_non_conditional_run'
+
+
+  # - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
+  #   displayName: 'Component Detection'
+
+  #   continueOnError: true
+  #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+
+    - task: NodeTool@0
+      displayName: 'Use Node $(nodeVersion)'
+      inputs:
+        versionSpec: '$(nodeVersion)'
+
+
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(pythonVersion)'
+      inputs:
+        versionSpec: '$(pythonVersion)'
+
+
+    - task: Npm@1
+      displayName: 'update npm'
+      inputs:
+        command: custom
+
+        verbose: true
+
+        customCommand: 'install -g npm@$(npmVersion)'
+
+
+    - task: Npm@1
+      displayName: 'npm ci'
+      inputs:
+        command: custom
+
+        verbose: true
+
+        customCommand: ci
+
+
+    - task: Npm@1
+      displayName: 'run vscode:prepublish'
+      inputs:
+        command: custom
+
+        verbose: false
+
+        customCommand: 'run vscode:prepublish'
+
+
+    - task: Gulp@0
+      displayName: 'gulp code hygiene'
+      inputs:
+        targets: 'hygiene-modified'
+      condition: and(succeeded(), eq(variables['runHygiene'], 'true'))
+
+
+    - task: Npm@1
+      displayName: 'run cover:enable'
+      inputs:
+        command: custom
+
+        verbose: false
+
+        customCommand: 'run cover:enable'
+
+
+    - task: Npm@1
+      displayName: 'run test:unittests'
+      inputs:
+        command: custom
+
+        verbose: false
+
+        customCommand: 'run test:unittests'
+
+
+    - bash: 'bash <(curl -s https://codecov.io/bash) -t $COV_UUID'
+      displayName: 'publish codecov'
+      continueOnError: true
+      condition: always()
+
+
+    - task: CmdLine@1
+      displayName: 'pip install requirements'
+      inputs:
+        filename: python
+
+        arguments: '-m pip install --upgrade -r ./requirements.txt'
+
+
+    - task: CmdLine@1
+      displayName: 'pip install ptvsd'
+      inputs:
+        filename: python
+
+        arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd ptvsd --no-cache-dir'
+
+      enabled: false
+
+
+    - task: CmdLine@1
+      displayName: 'pip install ptvsd [dev]'
+      inputs:
+        filename: python
+
+        arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/'
+
+
+    - task: ArchiveFiles@2
+      displayName: 'Capture Binaries'
+      inputs:
+        rootFolderOrFile: out
+
+        archiveFile: '$(Build.ArtifactStagingDirectory)/bin-artifacts.zip'
+
+
+    - task: AzureFileCopy@2
+      displayName: 'Upload bin-artifacts to cloud-store'
+      inputs:
+        SourcePath: '$(Build.ArtifactStagingDirectory)/bin-artifacts.zip'
+#       azureSubscription: 'dekeeler-ptvsazure-acct-for-dev'
+        azureSubscription: 'dekeeler-vscodepythonartifacts'
+        Destination: AzureBlob
+#       storage: vscodepythonci
+        storage: $(azureStorageAcctName)
+#       ContainerName: 'vscode-python-ci'
+        ContainerName: $(azureStorageContainerName)
+        BlobPrefix: '$(Build.BuildNumber)'
+      condition: and(succeeded(), eq(variables['uploadBinary'], 'true'))
+
+
+    - bash: echo AVAILABLE DEPENDENCY VERSIONS
+
+        echo Node Version = `node -v`
+
+        echo NPM Version = `npm -v`
+
+        echo Python Version = `python --version`
+
+      displayName: 'See whazzzup'
+      name: 'see_what_is_up_dawg'
+
