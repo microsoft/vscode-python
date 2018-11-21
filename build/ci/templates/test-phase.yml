@@ -38,6 +38,8 @@ steps:
 
       echo giver Test Suite Name = $(TestSuiteName)
 
+      echo parameter Test Suite Name = ${{ parameters.TestSuiteName }}
+
       echo pre-defined Build Number = $BUILD_BUILDNUMBER
 
       echo My Build Number = $BUILD_NUM
@@ -59,7 +61,7 @@ steps:
   - powershell: |
       New-Item -ItemType directory -Path "$(System.ArtifactsDirectory)/bin-artifacts"
 
-      $buildArtifactUri = "https://${{ parameters.AzureStorageAccountName }}.blob.core.windows.net/${{ parameters.AzureStorageContainerName }}/$(Build.BuildNumber)/bin-artifacts.zip"
+      $buildArtifactUri = "https://$(AzureStorageAccountName).blob.core.windows.net/$(AzureStorageContainerName)/$(Build.BuildNumber)/bin-artifacts.zip"
       Write-Verbose "Downloading from $buildArtifactUri"
 
       $destination = "$(System.ArtifactsDirectory)/bin-artifacts/bin-artifacts.zip"
@@ -81,15 +83,15 @@ steps:
 
 
   - task: NodeTool@0
-    displayName: 'Use Node ${{ parameters.NodeVersion }}'
+    displayName: 'Use Node $(NodeVersion)'
     inputs:
-      versionSpec: '${{ parameters.NodeVersion }}'
+      versionSpec: '$(NodeVersion)'
 
 
   - task: UsePythonVersion@0
-    displayName: 'Use Python ${{ parameters.PythonVersion }}'
+    displayName: 'Use Python $(PythonVersion)'
     inputs:
-      versionSpec: '${{ parameters.PythonVersion }}'
+      versionSpec: '$(PythonVersion)'
 
 
   - bash: echo INTERIM WHAZZUP PYTHON VERSION
@@ -122,7 +124,7 @@ steps:
 
       verbose: true
 
-      customCommand: ${{ format('install -g npm@{0}', parameters.NpmVersion) }}
+      customCommand: 'install -g npm@$(NpmVersion)'
 
 
   - bash: echo AVAILABLE DEPENDENCY VERSIONS
@@ -213,16 +215,16 @@ steps:
 
       searchFolder: '$(Build.ArtifactStagingDirectory)'
 
-      testRunTitle: ${{ format('{0}_{1}_{2}', parameters.Platform, parameters.BuildNumber, parameters.TestSuiteName) }}
+      testRunTitle: '$(Platform) - $(BuildNumber) $(TestSuiteName)'
 
-      buildPlatform: ${{ parameters.Platform }}
+      buildPlatform: '$(Platform)'
 
-      buildConfiguration: '${{ parameters.TestSuiteName }}'
+      buildConfiguration: '$(TestSuiteName)'
 
     condition: always()
 
 
-  - bash: 'bash <(curl -s https://codecov.io/bash) -t $COV_UUID -F ${{ parameters.Platform }}'
+  - bash: 'bash <(curl -s https://codecov.io/bash) -t $COV_UUID -F $(Platform)'
     displayName: 'publish codecov'
     continueOnError: true
     condition: always()
