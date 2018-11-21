@@ -86,6 +86,17 @@ export class FileSystem implements IFileSystem {
         });
     }
 
+    public async getFiles(rootDir: string): Promise<string[]> {
+        const files = await fs.readdir(rootDir);
+        return files.filter(async f => {
+            const fullPath = path.join(rootDir, f);
+            if ((await fs.stat(fullPath)).isFile()) {
+                return true;
+            }
+            return false;
+        });
+    }
+
     public arePathsSame(path1: string, path2: string): boolean {
         path1 = path.normalize(path1);
         path2 = path.normalize(path2);

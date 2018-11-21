@@ -356,6 +356,7 @@ suite('Jupyter Execution', async () => {
         // this object from a promise
         when(serviceContainer.get<INotebookServer>(INotebookServer)).thenReturn(new MockJupyterServer());
 
+        when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar/jupyter']);
 
         // We also need a file system
         const tempFile = {

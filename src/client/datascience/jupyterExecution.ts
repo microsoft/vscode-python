@@ -635,8 +635,8 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     private lookForJupyterInDirectory = async (pathToCheck: string): Promise<string[]> => {
         try {
             const path = await import('path');
-            const subdirs = await fsReaddirAsync(pathToCheck);
-            return subdirs.filter(s => {
+            const files = await this.fileSystem.getFiles(pathToCheck);
+            return files.filter(s => {
                 CheckJupyterRegEx.test(path.basename(s));
             });
 
