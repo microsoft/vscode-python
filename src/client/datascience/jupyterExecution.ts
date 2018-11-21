@@ -38,7 +38,7 @@ const ConvertCommand = 'nbconvert';
 const KernelSpecCommand = 'kernelspec';
 const KernelCreateCommand = 'ipykernel';
 const PyKernelOutputRegEx = /.*\s+(.+)$/m;
-const KernelSpecOutputRegEx = /^\s+(\S+)\s*(\S+)$/;
+const KernelSpecOutputRegEx = /^\s*\w+\s+(\S+)$/;
 
 class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;
@@ -330,8 +330,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     }
 
     private async deleteSpec(specFile: string) : Promise<void> {
-        const fs = await import('fs-extra');
-        return fs.unlink(specFile);
+        await this.fileSystem.deleteFile(specFile);
     }
 
     private async addClosestMatchingSpec(activeInterpreter: PythonInterpreter) : Promise<void> {
@@ -482,6 +481,16 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         // Then enumerate our specs
         const specs = await enumerator();
 
+        // Import our file system
+        const fs = await import ('fs-extra');
+
+        // For each get its details as we will likely need them
+        const specDetails = await Promise.all(specs.map(async s => {
+            if (s.path.length > 0 && await fs.pathExists(s.path)) {
+                return this.interpreterService.getInterpreterDetails(s.path);
+            }
+        }));
+
         for (let i = 0; specs && i < specs.length; i += 1) {
             const spec = specs[i];
             let score = 0;
@@ -495,9 +504,8 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                 score += 1;
 
                 // See if the version is the same
-                const fs = await import ('fs-extra');
-                if (info && info.version_info && spec.path.length > 0 && await fs.pathExists(spec.path)) {
-                    const details = await this.interpreterService.getInterpreterDetails(spec.path);
+                if (info && info.version_info && specDetails[i]) {
+                    const details = specDetails[i];
                     if (details && details.version_info) {
                         if (details.version_info[0] === info.version_info[0]) {
                             // Major version match
@@ -569,6 +577,26 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         });
     }
 
+    private async readSpec(kernelSpecOutputLine: string) : Promise<JupyterKernelSpec | undefined> {
+        const match = KernelSpecOutputRegEx.exec(kernelSpecOutputLine);
+        if (match && match !== null && match.length > 1) {
+            // Lazy import our node_modules
+            const path = await import('path');
+            const fs = await import('fs-extra');
+
+            // Second match should be our path to the kernel spec
+            const file = path.join(match[1], 'kernel.json');
+            if (await fs.pathExists(file)) {
+                // Turn this into a IJupyterKernelSpec
+                const model = await fs.readJSON(file, { encoding: 'utf8' });
+                model.name = match[1];
+                return new JupyterKernelSpec(model);
+            }
+        }
+
+        return undefined;
+    }
+
     private enumerateSpecs = async () : Promise<IJupyterKernelSpec[]> => {
         if (await this.isKernelSpecSupported()) {
             const kernelSpecCommand = await this.findBestCommand(KernelSpecCommand);
@@ -579,28 +607,14 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             // This should give us back a key value pair we can parse
             const result: IJupyterKernelSpec[] = [];
             const lines = list.stdout.splitLines({ trim: false, removeEmptyEntries: true });
-            for (let i = 0; i < lines.length; i += 1) {
-                const match = KernelSpecOutputRegEx.exec(lines[i]);
-                if (match && match !== null && match.length > 2) {
-                    // Lazy import our node_modules
-                    const path = await import('path');
-                    const fs = await import('fs-extra');
 
-                    // Second match should be our path to the kernel spec
-                    const file = path.join(match[2], 'kernel.json');
-                    if (await fs.pathExists(file)) {
-                        // Turn this into a IJupyterKernelSpec
-                        const model = await fs.readJSON(file, { encoding: 'utf8' });
-                        model.name = match[1];
-                        result.push(new JupyterKernelSpec(model));
-                    }
-                }
-            }
+            // Generate all of the promises at once
+            const promises = lines.map(l => this.readSpec(l));
 
-            return result;
+            // Then let them run concurrently (they are file io)
+            const specs = await Promise.all(promises);
+            return specs.filter(s => s);
         }
-
-        return [];
     }
 
     private findInterpreterCommand = async (command: string, interpreter: PythonInterpreter) : Promise<JupyterCommand | undefined> => {
@@ -675,13 +689,11 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             const current = await this.interpreterService.getActiveInterpreter();
             let found = await this.findInterpreterCommand(command, current);
             if (!found) {
-                // Look through all of our interpreters (minus the active one)
+                // Look through all of our interpreters (minus the active one at the same time)
                 const all = await this.interpreterService.getInterpreters();
-                for (let i=0; i < all.length && !found; i += 1) {
-                    if (current !== all[i]) {
-                        found = await this.findInterpreterCommand(command, all[i]);
-                    }
-                }
+                const promises = all.filter(i => i != current).map(i => this.findInterpreterCommand(command, i));
+                const foundList = await Promise.all(promises);
+                found = foundList.find(f => f !== undefined);
             }
 
             // If still not found, try looking on the path using jupyter
@@ -722,7 +734,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
     private doesJupyterCommandExist = async (command?: string) : Promise<boolean> => {
         const newOptions : SpawnOptions = {throwOnStdErr: true, encoding: 'utf8'};
-        const args = command ? [...command] : [];
+        const args = command ? [...command, '--version'] : [];
         const processService = await this.processServicePromise;
         try {
             const result = await processService.exec('jupyter', args, newOptions);

@@ -359,7 +359,9 @@ export class PythonSettings extends EventEmitter implements IPythonSettings {
         }));
 
         const initialConfig = workspace.getConfiguration('python', this.workspaceRoot);
-        this.update(initialConfig);
+        if (initialConfig) {
+            this.update(initialConfig);
+        }
     }
 }
 
