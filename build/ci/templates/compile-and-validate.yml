@@ -10,8 +10,8 @@ parameters:
   PublishVsix: false
   RunHygiene: true
   UploadBinary: false
-  AzureStorageAccountName: 'vscodepythonartifacts'  # 'vscodepythonci'
-  AzureStorageContainerName: 'pvsc-ci-yaml-artifacts' # 'vscode-python-ci'
+  AzureStorageAccountName: 'vscodepythonci'
+  AzureStorageContainerName: 'vscode-python-ci'
 
 jobs:
 - job: ${{ parameters.name }}
