@@ -10,8 +10,8 @@ parameters:
   PublishVsix: false
   RunHygiene: true
   UploadBinary: false
-  AzureStorageAccountName: 'vscodepythonartifacts'
-  AzureStorageContainerName: 'pvsc-ci-yaml-artifacts'
+  AzureStorageAccountName: 'vscodepythonartifacts'  # 'vscodepythonci'
+  AzureStorageContainerName: 'pvsc-ci-yaml-artifacts' # 'vscode-python-ci'
 
 jobs:
 - job: ${{ parameters.name }}
@@ -61,11 +61,11 @@ jobs:
       name: 'bash_tool_non_conditional_run'
 
 
-  # - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
-  #   displayName: 'Component Detection'
+    - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
+      displayName: 'Component Detection'
 
-  #   continueOnError: true
-  #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+      continueOnError: true
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
 
     - task: NodeTool@0
@@ -181,12 +181,9 @@ jobs:
       displayName: 'Upload bin-artifacts to cloud-store'
       inputs:
         SourcePath: '$(Build.ArtifactStagingDirectory)/bin-artifacts.zip'
-#       azureSubscription: 'dekeeler-ptvsazure-acct-for-dev'
-        azureSubscription: 'dekeeler-vscodepythonartifacts'
+        azureSubscription: 'dekeeler-ptvsazure-acct-for-dev'
         Destination: AzureBlob
-#       storage: vscodepythonci
         storage: $(azureStorageAcctName)
-#       ContainerName: 'vscode-python-ci'
         ContainerName: $(azureStorageContainerName)
         BlobPrefix: '$(Build.BuildNumber)'
       condition: and(succeeded(), eq(variables['uploadBinary'], 'true'))
