@@ -59,6 +59,17 @@ class TestRunner {
     private async extractLatestExtension(targetDir: string): Promise<void> {
         const extensionFile = await new Promise<string>((resolve, reject) => glob('*.vsix', (ex, files) => ex ? reject(ex) : resolve(files[0])));
         await unzip(extensionFile, targetDir);
+        console.log(`Extension extracted into ${targetDir}`);
+        await new Promise(resolve => {
+            glob('*.*', { cwd: targetDir }, (err, items) => {
+                if (err) {
+                    console.error('Failed to extract', err);
+                } else {
+                    items.forEach(file => console.log(file));
+                }
+                resolve();
+            });
+        });
     }
 }
 
