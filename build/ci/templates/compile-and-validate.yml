@@ -108,14 +108,10 @@ jobs:
       name: 'show_bld_deps_vers'
 
 
-    - task: Npm@1
-      displayName: 'run vscode:prepublish'
+    - task: Gulp@0
+      displayName: 'gulp prePublishNonBundle'
       inputs:
-        command: custom
-
-        verbose: false
-
-        customCommand: 'run vscode:prepublish'
+        targets: 'prePublishNonBundle'
 
 
     - task: Gulp@0
@@ -164,17 +160,7 @@ jobs:
       inputs:
         filename: python
 
-        arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd ptvsd --no-cache-dir'
-
-      enabled: false
-
-
-    - task: CmdLine@1
-      displayName: 'pip install ptvsd [dev]'
-      inputs:
-        filename: python
-
-        arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/'
+        arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd --no-cache-dir --implementation py --no-deps ptvsd'
 
 
     - task: ArchiveFiles@2

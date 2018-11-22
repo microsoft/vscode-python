@@ -149,17 +149,7 @@ steps:
     inputs:
       filename: python
 
-      arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd ptvsd --no-cache-dir'
-
-    enabled: false
-
-
-  - task: CmdLine@1
-    displayName: 'pip install ptvsd [dev]'
-    inputs:
-      filename: python
-
-      arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd git+https://github.com/Microsoft/ptvsd/'
+      arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd --no-cache-dir --implementation py --no-deps ptvsd'
 
 
   - task: Npm@1
