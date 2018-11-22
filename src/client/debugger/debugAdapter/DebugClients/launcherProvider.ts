@@ -27,6 +27,6 @@ export class DebuggerLauncherScriptProvider implements IDebugLauncherScriptProvi
 export class RemoteDebuggerLauncherScriptProvider implements IRemoteDebugLauncherScriptProvider {
     public getLauncherArgs(options: RemoteDebugOptions): string[] {
         const waitArgs = options.waitUntilDebuggerAttaches ? ['--wait'] : [];
-        return [script, '--host', options.host, '--port', options.port.toString()].concat(waitArgs);
+        return [script, '--default', '--host', options.host, '--port', options.port.toString()].concat(waitArgs);
     }
 }
