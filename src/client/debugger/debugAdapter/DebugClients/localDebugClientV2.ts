@@ -5,20 +5,15 @@
 
 import { DebugSession } from 'vscode-debugadapter';
 import { LaunchRequestArguments } from '../../types';
-import { IDebugLauncherScriptProvider } from '../types';
+import { ILocalDebugLauncherScriptProvider } from '../types';
 import { LocalDebugClient } from './LocalDebugClient';
 
 export class LocalDebugClientV2 extends LocalDebugClient {
-    constructor(args: LaunchRequestArguments, debugSession: DebugSession, canLaunchTerminal: boolean, launcherScriptProvider: IDebugLauncherScriptProvider) {
+    constructor(args: LaunchRequestArguments, debugSession: DebugSession, canLaunchTerminal: boolean, launcherScriptProvider: ILocalDebugLauncherScriptProvider) {
         super(args, debugSession, canLaunchTerminal, launcherScriptProvider);
     }
     protected buildDebugArguments(cwd: string, debugPort: number): string[] {
-        const launcher = this.launcherScriptProvider.getLauncherFilePath();
-        const additionalPtvsdArgs: string[] = [];
-        if (this.args.noDebug) {
-            additionalPtvsdArgs.push('--nodebug');
-        }
-        return [launcher, ...additionalPtvsdArgs, '--client', '--host', 'localhost', '--port', debugPort.toString()];
+        return this.launcherScriptProvider.getLauncherArgs({ host: 'localhost', port: debugPort });
     }
     protected buildStandardArguments() {
         const programArgs = Array.isArray(this.args.args) && this.args.args.length > 0 ? this.args.args : [];

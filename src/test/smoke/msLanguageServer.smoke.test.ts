@@ -10,22 +10,21 @@ import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { noop } from '../../client/common/utils/misc';
-import { IS_LANGUAGE_SERVER_TEST } from '../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST, SMOKE_TEST_EXTENSIONS_DIR } from '../constants';
+import { isWindows, noop } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
-const decoratorsPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'definition', 'navigation');
+const decoratorsPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'definition', 'navigation');
 const fileDefinitions = path.join(decoratorsPath, 'definitions.py');
-const wksPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'exclusions');
+const wksPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'exclusions');
 const fileOne = path.join(wksPath, 'one.py');
 
-suite('Language Server: Integration', function () {
+suite('Smoke Test: Language Server', function () {
     // Large value to allow for LS to get downloaded.
     this.timeout(4 * 60000);
 
     suiteSetup(async function () {
-        if (!IS_LANGUAGE_SERVER_TEST) {
+        if (!IS_SMOKE_TEST) {
             return this.skip();
         }
         await removeLanguageServerFiles();
@@ -55,8 +54,8 @@ suite('Language Server: Integration', function () {
     }
     async function getLanaguageServerFolders(): Promise<string[]> {
         return new Promise<string[]>((resolve, reject) => {
-            glob('languageServer.*', { cwd: EXTENSION_ROOT_DIR }, (ex, matches) => {
-                ex ? reject(ex) : resolve(matches.map(item => path.join(EXTENSION_ROOT_DIR, item)));
+            glob('languageServer.*', { cwd: SMOKE_TEST_EXTENSIONS_DIR }, (ex, matches) => {
+                ex ? reject(ex) : resolve(matches.map(item => path.join(SMOKE_TEST_EXTENSIONS_DIR, item)));
             });
         });
     }
@@ -85,8 +84,12 @@ suite('Language Server: Integration', function () {
     }
 
     const assertFile = (expectedLocation: string, location: vscode.Uri) => {
-        const relLocation = vscode.workspace.asRelativePath(location);
-        const expectedRelLocation = vscode.workspace.asRelativePath(expectedLocation);
+        let relLocation = vscode.workspace.asRelativePath(location);
+        let expectedRelLocation = vscode.workspace.asRelativePath(expectedLocation);
+        if (isWindows) {
+            relLocation = relLocation.toUpperCase();
+            expectedRelLocation = expectedRelLocation.toUpperCase();
+        }
         assert.equal(expectedRelLocation, relLocation, 'Position is in wrong file');
     };
 

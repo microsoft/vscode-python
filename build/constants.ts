@@ -15,3 +15,5 @@ function getListOfExcludedFiles() {
 }
 
 export const filesNotToCheck: string[] = getListOfExcludedFiles();
+
+export const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;

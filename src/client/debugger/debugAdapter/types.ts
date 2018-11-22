@@ -9,8 +9,18 @@ import { Disposable } from 'vscode';
 import { Logger } from 'vscode-debugadapter';
 import { Message } from 'vscode-debugadapter/lib/messages';
 
-export interface IDebugLauncherScriptProvider {
-    getLauncherFilePath(): string;
+export type LocalDebugOptions = { port: number; host: string };
+export type RemoteDebugOptions = LocalDebugOptions & { waitUntilDebuggerAttaches: boolean };
+
+export interface IDebugLauncherScriptProvider<T> {
+    getLauncherArgs(options: T): string[];
+}
+
+export interface ILocalDebugLauncherScriptProvider extends IDebugLauncherScriptProvider<LocalDebugOptions> {
+    getLauncherArgs(options: LocalDebugOptions): string[];
+}
+
+export interface IRemoteDebugLauncherScriptProvider extends IDebugLauncherScriptProvider<RemoteDebugOptions> {
 }
 
 export const IProtocolParser = Symbol('IProtocolParser');

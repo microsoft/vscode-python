@@ -16,6 +16,9 @@
             "path": "workspace5"
         },
         {
+            "path": "smokeTests"
+        },
+        {
             "path": "parent\\child"
         },
         {

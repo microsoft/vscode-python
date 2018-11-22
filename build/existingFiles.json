@@ -356,7 +356,6 @@
     "src/test/activation/languageServer/languageServerPackageService.test.ts",
     "src/test/activation/languageServer/languageServerPackageService.unit.test.ts",
     "src/test/activation/platformData.unit.test.ts",
-    "src/test/analysisEngineTest.ts",
     "src/test/application/diagnostics/applicationDiagnostics.unit.test.ts",
     "src/test/application/diagnostics/checks/envPathVariable.unit.test.ts",
     "src/test/application/diagnostics/checks/invalidPythonPathInDebugger.unit.test.ts",

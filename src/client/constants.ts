@@ -4,4 +4,8 @@
 'use strict';
 
 import * as path from 'path';
-export const EXTENSION_ROOT_DIR = path.join(__dirname, '..', '..');
+
+// This file is also used by the debug adapter.
+// When bundling, the bundle file for the debug adapter ends up elsewhere.
+const folderName = path.basename(__dirname);
+export const EXTENSION_ROOT_DIR = folderName === 'client' ? path.join(__dirname, '..', '..') : path.join(__dirname, '..', '..', '..', '..');

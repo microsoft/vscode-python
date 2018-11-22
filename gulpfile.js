@@ -101,7 +101,11 @@ gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
 
 gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
 
-gulp.task('clean', gulp.parallel('output:clean', 'cover:clean'));
+gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
+gulp.task('clean:vsix', () => del(['*.vsix']));
+gulp.task('clean:out', () => del(['out']));
+
+gulp.task('clean', gulp.parallel('output:clean', 'cover:clean', 'clean:vsix'));
 
 gulp.task('clean:ptvsd', () => del(['coverage', 'pythonFiles/experimental/ptvsd/*']));
 
@@ -142,6 +146,74 @@ gulp.task('inlinesource', () => {
 
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
 
+
+gulp.task("compile", () => {
+    const tsProject = ts.createProject("tsconfig.json");
+    return tsProject.src()
+        .pipe(tsProject())
+        .js.pipe(gulp.dest("out"));
+});
+
+
+gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production']));
+gulp.task('webpack', async () => {
+    await spawnAsync('npx', ['webpack', '--mode', 'production', '--inline', '--progress']);
+    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production', '--inline', '--progress']);
+});
+
+gulp.task('updateVSCodeIgnore', (done) => {
+    // Temporary work around, we need to old technique of building extension is still supported.
+    // Once Azure DevOps has been updated, we can hard code this value in `.vscodeignore`
+    fs.appendFileSync(path.join(__dirname, '.vscodeignore'), '\nnode_modules/**');
+    done();
+});
+
+gulp.task('removePrePublishScript', (done) => {
+    // Temporary work around
+    const packageJson = require('./package.json');
+    const scripts = packageJson.scripts;
+    if (scripts['vscode:prepublish']) {
+        scripts['vscode:prepublish_Old'] = scripts['vscode:prepublish'];
+        delete scripts['vscode:prepublish'];
+        fs.writeFileSync(path.join(__dirname, 'package.json'), JSON.stringify(packageJson, undefined, 4));
+    }
+    done();
+});
+
+gulp.task('restorePrePublishScript', (done) => {
+    // Temporary work around
+    const packageJson = require('./package.json');
+    const scripts = packageJson.scripts;
+    if (scripts['vscode:prepublish_Old']) {
+        scripts['vscode:prepublish'] = scripts['vscode:prepublish_Old'];
+        delete scripts['vscode:prepublish_Old'];
+        fs.writeFileSync(path.join(__dirname, 'package.json'), JSON.stringify(packageJson, undefined, 4));
+    }
+    done();
+});
+
+gulp.task('webpack', async () => {
+    await spawnAsync('npx', ['webpack', '--mode', 'production']);
+    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production']);
+});
+
+gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack'));
+gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
+
+function spawnAsync(command, args) {
+    return new Promise((resolve, reject) => {
+        const proc = spawn(command, args, { cwd: __dirname });
+        proc.stdout.on('data', data => {
+            // Log output on CI.
+            if (isCI) {
+                console.log(data.toString());
+            }
+        });
+        proc.stderr.on('data', data => console.error(data.toString()));
+        proc.on('close', () => resolve());
+        proc.on('error', error => reject(error));
+    });
+}
 function buildDatascienceDependencies() {
     fsExtra.ensureDirSync(path.join(__dirname, 'tmp'));
     spawn.sync('npm', ['run', 'dump-datascience-webpack-stats']);
@@ -170,7 +242,7 @@ async function checkDatascienceDependencies() {
     if (modulesInPackageLock.some(dependency => dependency.indexOf('/') !== dependency.lastIndexOf('/'))) {
         throwAndLogError('Dependencies detected with more than one \'/\', please update this script.');
     }
-    json.children[0].modules.forEach(m => {
+    json.chunks[0].modules.forEach(m => {
         const name = m.name;
         if (!name.startsWith('./node_modules')) {
             return;

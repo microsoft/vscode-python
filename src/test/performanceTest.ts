@@ -20,9 +20,9 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as request from 'request';
 import { EXTENSION_ROOT_DIR, PVSC_EXTENSION_ID } from '../client/common/constants';
+import { unzip } from './common';
 
 const NamedRegexp = require('named-js-regexp');
-const StreamZip = require('node-stream-zip');
 const del = require('del');
 
 const tmpFolder = path.join(EXTENSION_ROOT_DIR, 'tmp');
@@ -119,7 +119,7 @@ class TestRunner {
 
     private async extractLatestExtension(targetDir: string): Promise<void> {
         const extensionFile = await this.downloadExtension();
-        await this.unzip(extensionFile, targetDir);
+        await unzip(extensionFile, targetDir);
     }
 
     private async  getReleaseVersion(): Promise<string> {
@@ -143,26 +143,6 @@ class TestRunner {
     private async  getDevVersion(): Promise<string> {
         // tslint:disable-next-line:non-literal-require
         return require(path.join(EXTENSION_ROOT_DIR, 'package.json')).version;
-    }
-
-    private async  unzip(zipFile: string, targetFolder: string): Promise<void> {
-        await fs.ensureDir(targetFolder);
-        return new Promise<void>((resolve, reject) => {
-            const zip = new StreamZip({
-                file: zipFile,
-                storeEntries: true
-            });
-            zip.on('ready', async () => {
-                zip.extract('extension', targetFolder, err => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve();
-                    }
-                    zip.close();
-                });
-            });
-        });
     }
 
     private async downloadExtension(): Promise<string> {

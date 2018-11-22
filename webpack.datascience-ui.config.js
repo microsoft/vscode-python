@@ -63,7 +63,7 @@ module.exports = {
                 include: /node_modules.*remark.*default.*js/,
                 use: [
                     {
-                        loader: path.resolve('./build/datascience/remarkLoader.js'),
+                        loader: path.resolve('./build/webpack/loaders/remarkLoader.js'),
                         options: {}
                     }
                 ]
@@ -74,7 +74,7 @@ module.exports = {
                 include: /node_modules.*remark.*/,
                 use: [
                     {
-                        loader: path.resolve('./build/datascience/jsonloader.js'),
+                        loader: path.resolve('./build/webpack/loaders/jsonloader.js'),
                         options: {}
                     }
                 ]

@@ -14,7 +14,7 @@ import { Container } from 'inversify';
 import { CodeActionKind, debug, DebugConfigurationProvider, Disposable, ExtensionContext, extensions, IndentAction, languages, Memento, OutputChannel, window } from 'vscode';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationService } from './activation/types';
-import { IExtensionApi } from './api';
+import { buildApi, IExtensionApi } from './api';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
@@ -77,14 +77,14 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     registerServices(context, serviceManager, serviceContainer);
     initializeServices(context, serviceManager, serviceContainer);
 
+    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
+    await interpreterManager.autoSetInterpreter();
+
     // When testing, do not perform health checks, as modal dialogs can be displayed.
     if (!isTestExecution()) {
         const appDiagnostics = serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics);
         await appDiagnostics.performPreStartupHealthCheck();
     }
-
-    const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    await interpreterManager.autoSetInterpreter();
 
     serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
@@ -164,7 +164,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const api = { ready: activationDeferred.promise };
+    const api = buildApi(activationDeferred.promise);
     // In test environment return the DI Container.
     if (isTestExecution()) {
         // tslint:disable-next-line:no-any
