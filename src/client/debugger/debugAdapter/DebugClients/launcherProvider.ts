@@ -12,13 +12,15 @@ import { IDebugLauncherScriptProvider, IRemoteDebugLauncherScriptProvider, Local
 const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental', 'ptvsd_launcher.py');
 export class NoDebugLauncherScriptProvider implements IDebugLauncherScriptProvider<LocalDebugOptions> {
     public getLauncherArgs(options: LocalDebugOptions): string[] {
-        return [script, '--nodebug', '--client', '--host', options.host, '--port', options.port.toString()];
+        const customDebugger = options.customDebugger ? '--custom' : '--default';
+        return [script, customDebugger, '--nodebug', '--client', '--host', options.host, '--port', options.port.toString()];
     }
 }
 
 export class DebuggerLauncherScriptProvider implements IDebugLauncherScriptProvider<LocalDebugOptions>  {
     public getLauncherArgs(options: LocalDebugOptions): string[] {
-        return [script, '--client', '--host', options.host, '--port', options.port.toString()];
+        const customDebugger = options.customDebugger ? '--custom' : '--default';
+        return [script, customDebugger, '--client', '--host', options.host, '--port', options.port.toString()];
     }
 }
 
