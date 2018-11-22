@@ -15,12 +15,12 @@ const expectedPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'experimental'
 suite('Extension API Debugger', () => {
     test('Test debug launcher args (no-wait)', async () => {
         const args = await buildApi(Promise.resolve()).debug.getRemoteLauncherCommand('something', 1234, false);
-        const expectedArgs = [expectedPath, '--host', 'something', '--port', '1234'];
+        const expectedArgs = [expectedPath, '--default', '--host', 'something', '--port', '1234'];
         expect(args).to.be.deep.equal(expectedArgs);
     });
     test('Test debug launcher args (wait)', async () => {
         const args = await buildApi(Promise.resolve()).debug.getRemoteLauncherCommand('something', 1234, true);
-        const expectedArgs = [expectedPath, '--host', 'something', '--port', '1234', '--wait'];
+        const expectedArgs = [expectedPath, '--default', '--host', 'something', '--port', '1234', '--wait'];
         expect(args).to.be.deep.equal(expectedArgs);
     });
 });
