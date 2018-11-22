@@ -148,6 +148,14 @@ jobs:
 
 
     - task: CmdLine@1
+      displayName: 'pip upgrade pip'
+      inputs:
+        filename: python
+
+        arguments: '-m pip install --upgrade pip'
+
+
+    - task: CmdLine@1
       displayName: 'pip install requirements'
       inputs:
         filename: python
