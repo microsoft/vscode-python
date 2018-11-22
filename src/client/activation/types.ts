@@ -26,7 +26,7 @@ export interface IExtensionActivator {
 
 export const IHttpClient = Symbol('IHttpClient');
 export interface IHttpClient {
-  downloadFile(uri: string): RequestResult;
+  downloadFile(uri: string): Promise<RequestResult>;
   getJSON<T>(uri: string): Promise<T>;
 }
 

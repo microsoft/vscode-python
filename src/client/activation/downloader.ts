@@ -4,7 +4,6 @@
 'use strict';
 
 import * as path from 'path';
-import * as requestProgress from 'request-progress';
 import { ProgressLocation, window } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
@@ -98,9 +97,11 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
 
         await window.withProgress({
             location: ProgressLocation.Window
-        }, (progress) => {
+        }, async (progress) => {
             const httpClient = this.serviceContainer.get<IHttpClient>(IHttpClient);
-            requestProgress(httpClient.downloadFile(uri))
+            const req = await httpClient.downloadFile(uri);
+            const requestProgress = await import('request-progress');
+            requestProgress(req)
                 .on('progress', (state) => {
                     // https://www.npmjs.com/package/request-progress
                     const received = Math.round(state.size.transferred / 1024);

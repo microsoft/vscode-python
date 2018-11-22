@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { Kernel, KernelMessage, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import { Kernel, KernelMessage, Session, SessionManager } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -70,7 +70,8 @@ export class JupyterServer implements INotebookServer {
 
             // First connect to the sesssion manager and find a kernel that matches our
             // python we're using
-            const serverSettings = ServerConnection.makeSettings(
+            const jupyterLab = await import('@jupyterlab/services');
+            const serverSettings = jupyterLab.ServerConnection.makeSettings(
                 {
                     baseUrl: connInfo.baseUrl,
                     token: connInfo.token,
@@ -79,7 +80,7 @@ export class JupyterServer implements INotebookServer {
                     wsUrl: connInfo.baseUrl.replace('http', 'ws'),
                     init: { cache: 'no-store', credentials: 'same-origin' }
                 });
-            this.sessionManager = new SessionManager({ serverSettings: serverSettings });
+            this.sessionManager = new jupyterLab.SessionManager({ serverSettings: serverSettings });
 
             // If our kernel spec wasn't found (possibly because jupyter kernelspec isn't installed)
             // attempt to find it with our session manager instead
@@ -470,7 +471,8 @@ export class JupyterServer implements INotebookServer {
     private handleCodeRequest = (subscriber: Subscriber<ICell>, startTime: number, cell: ICell, code: string) => {
         // Generate a new request.
         const request = this.generateRequest(code, false);
-
+        // tslint:disable-next-line:no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         // Transition to the busy stage
         cell.state = CellState.executing;
 
@@ -478,17 +480,17 @@ export class JupyterServer implements INotebookServer {
         if (request) {
             request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
                 try {
-                    if (KernelMessage.isExecuteResultMsg(msg)) {
+                    if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
                         this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
-                    } else if (KernelMessage.isExecuteInputMsg(msg)) {
+                    } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                         this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
-                    } else if (KernelMessage.isStatusMsg(msg)) {
+                    } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
                         this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
-                    } else if (KernelMessage.isStreamMsg(msg)) {
+                    } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
                         this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
-                    } else if (KernelMessage.isDisplayDataMsg(msg)) {
+                    } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
                         this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
-                    } else if (KernelMessage.isErrorMsg(msg)) {
+                    } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
                         this.handleError(msg as KernelMessage.IErrorMsg, cell);
                     } else {
                         this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
@@ -503,7 +505,7 @@ export class JupyterServer implements INotebookServer {
                     subscriber.next(cell);
                 } catch (err) {
                     // If not a restart error, then tell the subscriber
-                    if (startTime > this.sessionStartTime) {
+                    if (startTime > this.sessionStartTime!) {
                         this.logger.logError(`Error during message ${msg.header.msg_type}`);
                         subscriber.error(err);
                     }
@@ -516,7 +518,7 @@ export class JupyterServer implements INotebookServer {
                 cell.state = error as Error ? CellState.error : CellState.finished;
                 // Only do this if start time is still valid. Dont log an error to the subscriber. Error
                 // state should end up in the cell output.
-                if (startTime > this.sessionStartTime) {
+                if (startTime > this.sessionStartTime!) {
                     subscriber.next(cell);
                 }
                 subscriber.complete();

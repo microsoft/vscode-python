@@ -1,4 +1,3 @@
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -16,7 +15,13 @@ export const nodeModulesToExternalize = [
     'unicode/category/Mn',
     'unicode/category/Mc',
     'unicode/category/Nd',
-    'unicode/category/Pc'
+    'unicode/category/Pc',
+    '@jupyterlab/services',
+    'azure-storage',
+    'vscode-languageclient',
+    'request',
+    'request-progress',
+    'source-map'
 ];
 
 export function getDefaultPlugins(name: 'extension' | 'debugger' | 'dependencies' | 'datascience-ui') {

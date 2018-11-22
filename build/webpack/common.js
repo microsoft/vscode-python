@@ -14,7 +14,13 @@ exports.nodeModulesToExternalize = [
     'unicode/category/Mn',
     'unicode/category/Mc',
     'unicode/category/Nd',
-    'unicode/category/Pc'
+    'unicode/category/Pc',
+    '@jupyterlab/services',
+    'azure-storage',
+    'vscode-languageclient',
+    'request',
+    'request-progress',
+    'source-map'
 ];
 function getDefaultPlugins(name) {
     const plugins = [];
