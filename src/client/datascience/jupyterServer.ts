@@ -14,7 +14,7 @@ import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
-import { ILogger } from '../common/types';
+import { ILogger, IDisposableRegistry } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { RegExpValues } from './constants';
@@ -28,6 +28,7 @@ import { noop } from '../common/utils/misc';
 export class JupyterServer implements INotebookServer {
     private isDisposed: boolean = false;
     private connInfo: IConnection | undefined;
+    private kernelSpec: IJupyterKernelSpec | undefined;
     private session: Session.ISession | undefined;
     private sessionManager : SessionManager | undefined;
     private sessionStartTime: number | undefined;
@@ -35,12 +36,15 @@ export class JupyterServer implements INotebookServer {
 
     constructor(
         @inject(ILogger) private logger: ILogger,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry) {
+        this.disposableRegistry.push(this);
     }
 
     public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: string) : Promise<void> => {
         // Save connection information so we can use it later during shutdown
         this.connInfo = connInfo;
+        this.kernelSpec = kernelSpec;
 
         // First connect to the sesssion manager and find a kernel that matches our
         // python we're using
@@ -101,6 +105,11 @@ export class JupyterServer implements INotebookServer {
         }
         if (this.connInfo) {
             this.connInfo.dispose(); // This should kill the process that's running
+            this.connInfo = undefined;
+        }
+        if (this.kernelSpec) {
+            this.kernelSpec.dispose(); // This destroy any unwanted kernel specs if necessary
+            this.kernelSpec = undefined;
         }
     }
 
@@ -214,14 +223,19 @@ export class JupyterServer implements INotebookServer {
         return this.onStatusChangedEvent.event.bind(this.onStatusChangedEvent);
     }
 
-    public dispose = () : Promise<void> => {
+    public dispose = () => {
         if (!this.isDisposed) {
             this.isDisposed = true;
             this.onStatusChangedEvent.dispose();
-            return this.shutdown();
+            if (this.connInfo) {
+                this.connInfo.dispose(); // This should kill the process that's running
+                this.connInfo = undefined;
+            }
+            if (this.kernelSpec) {
+                this.kernelSpec.dispose(); // This should delete any old kernel specs
+                this.kernelSpec = undefined;
+            }
         }
-
-        return Promise.resolve();
     }
 
     public restartKernel = async () : Promise<void> => {

@@ -14,7 +14,7 @@ import { IServiceContainer } from '../ioc/types';
 import { IFileSystem } from '../common/platform/types';
 import * as localize from '../common/utils/localize';
 
-const UrlPatternRegEx = /http:\/\/localhost:[0-9]+\/\?token=[a-z0-9]+/;
+const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
 const ForbiddenPatternRegEx = /Forbidden/;
 const HttpPattern = /https?:\/\//;
 
@@ -36,7 +36,6 @@ class ProcessDisposable implements Disposable {
 export type JupyterServerInfo = [string, string, string, boolean, number, number, boolean, string, string];
 
 class JupyterConnectionWaiter {
-    public isDisposed: boolean = false;
     private startPromise: Deferred<JupyterConnection>;
     private launchTimeout: NodeJS.Timer;
     private configService: IConfigurationService;

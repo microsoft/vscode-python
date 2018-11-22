@@ -26,6 +26,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { HistoryMessages, Telemetry } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
 import { CellState, ICell, ICodeCssGenerator, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
+import { IFileSystem } from '../common/platform/types';
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
@@ -50,7 +51,8 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(ICodeCssGenerator) private cssGenerator : ICodeCssGenerator,
         @inject(ILogger) private logger : ILogger,
         @inject(IStatusProvider) private statusProvider : IStatusProvider,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution) {
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(IFileSystem) private fileSystem: IFileSystem) {
 
         // Sign up for configuration changes
         this.settingsChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onSettingsChanged);
@@ -505,7 +507,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         } else {
             // See if the usable interpreter is not our active one. If so, show a warning
             const active = await this.interpreterService.getActiveInterpreter();
-            if (active && active.path !== usableInterpreter.path) {
+            if (active && !this.fileSystem.arePathsSame(active.path,usableInterpreter.path)) {
                 this.applicationShell.showWarningMessage(localize.DataScience.jupyterKernelNotSupportedOnActive().format(active.displayName, usableInterpreter.displayName));
             }
         }

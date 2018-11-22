@@ -54,7 +54,7 @@ export interface IJupyterExecution {
     getUsableJupyterPython() : Promise<PythonInterpreter>;
 }
 
-export interface IJupyterKernelSpec {
+export interface IJupyterKernelSpec extends Disposable {
     name: string;
     language: string;
     path: string;

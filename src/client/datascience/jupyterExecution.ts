@@ -5,6 +5,8 @@ import { Kernel, ServerConnection, SessionManager } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode-jsonrpc';
 import * as uuid from 'uuid/v4'; // uuid doesn't export a default so it messes async import
+import * as path from 'path'
+import * as fs from 'fs-extra'
 
 import { IFileSystem } from '../common/platform/types';
 import {
@@ -38,9 +40,16 @@ const ConvertCommand = 'nbconvert';
 const KernelSpecCommand = 'kernelspec';
 const KernelCreateCommand = 'ipykernel';
 const PyKernelOutputRegEx = /.*\s+(.+)$/m;
-const KernelSpecOutputRegEx = /^\s*\w+\s+(\S+)$/;
+const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
+const IsGuidRegEx = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 class JupyterKernelSpec implements IJupyterKernelSpec {
+    dispose = () => {
+        if (this.specFile && IsGuidRegEx.test(path.basename(path.dirname(this.specFile)))) {
+            fs.removeSync(path.dirname(this.specFile));
+            this.specFile = undefined;
+        }
+    }
     public name: string;
     public language: string;
     public path: string;
@@ -56,20 +65,22 @@ class JupyterKernelSpec implements IJupyterKernelSpec {
 // JupyterCommand objects represent some process that can be launched that should be guaranteed to work because it
 // was found by testing it previously
 class JupyterCommand {
-    public mainVersion: number;
     private exe: string;
     private requiredArgs: string[];
     private launcher: IProcessService;
-    private interpreter: IInterpreterService;
+    private interpreter: PythonInterpreter | undefined;
     private condaService: ICondaService;
 
     constructor(exe: string, args: string[], launcher: IProcessService, interpreter: IInterpreterService, condaService: ICondaService) {
         this.exe = exe;
         this.requiredArgs = args;
         this.launcher = launcher;
-        this.interpreter = interpreter;
         this.condaService = condaService;
-        this.interpreter.getInterpreterDetails(this.exe).then(i => this.mainVersion = i.version_info[0]).catch(e => this.mainVersion = 0);
+        interpreter.getInterpreterDetails(this.exe).then(i => this.interpreter).catch(e => this.interpreter = undefined);
+    }
+
+    public mainVersion = () : number => {
+        return this.interpreter ? this.interpreter.version_info[0] : 0;
     }
 
     public execObservable = async (args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> => {
@@ -96,9 +107,9 @@ class JupyterCommand {
         if (!inputEnv) {
             inputEnv = process.env;
         }
-        const interpreter = await this.interpreter.getActiveInterpreter();
-        if (interpreter && interpreter.type === InterpreterType.Conda) {
-            return this.condaService.getActivatedCondaEnvironment(interpreter, inputEnv);
+
+        if (this.interpreter && this.interpreter.type === InterpreterType.Conda) {
+            return this.condaService.getActivatedCondaEnvironment(this.interpreter, inputEnv);
         }
 
         return inputEnv;
@@ -112,8 +123,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     private processServicePromise: Promise<IProcessService>;
     private commands : {[command: string] : JupyterCommand } = {};
     private jupyterPath : string | undefined;
-    private createdSpecs : string[] = [];
-    private usablePythonInterpreter : PythonInterpreter | undefined;
+    private usablePythonInterpreterPromise : Promise<PythonInterpreter | undefined> | undefined;
 
     constructor(@inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
                 @inject(ICondaService) private condaService: ICondaService,
@@ -129,16 +139,9 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         this.disposableRegistry.push(this);
     }
 
-    public dispose = async () : Promise<void> => {
-        // Delete all created specs
-        const copy = [...this.createdSpecs];
-        this.createdSpecs = [];
-        for (let i=0; i < copy.length; i += 1) {
-            await this.deleteSpec(copy[i]);
-        }
-
+    public dispose = () => {
         // Clear our usableJupyterInterpreter
-        this.usablePythonInterpreter = undefined;
+        this.usablePythonInterpreterPromise = undefined;
     }
 
     public isNotebookSupported = (): Promise<boolean> => {
@@ -146,67 +149,14 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return this.isCommandSupported(NotebookCommand);
     }
 
-    public getUsableJupyterPython = async (): Promise<PythonInterpreter | undefined> => {
-        // May already have an answer
-        if (this.usablePythonInterpreter) {
-            return this.usablePythonInterpreter;
+    public getUsableJupyterPython = (): Promise<PythonInterpreter | undefined> => {
+        // Only try to compute this once.
+        if (!this.usablePythonInterpreterPromise) {
+            this.usablePythonInterpreterPromise = this.getUsableJupyterPythonImpl();
         }
-
-        // Make sure somebody is useable for notebooks. Otherwise it doesn't really matter
-        // if somebody else can run ipykernel
-        if (!(await this.isNotebookSupported())) {
-            return undefined;
-        }
-
-        // Find the python interpreter that supports ipykernel that is closest
-        // to our active interpreter
-        const active = await this.interpreterService.getActiveInterpreter();
-        if (await this.doesModuleExist(KernelCreateCommand, active)) {
-            // The active interpreter is good enough. It supports ipykernel
-            this.usablePythonInterpreter = active;
-        } else if (active && active !== null) {
-            // Go through the rest of them and see if anybody supports it. Score each based on
-            // version numbers
-            let bestScore = 0;
-            const list = await this.interpreterService.getInterpreters();
-            for (let i = 0; i < list.length; i += 1) {
-                let score = 0;
-                // Don't check active again
-                if (active !== list[i]) {
-                    // First the interpreter has to support ipykernel
-                    if (await this.doesModuleExist(KernelCreateCommand, list[i])) {
-                        // This one at least works, give it a point.
-                        score += 1;
-
-                        // Then start matching based on version
-                        if (list[i].version_info[0] === active.version_info[0]) {
-                            score += 32;
-                            if (list[i].version_info[1] === active.version_info[1]) {
-                                score += 16;
-                                if (list[i].version_info[2] === active.version_info[2]) {
-                                    score += 8;
-                                    if (list[i].version_info[3] === active.version_info[3]) {
-                                        score += 4;
-                                    }
-                                }
-                            }
-                        }
-
-                        // Also point for type
-                        if (list[i].type === active.type) {
-                            score += 1;
-                        }
-                    }
-                }
-                if (score > bestScore) {
-                    this.usablePythonInterpreter = list[i];
-                    bestScore = score;
-                }
-            }
-        }
-
-        return this.usablePythonInterpreter;
+        return this.usablePythonInterpreterPromise;
     }
+
 
     public isImportSupported = async (): Promise<boolean> => {
         // See if we can find the command nbconvert
@@ -248,7 +198,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
             // Wait for the connection information on this result
             const connection = await JupyterConnection.waitForConnection(
-                tempFile, this.getJupyterServerInfo, launchResult, notebookCommand.mainVersion, this.serviceContainer);
+                tempFile, this.getJupyterServerInfo, launchResult, notebookCommand.mainVersion(), this.serviceContainer);
 
             // If the kernel spec didn't match, then try with our current process instead
             if (!kernelSpec) {
@@ -298,15 +248,75 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return result.stdout;
     }
 
+    private getUsableJupyterPythonImpl = async () : Promise<PythonInterpreter | undefined> => {
+
+        // Make sure somebody is useable for notebooks. Otherwise it doesn't really matter
+        // if somebody else can run ipykernel
+        if (!(await this.isNotebookSupported())) {
+            return undefined;
+        }
+
+        // Find the python interpreter that supports ipykernel that is closest
+        // to our active interpreter
+        const active = await this.interpreterService.getActiveInterpreter();
+        if (await this.doesModuleExist(KernelCreateCommand, active)) {
+            // The active interpreter is good enough. It supports ipykernel
+            return active;
+        } else if (active && active !== null) {
+            // Go through the rest of them and see if anybody supports it. Score each based on
+            // version numbers
+            let bestScore = 0;
+            let bestInterpreter = undefined;
+            const list = await this.interpreterService.getInterpreters();
+            for (let i = 0; i < list.length; i += 1) {
+                let score = 0;
+                // Don't check active again
+                if (active !== list[i]) {
+                    // First the interpreter has to support ipykernel
+                    if (await this.doesModuleExist(KernelCreateCommand, list[i])) {
+                        // This one at least works, give it a point.
+                        score += 1;
+
+                        // Then start matching based on version
+                        if (list[i].version_info[0] === active.version_info[0]) {
+                            score += 32;
+                            if (list[i].version_info[1] === active.version_info[1]) {
+                                score += 16;
+                                if (list[i].version_info[2] === active.version_info[2]) {
+                                    score += 8;
+                                    if (list[i].version_info[3] === active.version_info[3]) {
+                                        score += 4;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Also point for type
+                        if (list[i].type === active.type) {
+                            score += 1;
+                        }
+                    }
+                }
+                if (score > bestScore) {
+                    bestInterpreter = list[i];
+                    bestScore = score;
+                }
+            }
+
+            return bestInterpreter;
+        }
+
+        return undefined;
+    }
     private getJupyterServerInfo = async () : Promise<JupyterServerInfo[]> => {
         const path = await import('path');
-        const newOptions: SpawnOptions = {mergeStdOutErr: true};
-        newOptions.env = await this.fixupCondaEnv(newOptions.env);
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const bestInterpreter = await this.getUsableJupyterPython();
         if (bestInterpreter) {
-            const processService = await this.processServiceFactory.create();
+            const newOptions: SpawnOptions = {mergeStdOutErr: true};
+            newOptions.env = await this.fixupCondaEnv(newOptions.env, bestInterpreter);
+                const processService = await this.processServiceFactory.create();
             const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
             const serverInfoString = await processService.exec(bestInterpreter.path, [file], newOptions);
 
@@ -326,14 +336,14 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     private onSettingsChanged = () : Promise<void> => {
         // Do the same thing as dispose so that we regenerate
         // all of our commands
-        return this.dispose();
+        return Promise.resolve(this.dispose());
     }
 
-    private async deleteSpec(specFile: string) : Promise<void> {
-        await this.fileSystem.deleteFile(specFile);
+    private deleteSpec(specDirectory: string) {
+        this.fileSystem.deleteDirectory(specDirectory);
     }
 
-    private async addClosestMatchingSpec(activeInterpreter: PythonInterpreter) : Promise<void> {
+    private async addMatchingSpec(bestInterpreter: PythonInterpreter) : Promise<void> {
         const displayName = localize.DataScience.historyTitle();
         const ipykernelCommand = await this.findBestCommand(KernelCreateCommand);
 
@@ -349,9 +359,6 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             const match = PyKernelOutputRegEx.exec(result.stdout);
             const diskPath = match && match != null && match.length > 1 ? path.join(match[1], 'kernel.json') : await this.findSpecPath(name);
 
-            // If our active interpreter supports ipykernel, use that, otherwise find the best match
-            const bestInterpreter = await this.getUsableJupyterPython();
-
             // If that works, rewrite our active interpreter into the argv
             if (diskPath && bestInterpreter) {
                 const fs = await import('fs-extra');
@@ -360,8 +367,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
                     specModel.argv[0] = bestInterpreter.path;
                     await fs.writeJSON(diskPath, specModel, { flag: 'w', encoding: 'utf8' });
 
-                    // Save for cleanup later
-                    this.createdSpecs.push(diskPath);
+                    // This should automatically cleanup when the kernelspec is used
                 }
             }
         } catch (err) {
@@ -373,16 +379,16 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
         // If not using an active connection, check on disk
         if (!connection) {
-            // Get our active interpreter. We want its python path
-            const activeInterpreter = await this.interpreterService.getActiveInterpreter();
+            // Get our best interpreter. We want its python path
+            const bestInterpreter = await this.getUsableJupyterPython();
 
             // Enumerate our kernel specs that jupyter will know about and see if
             // one of them already matches based on path
-            if (!await this.hasSpecPathMatch(activeInterpreter)) {
+            if (!await this.hasSpecPathMatch(bestInterpreter)) {
 
                 // Nobody matches on path, so generate a new kernel spec
                 if (await this.isKernelCreateSupported()) {
-                    await this.addClosestMatchingSpec(activeInterpreter);
+                    await this.addMatchingSpec(bestInterpreter);
                 }
             }
         }
@@ -420,7 +426,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         // Create  disposable that will delete the directory of the result
         const disposable = {
             dispose: () => {
-                return this.fileSystem.deleteDirectory(resultDir);
+                this.fileSystem.deleteDirectory(resultDir);
             }
         }
         this.disposableRegistry.push(disposable);
@@ -444,11 +450,10 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
      */
     // Base Node.js SpawnOptions uses any for environment, so use that here as well
     // tslint:disable-next-line:no-any
-    private fixupCondaEnv = async (inputEnv: any | undefined): Promise<any> => {
+    private fixupCondaEnv = async (inputEnv: any | undefined, interpreter: PythonInterpreter): Promise<any> => {
         if (!inputEnv) {
             inputEnv = process.env;
         }
-        const interpreter = await this.interpreterService.getActiveInterpreter();
         if (interpreter && interpreter.type === InterpreterType.Conda) {
             return this.condaService.getActivatedCondaEnvironment(interpreter, inputEnv);
         }
@@ -473,8 +478,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     private findSpecMatch = async (enumerator: () => Promise<IJupyterKernelSpec[]>) : Promise<IJupyterKernelSpec | undefined> => {
         // Extract our current python information that the user has picked.
         // We'll match against this.
-        const pythonService = await this.executionFactory.create({});
-        const info = await pythonService.getInterpreterInformation();
+        const info = await this.interpreterService.getActiveInterpreter();
         let bestScore = 0;
         let bestSpec : IJupyterKernelSpec | undefined;
 
@@ -579,18 +583,18 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
     private async readSpec(kernelSpecOutputLine: string) : Promise<JupyterKernelSpec | undefined> {
         const match = KernelSpecOutputRegEx.exec(kernelSpecOutputLine);
-        if (match && match !== null && match.length > 1) {
+        if (match && match !== null && match.length > 2) {
             // Lazy import our node_modules
             const path = await import('path');
             const fs = await import('fs-extra');
 
             // Second match should be our path to the kernel spec
-            const file = path.join(match[1], 'kernel.json');
+            const file = path.join(match[2], 'kernel.json');
             if (await fs.pathExists(file)) {
                 // Turn this into a IJupyterKernelSpec
                 const model = await fs.readJSON(file, { encoding: 'utf8' });
                 model.name = match[1];
-                return new JupyterKernelSpec(model);
+                return new JupyterKernelSpec(model, file);
             }
         }
 
@@ -636,12 +640,11 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         try {
             const path = await import('path');
             const files = await this.fileSystem.getFiles(pathToCheck);
-            return files.filter(s => {
-                CheckJupyterRegEx.test(path.basename(s));
-            });
+            const result = files ? files.filter(s => CheckJupyterRegEx.test(path.basename(s))) : [];
+            return result;
 
         } catch (err) {
-            this.logger.logWarning('Python Extension (lookForJupyterInDirectory.fsReaddirAsync):', err);
+            this.logger.logWarning('Python Extension (fileSystem.getFiles):', err);
         }
         return [] as string[];
     }
@@ -714,7 +717,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
     private doesModuleExist = async (module: string, interpreter: PythonInterpreter): Promise<boolean> => {
         if (interpreter && interpreter !== null) {
             const newOptions: SpawnOptions = { throwOnStdErr: true, encoding: 'utf8' };
-            newOptions.env = await this.fixupCondaEnv(newOptions.env);
+            newOptions.env = await this.fixupCondaEnv(newOptions.env, interpreter);
             const pythonService = await this.executionFactory.create({ pythonPath: interpreter.path });
             try {
                 // Special case for ipykernel
@@ -734,7 +737,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
     private doesJupyterCommandExist = async (command?: string) : Promise<boolean> => {
         const newOptions : SpawnOptions = {throwOnStdErr: true, encoding: 'utf8'};
-        const args = command ? [...command, '--version'] : [];
+        const args = command ? [command, '--version'] : ['--version'];
         const processService = await this.processServicePromise;
         try {
             const result = await processService.exec('jupyter', args, newOptions);

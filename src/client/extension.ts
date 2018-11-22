@@ -173,6 +173,10 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     return api;
 }
 
+export function deactivate(): Thenable<void> {
+    return Promise.resolve();
+}
+
 function registerServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
     serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
     serviceManager.addSingletonInstance<IServiceManager>(IServiceManager, serviceManager);
