@@ -196,7 +196,7 @@ suite('Linting - General Tests', () => {
     test('Enable Flake8 and test linter', async () => {
         await testEnablingDisablingOfLinter(Product.flake8, true);
     });
-    test('Disable Prospector and test linter', async () => {
+    test('Disable Prospector and test linter', async function () {
         // Skipping to solve #3464, tracked by issue #3466.
         // tslint:disable-next-line:no-invalid-this
         return this.skip();
