@@ -14,7 +14,7 @@ import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
 import { OSType } from '../client/common/utils/platform';
 import { IServiceContainer } from '../client/ioc/types';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_SMOKE_TEST } from './constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
 const StreamZip = require('node-stream-zip');
 
@@ -79,7 +79,7 @@ export async function setPythonPathInWorkspaceRoot(pythonPath: string) {
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
 function getWorkspaceRoot() {
-    if (IS_SMOKE_TEST) {
+    if (IS_SMOKE_TEST || IS_PERF_TEST) {
         return;
     }
     const vscode = require('vscode') as typeof import('vscode');
