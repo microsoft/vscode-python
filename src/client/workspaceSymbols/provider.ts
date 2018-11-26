@@ -1,6 +1,7 @@
 'use strict';
 
-import flatten from 'lodash/flatten';
+// tslint:disable-next-line:no-var-requires no-require-imports
+const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 import {
     CancellationToken, Location, SymbolInformation,
     Uri, WorkspaceSymbolProvider as IWorspaceSymbolProvider
