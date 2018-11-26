@@ -84,7 +84,7 @@ script:
         npm run cover:enable;
         npm run testMultiWorkspace --silent;
     fi
-  - if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" && "$PERFORMANCE_TEST" == "true" ]]; then
+  - if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "true" && "$PERFORMANCE_TEST" == "true" ]]; then
         npm run testPerformance --silent;
     fi
   - if [ "$TRAVIS_PYTHON_VERSION" == "3.7" ]; then
