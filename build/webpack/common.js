@@ -17,7 +17,6 @@ exports.nodeModulesToExternalize = [
     'unicode/category/Pc',
     '@jupyterlab/services',
     'azure-storage',
-    'vscode-languageclient',
     'request',
     'request-progress',
     'source-map',
