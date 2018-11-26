@@ -19,8 +19,6 @@ import {
 import { PlatformData } from './platformData';
 import { IHttpClient, ILanguageServerDownloader, ILanguageServerFolderService } from './types';
 
-// tslint:disable-next-line:no-require-imports no-var-requires
-const StreamZip = require('node-stream-zip');
 const downloadFileExtension = '.nupkg';
 
 export class LanguageServerDownloader implements ILanguageServerDownloader {
@@ -135,6 +133,8 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         await window.withProgress({
             location: ProgressLocation.Window
         }, (progress) => {
+            // tslint:disable-next-line:no-require-imports no-var-requires
+            const StreamZip = require('node-stream-zip');
             const zip = new StreamZip({
                 file: tempFilePath,
                 storeEntries: true

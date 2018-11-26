@@ -23,8 +23,8 @@ export class HttpClient implements IHttpClient {
         return request(uri, this.requestOptions);
     }
     public async getJSON<T>(uri: string): Promise<T> {
-        // tslint:disable-next-line:no-any
-        const request = await import('request') as any as typeof requestTypes;
+        // tslint:disable-next-line:no-require-imports
+        const request = require('request') as typeof requestTypes;
         return new Promise<T>((resolve, reject) => {
             request(uri, this.requestOptions, (ex, response, body) => {
                 if (ex) {

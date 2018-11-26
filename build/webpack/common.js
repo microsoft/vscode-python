@@ -20,7 +20,12 @@ exports.nodeModulesToExternalize = [
     'vscode-languageclient',
     'request',
     'request-progress',
-    'source-map'
+    'source-map',
+    'file-matcher',
+    'diff-match-patch',
+    'sudo-prompt',
+    'node-stream-zip',
+    'xml2js'
 ];
 function getDefaultPlugins(name) {
     const plugins = [];

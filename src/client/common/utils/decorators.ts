@@ -1,5 +1,6 @@
-import * as _ from 'lodash';
 import { isTestExecution, isUnitTestExecution } from '../constants';
+// tslint:disable-next-line:no-require-imports no-var-requires
+const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 /**
  * Debounces a function execution. Function must return either a void or a promise that resolves to a void.
@@ -14,7 +15,7 @@ export function debounce(wait?: number) {
         // If running tests, lets not debounce (so tests run fast).
         wait = wait && isUnitTestExecution() ? undefined : wait;
         // tslint:disable-next-line:no-invalid-this no-any
-        (descriptor as any).value = _.debounce(function () { return originalMethod.apply(this, arguments); }, wait);
+        (descriptor as any).value = _debounce(function () { return originalMethod.apply(this, arguments); }, wait);
     };
 }
 

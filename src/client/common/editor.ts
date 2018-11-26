@@ -1,4 +1,4 @@
-import * as dmp from 'diff-match-patch';
+import { Diff, diff_match_patch } from 'diff-match-patch';
 import * as fs from 'fs-extra';
 import { injectable } from 'inversify';
 import * as md5 from 'md5';
@@ -17,7 +17,7 @@ enum EditAction {
 const NEW_LINE_LENGTH = EOL.length;
 
 class Patch {
-    public diffs!: dmp.Diff[];
+    public diffs!: Diff[];
     public start1!: number;
     public start2!: number;
     public length1!: number;
@@ -61,7 +61,8 @@ export function getTextEditsFromPatch(before: string, patch: string): TextEdit[]
     // Remove the text added by unified_diff
     // # Work around missing newline (http://bugs.python.org/issue2142).
     patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
-
+    // tslint:disable-next-line:no-require-imports
+    const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
     const d = new dmp.diff_match_patch();
     const patches = patch_fromText.call(d, patch);
     if (!Array.isArray(patches) || patches.length === 0) {
@@ -114,6 +115,8 @@ export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?
         // # Work around missing newline (http://bugs.python.org/issue2142).
         patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
 
+        // tslint:disable-next-line:no-require-imports
+        const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
         const d = new dmp.diff_match_patch();
         const patches = patch_fromText.call(d, patch);
         if (!Array.isArray(patches) || patches.length === 0) {
@@ -150,6 +153,8 @@ export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?
     return workspaceEdit;
 }
 export function getTextEdits(before: string, after: string): TextEdit[] {
+    // tslint:disable-next-line:no-require-imports
+    const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
     const d = new dmp.diff_match_patch();
     const diffs = d.diff_main(before, after);
     return getTextEditsInternal(before, diffs).map(edit => edit.apply());
@@ -178,6 +183,8 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
             }
         }
 
+        // tslint:disable-next-line:no-require-imports
+        const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
         // tslint:disable-next-line:switch-default
         switch (diffs[i][0]) {
             case dmp.DIFF_DELETE:
@@ -261,7 +268,7 @@ function patch_fromText(textline): Patch[] {
             throw new Error(`Invalid patch string: ${text[textPointer]}`);
         }
         // tslint:disable-next-line:no-any
-        const patch = new (<any>dmp.diff_match_patch).patch_obj();
+        const patch = new (<any>diff_match_patch).patch_obj();
         patches.push(patch);
         patch.start1 = parseInt(m[1], 10);
         if (m[2] === '') {
@@ -285,6 +292,8 @@ function patch_fromText(textline): Patch[] {
             patch.length2 = parseInt(m[4], 10);
         }
         textPointer += 1;
+        // tslint:disable-next-line:no-require-imports
+        const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
 
         while (textPointer < text.length) {
             const sign = text[textPointer].charAt(0);
@@ -339,6 +348,8 @@ export class EditorUtils implements IEditorUtils {
         // # Work around missing newline (http://bugs.python.org/issue2142).
         patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
 
+        // tslint:disable-next-line:no-require-imports
+        const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
         const d = new dmp.diff_match_patch();
         const patches = patch_fromText.call(d, patch);
         if (!Array.isArray(patches) || patches.length === 0) {

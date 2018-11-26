@@ -1,6 +1,6 @@
 'use strict';
 
-import * as _ from 'lodash';
+import flatten from 'lodash/flatten';
 import {
     CancellationToken, Location, SymbolInformation,
     Uri, WorkspaceSymbolProvider as IWorspaceSymbolProvider
@@ -51,6 +51,6 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
             });
 
         const symbols = await Promise.all(promises);
-        return _.flatten(symbols);
+        return flatten(symbols);
     }
 }

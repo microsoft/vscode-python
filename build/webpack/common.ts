@@ -21,7 +21,12 @@ export const nodeModulesToExternalize = [
     'vscode-languageclient',
     'request',
     'request-progress',
-    'source-map'
+    'source-map',
+    'file-matcher',
+    'diff-match-patch',
+    'sudo-prompt',
+    'node-stream-zip',
+    'xml2js'
 ];
 
 export function getDefaultPlugins(name: 'extension' | 'debugger' | 'dependencies' | 'datascience-ui') {
