@@ -15,7 +15,7 @@ import * as vscode from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
 import { TemporaryFile } from '../common/platform/types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry, ILogger } from '../common/types';
+import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -26,7 +26,7 @@ import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer } fr
 // https://www.npmjs.com/package/@jupyterlab/services
 
 @injectable()
-export class JupyterServer implements INotebookServer, IAsyncDisposable {
+export class JupyterServer implements INotebookServer, IDisposable {
     private connInfo: IConnection | undefined;
     private kernelSpec: IJupyterKernelSpec | undefined;
     private session: Session.ISession | undefined;
@@ -97,13 +97,21 @@ export class JupyterServer implements INotebookServer, IAsyncDisposable {
             this.session = undefined;
             this.sessionManager = undefined;
         }
-        this.disposeInternal();
+        this.onStatusChangedEvent.dispose();
+        if (this.connInfo) {
+            this.connInfo.dispose(); // This should kill the process that's running
+            this.connInfo = undefined;
+        }
+        if (this.notebookFile) {
+            this.notebookFile.dispose(); // This should cleanup the temporary notebook we are using
+            this.notebookFile = undefined;
+        }
     }
 
-    public disposeAsync = () : Promise<void> => {
+    public dispose = () : Promise<void> => {
         // This could be changed to actually wait for shutdown, but do this
         // for now so we finish quickly.
-        return Promise.resolve(this.dispose());
+        return Promise.resolve(this.shutdown());
     }
 
     public waitForIdle = async () : Promise<void> => {
@@ -216,10 +224,6 @@ export class JupyterServer implements INotebookServer, IAsyncDisposable {
         return this.onStatusChangedEvent.event.bind(this.onStatusChangedEvent);
     }
 
-    public dispose = () => {
-        this.shutdown();
-    }
-
     public restartKernel = async () : Promise<void> => {
         if (this.session && this.session.kernel) {
             // Update our start time so we don't keep sending responses
@@ -274,19 +278,6 @@ export class JupyterServer implements INotebookServer, IAsyncDisposable {
             this.kernelSpec.dispose(); // This should delete any old kernel specs
             this.kernelSpec = undefined;
         }
-    }
-
-    private disposeInternal = () => {
-        this.onStatusChangedEvent.dispose();
-        if (this.connInfo) {
-            this.connInfo.dispose(); // This should kill the process that's running
-            this.connInfo = undefined;
-        }
-        if (this.notebookFile) {
-            this.notebookFile.dispose(); // This should cleanup the temporary notebook we are using
-            this.notebookFile = undefined;
-        }
-        this.destroyKernelSpec();
     }
 
     private generateRequest = (code: string, silent: boolean) : Kernel.IFuture | undefined => {

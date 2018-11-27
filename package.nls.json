@@ -103,8 +103,8 @@
     "DataScience.pythonVersionHeaderNoPyKernel": "Python Version may not match, no ipykernel found:",
     "DataScience.pythonRestartHeader": "Restarted Kernel:",
     "Linter.InstalledButNotEnabled": "Linter {0} is installed but not enabled.",
-    "DataScience.jupyterNotebookFailure" : "Jupyter notebook failed to launch\r\n{0}",
+    "DataScience.jupyterNotebookFailure" : "Jupyter notebook failed to launch. \r\n{0}",
     "DataScience.notebookVersionFormat" : "Jupyter Notebook Version: {0}",
     "DataScience.jupyterKernelNotSupportedOnActive" : "Jupyter kernel cannot be started from '{0}'. Using closest match {1} instead.",
-    "DataScience.jupyterKernelSpecNotFound" : "Cannot create a jupyter kernel spec and none are available for use"
+    "DataScience.jupyterKernelSpecNotFound" : "Cannot create a Jupyter kernel spec and none are available for use"
 }

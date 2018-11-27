@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { workspace } from 'vscode';
 
 import { PythonSettings } from '../../../client/common/configSettings';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService } from '../../../client/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposable } from '../../../client/common/types';
 import { initialize } from '../../initialize';
 import { UnitTestIocContainer } from '../../unittests/serviceRegistry';
 
@@ -28,14 +28,14 @@ suite('Configuration Service', () => {
     test('Ensure async registry works', async () => {
         const asyncRegistry = ioc.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
         let disposed = false;
-        const disposable : IAsyncDisposable = {
-            disposeAsync() : Promise<void> {
+        const disposable : IDisposable = {
+            dispose() : Promise<void> {
                 disposed = true;
                 return Promise.resolve();
             }
         };
         asyncRegistry.push(disposable);
-        await asyncRegistry.disposeAsync();
+        await asyncRegistry.dispose();
         expect(disposed).to.be.equal(true, 'Didn\'t dispose during async registry cleanup');
     });
 });

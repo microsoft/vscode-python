@@ -3,19 +3,19 @@
 'use strict';
 import { injectable } from 'inversify';
 
-import { IAsyncDisposable, IAsyncDisposableRegistry } from './types';
+import { IAsyncDisposableRegistry, IDisposable } from './types';
 
 // List of disposables that need to run a promise.
 @injectable()
 export class AsyncDisposableRegistry implements IAsyncDisposableRegistry {
-    private list : IAsyncDisposable[] = [];
+    private list : IDisposable[] = [];
 
-    public async disposeAsync(): Promise<void> {
-        const promises = this.list.map(l => l.disposeAsync());
+    public async dispose(): Promise<void> {
+        const promises = this.list.map(l => l.dispose());
         await Promise.all(promises);
     }
 
-    public push(disposable: IAsyncDisposable) {
+    public push(disposable: IDisposable) {
         this.list.push(disposable);
     }
 }

@@ -354,12 +354,12 @@ export interface IEditorUtils {
     getWorkspaceEditsFromPatch(originalContents: string, patch: string, uri: Uri): WorkspaceEdit;
 }
 
-export interface IAsyncDisposable {
-    disposeAsync() : Promise<void>;
+export interface IDisposable {
+    dispose() : Promise<void> | undefined;
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
 export interface IAsyncDisposableRegistry {
-    disposeAsync() : Promise<void>;
-    push(disposable : IAsyncDisposable);
+    dispose() : Promise<void>;
+    push(disposable : IDisposable);
 }

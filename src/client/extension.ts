@@ -205,7 +205,7 @@ export function deactivate(): Thenable<void> {
     if (activatedServiceContainer) {
         const registry = activatedServiceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
         if (registry) {
-            return registry.disposeAsync();
+            return registry.dispose();
         }
     }
 

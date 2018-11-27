@@ -470,7 +470,7 @@ suite('Jupyter Execution', async () => {
 
     test('Slow notebook startups throws exception', async () => {
         const execution = createExecution(workingPython, ['Failure']);
-        await assert.isRejected(execution.startNotebookServer(), 'Jupyter notebook failed to launch\r\nError: The Jupyter notebook server failed to launch in time');
+        await assert.isRejected(execution.startNotebookServer(), 'Jupyter notebook failed to launch. \r\nError: The Jupyter notebook server failed to launch in time');
     }).timeout(10000);
 
     test('Other than active works', async () => {
