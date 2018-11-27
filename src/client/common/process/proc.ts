@@ -102,10 +102,8 @@ export class ProcessService implements IProcessService {
             proc,
             out: output,
             dispose: () => {
-                if (proc) {
-                    if (!proc.killed) {
-                        tk(proc.pid);
-                    }
+                if (proc && !proc.killed) {
+                    tk(proc.pid);
                 }
             }
         };
