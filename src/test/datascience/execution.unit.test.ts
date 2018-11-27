@@ -188,6 +188,8 @@ suite('Jupyter Execution', async () => {
     setup(() => {
         workingKernelSpec = createTempSpec(workingPython.path);
         ipykernelInstallCount = 0;
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(10000);
     });
 
     teardown(() => {
