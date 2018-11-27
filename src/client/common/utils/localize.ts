@@ -11,7 +11,7 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 export namespace Diagnostics {
     export const warnSourceMaps = localize('diagnostics.warnSourceMaps', 'Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.');
     export const disableSourceMaps = localize('diagnostics.disableSourceMaps', 'Disable Source Map Support');
-    export const warnBeforeEnablingSourceMaps = localize('diagnostics.warnBeforeEnablingSourceMaps', 'Enabling source map support in the Python Extensionwill adversely impact performance of the extension.');
+    export const warnBeforeEnablingSourceMaps = localize('diagnostics.warnBeforeEnablingSourceMaps', 'Enabling source map support in the Python Extension will adversely impact performance of the extension.');
     export const enableSourceMapsAndReloadVSC = localize('diagnostics.enableSourceMapsAndReloadVSC', 'Enable and reload Window.');
 }
 
