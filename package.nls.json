@@ -79,7 +79,7 @@
     "DataScience.jupyterNbConvertNotSupported": "Importing notebooks requires Jupyter nbconvert to be installed.",
     "DataScience.jupyterLaunchTimedOut": "The Jupyter notebook server failed to launch in time",
     "DataScience.jupyterLaunchNoURL": "Failed to find the URL of the launched Jupyter notebook server",
-    "DataScience.pythonInteractiveHelpLink" : "Get more help",
+    "DataScience.pythonInteractiveHelpLink": "Get more help",
     "DataScience.importingFormat": "Importing {0}",
     "DataScience.startingJupyter": "Starting Jupyter Server",
     "Interpreters.RefreshingInterpreters": "Refreshing Python Interpreters",
@@ -103,8 +103,10 @@
     "DataScience.pythonVersionHeaderNoPyKernel": "Python Version may not match, no ipykernel found:",
     "DataScience.pythonRestartHeader": "Restarted Kernel:",
     "Linter.InstalledButNotEnabled": "Linter {0} is installed but not enabled.",
-    "DataScience.jupyterNotebookFailure" : "Jupyter notebook failed to launch. \r\n{0}",
-    "DataScience.notebookVersionFormat" : "Jupyter Notebook Version: {0}",
-    "DataScience.jupyterKernelNotSupportedOnActive" : "Jupyter kernel cannot be started from '{0}'. Using closest match {1} instead.",
-    "DataScience.jupyterKernelSpecNotFound" : "Cannot create a Jupyter kernel spec and none are available for use"
+    "DataScience.jupyterNotebookFailure": "Jupyter notebook failed to launch. \r\n{0}",
+    "DataScience.notebookVersionFormat": "Jupyter Notebook Version: {0}",
+    "DataScience.jupyterKernelNotSupportedOnActive": "Jupyter kernel cannot be started from '{0}'. Using closest match {1} instead.",
+    "DataScience.jupyterKernelSpecNotFound": "Cannot create a Jupyter kernel spec and none are available for use",
+    "diagnostics.warnSourceMaps": "Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.",
+    "diagnostics.disableSourceMaps": "Disable Source Map Support"
 }

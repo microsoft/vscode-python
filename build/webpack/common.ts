@@ -3,8 +3,11 @@
 
 'use strict';
 
+import * as glob from 'glob';
+import * as path from 'path';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
-import { isCI } from '../constants';
+import { ExtensionRootDir, isCI } from '../constants';
+
 export const nodeModulesToExternalize = [
     'unicode/category/Lu',
     'unicode/category/Ll',
@@ -20,7 +23,7 @@ export const nodeModulesToExternalize = [
     'azure-storage',
     'request',
     'request-progress',
-    'source-map',
+    'source-map-support',
     'file-matcher',
     'diff-match-patch',
     'sudo-prompt',
@@ -39,4 +42,10 @@ export function getDefaultPlugins(name: 'extension' | 'debugger' | 'dependencies
         );
     }
     return plugins;
+}
+
+export function getListOfExistingModulesInOutDir() {
+    const outDir = path.join(ExtensionRootDir, 'out', 'client');
+    const files = glob.sync('**/*.js', { sync: true, cwd: outDir });
+    return files.map(filePath => `./${filePath.slice(0, -3)}`);
 }

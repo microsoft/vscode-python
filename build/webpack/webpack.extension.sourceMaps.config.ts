@@ -5,12 +5,9 @@
 
 import * as path from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import { Configuration, ContextReplacementPlugin } from 'webpack';
+import * as webpack from 'webpack';
 import { ExtensionRootDir } from '../constants';
 import { getDefaultPlugins, getListOfExistingModulesInOutDir } from './common';
-
-// tslint:disable-next-line:no-var-requires no-require-imports
-const WrapperPlugin = require('wrapper-webpack-plugin');
 
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(ExtensionRootDir, 'tsconfig.extension.json');
@@ -19,12 +16,11 @@ const configFileName = path.join(ExtensionRootDir, 'tsconfig.extension.json');
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = getListOfExistingModulesInOutDir();
 
-const config: Configuration = {
+const config: webpack.Configuration = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: './src/client/extension.ts',
-        'debugger/debugAdapter/main': './src/client/debugger/debugAdapter/main.ts'
+        sourceMapSupport: './src/client/sourceMapSupport.ts'
     },
     devtool: 'source-map',
     node: {
@@ -32,32 +28,6 @@ const config: Configuration = {
     },
     module: {
         rules: [
-            {
-                // JupyterServices imports node-fetch using `eval`.
-                test: /@jupyterlab[\\\/]services[\\\/].*js$/,
-                use: [
-                    {
-                        loader: path.join(__dirname, 'loaders', 'fixEvalRequire.js')
-                    }
-                ]
-            },
-            {
-                // Do not use __dirname in getos when using require.
-                test: /getos[\\\/]index.js$/,
-                use: [
-                    {
-                        loader: path.join(__dirname, 'loaders', 'fixGetosRequire.js')
-                    }
-                ]
-            },
-            {
-                test: /\.ts$/,
-                use: [
-                    {
-                        loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
-                    }
-                ]
-            },
             {
                 test: /\.ts$/,
                 exclude: /node_modules/,
@@ -75,12 +45,7 @@ const config: Configuration = {
         ...existingModulesInOutDir
     ],
     plugins: [
-        ...getDefaultPlugins('extension'),
-        new ContextReplacementPlugin(/getos/, /logic\/.*.js/),
-        new WrapperPlugin({
-            test: /\extension.js$/,
-            header: 'require(\'./sourceMapSupport\').default(require(\'vscode\'));'
-        })
+        ...getDefaultPlugins('dependencies')
     ],
     resolve: {
         extensions: ['.ts', '.js'],
