@@ -80,6 +80,7 @@ export namespace DataScience {
     //tslint:disable-next-line:no-multiline-string
     export const jupyterKernelNotSupportedOnActive = localize('DataScience.jupyterKernelNotSupportedOnActive', `Jupyter kernel cannot be started from '{0}'. Using closest match {1} instead.`);
     export const jupyterKernelSpecNotFound = localize('DataScience.jupyterKernelSpecNotFound', 'Cannot create a Jupyter kernel spec and none are available for use');
+    export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt iPython Kernel');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

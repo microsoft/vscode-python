@@ -40,6 +40,7 @@ export interface INotebookServer extends Disposable {
     translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
     waitForIdle() : Promise<void>;
     shutdown();
+    interruptKernel() : Promise<void>;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');

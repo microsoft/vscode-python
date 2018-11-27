@@ -108,5 +108,6 @@
     "DataScience.jupyterKernelNotSupportedOnActive": "Jupyter kernel cannot be started from '{0}'. Using closest match {1} instead.",
     "DataScience.jupyterKernelSpecNotFound": "Cannot create a Jupyter kernel spec and none are available for use",
     "diagnostics.warnSourceMaps": "Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.",
-    "diagnostics.disableSourceMaps": "Disable Source Map Support"
+    "diagnostics.disableSourceMaps": "Disable Source Map Support",
+    "DataScience.interruptKernel": "Interrupt iPython Kernel"
 }

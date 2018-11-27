@@ -241,6 +241,15 @@ export class JupyterServer implements INotebookServer, IDisposable {
         throw new Error(localize.DataScience.sessionDisposed());
     }
 
+    public interruptKernel = () : Promise<void> => {
+        if (this.session && this.session.kernel) {
+            // Interrupt whatever is happening
+            return this.session.kernel.interrupt();
+        }
+
+        return Promise.reject(new Error(localize.DataScience.sessionDisposed()));
+    }
+
     public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
 
         if (this.connInfo && this.connInfo.pythonMainVersion) {

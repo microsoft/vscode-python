@@ -144,6 +144,10 @@ export class History implements IWebPanelMessageListener, IHistory {
                 this.restartKernel();
                 break;
 
+            case HistoryMessages.Interrupt:
+                this.interruptKernel();
+                break;
+
             case HistoryMessages.Export:
                 this.export(payload);
                 break;
@@ -334,6 +338,18 @@ export class History implements IWebPanelMessageListener, IHistory {
             });
         }
     }
+
+    @captureTelemetry(Telemetry.Interrupt)
+    private interruptKernel() {
+        if (this.jupyterServer && !this.restartingKernel) {
+            this.jupyterServer.interruptKernel()
+                .then()
+                .catch(err => {
+                    this.logger.logError(err);
+                });
+        }
+    }
+
 
     @captureTelemetry(Telemetry.ExportNotebook, {}, false)
     // tslint:disable-next-line: no-any no-empty
