@@ -21,13 +21,17 @@ suite('Diagnostisc - Source Maps', () => {
         service.register();
         verify(commandManager.registerCommand(Commands.Enable_SourceMap_Support, anyFunction(), service)).once();
     });
-    test('Setting is turned on', async () => {
+    test('Setting is turned on and vsc reloaded', async () => {
+        const commandManager = mock(CommandManager);
         const configService = mock(ConfigurationService);
-        const service = new SourceMapSupportService(undefined as any, [], instance(configService), undefined as any);
+        const service = new SourceMapSupportService(instance(commandManager), [], instance(configService), undefined as any);
         when(configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global)).thenResolve();
+        when(commandManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
 
         await service.enable();
+
         verify(configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global)).once();
+        verify(commandManager.executeCommand('workbench.action.reloadWindow')).once();
     });
     test('Display prompt and do not enable', async () => {
         const shell = mock(ApplicationShell);
@@ -44,18 +48,22 @@ suite('Diagnostisc - Source Maps', () => {
         await service.onEnable();
     });
     test('Display prompt and must enable', async () => {
+        const commandManager = mock(CommandManager);
         const configService = mock(ConfigurationService);
         const shell = mock(ApplicationShell);
         const service = new class extends SourceMapSupportService {
             public async onEnable() {
                 await super.onEnable();
             }
-        }(undefined as any, [], instance(configService), instance(shell));
+        }(instance(commandManager), [], instance(configService), instance(shell));
 
         when(configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global)).thenResolve();
         when(shell.showWarningMessage(anything(), anything())).thenResolve(Diagnostics.enableSourceMapsAndReloadVSC() as any);
+        when(commandManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
 
         await service.onEnable();
+
         verify(configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global)).once();
+        verify(commandManager.executeCommand('workbench.action.reloadWindow')).once();
     });
 });

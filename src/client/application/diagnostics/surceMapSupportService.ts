@@ -24,6 +24,7 @@ export class SourceMapSupportService implements ISourceMapSupportService {
     }
     public async enable(): Promise<void> {
         await this.configurationService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global);
+        await this.commandManager.executeCommand('workbench.action.reloadWindow');
     }
     protected async onEnable(): Promise<void> {
         const enableSourceMapsAndReloadVSC = Diagnostics.enableSourceMapsAndReloadVSC();
