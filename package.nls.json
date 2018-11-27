@@ -110,6 +110,6 @@
     "DataScience.jupyterKernelSpecNotFound": "Cannot create a Jupyter kernel spec and none are available for use",
     "diagnostics.warnSourceMaps": "Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.",
     "diagnostics.disableSourceMaps": "Disable Source Map Support",
-    "diagnostics.warnBeforeEnablingSourceMaps": "Enabling source map support in the Python Extensionwill adversely impact performance of the extension.",
-    "diagnostics.enableSourceMapsAndReloadVSC": "Enable and reload Window."
+    "diagnostics.warnBeforeEnablingSourceMaps": "Enabling source map support in the Python Extension will adversely impact performance of the extension.",
+    "diagnostics.enableSourceMapsAndReloadVSC": "Enable and reload Window"
 }
