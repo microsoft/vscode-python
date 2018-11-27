@@ -3,12 +3,14 @@
 'use strict';
 
 //tslint:disable:trailing-comma
+
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, FileSystemWatcher, Uri, WorkspaceConfiguration } from 'vscode';
 
 import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_64_BIT, IS_WINDOWS } from '../../client/common/platform/constants';
@@ -23,17 +25,18 @@ import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory } from 
 import { Bash } from '../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import {
-    PyEnvActivationCommandProvider
+    PyEnvActivationCommandProvider,
 } from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { ITerminalActivationCommandProvider } from '../../client/common/terminal/types';
 import {
+    IAsyncDisposableRegistry,
     IConfigurationService,
     ICurrentProcess,
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
     Is64Bit,
-    IsWindows
+    IsWindows,
 } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { EnvironmentVariablesService } from '../../client/common/variables/environment';
@@ -53,7 +56,7 @@ import {
     IJupyterExecution,
     INotebookImporter,
     INotebookServer,
-    IStatusProvider
+    IStatusProvider,
 } from '../../client/datascience/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
@@ -61,7 +64,7 @@ import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/config
 import {
     IInterpreterComparer,
     IPythonPathUpdaterServiceFactory,
-    IPythonPathUpdaterServiceManager
+    IPythonPathUpdaterServiceManager,
 } from '../../client/interpreter/configuration/types';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -83,7 +86,7 @@ import {
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
@@ -95,18 +98,18 @@ import { CondaEnvService } from '../../client/interpreter/locators/services/cond
 import { CurrentPathService } from '../../client/interpreter/locators/services/currentPathService';
 import {
     GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService
+    GlobalVirtualEnvService,
 } from '../../client/interpreter/locators/services/globalVirtualEnvService';
 import { InterpreterWatcherBuilder } from '../../client/interpreter/locators/services/interpreterWatcherBuilder';
 import {
     KnownPathsService,
-    KnownSearchPathsForInterpreters
+    KnownSearchPathsForInterpreters,
 } from '../../client/interpreter/locators/services/KnownPathsService';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService
+    WorkspaceVirtualEnvService,
 } from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
 import {
     WorkspaceVirtualEnvWatcherService,
@@ -131,6 +134,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
         this.serviceManager.add<IKnownSearchPathsForInterpreters>(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters);
+        this.serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
 
         // Also setup a mock execution service and interpreter service
         const logger = TypeMoq.Mock.ofType<ILogger>();

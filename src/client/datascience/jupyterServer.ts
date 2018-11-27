@@ -15,7 +15,7 @@ import * as vscode from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
 import { TemporaryFile } from '../common/platform/types';
-import { IDisposableRegistry, ILogger } from '../common/types';
+import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -26,7 +26,7 @@ import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer } fr
 // https://www.npmjs.com/package/@jupyterlab/services
 
 @injectable()
-export class JupyterServer implements INotebookServer {
+export class JupyterServer implements INotebookServer, IAsyncDisposable {
     private connInfo: IConnection | undefined;
     private kernelSpec: IJupyterKernelSpec | undefined;
     private session: Session.ISession | undefined;
@@ -38,8 +38,10 @@ export class JupyterServer implements INotebookServer {
     constructor(
         @inject(ILogger) private logger: ILogger,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry) {
+        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry) {
         this.disposableRegistry.push(this);
+        this.asyncRegistry.push(this);
     }
 
     public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: TemporaryFile) : Promise<void> => {
@@ -83,6 +85,7 @@ export class JupyterServer implements INotebookServer {
     }
 
     public shutdown = () => {
+        this.destroyKernelSpec(); // This is the most important part. We HAVE to get rid of this or it messes up other jupyter notebooks on the same machine.
         if (this.session && this.sessionManager) {
             try {
                 this.session.shutdown().ignoreErrors();
@@ -95,6 +98,12 @@ export class JupyterServer implements INotebookServer {
             this.sessionManager = undefined;
         }
         this.disposeInternal();
+    }
+
+    public disposeAsync = () : Promise<void> => {
+        // This could be changed to actually wait for shutdown, but do this
+        // for now so we finish quickly.
+        return Promise.resolve(this.dispose());
     }
 
     public waitForIdle = async () : Promise<void> => {
@@ -260,20 +269,24 @@ export class JupyterServer implements INotebookServer {
         }
     }
 
+    private destroyKernelSpec = () => {
+        if (this.kernelSpec) {
+            this.kernelSpec.dispose(); // This should delete any old kernel specs
+            this.kernelSpec = undefined;
+        }
+    }
+
     private disposeInternal = () => {
         this.onStatusChangedEvent.dispose();
         if (this.connInfo) {
             this.connInfo.dispose(); // This should kill the process that's running
             this.connInfo = undefined;
         }
-        if (this.kernelSpec) {
-            this.kernelSpec.dispose(); // This should delete any old kernel specs
-            this.kernelSpec = undefined;
-        }
         if (this.notebookFile) {
             this.notebookFile.dispose(); // This should cleanup the temporary notebook we are using
             this.notebookFile = undefined;
         }
+        this.destroyKernelSpec();
     }
 
     private generateRequest = (code: string, silent: boolean) : Kernel.IFuture | undefined => {

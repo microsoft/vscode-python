@@ -86,8 +86,11 @@ export class History implements IWebPanelMessageListener, IHistory {
         const status = this.setStatus(localize.DataScience.executingCode());
 
         try {
+
             // Make sure we're loaded first.
+            const statusLoad = this.setStatus(localize.DataScience.startingJupyter());
             await this.loadPromise;
+            statusLoad.dispose();
 
             // Then show our webpanel
             await this.show();
