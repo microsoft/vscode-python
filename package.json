@@ -87,7 +87,8 @@
         "onCommand:python.createTerminal",
         "onCommand:python.discoverTests",
         "onCommand:python.datascience.showhistorypane",
-        "onCommand:python.datascience.importnotebook"
+        "onCommand:python.datascience.importnotebook",
+        "onCommand:python.datascience.selectjupyteruri"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -257,6 +258,12 @@
             {
                 "command": "python.datascience.runcell",
                 "title": "%python.command.python.datascience.runcell.title%",
+                "category": "Python",
+                "when": "python.datascience.featureenabled"
+            },
+            {
+                "command": "python.datascience.selectjupyteruri",
+                "title": "%python.command.python.datascience.selectjupyteruri.title%",
                 "category": "Python",
                 "when": "python.datascience.featureenabled"
             },
@@ -869,6 +876,12 @@
                     "type": "number",
                     "default": 60000,
                     "description": "Amount of time (in ms) to wait for the Jupyter Notebook server to start.",
+                    "scope": "resource"
+                },
+                "python.dataScience.jupyterServerURI": {
+                    "type": "string",
+                    "default": "local",
+                    "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Juypter server on the local machine.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {

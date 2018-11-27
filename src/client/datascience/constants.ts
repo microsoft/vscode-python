@@ -10,6 +10,7 @@ export namespace Commands {
     export const RunCurrentCellAdvance = 'python.datascience.runcurrentcelladvance';
     export const ShowHistoryPane = 'python.datascience.showhistorypane';
     export const ImportNotebook = 'python.datascience.importnotebook';
+    export const SelectJupyterURI = 'python.datascience.selectjupyteruri';
 }
 
 export namespace EditorContexts {
@@ -57,6 +58,9 @@ export namespace Telemetry {
     export const ShowHistoryPane = 'DATASCIENCE.SHOW_HISTORY_PANE';
     export const ExpandAll = 'DATASCIENCE.EXPAND_ALL';
     export const CollapseAll = 'DATASCIENCE.COLLAPSE_ALL';
+    export const SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI';
+    export const SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL';
+    export const SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED';
 }
 
 export namespace HelpLinks {

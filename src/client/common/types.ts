@@ -267,6 +267,7 @@ export interface IDataScienceSettings {
     allowImportFromNotebook: boolean;
     enabled: boolean;
     jupyterLaunchTimeout: number;
+    jupyterServerURI: string;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

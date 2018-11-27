@@ -28,6 +28,7 @@
     "python.command.python.datascience.runcurrentcelladvance.title": "Run Current Cell And Advance",
     "python.command.python.datascience.runcell.title": "Run Cell",
     "python.command.python.datascience.showhistorypane.title": "Show Python Interactive Pane",
+    "python.command.python.datascience.selectjupyteruri.title": "Specify Jupyter server URI",
     "python.command.python.datascience.importnotebook.title": "Import Jupyter Notebook",
     "python.command.python.datascience.importnotebookonfile.title": "Import Jupyter Notebook",
     "python.snippet.launch.standard.label": "Python: Current File",
@@ -102,5 +103,7 @@
     "DataScience.pythonVersionHeader": "Python Version:",
     "DataScience.pythonVersionHeaderNoPyKernel": "Python Version may not match, no ipykernel found:",
     "DataScience.pythonRestartHeader": "Restarted Kernel:",
-    "Linter.InstalledButNotEnabled": "Linter {0} is installed but not enabled."
+    "Linter.InstalledButNotEnabled": "Linter {0} is installed but not enabled.",
+    "DataScience.jupyterSelectURILaunchLocal": "Launch local Jupyter server",
+    "DataScience.jupyterSelectURISpecifyURI": "Type in the URI for the Jupyter server"
 }

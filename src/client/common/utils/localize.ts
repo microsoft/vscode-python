@@ -70,6 +70,9 @@ export namespace DataScience {
     export const pythonVersionHeader = localize('DataScience.pythonVersionHeader', 'Python Version:');
     export const pythonRestartHeader = localize('DataScience.pythonRestartHeader', 'Restarted Kernel:');
     export const pythonVersionHeaderNoPyKernel = localize('DataScience.pythonVersionHeaderNoPyKernel', 'Python Version may not match, no ipykernel found:');
+
+    export const jupyterSelectURILaunchLocal = localize('DataScience.jupyterSelectURILaunchLocal', 'Launch local Jupyter server');
+    export const jupyterSelectURISpecifyURI = localize('DataScienece.jupyterSelectURISpecifyURI', 'Type in the URI for the Jupyter server');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
