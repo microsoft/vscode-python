@@ -30,6 +30,7 @@
     "python.command.python.datascience.showhistorypane.title": "Show Python Interactive Pane",
     "python.command.python.datascience.importnotebook.title": "Import Jupyter Notebook",
     "python.command.python.datascience.importnotebookonfile.title": "Import Jupyter Notebook",
+    "python.command.python.enableSourceMapSupport.title": "Enable Source map support for improved stack traces in Extension error logs.",
     "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.standard.description": "Debug a Python Program with Standard Output",
     "python.snippet.launch.pyspark.label": "Python: PySpark",
@@ -109,5 +110,6 @@
     "DataScience.jupyterKernelSpecNotFound": "Cannot create a Jupyter kernel spec and none are available for use",
     "diagnostics.warnSourceMaps": "Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.",
     "diagnostics.disableSourceMaps": "Disable Source Map Support",
-    "python.command.python.enableSourceMapSupport.title": "Enable Source map support for improved stack traces in Extension error logs."
+    "diagnostics.warnBeforeEnablingSourceMaps": "Enabling source map support in the Python Extensionwill adversely impact performance of the extension.",
+    "diagnostics.enableSourceMapsAndReloadVSC": "Enable and reload Window."
 }
