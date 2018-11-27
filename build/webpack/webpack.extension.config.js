@@ -74,7 +74,9 @@ const config = {
         new webpack_1.ContextReplacementPlugin(/getos/, /logic\/.*.js/),
         new WrapperPlugin({
             test: /\extension.js$/,
-            header: 'require(\'./sourceMapSupport\').default(require(\'vscode\'));'
+            // Import source map warning file only if source map is enabled.
+            // Minimize importing external files.
+            header: '(function(){if (require(\'vscode\').workspace.getConfiguration(\'python.diagnostics\', undefined).get(\'sourceMapsEnabled\', false)) {require(\'./sourceMapSupport\').default(require(\'vscode\'));}})();'
         })
     ],
     resolve: {

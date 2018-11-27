@@ -820,6 +820,12 @@
             "type": "object",
             "title": "Python Configuration",
             "properties": {
+                "python.diagnostics.sourceMapsEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable source map support for meaningful strack traces in error logs.",
+                    "scope": "application"
+                },
                 "python.autoComplete.addBrackets": {
                     "type": "boolean",
                     "default": false,
@@ -1867,6 +1873,7 @@
         "webpack-fix-default-import-plugin": "^1.0.3",
         "webpack-merge": "^4.1.4",
         "webpack-node-externals": "^1.7.2",
+        "webpack-stream": "^5.1.1",
         "wrapper-webpack-plugin": "^2.0.0",
         "yargs": "^12.0.2"
     },

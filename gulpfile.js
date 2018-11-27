@@ -194,6 +194,7 @@ gulp.task('restorePrePublishScript', (done) => {
 
 gulp.task('webpack', async () => {
     await spawnAsync('npx', ['webpack', '--mode', 'production']);
+    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.sourceMaps.config.js', '--mode', 'production']);
     await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production']);
 });
 

@@ -18,13 +18,13 @@ export class SourceMapSupport {
         if (!this.enabled) {
             return;
         }
+        require('./node_modules/source-map-support').install();
         const localize = require('./common/utils/localize') as typeof import('./common/utils/localize');
         const disable = localize.Diagnostics.disableSourceMaps();
         const selection = await this.vscode.window.showWarningMessage(localize.Diagnostics.warnSourceMaps(), disable);
         if (selection === disable) {
             await this.disable();
         }
-        require('source-map-support').install();
     }
     public get enabled(): boolean {
         return this.config.get<boolean>(setting, false);
