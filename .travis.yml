@@ -96,16 +96,14 @@ script:
   - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
         vsce package;
-        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
+        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders-unbundled.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
-  - if [[ $BUNDLE == "true" ]]; then
+  - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
         npm run package;
         npx gulp clean:cleanExceptTests;
         npm run testSmoke;
-    fi
-  - if [[ $BUNDLE == "true" && $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
-        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders-bundled.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
+        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
   - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == release* && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;

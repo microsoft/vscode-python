@@ -87,7 +87,8 @@
         "onCommand:python.createTerminal",
         "onCommand:python.discoverTests",
         "onCommand:python.datascience.showhistorypane",
-        "onCommand:python.datascience.importnotebook"
+        "onCommand:python.datascience.importnotebook",
+        "onCommand:python.python.enableSourceMapSupport"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -110,6 +111,11 @@
             }
         ],
         "commands": [
+            {
+                "command": "python.enableSourceMapSupport",
+                "title": "%python.command.python.enableSourceMapSupport.title%",
+                "category": "Python"
+            },
             {
                 "command": "python.sortImports",
                 "title": "%python.command.python.sortImports.title%",
