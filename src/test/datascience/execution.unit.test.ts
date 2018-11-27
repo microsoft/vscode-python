@@ -81,6 +81,11 @@ class MockJupyterServer implements INotebookServer {
     public shutdown() {
         noop();
     }
+
+    public interruptKernel() : Promise<void> {
+        throw new Error('Method not implemented');
+    }
+
     public dispose() {
         if (this.conninfo) {
             this.conninfo.dispose(); // This should kill the process that's running

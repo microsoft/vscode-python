@@ -9,9 +9,10 @@ import { Disposable, Uri } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
+import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { JupyterExecution } from '../../client/datascience/jupyterExecution';
-import { IJupyterExecution, INotebookImporter, INotebookServer } from '../../client/datascience/types';
+import { CellState, IJupyterExecution, INotebookImporter, INotebookServer } from '../../client/datascience/types';
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
@@ -19,6 +20,7 @@ import {
 } from '../../client/interpreter/contracts';
 import { Cell, ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
+import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console
@@ -284,6 +286,70 @@ suite('Jupyter notebook tests', () => {
 
         console.log('Verifying restart');
         await verifyError(server, 'a', `name 'a' is not defined`);
+    });
+
+    runTest('Interrupt kernel', async () => {
+        const server = await jupyterExecution.startNotebookServer();
+        if (!server) {
+            assert.fail('Server not created');
+        }
+
+        // Start executing something that will never finish
+        let interrupted = false;
+        let finishedBefore = false;
+        let finishedPromise = createDeferred();
+        let outputPromise = createDeferred();
+        let observable = server.executeObservable('import time\r\nwhile(1):\r\n  time.sleep(.1)\r\n  print(".")', 'foo.py', 0);
+        observable.subscribe(c => {
+            const cell = c[0].data as nbformat.ICodeCell;
+            if (!outputPromise.completed && cell && cell.outputs.length > 0) {
+                outputPromise.resolve();
+            }
+            if (c.length > 0 && c[0].state === CellState.error) {
+                finishedBefore = !interrupted;
+                finishedPromise.resolve();
+            }
+        }, (err) => finishedPromise.reject(err), () => finishedPromise.resolve());
+
+        // Wait for the first output
+        await outputPromise.promise;
+
+        // Then interrupt
+        interrupted = true;
+        await server.interruptKernel();
+
+        // Then we should get our finish
+        await Promise.race([finishedPromise.promise, sleep(5000)]);
+        assert.equal(finishedBefore, false, 'Finished before the interruption');
+        assert.ok(finishedPromise.completed, 'Timed out before interrupt');
+
+        // Try again with something that doesn't return. However it should timeout before
+        // we get to our own sleep.
+        interrupted = false;
+        finishedPromise = createDeferred();
+        outputPromise = createDeferred();
+        observable = server.executeObservable('import time\r\ntime.sleep(4)', 'foo.py', 0);
+        observable.subscribe(c => {
+            if (!outputPromise.completed) {
+                outputPromise.resolve();
+            }
+            if (c.length > 0 && c[0].state === CellState.error) {
+                finishedBefore = !interrupted;
+                finishedPromise.resolve();
+            }
+        }, (err) => finishedPromise.reject(err), () => finishedPromise.resolve());
+
+        // Wait for the first output
+        await outputPromise.promise;
+
+        // Then interrupt
+        interrupted = true;
+        await server.interruptKernel();
+
+        // Then we should get our finish
+        await Promise.race([finishedPromise.promise, sleep(5000)]);
+        assert.equal(finishedBefore, false, 'Finished before the interruption');
+        assert.ok(finishedPromise.completed, 'Timed out before interrupt');
     });
 
     testMimeTypes(

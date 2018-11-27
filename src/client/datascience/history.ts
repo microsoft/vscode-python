@@ -350,7 +350,6 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-
     @captureTelemetry(Telemetry.ExportNotebook, {}, false)
     // tslint:disable-next-line: no-any no-empty
     private export (payload: any) {
