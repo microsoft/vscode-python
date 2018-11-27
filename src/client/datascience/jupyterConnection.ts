@@ -1,67 +1,52 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { ChildProcess } from 'child_process';
-import * as tk from 'tree-kill';
 import * as path from 'path';
 import { Disposable } from 'vscode-jsonrpc';
 
-import { ObservableExecutionResult, Output } from '../common/process/types';
-import { ILogger, IConfigurationService } from '../common/types';
-import { createDeferred, Deferred } from '../common/utils/async';
-import { IConnection } from './types';
-import { IServiceContainer } from '../ioc/types';
 import { IFileSystem } from '../common/platform/types';
+import { ObservableExecutionResult, Output } from '../common/process/types';
+import { IConfigurationService, ILogger } from '../common/types';
+import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
+import { IServiceContainer } from '../ioc/types';
+import { IConnection } from './types';
 
 const UrlPatternRegEx = /(https?:\/\/[^\s]+)/ ;
 const ForbiddenPatternRegEx = /Forbidden/;
 const HttpPattern = /https?:\/\//;
 
-class ProcessDisposable implements Disposable {
-    private proc: ChildProcess | undefined;
-
-    constructor(proc: ChildProcess) {
-        this.proc = proc;
-    }
-
-    dispose = () => {
-        if (this.proc) {
-            if (!this.proc.killed) {
-                tk(this.proc.pid);
-            }
-        }
-    }
-}
 export type JupyterServerInfo = [string, string, string, boolean, number, number, boolean, string, string];
 
 class JupyterConnectionWaiter {
-    private startPromise: Deferred<JupyterConnection>;
+    private startPromise: Deferred<IConnection>;
     private launchTimeout: NodeJS.Timer;
     private configService: IConfigurationService;
     private logger: ILogger;
     private fileSystem: IFileSystem;
-    private processDisposable: ProcessDisposable;
     private notebook_dir: string;
-    private pythonMainVersionNumber: number;
-    private getServerInfo : () => Promise<JupyterServerInfo[]>;
+    private getServerInfo : () => Promise<JupyterServerInfo[] | undefined>;
+    private createConnection : (b: string, t: string, p: Disposable) => IConnection;
+    private launchResult : ObservableExecutionResult<string>;
 
-
-    constructor(launchResult : ObservableExecutionResult<string>, pythonVersion: number, notebookFile: string, getServerInfo: () => Promise<JupyterServerInfo[]>, serviceContainer: IServiceContainer) {
-    	this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+    constructor(
+        launchResult : ObservableExecutionResult<string>,
+        notebookFile: string,
+        getServerInfo: () => Promise<JupyterServerInfo[] | undefined>,
+        createConnection: (b: string, t: string, p: Disposable) => IConnection,
+        serviceContainer: IServiceContainer) {
+        this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.logger = serviceContainer.get<ILogger>(ILogger);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
-        this.pythonMainVersionNumber = pythonVersion;
         this.getServerInfo = getServerInfo;
+        this.createConnection = createConnection;
+        this.launchResult = launchResult;
 
         // Compute our notebook dir
         this.notebook_dir = path.dirname(notebookFile);
 
-        // Rememeber our process so we can pass it onto the connection or destroy it
-        this.processDisposable = new ProcessDisposable(launchResult.proc);
-
         // Setup our start promise
-        this.startPromise = createDeferred<JupyterConnection>();
+        this.startPromise = createDeferred<IConnection>();
 
         // We want to reject our Jupyter connection after a specific timeout
         const settings = this.configService.getSettings();
@@ -82,7 +67,7 @@ class JupyterConnectionWaiter {
 
     }
 
-    public waitForConnection() : Promise<JupyterConnection> {
+    public waitForConnection() : Promise<IConnection> {
         return this.startPromise.promise;
     }
 
@@ -95,7 +80,7 @@ class JupyterConnectionWaiter {
 
     // From a list of jupyter server infos try to find the matching jupyter that we launched
     // tslint:disable-next-line:no-any
-    private getJupyterURL(serverInfos: JupyterServerInfo[], data: any) {
+    private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
         if (serverInfos && !this.startPromise.completed) {
             const matchInfo = serverInfos.find(info => this.fileSystem.arePathsSame(this.notebook_dir, info['notebook_dir']));
             if (matchInfo) {
@@ -116,7 +101,9 @@ class JupyterConnectionWaiter {
     private getJupyterURLFromString(data: any) {
         const urlMatch = UrlPatternRegEx.exec(data);
         if (urlMatch && !this.startPromise.completed) {
-            var URL = require('url').URL;
+            // URL is not being found for some reason. Pull it in forcefully
+            // tslint:disable-next-line:no-require-imports
+            const URL = require('url').URL;
             let url: URL;
             try {
                 url = new URL(urlMatch[0]);
@@ -159,7 +146,7 @@ class JupyterConnectionWaiter {
 
     private resolveStartPromise = (baseUrl: string, token: string) => {
         clearTimeout(this.launchTimeout);
-        this.startPromise.resolve(new JupyterConnection(baseUrl, token, this.pythonMainVersionNumber, this.processDisposable));
+        this.startPromise.resolve(this.createConnection(baseUrl, token, this.launchResult));
     }
 
     // tslint:disable-next-line:no-any
@@ -183,22 +170,28 @@ export class JupyterConnection implements IConnection {
         this.pythonMainVersion = pythonMainVersion;
     }
 
+    public static waitForConnection(
+        notebookFile: string,
+        getServerInfo: () => Promise<JupyterServerInfo[] | undefined>,
+        notebookExecution : ObservableExecutionResult<string>,
+        pythonVersion: number,
+        serviceContainer: IServiceContainer) {
+
+        // Create our waiter. It will sit here and wait for the connection information from the jupyter process starting up.
+        const waiter = new JupyterConnectionWaiter(
+            notebookExecution,
+            notebookFile,
+            getServerInfo,
+            (baseUrl: string, token: string, processDisposable: Disposable) => new JupyterConnection(baseUrl, token, pythonVersion, processDisposable),
+            serviceContainer);
+
+        return waiter.waitForConnection();
+    }
+
     public dispose() {
         if (this.disposable) {
             this.disposable.dispose();
             this.disposable = undefined;
         }
     }
-
-    public static waitForConnection(
-        notebookFile: string,
-        getServerInfo: () => Promise<JupyterServerInfo[]>,
-        notebookExecution : ObservableExecutionResult<string>,
-        pythonVersion: number,
-        serviceContainer: IServiceContainer) {
-        const waiter = new JupyterConnectionWaiter(notebookExecution, pythonVersion, notebookFile, getServerInfo, serviceContainer);
-        return waiter.waitForConnection();
-    }
 }
-
-

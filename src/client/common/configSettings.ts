@@ -375,7 +375,7 @@ function getAbsolutePath(pathToCheck: string, rootDir: string): string {
     return path.isAbsolute(pathToCheck) ? pathToCheck : path.resolve(rootDir, pathToCheck);
 }
 
-export function getPythonExecutable(pythonPath: string): string {
+function getPythonExecutable(pythonPath: string): string {
     // tslint:disable-next-line:prefer-type-cast no-unsafe-any
     pythonPath = untildify(pythonPath) as string;
 

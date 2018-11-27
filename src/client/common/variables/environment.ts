@@ -53,8 +53,9 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             return vars;
         }
 
-        if (typeof vars[variableName] === 'string' && vars[variableName].length > 0) {
-            vars[variableName] = vars[variableName] + path.delimiter + valueToAppend;
+        const variable = vars ? vars[variableName] : undefined;
+        if (variable && typeof variable === 'string' && variable.length > 0) {
+            vars[variableName] = variable + path.delimiter + valueToAppend;
         } else {
             vars[variableName] = valueToAppend;
         }

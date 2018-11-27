@@ -1,5 +1,5 @@
-import { Memento } from 'vscode';
 import { injectable } from 'inversify';
+import { Memento } from 'vscode';
 
 @injectable()
 export class MockMemento implements Memento {

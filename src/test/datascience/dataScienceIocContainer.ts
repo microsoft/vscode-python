@@ -1,16 +1,44 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+
+//tslint:disable:trailing-comma
 import * as child_process from 'child_process';
-import * as TypeMoq from 'typemoq';
 import * as path from 'path';
-import { Event, EventEmitter, Uri, WorkspaceConfiguration, FileSystemWatcher, Disposable } from 'vscode';
+import * as TypeMoq from 'typemoq';
+import { Disposable, FileSystemWatcher, Uri, WorkspaceConfiguration } from 'vscode';
 
 import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import { PythonSettings } from '../../client/common/configSettings';
+import { PersistentStateFactory } from '../../client/common/persistentState';
+import { IS_64_BIT, IS_WINDOWS } from '../../client/common/platform/constants';
+import { PathUtils } from '../../client/common/platform/pathUtils';
+import { RegistryImplementation } from '../../client/common/platform/registry';
+import { IPlatformService, IRegistry } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
+import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
-import { IProcessServiceFactory, IPythonExecutionFactory, IBufferDecoder } from '../../client/common/process/types';
-import { IConfigurationService, ICurrentProcess, ILogger, IPythonSettings, IPathUtils, IsWindows, Is64Bit, IPersistentStateFactory } from '../../client/common/types';
+import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
+import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
+import { Bash } from '../../client/common/terminal/environmentActivationProviders/bash';
+import { CommandPromptAndPowerShell } from '../../client/common/terminal/environmentActivationProviders/commandPrompt';
+import {
+    PyEnvActivationCommandProvider
+} from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
+import { ITerminalActivationCommandProvider } from '../../client/common/terminal/types';
+import {
+    IConfigurationService,
+    ICurrentProcess,
+    ILogger,
+    IPathUtils,
+    IPersistentStateFactory,
+    Is64Bit,
+    IsWindows
+} from '../../client/common/types';
+import { noop } from '../../client/common/utils/misc';
+import { EnvironmentVariablesService } from '../../client/common/variables/environment';
+import { SystemVariables } from '../../client/common/variables/systemVariables';
+import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { History } from '../../client/datascience/history';
 import { HistoryProvider } from '../../client/datascience/historyProvider';
@@ -27,56 +55,72 @@ import {
     INotebookServer,
     IStatusProvider
 } from '../../client/datascience/types';
-import { ICondaService, IInterpreterService, IKnownSearchPathsForInterpreters, IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, IInterpreterHelper, IInterpreterLocatorHelper, IInterpreterVersionService, CONDA_ENV_FILE_SERVICE, CONDA_ENV_SERVICE, CURRENT_PATH_SERVICE, GLOBAL_VIRTUAL_ENV_SERVICE, WORKSPACE_VIRTUAL_ENV_SERVICE, PIPENV_SERVICE, WINDOWS_REGISTRY_SERVICE, KNOWN_PATH_SERVICE, IVirtualEnvironmentsSearchPathProvider, IPipEnvService, IInterpreterWatcher, IInterpreterWatcherBuilder } from '../../client/interpreter/contracts';
-import { KnownSearchPathsForInterpreters, KnownPathsService } from '../../client/interpreter/locators/services/KnownPathsService';
-import { UnitTestIocContainer } from '../unittests/serviceRegistry';
-import { MockPythonExecutionService } from './executionServiceMock';
-import { IEnvironmentVariablesService, IEnvironmentVariablesProvider } from '../../client/common/variables/types';
-import { EnvironmentVariablesService } from '../../client/common/variables/environment';
-import { EnvironmentVariablesProvider } from '../../client/common/variables/environmentVariablesProvider';
-import { PathUtils } from '../../client/common/platform/pathUtils';
-import { IS_64_BIT, IS_WINDOWS } from '../../client/common/platform/constants';
-import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
-import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { PythonInterpreterLocatorService } from '../../client/interpreter/locators';
-import { IInterpreterComparer, IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
-import { InterpreterHelper } from '../../client/interpreter/helpers';
-import { InterpreterLocatorHelper } from '../../client/interpreter/locators/helpers';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
-import { PersistentStateFactory } from '../../client/common/persistentState';
-import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
+import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
+import {
+    IInterpreterComparer,
+    IPythonPathUpdaterServiceFactory,
+    IPythonPathUpdaterServiceManager
+} from '../../client/interpreter/configuration/types';
+import {
+    CONDA_ENV_FILE_SERVICE,
+    CONDA_ENV_SERVICE,
+    CURRENT_PATH_SERVICE,
+    GLOBAL_VIRTUAL_ENV_SERVICE,
+    ICondaService,
+    IInterpreterHelper,
+    IInterpreterLocatorHelper,
+    IInterpreterLocatorService,
+    IInterpreterService,
+    IInterpreterVersionService,
+    IInterpreterWatcher,
+    IInterpreterWatcherBuilder,
+    IKnownSearchPathsForInterpreters,
+    INTERPRETER_LOCATOR_SERVICE,
+    IPipEnvService,
+    IVirtualEnvironmentsSearchPathProvider,
+    KNOWN_PATH_SERVICE,
+    PIPENV_SERVICE,
+    WINDOWS_REGISTRY_SERVICE,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
+} from '../../client/interpreter/contracts';
+import { InterpreterHelper } from '../../client/interpreter/helpers';
+import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
-import { BufferDecoder } from '../../client/common/process/decoder';
+import { PythonInterpreterLocatorService } from '../../client/interpreter/locators';
+import { InterpreterLocatorHelper } from '../../client/interpreter/locators/helpers';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
 import { CurrentPathService } from '../../client/interpreter/locators/services/currentPathService';
-import { GlobalVirtualEnvService, GlobalVirtualEnvironmentsSearchPathProvider } from '../../client/interpreter/locators/services/globalVirtualEnvService';
-import { WorkspaceVirtualEnvService, WorkspaceVirtualEnvironmentsSearchPathProvider } from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
-import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
-import { ConfigurationService } from '../../client/common/configuration/service';
-import { SystemVariables } from '../../client/common/variables/systemVariables';
-import { getPythonExecutable } from '../../client/common/configSettings';
-import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
-import { IPlatformService, IRegistry, IFileSystem } from '../../client/common/platform/types';
-import { RegistryImplementation } from '../../client/common/platform/registry';
-import { PlatformService } from '../../client/common/platform/platformService';
-import { FileSystem } from '../../client/common/platform/fileSystem';
-import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
-import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
-import { WorkspaceVirtualEnvWatcherService } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
+import {
+    GlobalVirtualEnvironmentsSearchPathProvider,
+    GlobalVirtualEnvService
+} from '../../client/interpreter/locators/services/globalVirtualEnvService';
 import { InterpreterWatcherBuilder } from '../../client/interpreter/locators/services/interpreterWatcherBuilder';
-import { noop } from '../../client/common/utils/misc';
-import { ITerminalActivationCommandProvider } from '../../client/common/terminal/types';
-import { Bash } from '../../client/common/terminal/environmentActivationProviders/bash';
-import { CommandPromptAndPowerShell } from '../../client/common/terminal/environmentActivationProviders/commandPrompt';
-import { PyEnvActivationCommandProvider } from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
+import {
+    KnownPathsService,
+    KnownSearchPathsForInterpreters
+} from '../../client/interpreter/locators/services/KnownPathsService';
+import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
+import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
+import {
+    WorkspaceVirtualEnvironmentsSearchPathProvider,
+    WorkspaceVirtualEnvService
+} from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
+import {
+    WorkspaceVirtualEnvWatcherService,
+} from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
+import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
+import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
+import { UnitTestIocContainer } from '../unittests/serviceRegistry';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     constructor() {
         super();
     }
 
+    //tslint:disable:max-func-body-length
     public registerDataScienceTypes() {
         this.registerFileSystemTypes();
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecution);
@@ -96,7 +140,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         const currentProcess = new CurrentProcess();
-        const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+        const pythonSettings = new PythonSettings();
+
+        // Setup default settings
+        pythonSettings.datascience = {
+            allowImportFromNotebook: true,
+            jupyterLaunchTimeout: 60000,
+            enabled: true
+        };
+
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         workspaceConfig.setup(ws => ws.has(TypeMoq.It.isAnyString()))
             .returns(() => false);
@@ -105,18 +157,25 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
             .returns((s, d) => d);
         class MockFileSystemWatcher implements FileSystemWatcher {
-            ignoreCreateEvents: boolean;
-            ignoreChangeEvents: boolean;
-            ignoreDeleteEvents: boolean;
+            public ignoreCreateEvents: boolean = false;
+            public ignoreChangeEvents: boolean = false;
+            public ignoreDeleteEvents: boolean = false;
+            //tslint:disable-next-line:no-any
+            public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            //tslint:disable-next-line:no-any
+            public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            //tslint:disable-next-line:no-any
             public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
                 return { dispose: noop };
             }
-            onDidChange: Event<Uri>;
-            onDidDelete: Event<Uri>;
-            dispose() {
-                undefined;
+            public dispose() {
+                noop();
             }
-        };
+        }
         workspaceService.setup(w => w.createFileSystemWatcher(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
             return new MockFileSystemWatcher();
         });
@@ -125,16 +184,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         .returns(() => false);
         workspaceService.setup(w => w.rootPath).returns(() => '~');
 
-
         const systemVariables: SystemVariables = new SystemVariables(undefined);
         const env = {...systemVariables};
 
         // Look on the path for python
-        let pythonPath = this.findPythonPath();
-        pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
+        const pythonPath = this.findPythonPath();
+
+        pythonSettings.pythonPath = pythonPath;
         const folders = ['Envs', '.virtualenvs'];
-        pythonSettings.setup(x => x.venvFolders).returns(() => folders);
-        pythonSettings.setup(x => x.venvPath).returns(() => path.join('~', 'foo'));
+        pythonSettings.venvFolders = folders;
+        pythonSettings.venvPath = path.join('~', 'foo');
 
         condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
         condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
@@ -145,7 +204,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global');
         this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace');
         this.serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
-
 
         this.serviceManager.addSingletonInstance<ILogger>(ILogger, logger.object);
         this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
@@ -201,7 +259,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, 'pyenv');
 
-
         const dummyDisposable = {
             dispose: () => { return; }
         };
@@ -211,13 +268,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('')));
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
 
-        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
 
         // tslint:disable-next-line:no-empty
         logger.setup(l => l.logInformation(TypeMoq.It.isAny())).returns((m) => {}); // console.log(m)); // REnable this to debug the server
-
     }
 
     private findPythonPath(): string {

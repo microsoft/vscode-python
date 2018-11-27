@@ -53,12 +53,7 @@ export class InterpreterHelper implements IInterpreterHelper {
         const processService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ pythonPath });
 
         try {
-            let info: InterpreterInfomation | undefined;
-
-            // Python path may not actually exist after joining reg keys together
-            if (await this.fs.fileExists(pythonPath)) {
-                info = await processService.getInterpreterInformation().catch<InterpreterInfomation | undefined>(() => undefined);
-            }
+            const info = await processService.getInterpreterInformation().catch<InterpreterInfomation | undefined>(() => undefined);
             if (!info) {
                 return;
             }

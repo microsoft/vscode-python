@@ -5,17 +5,21 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as TypeMoq from 'typemoq';
-import { Disposable, Event, Uri } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
+import { noop } from '../../client/common/utils/misc';
 import { JupyterExecution } from '../../client/datascience/jupyterExecution';
 import { IJupyterExecution, INotebookImporter, INotebookServer } from '../../client/datascience/types';
+import {
+    IInterpreterService,
+    IKnownSearchPathsForInterpreters,
+    PythonInterpreter
+} from '../../client/interpreter/contracts';
 import { Cell, ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { IInterpreterService, PythonInterpreter, IKnownSearchPathsForInterpreters } from '../../client/interpreter/contracts';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console
 suite('Jupyter notebook tests', () => {
@@ -30,7 +34,7 @@ suite('Jupyter notebook tests', () => {
     });
 
     teardown(async () => {
-        for (let i=0; i<disposables.length; i++) {
+        for (let i = 0; i < disposables.length; i += 1) {
             const disposable = disposables[i];
             if (disposable) {
                 const promise = disposable.dispose() as Promise<any>;
@@ -181,34 +185,36 @@ suite('Jupyter notebook tests', () => {
     test('Not installed', async () => {
         // Rewire our data we use to search for processes
         class EmptyInterpreterService implements IInterpreterService {
-            onDidChangeInterpreter: Event<void>;
-            getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
+            public onDidChangeInterpreter(_listener: (e: void) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            public getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
                 return Promise.resolve([]);
             }
-            autoSetInterpreter(): Promise<void> {
-                throw new Error("Method not implemented.");
+            public autoSetInterpreter(): Promise<void> {
+                throw new Error('Method not implemented');
             }
-            getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter> {
-                return Promise.resolve(null);
+            public getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
+                return Promise.resolve(undefined);
             }
-            getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<PythonInterpreter> {
-                throw new Error("Method not implemented.");
+            public getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<PythonInterpreter> {
+                throw new Error('Method not implemented');
             }
-            refresh(resource: Uri): Promise<void> {
-                throw new Error("Method not implemented.");
+            public refresh(resource: Uri): Promise<void> {
+                throw new Error('Method not implemented');
             }
-            initialize(): void {
-                throw new Error("Method not implemented.");
+            public initialize(): void {
+                throw new Error('Method not implemented');
             }
-            getDisplayName(interpreter: Partial<PythonInterpreter>): Promise<string> {
-                throw new Error("Method not implemented.");
+            public getDisplayName(interpreter: Partial<PythonInterpreter>): Promise<string> {
+                throw new Error('Method not implemented');
             }
-            shouldAutoSetInterpreter(): Promise<boolean> {
-                throw new Error("Method not implemented.");
+            public shouldAutoSetInterpreter(): Promise<boolean> {
+                throw new Error('Method not implemented');
             }
         }
         class EmptyPathService implements IKnownSearchPathsForInterpreters {
-            getSearchPaths() : string [] {
+            public getSearchPaths() : string [] {
                 return [];
             }
         }
@@ -233,6 +239,7 @@ suite('Jupyter notebook tests', () => {
 
         // Translate this into a notebook
         const notebook = await server.translateToNotebook(cells);
+        assert.ok(notebook, 'Translate to notebook is failing');
 
         // Save to a temp file
         const fileSystem = ioc.serviceManager.get<IFileSystem>(IFileSystem);

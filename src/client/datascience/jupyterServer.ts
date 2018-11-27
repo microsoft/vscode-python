@@ -14,25 +14,26 @@ import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
-import { ILogger, IDisposableRegistry } from '../common/types';
+import { TemporaryFile } from '../common/platform/types';
+import { IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
+import { noop } from '../common/utils/misc';
 import { RegExpValues } from './constants';
 import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer } from './types';
-import { noop } from '../common/utils/misc';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
 @injectable()
 export class JupyterServer implements INotebookServer {
-    private isDisposed: boolean = false;
     private connInfo: IConnection | undefined;
     private kernelSpec: IJupyterKernelSpec | undefined;
     private session: Session.ISession | undefined;
     private sessionManager : SessionManager | undefined;
     private sessionStartTime: number | undefined;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
+    private notebookFile : TemporaryFile | undefined;
 
     constructor(
         @inject(ILogger) private logger: ILogger,
@@ -41,10 +42,11 @@ export class JupyterServer implements INotebookServer {
         this.disposableRegistry.push(this);
     }
 
-    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: string) : Promise<void> => {
+    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: TemporaryFile) : Promise<void> => {
         // Save connection information so we can use it later during shutdown
         this.connInfo = connInfo;
         this.kernelSpec = kernelSpec;
+        this.notebookFile = notebookFile;
 
         // First connect to the sesssion manager and find a kernel that matches our
         // python we're using
@@ -61,7 +63,7 @@ export class JupyterServer implements INotebookServer {
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
-            path: notebookFile,
+            path: notebookFile.filePath,
             kernelName: kernelSpec ? kernelSpec.name : '',
             serverSettings: serverSettings
         };
@@ -80,27 +82,19 @@ export class JupyterServer implements INotebookServer {
 
     }
 
-    public shutdown = async () : Promise<void> => {
+    public shutdown = () => {
         if (this.session && this.sessionManager) {
             try {
-                await this.sessionManager.shutdownAll();
+                this.session.shutdown().ignoreErrors();
                 this.session.dispose();
                 this.sessionManager.dispose();
             } catch {
-                noop;
+                noop();
             }
             this.session = undefined;
             this.sessionManager = undefined;
-
         }
-        if (this.connInfo) {
-            this.connInfo.dispose(); // This should kill the process that's running
-            this.connInfo = undefined;
-        }
-        if (this.kernelSpec) {
-            this.kernelSpec.dispose(); // This destroy any unwanted kernel specs if necessary
-            this.kernelSpec = undefined;
-        }
+        this.disposeInternal();
     }
 
     public waitForIdle = async () : Promise<void> => {
@@ -214,18 +208,7 @@ export class JupyterServer implements INotebookServer {
     }
 
     public dispose = () => {
-        if (!this.isDisposed) {
-            this.isDisposed = true;
-            this.onStatusChangedEvent.dispose();
-            if (this.connInfo) {
-                this.connInfo.dispose(); // This should kill the process that's running
-                this.connInfo = undefined;
-            }
-            if (this.kernelSpec) {
-                this.kernelSpec.dispose(); // This should delete any old kernel specs
-                this.kernelSpec = undefined;
-            }
-        }
+        this.shutdown();
     }
 
     public restartKernel = async () : Promise<void> => {
@@ -277,6 +260,22 @@ export class JupyterServer implements INotebookServer {
         }
     }
 
+    private disposeInternal = () => {
+        this.onStatusChangedEvent.dispose();
+        if (this.connInfo) {
+            this.connInfo.dispose(); // This should kill the process that's running
+            this.connInfo = undefined;
+        }
+        if (this.kernelSpec) {
+            this.kernelSpec.dispose(); // This should delete any old kernel specs
+            this.kernelSpec = undefined;
+        }
+        if (this.notebookFile) {
+            this.notebookFile.dispose(); // This should cleanup the temporary notebook we are using
+            this.notebookFile = undefined;
+        }
+    }
+
     private generateRequest = (code: string, silent: boolean) : Kernel.IFuture | undefined => {
         //this.logger.logInformation(`Executing code in jupyter : ${code}`)
         return this.session ? this.session.kernel.requestExecute(
@@ -290,7 +289,6 @@ export class JupyterServer implements INotebookServer {
             true
         ) : undefined;
     }
-
 
     // Set up our initial plotting and imports
     private initialNotebookSetup = () => {
@@ -448,7 +446,7 @@ export class JupyterServer implements INotebookServer {
                     subscriber.next(cell);
                 } catch (err) {
                     // If not a restart error, then tell the subscriber
-                    if (startTime > this.sessionStartTime) {
+                    if (this.sessionStartTime && startTime > this.sessionStartTime) {
                         this.logger.logError(`Error during message ${msg.header.msg_type}`);
                         subscriber.error(err);
                     }
@@ -461,7 +459,7 @@ export class JupyterServer implements INotebookServer {
                 cell.state = error as Error ? CellState.error : CellState.finished;
                 // Only do this if start time is still valid. Dont log an error to the subscriber. Error
                 // state should end up in the cell output.
-                if (startTime > this.sessionStartTime) {
+                if (this.sessionStartTime && startTime > this.sessionStartTime) {
                     subscriber.next(cell);
                 }
                 subscriber.complete();

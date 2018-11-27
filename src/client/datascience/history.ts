@@ -19,6 +19,7 @@ import {
     IWebPanelProvider
 } from '../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
+import { IFileSystem } from '../common/platform/types';
 import { IDisposableRegistry, ILogger } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -26,7 +27,6 @@ import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { HistoryMessages, Telemetry } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
 import { CellState, ICell, ICodeCssGenerator, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
-import { IFileSystem } from '../common/platform/types';
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
@@ -117,7 +117,7 @@ export class History implements IWebPanelMessageListener, IHistory {
             status.dispose();
 
             // We failed, dispose of ourselves too so that nobody uses us again
-            this.dispose().ignoreErrors();
+            this.dispose();
 
             throw err;
         }
@@ -174,14 +174,14 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
-    public async dispose() {
+    public dispose() {
         if (!this.disposed) {
             this.disposed = true;
             this.settingsChangedDisposable.dispose();
-            if (this.jupyterServer) {
-                await this.jupyterServer.shutdown();
-            }
             this.closedEvent.fire(this);
+            if (this.jupyterServer) {
+                this.jupyterServer.shutdown();
+            }
         }
     }
 
@@ -304,7 +304,9 @@ export class History implements IWebPanelMessageListener, IHistory {
                     // First we need to finish all outstanding cells.
                     this.unfinishedCells.forEach(c => {
                         c.state = CellState.error;
-                        this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: c });
+                        if (this.webPanel) {
+                            this.webPanel.postMessage({ type: HistoryMessages.FinishCell, payload: c });
+                        }
                     });
                     this.unfinishedCells = [];
                     this.potentiallyUnfinishedStatus.forEach(s => s.dispose());
@@ -433,7 +435,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         const pythonPath = versionCells.length > 0 ? this.extractStreamOutput(pathCells[0]).trimQuotes() : '';
 
         // Both should influence our ignore count. We don't want them to count against execution
-        this.ignoreCount = this.ignoreCount + 2;
+        this.ignoreCount = this.ignoreCount + 3;
 
         // Combine this data together to make our sys info
         return {
@@ -507,8 +509,12 @@ export class History implements IWebPanelMessageListener, IHistory {
         } else {
             // See if the usable interpreter is not our active one. If so, show a warning
             const active = await this.interpreterService.getActiveInterpreter();
-            if (active && !this.fileSystem.arePathsSame(active.path,usableInterpreter.path)) {
-                this.applicationShell.showWarningMessage(localize.DataScience.jupyterKernelNotSupportedOnActive().format(active.displayName, usableInterpreter.displayName));
+            const activeDisplayName = active ? active.displayName : undefined;
+            const activePath = active ? active.path : undefined;
+            const usableDisplayName = usableInterpreter ? usableInterpreter.displayName : undefined;
+            const usablePath = usableInterpreter ? usableInterpreter.path : undefined;
+            if (activePath && usablePath && !this.fileSystem.arePathsSame(activePath, usablePath) && activeDisplayName && usableDisplayName) {
+                this.applicationShell.showWarningMessage(localize.DataScience.jupyterKernelNotSupportedOnActive().format(activeDisplayName, usableDisplayName));
             }
         }
 

@@ -58,7 +58,7 @@ function generateVMs(inputBlockToggled : (id: string) => void) : ICellViewModel 
 
 function generateCells() : ICell[] {
     const cellData = generateCellData();
-    return cellData.map((data : nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell, key : number) => {
+    return cellData.map((data : nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | ISysInfo, key : number) => {
         return {
             id : key.toString(),
             file : 'foo.py',

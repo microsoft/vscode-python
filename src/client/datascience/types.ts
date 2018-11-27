@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-import { Session } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
-import { ExecutionResult, ObservableExecutionResult, PythonVersionInfo, SpawnOptions } from '../common/process/types';
+import { TemporaryFile } from '../common/platform/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -33,14 +32,14 @@ export interface IConnection extends Disposable {
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends Disposable {
     onStatusChanged: Event<boolean>;
-    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: string) : Promise<void>;
+    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: TemporaryFile) : Promise<void>;
     getCurrentState() : Promise<ICell[]>;
     executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
     execute(code: string, file: string, line: number) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
     translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
     waitForIdle() : Promise<void>;
-    shutdown() : Promise<void>;
+    shutdown();
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -51,7 +50,7 @@ export interface IJupyterExecution {
     startNotebookServer() : Promise<INotebookServer>;
     spawnNotebook(file: string) : Promise<void>;
     importNotebook(file: string, template: string) : Promise<string>;
-    getUsableJupyterPython() : Promise<PythonInterpreter>;
+    getUsableJupyterPython() : Promise<PythonInterpreter | undefined>;
 }
 
 export interface IJupyterKernelSpec extends Disposable {

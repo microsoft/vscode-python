@@ -103,7 +103,7 @@ suite('History output tests', () => {
             await updatePromise;
 
             const foundResult = wrapper.find('Cell');
-            assert.ok(foundResult.length > 1, 'Didn\'t find any cells being rendered');
+            assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
         } else {
             // tslint:disable-next-line:no-console
             console.log('History test skipped, no Jupyter installed');
