@@ -1,5 +1,5 @@
+// tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation no-unnecessary-callback-wrapper
 import { inject, injectable } from 'inversify';
-import * as _ from 'lodash';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
@@ -7,6 +7,7 @@ import { IConfigurationService } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
+const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 /**
  * Locates the currently configured Python interpreter.
@@ -54,8 +55,7 @@ export class CurrentPathService extends CacheableLocatorService {
         const python2 = this.getInterpreter('python2', '').then(interpreter => [interpreter]);
         const python = this.getInterpreter('python', '').then(interpreter => [interpreter]);
         return Promise.all<string[]>([currentPythonInterpreter, python3, python2, python])
-            // tslint:disable-next-line:underscore-consistent-invocation
-            .then(listOfInterpreters => _.flatten(listOfInterpreters))
+            .then(listOfInterpreters => flatten(listOfInterpreters))
             .then(interpreters => interpreters.filter(item => item.length > 0))
             // tslint:disable-next-line:promise-function-async
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))))

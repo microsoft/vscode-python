@@ -1,0 +1,157 @@
+resources:
+- repo: self
+  clean: true
+
+jobs:
+
+- template: templates/compile-and-validate.yml
+  parameters:
+    name: 'PR_Validate_Windows_py37'
+    PythonVersion: '3.7'
+    NodeVersion: '8.11.2'
+    NpmVersion: 'latest'
+    PoolName: 'Hosted VS2017'
+    UploadBinary: true
+    Platform: 'Windows'
+    AzureStorageAccountName: 'vscodepythonci'
+    AzureStorageContainerName: 'vscode-python-ci'
+
+- job: 'System_Test_macOS'
+  dependsOn: 'PR_Validate_Windows_py37'
+  pool:
+    name: 'Hosted macOS'
+  steps:
+  - template: templates/test-phase.yml
+  strategy:
+    maxParallel: 3
+    matrix:
+      SingleWorkspace:
+        TestSuiteName: 'testSingleWorkspace'
+        BuildNumber: '$(Build.BuildNumber)'
+        Platform: 'macOS'
+        PythonVersion: '3.7'
+        NodeVersion: '8.11.2'
+        NpmVersion: 'latest'
+        MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+        MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+        MOCHA_REPORTER_JUNIT: true
+        AzureStorageAccountName: 'vscodepythonci'
+        AzureStorageContainerName: 'vscode-python-ci'
+      MultiWorkspace:
+        TestSuiteName: 'testMultiWorkspace'
+        BuildNumber: '$(Build.BuildNumber)'
+        Platform: 'macOS'
+        PythonVersion: '3.7'
+        NodeVersion: '8.11.2'
+        NpmVersion: 'latest'
+        MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+        MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+        MOCHA_REPORTER_JUNIT: true
+        AzureStorageAccountName: 'vscodepythonci'
+        AzureStorageContainerName: 'vscode-python-ci'
+      Debugger:
+        TestSuiteName: 'testDebugger'
+        BuildNumber: '$(Build.BuildNumber)'
+        Platform: 'macOS'
+        PythonVersion: '3.7'
+        NodeVersion: '8.11.2'
+        NpmVersion: 'latest'
+        MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+        MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+        MOCHA_REPORTER_JUNIT: true
+        AzureStorageAccountName: 'vscodepythonci'
+        AzureStorageContainerName: 'vscode-python-ci'
+
+
+- job: 'System_Test_Windows'
+  dependsOn: 'PR_Validate_Windows_py37'
+  pool:
+    name: 'Hosted VS2017'
+  steps:
+  - template: templates/test-phase.yml
+  strategy:
+    maxParallel: 3
+    matrix:
+      SingleWorkspace:
+        TestSuiteName: 'testSingleWorkspace'
+        BuildNumber: '$(Build.BuildNumber)'
+        Platform: 'Windows'
+        PythonVersion: '3.7'
+        NodeVersion: '8.11.2'
+        NpmVersion: 'latest'
+        MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+        MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+        MOCHA_REPORTER_JUNIT: true
+        AzureStorageAccountName: 'vscodepythonci'
+        AzureStorageContainerName: 'vscode-python-ci'
+      MultiWorkspace:
+        TestSuiteName: 'testMultiWorkspace'
+        BuildNumber: '$(Build.BuildNumber)'
+        Platform: 'Windows'
+        PythonVersion: '3.7'
+        NodeVersion: '8.11.2'
+        NpmVersion: 'latest'
+        MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+        MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+        MOCHA_REPORTER_JUNIT: true
+        AzureStorageAccountName: 'vscodepythonci'
+        AzureStorageContainerName: 'vscode-python-ci'
+      Debugger:
+        TestSuiteName: 'testDebugger'
+        BuildNumber: '$(Build.BuildNumber)'
+        Platform: 'Windows'
+        PythonVersion: '3.7'
+        NodeVersion: '8.11.2'
+        NpmVersion: 'latest'
+        MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+        MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+        MOCHA_REPORTER_JUNIT: true
+        AzureStorageAccountName: 'vscodepythonci'
+        AzureStorageContainerName: 'vscode-python-ci'
+
+
+# - job: 'System_Test_Run_Linux'
+#   dependsOn: 'PR_Validate_Windows_py37'
+#   pool:
+#     name: 'Hosted Ubuntu 1604'
+#   steps:
+#   - template: templates/test-phase.yml
+#   strategy:
+#     maxParallel: 10
+#     matrix:
+#       SingleWorkspace:
+#         TestSuiteName: 'testSingleWorkspace'
+#         BuildNumber: '$(Build.BuildNumber)'
+#         Platform: 'Linux'
+#         PythonVersion: '3.7'
+#         NodeVersion: '8.11.2'
+#         NpmVersion: 'latest'
+#         MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+#         MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+#         MOCHA_REPORTER_JUNIT: true
+#         AzureStorageAccountName: 'vscodepythonci'
+#         AzureStorageContainerName: 'vscode-python-ci'
+#       MultiWorkspace:
+#         TestSuiteName: 'testMultiWorkspace'
+#         BuildNumber: '$(Build.BuildNumber)'
+#         Platform: 'Linux'
+#         PythonVersion: '3.7'
+#         NodeVersion: '8.11.2'
+#         NpmVersion: 'latest'
+#         MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+#         MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+#         MOCHA_REPORTER_JUNIT: true
+#         AzureStorageAccountName: 'vscodepythonci'
+#         AzureStorageContainerName: 'vscode-python-ci'
+#       Debugger:
+#         TestSuiteName: 'testDebugger'
+#         BuildNumber: '$(Build.BuildNumber)'
+#         Platform: 'Linux'
+#         PythonVersion: '3.7'
+#         NodeVersion: '8.11.2'
+#         NpmVersion: 'latest'
+#         MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+#         MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+#         MOCHA_REPORTER_JUNIT: true
+#         AzureStorageAccountName: 'vscodepythonci'
+#         AzureStorageContainerName: 'vscode-python-ci'

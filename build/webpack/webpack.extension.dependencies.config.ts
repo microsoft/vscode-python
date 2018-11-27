@@ -21,6 +21,19 @@ const config: webpack.Configuration = {
     node: {
         __dirname: false
     },
+    module: {
+        rules: [
+            {
+                // JupyterServices imports node-fetch using `eval`.
+                test: /@jupyterlab[\\\/]services[\\\/].*js$/,
+                use: [
+                    {
+                        loader: path.join(__dirname, 'loaders', 'fixEvalRequire.js')
+                    }
+                ]
+            }
+        ]
+    },
     externals: [
         'vscode',
         'commonjs'

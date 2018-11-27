@@ -1,5 +1,5 @@
+// tslint:disable:no-require-imports no-var-requires no-unnecessary-callback-wrapper
 import { inject, injectable } from 'inversify';
-import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IPlatformService } from '../../../common/platform/types';
@@ -9,6 +9,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
+const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 /**
  * Locates "known" paths.
@@ -46,8 +47,7 @@ export class KnownPathsService extends CacheableLocatorService {
     private suggestionsFromKnownPaths() {
         const promises = this.knownSearchPaths.getSearchPaths().map(dir => this.getInterpretersInDirectory(dir));
         return Promise.all<string[]>(promises)
-            // tslint:disable-next-line:underscore-consistent-invocation
-            .then(listOfInterpreters => _.flatten(listOfInterpreters))
+            .then(listOfInterpreters => flatten(listOfInterpreters))
             .then(interpreters => interpreters.filter(item => item.length > 0))
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))))
             .then(interpreters => interpreters.filter(interpreter => !!interpreter).map(interpreter => interpreter!));

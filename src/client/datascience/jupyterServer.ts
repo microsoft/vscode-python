@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { Kernel, KernelMessage, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import { Kernel, KernelMessage, Session, SessionManager } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -413,7 +413,8 @@ export class JupyterServer implements INotebookServer {
     private handleCodeRequest = (subscriber: Subscriber<ICell>, startTime: number, cell: ICell, code: string) => {
         // Generate a new request.
         const request = this.generateRequest(code, false);
-
+        // tslint:disable-next-line:no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         // Transition to the busy stage
         cell.state = CellState.executing;
 
@@ -421,17 +422,17 @@ export class JupyterServer implements INotebookServer {
         if (request) {
             request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
                 try {
-                    if (KernelMessage.isExecuteResultMsg(msg)) {
+                    if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
                         this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
-                    } else if (KernelMessage.isExecuteInputMsg(msg)) {
+                    } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                         this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
-                    } else if (KernelMessage.isStatusMsg(msg)) {
+                    } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
                         this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
-                    } else if (KernelMessage.isStreamMsg(msg)) {
+                    } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
                         this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
-                    } else if (KernelMessage.isDisplayDataMsg(msg)) {
+                    } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
                         this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
-                    } else if (KernelMessage.isErrorMsg(msg)) {
+                    } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
                         this.handleError(msg as KernelMessage.IErrorMsg, cell);
                     } else {
                         this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);

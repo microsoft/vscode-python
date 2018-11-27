@@ -1,6 +1,6 @@
+// tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
-import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IRegistry, RegistryHive } from '../../../common/platform/types';
@@ -10,6 +10,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
+const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 // tslint:disable-next-line:variable-name
 const DefaultPythonExecutable = 'python.exe';
@@ -53,15 +54,13 @@ export class WindowsRegistryService extends CacheableLocatorService {
         }
 
         const companies = await Promise.all<CompanyInterpreter[]>(promises);
-        // tslint:disable-next-line:underscore-consistent-invocation
-        const companyInterpreters = await Promise.all(_.flatten(companies)
+        const companyInterpreters = await Promise.all(flatten(companies)
             .filter(item => item !== undefined && item !== null)
             .map(company => {
                 return this.getInterpretersForCompany(company.companyKey, company.hive, company.arch);
             }));
 
-        // tslint:disable-next-line:underscore-consistent-invocation
-        return _.flatten(companyInterpreters)
+        return flatten(companyInterpreters)
             .filter(item => item !== undefined && item !== null)
             // tslint:disable-next-line:no-non-null-assertion
             .map(item => item!)

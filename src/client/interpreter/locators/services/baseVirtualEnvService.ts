@@ -1,5 +1,6 @@
+// tslint:disable:no-unnecessary-callback-wrapper no-require-imports no-var-requires
+
 import { injectable, unmanaged } from 'inversify';
-import * as _ from 'lodash';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
@@ -8,6 +9,7 @@ import { IInterpreterHelper, IVirtualEnvironmentsSearchPathProvider, PythonInter
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
+const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 @injectable()
 export class BaseVirtualEnvService extends CacheableLocatorService {
@@ -31,14 +33,14 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
     private async suggestionsFromKnownVenvs(resource?: Uri) {
         const searchPaths = await this.searchPathsProvider.getSearchPaths(resource);
         return Promise.all(searchPaths.map(dir => this.lookForInterpretersInVenvs(dir, resource)))
-            .then(listOfInterpreters => _.flatten(listOfInterpreters));
+            .then(listOfInterpreters => flatten(listOfInterpreters));
     }
     private async lookForInterpretersInVenvs(pathToCheck: string, resource?: Uri) {
         return this.fileSystem.getSubDirectories(pathToCheck)
             .then(subDirs => Promise.all(this.getProspectiveDirectoriesForLookup(subDirs)))
             .then(dirs => dirs.filter(dir => dir.length > 0))
             .then(dirs => Promise.all(dirs.map(lookForInterpretersInDirectory)))
-            .then(pathsWithInterpreters => _.flatten(pathsWithInterpreters))
+            .then(pathsWithInterpreters => flatten(pathsWithInterpreters))
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getVirtualEnvDetails(interpreter, resource))))
             .then(interpreters => interpreters.filter(interpreter => !!interpreter).map(interpreter => interpreter!))
             .catch((err) => {

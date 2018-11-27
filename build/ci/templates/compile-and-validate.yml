@@ -1,0 +1,191 @@
+parameters:
+  name: 'Unit_Test_Run'
+  PythonVersion: '3.7'
+  NodeVersion: '8.11.2'
+  NpmVersion: 'latest'
+  PoolName: 'Hosted Ubuntu 1604'
+  MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+  MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
+  MOCHA_REPORTER_JUNIT: true
+  RunHygiene: true
+  UploadBinary: false
+  AzureStorageAccountName: 'vscodepythonci'
+  AzureStorageContainerName: 'vscode-python-ci'
+
+jobs:
+- job: ${{ parameters.name }}
+  pool:
+    name: ${{ parameters.PoolName }}
+
+  variables:
+    # TODO: use {{ insert }}: {{ parameters.variables }}, it would not work at time I wrote this
+    nodeVersion: ${{ parameters.NodeVersion }}
+    npmVersion: ${{ parameters.NpmVersion }}
+    pythonVersion: ${{ parameters.PythonVersion }}
+    mochaReportFile: ${{ parameters.MOCHA_CI_REPORTFILE }}
+    MOCHA_CI_REPORTER_ID: ${{ parameters.MOCHA_CI_REPORTER_ID }}
+    MOCHA_CI_REPORTFILE: ${{ parameters.MOCHA_CI_REPORTFILE }}
+    MOCHA_REPORTER_JUNIT: ${{ parameters.MOCHA_REPORTER_JUNIT }}
+    runHygiene: ${{ parameters.RunHygiene }}
+    uploadBinary: ${{ parameters.UploadBinary }}
+    azureStorageAcctName: ${{ parameters.AzureStorageAccountName }}
+    azureStorageContainerName: ${{ parameters.AzureStorageContainerName }}
+    plaform: ${{ parameters.Platform }}
+
+  steps:
+    - bash: echo REQUESTED VARIABLE VALUES
+
+        echo Node Version = $(nodeVersion)
+
+        echo Python Version = $(pythonVersion)
+
+        echo NPM Version = $(npmVersion)
+
+        echo Mocha reportfile = '$(mochaReportFile)'
+
+        echo MOCHA_CI_REPORTFILE = $MOCHA_CI_REPORTFILE
+
+        echo MOCHA_CI_REPORTER_ID = $MOCHA_CI_REPORTER_ID
+
+        echo MOCHA_REPORTER_JUNIT = $MOCHA_REPORTER_JUNIT
+
+        echo COV_UUID = $COV_UUID
+
+        echo Run Hygiene = $(runHygiene)
+
+      displayName: 'Show build vars'
+      name: 'show_bld_vars'
+
+
+    - task: ms.vss-governance-buildtask.governance-build-task-component-detection.ComponentGovernanceComponentDetection@0
+      displayName: 'Component Detection'
+
+      continueOnError: true
+      condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+
+    - task: NodeTool@0
+      displayName: 'Use Node $(nodeVersion)'
+      inputs:
+        versionSpec: '$(nodeVersion)'
+
+
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(pythonVersion)'
+      inputs:
+        versionSpec: '$(pythonVersion)'
+
+
+    - task: Npm@1
+      displayName: 'update npm'
+      inputs:
+        command: custom
+
+        verbose: true
+
+        customCommand: 'install -g npm@$(npmVersion)'
+
+
+    - task: Npm@1
+      displayName: 'npm ci'
+      inputs:
+        command: custom
+
+        verbose: true
+
+        customCommand: ci
+
+
+    - bash: echo AVAILABLE DEPENDENCY VERSIONS
+
+        echo Node Version = `node -v`
+
+        echo NPM Version = `npm -v`
+
+        echo Python Version = `python --version`
+
+      displayName: 'Show build dependency versions'
+      name: 'show_bld_deps_vers'
+
+
+    - task: Gulp@0
+      displayName: 'gulp prePublishNonBundle'
+      inputs:
+        targets: 'prePublishNonBundle'
+
+
+    - task: Gulp@0
+      displayName: 'gulp code hygiene'
+      inputs:
+        targets: 'hygiene-modified'
+      condition: and(succeeded(), eq(variables['runHygiene'], 'true'))
+
+
+    - task: Npm@1
+      displayName: 'run cover:enable'
+      inputs:
+        command: custom
+
+        verbose: false
+
+        customCommand: 'run cover:enable'
+
+
+    - task: Npm@1
+      displayName: 'run test:unittests'
+      inputs:
+        command: custom
+
+        verbose: false
+
+        customCommand: 'run test:unittests'
+
+
+    - bash: 'bash <(curl -s https://codecov.io/bash) -t $COV_UUID'
+      displayName: 'publish codecov'
+      continueOnError: true
+      condition: always()
+
+
+    - task: CmdLine@1
+      displayName: 'pip upgrade pip'
+      inputs:
+        filename: python
+
+        arguments: '-m pip install --upgrade pip'
+
+
+    - task: CmdLine@1
+      displayName: 'pip install requirements'
+      inputs:
+        filename: python
+
+        arguments: '-m pip install --upgrade -r ./requirements.txt'
+
+
+    - task: CmdLine@1
+      displayName: 'pip install ptvsd'
+      inputs:
+        filename: python
+
+        arguments: '-m pip install -t ./pythonFiles/experimental/ptvsd --no-cache-dir --implementation py --no-deps ptvsd'
+
+
+    - task: ArchiveFiles@2
+      displayName: 'Capture Binaries'
+      inputs:
+        rootFolderOrFile: out
+
+        archiveFile: '$(Build.ArtifactStagingDirectory)/bin-artifacts.zip'
+
+
+    - task: AzureFileCopy@2
+      displayName: 'Upload bin-artifacts to cloud-store'
+      inputs:
+        SourcePath: '$(Build.ArtifactStagingDirectory)/bin-artifacts.zip'
+        azureSubscription: 'dekeeler-ptvsazure-acct-for-dev'
+        Destination: AzureBlob
+        storage: $(azureStorageAcctName)
+        ContainerName: $(azureStorageContainerName)
+        BlobPrefix: '$(Build.BuildNumber)'
+      condition: and(succeeded(), eq(variables['uploadBinary'], 'true'))

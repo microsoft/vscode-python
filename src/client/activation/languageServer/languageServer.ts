@@ -151,7 +151,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         const settings = this.configuration.getSettings();
         if (!settings.downloadLanguageServer) {
             // Depends on .NET Runtime or SDK. Typically development-only case.
-            this.languageClient = this.createSimpleLanguageClient(clientOptions);
+            this.languageClient = await this.createSimpleLanguageClient(clientOptions);
             await this.startLanguageClient();
             return true;
         }
@@ -163,7 +163,7 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         }
 
         const serverModule = path.join(this.context.extensionPath, this.languageServerFolder, this.platformData.getEngineExecutableName());
-        this.languageClient = this.createSelfContainedLanguageClient(serverModule, clientOptions);
+        this.languageClient = await this.createSelfContainedLanguageClient(serverModule, clientOptions);
         try {
             await this.startLanguageClient();
             this.languageClient.onTelemetry(telemetryEvent => {
@@ -197,23 +197,25 @@ export class LanguageServerExtensionActivator implements IExtensionActivator {
         this.startupCompleted.resolve();
     }
 
-    private createSimpleLanguageClient(clientOptions: LanguageClientOptions): LanguageClient {
+    private async createSimpleLanguageClient(clientOptions: LanguageClientOptions): Promise<LanguageClient> {
         const commandOptions = { stdio: 'pipe' };
         const serverModule = path.join(this.context.extensionPath, this.languageServerFolder, this.platformData.getEngineDllName());
         const serverOptions: ServerOptions = {
             run: { command: dotNetCommand, args: [serverModule], options: commandOptions },
             debug: { command: dotNetCommand, args: [serverModule, '--debug'], options: commandOptions }
         };
-        return new LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
+        const vscodeLanaguageClient = await import('vscode-languageclient');
+        return new vscodeLanaguageClient.LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
     }
 
-    private createSelfContainedLanguageClient(serverModule: string, clientOptions: LanguageClientOptions): LanguageClient {
+    private async createSelfContainedLanguageClient(serverModule: string, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
         const options = { stdio: 'pipe' };
         const serverOptions: ServerOptions = {
             run: { command: serverModule, rgs: [], options: options },
             debug: { command: serverModule, args: ['--debug'], options }
         };
-        return new LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
+        const vscodeLanaguageClient = await import('vscode-languageclient');
+        return new vscodeLanaguageClient.LanguageClient(PYTHON, languageClientName, serverOptions, clientOptions);
     }
 
     // tslint:disable-next-line:member-ordering

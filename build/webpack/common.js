@@ -14,7 +14,17 @@ exports.nodeModulesToExternalize = [
     'unicode/category/Mn',
     'unicode/category/Mc',
     'unicode/category/Nd',
-    'unicode/category/Pc'
+    'unicode/category/Pc',
+    '@jupyterlab/services',
+    'azure-storage',
+    'request',
+    'request-progress',
+    'source-map',
+    'file-matcher',
+    'diff-match-patch',
+    'sudo-prompt',
+    'node-stream-zip',
+    'xml2js'
 ];
 function getDefaultPlugins(name) {
     const plugins = [];

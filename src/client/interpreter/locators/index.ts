@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import * as _ from 'lodash';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IPlatformService } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
@@ -17,6 +16,8 @@ import {
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../contracts';
+// tslint:disable-next-line:no-require-imports no-var-requires
+const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 /**
  * Facilitates locating Python interpreters.
@@ -65,7 +66,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         const promises = locators.map(async provider => provider.getInterpreters(resource));
         const listOfInterpreters = await Promise.all(promises);
 
-        const items = _.flatten(listOfInterpreters)
+        const items = flatten(listOfInterpreters)
             .filter(item => !!item)
             .map(item => item!);
         return this.interpreterLocatorHelper.mergeInterpreters(items);

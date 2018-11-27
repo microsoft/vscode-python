@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { JSONArray, JSONObject, JSONValue } from '@phosphor/coreutils';
-import * as fm from 'file-matcher';
+import { FindOptions } from 'file-matcher';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -271,7 +271,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
         // Search through all of the json files for the theme name
         const escapedThemeName = theme.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        const searchOptions: fm.FindOptions = {
+        const searchOptions: FindOptions = {
             path: extensionsPath,
             recursiveSearch: true,
             fileFilter: {
@@ -279,7 +279,8 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                 content: new RegExp(`id[',"]:\\s*[',"]${escapedThemeName}[',"]`)
             }
         };
-
+        // tslint:disable-next-line:no-require-imports
+        const fm = require('file-matcher') as typeof import('file-matcher');
         const matcher = new fm.FileMatcher();
 
         try {

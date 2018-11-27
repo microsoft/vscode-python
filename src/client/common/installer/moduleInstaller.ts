@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line:no-require-imports no-var-requires
-const sudo = require('sudo-prompt');
-
 import * as fs from 'fs';
 import { injectable } from 'inversify';
 import * as path from 'path';
@@ -90,6 +87,8 @@ export abstract class ModuleInstaller {
 
         outputChannel.appendLine('');
         outputChannel.appendLine(`[Elevated] ${command}`);
+        // tslint:disable-next-line:no-require-imports no-var-requires
+        const sudo = require('sudo-prompt');
 
         sudo.exec(command, options, (error, stdout, stderr) => {
             if (error) {
