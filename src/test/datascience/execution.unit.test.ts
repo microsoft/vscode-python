@@ -189,7 +189,6 @@ suite('Jupyter Execution', async () => {
         workingKernelSpec = createTempSpec(workingPython.path);
         ipykernelInstallCount = 0;
         // tslint:disable-next-line:no-invalid-this
-        this.timeout(10000);
     });
 
     teardown(() => {
@@ -455,24 +454,24 @@ suite('Jupyter Execution', async () => {
         const usableInterpreter = await execution.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable intepreter not found');
         await assert.isFulfilled(execution.startNotebookServer(), 'Should be able to start a server');
-    });
+    }).timeout(10000);
 
     test('Failing notebook throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
         await assert.isRejected(execution.startNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
-    });
+    }).timeout(10000);
 
     test('Failing others throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython, missingNotebookPython2]);
         await assert.isRejected(execution.startNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
-    });
+    }).timeout(10000);
 
     test('Slow notebook startups throws exception', async () => {
         const execution = createExecution(workingPython, ['Failure']);
         await assert.isRejected(execution.startNotebookServer(), 'Jupyter notebook failed to launch\r\nError: The Jupyter notebook server failed to launch in time');
-    });
+    }).timeout(10000);
 
     test('Other than active works', async () => {
         const execution = createExecution(missingNotebookPython);
@@ -485,7 +484,7 @@ suite('Jupyter Execution', async () => {
         if (usableInterpreter) {
             assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
         }
-    });
+    }).timeout(10000);
 
     test('Other than active finds closest match', async () => {
         const execution = createExecution(missingKernelPython);
@@ -498,7 +497,7 @@ suite('Jupyter Execution', async () => {
             assert.equal(usableInterpreter.version_info[0], missingKernelPython.version_info[0], 'Found interpreter should match on major');
             assert.notEqual(usableInterpreter.version_info[1], missingKernelPython.version_info[1], 'Found interpreter should not match on minor');
         }
-    });
+    }).timeout(10000);
 
     test('Kernelspec is deleted on exit', async () => {
         const execution = createExecution(missingKernelPython);
@@ -506,7 +505,7 @@ suite('Jupyter Execution', async () => {
         cleanupDisposables();
         const exists = fs.existsSync(workingKernelSpec);
         assert.notOk(exists, 'Temp kernel spec still exists');
-    });
+    }).timeout(10000);
 
     test('Jupyter found on the path', async () => {
         // Make sure we can find jupyter on the path if we
@@ -515,5 +514,5 @@ suite('Jupyter Execution', async () => {
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
         when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
         await assert.isFulfilled(execution.startNotebookServer(), 'Should be able to start a server');
-    });
+    }).timeout(10000);
 });
