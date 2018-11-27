@@ -9,11 +9,14 @@ import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { ILogger, IOutputChannel } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationDiagnostics } from '../types';
-import { IDiagnostic, IDiagnosticsService } from './types';
+import { IDiagnostic, IDiagnosticsService, ISourceMapSupportService } from './types';
 
 @injectable()
 export class ApplicationDiagnostics implements IApplicationDiagnostics {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
+    public register() {
+        this.serviceContainer.get<ISourceMapSupportService>(ISourceMapSupportService).register();
+    }
     public async performPreStartupHealthCheck(): Promise<void> {
         const diagnosticsServices = this.serviceContainer.getAll<IDiagnosticsService>(IDiagnosticsService);
         await Promise.all(diagnosticsServices.map(async diagnosticsService => {
