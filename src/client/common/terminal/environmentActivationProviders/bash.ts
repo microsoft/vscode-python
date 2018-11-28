@@ -20,14 +20,20 @@ export class Bash extends BaseActivationCommandProvider {
             targetShell === TerminalShellType.zsh ||
             targetShell === TerminalShellType.cshell ||
             targetShell === TerminalShellType.tcshell ||
-            targetShell === TerminalShellType.fish;
+            targetShell === TerminalShellType.fish ||
+            targetShell === TerminalShellType.xonsh;
     }
     public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
         const scriptFile = await this.findScriptFile(pythonPath, this.getScriptsInOrderOfPreference(targetShell));
         if (!scriptFile) {
             return;
         }
-        return [`source ${scriptFile.fileToCommandArgument()}`];
+
+        if (targetShell === TerminalShellType.xonsh) {
+            return [`conda ${scriptFile.fileToCommandArgument()}`];
+        } else {
+            return [`source ${scriptFile.fileToCommandArgument()}`];
+        }
     }
 
     private getScriptsInOrderOfPreference(targetShell: TerminalShellType): string[] {

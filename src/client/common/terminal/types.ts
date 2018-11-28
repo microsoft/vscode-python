@@ -16,6 +16,7 @@ export enum TerminalShellType {
     cshell = 'cshell',
     tcshell = 'tshell',
     wsl = 'wsl',
+    xonsh = 'xonsh',
     other = 'other'
 }
 
