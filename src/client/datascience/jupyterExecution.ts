@@ -66,28 +66,24 @@ class JupyterCommand {
     private exe: string;
     private requiredArgs: string[];
     private launcher: IProcessService;
-    private interpreter: PythonInterpreter | undefined;
+    private interpreterPromise: Promise<PythonInterpreter | undefined>;
     private condaService: ICondaService;
-    private versionNumber: number;
 
     constructor(exe: string, args: string[], launcher: IProcessService, interpreter: IInterpreterService, condaService: ICondaService) {
         this.exe = exe;
         this.requiredArgs = args;
         this.launcher = launcher;
         this.condaService = condaService;
-        this.versionNumber = 0;
-        interpreter.getInterpreterDetails(this.exe)
-            .then((i)  => {
-                 this.interpreter = i;
-                 this.versionNumber = this.interpreter ? this.interpreter.version_info[0] : 0;
-            }).catch(e => {
-                this.interpreter = undefined;
-                this.execVersion().then(n => this.versionNumber = n).ignoreErrors();
-            });
+        this.interpreterPromise = interpreter.getInterpreterDetails(this.exe).catch(e => undefined);
     }
 
-    public mainVersion = () : number => {
-        return this.versionNumber;
+    public mainVersion = async () : Promise<number> => {
+        const interpreter = await this.interpreterPromise;
+        if (interpreter) {
+            return interpreter.version_info[0];
+        } else {
+            return this.execVersion();
+        }
     }
 
     public execObservable = async (args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> => {
@@ -114,9 +110,10 @@ class JupyterCommand {
         if (!inputEnv) {
             inputEnv = process.env;
         }
+        const interpreter = await this.interpreterPromise;
 
-        if (this.interpreter && this.interpreter.type === InterpreterType.Conda) {
-            return this.condaService.getActivatedCondaEnvironment(this.interpreter, inputEnv);
+        if (interpreter && interpreter.type === InterpreterType.Conda) {
+            return this.condaService.getActivatedCondaEnvironment(interpreter, inputEnv);
         }
 
         return inputEnv;
@@ -214,7 +211,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
             // Wait for the connection information on this result
             const connection = await JupyterConnection.waitForConnection(
-                tempFile.filePath, this.getJupyterServerInfo, launchResult, notebookCommand.mainVersion(), this.serviceContainer);
+                tempFile.filePath, this.getJupyterServerInfo, launchResult, await notebookCommand.mainVersion(), this.serviceContainer);
 
             // If the kernel spec didn't match, then try with our current process instead
             if (!kernelSpec) {

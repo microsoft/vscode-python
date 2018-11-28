@@ -65,7 +65,7 @@ export namespace DataScience {
     export const restartKernelMessage = localize('DataScience.restartKernelMessage', 'Do you want to restart the Jupter kernel? All variables will be lost.');
     export const restartKernelMessageYes = localize('DataScience.restartKernelMessageYes', 'Restart');
     export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
-    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Jupyter Kernel');
+    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting iPython Kernel');
     export const executingCode = localize('DataScience.executingCode', 'Executing Cell');
     export const collapseAll = localize('DataScience.collapseAll', 'Collapse all cell inputs');
     export const expandAll = localize('DataScience.expandAll', 'Expand all cell inputs');
@@ -80,8 +80,9 @@ export namespace DataScience {
     export const jupyterNotebookFailure = localize('DataScience.jupyterNotebookFailure', 'Jupyter notebook failed to launch. \r\n{0}');
     export const notebookVersionFormat = localize('DataScience.notebookVersionFormat', 'Jupyter Notebook Version: {0}');
     //tslint:disable-next-line:no-multiline-string
-    export const jupyterKernelNotSupportedOnActive = localize('DataScience.jupyterKernelNotSupportedOnActive', `Jupyter kernel cannot be started from '{0}'. Using closest match {1} instead.`);
-    export const jupyterKernelSpecNotFound = localize('DataScience.jupyterKernelSpecNotFound', 'Cannot create a Jupyter kernel spec and none are available for use');
+    export const jupyterKernelNotSupportedOnActive = localize('DataScience.jupyterKernelNotSupportedOnActive', `iPython kernel cannot be started from '{0}'. Using closest match {1} instead.`);
+    export const jupyterKernelSpecNotFound = localize('DataScience.jupyterKernelSpecNotFound', 'Cannot create a iPython kernel spec and none are available for use');
+    export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt iPython Kernel');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

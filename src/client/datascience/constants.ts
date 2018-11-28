@@ -39,6 +39,7 @@ export namespace HistoryMessages {
     export const CollapseAll = 'collapse_all';
     export const StartProgress = 'start_progress';
     export const StopProgress = 'stop_progress';
+    export const Interrupt = 'interrupt';
 }
 
 export namespace Telemetry {
@@ -57,6 +58,7 @@ export namespace Telemetry {
     export const ShowHistoryPane = 'DATASCIENCE.SHOW_HISTORY_PANE';
     export const ExpandAll = 'DATASCIENCE.EXPAND_ALL';
     export const CollapseAll = 'DATASCIENCE.COLLAPSE_ALL';
+    export const Interrupt = 'DATASCIENCE.INTERRUPT';
 }
 
 export namespace HelpLinks {

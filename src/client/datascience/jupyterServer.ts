@@ -197,7 +197,6 @@ export class JupyterServer implements INotebookServer, IDisposable {
                 const request = this.generateRequest(code, true);
 
                 if (request) {
-
                     // // For debugging purposes when silently is failing.
                     // request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
                     //     try {
@@ -239,6 +238,18 @@ export class JupyterServer implements INotebookServer, IDisposable {
         }
 
         throw new Error(localize.DataScience.sessionDisposed());
+    }
+
+    public interruptKernel = () : Promise<void> => {
+        if (this.session && this.session.kernel) {
+            // Update our start time so we don't keep sending responses
+            this.sessionStartTime = Date.now();
+
+            // Interrupt whatever is happening
+            return this.session.kernel.interrupt();
+        }
+
+        return Promise.reject(new Error(localize.DataScience.sessionDisposed()));
     }
 
     public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
@@ -415,66 +426,78 @@ export class JupyterServer implements INotebookServer, IDisposable {
     }
 
     private handleCodeRequest = (subscriber: Subscriber<ICell>, startTime: number, cell: ICell, code: string) => {
-        // Generate a new request.
-        const request = this.generateRequest(code, false);
-        // tslint:disable-next-line:no-require-imports
-        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-        // Transition to the busy stage
-        cell.state = CellState.executing;
+        // Generate a new request if we still can
+        if (this.sessionStartTime && startTime > this.sessionStartTime) {
 
-        // Listen to the reponse messages and update state as we go
-        if (request) {
-            request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-                try {
-                    if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                        this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
-                    } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
-                        this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
-                    } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                        this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
-                    } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                        this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
-                    } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-                        this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
-                    } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-                        this.handleError(msg as KernelMessage.IErrorMsg, cell);
-                    } else {
-                        this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+            const request = this.generateRequest(code, false);
+
+            // tslint:disable-next-line:no-require-imports
+            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+            // Transition to the busy stage
+            cell.state = CellState.executing;
+
+            // Listen to the reponse messages and update state as we go
+            if (request) {
+                request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+                    try {
+                        if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+                            this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
+                        } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
+                            this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
+                        } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
+                            this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
+                        } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+                            this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
+                        } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+                            this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
+                        } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+                            this.handleError(msg as KernelMessage.IErrorMsg, cell);
+                        } else {
+                            this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+                        }
+
+                        // Set execution count, all messages should have it
+                        if (msg.content.execution_count) {
+                            cell.data.execution_count = msg.content.execution_count as number;
+                        }
+
+                        // Show our update if any new output
+                        subscriber.next(cell);
+                    } catch (err) {
+                        // If not a restart error, then tell the subscriber
+                        if (this.sessionStartTime && startTime > this.sessionStartTime) {
+                            this.logger.logError(`Error during message ${msg.header.msg_type}`);
+                            subscriber.error(err);
+                        }
                     }
+                };
 
-                    // Set execution count, all messages should have it
-                    if (msg.content.execution_count) {
-                        cell.data.execution_count = msg.content.execution_count as number;
-                    }
-
-                    // Show our update if any new output
-                    subscriber.next(cell);
-                } catch (err) {
-                    // If not a restart error, then tell the subscriber
+                // Create completion and error functions so we can bind our cell object
+                // tslint:disable-next-line:no-any
+                const completion = (error?: any) => {
+                    cell.state = error as Error ? CellState.error : CellState.finished;
+                    // Only do this if start time is still valid. Dont log an error to the subscriber. Error
+                    // state should end up in the cell output.
                     if (this.sessionStartTime && startTime > this.sessionStartTime) {
-                        this.logger.logError(`Error during message ${msg.header.msg_type}`);
-                        subscriber.error(err);
+                        subscriber.next(cell);
                     }
-                }
-            };
+                    subscriber.complete();
+                };
 
-            // Create completion and error functions so we can bind our cell object
-            // tslint:disable-next-line:no-any
-            const completion = (error?: any) => {
-                cell.state = error as Error ? CellState.error : CellState.finished;
-                // Only do this if start time is still valid. Dont log an error to the subscriber. Error
-                // state should end up in the cell output.
-                if (this.sessionStartTime && startTime > this.sessionStartTime) {
-                    subscriber.next(cell);
-                }
-                subscriber.complete();
-            };
-
-            // When the request finishes we are done
-            request.done.then(completion).catch(completion);
+                // When the request finishes we are done
+                request.done.then(completion).catch(completion);
+            } else {
+                subscriber.error(new Error(localize.DataScience.sessionDisposed()));
+            }
         } else {
-            subscriber.error(new Error(localize.DataScience.sessionDisposed()));
+            // Otherwise just set to an error
+            this.handleInterrupted(cell);
+            cell.state = CellState.error;
+            subscriber.next(cell);
+            subscriber.complete();
         }
+
     }
 
     private executeCodeObservable(code: string, file: string, line: number) : Observable<ICell> {
@@ -554,6 +577,24 @@ export class JupyterServer implements INotebookServer, IDisposable {
         this.addToCellData(cell, output);
     }
 
+    private handleInterrupted(cell : ICell) {
+        this.handleError({
+            channel: 'iopub',
+            parent_header: {},
+            metadata: {},
+            header: { username: '', version: '', session: '', msg_id: '', msg_type: 'error' },
+            content: {
+                ename: 'KeyboardInterrupt',
+                evalue: '',
+                // Does this need to be translated? All depends upon if jupyter does or not
+                traceback: [
+                    '[1;31m---------------------------------------------------------------------------[0m',
+                    '[1;31mKeyboardInterrupt[0m: '
+                ]
+            }
+        }, cell);
+    }
+
     private handleError(msg: KernelMessage.IErrorMsg, cell: ICell) {
         const output : nbformat.IError = {
             output_type : 'error',
@@ -562,5 +603,6 @@ export class JupyterServer implements INotebookServer, IDisposable {
             traceback : msg.content.traceback
         };
         this.addToCellData(cell, output);
+        cell.state = CellState.error;
     }
 }

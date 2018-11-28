@@ -89,8 +89,11 @@ export class History implements IWebPanelMessageListener, IHistory {
 
             // Make sure we're loaded first.
             const statusLoad = this.setStatus(localize.DataScience.startingJupyter());
-            await this.loadPromise;
-            statusLoad.dispose();
+            try {
+                await this.loadPromise;
+            } finally {
+                statusLoad.dispose();
+            }
 
             // Then show our webpanel
             await this.show();
@@ -142,6 +145,10 @@ export class History implements IWebPanelMessageListener, IHistory {
 
             case HistoryMessages.RestartKernel:
                 this.restartKernel();
+                break;
+
+            case HistoryMessages.Interrupt:
+                this.interruptKernel();
                 break;
 
             case HistoryMessages.Export:
@@ -335,6 +342,17 @@ export class History implements IWebPanelMessageListener, IHistory {
         }
     }
 
+    @captureTelemetry(Telemetry.Interrupt)
+    private interruptKernel() {
+        if (this.jupyterServer && !this.restartingKernel) {
+            this.jupyterServer.interruptKernel()
+                .then()
+                .catch(err => {
+                    this.logger.logError(err);
+                });
+        }
+    }
+
     @captureTelemetry(Telemetry.ExportNotebook, {}, false)
     // tslint:disable-next-line: no-any no-empty
     private export (payload: any) {
@@ -392,8 +410,6 @@ export class History implements IWebPanelMessageListener, IHistory {
             if (restart) {
                 await this.addRestartSysInfo();
             }
-        } catch (err) {
-            throw err;
         } finally {
             if (status) {
                 status.dispose();
@@ -502,27 +518,27 @@ export class History implements IWebPanelMessageListener, IHistory {
         const status = this.setStatus(localize.DataScience.startingJupyter());
 
         // Check to see if we support ipykernel or not
-        const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
-        if (!usableInterpreter) {
-            // Not loading anymore
-            status.dispose();
-
-            // Nobody is useable, throw an exception
-            throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
-        } else {
-            // See if the usable interpreter is not our active one. If so, show a warning
-            const active = await this.interpreterService.getActiveInterpreter();
-            const activeDisplayName = active ? active.displayName : undefined;
-            const activePath = active ? active.path : undefined;
-            const usableDisplayName = usableInterpreter ? usableInterpreter.displayName : undefined;
-            const usablePath = usableInterpreter ? usableInterpreter.path : undefined;
-            if (activePath && usablePath && !this.fileSystem.arePathsSame(activePath, usablePath) && activeDisplayName && usableDisplayName) {
-                this.applicationShell.showWarningMessage(localize.DataScience.jupyterKernelNotSupportedOnActive().format(activeDisplayName, usableDisplayName));
-            }
-        }
-
-        // Otherwise we continue loading
         try {
+            const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
+            if (!usableInterpreter) {
+                // Not loading anymore
+                status.dispose();
+
+                // Nobody is useable, throw an exception
+                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
+            } else {
+                // See if the usable interpreter is not our active one. If so, show a warning
+                const active = await this.interpreterService.getActiveInterpreter();
+                const activeDisplayName = active ? active.displayName : undefined;
+                const activePath = active ? active.path : undefined;
+                const usableDisplayName = usableInterpreter ? usableInterpreter.displayName : undefined;
+                const usablePath = usableInterpreter ? usableInterpreter.path : undefined;
+                if (activePath && usablePath && !this.fileSystem.arePathsSame(activePath, usablePath) && activeDisplayName && usableDisplayName) {
+                    this.applicationShell.showWarningMessage(localize.DataScience.jupyterKernelNotSupportedOnActive().format(activeDisplayName, usableDisplayName));
+                }
+            }
+
+            // Otherwise we continue loading
             await Promise.all([this.loadJupyterServer(), this.loadWebPanel()]);
         } finally {
             status.dispose();
