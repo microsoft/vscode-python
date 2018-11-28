@@ -66,15 +66,13 @@ class JupyterCommand {
     private exe: string;
     private requiredArgs: string[];
     private launcher: IProcessService;
-    private interpreterPromise: Promise<PythonInterpreter | undefined>;
-    private condaService: ICondaService;
+    private versionNumber: number;
 
-    constructor(exe: string, args: string[], launcher: IProcessService, interpreter: IInterpreterService, condaService: ICondaService) {
+    private constructor(exe: string, args: string[], versionNumber: number, launcher: IProcessService) {
         this.exe = exe;
         this.requiredArgs = args;
         this.launcher = launcher;
-        this.condaService = condaService;
-        this.interpreterPromise = interpreter.getInterpreterDetails(this.exe).catch(e => undefined);
+        this.versionNumber = versionNumber;
     }
 
     public mainVersion = async () : Promise<number> => {
@@ -88,50 +86,29 @@ class JupyterCommand {
 
     public execObservable = async (args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> => {
         const newOptions = {...options};
-        newOptions.env = await this.fixupCondaEnv(newOptions.env);
         const newArgs = [...this.requiredArgs, ...args];
         return this.launcher.execObservable(this.exe, newArgs, newOptions);
     }
 
     public exec = async (args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> => {
         const newOptions = {...options};
-        newOptions.env = await this.fixupCondaEnv(newOptions.env);
         const newArgs = [...this.requiredArgs, ...args];
         return this.launcher.exec(this.exe, newArgs, newOptions);
     }
 
-    /**
-     * Conda needs specific paths and env vars set to be happy. Call this function to fix up
-     * (or created if not present) our environment to run jupyter
-     */
-    // Base Node.js SpawnOptions uses any for environment, so use that here as well
-    // tslint:disable-next-line:no-any
-    private fixupCondaEnv = async (inputEnv: any | undefined): Promise<any> => {
-        if (!inputEnv) {
-            inputEnv = process.env;
-        }
-        const interpreter = await this.interpreterPromise;
+}
 
-        if (interpreter && interpreter.type === InterpreterType.Conda) {
-            return this.condaService.getActivatedCondaEnvironment(interpreter, inputEnv);
-        }
+class JupyterCommandFactory {
+    public static createCommandFromInterpreter(command: string, interpreter: PythonInterpreter, condaService: ICondaService) : Promise<JupyterCommand | undefined> {
 
-        return inputEnv;
     }
 
-    private execVersion = async () : Promise<number> => {
-        if (this.launcher) {
-            const output = await this.launcher.exec(this.exe, ['--version'], {throwOnStdErr: false, encoding: 'utf8'});
-            // First number should be our result
-            const matches = /.*(\d+).*/m.exec(output.stdout);
-            if (matches && matches.length > 1) {
-                return parseInt(matches[1], 10);
-            }
-        }
-        return 0;
+    public static createCommandFromPath(command: string, knownSearchPaths: IKnownSearchPathsForInterpreters) : Promise<JupyterCommand | undefined> {
+
     }
 
 }
+
 
 @injectable()
 export class JupyterExecution implements IJupyterExecution, Disposable {
@@ -324,6 +301,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
 
         return undefined;
     }
+
     private getJupyterServerInfo = async () : Promise<JupyterServerInfo[] | undefined> => {
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const bestInterpreter = await this.getUsableJupyterPython();
