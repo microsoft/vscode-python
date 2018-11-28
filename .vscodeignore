@@ -17,11 +17,12 @@ CONTRIBUTING - LANGUAGE SERVER.md
 coverconfig.json
 functionalTestRequirements.txt
 gulpfile.js
+package.datascience-ui.dependencies.json
 package-lock.json
 packageExtension.cmd
 pvsc-dev-ext.py
 PYTHON_INTERACTIVE_TROUBLESHOOTING.md
-tsconfig.json
+tsconfig*.json
 tsfmt.json
 tslint.json
 typings.json
@@ -47,6 +48,7 @@ images/**/*.gif
 images/**/*.png
 news/**
 obj/**
+out/client/**/*analyzer.html
 out/coverconfig.json
 out/pythonFiles/**
 out/src/**

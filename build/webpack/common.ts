@@ -37,7 +37,7 @@ export function getDefaultPlugins(name: 'extension' | 'debugger' | 'dependencies
         plugins.push(
             new BundleAnalyzerPlugin({
                 analyzerMode: 'static',
-                reportFilename: `${name}.html`
+                reportFilename: `${name}.analyzer.html`
             })
         );
     }
