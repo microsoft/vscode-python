@@ -74,15 +74,16 @@ class JupyterCommand {
         this.requiredArgs = args;
         this.launcher = launcher;
         this.condaService = condaService;
-        this.interpreterPromise = interpreter.getInterpreterDetails(this.exe);
+        this.interpreterPromise = interpreter.getInterpreterDetails(this.exe).catch(e => undefined);
     }
 
     public mainVersion = async () : Promise<number> => {
         const interpreter = await this.interpreterPromise;
         if (interpreter) {
             return interpreter.version_info[0];
+        } else {
+            return this.execVersion();
         }
-        return 0;
     }
 
     public execObservable = async (args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> => {
