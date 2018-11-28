@@ -15,7 +15,7 @@ export class ConfigurationService implements IConfigurationService {
     public async updateSectionSetting(section: string, setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void> {
         const defaultSetting = {
             uri: resource,
-            target: configTarget ? configTarget : ConfigurationTarget.WorkspaceFolder
+            target: configTarget || ConfigurationTarget.WorkspaceFolder
         };
         const settingsInfo = section === 'python' && configTarget !== ConfigurationTarget.Global ? PythonSettings.getSettingsUriAndTarget(resource) : defaultSetting;
 
