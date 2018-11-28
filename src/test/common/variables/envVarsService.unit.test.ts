@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
@@ -21,6 +23,11 @@ suite('Environment Variables Service', () => {
     setup(() => {
         pathUtils = new PathUtils(isWindows());
         variablesService = new EnvironmentVariablesService(pathUtils);
+    });
+
+    test('Custom variables should be undefined with no argument', async () => {
+        const vars = await variablesService.parseFile(undefined);
+        expect(vars).to.equal(undefined, 'Variables should be undefined');
     });
 
     test('Custom variables should be undefined with non-existent files', async () => {

@@ -8,17 +8,12 @@ const webpack_1 = require("webpack");
 const constants_1 = require("../constants");
 const common_1 = require("./common");
 // tslint:disable-next-line:no-var-requires no-require-imports
-const WrapperPlugin = require('wrapper-webpack-plugin');
-// tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(constants_1.ExtensionRootDir, 'tsconfig.extension.json');
-// Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
-// We need to ensure they do not get bundled into the output (as they are large).
-const existingModulesInOutDir = common_1.getListOfExistingModulesInOutDir();
 const config = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: './src/client/extension.ts'
+        'debugger/debugAdapter/main': './src/client/debugger/debugAdapter/main.ts'
     },
     devtool: 'source-map',
     node: {
@@ -46,14 +41,6 @@ const config = {
             },
             {
                 test: /\.ts$/,
-                use: [
-                    {
-                        loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
-                    }
-                ]
-            },
-            {
-                test: /\.ts$/,
                 exclude: /node_modules/,
                 use: [
                     {
@@ -65,18 +52,11 @@ const config = {
     },
     externals: [
         'vscode',
-        'commonjs',
-        ...existingModulesInOutDir
+        'commonjs'
     ],
     plugins: [
         ...common_1.getDefaultPlugins('extension'),
-        new webpack_1.ContextReplacementPlugin(/getos/, /logic\/.*.js/),
-        new WrapperPlugin({
-            test: /\extension.js$/,
-            // Import source map warning file only if source map is enabled.
-            // Minimize importing external files.
-            header: '(function(){if (require(\'vscode\').workspace.getConfiguration(\'python.diagnostics\', undefined).get(\'sourceMapsEnabled\', false)) {require(\'./sourceMapSupport\').default(require(\'vscode\'));}})();'
-        })
+        new webpack_1.ContextReplacementPlugin(/getos/, /logic\/.*.js/)
     ],
     resolve: {
         extensions: ['.ts', '.js'],

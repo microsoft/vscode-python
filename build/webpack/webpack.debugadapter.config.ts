@@ -7,23 +7,16 @@ import * as path from 'path';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration, ContextReplacementPlugin } from 'webpack';
 import { ExtensionRootDir } from '../constants';
-import { getDefaultPlugins, getListOfExistingModulesInOutDir } from './common';
-
-// tslint:disable-next-line:no-var-requires no-require-imports
-const WrapperPlugin = require('wrapper-webpack-plugin');
+import { getDefaultPlugins } from './common';
 
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(ExtensionRootDir, 'tsconfig.extension.json');
-
-// Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
-// We need to ensure they do not get bundled into the output (as they are large).
-const existingModulesInOutDir = getListOfExistingModulesInOutDir();
 
 const config: Configuration = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: './src/client/extension.ts'
+        'debugger/debugAdapter/main': './src/client/debugger/debugAdapter/main.ts'
     },
     devtool: 'source-map',
     node: {
@@ -51,14 +44,6 @@ const config: Configuration = {
             },
             {
                 test: /\.ts$/,
-                use: [
-                    {
-                        loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
-                    }
-                ]
-            },
-            {
-                test: /\.ts$/,
                 exclude: /node_modules/,
                 use: [
                     {
@@ -70,18 +55,11 @@ const config: Configuration = {
     },
     externals: [
         'vscode',
-        'commonjs',
-        ...existingModulesInOutDir
+        'commonjs'
     ],
     plugins: [
         ...getDefaultPlugins('extension'),
-        new ContextReplacementPlugin(/getos/, /logic\/.*.js/),
-        new WrapperPlugin({
-            test: /\extension.js$/,
-            // Import source map warning file only if source map is enabled.
-            // Minimize importing external files.
-            header: '(function(){if (require(\'vscode\').workspace.getConfiguration(\'python.diagnostics\', undefined).get(\'sourceMapsEnabled\', false)) {require(\'./sourceMapSupport\').default(require(\'vscode\'));}})();'
-        })
+        new ContextReplacementPlugin(/getos/, /logic\/.*.js/)
     ],
     resolve: {
         extensions: ['.ts', '.js'],

@@ -14,13 +14,12 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
     constructor(@inject(IPathUtils) pathUtils: IPathUtils) {
         this.pathVariable = pathUtils.getPathVariableName();
     }
-    public async parseFile(filePath: string): Promise<EnvironmentVariables | undefined> {
-        const exists = filePath.length > 0 ? await fs.pathExists(filePath) : undefined;
-        if (!exists) {
-            return undefined;
+    public async parseFile(filePath?: string): Promise<EnvironmentVariables | undefined> {
+        if (!filePath || !await fs.pathExists(filePath)) {
+            return;
         }
         if (!fs.lstatSync(filePath).isFile()) {
-            return undefined;
+            return;
         }
         return dotenv.parse(await fs.readFile(filePath));
     }

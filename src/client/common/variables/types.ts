@@ -10,7 +10,7 @@ export type EnvironmentVariables = Object & {
 export const IEnvironmentVariablesService = Symbol('IEnvironmentVariablesService');
 
 export interface IEnvironmentVariablesService {
-    parseFile(filePath: string): Promise<EnvironmentVariables | undefined>;
+    parseFile(filePath?: string): Promise<EnvironmentVariables | undefined>;
     mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables): void;
     appendPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]): void;
     appendPath(vars: EnvironmentVariables, ...paths: string[]): void;

@@ -196,6 +196,7 @@ gulp.task('webpack', async () => {
     await spawnAsync('npx', ['webpack', '--mode', 'production']);
     await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.sourceMaps.config.js', '--mode', 'production']);
     await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.extension.config.js', '--mode', 'production']);
+    await spawnAsync('npx', ['webpack', '--config', './build/webpack/webpack.debugadapter.config.js', '--mode', 'production']);
 });
 
 gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack'));

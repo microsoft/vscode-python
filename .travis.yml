@@ -108,5 +108,10 @@ script:
   - if [[ $AZURE_STORAGE_ACCOUNT && "$TRAVIS_BRANCH" == release* && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
         npm run clean;
         vsce package;
+        azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-$TRAVIS_BRANCH-insiders.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
+        npm run clean;
+        npm run package;
+        npx gulp clean:cleanExceptTests;
+        npm run testSmoke;
         azure storage blob upload python*.vsix $AZURE_STORAGE_CONTAINER ms-python-$TRAVIS_BRANCH.vsix --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY --quiet;
     fi
