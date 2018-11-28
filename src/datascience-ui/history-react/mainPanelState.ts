@@ -4,7 +4,7 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { CellState, ICell } from '../../client/datascience/types';
+import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
 import { Cell, ICellViewModel } from './cell';
 
 export interface IMainPanelState {
@@ -58,7 +58,7 @@ function generateVMs(inputBlockToggled : (id: string) => void) : ICellViewModel 
 
 function generateCells() : ICell[] {
     const cellData = generateCellData();
-    return cellData.map((data : nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell, key : number) => {
+    return cellData.map((data : nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | ISysInfo, key : number) => {
         return {
             id : key.toString(),
             file : 'foo.py',
@@ -69,10 +69,21 @@ function generateCells() : ICell[] {
     });
 }
 
-function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell)[] {
+//tslint:disable:max-func-body-length
+function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | ISysInfo)[] {
 
     // Hopefully new entries here can just be copied out of a jupyter notebook (ipynb)
     return [
+        {
+            // These are special. Sys_info is our own custom cell
+            cell_type: 'sys_info',
+            path: 'c:\\data\\python.exe',
+            version : '3.9.9.9 The Uber Version',
+            notebook_version: '(5, 9, 9)',
+            source: [],
+            metadata: {},
+            message: 'You have this python data:'
+        },
         {
             cell_type: 'code',
             execution_count: 4,

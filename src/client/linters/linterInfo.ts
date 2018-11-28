@@ -79,7 +79,7 @@ export class PylintLinterInfo extends LinterInfo {
             return enabled;
         }
         // If we're using new LS, then by default Pylint is disabled (unless the user provides a value).
-        const inspection = this.workspaceService.getConfiguration('python.linting', resource).inspect<boolean>('pylintEnabled');
+        const inspection = this.workspaceService.getConfiguration('python', resource).inspect<boolean>('linting.pylintEnabled');
         if (!inspection || inspection.globalValue === undefined && inspection.workspaceFolderValue === undefined || inspection.workspaceValue === undefined) {
             return false;
         }

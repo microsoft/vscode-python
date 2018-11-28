@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import 'rxjs/add/observable/of';
 import { Observable } from 'rxjs/Observable';
 import { ExecutionResult, IProcessService, ObservableExecutionResult, Output, SpawnOptions } from '../../client/common/process/types';
+import { noop } from '../core';
 
 type ExecObservableCallback = (result: Observable<Output<string>> | Output<string>) => void;
 type ExecCallback = (result: ExecutionResult<string>) => void;
@@ -26,13 +27,15 @@ export class MockProcessService extends EventEmitter implements IProcessService 
                 return {
                     // tslint:disable-next-line:no-any
                     proc: {} as any,
-                    out: Observable.of(output)
+                    out: Observable.of(output),
+                    dispose: () => { noop(); }
                 };
             } else {
                 return {
                     // tslint:disable-next-line:no-any
                     proc: {} as any,
-                    out: value as Observable<Output<string>>
+                    out: value as Observable<Output<string>>,
+                    dispose: () => { noop(); }
                 };
             }
         } else {

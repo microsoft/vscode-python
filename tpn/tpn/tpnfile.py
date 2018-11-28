@@ -10,7 +10,7 @@ from . import data
 
 TPN_SECTION_TEMPLATE = "%% {name} {version} NOTICES AND INFORMATION BEGIN HERE ({url})\n=========================================\n{license}\n=========================================\nEND OF {name} NOTICES AND INFORMATION"
 TPN_SECTION_RE = re.compile(
-    r"%% (?P<name>.+?) (?P<version>\S+) NOTICES AND INFORMATION BEGIN HERE \((?P<url>http.+?)\)\n=========================================\n(?P<license>.+?)\n=========================================\nEND OF (?P=name) NOTICES AND INFORMATION",
+    r"%% (?P<name>.+?) (?P<version>\S+) NOTICES AND INFORMATION BEGIN HERE \((?P<url>http.+?)\)\n=========================================\n(?P<license>.+?)\n=========================================\nEND OF .+? NOTICES AND INFORMATION",
     re.DOTALL,
 )
 

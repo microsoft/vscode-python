@@ -80,7 +80,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 73.  core-util-is 1.0.2 (https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.2.tgz)
 74.  create-emotion 9.2.12 (https://registry.npmjs.org/create-emotion/-/create-emotion-9.2.12.tgz)
 75.  crypt 0.0.2 (https://registry.npmjs.org/crypt/-/crypt-0.0.2.tgz)
-76.  css-loader 1.0.0 (https://registry.npmjs.org/css-loader/-/css-loader-1.0.0.tgz)
+76.  css-loader 1.0.1 (https://registry.npmjs.org/css-loader/-/css-loader-1.0.1.tgz)
 77.  d3-array 1.2.4 (https://registry.npmjs.org/d3-array/-/d3-array-1.2.4.tgz)
 78.  d3-bboxCollide 1.0.4 (https://registry.npmjs.org/d3-bboxCollide/-/d3-bboxCollide-1.0.4.tgz)
 79.  d3-brush 1.0.6 (https://registry.npmjs.org/d3-brush/-/d3-brush-1.0.6.tgz)
@@ -304,7 +304,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 297. static-extend 0.1.2 (https://registry.npmjs.org/static-extend/-/static-extend-0.1.2.tgz)
 298. string-hash 1.1.3 (https://registry.npmjs.org/string-hash/-/string-hash-1.1.3.tgz)
 299. string_decoder 0.10.31 (https://registry.npmjs.org/string_decoder/-/string_decoder-0.10.31.tgz)
-300. style-loader 0.23.0 (https://registry.npmjs.org/style-loader/-/style-loader-0.23.0.tgz)
+300. style-loader 0.23.1 (https://registry.npmjs.org/style-loader/-/style-loader-0.23.1.tgz)
 301. styled-jsx 3.1.0 (https://registry.npmjs.org/styled-jsx/-/styled-jsx-3.1.0.tgz)
 302. stylis-rule-sheet 0.0.10 (https://registry.npmjs.org/stylis-rule-sheet/-/stylis-rule-sheet-0.0.10.tgz)
 303. sudo-prompt 8.2.0 (https://registry.npmjs.org/sudo-prompt/-/sudo-prompt-8.2.0.tgz)
@@ -2907,7 +2907,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =========================================
 END OF crypt NOTICES AND INFORMATION
 
-%% css-loader 1.0.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/css-loader/-/css-loader-1.0.0.tgz)
+%% css-loader 1.0.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/css-loader/-/css-loader-1.0.1.tgz)
 =========================================
 Copyright JS Foundation and other contributors
 
@@ -8335,7 +8335,7 @@ END OF react NOTICES AND INFORMATION
 
       (a) You must give any other recipients of the Work or
           Derivative Works a copy of this License; and
-          
+
       (b) You must cause any modified files to carry prominent notices
           stating that You changed the files; and
 
@@ -9881,7 +9881,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 =========================================
 END OF string_decoder NOTICES AND INFORMATION
 
-%% style-loader 0.23.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/style-loader/-/style-loader-0.23.0.tgz)
+%% style-loader 0.23.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/style-loader/-/style-loader-0.23.1.tgz)
 =========================================
 Copyright JS Foundation and other contributors
 

@@ -103,7 +103,7 @@ suite('History output tests', () => {
             await updatePromise;
 
             const foundResult = wrapper.find('Cell');
-            assert.equal(foundResult.length, 1, 'Didn\'t find any cells being rendered');
+            assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
         } else {
             // tslint:disable-next-line:no-console
             console.log('History test skipped, no Jupyter installed');
@@ -125,7 +125,7 @@ suite('History output tests', () => {
         if (await jupyterExecution.isNotebookSupported()) {
             const history = historyProvider.active;
             await history.show(); // Have to wait for the load to finish
-            history.dispose();
+            await history.dispose();
             // tslint:disable-next-line:no-any
             const h2 = historyProvider.active;
             // Check equal and then dispose so the test goes away

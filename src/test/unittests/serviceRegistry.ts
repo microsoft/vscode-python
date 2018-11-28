@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 import { Uri } from 'vscode';
 
 import { IProcessServiceFactory } from '../../client/common/process/types';

@@ -69,7 +69,8 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             for (const code of [
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
                 DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
-                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic
+                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
+                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic
             ]) {
                 const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
                 diagnostic.setup(d => d.code)
@@ -116,7 +117,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             settings.verifyAll();
             interpreterService.verifyAll();
         });
-        test('Should return empty diagnostics if there are interpreters and platform is not mac', async () => {
+        test('Should return empty diagnostics if there are interpreters, one is selected, and platform is not mac', async () => {
             settings
                 .setup(s => s.disableInstallationChecks)
                 .returns(() => false)
@@ -124,6 +125,10 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             interpreterService
                 .setup(i => i.getInterpreters(typemoq.It.isAny()))
                 .returns(() => Promise.resolve([{} as any]))
+                .verifiable(typemoq.Times.once());
+            interpreterService
+                .setup(i => i.getActiveInterpreter(typemoq.It.isAny()))
+                .returns(() => { return Promise.resolve({ type: InterpreterType.Unknown } as any); })
                 .verifiable(typemoq.Times.once());
             platformService
                 .setup(i => i.isMac)
@@ -144,6 +149,10 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             interpreterService
                 .setup(i => i.getInterpreters(typemoq.It.isAny()))
                 .returns(() => Promise.resolve([{} as any]))
+                .verifiable(typemoq.Times.once());
+            interpreterService
+                .setup(i => i.getActiveInterpreter(typemoq.It.isAny()))
+                .returns(() => { return Promise.resolve({ type: InterpreterType.Unknown } as any); })
                 .verifiable(typemoq.Times.once());
             platformService
                 .setup(i => i.isMac)
@@ -173,6 +182,10 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     { path: pythonPath } as any
                 ]))
                 .verifiable(typemoq.Times.once());
+            interpreterService
+                .setup(i => i.getActiveInterpreter(typemoq.It.isAny()))
+                .returns(() => { return Promise.resolve({ type: InterpreterType.Unknown } as any); })
+                .verifiable(typemoq.Times.once());
             platformService
                 .setup(i => i.isMac)
                 .returns(() => true)
@@ -181,10 +194,6 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .setup(i => i.isMacDefaultPythonPath(typemoq.It.isValue(pythonPath)))
                 .returns(() => true)
                 .verifiable(typemoq.Times.atLeastOnce());
-            interpreterService
-                .setup(i => i.getActiveInterpreter(typemoq.It.isAny()))
-                .returns(() => { return Promise.resolve({ type: InterpreterType.Unknown } as any); })
-                .verifiable(typemoq.Times.once());
 
             const diagnostics = await diagnosticService.diagnose();
             expect(diagnostics).to.be.deep.equal([new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic)]);
@@ -231,7 +240,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             platformService.verifyAll();
             helper.verifyAll();
         });
-        test('Handling no interpreters diagnostisc should return download link', async () => {
+        test('Handling no interpreters diagnostic should return download link', async () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic);
             const cmd = {} as any as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
@@ -252,7 +261,30 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([{ prompt: 'Download', command: cmd }]);
         });
-        test('Handling no interpreters diagnostisc should return select interpreter cmd', async () => {
+        test('Handling no currently selected interpreter diagnostic should show select interpreter message', async () => {
+            const diagnostic = new InvalidPythonInterpreterDiagnostic(
+                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic
+            );
+            const cmd = {} as any as IDiagnosticCommand;
+            let messagePrompt: MessageCommandPrompt | undefined;
+            messageHandler
+                .setup(i => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
+                .callback((d, p: MessageCommandPrompt) => messagePrompt = p)
+                .returns(() => Promise.resolve())
+                .verifiable(typemoq.Times.once());
+            commandFactory.setup(f => f.createCommand(typemoq.It.isAny(),
+                typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', string>>({ type: 'executeVSCCommand' })))
+                .returns(() => cmd)
+                .verifiable(typemoq.Times.once());
+
+            await diagnosticService.handle([diagnostic]);
+
+            messageHandler.verifyAll();
+            commandFactory.verifyAll();
+            expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
+            expect(messagePrompt!.commandPrompts).to.be.deep.equal([{ prompt: 'Select Python Interpreter', command: cmd }]);
+        });
+        test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic);
             const cmd = {} as any as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;

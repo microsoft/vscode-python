@@ -9,21 +9,18 @@ Note that this module exists only to implement very specific functionality in
 the standard library. The usual way to understand the standard library is the
 compiled module that returns the types for C-builtins.
 """
-import re
-
 import parso
 
 from jedi._compatibility import force_unicode
 from jedi import debug
-from jedi.evaluate.arguments import ValuesArguments
+from jedi.evaluate.arguments import ValuesArguments, repack_with_argument_clinic
 from jedi.evaluate import analysis
 from jedi.evaluate import compiled
-from jedi.evaluate.context.instance import InstanceFunctionExecution, \
-    AbstractInstanceContext, CompiledInstance, BoundMethod, \
-    AnonymousInstanceFunctionExecution
+from jedi.evaluate.context.instance import \
+    AbstractInstanceContext, CompiledInstance, BoundMethod, InstanceArguments
 from jedi.evaluate.base_context import ContextualizedNode, \
     NO_CONTEXTS, ContextSet
-from jedi.evaluate.context import ClassContext, ModuleContext
+from jedi.evaluate.context import ClassContext, ModuleContext, FunctionExecutionContext
 from jedi.evaluate.context import iterable
 from jedi.evaluate.lazy_context import LazyTreeContext
 from jedi.evaluate.syntax_tree import is_string
@@ -72,7 +69,7 @@ def execute(evaluator, obj, arguments):
         except KeyError:
             pass
         else:
-            return func(evaluator, obj, arguments)
+            return func(evaluator, obj, arguments=arguments)
     raise NotInStdLib()
 
 
@@ -89,42 +86,22 @@ def argument_clinic(string, want_obj=False, want_context=False, want_arguments=F
     """
     Works like Argument Clinic (PEP 436), to validate function params.
     """
-    clinic_args = []
-    allow_kwargs = False
-    optional = False
-    while string:
-        # Optional arguments have to begin with a bracket. And should always be
-        # at the end of the arguments. This is therefore not a proper argument
-        # clinic implementation. `range()` for exmple allows an optional start
-        # value at the beginning.
-        match = re.match('(?:(?:(\[),? ?|, ?|)(\w+)|, ?/)\]*', string)
-        string = string[len(match.group(0)):]
-        if not match.group(2):  # A slash -> allow named arguments
-            allow_kwargs = True
-            continue
-        optional = optional or bool(match.group(1))
-        word = match.group(2)
-        clinic_args.append((word, optional, allow_kwargs))
 
     def f(func):
-        def wrapper(evaluator, obj, arguments):
+        @repack_with_argument_clinic(string, keep_arguments_param=True)
+        def wrapper(evaluator, obj, *args, **kwargs):
+            arguments = kwargs.pop('arguments')
+            assert not kwargs  # Python 2...
             debug.dbg('builtin start %s' % obj, color='MAGENTA')
             result = NO_CONTEXTS
-            try:
-                lst = list(arguments.eval_argument_clinic(clinic_args))
-            except ValueError:
-                pass
-            else:
-                kwargs = {}
-                if want_context:
-                    kwargs['context'] = arguments.context
-                if want_obj:
-                    kwargs['obj'] = obj
-                if want_arguments:
-                    kwargs['arguments'] = arguments
-                result = func(evaluator, *lst, **kwargs)
-            finally:
-                debug.dbg('builtin end: %s', result, color='MAGENTA')
+            if want_context:
+                kwargs['context'] = arguments.context
+            if want_obj:
+                kwargs['obj'] = obj
+            if want_arguments:
+                kwargs['arguments'] = arguments
+            result = func(evaluator, *args, **kwargs)
+            debug.dbg('builtin end: %s', result, color='MAGENTA')
             return result
 
         return wrapper
@@ -187,10 +164,11 @@ class SuperInstance(AbstractInstanceContext):
 @argument_clinic('[type[, obj]], /', want_context=True)
 def builtins_super(evaluator, types, objects, context):
     # TODO make this able to detect multiple inheritance super
-    if isinstance(context, (InstanceFunctionExecution,
-                            AnonymousInstanceFunctionExecution)):
-        su = context.instance.py__class__().py__bases__()
-        return su[0].infer().execute_evaluated()
+    if isinstance(context, FunctionExecutionContext):
+        if isinstance(context.var_args, InstanceArguments):
+            su = context.var_args.instance.py__class__().py__bases__()
+            return su[0].infer().execute_evaluated()
+
     return NO_CONTEXTS
 
 
@@ -334,8 +312,8 @@ _implemented = {
         'deepcopy': _return_first_param,
     },
     'json': {
-        'load': lambda *args: NO_CONTEXTS,
-        'loads': lambda *args: NO_CONTEXTS,
+        'load': lambda evaluator, obj, arguments: NO_CONTEXTS,
+        'loads': lambda evaluator, obj, arguments: NO_CONTEXTS,
     },
     'collections': {
         'namedtuple': collections_namedtuple,

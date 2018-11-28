@@ -31,7 +31,12 @@ class NewsEntry:
 
 
 def news_entries(directory):
-    """Yield news entries in the directory."""
+    """Yield news entries in the directory.
+
+    Entries are sorted by issue number.
+
+    """
+    entries = []
     for path in directory.iterdir():
         if path.name == "README.md":
             continue
@@ -45,7 +50,9 @@ def news_entries(directory):
             raise ValueError(f"'{path}' is not encoded as UTF-8") from exc
         if "\ufeff" in entry:
             raise ValueError(f"'{path}' contains the BOM")
-        yield NewsEntry(issue, entry, path)
+        entries.append(NewsEntry(issue, entry, path))
+    entries.sort(key=operator.attrgetter("issue_number"))
+    yield from entries
 
 
 @dataclasses.dataclass

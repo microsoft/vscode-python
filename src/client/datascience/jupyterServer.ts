@@ -14,114 +14,104 @@ import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
-import { IFileSystem } from '../common/platform/types';
-import { IDisposableRegistry, ILogger } from '../common/types';
+import { TemporaryFile } from '../common/platform/types';
+import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry, ILogger } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
+import { noop } from '../common/utils/misc';
 import { RegExpValues } from './constants';
-import { JupyterInstallError } from './jupyterInstallError';
-import { CellState, ICell, IJupyterExecution, INotebookProcess, INotebookServer } from './types';
-import { IInterpreterService } from '../interpreter/contracts';
+import { CellState, ICell, IConnection, IJupyterKernelSpec, INotebookServer } from './types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
 @injectable()
-export class JupyterServer implements INotebookServer {
-    public isDisposed: boolean = false;
+export class JupyterServer implements INotebookServer, IDisposable {
+    private connInfo: IConnection | undefined;
+    private kernelSpec: IJupyterKernelSpec | undefined;
     private session: Session.ISession | undefined;
     private sessionManager : SessionManager | undefined;
     private sessionStartTime: number | undefined;
-    private tempFile: string | undefined;
     private onStatusChangedEvent : vscode.EventEmitter<boolean> = new vscode.EventEmitter<boolean>();
+    private notebookFile : TemporaryFile | undefined;
 
     constructor(
         @inject(ILogger) private logger: ILogger,
-        @inject(INotebookProcess) private process: INotebookProcess,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IJupyterExecution) private jupyterExecution : IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService) {
+        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) private asyncRegistry: IAsyncDisposableRegistry) {
+        this.disposableRegistry.push(this);
+        this.asyncRegistry.push(this);
     }
 
-    public start = async () : Promise<boolean> => {
+    public connect = async (connInfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: TemporaryFile) : Promise<void> => {
+        // Save connection information so we can use it later during shutdown
+        this.connInfo = connInfo;
+        this.kernelSpec = kernelSpec;
+        this.notebookFile = notebookFile;
 
-        if (await this.jupyterExecution.isNotebookSupported()) {
+        // First connect to the sesssion manager and find a kernel that matches our
+        // python we're using
+        const serverSettings = ServerConnection.makeSettings(
+            {
+                baseUrl: connInfo.baseUrl,
+                token: connInfo.token,
+                pageUrl: '',
+                // A web socket is required to allow token authentication
+                wsUrl: connInfo.baseUrl.replace('http', 'ws'),
+                init: { cache: 'no-store', credentials: 'same-origin' }
+            });
+        this.sessionManager = new SessionManager({ serverSettings: serverSettings });
 
-            // First generate a temporary notebook. We need this as input to the session
-            this.tempFile = await this.generateTempFile();
+        // Create our session options using this temporary notebook and our connection info
+        const options: Session.IOptions = {
+            path: notebookFile.filePath,
+            kernelName: kernelSpec ? kernelSpec.name : '',
+            serverSettings: serverSettings
+        };
 
-            // start our process in the same directory as our ipynb file.
-            await this.process.start(path.dirname(this.tempFile));
+        // Start a new session
+        this.session = await this.sessionManager.startNew(options);
 
-            // Wait for connection information. We'll stick that into the options
-            const connInfo = await this.process.waitForConnectionInformation();
+        // Setup our start time. We reject anything that comes in before this time during execute
+        this.sessionStartTime = Date.now();
 
-            // First connect to the sesssion manager and find a kernel that matches our
-            // python we're using
-            const serverSettings = ServerConnection.makeSettings(
-                {
-                    baseUrl: connInfo.baseUrl,
-                    token: connInfo.token,
-                    pageUrl: '',
-                    // A web socket is required to allow token authentication
-                    wsUrl: connInfo.baseUrl.replace('http', 'ws'),
-                    init: { cache: 'no-store', credentials: 'same-origin' }
-                });
-            this.sessionManager = new SessionManager({ serverSettings: serverSettings });
+        // Wait for it to be ready
+        await this.session.kernel.ready;
 
-            // Ask Jupyter for its list of kernel specs.
-            const kernelName = await this.findKernelName(this.sessionManager);
+        // Run our initial setup and plot magics
+        this.initialNotebookSetup();
 
-            // Create our session options using this temporary notebook and our connection info
-            const options: Session.IOptions = {
-                path: this.tempFile,
-                kernelName: kernelName,
-                serverSettings: serverSettings
-            };
+    }
 
-            // Start a new session
-            this.session = await this.sessionManager.startNew(options);
-
-            // Setup our start time. We reject anything that comes in before this time during execute
-            this.sessionStartTime = Date.now();
-
-            // Wait for it to be ready
-            await this.session.kernel.ready;
-
-            // Check for dark theme, if so set matplot lib to use dark_background settings
-            let darkTheme: boolean = false;
-            const workbench = this.workspaceService.getConfiguration('workbench');
-            if (workbench) {
-                const theme = workbench.get<string>('colorTheme');
-                if (theme) {
-                    darkTheme = /dark/i.test(theme);
-                }
+    public shutdown = () => {
+        this.destroyKernelSpec(); // This is the most important part. We HAVE to get rid of this or it messes up other jupyter notebooks on the same machine.
+        if (this.session && this.sessionManager) {
+            try {
+                this.session.shutdown().ignoreErrors();
+                this.session.dispose();
+                this.sessionManager.dispose();
+            } catch {
+                noop();
             }
-
-            this.executeSilently(
-                `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
-            ).ignoreErrors();
-
-            return true;
-        } else {
-            throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
-        }
-
-    }
-
-    public shutdown = async () : Promise<void> => {
-        if (this.session) {
-            await this.sessionManager.shutdownAll();
-            this.session.dispose();
-            this.sessionManager.dispose();
             this.session = undefined;
             this.sessionManager = undefined;
         }
-        if (this.process) {
-            this.process.dispose();
+        this.onStatusChangedEvent.dispose();
+        if (this.connInfo) {
+            this.connInfo.dispose(); // This should kill the process that's running
+            this.connInfo = undefined;
         }
+        if (this.notebookFile) {
+            this.notebookFile.dispose(); // This should cleanup the temporary notebook we are using
+            this.notebookFile = undefined;
+        }
+    }
+
+    public dispose = () : Promise<void> => {
+        // This could be changed to actually wait for shutdown, but do this
+        // for now so we finish quickly.
+        return Promise.resolve(this.shutdown());
     }
 
     public waitForIdle = async () : Promise<void> => {
@@ -129,7 +119,7 @@ export class JupyterServer implements INotebookServer {
             await this.session.kernel.ready;
 
             while (this.session.kernel.status !== 'idle') {
-                await this.timeout(10);
+                await this.timeout(0);
             }
         }
     }
@@ -207,7 +197,6 @@ export class JupyterServer implements INotebookServer {
                 const request = this.generateRequest(code, true);
 
                 if (request) {
-
                     // // For debugging purposes when silently is failing.
                     // request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
                     //     try {
@@ -234,14 +223,6 @@ export class JupyterServer implements INotebookServer {
         return this.onStatusChangedEvent.event.bind(this.onStatusChangedEvent);
     }
 
-    public dispose = async () => {
-        if (!this.isDisposed) {
-            this.isDisposed = true;
-            this.onStatusChangedEvent.dispose();
-            this.shutdown().ignoreErrors();
-        }
-    }
-
     public restartKernel = async () : Promise<void> => {
         if (this.session && this.session.kernel) {
             // Update our start time so we don't keep sending responses
@@ -250,8 +231,8 @@ export class JupyterServer implements INotebookServer {
             // Restart our kernel
             await this.session.kernel.restart();
 
-            // Wait for it to be ready
-            await this.session.kernel.ready;
+            // Reimplement our magics
+            this.initialNotebookSetup();
 
             return;
         }
@@ -259,28 +240,29 @@ export class JupyterServer implements INotebookServer {
         throw new Error(localize.DataScience.sessionDisposed());
     }
 
+    public interruptKernel = () : Promise<void> => {
+        if (this.session && this.session.kernel) {
+            // Update our start time so we don't keep sending responses
+            this.sessionStartTime = Date.now();
+
+            // Interrupt whatever is happening
+            return this.session.kernel.interrupt();
+        }
+
+        return Promise.reject(new Error(localize.DataScience.sessionDisposed()));
+    }
+
     public translateToNotebook = async (cells: ICell[]) : Promise<nbformat.INotebookContent | undefined> => {
 
-        if (this.process) {
-
-            // First we need the python version we're running
-            const pythonVersion = await this.process.waitForPythonVersionString();
-
-            // Pull off the first number. Should be  3 or a 2
-            const first = pythonVersion.substr(0, 1);
+        if (this.connInfo && this.connInfo.pythonMainVersion) {
 
             // Use this to build our metadata object
             const metadata : nbformat.INotebookMetadata = {
-                kernelspec: {
-                    display_name: `Python ${first}`,
-                    language: 'python',
-                    name: `python${first}`
-                },
                 language_info: {
                     name: 'python',
                     codemirror_mode: {
                         name: 'ipython',
-                        version: parseInt(first, 10)
+                        version: this.connInfo.pythonMainVersion
                     }
                 },
                 orig_nbformat : 2,
@@ -288,13 +270,13 @@ export class JupyterServer implements INotebookServer {
                 mimetype: 'text/x-python',
                 name: 'python',
                 npconvert_exporter: 'python',
-                pygments_lexer: `ipython${first}`,
-                version: pythonVersion
+                pygments_lexer: `ipython${this.connInfo.pythonMainVersion}`,
+                version: this.connInfo.pythonMainVersion
             };
 
             // Combine this into a JSON object
             return {
-                cells: cells.map((cell : ICell) => this.pruneCell(cell)),
+                cells: this.pruneCells(cells),
                 nbformat: 4,
                 nbformat_minor: 2,
                 metadata: metadata
@@ -302,16 +284,16 @@ export class JupyterServer implements INotebookServer {
         }
     }
 
-    public launchNotebook = async (file: string) : Promise<boolean> => {
-        if (this.process) {
-            await this.process.spawn(file);
-            return true;
+    private destroyKernelSpec = () => {
+        if (this.kernelSpec) {
+            this.kernelSpec.dispose(); // This should delete any old kernel specs
+            this.kernelSpec = undefined;
         }
-        return false;
     }
 
-    private generateRequest = (code: string, silent: boolean) : Kernel.IFuture => {
-        return this.session.kernel.requestExecute(
+    private generateRequest = (code: string, silent: boolean) : Kernel.IFuture | undefined => {
+        //this.logger.logInformation(`Executing code in jupyter : ${code}`)
+        return this.session ? this.session.kernel.requestExecute(
             {
                 // Replace windows line endings with unix line endings.
                 code: code.replace(/\r\n/g, '\n'),
@@ -320,80 +302,38 @@ export class JupyterServer implements INotebookServer {
                 silent: silent
             },
             true
-        );
+        ) : undefined;
     }
 
-    private timeout(ms : number) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    private findKernelName = async (manager: SessionManager) : Promise<string> => {
-        // Ask the session manager to refresh its list of kernel specs. We're going to
-        // iterate through them finding the best match
-        await manager.refreshSpecs();
-
-        // Extract our current python information that the user has picked.
-        // We'll match against this.
-        const pythonVersion = await this.process.waitForPythonVersion();
-        const pythonPath = await this.process.waitForPythonPath();
-        let bestScore = 0;
-        let bestSpec;
-
-        // Enumerate all of the kernel specs, scoring each as follows
-        // - Path match = 10 Points. Very likely this is the right one
-        // - Language match = 1 point. Might be a match
-        // - Version match = 4 points for major version match
-        const keys = Object.keys(manager.specs.kernelspecs);
-        for (let i = 0; i < keys.length; i += 1) {
-            const spec = manager.specs.kernelspecs[keys[i]];
-            let score = 0;
-
-            if (spec.argv.length > 0 && spec.argv[0] === pythonPath) {
-                // Path match
-                score += 10;
-            }
-            if (spec.language.toLocaleLowerCase() === 'python') {
-                // Language match
-                score += 1;
-
-                // See if the version is the same
-                if (pythonVersion && spec.argv.length > 0 && await fs.pathExists(spec.argv[0])) {
-                    const details = await this.interpreterService.getInterpreterDetails(spec.argv[0])
-                    if (details && details.version_info) {
-                        if (details.version_info[0] === pythonVersion[0]) {
-                            // Major version match
-                            score += 4;
-
-                            if (details.version_info[1] === pythonVersion[1]) {
-                                // Minor version match
-                                score += 2;
-
-                                if (details.version_info[2] === pythonVersion[2]) {
-                                    // Minor version match
-                                    score += 1;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Update high score
-            if (score > bestScore) {
-                bestScore = score;
-                bestSpec = spec.name;
+    // Set up our initial plotting and imports
+    private initialNotebookSetup = () => {
+        // Check for dark theme, if so set matplot lib to use dark_background settings
+        let darkTheme: boolean = false;
+        const workbench = this.workspaceService.getConfiguration('workbench');
+        if (workbench) {
+            const theme = workbench.get<string>('colorTheme');
+            if (theme) {
+                darkTheme = /dark/i.test(theme);
             }
         }
 
-        // If still not set, at least pick the first one
-        if (!bestSpec && keys.length > 0) {
-            bestSpec = manager.specs.kernelspecs[keys[0]].name;
-        }
-
-        return bestSpec;
+        this.executeSilently(
+            `import pandas as pd\r\nimport numpy\r\n%matplotlib inline\r\nimport matplotlib.pyplot as plt${darkTheme ? '\r\nfrom matplotlib import style\r\nstyle.use(\'dark_background\')' : ''}`
+        ).ignoreErrors();
     }
 
-    private pruneCell(cell : ICell) : nbformat.IBaseCell {
+    private timeout(ms : number) : Promise<number> {
+        return new Promise(resolve => setTimeout(resolve, ms, ms));
+    }
+
+    private pruneCells = (cells : ICell[]) : nbformat.IBaseCell[] => {
+        // First filter out sys info cells. Jupyter doesn't understand these
+        return cells.filter(c => c.data.cell_type !== 'sys_info')
+            // Then prune each cell down to just the cell data.
+            .map(this.pruneCell);
+    }
+
+    private pruneCell = (cell : ICell) : nbformat.IBaseCell => {
         // Remove the #%% of the top of the source if there is any. We don't need
         // this to end up in the exported ipynb file.
         const copy = {...cell.data};
@@ -401,7 +341,7 @@ export class JupyterServer implements INotebookServer {
         return copy;
     }
 
-    private pruneSource(source : nbformat.MultilineString) : nbformat.MultilineString {
+    private pruneSource = (source : nbformat.MultilineString) : nbformat.MultilineString => {
 
         if (Array.isArray(source) && source.length > 0) {
             if (RegExpValues.PythonCellMarker.test(source[0])) {
@@ -486,65 +426,78 @@ export class JupyterServer implements INotebookServer {
     }
 
     private handleCodeRequest = (subscriber: Subscriber<ICell>, startTime: number, cell: ICell, code: string) => {
-        // Generate a new request.
-        const request = this.generateRequest(code, false);
+        // Generate a new request if we still can
+        if (this.sessionStartTime && startTime > this.sessionStartTime) {
 
-        // Transition to the busy stage
-        cell.state = CellState.executing;
+            const request = this.generateRequest(code, false);
 
-        // Listen to the reponse messages and update state as we go
-        if (request) {
-            request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-                try {
-                    if (KernelMessage.isExecuteResultMsg(msg)) {
-                        this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
-                    } else if (KernelMessage.isExecuteInputMsg(msg)) {
-                        this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
-                    } else if (KernelMessage.isStatusMsg(msg)) {
-                        this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
-                    } else if (KernelMessage.isStreamMsg(msg)) {
-                        this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
-                    } else if (KernelMessage.isDisplayDataMsg(msg)) {
-                        this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
-                    } else if (KernelMessage.isErrorMsg(msg)) {
-                        this.handleError(msg as KernelMessage.IErrorMsg, cell);
-                    } else {
-                        this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+            // tslint:disable-next-line:no-require-imports
+            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+            // Transition to the busy stage
+            cell.state = CellState.executing;
+
+            // Listen to the reponse messages and update state as we go
+            if (request) {
+                request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+                    try {
+                        if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+                            this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, cell);
+                        } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
+                            this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, cell);
+                        } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
+                            this.handleStatusMessage(msg as KernelMessage.IStatusMsg);
+                        } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+                            this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, cell);
+                        } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+                            this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, cell);
+                        } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+                            this.handleError(msg as KernelMessage.IErrorMsg, cell);
+                        } else {
+                            this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+                        }
+
+                        // Set execution count, all messages should have it
+                        if (msg.content.execution_count) {
+                            cell.data.execution_count = msg.content.execution_count as number;
+                        }
+
+                        // Show our update if any new output
+                        subscriber.next(cell);
+                    } catch (err) {
+                        // If not a restart error, then tell the subscriber
+                        if (this.sessionStartTime && startTime > this.sessionStartTime) {
+                            this.logger.logError(`Error during message ${msg.header.msg_type}`);
+                            subscriber.error(err);
+                        }
                     }
+                };
 
-                    // Set execution count, all messages should have it
-                    if (msg.content.execution_count) {
-                        cell.data.execution_count = msg.content.execution_count as number;
+                // Create completion and error functions so we can bind our cell object
+                // tslint:disable-next-line:no-any
+                const completion = (error?: any) => {
+                    cell.state = error as Error ? CellState.error : CellState.finished;
+                    // Only do this if start time is still valid. Dont log an error to the subscriber. Error
+                    // state should end up in the cell output.
+                    if (this.sessionStartTime && startTime > this.sessionStartTime) {
+                        subscriber.next(cell);
                     }
+                    subscriber.complete();
+                };
 
-                    // Show our update if any new output
-                    subscriber.next(cell);
-                } catch (err) {
-                    // If not a restart error, then tell the subscriber
-                    if (startTime > this.sessionStartTime) {
-                        this.logger.logError(`Error during message ${msg.header.msg_type}`);
-                        subscriber.error(err);
-                    }
-                }
-            };
-
-            // Create completion and error functions so we can bind our cell object
-            // tslint:disable-next-line:no-any
-            const completion = (error?: any) => {
-                cell.state = error ? CellState.error : CellState.finished;
-                // Only do this if start time is still valid. Dont log an error to the subscriber. Error
-                // state should end up in the cell output.
-                if (startTime > this.sessionStartTime) {
-                    subscriber.next(cell);
-                }
-                subscriber.complete();
-            };
-
-            // When the request finishes we are done
-            request.done.then(completion).catch(completion);
+                // When the request finishes we are done
+                request.done.then(completion).catch(completion);
+            } else {
+                subscriber.error(new Error(localize.DataScience.sessionDisposed()));
+            }
         } else {
-            subscriber.error(new Error(localize.DataScience.sessionDisposed()));
+            // Otherwise just set to an error
+            this.handleInterrupted(cell);
+            cell.state = CellState.error;
+            subscriber.next(cell);
+            subscriber.complete();
         }
+
     }
 
     private executeCodeObservable(code: string, file: string, line: number) : Observable<ICell> {
@@ -624,6 +577,24 @@ export class JupyterServer implements INotebookServer {
         this.addToCellData(cell, output);
     }
 
+    private handleInterrupted(cell : ICell) {
+        this.handleError({
+            channel: 'iopub',
+            parent_header: {},
+            metadata: {},
+            header: { username: '', version: '', session: '', msg_id: '', msg_type: 'error' },
+            content: {
+                ename: 'KeyboardInterrupt',
+                evalue: '',
+                // Does this need to be translated? All depends upon if jupyter does or not
+                traceback: [
+                    '[1;31m---------------------------------------------------------------------------[0m',
+                    '[1;31mKeyboardInterrupt[0m: '
+                ]
+            }
+        }, cell);
+    }
+
     private handleError(msg: KernelMessage.IErrorMsg, cell: ICell) {
         const output : nbformat.IError = {
             output_type : 'error',
@@ -632,15 +603,6 @@ export class JupyterServer implements INotebookServer {
             traceback : msg.content.traceback
         };
         this.addToCellData(cell, output);
-    }
-
-    private async generateTempFile() : Promise<string> {
-        // Create a temp file on disk
-        const file = await this.fileSystem.createTemporaryFile('.ipynb');
-
-        // Save in our list disposable
-        this.disposableRegistry.push(file);
-
-        return file.filePath;
+        cell.state = CellState.error;
     }
 }

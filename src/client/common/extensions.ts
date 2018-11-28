@@ -31,6 +31,12 @@ declare interface String {
      * Tokens such as {0}, {1} will be replaced with corresponding positional arguments.
      */
     format(...args: string[]): string;
+
+    /**
+     * String.trimQuotes implementation
+     * Removes leading and trailing quotes from a string
+     */
+    trimQuotes(): string;
 }
 
 /**
@@ -70,6 +76,17 @@ String.prototype.fileToCommandArgument = function (this: string): string {
         return this;
     }
     return this.toCommandArgument().replace(/\\/g, '/');
+};
+
+/**
+ * String.trimQuotes implementation
+ * Removes leading and trailing quotes from a string
+ */
+String.prototype.trimQuotes = function (this): string {
+    if (!this) {
+        return this;
+    }
+    return this.replace(/(^['"])|(['"]$)/g, '');
 };
 
 // tslint:disable-next-line:interface-name

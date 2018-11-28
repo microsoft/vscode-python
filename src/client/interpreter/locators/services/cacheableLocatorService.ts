@@ -29,11 +29,11 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         return this.locating.event;
     }
     public abstract dispose();
-    public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
+    public async getInterpreters(resource?: Uri, ignoreCache?: boolean): Promise<PythonInterpreter[]> {
         const cacheKey = this.getCacheKey(resource);
         let deferred = this.promisesPerResource.get(cacheKey);
 
-        if (!deferred) {
+        if (!deferred || ignoreCache) {
             deferred = createDeferred<PythonInterpreter[]>();
             this.promisesPerResource.set(cacheKey, deferred);
 

@@ -12,7 +12,7 @@ import {
     IApplicationShell, ICommandManager,
     IWorkspaceService
 } from '../common/application/types';
-import { isLanguageServerTest, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
 import { IPlatformService } from '../common/platform/types';
 import {
@@ -111,9 +111,6 @@ export class ExtensionActivationService implements IExtensionActivationService, 
         }
     }
     private useJedi(): boolean {
-        if (isLanguageServerTest()) {
-            return false;
-        }
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders!.map(item => item.uri) : [undefined];
         const configuraionService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         return workspacesUris.filter(uri => configuraionService.getSettings(uri).jediEnabled).length > 0;

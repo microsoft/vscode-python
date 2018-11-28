@@ -13,8 +13,8 @@ import logging
 from parso.utils import split_lines
 from parso.python.parser import Parser
 from parso.python.tree import EndMarker
-from parso.python.tokenize import (NEWLINE, PythonToken, ERROR_DEDENT,
-                                   ENDMARKER, INDENT, DEDENT)
+from parso.python.tokenize import PythonToken
+from parso.python.token import PythonTokenTypes
 
 LOG = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ def _get_last_line(node_or_leaf):
 
 def _ends_with_newline(leaf, suffix=''):
     if leaf.type == 'error_leaf':
-        typ = leaf.original_type
+        typ = leaf.token_type.lower()
     else:
         typ = leaf.type
 
@@ -41,21 +41,28 @@ def _flows_finished(pgen_grammar, stack):
     if, while, for and try might not be finished, because another part might
     still be parsed.
     """
-    for dfa, newstate, (symbol_number, nodes) in stack:
-        if pgen_grammar.number2symbol[symbol_number] in ('if_stmt', 'while_stmt',
-                                                    'for_stmt', 'try_stmt'):
+    for stack_node in stack:
+        if stack_node.nonterminal in ('if_stmt', 'while_stmt', 'for_stmt', 'try_stmt'):
             return False
     return True
+
+
+def _func_or_class_has_suite(node):
+    if node.type == 'decorated':
+        node = node.children[-1]
+    if node.type in ('async_funcdef', 'async_stmt'):
+        node = node.children[-1]
+    return node.type in ('classdef', 'funcdef') and node.children[-1].type == 'suite'
 
 
 def suite_or_file_input_is_valid(pgen_grammar, stack):
     if not _flows_finished(pgen_grammar, stack):
         return False
 
-    for dfa, newstate, (symbol_number, nodes) in reversed(stack):
-        if pgen_grammar.number2symbol[symbol_number] == 'suite':
+    for stack_node in reversed(stack):
+        if stack_node.nonterminal == 'suite':
             # If only newline is in the suite, the suite is not valid, yet.
-            return len(nodes) > 1
+            return len(stack_node.nodes) > 1
     # Not reaching a suite means that we're dealing with file_input levels
     # where there's no need for a valid statement in it. It can also be empty.
     return True
@@ -168,8 +175,7 @@ class DiffParser(object):
 
     def _enabled_debugging(self, old_lines, lines_new):
         if self._module.get_code() != ''.join(lines_new):
-            LOG.warning('parser issue:\n%s\n%s', ''.join(old_lines),
-                            ''.join(lines_new))
+            LOG.warning('parser issue:\n%s\n%s', ''.join(old_lines), ''.join(lines_new))
 
     def _copy_from_old_parser(self, line_offset, until_line_old, until_line_new):
         copied_nodes = [None]
@@ -273,7 +279,6 @@ class DiffParser(object):
         # memoryview?
         parsed_until_line = self._nodes_stack.parsed_until_line
         lines_after = self._parser_lines_new[parsed_until_line:]
-        #print('parse_content', parsed_until_line, lines_after, until_line)
         tokens = self._diff_tokenize(
             lines_after,
             until_line,
@@ -290,10 +295,10 @@ class DiffParser(object):
         omitted_first_indent = False
         indents = []
         tokens = self._tokenizer(lines, (1, 0))
-        stack = self._active_parser.pgen_parser.stack
+        stack = self._active_parser.stack
         for typ, string, start_pos, prefix in tokens:
             start_pos = start_pos[0] + line_offset, start_pos[1]
-            if typ == INDENT:
+            if typ == PythonTokenTypes.INDENT:
                 indents.append(start_pos[1])
                 if is_first_token:
                     omitted_first_indent = True
@@ -306,8 +311,9 @@ class DiffParser(object):
 
             # In case of omitted_first_indent, it might not be dedented fully.
             # However this is a sign for us that a dedent happened.
-            if typ == DEDENT \
-                    or typ == ERROR_DEDENT and omitted_first_indent and len(indents) == 1:
+            if typ == PythonTokenTypes.DEDENT \
+                    or typ == PythonTokenTypes.ERROR_DEDENT \
+                    and omitted_first_indent and len(indents) == 1:
                 indents.pop()
                 if omitted_first_indent and not indents:
                     # We are done here, only thing that can come now is an
@@ -317,18 +323,22 @@ class DiffParser(object):
                         prefix = re.sub(r'(<=\n)[^\n]+$', '', prefix)
                     else:
                         prefix = ''
-                    yield PythonToken(ENDMARKER, '', (start_pos[0] + line_offset, 0), prefix)
+                    yield PythonToken(
+                        PythonTokenTypes.ENDMARKER, '',
+                        (start_pos[0] + line_offset, 0),
+                        prefix
+                    )
                     break
-            elif typ == NEWLINE and start_pos[0] >= until_line:
+            elif typ == PythonTokenTypes.NEWLINE and start_pos[0] >= until_line:
                 yield PythonToken(typ, string, start_pos, prefix)
                 # Check if the parser is actually in a valid suite state.
                 if suite_or_file_input_is_valid(self._pgen_grammar, stack):
                     start_pos = start_pos[0] + 1, 0
                     while len(indents) > int(omitted_first_indent):
                         indents.pop()
-                        yield PythonToken(DEDENT, '', start_pos, '')
+                        yield PythonToken(PythonTokenTypes.DEDENT, '', start_pos, '')
 
-                    yield PythonToken(ENDMARKER, '', start_pos, '')
+                    yield PythonToken(PythonTokenTypes.ENDMARKER, '', start_pos, '')
                     break
                 else:
                     continue
@@ -509,7 +519,7 @@ class _NodesStack(object):
             # binary search.
             if _get_last_line(node) > until_line:
                 # We can split up functions and classes later.
-                if node.type in ('classdef', 'funcdef') and node.children[-1].type == 'suite':
+                if _func_or_class_has_suite(node):
                     new_nodes.append(node)
                 break
 
@@ -520,24 +530,26 @@ class _NodesStack(object):
 
         last_node = new_nodes[-1]
         line_offset_index = -1
-        if last_node.type in ('classdef', 'funcdef'):
-            suite = last_node.children[-1]
-            if suite.type == 'suite':
-                suite_tos = _NodesStackNode(suite)
-                # Don't need to pass line_offset here, it's already done by the
-                # parent.
-                suite_nodes, recursive_tos = self._copy_nodes(
-                    suite_tos, suite.children, until_line, line_offset)
-                if len(suite_nodes) < 2:
-                    # A suite only with newline is not valid.
-                    new_nodes.pop()
-                else:
-                    suite_tos.parent = tos
-                    new_tos = recursive_tos
-                    line_offset_index = -2
+        if _func_or_class_has_suite(last_node):
+            suite = last_node
+            while suite.type != 'suite':
+                suite = suite.children[-1]
 
-        elif (new_nodes[-1].type in ('error_leaf', 'error_node') or
-                          _is_flow_node(new_nodes[-1])):
+            suite_tos = _NodesStackNode(suite)
+            # Don't need to pass line_offset here, it's already done by the
+            # parent.
+            suite_nodes, recursive_tos = self._copy_nodes(
+                suite_tos, suite.children, until_line, line_offset)
+            if len(suite_nodes) < 2:
+                # A suite only with newline is not valid.
+                new_nodes.pop()
+            else:
+                suite_tos.parent = tos
+                new_tos = recursive_tos
+                line_offset_index = -2
+
+        elif (last_node.type in ('error_leaf', 'error_node') or
+              _is_flow_node(new_nodes[-1])):
             # Error leafs/nodes don't have a defined start/end. Error
             # nodes might not end with a newline (e.g. if there's an
             # open `(`). Therefore ignore all of them unless they are
@@ -568,7 +580,7 @@ class _NodesStack(object):
             self._tos = _NodesStackNode(tree_node, self._tos)
             self._tos.add(list(tree_node.children))
             self._update_tos(tree_node.children[-1])
-        elif tree_node.type in ('classdef', 'funcdef'):
+        elif _func_or_class_has_suite(tree_node):
             self._update_tos(tree_node.children[-1])
 
     def close(self):

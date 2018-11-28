@@ -6,10 +6,17 @@ import os.path
 import sys
 import traceback
 
+useCustomPtvsd = sys.argv[1] == '--custom'
+ptvsdArgs = sys.argv[:]
+ptvsdArgs.pop(1)
+
 # Load the debugger package
 try:
     ptvs_lib_path = os.path.join(os.path.dirname(__file__), 'ptvsd')
-    sys.path.append(ptvs_lib_path)
+    if useCustomPtvsd:
+        sys.path.append(ptvs_lib_path)
+    else:
+        sys.path.insert(0, ptvs_lib_path)
     try:
         import ptvsd
         import ptvsd.debugger as vspd
@@ -35,4 +42,4 @@ finally:
     if ptvs_lib_path:
         sys.path.remove(ptvs_lib_path)
 
-main(sys.argv)
+main(ptvsdArgs)

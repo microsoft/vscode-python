@@ -43,8 +43,11 @@ class ModuleContext(TreeContext):
     parent_context = None
 
     def __init__(self, evaluator, module_node, path, code_lines):
-        super(ModuleContext, self).__init__(evaluator, parent_context=None)
-        self.tree_node = module_node
+        super(ModuleContext, self).__init__(
+            evaluator,
+            parent_context=None,
+            tree_node=module_node
+        )
         self._path = path
         self.code_lines = code_lines
 
@@ -186,13 +189,17 @@ class ModuleContext(TreeContext):
         Lists modules in the directory of this module (if this module is a
         package).
         """
-        path = self._path
         names = {}
-        if path is not None and path.endswith(os.path.sep + '__init__.py'):
-            mods = iter_modules([os.path.dirname(path)])
-            for module_loader, name, is_pkg in mods:
-                # It's obviously a relative import to the current module.
-                names[name] = SubModuleName(self, name)
+        try:
+            method = self.py__path__
+        except AttributeError:
+            pass
+        else:
+            for path in method():
+                mods = iter_modules([path])
+                for module_loader, name, is_pkg in mods:
+                    # It's obviously a relative import to the current module.
+                    names[name] = SubModuleName(self, name)
 
         # TODO add something like this in the future, its cleaner than the
         #   import hacks.

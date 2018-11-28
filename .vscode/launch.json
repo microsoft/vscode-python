@@ -42,6 +42,7 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "${workspaceFolder}/src/testMultiRootWkspc/multi.code-workspace",
+                "--disable-extensions",
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
@@ -63,6 +64,7 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "${workspaceFolder}/src/test",
+                "--disable-extensions",
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
@@ -80,6 +82,7 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "${workspaceFolder}/src/testMultiRootWkspc/multi.code-workspace",
+                "--disable-extensions",
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
@@ -92,32 +95,13 @@
             "preLaunchTask": "Compile"
         },
         {
-            "name": "Tests (Language Server)",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "${workspaceFolder}/src/test",
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
-            ],
-            "stopOnEntry": false,
-            "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
-            ],
-            "preLaunchTask": "Compile",
-            "env": {
-                "VSC_PYTHON_LANGUAGE_SERVER": "1"
-            }
-        },
-        {
             "name": "Tests (VS Code, with code coverage, *.test.ts)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
                 "${workspaceFolder}/src/test",
+                "--disable-extensions",
                 "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],

@@ -1,16 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-// tslint:disable:no-any
-
 import { spawn } from 'child_process';
 import { Observable } from 'rxjs/Observable';
+import * as tk from 'tree-kill';
 import { Disposable } from 'vscode';
+
 import { createDeferred } from '../utils/async';
 import { EnvironmentVariables } from '../variables/types';
 import { DEFAULT_ENCODING } from './constants';
-import { ExecutionResult, IBufferDecoder, IProcessService, ObservableExecutionResult, Output, SpawnOptions, StdErrError } from './types';
+import {
+    ExecutionResult,
+    IBufferDecoder,
+    IProcessService,
+    ObservableExecutionResult,
+    Output,
+    SpawnOptions,
+    StdErrError
+} from './types';
 
+// tslint:disable:no-any
 export class ProcessService implements IProcessService {
     constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) { }
     public static isAlive(pid: number): boolean {
@@ -90,7 +98,15 @@ export class ProcessService implements IProcessService {
             });
         });
 
-        return { proc, out: output };
+        return {
+            proc,
+            out: output,
+            dispose: () => {
+                if (proc && !proc.killed) {
+                    tk(proc.pid);
+                }
+            }
+        };
     }
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         const encoding = options.encoding = typeof options.encoding === 'string' && options.encoding.length > 0 ? options.encoding : DEFAULT_ENCODING;

@@ -11,3 +11,4 @@ function getListOfExcludedFiles() {
     return files.map(file => path.join(exports.ExtensionRootDir, file.replace(/\//g, path.sep)));
 }
 exports.filesNotToCheck = getListOfExcludedFiles();
+exports.isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;

@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditorRevealType, window } from 'vscode';
 
-import { IApplicationShell, ICommandManager } from '../../common/application/types';
+import { inject, injectable } from 'inversify';
+import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditorRevealType } from 'vscode';
+
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, EditorContexts, RegExpValues, Telemetry } from '../constants';
 import { JupyterInstallError } from '../jupyterInstallError';
@@ -18,22 +19,20 @@ export interface ICell {
     title: string;
 }
 
+@injectable()
 export class CodeWatcher implements ICodeWatcher {
     private document?: TextDocument;
     private version: number = -1;
     private fileName: string = '';
     private codeLenses: CodeLens[] = [];
-    private historyProvider: IHistoryProvider;
-    private commandManager: ICommandManager;
-    private applicationShell: IApplicationShell;
-    private logger: ILogger;
 
-    constructor(serviceContainer: IServiceContainer, document: TextDocument) {
-        this.historyProvider = serviceContainer.get<IHistoryProvider>(IHistoryProvider);
-        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-        this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.logger = serviceContainer.get<ILogger>(ILogger);
+    constructor(@inject(ICommandManager) private commandManager: ICommandManager,
+                @inject(IApplicationShell) private applicationShell: IApplicationShell,
+                @inject(ILogger) private logger: ILogger,
+                @inject(IHistoryProvider) private historyProvider,
+                @inject(IDocumentManager) private documentManager) {}
 
+    public addFile(document: TextDocument) {
         this.document = document;
 
         // Cache these, we don't want to pull an old version if the document is updated
@@ -97,7 +96,7 @@ export class CodeWatcher implements ICodeWatcher {
             const code = this.document.getText(range);
 
             try {
-                await activeHistory.addCode(code, this.getFileName(), range.start.line, window.activeTextEditor);
+                await activeHistory.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor);
             } catch (err) {
                 this.handleError(err);
             }
@@ -107,13 +106,13 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunCurrentCell)
     public async runCurrentCell() {
-        if (!window.activeTextEditor || !window.activeTextEditor.document) {
+        if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return;
         }
 
         for (const lens of this.codeLenses) {
             // Check to see which RunCell lens range overlaps the current selection start
-            if (lens.range.contains(window.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
+            if (lens.range.contains(this.documentManager.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
                 await this.runCell(lens.range);
                 break;
             }
@@ -122,7 +121,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunCurrentCellAndAdvance)
     public async runCurrentCellAndAdvance() {
-        if (!window.activeTextEditor || !window.activeTextEditor.document) {
+        if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return;
         }
 
@@ -137,7 +136,7 @@ export class CodeWatcher implements ICodeWatcher {
             }
 
             // Check to see which RunCell lens range overlaps the current selection start
-            if (lens.range.contains(window.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
+            if (lens.range.contains(this.documentManager.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
                 currentRunCellLens = lens;
             }
         }
@@ -183,7 +182,7 @@ export class CodeWatcher implements ICodeWatcher {
     // User has picked run and advance on the last cell of a document
     // Create a new cell at the bottom and put their selection there, ready to type
     private createNewCell(currentRange: Range): Range {
-        const editor = window.activeTextEditor;
+        const editor = this.documentManager.activeTextEditor;
         const newPosition = new Position(currentRange.end.line + 3, 0); // +3 to account for the added spaces and to position after the new mark
 
         if (editor) {
@@ -197,7 +196,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     // Advance the cursor to the selected range
     private advanceToRange(targetRange: Range) {
-        const editor = window.activeTextEditor;
+        const editor = this.documentManager.activeTextEditor;
         const newSelection = new Selection(targetRange.start, targetRange.start);
         if (editor) {
             editor.selection = newSelection;

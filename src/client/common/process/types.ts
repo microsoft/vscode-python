@@ -18,8 +18,9 @@ export type Output<T extends string | Buffer> = {
     out: T;
 };
 export type ObservableExecutionResult<T extends string | Buffer> = {
-    proc: ChildProcess;
+    proc: ChildProcess | undefined;
     out: Observable<Output<T>>;
+    dispose() : void;
 };
 
 // tslint:disable-next-line:interface-name

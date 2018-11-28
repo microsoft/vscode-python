@@ -5,9 +5,16 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../constants';
+import { EXTENSION_ROOT_DIR } from '../../constants';
 
 // External callers of localize use these tables to retrieve localized values.
+export namespace Diagnostics {
+    export const warnSourceMaps = localize('diagnostics.warnSourceMaps', 'Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.');
+    export const disableSourceMaps = localize('diagnostics.disableSourceMaps', 'Disable Source Map Support');
+    export const warnBeforeEnablingSourceMaps = localize('diagnostics.warnBeforeEnablingSourceMaps', 'Enabling source map support in the Python Extension will adversely impact performance of the extension.');
+    export const enableSourceMapsAndReloadVSC = localize('diagnostics.enableSourceMapsAndReloadVSC', 'Enable and reload Window.');
+}
+
 export namespace LanguageServiceSurveyBanner {
     export const bannerMessage = localize('LanguageServiceSurveyBanner.bannerMessage', 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?');
     export const bannerLabelYes = localize('LanguageServiceSurveyBanner.bannerLabelYes', 'Yes, take survey now');
@@ -17,6 +24,10 @@ export namespace LanguageServiceSurveyBanner {
 export namespace Interpreters {
     export const loading = localize('Interpreters.LoadingInterpreters', 'Loading Python Interpreters');
     export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');
+}
+
+export namespace Linters {
+    export const installedButNotEnabled = localize('Linter.InstalledButNotEnabled', 'Linter {0} is installed but not enabled.');
 }
 
 export namespace DataScienceSurveyBanner {
@@ -44,6 +55,8 @@ export namespace DataScience {
     export const notebookCheckForImportDontAskAgain = localize('DataScience.notebookCheckForImportDontAskAgain', 'Don\'t Ask Again');
     export const jupyterNotSupported = localize('DataScience.jupyterNotSupported', 'Jupyter is not installed');
     export const jupyterNbConvertNotSupported = localize('DataScience.jupyterNbConvertNotSupported', 'Jupyter nbconvert is not installed');
+    export const jupyterLaunchTimedOut = localize('DataScience.jupyterLaunchTimedOut', 'The Jupyter notebook server failed to launch in time');
+    export const jupyterLaunchNoURL = localize('DataScience.jupyterLaunchNoURL', 'Failed to find the URL of the launched Jupyter notebook server');
     export const pythonInteractiveHelpLink = localize('DataScience.pythonInteractiveHelpLink', 'See [https://aka.ms/pyaiinstall] for help on installing jupyter.');
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter Server');
@@ -52,7 +65,7 @@ export namespace DataScience {
     export const restartKernelMessage = localize('DataScience.restartKernelMessage', 'Do you want to restart the Jupter kernel? All variables will be lost.');
     export const restartKernelMessageYes = localize('DataScience.restartKernelMessageYes', 'Restart');
     export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
-    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Jupyter Kernel');
+    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting iPython Kernel');
     export const executingCode = localize('DataScience.executingCode', 'Executing Cell');
     export const collapseAll = localize('DataScience.collapseAll', 'Collapse all cell inputs');
     export const expandAll = localize('DataScience.expandAll', 'Expand all cell inputs');
@@ -60,8 +73,16 @@ export namespace DataScience {
     export const restartServer = localize('DataScience.restartServer', 'Restart iPython Kernel');
     export const undo = localize('DataScience.undo', 'Undo');
     export const redo = localize('DataScience.redo', 'Redo');
-
     export const clearAll = localize('DataScience.clearAll', 'Remove All Cells');
+    export const pythonVersionHeader = localize('DataScience.pythonVersionHeader', 'Python Version:');
+    export const pythonRestartHeader = localize('DataScience.pythonRestartHeader', 'Restarted Kernel:');
+    export const pythonVersionHeaderNoPyKernel = localize('DataScience.pythonVersionHeaderNoPyKernel', 'Python Version may not match, no ipykernel found:');
+    export const jupyterNotebookFailure = localize('DataScience.jupyterNotebookFailure', 'Jupyter notebook failed to launch. \r\n{0}');
+    export const notebookVersionFormat = localize('DataScience.notebookVersionFormat', 'Jupyter Notebook Version: {0}');
+    //tslint:disable-next-line:no-multiline-string
+    export const jupyterKernelNotSupportedOnActive = localize('DataScience.jupyterKernelNotSupportedOnActive', `iPython kernel cannot be started from '{0}'. Using closest match {1} instead.`);
+    export const jupyterKernelSpecNotFound = localize('DataScience.jupyterKernelSpecNotFound', 'Cannot create a iPython kernel spec and none are available for use');
+    export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt iPython Kernel');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
@@ -78,21 +99,21 @@ export function localize(key: string, defValue: string) {
     };
 }
 
-export function getCollection () {
+export function getCollection() {
     // Load the current collection
     if (!loadedCollection || parseLocale() !== loadedLocale) {
         load();
     }
 
     // Combine the default and loaded collections
-    return {...defaultCollection, ...loadedCollection};
+    return { ...defaultCollection, ...loadedCollection };
 }
 
 export function getAskedForCollection() {
     return askedForCollection;
 }
 
-function parseLocale() : string {
+function parseLocale(): string {
     // Attempt to load from the vscode locale. If not there, use english
     const vscodeConfigString = process.env.VSCODE_NLS_CONFIG;
     return vscodeConfigString ? JSON.parse(vscodeConfigString).locale : 'en-us';

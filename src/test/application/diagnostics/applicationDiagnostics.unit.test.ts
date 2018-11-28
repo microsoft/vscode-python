@@ -10,7 +10,7 @@ import { DiagnosticSeverity } from 'vscode';
 import { ApplicationDiagnostics } from '../../../client/application/diagnostics/applicationDiagnostics';
 import { EnvironmentPathVariableDiagnosticsServiceId } from '../../../client/application/diagnostics/checks/envPathVariable';
 import { InvalidDebuggerTypeDiagnosticsServiceId } from '../../../client/application/diagnostics/checks/invalidDebuggerType';
-import { DiagnosticScope, IDiagnostic, IDiagnosticsService } from '../../../client/application/diagnostics/types';
+import { DiagnosticScope, IDiagnostic, IDiagnosticsService, ISourceMapSupportService } from '../../../client/application/diagnostics/types';
 import { IApplicationDiagnostics } from '../../../client/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
 import { ILogger, IOutputChannel } from '../../../client/common/types';
@@ -44,6 +44,18 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             .returns(() => logger.object);
 
         appDiagnostics = new ApplicationDiagnostics(serviceContainer.object);
+    });
+
+    test('Register should register source maps', () => {
+        const sourceMapService = typemoq.Mock.ofType<ISourceMapSupportService>();
+        sourceMapService.setup(s => s.register()).verifiable(typemoq.Times.once());
+
+        serviceContainer.setup(d => d.get(typemoq.It.isValue(ISourceMapSupportService), typemoq.It.isAny()))
+            .returns(() => sourceMapService.object);
+
+        appDiagnostics.register();
+
+        sourceMapService.verifyAll();
     });
 
     test('Performing Pre Startup Health Check must check Path environment variable and Debugger Type', async () => {

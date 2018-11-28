@@ -8,23 +8,14 @@ import { CurrentProcess } from '../../../common/process/currentProcess';
 import { noop } from '../../../common/utils/misc';
 import { EnvironmentVariablesService } from '../../../common/variables/environment';
 import { IServiceContainer } from '../../../ioc/types';
-import { DebugOptions, LaunchRequestArguments } from '../../types';
+import { LaunchRequestArguments } from '../../types';
 import { IDebugServer } from '../Common/Contracts';
 import { IS_WINDOWS } from '../Common/Utils';
 import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { LocalDebugServerV2 } from '../DebugServers/LocalDebugServerV2';
-import { IDebugLauncherScriptProvider } from '../types';
+import { ILocalDebugLauncherScriptProvider } from '../types';
 import { DebugClient, DebugType } from './DebugClient';
 import { DebugClientHelper } from './helper';
-
-const VALID_DEBUG_OPTIONS = [
-    'RedirectOutput',
-    'DebugStdLib',
-    'StopOnEntry',
-    'ShowReturnValue',
-    'BreakOnSystemExitZero',
-    'DjangoDebugging',
-    'Django'];
 
 enum DebugServerStatus {
     Unknown = 1,
@@ -44,7 +35,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         }
         return DebugServerStatus.Unknown;
     }
-    constructor(args: LaunchRequestArguments, debugSession: DebugSession, private canLaunchTerminal: boolean, protected launcherScriptProvider: IDebugLauncherScriptProvider) {
+    constructor(args: LaunchRequestArguments, debugSession: DebugSession, private canLaunchTerminal: boolean, protected launcherScriptProvider: ILocalDebugLauncherScriptProvider) {
         super(args, debugSession);
     }
 
@@ -143,18 +134,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
 
     // tslint:disable-next-line:member-ordering
     protected buildDebugArguments(cwd: string, debugPort: number): string[] {
-        const ptVSToolsFilePath = this.launcherScriptProvider.getLauncherFilePath();
-        const vsDebugOptions: string[] = [DebugOptions.RedirectOutput];
-        if (Array.isArray(this.args.debugOptions)) {
-            this.args.debugOptions.filter(opt => VALID_DEBUG_OPTIONS.indexOf(opt) >= 0)
-                .forEach(item => vsDebugOptions.push(item));
-        }
-        const djangoIndex = vsDebugOptions.indexOf(DebugOptions.Django);
-        // PTVSD expects the string `DjangoDebugging`
-        if (djangoIndex >= 0) {
-            vsDebugOptions[djangoIndex] = 'DjangoDebugging';
-        }
-        return [ptVSToolsFilePath, cwd, debugPort.toString(), '34806ad9-833a-4524-8cd6-18ca4aa74f14', vsDebugOptions.join(',')];
+        throw new Error('Not Implemented');
     }
     // tslint:disable-next-line:member-ordering
     protected buildStandardArguments() {

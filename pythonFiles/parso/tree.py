@@ -229,6 +229,7 @@ class Leaf(NodeOrLeaf):
 
 class TypedLeaf(Leaf):
     __slots__ = ('type',)
+
     def __init__(self, type, value, start_pos, prefix=''):
         super(TypedLeaf, self).__init__(value, start_pos, prefix)
         self.type = type
@@ -351,13 +352,13 @@ class ErrorLeaf(Leaf):
     A leaf that is either completely invalid in a language (like `$` in Python)
     or is invalid at that position. Like the star in `1 +* 1`.
     """
-    __slots__ = ('original_type',)
+    __slots__ = ('token_type',)
     type = 'error_leaf'
 
-    def __init__(self, original_type, value, start_pos, prefix=''):
+    def __init__(self, token_type, value, start_pos, prefix=''):
         super(ErrorLeaf, self).__init__(value, start_pos, prefix)
-        self.original_type = original_type
+        self.token_type = token_type
 
     def __repr__(self):
         return "<%s: %s:%s, %s>" % \
-            (type(self).__name__, self.original_type, repr(self.value), self.start_pos)
+            (type(self).__name__, self.token_type, repr(self.value), self.start_pos)

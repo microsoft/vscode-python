@@ -7,8 +7,8 @@ import { Observable } from 'rxjs/Observable';
 import { CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
-import { ExecutionResult, ObservableExecutionResult, PythonVersionInfo, SpawnOptions } from '../common/process/types';
-import { IConnectionInfo } from './jupyterProcess';
+import { TemporaryFile } from '../common/platform/types';
+import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -21,37 +21,43 @@ export interface IDataScienceCommandListener {
     register(commandManager: ICommandManager);
 }
 
+// Connection information for talking to a jupyter notebook process
+export interface IConnection extends Disposable {
+    baseUrl: string;
+    token: string;
+    pythonMainVersion : number;
+}
+
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends Disposable {
     onStatusChanged: Event<boolean>;
-    start(notebookFile? : string) : Promise<boolean>;
-    shutdown() : Promise<void>;
+    connect(conninfo: IConnection, kernelSpec: IJupyterKernelSpec, notebookFile: TemporaryFile) : Promise<void>;
     getCurrentState() : Promise<ICell[]>;
     executeObservable(code: string, file: string, line: number) : Observable<ICell[]>;
     execute(code: string, file: string, line: number) : Promise<ICell[]>;
     restartKernel() : Promise<void>;
     translateToNotebook(cells: ICell[]) : Promise<JSONObject | undefined>;
-    launchNotebook(file: string) : Promise<boolean>;
     waitForIdle() : Promise<void>;
+    shutdown();
+    interruptKernel() : Promise<void>;
 }
 
-export const INotebookProcess = Symbol('INotebookProcess');
-export interface INotebookProcess extends Disposable {
-    start(notebookFile: string) : Promise<void>;
-    shutdown() : Promise<void>;
-    waitForConnectionInformation() : Promise<IConnectionInfo>;
-    waitForPythonVersionString() : Promise<string>;
-    waitForPythonPath() : Promise<string | undefined>;
-    waitForPythonVersion() : Promise<PythonVersionInfo | undefined>;
-    spawn(notebookFile: string) : Promise<ExecutionResult<string>>;
-}
-export const IJupyterExecution = Symbol('IJupyterAvailablity');
+export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution {
     isNotebookSupported() : Promise<boolean>;
     isImportSupported() : Promise<boolean>;
-    execModuleObservable(args: string[], options: SpawnOptions) : Promise<ObservableExecutionResult<string>>;
-    execModule(args: string[], options: SpawnOptions) : Promise<ExecutionResult<string>>;
+    isKernelCreateSupported(): Promise<boolean>;
+    startNotebookServer() : Promise<INotebookServer>;
+    spawnNotebook(file: string) : Promise<void>;
+    importNotebook(file: string, template: string) : Promise<string>;
+    getUsableJupyterPython() : Promise<PythonInterpreter | undefined>;
+}
+
+export interface IJupyterKernelSpec extends Disposable {
+    name: string;
+    language: string;
+    path: string;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
@@ -92,6 +98,7 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
 export interface ICodeWatcher {
+    addFile(document: TextDocument);
     getFileName() : string;
     getVersion() : number;
     getCodeLenses() : CodeLens[];
@@ -114,7 +121,15 @@ export interface ICell {
     file: string;
     line: number;
     state: CellState;
-    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell;
+    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | ISysInfo;
+}
+
+export interface ISysInfo extends nbformat.IBaseCell {
+    cell_type: 'sys_info';
+    version: string;
+    notebook_version: string;
+    path: string;
+    message: string;
 }
 
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
