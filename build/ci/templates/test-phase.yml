@@ -7,7 +7,7 @@
 #   PythonVersion: '3.7'
 #   NodeVersion: '8.11.2'
 #   NpmVersion: 'latest'
-#   MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/.mocha-reporter/mocha-vsts-reporter.js'
+#   MOCHA_CI_REPORTER_ID: '$(Build.SourcesDirectory)/build/ci/mocha-vsts-reporter.js'
 #   MOCHA_CI_REPORTFILE: '$(Build.ArtifactStagingDirectory)/reports/junit-report.xml'
 #   MOCHA_REPORTER_JUNIT: true
 #   AzureStorageAccountName: 'vscodepythonartifacts'
