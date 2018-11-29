@@ -5,8 +5,12 @@ import { parse, SemVer } from 'semver';
 import { Logger } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { ExecutionResult, IProcessServiceFactory } from '../../../common/process/types';
+import { Bash } from '../../../common/terminal/environmentActivationProviders/bash';
+import { CommandPromptAndPowerShell } from '../../../common/terminal/environmentActivationProviders/commandPrompt';
+import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../../../common/types';
 import { compareVersion } from '../../../common/utils/version';
+import { IServiceContainer } from '../../../ioc/types';
 import {
     CondaInfo,
     ICondaService,
@@ -51,6 +55,8 @@ export class CondaService implements ICondaService {
     private isAvailable: boolean | undefined;
     private readonly condaHelper = new CondaHelper();
     private activatedEnvironmentCache : { [key: string] : NodeJS.ProcessEnv } = {};
+    private activationProvider : ITerminalActivationCommandProvider;
+    private shellType : TerminalShellType;
 
     constructor(
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
@@ -61,9 +67,12 @@ export class CondaService implements ICondaService {
         @inject(ILogger) private logger: ILogger,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IInterpreterLocatorService) @named(WINDOWS_REGISTRY_SERVICE) @optional() private registryLookupForConda?: IInterpreterLocatorService
     ) {
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged));
+        this.activationProvider = this.platform.isWindows ? new CommandPromptAndPowerShell(serviceContainer) : new Bash(serviceContainer);
+        this.shellType = this.platform.isWindows ? TerminalShellType.commandPrompt : TerminalShellType.bash; // Defaults for Child_Process.exec
     }
 
     public get condaEnvironmentsFile(): string | undefined {
@@ -269,37 +278,46 @@ export class CondaService implements ICondaService {
         }
 
         // From that path we need to start an activate script
-        const activateCommand = this.platform.isWindows ?
-            `"${path.join(path.dirname(condaPath), 'activate')}"` :
-            `. "${path.join(path.dirname(condaPath), 'activate')}"`;
+        const activateCommands = this.activationProvider.getActivationCommandsForInterpreter ?
+            await this.activationProvider.getActivationCommandsForInterpreter(condaPath, this.shellType) :
+            this.platform.isWindows ?
+            [`"${path.join(path.dirname(condaPath), 'activate')}"`] :
+            [`. "${path.join(path.dirname(condaPath), 'activate')}"`];
+
         const result = {...input};
         const processService = await this.processServiceFactory.create();
 
         // Run the activate command collect the environment from it.
         const listEnv = this.platform.isWindows ? 'set' : 'printenv';
         let shellExecResult: ExecutionResult<string> | undefined;
-        // tslint:disable-next-line:no-any
-        let error : any;
-        try {
-            // In order to make sure we know where the environment output is,
-            // put in a dummy echo we can look for
-            const command = `${activateCommand} && conda activate ${condaEnvironmentName} && echo '${CondaGetEnvironmentPrefix}' && ${listEnv}`;
-            shellExecResult = await processService.shellExec(command, { env: inputEnvironment });
-        } catch (err) {
-            // If that crashes for whatever reason, then just return empty data.
-            this.logger.logWarning(err);
-            error = err;
-        }
 
-        // Special case. The 'environment' we have is the base environment. Previous call would have
-        // thrown an error.
-        if (!shellExecResult && error) {
+        for (let i = 0; activateCommands && i < activateCommands.length && !shellExecResult; i += 1) {
+            // Replace 'source ' with '. ' as that works in shell exec
+            const activateCommand = activateCommands[i].replace(/^source\s+/, '. ');
+
+            // tslint:disable-next-line:no-any
+            let error: any;
             try {
-                const command = `"${activateCommand}" && echo '${CondaGetEnvironmentPrefix}' && ${listEnv}`;
+                // In order to make sure we know where the environment output is,
+                // put in a dummy echo we can look for
+                const command = `${activateCommand} && conda activate ${condaEnvironmentName} && echo '${CondaGetEnvironmentPrefix}' && ${listEnv}`;
                 shellExecResult = await processService.shellExec(command, { env: inputEnvironment });
             } catch (err) {
                 // If that crashes for whatever reason, then just return empty data.
                 this.logger.logWarning(err);
+                error = err;
+            }
+
+            // Special case. The 'environment' we have is the base environment. Previous call would have
+            // thrown an error.
+            if (!shellExecResult && error) {
+                try {
+                    const command = `"${activateCommand}" && echo '${CondaGetEnvironmentPrefix}' && ${listEnv}`;
+                    shellExecResult = await processService.shellExec(command, { env: inputEnvironment });
+                } catch (err) {
+                    // If that crashes for whatever reason, then just return empty data.
+                    this.logger.logWarning(err);
+                }
             }
         }
 
@@ -462,9 +480,8 @@ export class CondaService implements ICondaService {
     /**
      * Called when the user changes the current interpreter.
      */
-    private onInterpreterChanged = () : Promise<void> => {
+    private onInterpreterChanged = () : void => {
         // Clear our activated environment cache as it can't match the current one anymore
         this.activatedEnvironmentCache = {};
-        return Promise.resolve();
     }
 }

@@ -95,6 +95,7 @@ suite('Interpreters Conda Service', () => {
             logger.object,
             interpreterService.object,
             disposableRegistry,
+            serviceContainer.object,
             registryInterpreterLocatorService.object);
 
     });
@@ -384,7 +385,8 @@ suite('Interpreters Conda Service', () => {
             config.object,
             logger.object,
             interpreterService.object,
-            disposableRegistry);
+            disposableRegistry,
+            serviceContainer.object);
 
         const result = await condaSrv.getCondaFile();
         expect(result).is.equal(expected);
@@ -402,7 +404,6 @@ suite('Interpreters Conda Service', () => {
 
         // We should not try to call other unwanted methods.
         processService.verifyAll();
-        platformService.verify(p => p.isWindows, TypeMoq.Times.never());
         registryInterpreterLocatorService.verify(r => r.getInterpreters(TypeMoq.It.isAny()), TypeMoq.Times.never());
     });
 
@@ -413,7 +414,6 @@ suite('Interpreters Conda Service', () => {
         assert.equal(condaExe, 'conda', 'Failed to identify conda.exe');
 
         // We should not try to call other unwanted methods.
-        platformService.verify(p => p.isWindows, TypeMoq.Times.never());
         registryInterpreterLocatorService.verify(r => r.getInterpreters(TypeMoq.It.isAny()), TypeMoq.Times.never());
     });
 
@@ -425,7 +425,6 @@ suite('Interpreters Conda Service', () => {
         processService.verify(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.once());
 
         // We should not try to call other unwanted methods.
-        platformService.verify(p => p.isWindows, TypeMoq.Times.never());
         registryInterpreterLocatorService.verify(r => r.getInterpreters(TypeMoq.It.isAny()), TypeMoq.Times.never());
 
         await condaService.getCondaFile();
