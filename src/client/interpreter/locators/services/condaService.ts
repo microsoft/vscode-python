@@ -377,36 +377,34 @@ export class CondaService implements ICondaService {
     private async getCondaFileFromInterpreter(interpreter: PythonInterpreter | undefined) : Promise<string | undefined> {
         const condaExe = this.platform.isWindows ? 'conda.exe' : 'conda';
         const scriptsDir = this.platform.isWindows ? 'Scripts' : 'bin';
-        let condaPath = interpreter ? path.join(path.dirname(interpreter.path), condaExe) : '';
+        const interpreterDir = interpreter ? path.dirname(interpreter.path) : '';
+        let condaPath = path.join(interpreterDir, condaExe);
         if (await this.fileSystem.fileExists(condaPath)) {
             return condaPath;
         }
         // Conda path has changed locations, check the new location in the scripts directory after checking
         // the old location
-        condaPath = interpreter ? path.join(path.dirname(interpreter.path), scriptsDir, condaExe) : '';
+        condaPath = path.join(interpreterDir, scriptsDir, condaExe);
         if (await this.fileSystem.fileExists(condaPath)) {
             return condaPath;
         }
 
         // Might be in a situation where this is not the default python env, but rather one running
         // from a virtualenv
-        const split = interpreter ? path.dirname(interpreter.path).split(path.sep) : [];
-        if (interpreter && split && split.length > 0 && split[split.length - 1] === interpreter.envName) {
-            // Then we need to go up one more to check for 'envs'
-            if (split.length > 1 && split[split.length - 2] === 'envs') {
-                // This should be where the original python was run from.
-                const originalPath = split.slice(0, split.length - 2).join(path.sep);
-                condaPath = path.join(originalPath, condaExe);
+        const envsPos = interpreterDir.indexOf(path.join('envs', interpreter.envName));
+        if (envsPos > 0) {
+            // This should be where the original python was run from when the environment was created.
+            const originalPath = interpreterDir.slice(0, envsPos);
+            condaPath = path.join(originalPath, condaExe);
 
-                if (await this.fileSystem.fileExists(condaPath)) {
-                    return condaPath;
-                }
+            if (await this.fileSystem.fileExists(condaPath)) {
+                return condaPath;
+            }
 
-                // Also look in the scripts directory here too.
-                condaPath = path.join(originalPath, scriptsDir, condaExe);
-                if (await this.fileSystem.fileExists(condaPath)) {
-                    return condaPath;
-                }
+            // Also look in the scripts directory here too.
+            condaPath = path.join(originalPath, scriptsDir, condaExe);
+            if (await this.fileSystem.fileExists(condaPath)) {
+                return condaPath;
             }
         }
     }
