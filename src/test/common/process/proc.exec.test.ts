@@ -168,4 +168,21 @@ suite('ProcessService Observable', () => {
         expect(result.stdout).equals('', 'stdout is invalid');
         expect(result.stderr).equals(undefined, 'stderr is invalid');
     });
+    test('shellExec should be able to run python too', async () => {
+        const procService = new ProcessService(new BufferDecoder());
+        const printOutput = '1234';
+        const result = await procService.shellExec(`"${pythonPath}" -c 'import sys' 'sys.exit()'`);
+
+        expect(result).not.to.be.an('undefined', 'result is undefined');
+        expect(result.stdout.trim()).to.be.equal(printOutput, 'Invalid output');
+        expect(result.stderr).to.equal(undefined, 'stderr not undefined');
+
+        expect(result.stdout).equals('', 'stdout is invalid');
+        expect(result.stderr).equals(undefined, 'stderr is invalid');
+    });
+    test('shellExec should fail on invalid command', async () => {
+        const procService = new ProcessService(new BufferDecoder());
+        const result = procService.shellExec('invalid command');
+        await expect(result).to.eventually.be.rejectedWith(Error, 'a', 'Expected error to be thrown');
+    });
 });
