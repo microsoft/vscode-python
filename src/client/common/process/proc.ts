@@ -159,7 +159,7 @@ export class ProcessService implements IProcessService {
                 } else if (shellOptions.throwOnStdErr && stderr && stderr.length) {
                     reject(new Error(stderr));
                 } else {
-                    resolve({ stderr: stderr, stdout: stdout });
+                    resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout: stdout });
                 }
             });
         });
