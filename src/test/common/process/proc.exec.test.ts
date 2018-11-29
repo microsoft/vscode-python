@@ -174,7 +174,7 @@ suite('ProcessService Observable', () => {
         const result = await procService.shellExec(`"${pythonPath}" -c 'print("${printOutput}")'`);
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
-        expect(result.stderr).to.equal(undefined, 'stderr not undefined');
+        expect(result.stderr).to.equal('', 'stderr not empty');
         expect(result.stdout.trim()).to.be.equal(printOutput, 'Invalid output');
     });
     test('shellExec should fail on invalid command', async () => {
