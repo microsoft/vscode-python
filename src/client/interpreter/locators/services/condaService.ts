@@ -380,6 +380,7 @@ export class CondaService implements ICondaService {
         const condaExe = this.platform.isWindows ? 'conda.exe' : 'conda';
         const scriptsDir = this.platform.isWindows ? 'Scripts' : 'bin';
         const interpreterDir = interpreter ? path.dirname(interpreter.path) : '';
+        const envName = interpreter && interpreter.envName ? interpreter.envName : 'xxx'; // Prevents non named from being found
         let condaPath = path.join(interpreterDir, condaExe);
         if (await this.fileSystem.fileExists(condaPath)) {
             return condaPath;
@@ -393,7 +394,7 @@ export class CondaService implements ICondaService {
 
         // Might be in a situation where this is not the default python env, but rather one running
         // from a virtualenv
-        const envsPos = interpreterDir.indexOf(path.join('envs', interpreter.envName));
+        const envsPos = interpreterDir.indexOf(path.join('envs', envName));
         if (envsPos > 0) {
             // This should be where the original python was run from when the environment was created.
             const originalPath = interpreterDir.slice(0, envsPos);
