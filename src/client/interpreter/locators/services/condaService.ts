@@ -271,7 +271,7 @@ export class CondaService implements ICondaService {
         // From that path we need to start an activate script
         const activateCommand = this.platform.isWindows ?
             `"${path.join(path.dirname(condaPath), 'activate')}"` :
-            `source #${path.join(path.dirname(condaPath), 'activate')}#`;
+            `source "${path.join(path.dirname(condaPath), 'activate')}"`;
         const result = {...input};
         const processService = await this.processServiceFactory.create();
 
