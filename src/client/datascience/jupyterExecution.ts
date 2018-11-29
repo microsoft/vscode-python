@@ -191,7 +191,20 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         return this.isCommandSupported(KernelSpecCommand);
     }
 
-    public startNotebookServer = async () : Promise<INotebookServer> => {
+    public connectToNotebookServer = async (connection: IConnection, kernelSpec: IJupyterKernelSpec): Promise<INotebookServer> => {
+        try {
+            // Try to connect to our jupyter process
+            const result = this.serviceContainer.get<INotebookServer>(INotebookServer);
+            this.disposableRegistry.push(result);
+            await result.connect(connection, kernelSpec);
+            return result;
+        } catch (err) {
+            // Something else went wrong
+            throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(err));
+        }
+    }
+
+    public startNotebookServer = async () : Promise<[IConnection, IJupyterKernelSpec]> => {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommand(NotebookCommand);
         if (!notebookCommand) {
@@ -212,36 +225,32 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
             let kernelSpec = await this.getMatchingKernelSpec();
 
             // Then use this to launch our notebook process.
-            //const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8'});
+            const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8'});
 
             // Wait for the connection information on this result
-            //const connection = await JupyterConnection.waitForConnection(
-            //    tempFile.filePath, this.getJupyterServerInfo, launchResult, notebookCommand.mainVersion(), this.serviceContainer);
+            const connection = await JupyterConnection.waitForConnection(
+                tempFile.filePath, this.getJupyterServerInfo, launchResult, notebookCommand.mainVersion(), this.serviceContainer);
 
+            // IANHU: Should this actually be happening in the connection function?
             // If the kernel spec didn't match, then try with our current process instead
-            //if (!kernelSpec) {
-                //kernelSpec = await this.getMatchingKernelSpec(connection);
-            //}
+            if (!kernelSpec) {
+                kernelSpec = await this.getMatchingKernelSpec(connection);
+            }
 
             // If still not found, throw an error
             if (!kernelSpec) {
                 throw new Error(localize.DataScience.jupyterKernelSpecNotFound());
             }
 
+            return [connection, kernelSpec];
             // IANHU FAKE REMOTE CONNECTION
-            const connection: IConnection = { 
-                baseUrl: 'http://IANHULAPTOP2:9999',
-                token: '4ced9d3ffc24e4c839be67766371358105d6a5c09c73951c',
-                pythonMainVersion: 3,
-                dispose: () => {}
-             };
+            //const connection: IConnection = { 
+                //baseUrl: 'http://IANHULAPTOP2:9999',
+                //token: '4ced9d3ffc24e4c839be67766371358105d6a5c09c73951c',
+                //pythonMainVersion: 3,
+                //dispose: () => {}
+             //};
 
-            // Then use this to connect to the jupyter process
-            const result = this.serviceContainer.get<INotebookServer>(INotebookServer);
-            this.disposableRegistry.push(result);
-            //await result.connect(connection, kernelSpec, tempFile);
-            await result.connect(connection, kernelSpec);
-            return result;
 
         } catch (err) {
             // Something else went wrong
@@ -399,7 +408,7 @@ export class JupyterExecution implements IJupyterExecution, Disposable {
         }
     }
 
-    private async getMatchingKernelSpec(connection?: IConnection) : Promise<IJupyterKernelSpec | undefined> {
+    public async getMatchingKernelSpec(connection?: IConnection) : Promise<IJupyterKernelSpec | undefined> {
 
         // If not using an active connection, check on disk
         if (!connection) {

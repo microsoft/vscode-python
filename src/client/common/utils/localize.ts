@@ -79,6 +79,7 @@ export namespace DataScience {
     export const jupyterSelectURILaunchLocal = localize('DataScience.jupyterSelectURILaunchLocal', 'Launch local Jupyter server');
     export const jupyterSelectURISpecifyURI = localize('DataScienece.jupyterSelectURISpecifyURI', 'Type in the URI for the Jupyter server');
     export const jupyterNotebookFailure = localize('DataScience.jupyterNotebookFailure', 'Jupyter notebook failed to launch. \r\n{0}');
+    export const jupyterNotebookConnectFailed = localize('DataScience.jupyterNotebookConnectFailed', 'Failed to connect to Jupyter notebook. \r\n{0}');
     export const notebookVersionFormat = localize('DataScience.notebookVersionFormat', 'Jupyter Notebook Version: {0}');
     //tslint:disable-next-line:no-multiline-string
     export const jupyterKernelNotSupportedOnActive = localize('DataScience.jupyterKernelNotSupportedOnActive', `Jupyter kernel cannot be started from '{0}'. Using closest match {1} instead.`);

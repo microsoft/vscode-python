@@ -128,27 +128,27 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
-    function testMimeTypes(types : {code: string; mimeType: string; cellType: string; verifyValue(data: any): void}[]) {
-        runTest('MimeTypes', async () => {
-            // Test all mime types together so we don't have to startup and shutdown between
-            // each
-            const server = await jupyterExecution.startNotebookServer();
-            if (!server) {
-                assert.fail('Server not created');
-            }
-            let statusCount: number = 0;
-            server.onStatusChanged((bool: boolean) => {
-                statusCount += 1;
-            });
-            for (let i = 0; i < types.length; i += 1) {
-                const prevCount = statusCount;
-                await verifyCell(server, i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
-                if (types[i].cellType !== 'markdown') {
-                    assert.ok(statusCount > prevCount, 'Status didnt update');
-                }
-            }
-        });
-    }
+    //function testMimeTypes(types : {code: string; mimeType: string; cellType: string; verifyValue(data: any): void}[]) {
+        //runTest('MimeTypes', async () => {
+            //// Test all mime types together so we don't have to startup and shutdown between
+            //// each
+            //const server = await jupyterExecution.startNotebookServer();
+            //if (!server) {
+                //assert.fail('Server not created');
+            //}
+            //let statusCount: number = 0;
+            //server.onStatusChanged((bool: boolean) => {
+                //statusCount += 1;
+            //});
+            //for (let i = 0; i < types.length; i += 1) {
+                //const prevCount = statusCount;
+                //await verifyCell(server, i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
+                //if (types[i].cellType !== 'markdown') {
+                    //assert.ok(statusCount > prevCount, 'Status didnt update');
+                //}
+            //}
+        //});
+    //}
 
     function runTest(name: string, func: () => Promise<void>) {
         test(name, async () => {
@@ -227,124 +227,124 @@ suite('Jupyter notebook tests', () => {
         }, 'Server start is not throwing');
     });
 
-    runTest('Export/Import', async () => {
-        const server = await jupyterExecution.startNotebookServer();
-        if (!server) {
-            assert.fail('Server not created');
-        }
+    //runTest('Export/Import', async () => {
+        //const server = await jupyterExecution.startNotebookServer();
+        //if (!server) {
+            //assert.fail('Server not created');
+        //}
 
-        // Get a bunch of test cells (use our test cells from the react controls)
-        const testState = generateTestState(id => { return; });
-        const cells = testState.cellVMs.map((cellVM: ICellViewModel, index: number) => { return cellVM.cell; });
+        //// Get a bunch of test cells (use our test cells from the react controls)
+        //const testState = generateTestState(id => { return; });
+        //const cells = testState.cellVMs.map((cellVM: ICellViewModel, index: number) => { return cellVM.cell; });
 
-        // Translate this into a notebook
-        const notebook = await server.translateToNotebook(cells);
-        assert.ok(notebook, 'Translate to notebook is failing');
+        //// Translate this into a notebook
+        //const notebook = await server.translateToNotebook(cells);
+        //assert.ok(notebook, 'Translate to notebook is failing');
 
-        // Save to a temp file
-        const fileSystem = ioc.serviceManager.get<IFileSystem>(IFileSystem);
-        const importer = ioc.serviceManager.get<INotebookImporter>(INotebookImporter);
-        const temp = await fileSystem.createTemporaryFile('.ipynb');
-        try {
-            await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
-            // Try importing this. This should verify export works and that importing is possible
-            const results = await importer.importFromFile(temp.filePath);
+        //// Save to a temp file
+        //const fileSystem = ioc.serviceManager.get<IFileSystem>(IFileSystem);
+        //const importer = ioc.serviceManager.get<INotebookImporter>(INotebookImporter);
+        //const temp = await fileSystem.createTemporaryFile('.ipynb');
+        //try {
+            //await fs.writeFile(temp.filePath, JSON.stringify(notebook), 'utf8');
+            //// Try importing this. This should verify export works and that importing is possible
+            //const results = await importer.importFromFile(temp.filePath);
 
-            // Make sure we have a cell in our results
-            assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
-        } finally {
-            importer.dispose();
-            temp.dispose();
-        }
-    });
+            //// Make sure we have a cell in our results
+            //assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
+        //} finally {
+            //importer.dispose();
+            //temp.dispose();
+        //}
+    //});
 
-    runTest('Restart kernel', async () => {
-        const server = await jupyterExecution.startNotebookServer();
-        if (!server) {
-            assert.fail('Server not created');
-        }
+    //runTest('Restart kernel', async () => {
+        //const server = await jupyterExecution.startNotebookServer();
+        //if (!server) {
+            //assert.fail('Server not created');
+        //}
 
-        // Setup some state and verify output is correct
-        await verifySimple(server, 'a=1\r\na', 1);
-        await verifySimple(server, 'a+=1\r\na', 2);
-        await verifySimple(server, 'a+=4\r\na', 6);
+        //// Setup some state and verify output is correct
+        //await verifySimple(server, 'a=1\r\na', 1);
+        //await verifySimple(server, 'a+=1\r\na', 2);
+        //await verifySimple(server, 'a+=4\r\na', 6);
 
-        console.log('Waiting for idle');
+        //console.log('Waiting for idle');
 
-        // In unit tests we have to wait for status idle before restarting. Unit tests
-        // seem to be timing out if the restart throws any exceptions (even if they're caught)
-        await server.waitForIdle();
+        //// In unit tests we have to wait for status idle before restarting. Unit tests
+        //// seem to be timing out if the restart throws any exceptions (even if they're caught)
+        //await server.waitForIdle();
 
-        console.log('Restarting kernel');
+        //console.log('Restarting kernel');
 
-        await server.restartKernel();
+        //await server.restartKernel();
 
-        console.log('Waiting for idle');
-        await server.waitForIdle();
+        //console.log('Waiting for idle');
+        //await server.waitForIdle();
 
-        console.log('Verifying restart');
-        await verifyError(server, 'a', `name 'a' is not defined`);
-    });
+        //console.log('Verifying restart');
+        //await verifyError(server, 'a', `name 'a' is not defined`);
+    //});
 
-    testMimeTypes(
-        [
-            {
-                code:
-                    `a=1
-a`,
-                mimeType: 'text/plain',
-                cellType: 'code',
-                verifyValue: (d) => assert.equal(d, 1, 'Plain text invalid')
-            },
-            {
-                code:
-                    `df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
-df.head()`,
-                mimeType: 'text/html',
-                cellType: 'code',
-                verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
-            },
-            {
-                code:
-                    `df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
-df.head()`,
-                mimeType: 'text/html',
-                cellType: 'error',
-                verifyValue: (d) => assert.equal(d, `module 'pandas' has no attribute 'read'`, 'Unexpected error result')
-            },
-            {
-                code:
-                    `#%% [markdown]#
-# #HEADER`,
-                mimeType: 'text/plain',
-                cellType: 'markdown',
-                verifyValue: (d) => assert.equal(d, '#HEADER', 'Markdown incorrect')
-            },
-            {
-                // Test relative directories too.
-                code:
-                    `df = pd.read_csv("./DefaultSalesReport.csv")
-df.head()`,
-                mimeType: 'text/html',
-                cellType: 'code',
-                verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
-            },
-            {
-                // Plotly
-                code:
-                    `import matplotlib.pyplot as plt
-import matplotlib as mpl
-import numpy as np
-import pandas as pd
-x = np.linspace(0, 20, 100)
-plt.plot(x, np.sin(x))
-plt.show()`,
-                mimeType: 'image/png',
-                cellType: 'code',
-                verifyValue: (d) => { return; }
-            }
-        ]
-    );
+    //testMimeTypes(
+        //[
+            //{
+                //code:
+                    //`a=1
+//a`,
+                //mimeType: 'text/plain',
+                //cellType: 'code',
+                //verifyValue: (d) => assert.equal(d, 1, 'Plain text invalid')
+            //},
+            //{
+                //code:
+                    //`df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+//df.head()`,
+                //mimeType: 'text/html',
+                //cellType: 'code',
+                //verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
+            //},
+            //{
+                //code:
+                    //`df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+//df.head()`,
+                //mimeType: 'text/html',
+                //cellType: 'error',
+                //verifyValue: (d) => assert.equal(d, `module 'pandas' has no attribute 'read'`, 'Unexpected error result')
+            //},
+            //{
+                //code:
+                    //`#%% [markdown]#
+//# #HEADER`,
+                //mimeType: 'text/plain',
+                //cellType: 'markdown',
+                //verifyValue: (d) => assert.equal(d, '#HEADER', 'Markdown incorrect')
+            //},
+            //{
+                //// Test relative directories too.
+                //code:
+                    //`df = pd.read_csv("./DefaultSalesReport.csv")
+//df.head()`,
+                //mimeType: 'text/html',
+                //cellType: 'code',
+                //verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
+            //},
+            //{
+                //// Plotly
+                //code:
+                    //`import matplotlib.pyplot as plt
+//import matplotlib as mpl
+//import numpy as np
+//import pandas as pd
+//x = np.linspace(0, 20, 100)
+//plt.plot(x, np.sin(x))
+//plt.show()`,
+                //mimeType: 'image/png',
+                //cellType: 'code',
+                //verifyValue: (d) => { return; }
+            //}
+        //]
+    //);
 
     // Tests that should be running:
     // - Creation

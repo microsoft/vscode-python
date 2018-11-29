@@ -20,13 +20,13 @@ import {
 } from '../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
-import { IDisposableRegistry, ILogger } from '../common/types';
+import { IConfigurationService, IDisposableRegistry, ILogger } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { HistoryMessages, Telemetry } from './constants';
 import { JupyterInstallError } from './jupyterInstallError';
-import { CellState, ICell, ICodeCssGenerator, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
+import { CellState, ICell, IConnection, ICodeCssGenerator, IHistory, IJupyterExecution, INotebookServer, IStatusProvider } from './types';
 
 @injectable()
 export class History implements IWebPanelMessageListener, IHistory {
@@ -52,6 +52,7 @@ export class History implements IWebPanelMessageListener, IHistory {
         @inject(ILogger) private logger : ILogger,
         @inject(IStatusProvider) private statusProvider : IStatusProvider,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IFileSystem) private fileSystem: IFileSystem) {
 
         // Sign up for configuration changes
@@ -384,9 +385,23 @@ export class History implements IWebPanelMessageListener, IHistory {
 
     private loadJupyterServer = async (restart?: boolean) : Promise<void> => {
         // Startup our jupyter server
+        // IANHU: different status for 
         const status = this.setStatus(localize.DataScience.startingJupyter());
         try {
-            this.jupyterServer = await this.jupyterExecution.startNotebookServer();
+            const settings = this.configuration.getSettings();
+            const serverURI = settings.datascience.jupyterServerURI;
+            let connectionInfo = [undefined, undefined];
+            // IANHU pull out constant setting name
+            if (serverURI === 'local') {
+                connectionInfo = await this.jupyterExecution.startNotebookServer();
+            } else {
+                // Generate our connection info and kernel spec here
+                const remoteConnectionInfo = this.createConnectionInfo("TESTING");
+                const remoteKernelSpec = await this.jupyterExecution.getMatchingKernelSpec(remoteConnectionInfo);
+                // IANHU : CHECKIN Pretty sure this is an error condition if we failed to get a spec here
+                connectionInfo = [remoteConnectionInfo, remoteKernelSpec];
+            }
+            this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(connectionInfo[0], connectionInfo[1]);
 
             // If this is a restart, show our restart info
             if (restart) {
@@ -399,6 +414,20 @@ export class History implements IWebPanelMessageListener, IHistory {
                 status.dispose();
             }
         }
+    }
+
+    private createConnectionInfo = (connectionURL: string): IConnection => {
+        // Fake for now
+        
+        // IANHU FAKE REMOTE CONNECTION
+        const connection: IConnection = { 
+            baseUrl: 'http://IANHULAPTOP2:9999',
+            token: '849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe',
+            pythonMainVersion: 3,
+            dispose: () => {}
+        };
+
+        return connection;
     }
 
     private extractStreamOutput(cell: ICell) : string {
