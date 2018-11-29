@@ -275,12 +275,14 @@ export class CondaService implements ICondaService {
         const result = {...input};
         const processService = await this.processServiceFactory.create();
 
-        // In order to make sure we know where the environment output is, put in a dummy echo we can look for
+        // Run the activate command collect the environment from it.
         const listEnv = this.platform.isWindows ? 'set' : 'printenv';
         let shellExecResult: ExecutionResult<string> | undefined;
         // tslint:disable-next-line:no-any
         let error : any;
         try {
+            // In order to make sure we know where the environment output is,
+            // put in a dummy echo we can look for
             const command = `${activateCommand} && conda activate ${condaEnvironmentName} && echo '${CondaGetEnvironmentPrefix}' && ${listEnv}`;
             shellExecResult = await processService.shellExec(command, { env: inputEnvironment });
         } catch (err) {
