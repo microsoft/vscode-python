@@ -270,8 +270,8 @@ export class CondaService implements ICondaService {
 
         // From that path we need to start an activate script
         const activateCommand = this.platform.isWindows ?
-            path.join(path.dirname(condaPath), 'activate') :
-            `source ${path.join(path.dirname(condaPath), 'activate')}`;
+            `"${path.join(path.dirname(condaPath), 'activate')}"` :
+            `source #${path.join(path.dirname(condaPath), 'activate')}#`;
         const result = {...input};
         const processService = await this.processServiceFactory.create();
 
@@ -281,7 +281,7 @@ export class CondaService implements ICondaService {
         // tslint:disable-next-line:no-any
         let error : any;
         try {
-            const command = `"${activateCommand}" && conda activate ${condaEnvironmentName} && echo '${CondaGetEnvironmentPrefix}' && ${listEnv}`;
+            const command = `${activateCommand} && conda activate ${condaEnvironmentName} && echo '${CondaGetEnvironmentPrefix}' && ${listEnv}`;
             shellExecResult = await processService.shellExec(command, { env: inputEnvironment });
         } catch (err) {
             // If that crashes for whatever reason, then just return empty data.
