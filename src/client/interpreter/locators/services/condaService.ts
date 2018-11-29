@@ -290,8 +290,8 @@ export class CondaService implements ICondaService {
         }
 
         // Special case. The 'environment' we have is the base environment. Previous call would have
-        // thrown an error with 'conda info --envs' in the help.
-        if (!shellExecResult && error && error.hasOwnProperty('stack') && error.stack.includes('conda info --envs')) {
+        // thrown an error.
+        if (!shellExecResult && error) {
             try {
                 const command = `"${activateCommand}" && echo '${CondaGetEnvironmentPrefix}' && ${listEnv}`;
                 shellExecResult = await processService.shellExec(command, { env: inputEnvironment });
