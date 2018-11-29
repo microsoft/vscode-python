@@ -1,6 +1,6 @@
 # Changelog
 
-## 2018.11.0-rc (28 Nov 2018)
+## 2018.11.0 (29 Nov 2018)
 
 ### Thanks
 
@@ -116,11 +116,9 @@ part of!
    ([#3350](https://github.com/Microsoft/vscode-python/issues/3350))
 1. Stop running CI tests against the `master` branch of ptvsd.
    ([#3414](https://github.com/Microsoft/vscode-python/issues/3414))
-1. Be more aggresive in searching for a Python that can run Kupyter
+1. Be more aggresive in searching for a Python environment that can run Jupyter
    (make sure to cleanup any kernelspecs that are created during this process).
    ([#3433](https://github.com/Microsoft/vscode-python/issues/3433))
-
-
 
 
 ## 2018.10.1 (09 Nov 2018)
